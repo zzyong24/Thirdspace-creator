@@ -53,7 +53,8 @@ export type KnowledgeItemResource = z.infer<typeof knowledgeItemResource>;
 export const knowledgeFolderResource = z.object({
   id,
   userId: id,
-  accountId: id,
+  accountId: id.nullable(),
+  groupId: id.nullable().optional(),
   parentId: id.nullable(),
   name: z.string(),
   status: knowledgeStatus,

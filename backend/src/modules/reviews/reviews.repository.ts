@@ -1,10 +1,13 @@
-import { and, asc, eq, type Db } from "@creatoros/backend";
+import {withWorkspaceParentWrite} from "../../workspace-write";
+import {projects,contentOutputs,publications} from "@creatoros/backend";
+import {workspaceKey,workspaceFilter,workspaceStamp,assertWritableWorkspace} from "@creatoros/backend";
+import { and, asc, eq, sql, type Db } from "@creatoros/backend";
 import {
   reviews,
   reviewInsights,
   reviewPublications,
 } from "./reviews.db-schema";
-import { OwnershipError } from "./reviews.errors";
+import { OwnershipError, ConflictError } from "./reviews.errors";
 
 // Reviews repository (foundation §5.2) — user-scoped queries ONLY. `userId` is
 // baked into deps (mirrors the knowledge/publishing repos): EVERY query filters
@@ -24,7 +27,8 @@ export interface RepoDeps {
   userId: string; // the ownership boundary, baked in at construction
   // [T-332 S2 · ISO-02/03] 第二所有权维度,**必填 strict**:读门恒叠 eq(table.accountId),
   // 写路径盖章当前号。未选号在 service 入口 requireAccountId 即被拒(SPEC §4.2 引导态)。
-  accountId: string;
+  accountId?: string | null;
+  groupId?: string | null;
 }
 
 export interface CreateReviewInput {
@@ -70,7 +74,14 @@ export interface ReviewsRepository {
 export function createReviewsRepository(
   db: Db,
   deps: RepoDeps,
+  parentLocked = false,
 ): ReviewsRepository {
+  const scope = workspaceKey(deps);
+  const stamp = workspaceStamp(scope);
+  const ctx = {userId:deps.userId,...stamp,requestId:"reviews-parent-write",source:"user" as const};
+  const writeParent = {table:reviews,id:reviews.id,userId:reviews.userId,groupId:reviews.groupId,accountId:reviews.accountId,lock:"update" as const};
+  const projectParent = {table:projects,id:projects.id,userId:projects.userId,groupId:projects.groupId,accountId:projects.accountId};
+  const writable = () => assertWritableWorkspace(db, {userId:deps.userId,...stamp,requestId:"shared-domain-write",source:"user"});
   // Private ownership gate: the scoped select for a review. Empty ⇒ OwnershipError
   // (→ 404; cross-user / unknown id never reveals existence).
   async function getReviewRow(reviewId: string): Promise<ReviewRow> {
@@ -81,7 +92,7 @@ export function createReviewsRepository(
         and(
           eq(reviews.userId, deps.userId),
           // [T-332 S2 · §4.5 by-id 门] strict 恒叠号:跨号 review 与未知 id 同样 404。
-          eq(reviews.accountId, deps.accountId),
+          workspaceFilter(reviews, scope),
           eq(reviews.id, reviewId),
         ),
       );
@@ -103,13 +114,23 @@ export function createReviewsRepository(
     },
 
     async createReview(input) {
+      if (!parentLocked) return withWorkspaceParentWrite(db,ctx,projectParent,[input.projectId],async tx => {
+        const txDb=tx as unknown as Db;
+        if(input.contentOutputId) return withWorkspaceParentWrite(txDb,ctx,{...projectParent,via:[{table:contentOutputs,id:contentOutputs.id,parentId:contentOutputs.projectId}]},[input.contentOutputId],async outputTx => {
+          const selected=await outputTx.select({projectId:contentOutputs.projectId}).from(contentOutputs).where(eq(contentOutputs.id,input.contentOutputId!));
+          if(selected[0]?.projectId!==input.projectId)throw new OwnershipError("作品不属于当前项目");
+          return createReviewsRepository(outputTx as unknown as Db,deps,true).createReview(input);
+        });
+        return createReviewsRepository(txDb,deps,true).createReview(input);
+      });
+      await writable();
       const inserted = await db
         .insert(reviews)
         .values({
           id: deps.nextId("review"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(必填,无 null 兜底)。
-          accountId: deps.accountId,
+          ...stamp,
           projectId: input.projectId,
           contentOutputId: input.contentOutputId ?? null,
           reportArtifactId: input.reportArtifactId ?? null,
@@ -129,24 +150,30 @@ export function createReviewsRepository(
     },
 
     async completeReview(reviewId) {
+      if(!parentLocked)return withWorkspaceParentWrite(db,ctx,writeParent,[reviewId],tx=>createReviewsRepository(tx as unknown as Db,deps,true).completeReview(reviewId));
+      await writable();
       await getReviewRow(reviewId); // scoped ownership gate
       const updated = await db
         .update(reviews)
         .set({ status: "completed", completedAt: deps.now() })
-        .where(and(eq(reviews.userId, deps.userId), eq(reviews.id, reviewId)))
+        .where(and(eq(reviews.userId, deps.userId), workspaceFilter(reviews, scope), eq(reviews.id, reviewId)))
         .returning();
-      return updated[0]!;
+      if(!updated[0])throw new OwnershipError("复盘已归组，请重新选择工作区");
+      return updated[0];
     },
 
     async createInsight(reviewId, input) {
-      await getReviewRow(reviewId); // scoped ownership gate on the parent review
+      if(!parentLocked)return withWorkspaceParentWrite(db,ctx,writeParent,[reviewId],tx=>createReviewsRepository(tx as unknown as Db,deps,true).createInsight(reviewId,input));
+      await writable();
+      const parent=await getReviewRow(reviewId);
+      if(parent.status!=="in_progress")throw new ConflictError("已结束的复盘不能添加洞察");
       const inserted = await db
         .insert(reviewInsights)
         .values({
           id: deps.nextId("insight"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(与父 review 同号;必填)。
-          accountId: deps.accountId,
+          ...stamp, groupId: parent.groupId ?? stamp.groupId,
           reviewId,
           insightType: input.insightType,
           title: input.title,
@@ -166,7 +193,7 @@ export function createReviewsRepository(
           and(
             eq(reviewInsights.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(reviewInsights.accountId, deps.accountId),
+            workspaceFilter(reviewInsights, scope),
             eq(reviewInsights.reviewId, reviewId),
           ),
         )
@@ -181,7 +208,7 @@ export function createReviewsRepository(
           and(
             eq(reviewInsights.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(reviewInsights.accountId, deps.accountId),
+            workspaceFilter(reviewInsights, scope),
             eq(reviewInsights.reviewId, reviewId),
           ),
         );
@@ -189,7 +216,10 @@ export function createReviewsRepository(
     },
 
     async attachPublication(reviewId, publicationId) {
+      if(!parentLocked)return withWorkspaceParentWrite(db,ctx,writeParent,[reviewId],tx=>withWorkspaceParentWrite(tx as unknown as Db,ctx,{table:publications,id:publications.id,userId:publications.userId,groupId:publications.groupId,accountId:publications.accountId},[publicationId],pubTx=>createReviewsRepository(pubTx as unknown as Db,deps,true).attachPublication(reviewId,publicationId)));
+      await writable();
       await getReviewRow(reviewId); // scoped ownership gate on the parent review
+      if(scope.kind==="group"){const found=await db.execute(sql`SELECT id FROM publications WHERE id=${publicationId} AND user_id=${deps.userId} AND group_id=${scope.id}`);if(!found.rows.length)throw new OwnershipError("Publication not found");}
       await db
         .insert(reviewPublications)
         .values({
@@ -210,7 +240,7 @@ export function createReviewsRepository(
           and(
             eq(reviews.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(reviews.accountId, deps.accountId),
+            workspaceFilter(reviews, scope),
             eq(reviews.projectId, projectId),
           ),
         )

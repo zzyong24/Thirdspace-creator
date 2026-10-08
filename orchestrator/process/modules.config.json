@@ -18,6 +18,118 @@
     ]
   },
   "modules": {
+    "T-1022": {
+      "task_id": "T-1022",
+      "archetype": [
+        "user-authored",
+        "derived-computed",
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t1022-account-group-workspace.md",
+        "docs/features/t1022-account-group-workspace/**",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/**",
+        "backend/src/schema/**",
+        "backend/src/modules/platform-account/**",
+        "backend/src/modules/analytics/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/application/queries/**",
+        "frontend/src/components/shell/**",
+        "frontend/src/features/platform-account/**",
+        "frontend/src/features/dashboard/**",
+        "frontend/src/features/review/**",
+        "backend/src/**",
+        "frontend/src/**",
+        "ai-worker/src/**",
+        "mcp-server/**",
+        "contract/tests/**",
+        "backend/drizzle/**"
+      ],
+      "write_set": [
+        "docs/features/t1022-account-group-workspace.md",
+        "docs/features/t1022-account-group-workspace/**",
+        "docs/features/t1022-account-group-workspace.review.md",
+        "orchestrator/reviews/T-1022-round-1.json",
+        "orchestrator/reviews/T-1022-round-2.json",
+        "orchestrator/reviews/T-1022-round-3.json",
+        "AGENTS.md",
+        ".agents/skills/oil-ui-pro/**",
+        "backend/src/**",
+        "backend/drizzle/**",
+        "frontend/src/**",
+        "frontend/tests/**",
+        "ai-worker/src/**",
+        "contract/src/**",
+        "contract/tests/**",
+        "mcp-server/**",
+        "docs/verification/t1022/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "design": "git diff --check -- AGENTS.md docs/features/t1022-account-group-workspace.md docs/features/t1022-account-group-workspace orchestrator/reviews",
+        "implementation": "pnpm -C backend exec vitest run src/modules/platform-account/account-group.integration.test.ts"
+      }
+    },
+    "T-1021": {
+      "task_id": "T-1021",
+      "archetype": [
+        "reference-config",
+        "user-authored",
+        "ai-generated"
+      ],
+      "tasks": [
+        "design"
+      ],
+      "read_set": [
+        "docs/features/t1021-cover-template-library.md",
+        "docs/features/t1021-cover-template-library/**",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        ".agents/skills/oil-ui-pro/**",
+        "frontend/src/styles/tokens.css",
+        "frontend/src/components/ui/**",
+        "frontend/src/features/assets/**",
+        "contract/src/operations/settings.ts",
+        "contract/src/resources/settings.ts",
+        "docs/产品定位.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/assets/**",
+        "backend/src/modules/execution/execution-cover.service.ts",
+        "backend/src/modules/ai-runtime/cover-business-adapter.ts",
+        "backend/src/modules/ai-runtime/chat-cover-task-host.ts",
+        "ai-worker/src/runtime/cover-plan.ts",
+        "frontend/src/features/copilot/chat-generate-card.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+        "contract/src/operations/assets.ts",
+        "frontend/src/features/draft-workbench/publish-package-cta.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-data.ts",
+        "frontend/src/features/draft-workbench/draft-chat-request.tsx",
+        "frontend/src/features/publishing-center/**",
+        "frontend/src/features/copilot/chat-publish-package-card.tsx",
+        "frontend/src/app/(creator)/projects/[projectId]/publishing/page.tsx",
+        "backend/src/modules/publishing/**",
+        "backend/src/modules/ai/ai.service.ts",
+        "backend/src/application/chat/generation-tasks.ts",
+        "contract/src/operations/publishing.ts",
+        "contract/src/resources/publishing.ts"
+      ],
+      "write_set": [
+        "docs/features/t1021-cover-template-library.md",
+        "docs/features/t1021-cover-template-library/**",
+        "docs/features/t1021-cover-template-library.review.md",
+        "orchestrator/reviews/T-1021-round-1.json",
+        "orchestrator/reviews/T-1021-round-2.json",
+        "orchestrator/reviews/T-1021-round-3.json",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "design": "git diff --check -- docs/features/t1021-cover-template-library.md docs/features/t1021-cover-template-library orchestrator/reviews"
+      }
+    },
     "T-988": {
       "task_id": "T-988",
       "archetype": [
@@ -1487,6 +1599,37 @@
         "implementation": "pnpm -C frontend exec vitest run src/features/daily-report src/components/shell/shell.test.tsx src/features/dashboard/dashboard-page.test.tsx"
       }
     },
+    "T-969": {
+      "task_id": "T-969",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t969-redfox-chat-recovery.md",
+        "frontend/src/features/copilot/**",
+        "frontend/src/app/api/chat/**",
+        "frontend/src/server/**",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/execution/**",
+        "ai-worker/src/execution/**"
+      ],
+      "write_set": [
+        "docs/features/t969-redfox-chat-recovery.md",
+        "frontend/src/features/copilot/**",
+        "frontend/src/app/api/chat/**",
+        "frontend/src/server/**",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/execution/**",
+        "ai-worker/src/execution/**",
+        "orchestrator/DECISION_LOG.md"
+      ],
+      "verify_commands": {
+        "implementation": "pnpm -C frontend exec vitest run src/features/copilot src/app/api/chat && pnpm -C frontend exec tsc --noEmit"
+      }
+    },
     "T-968": {
       "task_id": "T-968",
       "archetype": [
@@ -1613,6 +1756,70 @@
       ],
       "verify_commands": {
         "research": "git diff --check"
+      }
+    },
+    "T-1019": {
+      "task_id": "T-1019",
+      "archetype": [
+        "ai-generated",
+        "user-authored"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/audience-task-topics/**",
+        "backend/src/modules/candidate/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/execution/execution-topic-read*",
+        "backend/src/application/generation/**",
+        "ai-worker/src/**",
+        "contract/src/**",
+        "frontend/src/features/topics/**",
+        "frontend/src/components/ai/**"
+      ],
+      "write_set": [
+        "docs/features/audience-task-topics/**",
+        "backend/src/modules/candidate/**",
+        "backend/src/schema/candidate.ts",
+        "backend/src/index.ts",
+        "backend/drizzle/**",
+        "backend/src/modules/ai/ai.service.ts",
+        "backend/src/modules/ai/topic-candidate-adoption.service.ts",
+        "backend/src/modules/ai/daily-topic-completion.service.ts",
+        "backend/src/application/generation/discovery.ts",
+        "ai-worker/src/nodes/topic-node.ts",
+        "ai-worker/src/prompt/templates/topic-generate.ts",
+        "contract/src/resources/audience-task.ts",
+        "contract/src/resources/candidate.ts",
+        "contract/src/operations/candidate.ts",
+        "contract/src/internal/execution-topic-read.ts",
+        "frontend/src/features/topics/**",
+        "frontend/src/server/persistence-client.ts",
+        "docs/verification/**",
+        "orchestrator/reviews/**",
+        "backend/src/modules/ai-runtime/topic-business-adapter.ts",
+        "backend/src/modules/ai-runtime/daily-topic-business-adapter.ts",
+        "backend/src/modules/execution/execution-topic-read.service.ts",
+        "ai-worker/src/execution/**",
+        "contract/src/index.ts",
+        "contract/src/cli-policy.ts",
+        "ai-worker/src/prompt/registry.ts",
+        "ai-worker/src/prompt/templates/topic-query-plan.ts",
+        "backend/src/modules/ai-runtime/effective-skill-snapshot.ts",
+        "backend/src/modules/ai-runtime/effective-skill-snapshot.test.ts",
+        "frontend/src/components/ai/adopt-candidate-card.tsx",
+        "frontend/tests/e2e/audience-task-topics.spec.ts",
+        "contract/tests/registry.test.ts",
+        "contract/tests/execution-topic-read.test.ts",
+        "contract/tests/cli-policy.test.ts",
+        "backend/src/modules/ai-runtime/topic-business-adapter.test.ts",
+        "backend/src/modules/ai-runtime/chat-business-generation-preparation.ts",
+        "backend/src/modules/ai-runtime/chat-production-composition.ts"
+      ],
+      "verify_commands": {
+        "implementation": "pnpm --filter @creatoros/backend test src/modules/candidate/topic-workspace.test.ts"
       }
     }
   }

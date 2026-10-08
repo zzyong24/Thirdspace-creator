@@ -1,3 +1,9 @@
+import type {RequestContext} from "@creatoros/contract";
+import {projects,contentOutputs} from "../../schema/projects";
+import {publications} from "../../schema/publishing";
+import {learnings} from "../../schema/learnings";
+import {withWorkspaceWrite,withWorkspaceParentWrite,type WorkspaceWriteTx,type WorkspaceWriteParent} from "../../workspace-write";
+import {workspaceKey,workspaceFilter,workspaceStamp} from "@creatoros/backend";
 import { and, asc, desc, eq, type Db } from "@creatoros/backend";
 import {
   rubrics,
@@ -31,7 +37,8 @@ export interface RepoDeps {
   // [T-332 S2 · ISO-02/03] 第二所有权维度,**必填 strict**:逐个 list/get/count 读门恒叠
   // eq(table.accountId),写路径盖章当前号。未选号在 service 入口 requireAccountId 即被拒
   // (SPEC §4.2 引导态),无「null → 退化全量」分支。
-  accountId: string;
+  accountId?: string | null;
+  groupId?: string | null;
 }
 
 export interface RubricDimension {
@@ -80,6 +87,10 @@ export interface CreateRuleSuggestionInput {
 }
 
 export interface CalibrationRepository {
+  withWrite<T>(body:(repo:CalibrationRepository)=>Promise<T>):Promise<T>;
+  withRubricWrite<T>(rubricId:string,body:(repo:CalibrationRepository)=>Promise<T>):Promise<T>;
+  withPredictionWrite<T>(predictionId:string,body:(repo:CalibrationRepository)=>Promise<T>):Promise<T>;
+  withSuggestionWrite<T>(suggestionId:string,body:(repo:CalibrationRepository)=>Promise<T>):Promise<T>;
   // Fixture hydration (insert with explicit user_id already on the row).
   seedRubrics(rows: RubricRow[]): Promise<void>;
   seedRubricVersions(rows: RubricVersionRow[]): Promise<void>;
@@ -150,6 +161,14 @@ export function createCalibrationRepository(
   db: Db,
   deps: RepoDeps,
 ): CalibrationRepository {
+  const scope = workspaceKey(deps);
+  const stamp = workspaceStamp(scope);
+  const ctx:RequestContext={userId:deps.userId,...stamp,requestId:"calibration-parent-write",source:"user"};
+  const rubricParent:WorkspaceWriteParent={table:rubrics,id:rubrics.id,userId:rubrics.userId,groupId:rubrics.groupId,accountId:rubrics.accountId,lock:"update"};
+  const versionParent:WorkspaceWriteParent={...rubricParent,via:[{table:rubricVersions,id:rubricVersions.id,parentId:rubricVersions.rubricId,userId:rubricVersions.userId,scope:{groupId:rubricVersions.groupId,accountId:rubricVersions.accountId}}]};
+  const predictionParent:WorkspaceWriteParent={...versionParent,via:[...versionParent.via!,{table:predictions,id:predictions.id,parentId:predictions.rubricVersionId,userId:predictions.userId,scope:{groupId:predictions.groupId,accountId:predictions.accountId}}]};
+  const suggestionParent:WorkspaceWriteParent={...rubricParent,via:[{table:calibrationRuleSuggestions,id:calibrationRuleSuggestions.id,parentId:calibrationRuleSuggestions.rubricId,userId:calibrationRuleSuggestions.userId,scope:{groupId:calibrationRuleSuggestions.groupId,accountId:calibrationRuleSuggestions.accountId}}]};
+  const writeParent=<T>(parent:WorkspaceWriteParent,id:string,body:(tx:WorkspaceWriteTx)=>Promise<T>)=>withWorkspaceParentWrite(db,ctx,parent,[id],body);
   async function getRubricRow(rubricId: string): Promise<RubricRow> {
     const rows = await db
       .select()
@@ -158,7 +177,7 @@ export function createCalibrationRepository(
         and(
           eq(rubrics.userId, deps.userId),
           // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-          eq(rubrics.accountId, deps.accountId),
+          workspaceFilter(rubrics, scope),
           eq(rubrics.id, rubricId),
         ),
       );
@@ -179,7 +198,7 @@ export function createCalibrationRepository(
         and(
           eq(rubricVersions.userId, deps.userId),
           // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-          eq(rubricVersions.accountId, deps.accountId),
+          workspaceFilter(rubricVersions, scope),
           eq(rubricVersions.id, versionId),
         ),
       );
@@ -200,7 +219,7 @@ export function createCalibrationRepository(
         and(
           eq(predictions.userId, deps.userId),
           // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-          eq(predictions.accountId, deps.accountId),
+          workspaceFilter(predictions, scope),
           eq(predictions.id, predictionId),
         ),
       );
@@ -214,6 +233,10 @@ export function createCalibrationRepository(
   }
 
   return {
+    withWrite:body=>withWorkspaceWrite(db,ctx,tx=>body(createCalibrationRepository(tx as unknown as Db,deps))),
+    withRubricWrite:(id,body)=>writeParent(rubricParent,id,tx=>body(createCalibrationRepository(tx as unknown as Db,deps))),
+    withPredictionWrite:(id,body)=>writeParent(predictionParent,id,tx=>body(createCalibrationRepository(tx as unknown as Db,deps))),
+    withSuggestionWrite:(id,body)=>writeParent(suggestionParent,id,tx=>body(createCalibrationRepository(tx as unknown as Db,deps))),
     async seedRubrics(rows) {
       if (rows.length === 0) return;
       await db.insert(rubrics).values(rows).onConflictDoNothing();
@@ -243,30 +266,34 @@ export function createCalibrationRepository(
     },
 
     async createRubric({ name }) {
-      const inserted = await db
+      return withWorkspaceWrite(db,ctx,async tx=>{
+      const inserted = await tx
         .insert(rubrics)
         .values({
           id: deps.nextId("rubric"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(必填,无 null 兜底)。
-          accountId: deps.accountId,
+          ...stamp,
           name,
           currentVersionId: null,
           createdAt: deps.now(),
         })
         .returning();
       return inserted[0]!;
+      });
     },
 
     async insertRubricVersion(input) {
+      return writeParent(rubricParent,input.rubricId,async tx=>{
+      const parent=await createCalibrationRepository(tx as unknown as Db,deps).getRubric(input.rubricId);
       // Never an update — each call is a NEW immutable row (data-model 约束 6).
-      const inserted = await db
+      const inserted = await tx
         .insert(rubricVersions)
         .values({
           id: deps.nextId("rubricver"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(与父 rubric 同号;必填)。
-          accountId: deps.accountId,
+          ...stamp, groupId: parent.groupId ?? stamp.groupId,
           rubricId: input.rubricId,
           versionNumber: input.versionNumber,
           dimensions: input.dimensions,
@@ -275,17 +302,22 @@ export function createCalibrationRepository(
         })
         .returning();
       return inserted[0]!;
+      });
     },
 
     async setRubricCurrentVersion(rubricId, versionId) {
-      await getRubricRow(rubricId); // scoped ownership gate
+      return writeParent(versionParent,versionId,async tx=>{
+      const version=await createCalibrationRepository(tx as unknown as Db,deps).getRubricVersion(versionId);
+      if(version.rubricId!==rubricId)throw new OwnershipError("Rubric version not found");
+      await createCalibrationRepository(tx as unknown as Db,deps).getRubric(rubricId); // scoped ownership gate
       // The ONLY rubric mutation — re-points the pointer; version rows stay immutable.
-      const updated = await db
+      const updated = await tx
         .update(rubrics)
         .set({ currentVersionId: versionId })
-        .where(and(eq(rubrics.userId, deps.userId), eq(rubrics.id, rubricId)))
+        .where(and(eq(rubrics.userId, deps.userId), workspaceFilter(rubrics, scope), eq(rubrics.id, rubricId)))
         .returning();
       return updated[0]!;
+      });
     },
 
     async getRubric(rubricId) {
@@ -304,7 +336,7 @@ export function createCalibrationRepository(
           and(
             eq(rubricVersions.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(rubricVersions.accountId, deps.accountId),
+            workspaceFilter(rubricVersions, scope),
             eq(rubricVersions.rubricId, rubricId),
           ),
         )
@@ -319,7 +351,7 @@ export function createCalibrationRepository(
           and(
             eq(rubricVersions.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(rubricVersions.accountId, deps.accountId),
+            workspaceFilter(rubricVersions, scope),
             eq(rubricVersions.rubricId, rubricId),
           ),
         );
@@ -327,13 +359,19 @@ export function createCalibrationRepository(
     },
 
     async createPrediction(input) {
-      const inserted = await db
+      const subjectParent:WorkspaceWriteParent={table:projects,id:projects.id,userId:projects.userId,groupId:projects.groupId,accountId:projects.accountId,via:[{table:contentOutputs,id:contentOutputs.id,parentId:contentOutputs.projectId}]};
+      if(input.subjectType==="publication")subjectParent.via!.push({table:publications,id:publications.id,parentId:publications.contentOutputId,userId:publications.userId,scope:{groupId:publications.groupId,accountId:publications.accountId}});
+      else if(input.subjectType!=="content_output")throw new OwnershipError("校准对象不存在");
+      return withWorkspaceParentWrite(db,ctx,subjectParent,[input.subjectId],async tx=>
+        withWorkspaceParentWrite(tx as unknown as Db,ctx,{...versionParent,lock:"share"},[input.rubricVersionId],async writeTx=>{
+      const parent=await createCalibrationRepository(writeTx as unknown as Db,deps).getRubricVersion(input.rubricVersionId);
+      const inserted = await writeTx
         .insert(predictions)
         .values({
           id: deps.nextId("pred"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(必填,无 null 兜底)。
-          accountId: deps.accountId,
+          ...stamp, groupId: parent.groupId ?? stamp.groupId,
           subjectType: input.subjectType,
           subjectId: input.subjectId,
           rubricVersionId: input.rubricVersionId,
@@ -347,25 +385,29 @@ export function createCalibrationRepository(
         })
         .returning();
       return inserted[0]!;
+      }));
     },
 
     async lockPrediction(predictionId) {
-      await getPredictionRow(predictionId); // scoped ownership gate
+      return writeParent(predictionParent,predictionId,async tx=>{
+      await createCalibrationRepository(tx as unknown as Db,deps).getPrediction(predictionId); // scoped ownership gate
       // The SQL `status='draft'` guard backs the immutability invariant at the DB layer
       // (a re-lock of an already-locked prediction matches 0 rows). The service enforces
       // the state machine + idempotency on top.
-      const updated = await db
+      const updated = await tx
         .update(predictions)
         .set({ status: "locked", lockedAt: deps.now() })
         .where(
           and(
             eq(predictions.userId, deps.userId),
+            workspaceFilter(predictions, scope),
             eq(predictions.id, predictionId),
             eq(predictions.status, "draft"),
           ),
         )
         .returning();
       return updated[0]!;
+      });
     },
 
     async getPrediction(predictionId) {
@@ -376,7 +418,7 @@ export function createCalibrationRepository(
       // [T-332 S2 · ISO-02] 号维度 strict 恒叠(无「无号全量」退化)。
       const where = and(
         eq(predictions.userId, deps.userId),
-        eq(predictions.accountId, deps.accountId),
+        workspaceFilter(predictions, scope),
       );
       const rows = await db
         .select()
@@ -393,15 +435,17 @@ export function createCalibrationRepository(
     },
 
     async createResult(input) {
+      return writeParent(predictionParent,input.predictionId,async tx=>{
+      const parent=await createCalibrationRepository(tx as unknown as Db,deps).getPrediction(input.predictionId);
       // Idempotent on UNIQUE prediction_id: a re-submit inserts nothing and the
       // read-back returns the existing row (never double-feeds the rubric/Learning).
-      await db
+      await tx
         .insert(calibrationResults)
         .values({
           id: deps.nextId("calibres"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(与父 prediction 同号;必填)。
-          accountId: deps.accountId,
+          ...stamp, groupId: parent.groupId ?? stamp.groupId,
           predictionId: input.predictionId,
           ingestionRunId: input.ingestionRunId,
           actualMetrics: input.actualMetrics,
@@ -409,18 +453,19 @@ export function createCalibrationRepository(
           createdAt: deps.now(),
         })
         .onConflictDoNothing();
-      const existing = await db
+      const existing = await tx
         .select()
         .from(calibrationResults)
         .where(
           and(
             eq(calibrationResults.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(calibrationResults.accountId, deps.accountId),
+            workspaceFilter(calibrationResults, scope),
             eq(calibrationResults.predictionId, input.predictionId),
           ),
         );
       return existing[0]!;
+      });
     },
 
     async getResultByPrediction(predictionId) {
@@ -431,7 +476,7 @@ export function createCalibrationRepository(
           and(
             eq(calibrationResults.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(calibrationResults.accountId, deps.accountId),
+            workspaceFilter(calibrationResults, scope),
             eq(calibrationResults.predictionId, predictionId),
           ),
         );
@@ -446,7 +491,7 @@ export function createCalibrationRepository(
           and(
             eq(predictions.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(predictions.accountId, deps.accountId),
+            workspaceFilter(predictions, scope),
           ),
         )
         .orderBy(desc(predictions.createdAt));
@@ -460,37 +505,39 @@ export function createCalibrationRepository(
           and(
             eq(calibrationResults.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(calibrationResults.accountId, deps.accountId),
+            workspaceFilter(calibrationResults, scope),
           ),
         )
         .orderBy(desc(calibrationResults.createdAt));
     },
 
     async createRuleSuggestion(input) {
+      return writeParent(rubricParent,input.rubricId,async parentTx=>
+        withWorkspaceParentWrite(parentTx as unknown as Db,ctx,{table:learnings,id:learnings.id,userId:learnings.userId,groupId:learnings.groupId,accountId:learnings.accountId},[input.learningId],async tx=>{
       // Idempotent reflow: if a PENDING suggestion already exists for this
       // (learning, rubric), return it instead of inserting a duplicate — re-clicking
       // 回流到校准 never spawns a second pending row.
-      const existing = await db
+      const existing = await tx
         .select()
         .from(calibrationRuleSuggestions)
         .where(
           and(
             eq(calibrationRuleSuggestions.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(calibrationRuleSuggestions.accountId, deps.accountId),
+            workspaceFilter(calibrationRuleSuggestions, scope),
             eq(calibrationRuleSuggestions.learningId, input.learningId),
             eq(calibrationRuleSuggestions.rubricId, input.rubricId),
             eq(calibrationRuleSuggestions.status, "pending"),
           ),
         );
       if (existing[0]) return existing[0];
-      const inserted = await db
+      const inserted = await tx
         .insert(calibrationRuleSuggestions)
         .values({
           id: deps.nextId("calibsug"),
           userId: deps.userId,
           // [T-332 S2 · ISO-03] 号维度盖章(必填,无 null 兜底)。
-          accountId: deps.accountId,
+          ...stamp,
           learningId: input.learningId,
           rubricId: input.rubricId,
           status: "pending",
@@ -502,6 +549,7 @@ export function createCalibrationRepository(
         })
         .returning();
       return inserted[0]!;
+      }));
     },
 
     async getRuleSuggestion(suggestionId) {
@@ -512,7 +560,7 @@ export function createCalibrationRepository(
           and(
             eq(calibrationRuleSuggestions.userId, deps.userId),
             // [T-332 S2 · ISO-02] 号维度 strict 恒叠。
-            eq(calibrationRuleSuggestions.accountId, deps.accountId),
+            workspaceFilter(calibrationRuleSuggestions, scope),
             eq(calibrationRuleSuggestions.id, suggestionId),
           ),
         );
@@ -529,7 +577,7 @@ export function createCalibrationRepository(
       // [T-332 S2 · ISO-02] 号维度 strict 恒叠(无「无号全量」退化)。
       const where = and(
         eq(calibrationRuleSuggestions.userId, deps.userId),
-        eq(calibrationRuleSuggestions.accountId, deps.accountId),
+        workspaceFilter(calibrationRuleSuggestions, scope),
         eq(calibrationRuleSuggestions.status, "pending"),
       );
       const rows = await db
@@ -547,10 +595,11 @@ export function createCalibrationRepository(
     },
 
     async markRuleSuggestionAdopted(suggestionId, input) {
+      return writeParent(suggestionParent,suggestionId,async tx=>{
       // SQL `status='pending'` guard backs the terminal invariant (a re-adopt of an
       // already-terminal suggestion matches 0 rows). The service enforces the state
       // machine + ownership on top.
-      const updated = await db
+      const updated = await tx
         .update(calibrationRuleSuggestions)
         .set({
           status: input.status,
@@ -560,12 +609,14 @@ export function createCalibrationRepository(
         .where(
           and(
             eq(calibrationRuleSuggestions.userId, deps.userId),
+            workspaceFilter(calibrationRuleSuggestions, scope),
             eq(calibrationRuleSuggestions.id, suggestionId),
             eq(calibrationRuleSuggestions.status, "pending"),
           ),
         )
         .returning();
       return updated[0]!;
+      });
     },
   };
 }

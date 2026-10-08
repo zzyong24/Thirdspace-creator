@@ -1,3 +1,5 @@
+import {withWorkspaceWrite,withWorkspaceParentWrite,type WorkspaceWriteParent} from "../../workspace-write";
+import {workspaceFilter,workspaceStamp,assertWritableWorkspace} from "@creatoros/backend";
 import { and, eq, or, asc, inArray, sql, type Db } from "@creatoros/backend";
 import {
   projects,
@@ -65,7 +67,7 @@ import { OwnershipError, requireAccountId } from "./projects.errors";
 // existence leak). The repository executes only service-approved writes — it owns
 // no state machine (SPEC §12 last line).
 
-export type ProjectRow = typeof projects.$inferSelect;
+export type ProjectRow = Omit<typeof projects.$inferSelect,"groupId"> & {groupId?:string|null};
 export type ActivityRow = typeof projectActivities.$inferSelect;
 export type StageRow = typeof projectStages.$inferSelect;
 export type TargetPlatformRow = typeof projectTargetPlatforms.$inferSelect;
@@ -93,6 +95,13 @@ export interface ProjectRepository {
   // 新数据出生即带号(绑定即建号绑定 job),不存在「先落 NULL 再认领」的窗口。
   get(ctx: RequestContext, projectId: string): Promise<ProjectRow>;
   insertProject(ctx: RequestContext, row: ProjectRow): Promise<ProjectRow>;
+  /** 项目根、固定阶段、目标平台与创建活动由同一个工作区锁和事务提交。 */
+  insertProjectWithChildren(ctx: RequestContext, input: {
+    project: ProjectRow;
+    stages: StageRow[];
+    targetPlatforms: TargetPlatformRow[];
+    activity: ActivityRow;
+  }): Promise<ProjectRow>;
   // 数据底座(SPEC §1.3):按平台引用查既有 imported 项目(幂等键
   // (userId, platform, externalId))。命中返回该 project row,否则 null。匹配
   // source='imported' 且 platform_ref->>platform / ->>externalId 相等(user-scoped)。
@@ -121,6 +130,7 @@ export interface ProjectRepository {
     ctx: RequestContext,
     projectId: string,
     set: Partial<ProjectRow>,
+    options?: {targetPlatforms?: TargetPlatformRow[]},
   ): Promise<ProjectRow>;
 
   // T-102 物理删除:级联清除该项目全部关联行 + 项目本身,一个事务包裹(全成或全不成)。
@@ -241,12 +251,10 @@ export function createProjectRepository(db: Db): ProjectRepository {
   // 禁读写)—— 不再有「无号退化为该 user 全量」的 lenient 分支(拍板 ② 已废除存量兜底)。
   // projects 是唯一 owned-root(有自身 account_id 列)的表;子表(activities/stages/
   // platforms/outputs/output_stages/tasks 无 account_id 列)经父 project 门透传(SPEC §9)。
-  function accountGate(ctx: RequestContext) {
-    return eq(
-      projects.accountId,
-      requireAccountId(ctx.accountId, "projects.accountGate"),
-    );
-  }
+  function accountGate(ctx: RequestContext) { return workspaceFilter(projects,ctx); }
+  const projectParent:WorkspaceWriteParent={table:projects,id:projects.id,userId:projects.userId,groupId:projects.groupId,accountId:projects.accountId};
+  const outputParent:WorkspaceWriteParent={...projectParent,via:[{table:contentOutputs,id:contentOutputs.id,parentId:contentOutputs.projectId}]};
+
 
   // Resolve + ownership-check a project; cross-user/missing is indistinguishable
   // (foundation §2: 404, never reveal existence) → OwnershipError.
@@ -372,7 +380,23 @@ export function createProjectRepository(db: Db): ProjectRepository {
 
     get,
 
+    async insertProjectWithChildren(ctx, input) {
+      const projectId=input.project.id;
+      if(input.stages.some(row=>row.projectId!==projectId)||input.targetPlatforms.some(row=>row.projectId!==projectId)||input.activity.projectId!==projectId)throw new OwnershipError('创建资料的父项目不一致');
+      // 只有采集边界已确认的历史导入可写归档组；普通用户不能凭source放宽权限。
+      const allowArchived=ctx.source==="ingestion"&&!!ctx.ingestionRunId&&input.project.source==="imported";
+      return withWorkspaceWrite(db,ctx,async tx=>{
+        const [project]=await tx.insert(projects).values({...input.project,userId:ctx.userId,...workspaceStamp(ctx)}).returning();
+        if(input.stages.length)await tx.insert(projectStages).values(input.stages);
+        if(input.targetPlatforms.length)await tx.insert(projectTargetPlatforms).values(input.targetPlatforms).onConflictDoNothing();
+        await tx.insert(projectActivities).values(input.activity);
+        return project!;
+      },{allowArchived});
+    },
+
     async insertProject(ctx, row) {
+      // 仅真实采集导入的历史事实可继续落已归档组；公开创作仍走active门。
+      await assertWritableWorkspace(db,ctx,{allowArchived:ctx.source==="ingestion"&&!!ctx.ingestionRunId&&row.source==="imported"});
       // Stamp ownership on the root row regardless of what the caller passed.
       // [T-332 S2] accountId 同样只信 ctx(SPEC §4.6:repo 不接受调用方显式传号,防绕过);
       // 未选号 → AccountRequiredError(写路径禁 stamp null,ISO-03)。
@@ -381,7 +405,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
         .values({
           ...row,
           userId: ctx.userId,
-          accountId: requireAccountId(ctx.accountId, "projects.insertProject"),
+          ...workspaceStamp(ctx),
         })
         .returning();
       return inserted[0]!;
@@ -428,7 +452,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
       const activityByProjectId = new Map(
         input.activities.map((row) => [row.projectId, row]),
       );
-      return db.transaction(async (tx) => {
+      return withWorkspaceParentWrite(db,ctx,{...projectParent,lock:"update"},input.projectIds,async (tx) => {
         // UPDATE 自带 status/source/双归属条件，两个并发收口只有真正跨过
         // active→archived 的事务能拿到 returning id，也只有它会写 activity。
         const updated = await tx
@@ -460,27 +484,26 @@ export function createProjectRepository(db: Db): ProjectRepository {
       });
     },
 
-    async updateProjectRow(ctx, projectId, set) {
-      await get(ctx, projectId); // re-assert ownership (含账号门) before the write
-      const updated = await db
-        .update(projects)
-        .set(set)
-        .where(
-          and(
-            eq(projects.id, projectId),
-            eq(projects.userId, ctx.userId),
-            accountGate(ctx),
-          ),
-        )
-        .returning();
-      return updated[0]!;
+    async updateProjectRow(ctx, projectId, set, options) {
+      return withWorkspaceParentWrite(db,ctx,{...projectParent,lock:'update'},[projectId],async tx=>{
+        if(options?.targetPlatforms){
+          if(options.targetPlatforms.some(row=>row.projectId!==projectId))throw new OwnershipError('目标平台父项目不一致');
+          await tx.delete(projectTargetPlatforms).where(eq(projectTargetPlatforms.projectId,projectId));
+          if(options.targetPlatforms.length)await tx.insert(projectTargetPlatforms).values(options.targetPlatforms).onConflictDoNothing();
+        }
+        const [updated]=await tx.update(projects).set(set).where(and(eq(projects.id,projectId),eq(projects.userId,ctx.userId),accountGate(ctx))).returning();
+        if(!updated)throw new OwnershipError('项目已归组，请重新选择');return updated;
+      });
     },
 
     async deleteProjectCascade(ctx, projectId, opts) {
       // 删前再断言所有权(cross-user/missing → 404,不泄露存在性)。
-      const target = await get(ctx, projectId);
+      let target!: ProjectRow;
       // 一个事务包裹整条级联:全成或全不成(pglite/node-postgres 同一 Drizzle API)。
-      await db.transaction(async (tx) => {
+      await withWorkspaceParentWrite(db,ctx,{...projectParent,lock:"update"},[projectId],async (tx) => {
+        const [current]=await tx.select().from(projects).where(eq(projects.id,projectId)) as ProjectRow[];
+        if(!current)throw new OwnershipError('项目不存在');
+        target=current;
         // ── 先解析派生子键(删除孙表要用到) ──────────────────────────────
         // 该项目下的 content_output ids。
         const outputRows = await tx
@@ -894,7 +917,7 @@ export function createProjectRepository(db: Db): ProjectRepository {
       // output→project ownership gate；手工项目根及其创作资产不会被删除。
       await getOutput(ctx, target.contentOutputId);
 
-      await db.transaction(async (tx) => {
+      await withWorkspaceParentWrite(db,ctx,{...outputParent,lock:"update",via:[...outputParent.via!,{table:publications,id:publications.id,parentId:publications.contentOutputId,userId:publications.userId,scope:{groupId:publications.groupId,accountId:publications.accountId}}]},[target.id],async (tx) => {
         const snapshotRows = await tx
           .select({ id: metricSnapshots.id })
           .from(metricSnapshots)
@@ -1016,9 +1039,10 @@ export function createProjectRepository(db: Db): ProjectRepository {
       if (!target) return null;
       const output = await getOutput(ctx, target.contentOutputId);
       const project = await get(ctx, output.projectId);
-      const platformRef = (project.platformRef ?? {}) as Record<string, unknown>;
 
-      await db.transaction(async (tx) => {
+      await withWorkspaceParentWrite(db,ctx,{...outputParent,lock:"update",via:[...outputParent.via!,{table:publications,id:publications.id,parentId:publications.contentOutputId,userId:publications.userId,scope:{groupId:publications.groupId,accountId:publications.accountId}}]},[target.publicationId],async (tx) => {
+        const [lockedProject]=await tx.select().from(projects).where(eq(projects.id,project.id));
+        const platformRef=(lockedProject!.platformRef??{}) as Record<string,unknown>;
         await tx
           .update(publications)
           .set({
@@ -1064,19 +1088,15 @@ export function createProjectRepository(db: Db): ProjectRepository {
         .orderBy(asc(projectActivities.occurredAt));
     },
 
-    async appendActivity(ctx, row) {
-      await get(ctx, row.projectId); // ownership of the parent project
-      const inserted = await db
-        .insert(projectActivities)
-        .values(row)
-        .returning();
-      return inserted[0]!;
+    async appendActivity(ctx,row) {
+      return withWorkspaceParentWrite(db,ctx,projectParent,[row.projectId],async tx=>{
+        const [inserted]=await tx.insert(projectActivities).values(row).returning();return inserted!;
+      });
     },
 
-    async insertStages(ctx, rows) {
-      if (rows.length === 0) return;
-      await get(ctx, rows[0]!.projectId); // ownership of the parent project
-      await db.insert(projectStages).values(rows);
+    async insertStages(ctx,rows) {
+      if(!rows.length)return;
+      await withWorkspaceParentWrite(db,ctx,projectParent,rows.map(row=>row.projectId),async tx=>{await tx.insert(projectStages).values(rows);});
     },
 
     async listStages(ctx, projectId) {
@@ -1103,32 +1123,16 @@ export function createProjectRepository(db: Db): ProjectRepository {
       return row;
     },
 
-    async updateStage(ctx, stageId, set) {
-      // Ownership via parent project (join stage→project).
-      const owned = await db
-        .select({ stage: projectStages })
-        .from(projectStages)
-        .innerJoin(projects, eq(projectStages.projectId, projects.id))
-        .where(
-          and(
-            eq(projectStages.id, stageId),
-            eq(projects.userId, ctx.userId),
-            accountGate(ctx), // [T-136 切片 b] 父门透传账号维度
-          ),
-        );
-      if (!owned[0]) throw new OwnershipError(`Stage not found: ${stageId}`);
-      const updated = await db
-        .update(projectStages)
-        .set(set)
-        .where(eq(projectStages.id, stageId))
-        .returning();
-      return updated[0]!;
+    async updateStage(ctx,stageId,set) {
+      const parent={...projectParent,lock:'update' as const,via:[{table:projectStages,id:projectStages.id,parentId:projectStages.projectId}]};
+      return withWorkspaceParentWrite(db,ctx,parent,[stageId],async tx=>{
+        const [updated]=await tx.update(projectStages).set(set).where(eq(projectStages.id,stageId)).returning();return updated!;
+      });
     },
 
-    async insertTargetPlatforms(ctx, rows) {
-      if (rows.length === 0) return;
-      await get(ctx, rows[0]!.projectId);
-      await db.insert(projectTargetPlatforms).values(rows).onConflictDoNothing();
+    async insertTargetPlatforms(ctx,rows) {
+      if(!rows.length)return;
+      await withWorkspaceParentWrite(db,ctx,projectParent,rows.map(row=>row.projectId),async tx=>{await tx.insert(projectTargetPlatforms).values(rows).onConflictDoNothing();});
     },
 
     async listTargetPlatforms(ctx, projectId) {
@@ -1139,25 +1143,18 @@ export function createProjectRepository(db: Db): ProjectRepository {
         .where(eq(projectTargetPlatforms.projectId, projectId));
     },
 
-    async replaceTargetPlatforms(ctx, projectId, rows) {
-      // SPEC §1.2 SKL-09:关系表是唯一写真值。整体替换 = 先删该项目全部平台行,再插新集。
-      // pglite 同进程同步,删→插背靠背跑;(project, platform) 唯一索引兜底防重。
-      await get(ctx, projectId); // ownership of the parent project
-      await db
-        .delete(projectTargetPlatforms)
-        .where(eq(projectTargetPlatforms.projectId, projectId));
-      if (rows.length > 0) {
-        await db
-          .insert(projectTargetPlatforms)
-          .values(rows)
-          .onConflictDoNothing();
-      }
+    async replaceTargetPlatforms(ctx,projectId,rows) {
+      if(rows.some(row=>row.projectId!==projectId))throw new OwnershipError('目标平台父项目不一致');
+      await withWorkspaceParentWrite(db,ctx,{...projectParent,lock:'update'},[projectId],async tx=>{
+        await tx.delete(projectTargetPlatforms).where(eq(projectTargetPlatforms.projectId,projectId));
+        if(rows.length)await tx.insert(projectTargetPlatforms).values(rows).onConflictDoNothing();
+      });
     },
 
-    async insertOutput(ctx, row) {
-      await get(ctx, row.projectId); // ownership of the parent project
-      const inserted = await db.insert(contentOutputs).values(row).returning();
-      return inserted[0]!;
+    async insertOutput(ctx,row) {
+      return withWorkspaceParentWrite(db,ctx,projectParent,[row.projectId],async tx=>{
+        const [inserted]=await tx.insert(contentOutputs).values(row).returning();return inserted!;
+      });
     },
 
     async listOutputs(ctx, projectId) {
@@ -1200,20 +1197,15 @@ export function createProjectRepository(db: Db): ProjectRepository {
 
     getOutput,
 
-    async updateOutputRow(ctx, outputId, set) {
-      await getOutput(ctx, outputId); // ownership
-      const updated = await db
-        .update(contentOutputs)
-        .set(set)
-        .where(eq(contentOutputs.id, outputId))
-        .returning();
-      return updated[0]!;
+    async updateOutputRow(ctx,outputId,set) {
+      return withWorkspaceParentWrite(db,ctx,{...outputParent,lock:'update'},[outputId],async tx=>{
+        const [updated]=await tx.update(contentOutputs).set(set).where(eq(contentOutputs.id,outputId)).returning();return updated!;
+      });
     },
 
-    async insertOutputStages(ctx, rows) {
-      if (rows.length === 0) return;
-      await getOutput(ctx, rows[0]!.contentOutputId); // ownership via output→project
-      await db.insert(outputStages).values(rows);
+    async insertOutputStages(ctx,rows) {
+      if(!rows.length)return;
+      await withWorkspaceParentWrite(db,ctx,outputParent,rows.map(row=>row.contentOutputId),async tx=>{await tx.insert(outputStages).values(rows);});
     },
 
     async getOutputStage(ctx, outputId, stage) {
@@ -1232,35 +1224,18 @@ export function createProjectRepository(db: Db): ProjectRepository {
       return row;
     },
 
-    async updateOutputStage(ctx, stageId, set) {
-      const owned = await db
-        .select({ stage: outputStages })
-        .from(outputStages)
-        .innerJoin(
-          contentOutputs,
-          eq(outputStages.contentOutputId, contentOutputs.id),
-        )
-        .innerJoin(projects, eq(contentOutputs.projectId, projects.id))
-        .where(
-          and(
-            eq(outputStages.id, stageId),
-            eq(projects.userId, ctx.userId),
-            accountGate(ctx), // [T-136 切片 b] 父门透传账号维度
-          ),
-        );
-      if (!owned[0]) throw new OwnershipError(`Output stage not found: ${stageId}`);
-      const updated = await db
-        .update(outputStages)
-        .set(set)
-        .where(eq(outputStages.id, stageId))
-        .returning();
-      return updated[0]!;
+    async updateOutputStage(ctx,stageId,set) {
+      const parent={...outputParent,lock:'update' as const,via:[...outputParent.via!,{table:outputStages,id:outputStages.id,parentId:outputStages.contentOutputId}]};
+      return withWorkspaceParentWrite(db,ctx,parent,[stageId],async tx=>{
+        const [updated]=await tx.update(outputStages).set(set).where(eq(outputStages.id,stageId)).returning();return updated!;
+      });
     },
 
-    async insertTask(ctx, row) {
-      await get(ctx, row.projectId); // ownership of the parent project
-      const inserted = await db.insert(tasks).values(row).returning();
-      return inserted[0]!;
+    async insertTask(ctx,row) {
+      return withWorkspaceParentWrite(db,ctx,projectParent,[row.projectId],async tx=>{
+        if(row.contentOutputId){const [output]=await tx.select({id:contentOutputs.id}).from(contentOutputs).where(and(eq(contentOutputs.id,row.contentOutputId),eq(contentOutputs.projectId,row.projectId))).for('share');if(!output)throw new OwnershipError('任务稿件不属于当前项目');}
+        const [inserted]=await tx.insert(tasks).values(row).returning();return inserted!;
+      });
     },
 
     async listTasks(ctx, projectId) {
@@ -1274,14 +1249,11 @@ export function createProjectRepository(db: Db): ProjectRepository {
 
     getTask,
 
-    async updateTaskRow(ctx, taskId, set) {
-      await getTask(ctx, taskId); // ownership
-      const updated = await db
-        .update(tasks)
-        .set(set)
-        .where(eq(tasks.id, taskId))
-        .returning();
-      return updated[0]!;
+    async updateTaskRow(ctx,taskId,set) {
+      const parent={...projectParent,lock:'update' as const,via:[{table:tasks,id:tasks.id,parentId:tasks.projectId}]};
+      return withWorkspaceParentWrite(db,ctx,parent,[taskId],async tx=>{
+        const [updated]=await tx.update(tasks).set(set).where(eq(tasks.id,taskId)).returning();return updated!;
+      });
     },
   };
 }

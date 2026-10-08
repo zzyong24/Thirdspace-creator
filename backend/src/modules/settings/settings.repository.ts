@@ -1,4 +1,4 @@
-import { and, eq, sql, type Db, type RequestContext } from "@creatoros/backend";
+import { workspaceKey,workspaceFilter,workspaceStamp,assertWritableWorkspace, and, eq, sql, type Db, type RequestContext } from "@creatoros/backend";
 import { ErrorCode } from "@creatoros/contract";
 import { assets, assetFiles } from "@creatoros/backend";
 import { encryptSecret, decryptSecret, isEncrypted } from "@creatoros/backend";
@@ -292,11 +292,7 @@ export function createSettingsRepository(
   db: Db,
   deps: RepoDeps,
 ): SettingsRepository {
-  const requireAccount = (ctx: RequestContext): string => {
-    const accountId = ctx.accountId?.trim();
-    if (!accountId) throw new Error("ACCOUNT_REQUIRED");
-    return accountId;
-  };
+  const requireAccount = (ctx:RequestContext):string|null => {workspaceKey(ctx);return ctx.groupId?null:ctx.accountId!;};
   const latestAccountSkillOverlay = async (
     ctx: RequestContext,
     skillId: string,
@@ -308,7 +304,7 @@ export function createSettingsRepository(
       .where(
         and(
           eq(accountSkillOverlays.userId, ctx.userId),
-          eq(accountSkillOverlays.accountId, accountId),
+          workspaceFilter(accountSkillOverlays,workspaceKey(ctx)),
           eq(accountSkillOverlays.skillId, skillId),
         ),
       )
@@ -790,7 +786,7 @@ export function createSettingsRepository(
         .where(
           and(
             eq(accountSkillOverlays.userId, ctx.userId),
-            eq(accountSkillOverlays.accountId, accountId),
+            workspaceFilter(accountSkillOverlays,workspaceKey(ctx)),
           ),
         );
       const wanted = skillIds ? new Set(skillIds) : null;
@@ -804,6 +800,7 @@ export function createSettingsRepository(
     },
 
     async putAccountSkillOverlay(ctx, body) {
+      await assertWritableWorkspace(db,ctx);
       const accountId = requireAccount(ctx);
       const now = deps.now();
       const updatedBy = body.updatedBy ?? ctx.userId;
@@ -817,7 +814,7 @@ export function createSettingsRepository(
               .values({
                 id: deps.nextId("skoverlay"),
                 userId: ctx.userId,
-                accountId,
+                ...workspaceStamp(workspaceKey(ctx)),
                 skillId: body.skillId,
                 rowRevision: 1,
                 observedBaseVersion: body.observedBaseVersion,
@@ -827,13 +824,7 @@ export function createSettingsRepository(
                 createdAt: now,
                 updatedAt: now,
               })
-              .onConflictDoNothing({
-                target: [
-                  accountSkillOverlays.userId,
-                  accountSkillOverlays.accountId,
-                  accountSkillOverlays.skillId,
-                ],
-              })
+              .onConflictDoNothing()
               .returning();
             row = inserted[0];
           } else {
@@ -850,7 +841,7 @@ export function createSettingsRepository(
               .where(
                 and(
                   eq(accountSkillOverlays.userId, ctx.userId),
-                  eq(accountSkillOverlays.accountId, accountId),
+                  workspaceFilter(accountSkillOverlays,workspaceKey(ctx)),
                   eq(accountSkillOverlays.skillId, body.skillId),
                   eq(
                     accountSkillOverlays.rowRevision,
@@ -871,7 +862,7 @@ export function createSettingsRepository(
               .where(
                 and(
                   eq(accountSkillOverlays.userId, ctx.userId),
-                  eq(accountSkillOverlays.accountId, accountId),
+                  workspaceFilter(accountSkillOverlays,workspaceKey(ctx)),
                   eq(accountSkillOverlays.skillId, body.skillId),
                 ),
               )
@@ -885,7 +876,7 @@ export function createSettingsRepository(
             id: deps.nextId("skoverlayv"),
             overlayId: row.id,
             userId: row.userId,
-            accountId: row.accountId,
+            accountId: row.accountId,groupId:row.groupId,
             skillId: row.skillId,
             rowRevision: row.rowRevision,
             observedBaseVersion: row.observedBaseVersion,
@@ -910,7 +901,7 @@ export function createSettingsRepository(
         .where(
           and(
             eq(accountSkillOverlayVersions.userId, ctx.userId),
-            eq(accountSkillOverlayVersions.accountId, accountId),
+            workspaceFilter(accountSkillOverlayVersions,workspaceKey(ctx)),
             eq(accountSkillOverlayVersions.skillId, skillId),
           ),
         );
@@ -926,7 +917,7 @@ export function createSettingsRepository(
           and(
             eq(accountSkillOverlayVersions.id, body.versionId),
             eq(accountSkillOverlayVersions.userId, ctx.userId),
-            eq(accountSkillOverlayVersions.accountId, accountId),
+            workspaceFilter(accountSkillOverlayVersions,workspaceKey(ctx)),
             eq(accountSkillOverlayVersions.skillId, body.skillId),
           ),
         )

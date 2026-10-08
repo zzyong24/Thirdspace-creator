@@ -14,8 +14,9 @@ import { ENDPOINTS } from "@creatoros/contract";
 
 export default async function IntelligencePage() {
   const session = await resolveSession();
-  if (!session?.ctx.accountId) return <ZeroAccountGuidance />;
+  if (!session || (!session.ctx.groupId && !session.ctx.accountId)) return <ZeroAccountGuidance />;
 
+  const scope=session.ctx.groupId?{}:{accountId:session.ctx.accountId??undefined};
   const api = createServerClient(session.ctx);
   const positioningStatements = (await api.listStatements({
     params: undefined,
@@ -24,7 +25,7 @@ export default async function IntelligencePage() {
   })) as unknown as Array<{ id: string }>;
   const workspace = (await api.getIntelligenceWorkspace({
     params: undefined,
-    query: { accountId: session.ctx.accountId },
+    query: scope,
     body: undefined,
   })) as RadarWorkspace;
   const itemPage = await requestServerListWithMeta(
@@ -33,7 +34,7 @@ export default async function IntelligencePage() {
     {
       params: undefined,
       query: {
-        accountId: session.ctx.accountId,
+        ...scope,
         page: 1,
         pageSize: 100,
         sort: "published_desc",
@@ -53,7 +54,8 @@ export default async function IntelligencePage() {
 
   return (
     <IntelligenceWorkbench
-      accountId={session.ctx.accountId}
+      groupId={session.ctx.groupId??undefined}
+      accountId={session.ctx.accountId??undefined}
       workspace={workspace}
       items={items}
       initialTotal={itemPage.meta.total}

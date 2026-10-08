@@ -1,3 +1,4 @@
+import {projects as parentProjects,contentOutputs as parentOutputs,publications as parentPublications,reviews as parentReviews} from "@creatoros/backend";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -69,6 +70,10 @@ describe("reviews service", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    // 真实父实体fixture；授权不能只靠通过的mock服务端口。
+    await db.insert(parentProjects).values(["project-1"].map(id=>({id,userId:"user-a",accountId:"acct-a",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
+    await db.insert(parentOutputs).values([{id:"out-1",projectId:"project-1",title:"真实作品",contentType:"video",status:"draft",createdAt:NOW,updatedAt:NOW}]);
+
   });
 
   it("createReview project-scope: verifies project, in_progress, null output/report, period from publications", async () => {

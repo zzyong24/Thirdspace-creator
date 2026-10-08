@@ -23,13 +23,15 @@ export async function rebuildOwnedSearchIndex(db:Db,userId:string,now:()=>string
           brief: p.brief ?? "",
           currentStage: p.currentStage,
           progressPct: p.progressPct ?? 0,
-          accountId: p.accountId, // [T-332 S2] 源行派生号
+          accountId: p.accountId,
+          groupId: p.groupId, // [T-332 S2] 源行派生号
         })),
         knowledgeItems: dbKnowledge.map((k) => ({
           id: k.id,
           title: k.title,
           currentRevisionId: k.currentRevisionId ?? "",
-          accountId: k.accountId, // [T-332 S2] 源行派生号
+          accountId: k.accountId,
+          groupId: k.groupId, // [T-332 S2] 源行派生号
         })),
         knowledgeRevisions: dbKRevisions.filter((r) => ownedKnowledgeIds.has(r.knowledgeItemId)).map((r) => ({
           id: r.id,
@@ -40,7 +42,8 @@ export async function rebuildOwnedSearchIndex(db:Db,userId:string,now:()=>string
           id: a.id,
           name: a.name,
           assetType: a.assetType,
-          accountId: a.accountId, // [T-332 S2] 源行派生号
+          accountId: a.accountId,
+          groupId: a.groupId, // [T-332 S2] 源行派生号
         })),
         publications: dbPubs.map((pub) => ({
           id: pub.id,

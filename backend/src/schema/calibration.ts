@@ -29,7 +29,8 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const rubrics = pgTable("rubrics", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离(校准闭环 per 号);nullable 稳定终态
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离(校准闭环 per 号);nullable 稳定终态
   name: text("name").notNull(),
   currentVersionId: text("current_version_id"), // nullable until first version inserted
   createdAt: text("created_at").notNull(),
@@ -40,7 +41,8 @@ export const rubrics = pgTable("rubrics", {
 export const rubricVersions = pgTable("rubric_versions", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
   rubricId: text("rubric_id").notNull(),
   versionNumber: integer("version_number").notNull(),
   dimensions: jsonb("dimensions").notNull().default([]), // array of { key, label, weight }
@@ -53,7 +55,8 @@ export const rubricVersions = pgTable("rubric_versions", {
 export const predictions = pgTable("predictions", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
   subjectType: text("subject_type").notNull(), // content_output|publication
   subjectId: text("subject_id").notNull(),
   rubricVersionId: text("rubric_version_id").notNull(),
@@ -71,7 +74,8 @@ export const predictions = pgTable("predictions", {
 export const calibrationResults = pgTable("calibration_results", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
   predictionId: text("prediction_id").notNull(),
   ingestionRunId: text("ingestion_run_id").notNull(), // §C-4: references a real IngestionRun
   actualMetrics: jsonb("actual_metrics").notNull().default({}),
@@ -93,7 +97,8 @@ export const calibrationRuleSuggestions = pgTable(
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
+    groupId: text("group_id"),
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
     learningId: text("learning_id").notNull(), // the source 复盘 Learning
     rubricId: text("rubric_id").notNull(), // the target Rubric this suggestion bumps
     status: text("status").notNull().default("pending"), // pending|adopted|dismissed

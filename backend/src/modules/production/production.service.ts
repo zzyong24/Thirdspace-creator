@@ -1,3 +1,4 @@
+import {assertWritableWorkspace} from "../../workspace-scope";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
 import {
@@ -90,6 +91,8 @@ export interface ServiceDeps {
   db: Db;
   now: () => string;
   nextId: (prefix: string) => string;
+  assertOutputOwned?:(ctx:RequestContext,id:string)=>Promise<unknown>;
+  assertAssetOwned?:(ctx:RequestContext,id:string)=>Promise<unknown>;
   /** ContentOutput active→ready primary-asset link (ProjectsService.patchOutput). */
   setPrimaryOutputAsset?: SetPrimaryOutputAsset;
   /** Post-commit search index upsert (SearchService.upsertDocument). */
@@ -190,6 +193,8 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
       // [T-332 S2] 父锚账号维度下推:repo 每个读写点经 content_output → project 的
       // strict 门闭合(§3.2);未选号 → AccountRequiredError(引导态禁读写)。
       accountId: ctx.accountId ?? null,
+      groupId:ctx.groupId??null,
+      assertOutputOwned:deps.assertOutputOwned?(id)=>deps.assertOutputOwned!(ctx,id):undefined,
     });
   }
 
@@ -201,10 +206,14 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
     async getProduction(ctx, outputId) {
       // Backs outputs.production.get — get-or-create so the initial page load
       // resolves a real row even before the creator enters production.
-      return repoFor(ctx).ensureProductionForOutput(outputId);
+      const repo=repoFor(ctx),existing=await repo.findProductionByOutput(outputId);
+      if(existing)return existing;
+      await assertWritableWorkspace(deps.db,ctx);
+      return repo.ensureProductionForOutput(outputId);
     },
 
     async updateProduction(ctx, outputId, patch) {
+      await assertWritableWorkspace(deps.db,ctx);
       const repo = repoFor(ctx);
       const production = await repo.getProductionByOutput(outputId);
 
@@ -233,6 +242,7 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
     },
 
     async confirmEditingPlan(ctx, outputId, body) {
+      await assertWritableWorkspace(deps.db,ctx);
       const repo = repoFor(ctx);
       const production = await repo.getProductionByOutput(outputId);
       const updated = await repo.confirmEditingPlan(
@@ -249,6 +259,7 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
     },
 
     async removeEditingPlanBroll(ctx, outputId, body) {
+      await assertWritableWorkspace(deps.db,ctx);
       const repo = repoFor(ctx);
       const production = await repo.getProductionByOutput(outputId);
       const recordingConfig = (production.recordingConfig ?? {}) as Record<
@@ -330,6 +341,7 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
     },
 
     async createSegment(ctx, productionId, body) {
+      await assertWritableWorkspace(deps.db,ctx);
       return repoFor(ctx).createSegment(productionId, body);
     },
 
@@ -338,6 +350,7 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
     },
 
     async requestExport(ctx, productionId, body) {
+      await assertWritableWorkspace(deps.db,ctx);
       // Mock render is async/out-of-band; the export sits `queued` until
       // completeExport drives it to `ready` (plan Step 3).
       return repoFor(ctx).createExport(productionId, {
@@ -362,6 +375,9 @@ export function createProductionService(deps: ServiceDeps): ProductionService {
         );
       }
 
+      await assertWritableWorkspace(deps.db,ctx);
+      if(ctx.groupId&&!deps.assertAssetOwned)throw new OwnershipError("结果素材归属验证不可用");
+      await deps.assertAssetOwned?.(ctx,body.resultAssetId);
       // 1. Durable main write — the export fact (status ready + resultAssetId).
       const completed = await repo.completeExportRow(exportId, {
         resultAssetId: body.resultAssetId,

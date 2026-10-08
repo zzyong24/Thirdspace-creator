@@ -37,6 +37,7 @@ export interface DispatchInput {
 }
 
 export interface DispatchCallOptions {
+  groupId?: string;
   accountId?: string;
   idempotencyKey?: string;
   apply?: boolean;
@@ -178,6 +179,7 @@ export class DispatchClient {
     if (this.productId) headers["x-creatoros-cli-product-id"] = this.productId;
     if (this.packageId) headers["x-creatoros-cli-package-id"] = this.packageId;
     if (this.launchNonce) headers["x-creatoros-cli-launch-nonce"] = this.launchNonce;
+    if (callOptions.groupId) headers["x-group-id"] = callOptions.groupId;
     if (callOptions.accountId) headers["x-account-id"] = callOptions.accountId;
     if (callOptions.idempotencyKey) {
       headers["x-idempotency-key"] = callOptions.idempotencyKey;

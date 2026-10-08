@@ -1,3 +1,6 @@
+import {learnings} from "../../schema/learnings";
+import {rubrics,rubricVersions} from "../../schema/calibration";
+import {projects,contentOutputs} from "../../schema/projects";
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import {
@@ -41,10 +44,24 @@ const DIMENSIONS = [
   { key: "product_path", label: "为产品铺路程度", weight: 0.15 },
 ];
 
+async function createOwnedPrediction(repo: CalibrationRepository) {
+  const rubric=await repo.createRubric({name:"结果所属标准"});
+  const version=await repo.insertRubricVersion({rubricId:rubric.id,versionNumber:1,dimensions:DIMENSIONS,changeSummary:""});
+  return repo.createPrediction({subjectType:"content_output",subjectId:"output-1",rubricVersionId:version.id,predictedMetrics:{},predictedConversion:{},predictedScore:"42.5",confidence:"high"});
+}
+
 describe("calibration repository (integration, user-scoped)", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    await db.insert(learnings).values({id:"learning-1",userId:"user-a",accountId:"acct-default",title:"真实人工确认经验",createdAt:NOW,updatedAt:NOW});
+    await db.insert(rubrics).values({id:"rubric-a",userId:"user-a",accountId:"acct-default",name:"建议实际父标准",createdAt:NOW});
+    await db.insert(rubricVersions).values({id:"rubricver-2",userId:"user-a",accountId:"acct-default",rubricId:"rubric-a",versionNumber:1,dimensions:DIMENSIONS,createdAt:NOW});
+    for(const accountId of ['acct-default','account-a']){
+      const projectId=`project-${accountId}`;
+      await db.insert(projects).values({id:projectId,userId:'user-a',accountId,title:'真实校准父项目',creationMode:'free',status:'active',currentStage:'script',startedAt:NOW,createdAt:NOW,updatedAt:NOW});
+      await db.insert(contentOutputs).values({id:accountId==='acct-default'?'output-1':'output-account-a',projectId,title:'真实校准稿件',contentType:'video',status:'draft',createdAt:NOW,updatedAt:NOW});
+    }
   });
 
   it("rubric + version round-trip with nullable currentVersionId + dimension order", async () => {
@@ -102,14 +119,15 @@ describe("calibration repository (integration, user-scoped)", () => {
 
   it("calibration result round-trips with jsonb deviation + actualMetrics", async () => {
     const repo = repoFor(db, "user-a");
+    const prediction=await createOwnedPrediction(repo);
     const result = await repo.createResult({
-      predictionId: "pred-x",
+      predictionId: prediction.id,
       ingestionRunId: "run-1",
       actualMetrics: { views: 1200 },
       deviation: { views: 200 },
     });
     expect(result.userId).toBe("user-a");
-    expect(result.predictionId).toBe("pred-x");
+    expect(result.predictionId).toBe(prediction.id);
     expect(result.ingestionRunId).toBe("run-1");
     expect(result.actualMetrics).toEqual({ views: 1200 });
     expect(result.deviation).toEqual({ views: 200 });
@@ -180,21 +198,22 @@ describe("calibration repository (integration, user-scoped)", () => {
 
   it("CalibrationResult idempotent UNIQUE prediction_id (second create returns first row)", async () => {
     const repo = repoFor(db, "user-a");
+    const prediction=await createOwnedPrediction(repo);
     const first = await repo.createResult({
-      predictionId: "pred-1",
+      predictionId: prediction.id,
       ingestionRunId: "run-1",
       actualMetrics: { views: 100 },
       deviation: { views: 10 },
     });
     const second = await repo.createResult({
-      predictionId: "pred-1",
+      predictionId: prediction.id,
       ingestionRunId: "run-1",
       actualMetrics: { views: 999 }, // ignored — row already exists
       deviation: { views: 999 },
     });
     expect(second.id).toBe(first.id);
     expect(second.actualMetrics).toEqual({ views: 100 });
-    const fetched = await repo.getResultByPrediction("pred-1");
+    const fetched = await repo.getResultByPrediction(prediction.id);
     expect(fetched?.id).toBe(first.id);
   });
 
@@ -273,7 +292,7 @@ describe("calibration repository (integration, user-scoped)", () => {
 
     const predA = await repoA.createPrediction({
       subjectType: "content_output",
-      subjectId: "output-1",
+      subjectId: "output-account-a",
       rubricVersionId: vA.id,
       predictedMetrics: {},
       predictedConversion: {},

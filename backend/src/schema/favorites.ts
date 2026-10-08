@@ -21,7 +21,8 @@ import { pgTable, text, boolean, jsonb } from "drizzle-orm/pg-core";
 
 export const favoritesFolders = pgTable("favorites_folders", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull(), // 所有权边界
+  userId: text("user_id").notNull(),
+  groupId: text("group_id"), // 所有权边界
   accountId: text("account_id").notNull(), // [T-201] 按号隔离;nullable 稳定终态
   name: text("name").notNull(), // 收藏夹名(幂等锚:同 user 同名唯一;须与抖音收藏夹同名)
   collectsId: text("collects_id"), // 抖音 collects_id_str(首采按名匹配回填;未匹配 NULL)
@@ -34,7 +35,8 @@ export const favoritesFolders = pgTable("favorites_folders", {
 
 export const favoritesItems = pgTable("favorites_items", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull(), // 所有权边界
+  userId: text("user_id").notNull(),
+  groupId: text("group_id"), // 所有权边界
   accountId: text("account_id").notNull(), // [T-201] 按号隔离;nullable 稳定终态
   folderId: text("folder_id").notNull(), // soft FK → favorites_folders.id(夹删后台账保留溯源)
   awemeId: text("aweme_id").notNull(), // 幂等锚:同 user 同视频只记一次

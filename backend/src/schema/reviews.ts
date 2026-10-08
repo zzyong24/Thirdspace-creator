@@ -30,7 +30,8 @@ import { pgTable, text, integer, jsonb } from "drizzle-orm/pg-core";
 export const reviews = pgTable("reviews", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离(复盘归到号);nullable 稳定终态
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离(复盘归到号);nullable 稳定终态
   projectId: text("project_id").notNull(),
   contentOutputId: text("content_output_id"), // nullable — only set when reviewType="output"
   reportArtifactId: text("report_artifact_id"), // nullable — optional review_report ArtifactVersion link
@@ -45,7 +46,8 @@ export const reviews = pgTable("reviews", {
 export const reviewInsights = pgTable("review_insights", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
-  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
   reviewId: text("review_id").notNull(),
   insightType: text("insight_type").notNull(),
   title: text("title").notNull(),

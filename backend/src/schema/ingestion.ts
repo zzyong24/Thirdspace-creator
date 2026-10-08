@@ -31,7 +31,8 @@ export const externalSources = pgTable("external_sources", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
   // [T-136 多账号 · SPEC §D] 采集源按号隔离(区分同 user 的多号源)。nullable 稳定终态。
-  accountId: text("account_id").notNull(),
+  groupId: text("group_id"),
+  accountId: text("account_id"),
   sourceType: text("source_type").notNull(),
   name: text("name").notNull(),
   sourceIdentifier: text("source_identifier").notNull().default(""),
@@ -45,7 +46,10 @@ export const ingestionRuns = pgTable("ingestion_runs", {
   userId: text("user_id").notNull(),
   // [T-136 多账号 · SPEC §D] 采集 run 按号隔离(采集结果归到「哪个号」)。nullable 稳定终态。
   // 子表 ingestion_errors/ingestion_records 无独立归属需要,经 run 透传,不加 account_id。
-  accountId: text("account_id").notNull(),
+  groupId: text("group_id"),
+  groupVersion: integer("group_version"),
+  membershipVersion: integer("membership_version"),
+  accountId: text("account_id"),
   externalSourceId: text("external_source_id").notNull(),
   runType: text("run_type").notNull(),
   idempotencyKey: text("idempotency_key").notNull(),

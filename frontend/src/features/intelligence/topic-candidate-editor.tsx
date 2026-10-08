@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { FolderPlus,Link2,RefreshCw } from "lucide-react";
+import { Copy, FolderPlus,Link2,RefreshCw } from "lucide-react";
 import * as React from "react";
 import type { RadarItemDetail } from "./intelligence-workbench-types";
 import { canRetryTopicTask,isTopicTaskPending,isTopicTaskPolling,topicTaskAttention,topicTaskStatus } from "./topic-task-state";
@@ -33,6 +33,7 @@ export function TopicCandidateEditor({
   sourceTranscript,
   busy,
   retryDisabled,
+  generationPending = false,
   onRetry,
   onConfirm,
   onUpgradeProject,
@@ -45,6 +46,7 @@ export function TopicCandidateEditor({
   sourceTranscript: string;
   busy: boolean;
   retryDisabled: boolean;
+  generationPending?: boolean;
   onRetry: () => void;
   onConfirm: (
     transformId: string,
@@ -76,7 +78,40 @@ export function TopicCandidateEditor({
     Object.keys(changes).forEach((field) => dirtyFields.current.add(field));
     setCandidate((current) => ({ ...current, ...changes }));
   };
-  const draftText = transform.outputSnapshot.adaptedDraft?.contentText ?? "";
+  const savedDraftText =
+    transform.outputSnapshot.adoptedDraftContentText ??
+    transform.outputSnapshot.adaptedDraft?.contentText ??
+    "";
+  const hasSavedDraft = Boolean(savedDraftText.trim());
+  const [draftText, setDraftText] = React.useState(savedDraftText);
+  const draftEdited = React.useRef(false);
+  const previousSavedDraftText = React.useRef(savedDraftText);
+  const [copyStatus, setCopyStatus] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    if (previousSavedDraftText.current !== savedDraftText) {
+      previousSavedDraftText.current = savedDraftText;
+      draftEdited.current = false;
+      setDraftText(savedDraftText);
+      setCopyStatus(null);
+    } else if (!draftEdited.current) {
+      setDraftText(savedDraftText);
+    }
+  }, [savedDraftText]);
+  const candidateForAction = React.useMemo(() => ({
+    ...candidate,
+    ...(candidate.adaptedDraft
+      ? { adaptedDraft: { ...candidate.adaptedDraft, contentText: draftText } }
+      : {}),
+  }), [candidate, draftText]);
+  const copyDraft = async () => {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(draftText);
+      setCopyStatus("已复制改写稿。");
+    } catch {
+      setCopyStatus("复制失败，请选中正文后手动复制。");
+    }
+  };
   const confirmed = transform.status === "confirmed";
   const recommendedRole = confirmed
     ? transform.outputSnapshot.recommendedContentRole
@@ -86,10 +121,24 @@ export function TopicCandidateEditor({
   // 归属、来源与 provenance 等安全门仍由 confirmTopic 在执行当下重新校验。
   const incomplete = !draftText.trim();
   const progress = transform.outputSnapshot.generationProgress;
-  const retrying=isTopicTaskPending(topicTaskStatus(transform));
+  const retrying=generationPending || isTopicTaskPending(topicTaskStatus(transform));
   const terminalFailure=Boolean(topicTaskAttention(topicTaskStatus(transform)));
-  const progressLabel =
-    retrying && progress?.draft?.status === "failed"
+  const personalizationStatus =
+    transform.outputSnapshot.adaptedDraft?.generationMode === "rewrite_only"
+      ? transform.outputSnapshot.adaptedDraft.personalizationStatus
+      : transform.outputSnapshot.personalizationStatus;
+  const rewriteOnly =
+    transform.outputSnapshot.generationMode === "rewrite_only" ||
+    transform.outputSnapshot.adaptedDraft?.generationMode === "rewrite_only";
+  const progressLabel = rewriteOnly
+    ? retrying
+      ? "正在生成改写稿"
+      : progress?.rewriteDraft?.status === "completed"
+        ? "改写稿已生成"
+        : progress?.rewriteDraft?.status === "failed"
+          ? "改写稿待重试"
+          : null
+    : retrying && progress?.draft?.status === "failed"
       ? "拆解和选题已保留，正在重试改写初稿"
       : retrying && progress?.topic?.status === "failed"
         ? "逐字稿拆解已保留，正在重试选题"
@@ -127,12 +176,12 @@ export function TopicCandidateEditor({
           className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2"
         >
           <p className="text-xs font-medium text-foreground">
-            后续生成暂未完成，已生成的内容已保留
+            {rewriteOnly ? "这次没有生成改写稿" : "后续生成暂未完成，已生成的内容已保留"}
           </p>
           <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
             {transform.taskErrorMessage?.trim() || topicTaskAttention(topicTaskStatus(transform)) || "可以稍后只重试未完成部分。"}
           </p>
-          {!confirmed&&canRetryTopicTask(topicTaskStatus(transform)) ? (
+          {!confirmed ? (
             <Button
               type="button"
               size="sm"
@@ -142,9 +191,52 @@ export function TopicCandidateEditor({
               className="mt-2 gap-1.5"
             >
               <RefreshCw className="size-3.5" />
-              重试生成选题卡
+              {rewriteOnly ? "重新生成改写稿" : "重试生成选题卡"}
             </Button>
           ) : null}
+        </div>
+      ) : null}
+      {hasSavedDraft ? (
+        <div className="space-y-2 rounded-lg border border-primary/20 bg-surface p-3">
+          <label className="grid gap-1 text-[11px] font-semibold text-muted-foreground">
+            对标原稿（只读）
+            <textarea
+              aria-label="对标原稿"
+              value={sourceTranscript}
+              readOnly
+              className="min-h-28 resize-y rounded-lg border border-input bg-muted/40 px-3 py-2 text-xs font-normal leading-5 text-muted-foreground"
+            />
+          </label>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-xs font-semibold text-foreground">我的改写稿</p>
+              {personalizationStatus === "not_applied" ? (
+                <p className="mt-1 text-[11px] text-warning">未应用账号定位，这是通用改写稿。</p>
+              ) : personalizationStatus === "applied" ? (
+                <p className="mt-1 text-[11px] text-muted-foreground">生成时已应用账号定位；重新生成会使用当前定位。</p>
+              ) : null}
+            </div>
+            <Button type="button" size="sm" variant="outline" disabled={!draftText.trim()} onClick={() => void copyDraft()} className="gap-1.5">
+              <Copy className="size-3.5" />复制改写稿
+            </Button>
+          </div>
+          <textarea
+            aria-label="我的改写初稿"
+            value={draftText}
+            disabled={confirmed || busy || retrying || !rewriteOnly}
+            onChange={(event) => {
+              draftEdited.current = true;
+              setDraftText(event.target.value);
+              setCopyStatus(null);
+            }}
+            className="min-h-64 w-full resize-y rounded-lg border border-input bg-background px-3 py-2 text-xs font-normal leading-5 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          {copyStatus ? <p role="status" className="text-[11px] text-muted-foreground">{copyStatus}</p> : null}
+          <p className="text-[11px] leading-4 text-muted-foreground">
+            {rewriteOnly
+              ? "这里的编辑暂存在当前页面；采纳为选题或创建项目时会一并保存。"
+              : "这是旧版策略稿；可以复制正文，后续继续沿用原有选题编辑流程。"}
+          </p>
         </div>
       ) : null}
       {candidate.hook || candidate.structureSteps?.length ? (
@@ -184,31 +276,7 @@ export function TopicCandidateEditor({
         ) : null}
       </div>
       ) : null}
-      {draftText ? (
-        <div className="grid gap-3 rounded-lg border border-border/70 bg-surface p-3 md:grid-cols-2">
-          <label className="grid min-w-0 gap-1 text-[11px] font-semibold text-foreground">
-            对标原稿（只读）
-            <textarea
-              aria-label="对标原稿"
-              value={sourceTranscript}
-              readOnly
-              className="min-h-64 resize-y rounded-lg border border-input bg-muted/40 px-3 py-2 text-xs font-normal leading-5 text-muted-foreground"
-            />
-          </label>
-          <label className="grid min-w-0 gap-1 text-[11px] font-semibold text-foreground">
-            我的改写初稿
-            <textarea
-              aria-label="我的改写初稿"
-              value={draftText}
-              readOnly
-              className="min-h-64 resize-y rounded-lg border border-input bg-background px-3 py-2 text-xs font-normal leading-5 text-foreground"
-            />
-            <span className="font-normal text-muted-foreground">
-              采纳选题后会随选题进入 Project；在项目稿面编辑和保存版本。
-            </span>
-          </label>
-        </div>
-      ) : null}
+      {!rewriteOnly ? <>
       <Input
         aria-label="选题候选标题"
         value={candidate.title}
@@ -270,7 +338,7 @@ export function TopicCandidateEditor({
         <div>
           <p className="text-[11px] font-semibold text-foreground">改写规则</p>
           <p className="mt-0.5 text-[10px] leading-4 text-muted-foreground">
-            系统根据对标原稿和当前定位生成，随本次选题锁定。文案不满意时，可重新生成改写稿。
+            生成改写稿不依赖这些补充字段；需要时可稍后整理选题信息。
           </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
@@ -304,6 +372,7 @@ export function TopicCandidateEditor({
         })}
         </div>
       </div>
+      </> : null}
       {draftText && !retrying && !terminalFailure ? (
         <Button
           type="button"
@@ -318,13 +387,13 @@ export function TopicCandidateEditor({
         </Button>
       ) : null}
       <div className="grid gap-2 sm:grid-cols-2">
-        {!confirmed&&canRetryTopicTask(topicTaskStatus(transform)) ? (
+        {!confirmed ? (
           <Button
             type="button"
             size="sm"
             variant="outline"
             disabled={busy || retrying || incomplete}
-            onClick={() => onConfirm(transform.id, candidate)}
+          onClick={() => onConfirm(transform.id, candidateForAction)}
             className="w-full"
           >
             确认写入选题池
@@ -337,7 +406,7 @@ export function TopicCandidateEditor({
           onClick={() =>
             onUpgradeProject(
               transform.id,
-              candidate,
+              candidateForAction,
               transform.targetTopicId,
             )
           }
@@ -353,4 +422,3 @@ export function TopicCandidateEditor({
     </div>
   );
 }
-

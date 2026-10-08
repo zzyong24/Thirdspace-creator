@@ -49,11 +49,12 @@ function deterministicDeps() {
 let db: Db;
 let repo: ProjectRepository;
 let transport: Transport;
+let service: ReturnType<typeof createProjectsService>;
 
 beforeEach(async () => {
   ({ db } = await createDb());
   repo = createProjectRepository(db);
-  const service = createProjectsService(repo, deterministicDeps());
+  service = createProjectsService(repo, deterministicDeps());
   transport = createProjectsTransport(() => ({ service, repo }));
 });
 
@@ -114,17 +115,23 @@ describe("projects.transport — 17-op contract conformance", () => {
         templateVersion: "intelligence-topic-draft-v1",
       },
     };
-    const created = await call("projects.create", {
-      body: {
-        title: "雷达项目",
-        briefDetail: {
-          orientation: "portrait",
-          targetPlatforms: ["douyin"],
-          contentRadarEvidence: evidence,
-        },
+    const created = await service.createProject(ctx, {
+      title: "雷达项目",
+      briefDetail: {
+        orientation: "portrait",
+        targetPlatforms: ["douyin"],
+        contentRadarEvidence: evidence,
       },
     });
-    const projectId = (created as { data: { id: string } }).data.id;
+    const projectId = created.id;
+    const publicCreated = successEnvelope(projectResource).parse(await call("projects.create", {
+      body: { title: "客户端不能伪造来源", briefDetail: { contentRadarEvidence: evidence } },
+    }));
+    expect(publicCreated.data.briefDetail.contentRadarEvidence).toBeUndefined();
+    await call("projects.patch", {
+      params: { projectId },
+      body: { briefDetail: { orientation: "portrait", contentRadarEvidence: { ...evidence, adaptedDraftSeed: { ...evidence.adaptedDraftSeed, contentText: "伪造正文" } } } },
+    });
 
     const got = successEnvelope(projectResource).parse(
       await call("projects.get", { params: { projectId } }),

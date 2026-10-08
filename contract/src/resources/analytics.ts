@@ -7,6 +7,8 @@ import { id, iso8601 } from "../primitives";
 export const metricSnapshotResource = z.object({
   id,
   publicationId: id,
+  accountId:id.nullable().optional(),
+  groupId:id.nullable().optional(),
   ingestionRunId: id.nullable(),
   capturedAt: iso8601,
   source: z.string(),
@@ -30,6 +32,8 @@ export type MetricValueResource = z.infer<typeof metricValueResource>;
 export const retentionPointResource = z.object({
   id,
   publicationId: id,
+  accountId:id.nullable().optional(),
+  groupId:id.nullable().optional(),
   capturedAt: iso8601,
   positionMs: z.number().int(),
   retentionRate: z.number(),
@@ -54,6 +58,8 @@ const dimensionType = z.enum([
 export const audienceSnapshotResource = z.object({
   id,
   publicationId: id,
+  accountId:id.nullable().optional(),
+  groupId:id.nullable().optional(),
   capturedAt: iso8601,
   dimensionType,
   dimensionValue: z.string(),

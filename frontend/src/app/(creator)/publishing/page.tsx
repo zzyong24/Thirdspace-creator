@@ -41,7 +41,7 @@ export default async function PublishingCenterRoutePage({
   // [T-353] 未选号(含 0 号)= 引导态(T-332 §4.2):本页 per-account 读会撞 S2 strict 门
   // (AccountRequiredError → 整页错误边界)。layout 的零账号守卫只在首次渲染判定(App Router
   // 客户端导航不重渲 layout),故页面自兜:ctx 无选中号 → 渲绑定引导,不发注定失败的读。
-  if (!session.ctx.accountId) {
+  if (!session.ctx.groupId && !session.ctx.accountId) {
     return <ZeroAccountGuidance />;
   }
 
@@ -51,7 +51,7 @@ export default async function PublishingCenterRoutePage({
   );
   const calendar =
     projection.calendar.state === "ready" ? (
-      <ContentCalendarView viewModel={projection.calendar.viewModel} />
+      <ContentCalendarView key={session.ctx.groupId ?? session.ctx.accountId} viewModel={projection.calendar.viewModel} />
     ) : (
       <ErrorState
         error={{

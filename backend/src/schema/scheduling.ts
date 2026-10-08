@@ -32,7 +32,10 @@ export const scheduledJobs = pgTable("scheduled_job", {
   //   runtime ctx.accountId 由此列派生(triggerScheduledJob),使采集落库 stamp 正确 account_id,
   //   而非系统调度 ctx 的 null 号(串号根因)。
   // [T-332 S1] per-account 收口 NOT NULL(迁移 0042);绑号 bootstrap 建的采集 job 全部账号绑定。
-  accountId: text("account_id").notNull(),
+  accountId: text("account_id"),
+  groupId: text("group_id"),
+  groupVersion: integer("group_version"),
+  membershipVersion: integer("membership_version"),
   name: text("name").notNull(),
   prompt: text("prompt").notNull().default(""), // Agent 发现路径用;内建采集器源可空
   sourceKind: text("source_kind").notNull(), // self.metrics | comments (contract Zod 校验)
@@ -50,6 +53,9 @@ export const scheduledJobs = pgTable("scheduled_job", {
 export const jobRuns = pgTable("job_run", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // ownership boundary (owned-root)
+  groupId:text("group_id"),
+  groupVersion: integer("group_version"),
+  membershipVersion: integer("membership_version"),
   jobId: text("job_id").notNull(), // → scheduled_job (reached via requireJob gate)
   // [T-332 S1 · GAP-08] 计划触发时刻锚(迁移 0042)。nullable —— 存量 run / 临时「立即运行」不带;
   // cron 到点触发时由 S2/D3 写入(计划 tick 的 ISO 时刻),与 (job_id, scheduled_for) 部分唯一

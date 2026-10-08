@@ -37,7 +37,7 @@ export function createChatStructuredTaskToolHost(
   signal?.throwIfAborted();
   const restored=structuredClone(await reader.read(execution));
   signal?.throwIfAborted();
-  if(!owner.userId || !owner.accountId || restored.context.userId!==owner.userId || restored.context.accountId!==owner.accountId)throw new Error("生成工具账号与原任务不符");
+  if(!owner.userId || (!owner.accountId && !owner.groupId) || restored.context.userId!==owner.userId || (restored.context.accountId??null)!==(owner.accountId??null) || (restored.context.groupId??null)!==(owner.groupId??null))throw new Error("生成工具账号与原任务不符");
   const definitions=restored.modelInput.tools.filter(tool=>names.some(name=>name===tool.name));
   if(!definitions.length)return null;
   const creative=chatStructuredContextSchema.parse(restored.hostContext.structuredContext);

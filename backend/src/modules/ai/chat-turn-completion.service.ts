@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import { partitionExecutionCalls } from "../execution/execution-call-tree";
 import { and, asc, eq, aiTasks, aiMessages, aiConversations, aiTaskResults, executionTasks, executionCalls, executionStreamEvents, type Db } from "@creatoros/backend";
 import { chatWorkerInputSchema, workerProviderReceiptSchema, executionCheckpointSchema, workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
@@ -19,11 +20,11 @@ export function createChatTurnCompletionService(db: Db, deps: {
             return leases.withLease(ref, "settlement", async ({ tx, task, context }) => {
                 if (task.kind !== "ai_task" || task.ownerType !== "ai_task")
                     throw new ConflictError("聊天执行归属无效");
-                const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), eq(aiTasks.accountId, context.accountId!))).for("update");
+                const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), workspaceFilter(aiTasks,context))).for("update");
                 const payload = object(task.payload), sourceInput = object(business?.inputData), frozen = chatWorkerInputSchema.parse(payload.modelInput);
-                if (!business || business.taskType !== "copilot.assist" || payload.aiTaskId !== business.id || sourceInput.kind !== "chat.run" || sourceInput.conversationId !== frozen.conversationId || sourceInput.sourceMessageId !== frozen.sourceMessageId || frozen.userId !== context.userId || frozen.accountId !== context.accountId || sourceInput.modelInputDigest !== chatInputDigest(frozen))
+                if (!business || business.taskType !== "copilot.assist" || payload.aiTaskId !== business.id || sourceInput.kind !== "chat.run" || sourceInput.conversationId !== frozen.conversationId || sourceInput.sourceMessageId !== frozen.sourceMessageId || frozen.userId !== context.userId || frozen.accountId !== (context.accountId??null) || (frozen.groupId??null)!==(context.groupId??null) || sourceInput.modelInputDigest !== chatInputDigest(frozen))
                     throw new ConflictError("聊天任务来源或冻结映射无效");
-                const [conversation] = await tx.select().from(aiConversations).where(and(eq(aiConversations.id, frozen.conversationId), eq(aiConversations.userId, context.userId), eq(aiConversations.accountId, context.accountId!))).for("update");
+                const [conversation] = await tx.select().from(aiConversations).where(and(eq(aiConversations.id, frozen.conversationId), eq(aiConversations.userId, context.userId), workspaceFilter(aiConversations,context))).for("update");
                 if (!conversation || conversation.projectId !== business.projectId)
                     throw new ConflictError("会话归属已改变");
                 const messages = await tx.select().from(aiMessages).where(eq(aiMessages.conversationId, conversation.id)).orderBy(asc(aiMessages.createdAt));
@@ -77,7 +78,7 @@ export function createChatTurnCompletionService(db: Db, deps: {
                     throw new ConflictError("聊天当前不可提交");
                 const usage = confirmed.filter(call => call.kind === "model").map(call => workerProviderReceiptSchema.parse(call.providerResult).usage);
                 const sum = (values: (number | undefined)[]) => values.some(value => value === undefined) ? null : values.reduce<number>((total, value) => total + (value ?? 0), 0);
-                const repo = createAiRepository(tx as unknown as Db, { now: () => stamp, nextId: () => messageId, userId: context.userId, accountId: context.accountId! });
+                const repo = createAiRepository(tx as unknown as Db, { now: () => stamp, nextId: () => messageId, userId: context.userId, accountId: context.accountId??null,groupId:context.groupId });
                 await repo.createMessage(conversation.id, { role: "assistant", content: projected.content, parts: projected.parts, attachments: [], modelMetadata: metadata, usage: { inputTokens: sum(usage.map(item => item.inputTokens.total)), outputTokens: sum(usage.map(item => item.outputTokens.total)), cachedTokens: sum(usage.map(item => item.inputTokens.cacheRead)) } });
                 await tx.insert(aiTaskResults).values({ id: resultId, aiTaskId: business.id, resultType: "conversation_reply", executionCallId: lastModel.id, resultData });
                 await tx.update(executionCalls).set({ resultRef: resultId, updatedAt: stamp }).where(eq(executionCalls.id, lastModel.id));

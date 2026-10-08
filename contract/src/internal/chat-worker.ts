@@ -10,7 +10,10 @@ export const chatWorkerInputSchema = z.object({
   operationKey: z.string().min(1).max(200),
   capability: z.string().min(1).max(128),
   userId: z.string().min(1),
-  accountId: z.string().min(1),
+  accountId: z.string().min(1).nullable(),
+  groupId: z.string().min(1).nullable().optional(),
+  groupVersion: z.number().int().positive().nullable().optional(),
+  membershipVersion: z.number().int().positive().nullable().optional(),
   conversationId: z.string().min(1),
   sourceMessageId: z.string().min(1),
   system: z.string().max(500000),
@@ -27,6 +30,7 @@ export const chatWorkerInputSchema = z.object({
     execution:z.enum(["host","worker.redfox","worker.web-read","worker.research","worker.script-draft","worker.script-hooks","worker.structured-node","host.task-submit"]).optional(),
   }).strict()).max(100),
 }).strict().superRefine((value, ctx) => {
+  if(!value.accountId && !value.groupId)ctx.addIssue({code:"custom",message:"聊天缺少组或真实账号范围"});
   for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.web-read" && (tool.name!=="web.read" || tool.effect!=="committed"))ctx.addIssue({code:"custom",message:"网页读取声明与工具身份不符",path:["tools",index,"execution"]});
   for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.research" && (tool.name!=="material.gather" || tool.effect!=="none"))ctx.addIssue({code:"custom",message:"研究执行声明与工具身份不符",path:["tools",index,"execution"]});
   for(const [index,tool] of value.tools.entries())if(tool.execution==="worker.redfox" && (tool.name!=="redfox.query" || tool.effect!=="committed"))ctx.addIssue({code:"custom",message:"RedFox执行声明与工具身份不符",path:["tools",index,"execution"]});

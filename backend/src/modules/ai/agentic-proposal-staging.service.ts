@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import { createHash } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
@@ -64,10 +65,10 @@ export function createAgenticProposalStagingService(db: Db, ports: {
         const { tx, task, context } = scope;
         signal.throwIfAborted();
         if (task.kind !== "ai_task" || task.ownerType !== "ai_task") throw new ConflictError("当前执行没有AI业务任务");
-        const accountId = requireAccountId(context.accountId, "ai.stageAgenticProposalForExecution");
+        requireWorkspace(context);const accountId=context.accountId??null;
         const [business] = await tx.select().from(aiTasks).where(and(
           eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id),
-          eq(aiTasks.userId, context.userId), eq(aiTasks.accountId, accountId),
+          eq(aiTasks.userId, context.userId), workspaceFilter(aiTasks,context),
         )).for("update");
         if (!business || !["queued", "running"].includes(business.status)) throw new ConflictError("AI任务已停止或执行映射、归属不一致");
         if (input.kind === "knowledge.create") await verifyExecutionKnowledgeSource(tx, task.id, input, true);
@@ -100,7 +101,7 @@ export function createAgenticProposalStagingService(db: Db, ports: {
     },
     async stage(ctx: RequestContext, taskId: string, input: Input, signal: AbortSignal): Promise<AgenticProposal> {
       signal.throwIfAborted();
-      const accountId = requireAccountId(ctx.accountId, "ai.stageAgenticProposal");
+      requireWorkspace(ctx);const accountId=ctx.accountId??null;
       if (!input.toolCallId || !input.evidenceRefs.length) throw new ConflictError("候选缺少真实调用或来源证据");
       const lease = ports.resolveLease(ctx, taskId);
       const now = ports.now ?? (() => new Date().toISOString());
@@ -108,7 +109,7 @@ export function createAgenticProposalStagingService(db: Db, ports: {
       const requestDigest = hash(input);
       const source = { taskId, toolCallId: input.toolCallId, evidenceRefs: input.evidenceRefs };
       const read = async () => {
-        const [task] = await db.select().from(aiTasks).where(and(eq(aiTasks.id, taskId), eq(aiTasks.userId, ctx.userId), eq(aiTasks.accountId, accountId)));
+        const [task] = await db.select().from(aiTasks).where(and(eq(aiTasks.id, taskId), eq(aiTasks.userId, ctx.userId), workspaceFilter(aiTasks,ctx)));
         if (!task) throw new OwnershipError("自主任务不存在");
         if (task.status !== "running" || task.executionTaskId || task.leaseToken !== lease.leaseToken || !task.leaseExpiresAt || task.leaseExpiresAt <= now()) throw new ConflictError("当前执行权不允许该入口生成候选");
         const [existing] = await db.select().from(aiTaskResults).where(eq(aiTaskResults.id, proposalId));
@@ -126,7 +127,7 @@ export function createAgenticProposalStagingService(db: Db, ports: {
         : agenticProposal.parse({ schemaVersion: 1, kind: "asset.tags", proposalId, source,
           targets: await ports.prepareAssets(ctx, input.assetIds), tag: input.tag });
       return db.transaction(async tx => {
-        const [task] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, taskId), eq(aiTasks.userId, ctx.userId), eq(aiTasks.accountId, accountId))).for("update");
+        const [task] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, taskId), eq(aiTasks.userId, ctx.userId), workspaceFilter(aiTasks,ctx))).for("update");
         signal.throwIfAborted();
         if (!task || task.status !== "running" || task.executionTaskId || task.leaseToken !== lease.leaseToken || !task.leaseExpiresAt || task.leaseExpiresAt <= now()) throw new ConflictError("任务已停止或执行权已转交，不能写候选");
         const [created] = await tx.insert(aiTaskResults).values({ id: proposalId, aiTaskId: taskId,

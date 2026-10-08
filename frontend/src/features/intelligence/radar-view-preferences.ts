@@ -1,11 +1,12 @@
-import type {RadarSort,RadarTranscriptState,RadarTopicState} from "./intelligence-workbench-types";
+import {radarScope} from "./intelligence-workbench-types";
+import type {RadarScopeInput,RadarSort,RadarTranscriptState,RadarTopicState} from "./intelligence-workbench-types";
 export interface RadarViewPreferences {
   sort:RadarSort;transcriptState:RadarTranscriptState|null;topicState:RadarTopicState|null;
   query:string;sourceQuery:string;collectionId:string|null;sourceId:string|null;
 }
-export const radarViewKey=(accountId:string)=>`creatoros:radar-view:v1:${accountId}`;
+export const radarViewKey=(input:RadarScopeInput)=>{const scope=radarScope(input);return scope.groupId?`creatoros:radar-view:v2:group:${scope.groupId}`:`creatoros:radar-view:v1:${scope.accountId}`;};
 // SEMANTIC_BOUNDARY_ALLOW: 仅校验用户显式选择的界面值，不做内容判断或排序决策。
-export function readRadarView(accountId:string):RadarViewPreferences|null {
+export function readRadarView(accountId:RadarScopeInput):RadarViewPreferences|null {
   try {
     const value=JSON.parse(window.localStorage.getItem(radarViewKey(accountId))??"null");
     if(!value||typeof value!=="object")return null;
@@ -17,6 +18,6 @@ export function readRadarView(accountId:string):RadarViewPreferences|null {
     return value as RadarViewPreferences;
   }catch{return null;}
 }
-export function saveRadarView(accountId:string,view:RadarViewPreferences){
+export function saveRadarView(accountId:RadarScopeInput,view:RadarViewPreferences){
   try {window.localStorage.setItem(radarViewKey(accountId),JSON.stringify(view));}catch{/* 存储不可用不影响页面。 */}
 }

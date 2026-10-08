@@ -1,3 +1,4 @@
+import {groupWorkspaceQuery,groupDashboardPage} from "../pages/group-workspace";
 import { dailyReportPage, dailyReportQuery } from "../pages/daily-report";
 import { z } from "zod";
 import { defineEndpoint } from "../endpoints";
@@ -14,6 +15,7 @@ export { publishingCenterPage } from "../pages/publishing-center";
 // PAGE composition DTO read endpoints. These responses are view-specific
 // projections built by selectors, not raw resources.
 export const pagesOperations = {
+  getGroupOverview:defineEndpoint({id:"pages.groupOverview.get",method:"GET",path:"/groups/:groupId/overview",params:z.object({groupId:id}),query:groupWorkspaceQuery,response:groupDashboardPage,fr:["FR-GROUP-WORKSPACE"]}),
   getDailyReport: defineEndpoint({id:"pages.dailyReport.get",method:"GET",path:"/analytics/daily-report",query:dailyReportQuery,response:dailyReportPage,fr:["FR-PAGE-DAILY-REPORT"]}),
   getProjectOverview: defineEndpoint({
     id: "pages.projectOverview.get",

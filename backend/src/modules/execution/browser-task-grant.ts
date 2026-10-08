@@ -12,7 +12,10 @@ const grantSchema = z
     grantId: z.string().min(1),
     aiTaskId: z.string(),
     userId: z.string(),
-    accountId: z.string(),
+    accountId: z.string().nullable(),
+    groupId:z.string().nullable().optional(),
+    groupVersion:z.number().int().positive().nullable().optional(),
+    membershipVersion:z.number().int().positive().nullable().optional(),
     requestFingerprint: z.string(),
     grantedAt: z.string().datetime(),
     idempotencyKey: z.string().min(1),
@@ -22,7 +25,9 @@ const grantSchema = z
 export type BrowserGrantTask = {
   id: string;
   userId: string;
-  accountId: string;
+  accountId: string|null;
+  groupId?:string|null;
+  groupVersion?:number|null;membershipVersion?:number|null;
   requestFingerprint: string;
   runtimeData: unknown;
 };
@@ -34,6 +39,8 @@ export function readBrowserTaskGrant(task: BrowserGrantTask) {
     grant.aiTaskId !== task.id ||
     grant.userId !== task.userId ||
     grant.accountId !== task.accountId ||
+    (grant.groupId??null)!==(task.groupId??null) ||
+    (grant.groupVersion??null)!==(task.groupVersion??null) || (grant.membershipVersion??null)!==(task.membershipVersion??null) ||
     grant.requestFingerprint !== task.requestFingerprint
   )
     throw new ConflictError("浏览器授权与任务归属或输入不一致");

@@ -1,4 +1,5 @@
-import { pgTable, text, integer, jsonb, primaryKey } from "drizzle-orm/pg-core";
+import {sql} from "drizzle-orm";
+import { pgTable, text, integer, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 
 // Candidate / AudienceSignal / TopicPromotion tables (七步整合设计 §5 — 选题情报层;
 // contract v0.4 resources/candidate.ts; SPEC §13 "选题候选 (candidate)" group). The
@@ -31,7 +32,8 @@ import { pgTable, text, integer, jsonb, primaryKey } from "drizzle-orm/pg-core";
 export const candidates = pgTable("candidates", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column (foundation §1)
-  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离(soft FK → platform_accounts.id);nullable 稳定终态
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离(soft FK → platform_accounts.id);nullable 稳定终态
   title: text("title").notNull(),
   angle: text("angle").notNull().default(""), // 切入角度
   source: text("source").notNull(), // trend|benchmark|demand|idea|favorites([T-235c] 收藏夹跟拍)
@@ -61,7 +63,8 @@ export const candidates = pgTable("candidates", {
 export const topicPreferences = pgTable("topic_preferences", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column
-  accountId: text("account_id").notNull(), // [T-201 账号锚点] 按号 stamp;不入身份唯一键(见迁移注释)
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-201 账号锚点] 按号 stamp;不入身份唯一键(见迁移注释)
   keyword: text("keyword").notNull(), // 匹配候选标题/角度的短词(护栏按 includes 命中)
   direction: text("direction").notNull().default("avoid"), // avoid(压分)|prefer(抬分)
   signal: text("signal").notNull().default(""), // 一句人话偏好
@@ -76,6 +79,7 @@ export const topicPreferences = pgTable("topic_preferences", {
 export const audienceSignals = pgTable("audience_signals", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column
+  groupId: text("group_id"),
   accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;采集 stamp 归到「哪个号」的评论/信号
   source: text("source").notNull(), // comment|dm|consultation|review
   rawText: text("raw_text").notNull().default(""),
@@ -102,7 +106,8 @@ export const audienceSignals = pgTable("audience_signals", {
 export const topicPromotions = pgTable("topic_promotions", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column
-  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
   candidateId: text("candidate_id").notNull(), // FK → candidates
   projectId: text("project_id").notNull(), // FK → projects (the promoted Project)
   promotedAt: text("promoted_at").notNull(),
@@ -194,8 +199,8 @@ CREATE INDEX IF NOT EXISTS ix_topic_preferences_user_status ON topic_preferences
 
 // T-1019：显式用户配置；反馈保存真实任务结果，独立于采纳及发布表现。
 export const topicWorkspaces = pgTable("topic_workspaces", {
- userId:text("user_id").notNull(),accountId:text("account_id").notNull(),version:integer("version").notNull(),config:jsonb("config").notNull(),receipts:jsonb("receipts").notNull().default({}),updatedAt:text("updated_at").notNull(),
-}, table=>[primaryKey({columns:[table.userId,table.accountId]})]);
+ userId:text("user_id").notNull(),groupId:text("group_id"),accountId:text("account_id"),version:integer("version").notNull(),config:jsonb("config").notNull(),receipts:jsonb("receipts").notNull().default({}),updatedAt:text("updated_at").notNull(),
+}, table=>[uniqueIndex("topic_workspaces_group_ux").on(table.userId,table.groupId).where(sql`${table.groupId} IS NOT NULL`),uniqueIndex("topic_workspaces_legacy_ux").on(table.userId,table.accountId).where(sql`${table.accountId} IS NOT NULL`)]);
 export const topicProposalFeedback = pgTable("topic_proposal_feedback", {
- id:text("id").primaryKey(),userId:text("user_id").notNull(),accountId:text("account_id").notNull(),projectId:text("project_id"),taskId:text("task_id").notNull(),proposalId:text("proposal_id").notNull(),propositionKey:text("proposition_key").notNull(),title:text("title").notNull(),angle:text("angle").notNull(),reason:text("reason").notNull(),note:text("note").notNull(),positioningVersionId:text("positioning_version_id"),requestHash:text("request_hash").notNull(),createdAt:text("created_at").notNull(),
+ id:text("id").primaryKey(),userId:text("user_id").notNull(),groupId:text("group_id"),accountId:text("account_id"),projectId:text("project_id"),taskId:text("task_id").notNull(),proposalId:text("proposal_id").notNull(),propositionKey:text("proposition_key").notNull(),title:text("title").notNull(),angle:text("angle").notNull(),reason:text("reason").notNull(),note:text("note").notNull(),positioningVersionId:text("positioning_version_id"),requestHash:text("request_hash").notNull(),createdAt:text("created_at").notNull(),
 });

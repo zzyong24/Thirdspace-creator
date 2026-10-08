@@ -1,3 +1,4 @@
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {readCoverImageBinding} from "../execution/cover-execution-binding";
 import {verifyGeneratedAssetCandidate} from "../assets";
 import {bindAssetExecution} from "../execution/asset-execution-binding";
@@ -22,7 +23,7 @@ export function createExecutionCandidateService(db:Db,deps:ExecutionCandidateDep
       if(input.outcome!=="succeeded")throw new ConflictError("失败必须经执行状态端口");
       return leases.withLease(ref,"settlement",async({tx,task,context})=>{
         if(task.kind!=="ai_task" || task.ownerType!=="ai_task")throw new ConflictError("当前执行没有AI业务任务");
-        const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),eq(aiTasks.accountId,context.accountId!))).for("update");
+        const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
         if(!business)throw new ConflictError("AI任务映射或归属不一致");
         if(business.taskType==="copilot.assist")throw new ConflictError("对话回复必须经消息完成端口");
         if(business.taskType==="scheduled.topic.daily")throw new ConflictError("每日选题必须经调度入池完成端口");

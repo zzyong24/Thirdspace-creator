@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import {bindTranscribeAudioExecution,type TranscribeResourceBinding} from './transcribe-execution-binding';
 import {readTranscribeAsrPlan} from './transcribe-asr-plan';
 import {asrExecutionIdentity} from '@creatoros/ai-worker/asr-identity';
@@ -30,7 +31,7 @@ export function createExecutionAsrPorts(db: Db, deps: Parameters<typeof createEx
         if(plan){const audio=transcribeAudioReceiptSchema.parse((payload.transcribeAudioInputs as Record<string,unknown>)?.[awemeId]);if(audio.audioDigest!==plan.audioDigest||audio.audioByteLength!==plan.audioByteLength)throw new ConflictError("实际识别身份与原音频不符");}
         if(!legacy.success){if(!resource)await bindTranscribeAudioExecution(scope,awemeId);if(!input.awemeIds.includes(awemeId))throw new ConflictError("ASR 输入与领域资源不符");}
         else {
-        const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), eq(aiTasks.accountId, context.accountId!)));
+        const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), workspaceFilter(aiTasks,context)));
         const raw = business?.inputData as {
             awemeIds?: unknown;
             awemeId?: unknown;

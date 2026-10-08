@@ -17,11 +17,11 @@ export function createChatVideoEditTaskToolHost(
  ports:ChatVideoEditPorts,
 ):NonNullable<ChatWorkerDispatcherDeps["resolveTools"]>{
  const resolve:ResolveChatHostTools=async(context,execution,signal)=>{
-  const owner={userId:context.userId,accountId:context.accountId};
+  const owner={userId:context.userId,accountId:context.accountId??null,groupId:context.groupId??null};
   signal?.throwIfAborted();
   const restored=structuredClone(await reader.read({...execution}));
   signal?.throwIfAborted();
-  if(!owner.userId || !owner.accountId || restored.context.userId!==owner.userId || restored.context.accountId!==owner.accountId)throw new Error("剪辑工具账号与原任务不符");
+  if(!owner.userId || (!owner.accountId && !owner.groupId) || restored.context.userId!==owner.userId || (restored.context.accountId??null)!==owner.accountId || (restored.context.groupId??null)!==owner.groupId)throw new Error("剪辑工具账号与原任务不符");
   const definitions=restored.modelInput.tools.filter(tool=>Object.hasOwn(effects,tool.name));
   const projectId=restored.hostContext.chatContext.projectId;
   const tools=buildChatTools(definitions.map(tool=>tool.name),{

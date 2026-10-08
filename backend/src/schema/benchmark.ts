@@ -17,8 +17,9 @@ import { pgTable, text, integer, boolean, doublePrecision } from "drizzle-orm/pg
 
 export const benchmarkSources = pgTable("benchmark_sources", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull(), // 所有权边界
-  accountId: text("account_id").notNull(), // [T-201] 按号隔离(哪个号在对标);nullable 稳定终态
+  userId: text("user_id").notNull(),
+  groupId: text("group_id"), // 所有权边界
+  accountId: text("account_id"), // [T-201] 按号隔离(哪个号在对标);nullable 稳定终态
   platform: text("platform").notNull().default("douyin"),
   externalAccountId: text("external_account_id").notNull(), // sec_uid(稳定身份键)
   nickname: text("nickname"), // 博主昵称/备注名(可选)
@@ -31,8 +32,9 @@ export const benchmarkSources = pgTable("benchmark_sources", {
 
 export const benchmarkWorks = pgTable("benchmark_works", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull(), // 所有权边界
-  accountId: text("account_id").notNull(), // [T-201] 按号隔离;nullable 稳定终态
+  userId: text("user_id").notNull(),
+  groupId: text("group_id"), // 所有权边界
+  accountId: text("account_id"), // [T-201] 按号隔离;nullable 稳定终态
   sourceId: text("source_id").notNull(), // soft FK → benchmark_sources.id
   sourceExternalAccountId: text("source_external_account_id").notNull(), // 冗余 sec_uid(便于按源查)
   platform: text("platform").notNull().default("douyin"),

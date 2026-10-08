@@ -90,7 +90,8 @@ export interface ProjectsPageProps {
    * 缺省不渲染控件，避免未登录/未选号或旧调用方制造无归属写请求。
    */
   readonly scheduleContext?: {
-    readonly accountId: string;
+    readonly accountId: string | null;
+    readonly groupId?: string | null;
     readonly referenceDateKey: string;
     readonly entries: ReadonlyArray<ProjectScheduleSummary>;
   };
@@ -453,6 +454,7 @@ function ProjectListItem({
         {scheduleContext && scheduleEligible ? (
           <ProjectScheduleControl
             accountId={scheduleContext.accountId}
+            groupId={scheduleContext.groupId}
             projectId={row.id}
             projectTitle={row.title}
             referenceDateKey={scheduleContext.referenceDateKey}

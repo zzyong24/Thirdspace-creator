@@ -1,3 +1,5 @@
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {
   and,
   eq,
@@ -48,10 +50,7 @@ export function createResearchMaterialAdoptionService(
 ) {
   return {
     async confirmTask(ctx: RequestContext, taskId: string) {
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "ai.confirmResearchMaterials",
-      );
+      await assertWritableWorkspace(db,ctx);requireWorkspace(ctx);const accountId=ctx.accountId??null;
       await db.transaction(async (tx) => {
         const [task] = await tx
           .select()
@@ -60,11 +59,12 @@ export function createResearchMaterialAdoptionService(
             and(
               eq(aiTasks.id, taskId),
               eq(aiTasks.userId, ctx.userId),
-              eq(aiTasks.accountId, accountId),
+              workspaceFilter(aiTasks,ctx),
             ),
           )
           .for("update");
         if (!task) throw new OwnershipError("素材候选任务不存在");
+        await assertFrozenWorkspaceMembership(tx,{userId:task.userId,groupId:task.groupId,accountId:task.accountId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion});
         if (task.taskType !== "research.gather_material")
           throw new ConflictError("任务不是素材生成");
         if (task.status === "succeeded") return;
@@ -93,7 +93,7 @@ export function createResearchMaterialAdoptionService(
               and(
                 eq(executionTasks.id, task.executionTaskId),
                 eq(executionTasks.userId, ctx.userId),
-                eq(executionTasks.accountId, accountId),
+                workspaceFilter(executionTasks,ctx),
               ),
             );
           if (

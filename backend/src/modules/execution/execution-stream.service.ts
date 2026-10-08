@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import { isDeepStrictEqual } from "node:util";
 import {
   and,
@@ -118,7 +119,7 @@ export function createExecutionStreamService(
             and(
               eq(executionTasks.id, taskId),
               eq(executionTasks.userId, ctx.userId),
-              eq(executionTasks.accountId, ctx.accountId ?? ""),
+              workspaceFilter(executionTasks,ctx),
             ),
           )
           .for("share");

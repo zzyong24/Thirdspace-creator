@@ -24,34 +24,60 @@ return ((): ProjectBriefReader => ({
             可借鉴点?: string[];
             适配本账号建议?: string;
           };
-          contentRadarEvidence?: {
-            sourceReferences: Array<{
-              kind: "original_video" | "source_page";
-              platform: string;
-              label: string;
-              url: string;
-              intelligenceItemId?: string;
-            }>;
-            decomposition: {
-              hook: string;
-              structureSteps: string[];
-              coreClaims: string[];
-              reusablePattern: string;
-              factRisks: string[];
-            };
-            strategy: {
-              keep: string[];
-              replace: string[];
-              add: string[];
-              avoid: string[];
-            };
-            adaptedDraftSeed: {
-              contentText: string;
-              generatedFromTranscriptHash: string;
-              strategyHash: string;
-              templateVersion: string;
-            };
-          };
+          contentRadarEvidence?:
+            | {
+                generationMode: "rewrite_only";
+                sourceReferences: Array<{
+                  kind: "original_video" | "source_page";
+                  platform: string;
+                  label: string;
+                  url: string;
+                  intelligenceItemId?: string;
+                }>;
+                sourceSnapshotId: string;
+                generatedFromTranscriptHash: string;
+                adaptedDraftSeed: {
+                  generationMode: "rewrite_only";
+                  contentText: string;
+                  sourceSnapshotId: string;
+                  generatedFromTranscriptHash: string;
+                  aiTaskId?: string;
+                  positioningVersionId?: string;
+                  personalizationStatus: "applied" | "not_applied";
+                  templateVersion: string;
+                };
+                positioningVersionId?: string;
+                personalizationStatus?: "applied" | "not_applied";
+                aiTaskId?: string;
+              }
+            | {
+                sourceReferences: Array<{
+                  kind: "original_video" | "source_page";
+                  platform: string;
+                  label: string;
+                  url: string;
+                  intelligenceItemId?: string;
+                }>;
+                decomposition: {
+                  hook: string;
+                  structureSteps: string[];
+                  coreClaims: string[];
+                  reusablePattern: string;
+                  factRisks: string[];
+                };
+                strategy: {
+                  keep: string[];
+                  replace: string[];
+                  add: string[];
+                  avoid: string[];
+                };
+                adaptedDraftSeed: {
+                  contentText: string;
+                  generatedFromTranscriptHash: string;
+                  strategyHash: string;
+                  templateVersion: string;
+                };
+              };
         };
         return {
           orientation: d.orientation,

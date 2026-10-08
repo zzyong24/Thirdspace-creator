@@ -14,7 +14,7 @@ import {
   revokeConnection,
 } from "./connection";
 import { endpointInputSchema, schemaToJson } from "./tools";
-import { readDefaultAccountId, writeDefaultAccountId } from "./context";
+import { readDefaultAccountId, writeDefaultAccountId, readDefaultGroupId, writeDefaultGroupId } from "./context";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
 type JsonObject = Record<string, unknown>;
@@ -38,6 +38,7 @@ function hasFlag(args: string[], name: string): boolean {
 const VALUE_FLAGS = new Set([
   "--input",
   "--account",
+  "--group",
   "--idempotency-key",
   "--confirm-impact",
   "--connection-file",
@@ -50,6 +51,7 @@ const BOOLEAN_FLAGS = new Set([
   "--json",
   "--apply",
   "--use-default-account",
+  "--use-default-group",
   "--force-new",
   "--help",
   "--version",
@@ -163,6 +165,17 @@ async function selectedAccountId(args: string[]): Promise<string | undefined> {
     : undefined;
 }
 
+async function selectedGroupId(args: string[]): Promise<string | undefined> {
+  const explicit = flagValue(args, "--group");
+  if (explicit) return explicit;
+  if (hasFlag(args, "--use-default-group")) {
+    const saved = await readDefaultGroupId();
+    if (!saved) throw new Error("尚未保存默认账号组，请先执行 groups use <groupId>。");
+    return saved;
+  }
+  return undefined;
+}
+
 const TASK_READERS = [
   { operation: "ai.tasks.get", input: (taskId: string) => ({ params: { taskId } }) },
   { operation: "execution.tasks.get", input: (taskId: string) => ({ params: { taskId } }) },
@@ -175,13 +188,14 @@ async function readTask(
   client: DispatchClient,
   taskId: string,
   accountId: string | undefined,
+  groupId?: string,
 ): Promise<{ sourceOperation: string; requestId: string | null; task: unknown }> {
   for (const reader of TASK_READERS) {
     try {
       const envelope = await client.dispatch(
         reader.operation,
         reader.input(taskId),
-        { accountId },
+        { accountId, groupId },
       );
       return {
         sourceOperation: reader.operation,
@@ -223,12 +237,13 @@ async function waitForTask(
   taskId: string,
   accountId: string | undefined,
   args: string[],
+  groupId?: string,
 ): Promise<{ sourceOperation: string; requestId: string | null; task: unknown }> {
   const pollSeconds = positiveNumberFlag(args, "--poll-interval") ?? 2;
   const timeoutSeconds = positiveNumberFlag(args, "--timeout");
   const startedAt = Date.now();
   while (true) {
-    const current = await readTask(client, taskId, accountId);
+    const current = await readTask(client, taskId, accountId, groupId);
     const status = taskStatus(current.task);
     if (status && !NON_TERMINAL_TASK_STATUSES.has(status)) return current;
     if (timeoutSeconds !== null && Date.now() - startedAt >= timeoutSeconds * 1000) {
@@ -277,7 +292,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
   if (group === "help" || hasFlag(args, "--help")) {
     return {
       ok: true,
-      usage: "creatoros status | access status|revoke | operations list|describe <op> | call <op> --input <json|@file|-> --account <id> | tasks get|wait <taskId> --account <id> | accounts list|current|use <id> | douyin status|login|refresh|import | mcp serve",
+      usage: "creatoros status | access status|revoke | operations list|describe <op> | call <op> --input <json|@file|-> [--group <id>|--use-default-group] [--account <id>|--use-default-account] | tasks get|wait <taskId> --group <id> [--account <id>] | accounts list|current|use <id> | groups list|current|use <id> | douyin status|login|refresh|import | mcp serve",
       writeFlags: "--apply --idempotency-key <key>",
       impactFlags: "--confirm-impact <真实账号或实体ID>",
     };
@@ -328,6 +343,21 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     await revokeConnection(connection);
     return { ok: true, enabled: false, revoked: true };
   }
+  if (group === "groups" && action === "current") {
+    return {ok:true, groupId:await readDefaultGroupId()};
+  }
+  if (group === "groups" && action === "list") {
+    const {client}=await clientFor(args);
+    const envelope=await client.dispatch("accountGroups.list", {query:{}});
+    return {ok:true,operation:"accountGroups.list",data:envelopeData(envelope),meta:envelopeMeta(envelope)};
+  }
+  if (group === "groups" && action === "use") {
+    if (!target) throw new Error("groups use 缺少 groupId。");
+    const {client}=await clientFor(args);
+    await client.dispatch("accountGroups.get", {params:{groupId:target}}, {groupId:target});
+    await writeDefaultGroupId(target);
+    return {ok:true,groupId:target};
+  }
   if (group === "accounts" && action === "current") {
     return { ok: true, accountId: await readDefaultAccountId() };
   }
@@ -357,18 +387,20 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
   }
   if (group === "douyin" && action === "status") {
     const accountId = await selectedAccountId(args);
+    const groupId = await selectedGroupId(args);
     if (!accountId) throw new Error("douyin status 必须显式 --account <accountId>。");
     const { client } = await clientFor(args);
     const envelope = await client.dispatch(
       "ingestion.douyin.status",
       { query: { accountId } },
-      { accountId },
+      { accountId, groupId },
     );
     return {
       ok: true,
       operation: "ingestion.douyin.status",
       requestId: envelopeRequestId(envelope),
       accountId,
+      groupId: groupId ?? null,
       data: envelopeData(envelope),
       meta: envelopeMeta(envelope),
       error: null,
@@ -379,12 +411,14 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     const policy = getCliOperationPolicy(operation)!;
     requireExecutionFlags(operation, policy, args);
     const accountId = await selectedAccountId(args);
+    const groupId = await selectedGroupId(args);
     const { client } = await clientFor(args);
     const envelope = await client.dispatch(
       operation,
       { body: { ...(accountId ? { accountId } : {}), forceNew: hasFlag(args, "--force-new") } },
       {
         accountId,
+        groupId,
         idempotencyKey: flagValue(args, "--idempotency-key"),
         apply: true,
         confirmImpact: flagValue(args, "--confirm-impact"),
@@ -394,6 +428,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       ok: true,
       operation,
       requestId: envelopeRequestId(envelope),
+      groupId: groupId ?? null,
       accountId: accountId ?? null,
       data: envelopeData(envelope),
       meta: envelopeMeta(envelope),
@@ -405,6 +440,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     const policy = getCliOperationPolicy(operation)!;
     requireExecutionFlags(operation, policy, args);
     const accountId = await selectedAccountId(args);
+    const groupId = await selectedGroupId(args);
     if (!accountId) throw new Error("douyin import 必须显式 --account <accountId>。");
     const shareInput = flagValue(args, "--share");
     if (!shareInput) throw new Error("douyin import 必须提供 --share <抖音分享链接或分享文本>。");
@@ -422,6 +458,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       },
       {
         accountId,
+        groupId,
         idempotencyKey,
         apply: true,
         confirmImpact: flagValue(args, "--confirm-impact"),
@@ -432,6 +469,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       operation,
       requestId: envelopeRequestId(envelope),
       accountId,
+      groupId: groupId ?? null,
       data: envelopeData(envelope),
       meta: envelopeMeta(envelope),
       error: null,
@@ -442,12 +480,13 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     const policy = getCliOperationPolicy(operation)!;
     requireExecutionFlags(operation, policy, args);
     const accountId = await selectedAccountId(args);
+    const groupId = await selectedGroupId(args);
     if (!accountId) throw new Error("douyin refresh 必须显式 --account <accountId>。");
     const { client } = await clientFor(args);
     const listed = await client.dispatch(
       "scheduledJobs.list",
       { query: { page: 1, pageSize: 100, sourceKind: "self.detail" } },
-      { accountId },
+      { accountId, groupId },
     );
     const jobs = envelopeData(listed);
     if (!Array.isArray(jobs) || jobs.length !== 1) {
@@ -464,6 +503,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       { params: { jobId }, body: {} },
       {
         accountId,
+        groupId,
         idempotencyKey: flagValue(args, "--idempotency-key"),
         apply: true,
         confirmImpact: flagValue(args, "--confirm-impact"),
@@ -475,6 +515,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       sourceOperation: "scheduledJobs.list",
       requestId: envelopeRequestId(envelope),
       accountId,
+      groupId: groupId ?? null,
       data: envelopeData(envelope),
       meta: envelopeMeta(envelope),
       error: null,
@@ -489,8 +530,10 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     const { client } = await clientFor(args);
     const input = await parseInput(flagValue(args, "--input"));
     const accountId = await selectedAccountId(args);
+    const groupId = await selectedGroupId(args);
     const envelope = await client.dispatch(action, input, {
       accountId,
+      groupId,
       idempotencyKey: flagValue(args, "--idempotency-key"),
       apply: hasFlag(args, "--apply"),
       confirmImpact: flagValue(args, "--confirm-impact"),
@@ -499,6 +542,7 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
       ok: true,
       operation: action,
       requestId: envelopeRequestId(envelope),
+      groupId: groupId ?? null,
       accountId: accountId ?? null,
       data: envelopeData(envelope),
       meta: envelopeMeta(envelope),
@@ -509,14 +553,16 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
     if (!target) throw new Error(`tasks ${action} 缺少 taskId。`);
     const { client } = await clientFor(args);
     const accountId = await selectedAccountId(args);
+    const groupId = await selectedGroupId(args);
     const result = action === "wait"
-      ? await waitForTask(client, target, accountId, args)
-      : await readTask(client, target, accountId);
+      ? await waitForTask(client, target, accountId, args, groupId)
+      : await readTask(client, target, accountId, groupId);
     return {
       ok: true,
       operation: `tasks.${action}`,
       sourceOperation: result.sourceOperation,
       requestId: result.requestId,
+      groupId: groupId ?? null,
       accountId: accountId ?? null,
       data: result.task,
       error: null,
@@ -524,12 +570,12 @@ export async function runCliCommand(args: string[]): Promise<unknown> {
   }
   if (group === "mcp" && action === "serve") {
     const { client } = await clientFor(args);
-    const server = createCreatorOsMcpServer({ dispatchClient: client });
+    const server = createCreatorOsMcpServer({ dispatchClient: client,defaultGroupId:await selectedGroupId(args),defaultAccountId:await selectedAccountId(args) });
     await server.connect(new StdioServerTransport());
     return new Promise(() => undefined);
   }
   throw new Error(
-    "用法: creatoros status | access status|revoke | operations list|describe <op> | call <op> --input <json|@file|-> [--account <id>|--use-default-account] | tasks get|wait <taskId> --account <id> | accounts list|current|use <id> | douyin status|login|refresh|import | mcp serve",
+    "用法: creatoros status | access status|revoke | operations list|describe <op> | call <op> --input <json|@file|-> [--group <id>|--use-default-group] [--account <id>|--use-default-account] | tasks get|wait <taskId> --group <id> [--account <id>] | accounts list|current|use <id> | groups list|current|use <id> | douyin status|login|refresh|import | mcp serve",
   );
 }
 

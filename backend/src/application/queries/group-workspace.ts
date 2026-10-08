@@ -1,0 +1,58 @@
+import type {RequestContext,MetricCard} from '@creatoros/contract';
+import {groupWorkspaceQuery,groupDashboardPage} from '@creatoros/contract';
+import {OwnershipError} from '../../errors';
+import type {AccountGroupService} from '../../modules/platform-account';
+import type {ProjectsService} from '../../modules/projects';
+import type {PublishingService} from '../../modules/publishing';
+import type {AnalyticsService} from '../../modules/analytics';
+import type {DashboardPage} from '@creatoros/contract';
+const num=(m:Record<string,unknown>,keys:string[])=>{for(const k of keys){const v=m[k];if(typeof v==='number'&&Number.isFinite(v))return v;}return null;};
+const sum=(values:Array<number|null>)=>{const known=values.filter((v):v is number=>v!==null);return known.length?known.reduce((a,b)=>a+b,0):null;};
+const fmt=(n:number|null)=>n===null?'—':n.toLocaleString('zh-CN');
+const card=(id:string,label:string,n:number|null):MetricCard=>({id,label,value:fmt(n),delta:'',trend:'flat',tone:'neutral'});
+/** 组页面只组合现有业务端口；共享创作卡片始终用组范围，平台筛选只消费发布与指标。 */
+export function createGroupWorkspaceApplication(ports:{groups:AccountGroupService;projects:ProjectsService;publishing:PublishingService;analytics:AnalyticsService;dashboard:{getDashboard(ctx:RequestContext):Promise<DashboardPage>};now:()=>string}){
+ return {async get(ctx:RequestContext,groupId:string,input:unknown){
+  const query=groupWorkspaceQuery.parse(input);const group=await ports.groups.get(ctx,groupId);
+  if(ctx.groupId&&ctx.groupId!==groupId)throw new OwnershipError('请切换到此账号组');
+  const sharedCtx={...ctx,groupId,accountId:null};
+  const generatedAt=ports.now();const endDate=query.endDate??new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(generatedAt));
+  const startDate=query.startDate??new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(Date.parse(endDate+'T00:00:00+08:00')-29*86400000));
+  // 获取冻结组历史事实，选项包含已转出的账号，不向前端借账号列表扩大权限。
+  const [base,projects,allPubs]=await Promise.all([ports.dashboard.getDashboard(sharedCtx),ports.projects.listProjectsForComposition(sharedCtx),ports.publishing.listPublicationsForUser(sharedCtx,{limit:100000,offset:0})]);
+  const accounts=new Map(group.members.map(m=>[m.accountId,{id:m.accountId,platform:m.platform,name:m.accountHandle,historical:false,archived:m.status==='archived'}]));
+  for(const p of allPubs)if(!accounts.has(p.accountId))accounts.set(p.accountId,{id:p.accountId,platform:p.platform as typeof group.members[number]['platform'],name:p.accountReference||p.accountId,historical:true,archived:false});
+  if(query.accountId&&!accounts.has(query.accountId))throw new OwnershipError('账号不属于当前组或没有此组历史事实');
+  if(query.accountId&&query.platform&&accounts.get(query.accountId)!.platform!==query.platform)throw new OwnershipError('账号与所选平台不一致');
+  const inWindow=(p:typeof allPubs[number])=>!!p.publishedAt&&Date.parse(p.publishedAt)>=Date.parse(startDate+'T00:00:00+08:00')&&Date.parse(p.publishedAt)<Date.parse(endDate+'T00:00:00+08:00')+86400000;
+  const pubs=allPubs.filter(p=>(!query.platform||p.platform===query.platform)&&(!query.accountId||p.accountId===query.accountId));
+  const published=pubs.filter(p=>p.status==='published'&&!p.hiddenAt&&!p.removedAt&&inWindow(p));
+  const latest=published.length?await ports.analytics.listLatestSnapshotsByPublicationIds(sharedCtx,published.map(p=>p.id)):[];
+  const byPub=new Map(latest.map(s=>[s.publicationId,s]));
+  const platformNames=[...new Set([...group.members.map(m=>m.platform),...pubs.map(p=>p.platform)])];
+  const platforms=platformNames.filter(p=>!query.platform||p===query.platform).map(platform=>{
+   const facts=published.filter(p=>p.platform===platform);const snapshots=facts.flatMap(p=>byPub.has(p.id)?[byPub.get(p.id)!]:[]);
+   const raws=snapshots.map(s=>(s.rawMetrics??{}) as Record<string,unknown>);const article=platform==='wechatOfficial';
+   return {platform,publicationCount:facts.length,sampleCount:snapshots.length,views:article?null:sum(raws.map(m=>num(m,['views','plays']))),reads:article?sum(raws.map(m=>num(m,['reads','read_count','views']))):null,likes:sum(raws.map(m=>num(m,['likes']))),shares:sum(raws.map(m=>num(m,['shares']))),capturedAt:snapshots.map(s=>s.capturedAt).sort().at(-1)??null};
+  });
+  const outputRefs=await ports.projects.listOutputRefsByOutputIds(sharedCtx,published.map(p=>p.contentOutputId));
+  const contentCount=new Set(outputRefs.map(p=>p.projectId)).size;const pendingCount=pubs.filter(p=>p.status!=='published'&&p.status!=='removed').length;
+  const videoViews=sum(platforms.filter(p=>p.platform!=='wechatOfficial').map(p=>p.views));const articleReads=sum(platforms.filter(p=>p.platform==='wechatOfficial').map(p=>p.reads));
+  const collectedAccounts=new Set(published.filter(p=>byPub.has(p.id)).map(p=>p.accountId)).size;const selectedAccounts=[...accounts.values()].filter(a=>(!query.platform||a.platform===query.platform)&&(!query.accountId||a.id===query.accountId));
+  const coverage=`${collectedAccounts}/${selectedAccounts.length} 个账号有作品指标；期间发布作品截至采集时的累计表现`;
+  const followerFacts=new Map<string,{capturedAt:string;value:number}>();
+  for(const p of published){const snap=byPub.get(p.id);if(!snap)continue;const value=num((snap.rawMetrics??{}) as Record<string,unknown>,['followers','follower_count','fans_count']);if(value!==null&&(!followerFacts.has(p.accountId)||snap.capturedAt>followerFacts.get(p.accountId)!.capturedAt))followerFacts.set(p.accountId,{capturedAt:snap.capturedAt,value});}
+  const followers=sum([...followerFacts.values()].map(f=>f.value));
+  const rollup=query.platform?await ports.analytics.getDashboardRollup(sharedCtx,{publicationIds:published.map(p=>p.id)}):null;
+  const finish=rollup?.finishAvg;
+  const metrics=query.platform?[
+   card('g-views',query.platform==='wechatOfficial'?'文章阅读':'视频播放',query.platform==='wechatOfficial'?articleReads:videoViews),card('g-likes','点赞',sum(platforms.map(p=>p.likes))),card('g-followers','粉丝数',followers),query.platform==='wechatOfficial'?card('g-watching','在看',sum(latest.map(s=>num((s.rawMetrics??{}) as Record<string,unknown>,['watching','wow','in_look'])))):{...card('g-finish','平均完播率',null),value:typeof finish==='number'&&rollup!.finishCount>0?finish.toFixed(1)+'%':'—'},card('g-shares','分享',sum(platforms.map(p=>p.shares))),
+  ]:[card('g-content','独立内容数',new Set(projects.map(p=>p.id)).size),card('g-pubs','期间发布记录',published.length),card('g-pending','待分发记录',pendingCount),card('g-video','视频播放合计',videoViews),card('g-read','文章阅读',articleReads)];
+  const titles=await ports.publishing.listCurrentRevisionSummariesByPublicationIds(sharedCtx,published.map(p=>p.id));const byTitle=new Map(titles.map(t=>[t.publicationId,t.title]));
+  const recentPublications=published.slice().sort((a,b)=>(b.publishedAt??'').localeCompare(a.publishedAt??'')).slice(0,5).map(p=>({id:p.id,title:byTitle.get(p.id)||'未命名发布',platform:p.platform,status:p.status,views:num((byPub.get(p.id)?.rawMetrics??{}) as Record<string,unknown>,p.platform==='wechatOfficial'?['reads','read_count','views']:['views','plays']),engagement:sum([num((byPub.get(p.id)?.rawMetrics??{}) as Record<string,unknown>,['likes']),num((byPub.get(p.id)?.rawMetrics??{}) as Record<string,unknown>,['comments']),num((byPub.get(p.id)?.rawMetrics??{}) as Record<string,unknown>,['shares'])]),publishedAt:p.publishedAt!}));
+  const daily=query.platform==='wechatOfficial'?[]:await ports.analytics.getDailyPlayTrend(sharedCtx,{publicationIds:published.filter(p=>p.platform!=='wechatOfficial').map(p=>p.id),days:30});
+  const trend=daily.filter(p=>p.day>=startDate&&p.day<=endDate).map(p=>({label:p.day,value:p.complete===false?null:p.plays}));
+  // 仅同来源相邻日实测差分；缺失或覆盖不全留空，不把累计值画成增长。
+  return groupDashboardPage.parse({...base,metrics,recentPublications,dataOverview:{metrics,trend},workspace:{groupId,groupName:group.name,status:group.status,platform:query.platform??null,accountId:query.accountId??null,startDate,endDate,generatedAt,contentCount,publicationCount:published.length,pendingCount,collectedAccounts,totalAccounts:selectedAccounts.length,videoViews,articleReads,followers,latestCapturedAt:latest.map(s=>s.capturedAt).sort().at(-1)??null,accounts:[...accounts.values()],platforms,coverage,metricMode:'published_in_period_cumulative'}});
+ }};
+}

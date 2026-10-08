@@ -1,3 +1,4 @@
+import {projects as parentProjects,contentOutputs as parentOutputs,publications as parentPublications,reviews as parentReviews} from "@creatoros/backend";
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import { createLearningsRepository } from "./learnings.repository";
@@ -31,6 +32,11 @@ describe("learnings repository (integration, user-scoped)", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    // 真实父实体fixture；授权不能只靠通过的mock服务端口。
+    await db.insert(parentProjects).values(["project-1", "project-abc", "project-P", "project-Q", "project-shared", "p1", "p2"].map(id=>({id,userId:"user-a",accountId:"acct-default",title:id,creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW}))).onConflictDoNothing();
+    await db.insert(parentProjects).values({id:"p1-account-a",accountId:"account-a",userId:"user-a",title:"号A项目",creationMode:"free",status:"active",currentStage:"script",startedAt:NOW,createdAt:NOW,updatedAt:NOW});
+    await db.insert(parentReviews).values({id:"review-1",userId:"user-a",accountId:"acct-default",projectId:"project-1",reviewType:"project",status:"completed",periodStart:NOW,periodEnd:NOW,createdAt:NOW});
+
   });
 
   it("learnings row round-trips with defaults", async () => {
@@ -329,7 +335,7 @@ describe("learnings repository (integration, user-scoped)", () => {
     expect((await repoA.getLearningRowById(a.id)).id).toBe(a.id);
 
     // learning_applications 也随号盖章 + 号门收窄计数。
-    await repoA.createApplication(a.id, { projectId: "p1", applicationNote: "" });
+    await repoA.createApplication(a.id, { projectId: "p1-account-a", applicationNote: "" });
     expect(await repoA.countApplications(a.id)).toBe(1);
   });
 });

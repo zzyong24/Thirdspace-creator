@@ -37,6 +37,8 @@ import type {
 } from "./content-calendar-page";
 import type { ContentCalendarEntryResource } from "@creatoros/backend/modules/content-calendar";
 
+import {GroupCalendarPlanningControl} from "./group-calendar-planning-control";
+
 const WEEKDAY_LABELS = ["一", "二", "三", "四", "五", "六", "日"];
 
 /** "YYYY-MM" → "YYYY年M月" 标题。 */
@@ -67,7 +69,7 @@ export function ContentCalendarView({
 }: {
   readonly viewModel: ContentCalendarViewModel;
 }) {
-  const { accountId, month, referenceDateKey, publications, entries, projects } =
+  const { accountId, groupId, month, referenceDateKey, publications, entries, projects } =
     viewModel;
   const router = useRouter();
   const [isMonthPending, startMonthTransition] = React.useTransition();
@@ -76,12 +78,12 @@ export function ContentCalendarView({
   const nextMonthHref = `/publishing?month=${shiftMonth(month, 1)}`;
 
   React.useEffect(() => {
-    if (!accountId) return;
+    if (!accountId && !groupId) return;
     router.prefetch(prevMonthHref);
     router.prefetch(nextMonthHref);
-  }, [accountId, nextMonthHref, prevMonthHref, router]);
+  }, [accountId, groupId, nextMonthHref, prevMonthHref, router]);
 
-  if (!accountId) {
+  if (!accountId && !groupId) {
     // [T-332 S4] 区分两种「没当前号」(SPEC §6.2/§4.2):
     //  - 0 个 active 号 → 绑定引导(去账号管理);
     //  - 有号但未选(cookie 失效等边缘,切换器挂载后会自愈)→ 提示选号,不代猜。
@@ -158,13 +160,16 @@ export function ContentCalendarView({
       data-slot="content-calendar"
       data-testid="content-calendar"
       data-account-id={accountId}
+      data-group-id={groupId}
       data-month={month}
       data-month-pending={isMonthPending ? "true" : undefined}
       aria-busy={isMonthPending}
       className="flex flex-col gap-section-gap"
     >
+      {groupId ? <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">共享创作计划 · 未选平台目标也可安排日期</p><GroupCalendarPlanningControl key={groupId} groupId={groupId} projects={projects} today={referenceDateKey}/></div> : null}
+      {groupId ? <p className="text-xs text-muted-foreground">{viewModel.cadenceUnavailable ? "组创作节奏暂时不可用" : viewModel.cadence ? `组创作节奏：${({daily:"每天",weekly:"每周",biweekly:"每两周",monthly:"每月",custom:"自定义"} as Record<string,string>)[viewModel.cadence.frequency] ?? viewModel.cadence.frequency}` : "尚未设置组创作节奏，可先安排具体日期"}</p> : null}
       {/* 月份头：客户端路由保留当前月历直到新月份读回，避免 Tauri WebView 整页白屏。 */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -206,7 +211,7 @@ export function ContentCalendarView({
           data-testid="calendar-month-summary"
           className="text-sm text-muted-foreground"
         >
-          本月发布 {publications.length} 条 · 排期 {visibleEntries.length} 条
+          {viewModel.publicationsUnavailable ? "发布记录暂时不可用" : `本月发布 ${publications.length} 条`} · 排期 {visibleEntries.length} 条
         </p>
       </div>
 
@@ -282,7 +287,7 @@ export function ContentCalendarView({
 
           {selectedPubs.length === 0 && selectedEntries.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              这一天没有发布记录，也没有排期。
+              {viewModel.publicationsUnavailable ? "发布记录暂时不可用，这一天暂无排期。" : "这一天没有发布记录，也没有排期。"}
             </p>
           ) : null}
 
@@ -328,6 +333,8 @@ export function ContentCalendarView({
                   <CalendarEntryReadonlyRow
                     key={entry.id}
                     entry={entry}
+                    groupId={groupId}
+                    today={referenceDateKey}
                     projectTitle={
                       entry.projectId
                         ? (projectTitleById.get(entry.projectId) ?? null)
@@ -489,7 +496,11 @@ function CalendarDayCell({
 function CalendarEntryReadonlyRow({
   entry,
   projectTitle,
+  groupId,
+  today,
 }: {
+  readonly groupId?: string | null;
+  readonly today?: string;
   readonly entry: ContentCalendarEntryResource;
   readonly projectTitle: string | null;
 }) {
@@ -508,9 +519,11 @@ function CalendarEntryReadonlyRow({
         <p className="truncate text-xs text-muted-foreground">
           {ENTRY_STATUS_LABELS[entry.status] ?? entry.status} ·{" "}
           {dayTitle(entry.plannedDate)}
+          {entry.targetStatus === "needs_reselection" ? " · 平台账号已转出，需重新选择目标" : entry.targetStatus === "unassigned" ? " · 未选平台目标" : ""}
           {legacy && entry.note ? ` · ${entry.note}` : ""}
         </p>
       </div>
+      {groupId && entry.targetStatus === "needs_reselection" ? <GroupCalendarPlanningControl key={`${groupId}:${entry.id}`} groupId={groupId} projects={[]} today={today??entry.plannedDate} entryId={entry.id}/> : null}
       {entry.projectId ? (
         <a
           href={`/projects/${entry.projectId}`}

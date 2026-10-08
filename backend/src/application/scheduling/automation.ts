@@ -71,8 +71,8 @@ const {aiService,schedulingService,schedulerCtx,syncDailyExecutionRuns,syncColle
     });
     const runnable: AutomationDriverJob[] = [];
     for (const job of rows) {
-      if (!job.accountId) continue;
-      const jobCtx: RequestContext = { ...c, accountId: job.accountId };
+      if (!job.accountId&&!(["topic.daily","intelligence.sync"].includes(job.sourceKind)&&job.groupId)) continue;
+      const jobCtx: RequestContext = { ...c, accountId: job.accountId??null,groupId:job.groupId,groupVersion:job.groupVersion??undefined,membershipVersion:job.membershipVersion??undefined };
       const recent = await schedulingService.listRunsByJob(jobCtx, job.id, {
         limit: 1,
         offset: 0,
@@ -85,7 +85,7 @@ const {aiService,schedulingService,schedulerCtx,syncDailyExecutionRuns,syncColle
         target: (job.target ?? {}) as Record<string, unknown>,
         schedule: job.schedule,
         enabled: job.enabled,
-        accountId: job.accountId,
+        accountId: job.accountId??null,groupId:job.groupId,groupVersion:job.groupVersion,membershipVersion:job.membershipVersion,
         // [T-636] 每日作品同步漏跑补偿只需知道“当天计划后是否已经尝试过”。最近 run
         // 无论成功或失败都算一次尝试，避免失败时每分钟自动重试；needs_reconnect 已在上方停跑。
         lastRunStartedAt: last?.startedAt ?? null,
@@ -104,7 +104,7 @@ const {aiService,schedulingService,schedulerCtx,syncDailyExecutionRuns,syncColle
             id: input.job.id,
             sourceKind: input.job.sourceKind,
             target: input.job.target,
-            accountId: input.job.accountId,
+            accountId: input.job.accountId,groupId:input.job.groupId,groupVersion:input.job.groupVersion,membershipVersion:input.job.membershipVersion,
           },
           triggerDeps,
           { scheduledFor: input.scheduledFor },

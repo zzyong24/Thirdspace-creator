@@ -1,3 +1,5 @@
+import {factFilter} from "../../workspace-scope";
+import {requireAccountId} from "../../errors";
 import { and, desc, eq, inArray, isNull, or, sql, type Db } from "@creatoros/backend";
 import { publications, publicationRevisions } from "./publishing.db-schema";
 import { ConflictError, OwnershipError } from "./publishing.errors";
@@ -15,7 +17,7 @@ import { ConflictError, OwnershipError } from "./publishing.errors";
 // SERVICE; the repository only executes service-approved updates and is the
 // append-only writer for revisions (never UPDATE a revision row).
 
-export type PublicationRow = typeof publications.$inferSelect;
+export type PublicationRow = Omit<typeof publications.$inferSelect,"groupId"|"groupVersion"|"membershipVersion"> & {groupId?:string|null;groupVersion?:number|null;membershipVersion?:number|null};
 export type PublicationRevisionRow = typeof publicationRevisions.$inferSelect;
 
 export interface RepoDeps {
@@ -27,7 +29,10 @@ export interface RepoDeps {
   //   退化)。写路径 create 一律 stamp 本号;读路径(列表/聚合/by-id)一律
   //   eq(account_id, deps.accountId) —— 无任何 OR-IS-NULL lenient 分支(用户拍板 ②:
   //   清库重来,不存在待兼容的存量 NULL 行)。唯一例外是 findByExternalKey(见其注释)。
-  accountId: string;
+  accountId: string|null;
+  groupId?: string|null;
+  groupVersion?: number|null;
+  membershipVersion?: number|null;
 }
 
 export interface CreatePublicationInput {
@@ -133,6 +138,9 @@ export interface PublishingRepository {
     publicationId: string,
     patch: UpdateStatusPatch,
   ): Promise<PublicationRow>;
+  listCollectedExternalIds(platform:string):Promise<string[]>;
+  findCollectedById(id: string): Promise<PublicationRow | null>;
+  findCollectedByExternalKey(platform: string, externalId: string): Promise<PublicationRow | null>;
   findByExternalKey(
     platform: string,
     externalId: string,
@@ -184,7 +192,7 @@ export function createPublishingRepository(
   //   · **唯一例外 findByExternalKey**(C-09 裁决):(platform, external_id) 是平台事实
   //     唯一锚,查询保持 user 级(加号过滤会让跨号行不可见 → 重复 INSERT 炸唯一索引、
   //     破幂等);命中后断言归属号与 ctx 一致,不一致按数据 bug 报错,绝不静默返回。
-  const accountGate = eq(publications.accountId, deps.accountId);
+  const accountGate = factFilter(publications, deps);
 
   // Private ownership gate — a cross-user / unknown id is indistinguishable from a
   // missing one (foundation §2: 404, never reveal existence) → OwnershipError.
@@ -229,7 +237,10 @@ export function createPublishingRepository(
         id,
         userId,
         // [T-332 S2] 按号 stamp(strict:deps.accountId 必填,发布草稿出生即归当前号)。
-        accountId: deps.accountId,
+        accountId: requireAccountId(deps.accountId,"publication target"),
+        groupId: deps.groupId ?? null,
+        groupVersion: deps.groupVersion ?? null,
+        membershipVersion: deps.membershipVersion ?? null,
         contentOutputId: outputId,
         platform: input.platform,
         accountReference: input.accountReference,
@@ -262,7 +273,10 @@ export function createPublishingRepository(
           id: pubId,
           userId,
           // [T-332 S2] 采集 stamp:导入作品出生即归当前号(strict,deps.accountId 必填)。
-          accountId: deps.accountId,
+          accountId: requireAccountId(deps.accountId,"publication target"),
+        groupId: deps.groupId ?? null,
+        groupVersion: deps.groupVersion ?? null,
+        membershipVersion: deps.membershipVersion ?? null,
           contentOutputId: outputId,
           platform: input.platform,
           accountReference: input.accountReference,
@@ -460,7 +474,7 @@ export function createPublishingRepository(
         .where(
           and(
             eq(publications.userId, deps.userId),
-            eq(publications.accountId, deps.accountId),
+            factFilter(publications, deps),
             inArray(publications.id, [...publicationIds]),
           ),
         );
@@ -567,30 +581,24 @@ export function createPublishingRepository(
       return rows.map((r) => ({...r.pub, coverAssetId: r.coverAssetId}));
     },
 
+    async listCollectedExternalIds(platform){
+      const rows=await db.select({externalId:publications.externalId}).from(publications).where(and(eq(publications.userId,userId),eq(publications.accountId,requireAccountId(deps.accountId,"verified collection account")),eq(publications.platform,platform),eq(publications.status,"published")));
+      return rows.flatMap(row=>row.externalId?[row.externalId]:[]);
+    },
+    async findCollectedById(id) {
+      const rows=await db.select().from(publications).where(and(eq(publications.userId,userId),eq(publications.accountId,requireAccountId(deps.accountId,"verified collection account")),eq(publications.id,id))).limit(1);
+      return rows[0]??null;
+    },
+    async findCollectedByExternalKey(platform, externalId) {
+      const rows=await db.select().from(publications).where(and(eq(publications.userId,userId),eq(publications.accountId,requireAccountId(deps.accountId,"verified collection account")),eq(publications.platform,platform),eq(publications.externalId,externalId)));
+      return rows[0]??null;
+    },
     async findByExternalKey(platform, externalId) {
-      // [T-332 S2 / C-09 裁决] 查询保持 user 级:(platform, external_id) 是平台事实唯一锚
-      //   (一个抖音作品在平台上只属于一个号),加号过滤会让跨号行不可见 → 重复 INSERT
-      //   炸唯一索引、破幂等。命中后断言归属号与当前 ctx 一致 —— 不一致说明采集/登记链
-      //   在错误的号 ctx 下触碰了别号的作品,是数据 bug,必须炸出来,绝不静默返回。
-      const rows = await db
-        .select()
-        .from(publications)
-        .where(
-          and(
-            eq(publications.userId, userId),
-            eq(publications.platform, platform),
-            eq(publications.externalId, externalId),
-          ),
-        );
-      const row = rows[0] ?? null;
-      if (row && row.accountId !== deps.accountId) {
-        throw new Error(
-          `publishing 数据 bug:外键 (${platform}, ${externalId}) 命中行归属号与当前 ctx 不一致 —— ` +
-            `publication ${row.id} 属号 ${row.accountId},当前 ctx 号 ${deps.accountId}。` +
-            `平台唯一锚不可能跨号双属,说明采集/登记在错误的账号上下文下运行,请排查调用链。`,
-        );
-      }
-      return row;
+      const rows=await db.select().from(publications).where(and(eq(publications.userId,userId),eq(publications.platform,platform),eq(publications.externalId,externalId)));
+      const row=rows[0]??null;
+      if(!row)return null;
+      if((deps.groupId && row.groupId!==deps.groupId)||(deps.accountId && row.accountId!==deps.accountId))throw new OwnershipError("发布记录不属于当前工作区");
+      return getPublicationRowById(row.id);
     },
 
     async reAnchorPublicationOutput(publicationId, newOutputId) {

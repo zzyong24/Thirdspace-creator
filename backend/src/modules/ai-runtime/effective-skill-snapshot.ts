@@ -249,7 +249,8 @@ export interface OfficialSkillProvider {
 
 export interface AccountSkillOverlayRuntimeRow {
   userId: string;
-  accountId: string;
+  accountId: string | null;
+  groupId?: string | null;
   skillId: string;
   rowRevision: number;
   observedBaseVersion: string;
@@ -267,6 +268,7 @@ export interface AccountSkillOverlayReader {
 export interface EffectiveSkillSnapshotResolverDeps {
   officialSkills: OfficialSkillProvider;
   accountOverlays: AccountSkillOverlayReader;
+  groupOverlays?: AccountSkillOverlayReader;
   now?: () => string;
 }
 
@@ -538,8 +540,9 @@ export function createEffectiveSkillSnapshotResolver(
   deps: EffectiveSkillSnapshotResolverDeps,
 ): EffectiveSkillSnapshotResolver {
   return async (ctx, requiredSkillIds) => {
-    const accountId = ctx.accountId?.trim();
-    if (!ctx.userId.trim() || !accountId) {
+    const accountId = ctx.accountId?.trim() ?? null;
+    const groupId = ctx.groupId?.trim() ?? null;
+    if (!ctx.userId.trim() || (!accountId && !groupId)) {
       return accountMismatch("解析 Skill snapshot 缺少有效 user/account owner", {
         userId: ctx.userId,
         accountId: ctx.accountId ?? null,
@@ -559,13 +562,13 @@ export function createEffectiveSkillSnapshotResolver(
     const rows =
       skillIds.length === 0
         ? []
-        : await deps.accountOverlays.listBySkillIds(ctx, skillIds);
+        : groupId ? await deps.groupOverlays?.listBySkillIds(ctx, skillIds) ?? [] : await deps.accountOverlays.listBySkillIds(ctx, skillIds);
     const requested = new Set(skillIds);
     const rowBySkill = new Map<string, AccountSkillOverlayRuntimeRow>();
     for (const row of rows) {
       if (
         row.userId !== ctx.userId ||
-        row.accountId !== accountId ||
+        (groupId ? row.groupId !== groupId : row.accountId !== accountId) ||
         !requested.has(row.skillId)
       ) {
         return accountMismatch("overlay reader 返回了跨属主或非请求 Skill 行", {
@@ -602,7 +605,7 @@ export function createEffectiveSkillSnapshotResolver(
     const snapshot: EffectiveSkillSnapshotV1 = {
       snapshotVersion: 1,
       userId: ctx.userId,
-      accountId,
+      accountId,groupId,groupVersion:ctx.groupVersion??null,membershipVersion:ctx.membershipVersion??null,
       resolvedAt: (deps.now ?? (() => new Date().toISOString()))(),
       platformPolicyVersion: policy.version,
       platformPolicy: policy.text,
@@ -639,8 +642,8 @@ function assertSnapshot(
     value.snapshotVersion !== 1 ||
     typeof value.userId !== "string" ||
     !value.userId.trim() ||
-    typeof value.accountId !== "string" ||
-    !value.accountId.trim() ||
+    (value.accountId !== null && (typeof value.accountId !== "string" || !value.accountId.trim())) ||
+    (!(typeof value.groupId === "string" && value.groupId.trim()) && !value.accountId) ||
     typeof value.resolvedAt !== "string" ||
     Number.isNaN(Date.parse(value.resolvedAt)) ||
     typeof value.platformPolicyVersion !== "string" ||

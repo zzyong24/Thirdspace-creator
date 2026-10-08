@@ -29,7 +29,8 @@ export const creatorProfiles = pgTable("creator_profiles", {
   // [T-136 多账号 · SPEC §C] 定位母版 per-account:UNIQUE(user_id) → UNIQUE(user_id,
   // account_id)(迁移 0025 换约束)。account_id nullable 稳定终态(SPEC §6 MAJOR-3);
   // 一号一套定位母版。
-  accountId: text("account_id").notNull(), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042)
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-332 S1] per-account 收口 NOT NULL(迁移 0042)
   persona: text("persona").notNull().default(""),
   field: text("field").notNull().default(""), // 领域/赛道
   audience: text("audience").notNull().default(""), // 目标人群
@@ -53,7 +54,8 @@ export const creatorProfiles = pgTable("creator_profiles", {
 export const positioningStatements = pgTable("positioning_statements", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column (foundation §1)
-  accountId: text("account_id").notNull(), // [T-332 S1] per-account 收口 NOT NULL(承 profile 的号);UNIQUE(profile_id, version_number) 不变
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-332 S1] per-account 收口 NOT NULL(承 profile 的号);UNIQUE(profile_id, version_number) 不变
   profileId: text("profile_id").notNull(), // FK → creator_profiles
   oneLiner: text("one_liner").notNull().default(""), // 我是谁+帮谁+解决什么+怎么表达
   keywords: jsonb("keywords").notNull().default([]), // exactly 3 strings (service guard)
@@ -77,7 +79,8 @@ export const positioningDiscoverySessions = pgTable(
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id").notNull(),
+    groupId: text("group_id"),
+  accountId: text("account_id"),
     sourceMode: text("source_mode").notNull(),
     status: text("status").notNull().default("draft"),
     answers: jsonb("answers").notNull().default([]),

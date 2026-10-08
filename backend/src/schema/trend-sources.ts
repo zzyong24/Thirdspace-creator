@@ -18,8 +18,9 @@ import { pgTable, text, boolean } from "drizzle-orm/pg-core";
 
 export const trendSources = pgTable("trend_sources", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull(), // 所有权边界
-  accountId: text("account_id").notNull(), // [T-201] 按号隔离;nullable 稳定终态
+  userId: text("user_id").notNull(),
+  groupId: text("group_id"), // 所有权边界
+  accountId: text("account_id"), // [T-201] 按号隔离;nullable 稳定终态
   name: text("name").notNull().default(""), // 展示名(缺省用 domain)
   url: text("url").notNull(), // 信源 URL(幂等锚)
   sourceType: text("source_type").notNull().default("web"), // web | rss

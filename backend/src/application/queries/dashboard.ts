@@ -10,7 +10,7 @@ learningsService: Pick<ReturnType<typeof import("../../modules/learnings").creat
 executionService: Pick<ReturnType<typeof import("../../modules/execution").createExecutionService>, "list">;
 candidateService: Pick<ReturnType<typeof import("../../modules/candidate").createCandidateService>, "listCandidates">;
 platformAccountService: Pick<ReturnType<typeof import("../../modules/platform-account").createPlatformAccountService>, "listAccounts">;
-contentCalendarService: Pick<ReturnType<typeof import("../../modules/content-calendar").createContentCalendarService>, "getCalendarRequestContext" | "listActiveProjectSchedules">;
+contentCalendarService: Pick<ReturnType<typeof import("../../modules/content-calendar").createContentCalendarService>, "getCalendarRequestContext" | "listActiveProjectSchedules" | "listGroupCalendar">;
 notificationsServiceForQuery: Pick<ReturnType<typeof import("../../modules/notifications").createNotificationsService>, "getUnreadCount">;
 resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
 }) {
@@ -30,10 +30,10 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
       getDashboardSummary: async (ctx) => {
         const summaryRead = projectsService.getDashboardSummary(ctx);
         const executionRead = executionService.list(ctx,{limit:30,offset:0}).catch(()=>({rows:[]}));
-        const scheduleRead = ctx.accountId ? (async()=>{
+        const scheduleRead = ctx.groupId || ctx.accountId ? (async()=>{
           const [calendarContext,schedules,projects]=await Promise.all([
             contentCalendarService.getCalendarRequestContext(ctx),
-            contentCalendarService.listActiveProjectSchedules(ctx,ctx.accountId!),
+            ctx.groupId?contentCalendarService.listGroupCalendar(ctx,ctx.groupId,{from:"1900-01-01T00:00:00Z",to:"9999-12-31T23:59:59Z"},{limit:1000,offset:0}).then(result=>result.rows.filter(e=>e.projectId&&(e.status==='planned'||e.status==='missed'))):contentCalendarService.listActiveProjectSchedules(ctx,ctx.accountId!),
             projectsService.listProjectsForComposition(ctx),
           ]);
           const outputRefs=await projectsService.listOutputRefsByProjects(ctx,projects.map(p=>p.id));
@@ -125,7 +125,7 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
         const scheduleAccountId = ctx.accountId;
         // 排期属于抖音账号维度。尚未绑定账号是正常上手状态，不应调用账号服务，更不能误报成
         // “排期暂不可用”。只有已绑定账号后的真实读取异常才进入可重试错误态。
-        if (scheduleAccountId) {
+        if (ctx.groupId || scheduleAccountId) {
           try {
             const result = await scheduleRead!;
             if(!result.ok) throw result.error;
@@ -299,8 +299,8 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
             .then(value=>({ok:true as const,value}),error=>({ok:false as const,error})),
         ]);
         if (r.snapshotCount === 0) return { metrics: [], trend: [] };
-        const fmt = (v: number) =>
-          v >= 10000
+        const fmt = (v: number|null) =>
+          v===null?"—":v >= 10000
             ? `${(v / 10000).toFixed(1)} 万`
             : v.toLocaleString("zh-CN");
         const card = (
@@ -341,7 +341,7 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
             .reduce((acc, a) => acc + (a.followerBaseline ?? 0), 0);
           if (baselineSum > 0) {
             followerTotal = { label: "总粉丝", value: fmt(baselineSum) };
-          } else if (r.followerGain > 0) {
+          } else if (r.followerGain !== null && r.followerGain > 0) {
             // [Bug-2 T-015] 真值兜底:期内采集到的新增粉丝总和(label 显式标「期内」,别假装总数)。
             followerTotal = {
               label: "新增粉丝(期内)",
@@ -362,7 +362,7 @@ resolveImportedPublicationIds: (ctx: RequestContext) => Promise<string[]>;
             ...card(
               "d-finish",
               "平均完播率",
-              r.finishCount > 0 ? `${r.finishAvg.toFixed(1)}%` : "—",
+              r.finishAvg !== null ? `${r.finishAvg.toFixed(1)}%` : "—",
             ),
             tone: "info",
           },

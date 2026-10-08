@@ -6,13 +6,17 @@ import {
   platformId,
   platformAccountStatus,
 } from "../primitives";
-import { platformAccountResource } from "../resources/platform-accounts";
+import { platformAccountResource, platformAccountCapabilitiesResource,accountBindingStart,accountBindingResource } from "../resources/platform-accounts";
 
 const accountParams = z.object({ accountId: id });
 
 // SPEC §13 "平台账号 (platform-account)" group (七步 §7.1, contract v0.4).
 // Stores a secret *reference*, never a raw token.
 export const platformAccountOperations = {
+  startAccountBinding:defineEndpoint({id:"accounts.bind.start",method:"POST",path:"/accounts/bindings",body:accountBindingStart,response:accountBindingResource,fr:["FR-ACCOUNT-BIND"]}),
+  getAccountBinding:defineEndpoint({id:"accounts.bind.status",method:"GET",path:"/accounts/bindings/:runId",params:z.object({runId:id}),response:accountBindingResource,fr:["FR-ACCOUNT-BIND"]}),
+  cancelAccountBinding:defineEndpoint({id:"accounts.bind.cancel",method:"POST",path:"/accounts/bindings/:runId/cancel",params:z.object({runId:id}),response:accountBindingResource,fr:["FR-ACCOUNT-BIND"]}),
+  getPlatformAccountCapabilities:defineEndpoint({id:"accounts.bindingCapabilities",method:"GET",path:"/accounts/binding-capabilities",response:platformAccountCapabilitiesResource,isList:true,fr:["FR-ACCOUNT-CAPABILITIES"]}),
   listAccounts: defineEndpoint({
     id: "accounts.list",
     method: "GET",
@@ -29,6 +33,7 @@ export const platformAccountOperations = {
     body: z.object({
       platform: platformId,
       accountHandle: z.string().min(1),
+      idempotencyKey:z.string().min(1).max(160).optional(),
       secretReference: z.string().optional(),
       followerBaseline: z.number().int().min(0).optional(),
     }),

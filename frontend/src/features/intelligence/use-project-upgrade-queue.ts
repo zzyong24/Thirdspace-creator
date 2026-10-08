@@ -1,7 +1,8 @@
 "use client";
 import * as React from "react";
 import type {ExecutionTaskResourceV2} from "@creatoros/contract";
-import type {RadarApi} from "./intelligence-workbench-types";
+import {radarTaskInScope,radarScopeKey} from "./intelligence-workbench-types";
+import type {RadarScope,RadarApi} from "./intelligence-workbench-types";
 import {operationKey} from "./radar-operation-key";
 
 export function upgradeProjectId(task?:ExecutionTaskResourceV2):string|null {
@@ -28,16 +29,20 @@ export function upgradeLabel(task?:ExecutionTaskResourceV2):string {
   return ({transcribing:"AI 转写中",generating:"拆解与写稿中",creating_project:"创建项目中",completed:"查看项目"} as Record<string,string>)[point?.stage??""]??"升级排队中";
 }
 
-export function useProjectUpgradeQueue({api,accountId,positioningVersionId,setNotice}:{api:RadarApi;accountId:string;positioningVersionId:string|null;setNotice:(value:string|null)=>void}){
+export function useProjectUpgradeQueue({api,accountId,groupId,positioningVersionId,setNotice}:RadarScope & {api:RadarApi;positioningVersionId:string|null;setNotice:(value:string|null)=>void}){
+  const scope=React.useMemo(()=>({groupId,accountId}),[groupId,accountId]);
+  const scopeKey=radarScopeKey(scope);
+  const currentScope=React.useRef(scopeKey);
+  React.useLayoutEffect(()=>{currentScope.current=scopeKey;},[scopeKey,scope]);
   const [tasks,setTasks]=React.useState<ExecutionTaskResourceV2[]>([]);
   const [submitting,setSubmitting]=React.useState<Set<string>>(new Set());
   const pending=React.useRef(new Set<string>());
   const mounted=React.useRef(true);
-  const merge=React.useCallback((rows:ExecutionTaskResourceV2[])=>setTasks(old=>{
+  const merge=React.useCallback((rows:ExecutionTaskResourceV2[])=>{if(currentScope.current!==scopeKey)return;setTasks(old=>{
     const map=new Map(old.map(task=>[task.id,task]));
-    for(const row of rows)if(row.accountId===accountId)map.set(row.id,row);
+    for(const row of rows)if(radarTaskInScope(row,scope))map.set(row.id,row);
     return [...map.values()].sort((a,b)=>a.createdAt.localeCompare(b.createdAt));
-  }),[accountId]);
+  });},[scopeKey,scope]);
   React.useEffect(()=>{
     mounted.current=true;
     let disposed=false,reading=false;
@@ -46,7 +51,7 @@ export function useProjectUpgradeQueue({api,accountId,positioningVersionId,setNo
       reading=true;
       try{
         for(let page=1;;page++){
-          const result=await api.listProjectUpgrades({accountId,page});
+          const result=await api.listProjectUpgrades({...scope,page});
           if(disposed)return;
           merge(result.tasks);
           if(result.tasks.length===0 || page*100>=result.total)break;
@@ -57,13 +62,13 @@ export function useProjectUpgradeQueue({api,accountId,positioningVersionId,setNo
     const timer=window.setInterval(()=>void refresh(),3000);
     window.addEventListener("focus",refresh);
     return()=>{disposed=true;mounted.current=false;window.clearInterval(timer);window.removeEventListener("focus",refresh);};
-  },[api,accountId,merge]);
+  },[api,scopeKey,scope,merge]);
   const byItem=React.useMemo(()=>new Map(tasks.map(task=>[task.ownerId,task])),[tasks]);
   const enqueue=async(itemId:string)=>{
     if(pending.current.has(itemId)||!api.enqueueProjectUpgrades)return;
     const task=byItem.get(itemId);
     if(task && !["failed","blocked","cancelled","paused"].includes(task.status))return;
-    if(!positioningVersionId){setNotice("请先在定位中心保存当前账号定位，再升级为项目。");return;}
+    if(!positioningVersionId){setNotice("请先在定位中心保存当前工作区定位，再升级为项目。");return;}
     pending.current.add(itemId);setSubmitting(new Set(pending.current));
     try{
       if(upgradeNeedsResultCheck(task)){
@@ -75,19 +80,19 @@ export function useProjectUpgradeQueue({api,accountId,positioningVersionId,setNo
       }
       if(task && api.commandTask){
         await api.commandTask({taskId:task.id,command:task.status==="paused"?"resume":"retry",idempotencyKey:operationKey(`upgrade-${task.id}`)});
-        if(mounted.current)merge([{...task,status:"queued",errorCode:null,errorMessage:null}]);
+        if(mounted.current && currentScope.current===scopeKey)merge([{...task,status:"queued",errorCode:null,errorMessage:null}]);
       }else{
-        const result=await api.enqueueProjectUpgrades({itemIds:[itemId],positioningVersionId,idempotencyKey:`radar-upgrade:${accountId}:${itemId}`});
-        if(mounted.current)merge(result.tasks);
+        const result=await api.enqueueProjectUpgrades({itemIds:[itemId],positioningVersionId,idempotencyKey:`radar-upgrade:${scopeKey}:${itemId}`});
+        if(mounted.current && currentScope.current===scopeKey)merge(result.tasks);
       }
-      if(mounted.current)setNotice("已加入项目升级队列，将依次转写、拆解选题和生成文案。可以继续添加其他作品。");
-    }catch(error){if(mounted.current)setNotice(error instanceof Error?error.message:"加入队列失败，请重试。");}
-    finally{pending.current.delete(itemId);if(mounted.current)setSubmitting(new Set(pending.current));}
+      if(mounted.current && currentScope.current===scopeKey)setNotice("已加入项目升级队列，将依次转写、拆解选题和生成文案。可以继续添加其他作品。");
+    }catch(error){if(mounted.current && currentScope.current===scopeKey)setNotice(error instanceof Error?error.message:"加入队列失败，请重试。");}
+    finally{pending.current.delete(itemId);if(mounted.current && currentScope.current===scopeKey)setSubmitting(new Set(pending.current));}
   };
   const cancel=async(task:ExecutionTaskResourceV2)=>{
     if(!api.commandTask)return;
-    try{await api.commandTask({taskId:task.id,command:"cancel",idempotencyKey:operationKey(`upgrade-cancel-${task.id}`)});if(mounted.current)setNotice("已请求取消升级，已完成的内容会保留。");}
-    catch{if(mounted.current)setNotice("取消未确认，请稍后重试。");}
+    try{await api.commandTask({taskId:task.id,command:"cancel",idempotencyKey:operationKey(`upgrade-cancel-${task.id}`)});if(mounted.current && currentScope.current===scopeKey)setNotice("已请求取消升级，已完成的内容会保留。");}
+    catch{if(mounted.current && currentScope.current===scopeKey)setNotice("取消未确认，请稍后重试。");}
   };
   return {tasks,byItem,submitting,enqueue,cancel};
 }

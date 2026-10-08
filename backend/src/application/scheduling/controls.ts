@@ -1,3 +1,4 @@
+import {PRIVATE_COLLECTION_SOURCE_KINDS} from '../../modules/scheduling';
 import type {RequestContext,Transport} from "@creatoros/contract";
 import {triggerScheduledJob,runJobNow,bootstrapDouyinCollectionJobs,type TriggerDeps} from "../../modules/ai-runtime";
 /** 绑定初始化、立即运行与自动化共用同一触发协议。 */
@@ -15,7 +16,8 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
   const triggerDeps: TriggerDeps = {
     ai: {
       createTask: async (c, body) => {
-        const t = await aiService.createTask(c, body);
+        const privateCollector=!!c.groupId&&!!c.accountId&&body.taskType.startsWith("scheduled.")&&PRIVATE_COLLECTION_SOURCE_KINDS.has(body.taskType.slice(10))&&typeof body.inputData?.jobId==="string";
+        const t = await aiService.createTask(privateCollector?{...c,source:"ingestion"}:c, body,privateCollector?{scheduledCollectorJobId:body.inputData!.jobId as string}:undefined);
         return { id: t.id, status: t.status };
       },
     },
@@ -86,10 +88,13 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
         console.warn("[seed] 绑定补种默认 rubric 失败(不阻断绑定):", err),
       );
     }
-    void bootstrapDouyinCollectionJobs(ctx, {
+    await bootstrapDouyinCollectionJobs(ctx, {
       listJobsBySourceKind: async (c, sourceKind) => {
-        const { rows } = await schedulingService.listJobs(c, {
+        const privateCollector=PRIVATE_COLLECTION_SOURCE_KINDS.has(sourceKind);
+        const scoped=privateCollector||!c.groupId?c:{...c,accountId:null,membershipVersion:undefined};
+        const { rows } = await schedulingService.listJobs(scoped, {
           sourceKind,
+          ...(privateCollector?{accountId:c.accountId}:{}),
           limit: 1,
           offset: 0,
         });
@@ -97,7 +102,9 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
         return rows.map((r) => ({ id: r.id, accountId: r.accountId ?? null,enabled:r.enabled,target:r.target??{} }));
       },
       createJob: async (c, input) => {
-        const job = await schedulingService.createJob(c, {
+        const privateCollector=PRIVATE_COLLECTION_SOURCE_KINDS.has(input.sourceKind);
+        const scoped={...c,source:"ingestion" as const,...(!privateCollector&&c.groupId?{accountId:null,membershipVersion:undefined}:{})};
+        const job = await schedulingService.createJob(scoped, {
           name: input.name,
           prompt: input.prompt,
           sourceKind: input.sourceKind,
@@ -105,8 +112,8 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
           target: input.target,
           // [T-359] 分层启用透传:默认关的模板建即 disabled(缺省 undefined = service 默认 true)。
           enabled: input.enabled,
-          systemManaged: input.sourceKind === "intelligence.sync",
-        });
+          systemManaged: input.systemManaged===true||privateCollector||input.sourceKind === "intelligence.sync",
+        },privateCollector&&c.groupId?{backgroundCollector:true}:undefined);
         return { id: job.id };
       },
       // 初始化触发复用 triggerScheduledJob(与 cron 到点 / 「立即运行」同一幂等双闸 + 触发点)。

@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import type {BoundedExecutionBudget,ExecutionBudget} from "@creatoros/contract/execution-worker";
 import {prepareLegacyAssetRecovery} from "./asset-legacy-recovery.service";
 import {createHash} from "node:crypto";
@@ -23,7 +24,7 @@ function fields(task:Task){
 export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,capability:"image.generate"|"video.generate",taskId:string):Promise<MultimodalSpec>;assertProject(ctx:RequestContext,id:string):Promise<void>}){
  const controller=new AbortController();
  const authority=createExecutionAuthorityService(db,{now:deps.now});
- const owned=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,ctx.accountId??""));
+ const owned=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx));
  async function hasLegacy(tx:Pick<Db,"select">,task:Task){
   if(task.modelCallStartedAt || task.startedAt || task.retryOfTaskId || Object.prototype.hasOwnProperty.call(task.runtimeData??{},"multimodalProviderCheckpoint"))return true;
   return !!(await tx.select({id:aiTaskResults.id}).from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,task.id)).limit(1))[0];
@@ -80,7 +81,7 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
    while(!shouldStop() && !controller.signal.aborted){
     const rows=await db.select().from(aiTasks).where(and(eq(aiTasks.taskType,"asset.generate"),eq(aiTasks.status,"queued"),isNull(aiTasks.executionTaskId),isNull(aiTasks.leaseOwner),isNull(aiTasks.leaseToken),sql`${aiTasks.runtimeData}->'hostTaskSubmission' IS NULL`,...(cursor?[sql`${aiTasks.id} > ${cursor}`]:[]))).orderBy(asc(aiTasks.id)).limit(50);
     if(!rows.length)return;
-    for(const task of rows){if(shouldStop() || controller.signal.aborted)return;cursor=task.id;const ctx:RequestContext={userId:task.userId,accountId:task.accountId,requestId:`asset-recover:${task.id}`,source:"user"};try{await service.prepare(ctx,task.id);if(shouldStop() || controller.signal.aborted)return;}catch{if(shouldStop() || controller.signal.aborted)return;await onFailure(ctx,task.id);}}
+    for(const task of rows){if(shouldStop() || controller.signal.aborted)return;cursor=task.id;const ctx:RequestContext={userId:task.userId,accountId:task.accountId,groupId:task.groupId,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined,requestId:`asset-recover:${task.id}`,source:"user"};try{await service.prepare(ctx,task.id);if(shouldStop() || controller.signal.aborted)return;}catch{if(shouldStop() || controller.signal.aborted)return;await onFailure(ctx,task.id);}}
    }
   },
  };

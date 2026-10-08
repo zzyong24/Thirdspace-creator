@@ -9,6 +9,14 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1024 | 紧急排查充值50元后Growth受管Omni模型仍报余额不足 | 🔨 待办 | — | 待验 | [排查范围](docs/verification/t1024-managed-credit-diagnosis.md) | 充值及Omni额度同步已实证正常；两份Windows日志定位21:08/21:11/21:15选题聊天约352万粗估且未收敛、约1.5秒报AI_CREDIT_EXHAUSTED；已验证单轮裁剪缺口与图片base64粗估歧义，原始供应商错误/模型/附件类型仍待对齐，不改账、不重发原大请求。 |
+| T-1022 | 按账号组统一多平台工作区、绑定管理、首页与复盘 | 🔨 待办 | PASS[REV:2f179f8d9380] | 待验 | [SPEC](docs/features/t1022-account-group-workspace.md) | 用户2026-10-04要求先调研并全面设计；全局切换账号组、组内筛选抖音/快手/视频号/公众号/小红书，共享内容分发与数据可见；使用用户提供的oil-ui-pro 0.10.0并纳入页面规范；用户否定A/B并明确保留原版丰富布局，只补总览和多平台切换；用户已认可原版增补，追加要求图表更美观；用户再次指出图表缺坐标；保留布局，补数值/日期轴与单位，缺明细不画日折线，用户已回复ok开始执行；正式接入已评审的显式归组与迁移预览方案，真实库执行先备份校验。 |
+| T-1023 | 修正既有任务绑定glob导致的progress生成阻断 | 📋 待办 | — | — | [证据](docs/features/t1022-account-group-workspace/VERIFICATION.md) | T-1022注册时progress generate被既有T-1003的非terminal wildcard write_set拒绝；核对安全范围并按真实文件或terminal目录规则校准，不扩大写集，不丢其他任务和lease。 |
+| T-1021 | CreatorOS封面与小红书图文双模板库、行业分类及私人收藏 | 🔨 待办 | PASS[REV:f0f3fa0ff91b] | 待验 | [SPEC](docs/features/t1021-cover-template-library.md) | 用户认可复用发布链，补充宿主为无限画布；补画板/图文页组、固定工具面板、比例与缩放分离及发布引用方案；当前分支尚未定位画布入口，已询问位置。旧SPEC评审不覆盖本补充，生产未接入。 |
+| T-1019 | 按观众具体任务与双九宫格持续生成可实测选题 | ⏸️ 待办 | PASS[REV:3a0362412b23] | 待验 | [SPEC](docs/features/audience-task-topics/README.md) | 用户委派；复用定位/雷达/候选/反馈，观众入口与作者实测分流，保留 T-1017 首稿；不发布或 push。 |
+| T-1020 | 统一可视化推荐、作品承接与科学运营观测 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/creator-operations/README.md) | 用户2026-10-02补充；依赖T-1019验收，复用采集/analytics/review及独立本地投影后台，不复制UI/调度；逐平台区分发布/草稿，null与未关联保真。 |
+| T-1017 | 简化内容雷达：按账号定位一键生成可编辑改写稿 | 🔨 待办 | PASS[REV:d2fb4541c82d] | 待验 | [SPEC](docs/features/t1017-content-radar-rewrite-first.md) | 把“基于对标文案与当前定位快速改写”作为主结果；拆解、策略和选题卡字段改为可选补充，不得阻断首稿；[自动化实测](docs/verification/t1017-rewrite-first.md)，真实桌面/供应商待验。 |
+| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) | 后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 |
 | T-1016 | 调研 CreatorOS 连接本地 Codex、WorkBuddy 与外部 Agent | ✅ 待办 | — | — | [SPEC](docs/features/t1016-external-agent-research.md) | 参考 ChatCut 和公开协议，核实双向接入、现有执行边界与可落地方案；本轮仅调研设计。 |
 | T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |
 | T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 |
@@ -149,7 +157,7 @@
 | T-641 | 根治发布中心“登录多日仍只有一个采集日、发布趋势不出曲线”【线上数据回流·用户 2026-07-31】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-641) | 详情见外置记录。 |
 | T-640 | 配置 Apple Developer ID 签名与公证，并在前序修复全部闭环后统一产出本地安装包【发布·用户 2026-07-31】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-640) | 详情见外置记录。 |
 | T-635 | 把 CreatorOS 正式构建绑定到 Growth 商品的统一 `projectKey`，禁止运行时覆盖产品身份或关闭严格验签 | 🔨 本地实现待验 | PASS[REV:b8add273a494] | 待验 | [详情](BACKLOG-details.md#t-635)  [SPEC](docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md) | 详情见外置记录。 |
-| T-633 | 根治内容雷达生成选题卡失败并恢复创作者中心自动扫码【线上阻断·用户 2026-07-30】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-633) | 详情见外置记录。 |
+| T-633 | 恢复创作者中心自动扫码登录【线上阻断·用户 2026-07-30】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-633) | 内容雷达改写可用性由 T-1017 收口；本任务仅保留首次扫码直达创作者中心二维码页及账号登录态复用。 |
 | T-632 | 根治“新建定位母版”无效、历史母版无法恢复与逐字稿提取长时间无结果【线上阻断·用户 2026-07-30/31】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-632) | 详情见外置记录。 |
 | T-631 | 根治大视频上传被 10MB 截断并误报 ffmpeg 缺失【线上阻断·用户 2026-07-30】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-631) | 详情见外置记录。 |
 | T-621 | 补齐渠道模型 authority snapshot 生产链路回归【非阻断测试增强·T-606 复核】 | 📋 待办 | — | — | [详情](BACKLOG-details.md#t-621) | 详情见外置记录。 |

@@ -1,6 +1,6 @@
 import type {RequestContext} from "@creatoros/contract";
 import type {Db} from "../db";
-import {requireAccountId} from "../errors";
+import {workspaceStamp} from "../workspace-scope";
 import type {Transport} from "@creatoros/contract";
 import {createKnowledgeRepository,createKnowledgeService,createKnowledgeTransport} from "../modules/knowledge";
 import {createSearchRepository,createSearchService,createSearchTransport,createKnowledgeSearchRuntime} from "../modules/search";
@@ -22,7 +22,7 @@ export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof cr
         userId: ctx.userId,
         // [T-332 S2] strict:搜索投影/检索是 per-account 域(跨号搜到=串味),未选号 →
         //   AccountRequiredError(引导态);「未选号=全局视图」退化已废除(SPEC §4.2)。
-        accountId: requireAccountId(ctx.accountId, "search.repo"),
+        ...workspaceStamp(ctx),
       }),
     deps,
   );

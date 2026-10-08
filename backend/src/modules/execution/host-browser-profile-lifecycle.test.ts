@@ -52,3 +52,8 @@ it('跨启动无法证明停止仍保留原租约及原owner释放能力',async(
  await expect(next.acquire('/test/9')).rejects.toMatchObject({code:'BROWSER_PROFILE_BUSY'});await held.onStopped();
  const recovered=await next.acquire('/test/9');await recovered.onStopped();
 });
+it('绑定提交回执持有目录直到DB完成，release后其他使用者才能进入',async()=>{
+ const host=lifecycle('7');const reservation=await host.reserveProfiles(['/test/7']);let admitted=false;
+ const pending=host.acquire('/test/7').then(r=>{admitted=true;return r;});await new Promise(r=>setTimeout(r,25));expect(admitted).toBe(false);
+ await reservation.release();await reservation.release();const next=await pending;expect(admitted).toBe(true);await next.onStopped();
+});

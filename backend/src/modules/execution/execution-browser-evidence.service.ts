@@ -1,3 +1,4 @@
+import {workspaceFilter} from "../../workspace-scope";
 import { createHash, randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
@@ -48,7 +49,7 @@ export function createExecutionBrowserEvidenceService(db: Db, deps: {
             return leases.withLease(ref, "settlement", async ({ tx, task, context }) => {
                 if (task.kind !== "ai_task" || task.ownerType !== "ai_task")
                     throw new ConflictError("浏览器证据缺少AI归属");
-                const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), eq(aiTasks.accountId, context.accountId!))).for("update");
+                const [business] = await tx.select().from(aiTasks).where(and(eq(aiTasks.id, task.ownerId), eq(aiTasks.executionTaskId, task.id), eq(aiTasks.userId, context.userId), workspaceFilter(aiTasks,context))).for("update");
                 if (!business)
                     throw new ConflictError("浏览器证据任务映射不符");
                 const calls = await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId, task.id)).orderBy(asc(executionCalls.sequence));

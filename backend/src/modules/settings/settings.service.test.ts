@@ -249,6 +249,7 @@ function makeFakeRepo(
         body.expectedRevision === null ? 1 : body.expectedRevision + 1;
       const row: AccountSkillOverlayRow = {
         id: previous?.id ?? `overlay-${body.skillId}`,
+        groupId: null,
         userId: ctx.userId,
         accountId: ctx.accountId!,
         skillId: body.skillId,

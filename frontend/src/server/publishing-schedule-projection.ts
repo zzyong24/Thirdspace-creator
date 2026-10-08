@@ -50,6 +50,7 @@ const PLATFORM_LABELS: Record<string, string> = {
   bilibili: "哔哩哔哩",
   douyin: "抖音",
   xiaohongshu: "小红书",
+  wechatOfficial: "微信公众号",
   wechatVideo: "微信视频号",
   x: "X",
 };
@@ -298,8 +299,8 @@ export async function buildPublishingScheduleProjection(
   ctx: RequestContext,
   monthParam?: string,
 ): Promise<PublishingScheduleProjection> {
-  const accountId = ctx.accountId;
-  if (!accountId) {
+  const accountId = ctx.accountId ?? null;
+  if (!ctx.groupId && !accountId) {
     throw new Error("AccountRequiredError: publishing schedule requires account");
   }
 
@@ -324,16 +325,20 @@ export async function buildPublishingScheduleProjection(
   };
 
   const calendarEntriesPromise = calendarContext
-    ? deps.calendar
-        .listCalendar(ctx, accountId, window, { limit: 500, offset: 0 })
+    ? (ctx.groupId
+        ? deps.calendar.listGroupCalendar(ctx, ctx.groupId, window, { limit:500,offset:0 })
+        : deps.calendar.listCalendar(ctx, accountId!, window, {limit:500,offset:0}))
         .then((page) => page.rows)
     : Promise.reject(contextError ?? new Error("日历上下文不可用"));
 
+  let sharedProjects:Array<{id:string;title:string;schedulable?:boolean}>|null=null;
   const readPerformance = async () => {
-    const projects = (await deps.projects.listProjectsForComposition(ctx)).map(({ id, title }) => ({ id, title }));
+    const creativeContext = ctx.groupId ? {...ctx,accountId:null,membershipVersion:undefined} : ctx;
+    const projects = (await deps.projects.listProjectsForComposition(creativeContext)).map(({id,title,status,source,currentStage})=>({id,title,schedulable:status!=="archived"&&status!=="completed"&&source!=="imported"&&currentStage!=="review"}));
+    sharedProjects=projects;
     const projectById = new Map(projects.map((project) => [project.id, project]));
     const outputs = await deps.projects.listOutputRefsByProjects(
-      ctx,
+      creativeContext,
       projects.map((project) => project.id),
     );
     const outputById = new Map(outputs.map((output) => [output.outputId, output]));
@@ -459,9 +464,10 @@ export async function buildPublishingScheduleProjection(
       })
     : readPerformance();
 
-  const [calendarResult, performanceResult] = await Promise.allSettled([
+  const [calendarResult, performanceResult, cadenceResult] = await Promise.allSettled([
     calendarEntriesPromise,
     performancePromise,
+    ctx.groupId ? deps.calendar.getGroupCadence({...ctx,accountId:null,membershipVersion:undefined},ctx.groupId) : Promise.resolve(null),
   ]);
 
   const performance =
@@ -494,7 +500,7 @@ export async function buildPublishingScheduleProjection(
   if (
     !calendarContext ||
     calendarResult.status === "rejected" ||
-    performanceResult.status === "rejected"
+    (performanceResult.status === "rejected" && !(ctx.groupId && sharedProjects))
   ) {
     const reason =
       calendarResult.status === "rejected"
@@ -515,7 +521,7 @@ export async function buildPublishingScheduleProjection(
     };
   }
 
-  const publishedRows = performanceResult.value.rows.filter(
+  const publishedRows = (performanceResult.status === "fulfilled" ? performanceResult.value.rows : []).filter(
     (row) =>
       Boolean(row.publishedAt) &&
       row.publishedAt.slice(0, 7) !== "" &&
@@ -529,6 +535,7 @@ export async function buildPublishingScheduleProjection(
       error: null,
       viewModel: {
         accountId,
+        groupId:ctx.groupId??null,
         accounts: [],
         month,
         referenceDateKey: calendarContext.today,
@@ -550,11 +557,14 @@ export async function buildPublishingScheduleProjection(
             coverAssetId: row.coverAssetId ?? null,
           })),
         entries,
-        projects: performanceResult.value.projects.map((project) => ({
+        projects: (performanceResult.status === "fulfilled" ? performanceResult.value.projects : (sharedProjects??[])).map((project) => ({
           id: project.id,
           title: project.title,
+          schedulable:project.schedulable,
         })),
-        cadence: null,
+        publicationsUnavailable:performanceResult.status === "rejected",
+        cadence: cadenceResult.status === "fulfilled" ? cadenceResult.value : null,
+        cadenceUnavailable:cadenceResult.status === "rejected",
         attainment: null,
         window,
       },

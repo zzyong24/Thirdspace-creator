@@ -36,8 +36,10 @@ import {
 // no conversion field is dropped at ingestion.
 
 export const metricSnapshots = pgTable("metric_snapshots", {
+  nativePlatform: text("native_platform"),
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  groupId: text("group_id"),
   accountId: text("account_id").notNull(), // [T-136 多账号 · SPEC §D] 采集 stamp 归到号;nullable 稳定终态
   publicationId: text("publication_id").notNull(),
   ingestionRunId: text("ingestion_run_id"), // nullable — seed/fixture appends carry null
@@ -50,6 +52,7 @@ export const metricSnapshots = pgTable("metric_snapshots", {
 export const metricValues = pgTable("metric_values", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  groupId: text("group_id"),
   accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
   metricSnapshotId: text("metric_snapshot_id").notNull(),
   metricKey: text("metric_key").notNull(),
@@ -61,6 +64,7 @@ export const metricValues = pgTable("metric_values", {
 export const retentionPoints = pgTable("retention_points", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  groupId: text("group_id"),
   accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
   publicationId: text("publication_id").notNull(),
   capturedAt: text("captured_at").notNull(),
@@ -72,6 +76,7 @@ export const retentionPoints = pgTable("retention_points", {
 export const audienceSnapshots = pgTable("audience_snapshots", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
+  groupId: text("group_id"),
   accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
   publicationId: text("publication_id").notNull(),
   capturedAt: text("captured_at").notNull(),
@@ -149,11 +154,11 @@ CREATE INDEX IF NOT EXISTS idx_audience_snapshots_user_account ON audience_snaps
 
 /** 独立明细与持久待采状态；成功数据保留至下一次成功，不污染基本指标快照。 */
 export const publicationTraffic = pgTable('publication_traffic',{
- publicationId:text('publication_id').primaryKey(),userId:text('user_id').notNull(),accountId:text('account_id').notNull(),externalId:text('external_id').notNull(),
+ publicationId:text('publication_id').primaryKey(),userId:text('user_id').notNull(),groupId:text('group_id'),accountId:text('account_id').notNull(),externalId:text('external_id').notNull(),
  lastTaskId:text('last_task_id'),requestedAt:text('requested_at').notNull(),attemptedAt:text('attempted_at'),capturedAt:text('captured_at'),status:text('status').notNull(),error:text('error'),data:jsonb('data'),
 });
 
 /** 各作品/能力成功水位；不以最后尝试时间冒充新鲜度。 */
 export const publicationSyncState=pgTable('publication_sync_state',{
- userId:text('user_id').notNull(),accountId:text('account_id').notNull(),publicationId:text('publication_id').notNull(),capability:text('capability').notNull(),externalId:text('external_id').notNull(),lastSucceededAt:text('last_succeeded_at'),attemptedAt:text('attempted_at').notNull(),retryAt:text('retry_at'),failures:integer('failures').notNull().default(0),error:text('error'),
+ userId:text('user_id').notNull(),groupId:text('group_id'),accountId:text('account_id').notNull(),publicationId:text('publication_id').notNull(),capability:text('capability').notNull(),externalId:text('external_id').notNull(),lastSucceededAt:text('last_succeeded_at'),attemptedAt:text('attempted_at').notNull(),retryAt:text('retry_at'),failures:integer('failures').notNull().default(0),error:text('error'),
 },t=>({scope:uniqueIndex('publication_sync_state_scope').on(t.userId,t.accountId,t.publicationId,t.capability)}));

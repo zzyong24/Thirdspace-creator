@@ -1,3 +1,4 @@
+import {workspaceKey,workspaceFilter} from "@creatoros/backend";
 import type {Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
 import type {ObjectStorageForCtx} from "./assets.service";
@@ -11,7 +12,7 @@ export function createWebDocumentCacheService(db:Db,deps:{objectStorageForCtx:Ob
  const prepared=new WeakMap<WebDocumentCachePreparation,{snapshot:Snapshot;fullText:string;previewUrl:string|null}>();
  return {
   async prepare(ctx:RequestContext,url:string,signal?:AbortSignal):Promise<WebDocumentCachePreparation|null>{
-   const owner={...ctx},accountId=requireAccountId(owner.accountId,"assets.webDocumentCache");
+   const owner={...ctx},accountId=workspaceKey(owner);
    signal?.throwIfAborted();
    let snapshot:Snapshot|null,fullText:string,previewUrl:string|null;
    try{
@@ -27,8 +28,8 @@ export function createWebDocumentCacheService(db:Db,deps:{objectStorageForCtx:Ob
    prepared.set(token,{snapshot,fullText,previewUrl});return token;
   },
   async confirm(ctx:RequestContext,token:WebDocumentCachePreparation,transaction?:CacheTransaction,signal?:AbortSignal){
-   const accountId=requireAccountId(ctx.accountId,"assets.webDocumentCache"),bound=prepared.get(token);
-   if(!bound || bound.snapshot.asset.userId!==ctx.userId || bound.snapshot.asset.accountId!==accountId)throw new ConflictError("缓存准备对象无效或归属不符");
+   const accountId=workspaceKey(ctx),bound=prepared.get(token);
+   if(!bound || bound.snapshot.asset.userId!==ctx.userId || (accountId.kind==="group"?bound.snapshot.asset.groupId!==accountId.id:bound.snapshot.asset.accountId!==accountId.id))throw new ConflictError("缓存准备对象无效或归属不符");
    const confirmed=await repo.confirm(bound.snapshot,bound.fullText,transaction,signal);
    return {...confirmed,previewUrl:bound.previewUrl};
   },

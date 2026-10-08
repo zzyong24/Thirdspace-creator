@@ -8,9 +8,9 @@ import { canonicalJson } from "../ai/canonical-json";
 /** 宿主只恢复冻结定义和真实归属，网页动作由 Worker 执行。 */
 export function createChatWebReadTaskToolHost(reader: Pick<ReturnType<typeof createChatHostContextReader>, "read">): NonNullable<ChatWorkerDispatcherDeps["resolveTools"]> {
   return async (context, _input, ref, signal): Promise<Record<string, ChatBackendTool>> => {
-    const owner = { userId: context.userId, accountId: context.accountId };
+    const owner = { userId: context.userId, accountId: context.accountId??null,groupId:context.groupId??null };
     signal.throwIfAborted(); const restored = await reader.read({ ...ref }); signal.throwIfAborted();
-    if (!owner.userId || !owner.accountId || restored.context.userId !== owner.userId || restored.context.accountId !== owner.accountId) throw new Error("网页工具账号与原任务不符");
+    if (!owner.userId || (!owner.accountId && !owner.groupId) || restored.context.userId !== owner.userId || (restored.context.accountId??null)!==owner.accountId || (restored.context.groupId??null)!==owner.groupId) throw new Error("网页工具账号与原任务不符");
     const frozen = restored.modelInput.tools.find((tool) => tool.name === "web.read");
     if (!frozen) return {};
     const prepared = await prepareChatToolDefinitions(buildChatTools(["web.read"], {} as ChatToolDeps), { workerWebRead: true });

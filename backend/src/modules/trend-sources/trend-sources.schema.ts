@@ -11,6 +11,7 @@ export function toTrendSourceDto(row: TrendSourceRow): TrendSourceResource {
   return {
     id: row.id,
     userId: row.userId,
+    groupId:row.groupId??null,
     accountId: row.accountId ?? null,
     name: row.name,
     url: row.url,

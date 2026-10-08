@@ -1,4 +1,4 @@
-import { and, eq, type Db } from "@creatoros/backend";
+import {workspaceFilter,assertWritableWorkspace, and, eq, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import { pendingDocumentCommits } from "../../schema/pending-document-commits";
 import { assets, assetFiles } from "./assets.db-schema";
@@ -11,7 +11,7 @@ export type DocumentCommitAuthorization = (ctx: RequestContext, operationKey: st
 export function createPendingDocumentRepository(db: Db, authorize: DocumentCommitAuthorization) {
   const scope = (row: DocumentCommit) => and(
     eq(pendingDocumentCommits.id, row.id), eq(pendingDocumentCommits.userId, row.userId),
-    eq(pendingDocumentCommits.accountId, row.accountId),
+    workspaceFilter(pendingDocumentCommits,row.groupId?{kind:"group",id:row.groupId}:row.accountId!),
   );
   function check(row: DocumentCommit | undefined, expected: DocumentCommit): DocumentCommit {
     if (!row || row.inputDigest !== expected.inputDigest) throw new ConflictError("正文提交键已绑定其他内容");
@@ -26,6 +26,7 @@ export function createPendingDocumentRepository(db: Db, authorize: DocumentCommi
           if (existing.committedAt) return existing;
         }
         signal?.throwIfAborted();
+        await assertWritableWorkspace(tx,ctx);
         await authorize(ctx, operationKey, tx);
         signal?.throwIfAborted();
         await tx.insert(pendingDocumentCommits).values(expected).onConflictDoNothing();
@@ -41,13 +42,14 @@ export function createPendingDocumentRepository(db: Db, authorize: DocumentCommi
         // 这里由执行属主在同事务内重新检查当前租约、取消、真实归属；准备字节不代表授权。
         // prepare 与 commit 都先取得执行权限锁、再锁回执，避免相反的锁顺序。
         signal?.throwIfAborted();
+        await assertWritableWorkspace(tx,ctx);
         await authorize(ctx, operationKey, tx);
         signal?.throwIfAborted();
         const row = check((await tx.select().from(pendingDocumentCommits).where(scope(expected)).for("update"))[0], expected);
         if (row.committedAt) return row;
         signal?.throwIfAborted();
         await tx.insert(assets).values({
-          id: row.assetId, userId: row.userId, accountId: row.accountId, currentFileId: row.fileId,
+          id: row.assetId, userId: row.userId, accountId: row.accountId,groupId:row.groupId, currentFileId: row.fileId,
           assetType: "document", name: row.name, status: "pending", createdAt: committedAt, updatedAt: committedAt,
         });
         signal?.throwIfAborted();

@@ -162,6 +162,9 @@ return (() => {
                 projectId,
               });
               return contexts.map((context) => ({
+                sourceSnapshotId: context.reference.sourceSnapshotId,
+                positioningVersionId: context.transform.positioningVersionId ?? null,
+                positioningSnapshot: context.transform.outputSnapshot.positioningSnapshot,
                 item: context.item,
                 transcript: {
                   text: context.transcript.text,

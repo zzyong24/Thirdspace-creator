@@ -1,3 +1,5 @@
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {and,eq,aiTasks,aiTaskResults,executionTasks,executionCalls,requireAccountId,type Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
 import {discardGeneratedAssetCandidate,activateGeneratedAssetCandidate} from "../assets";
@@ -12,18 +14,19 @@ export function createGeneratedAssetAdoptionService(db:Db,ports:Pick<StructuredT
   async cancelTask(ctx:RequestContext,taskId:string,errorMessage?:string){return change(ctx,taskId,"cancel",errorMessage);},
  };
  async function change(ctx:RequestContext,taskId:string,action:"confirm"|"cancel",errorMessage?:string){
-   const accountId=requireAccountId(ctx.accountId,"ai.confirmGeneratedAsset");
+   await assertWritableWorkspace(db,ctx);requireWorkspace(ctx);const accountId=ctx.accountId??null;
    await db.transaction(async tx=>{
-    const owned=and(eq(aiTasks.id,taskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,accountId));
+    const owned=and(eq(aiTasks.id,taskId),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx));
     const [snapshot]=await tx.select().from(aiTasks).where(owned);
     if(!snapshot)throw new OwnershipError("素材任务不存在");
     // 与候选提交保持 execution → ai task 的锁顺序；避免确认与迟到回执互锁。
-    const [execution]=snapshot.executionTaskId?await tx.select().from(executionTasks).where(and(eq(executionTasks.id,snapshot.executionTaskId),eq(executionTasks.ownerId,taskId),eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,accountId))).for("update"):[];
+    const [execution]=snapshot.executionTaskId?await tx.select().from(executionTasks).where(and(eq(executionTasks.id,snapshot.executionTaskId),eq(executionTasks.ownerId,taskId),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx))).for("update"):[];
     const [task]=await tx.select().from(aiTasks).where(owned).for("update");
     if(!task || task.taskType!=="asset.generate" || !execution || task.executionTaskId!==execution.id || execution.kind!=="ai_task" || execution.ownerType!=="ai_task" || execution.status!=="succeeded")throw new ConflictError("生成素材执行映射或状态不一致");
     // 已成功的采纳只回读；用户后续删除素材或链接不应被重试恢复。
     if(task.status===(action==="confirm"?"succeeded":"cancelled"))return;
     if(task.status!=="awaiting_confirmation")throw new ConflictError("素材候选当前不可采纳");
+    await assertFrozenWorkspaceMembership(tx,{userId:task.userId,groupId:task.groupId,accountId:task.accountId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion});
     const results=await tx.select().from(aiTaskResults).where(eq(aiTaskResults.aiTaskId,task.id));
     if(results.length!==1 || results[0]!.resultType!=="generated_asset" || !results[0]!.executionCallId)throw new ConflictError("生成素材候选批次不唯一");
     const candidate=results[0]!;

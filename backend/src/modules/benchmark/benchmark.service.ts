@@ -1,3 +1,4 @@
+import {requireWorkspace,assertWritableWorkspace} from "../../workspace-scope";
 import type { RequestContext } from "@creatoros/contract";
 import type { Db } from "@creatoros/backend";
 import {
@@ -154,7 +155,8 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
       nextId,
       userId: ctx.userId,
       // [T-332 S2] 未选号 → AccountRequiredError(读写同门,§4.2)。
-      accountId: requireAccountId(ctx.accountId, op),
+      groupId:ctx.groupId??null,
+      accountId: (requireWorkspace(ctx),ctx.groupId?null:requireAccountId(ctx.accountId,op)),
     };
     return createBenchmarkRepository(db, repoDeps);
   }
@@ -169,6 +171,7 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
     },
 
     async createSource(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
       guardCreate(input);
       // [T-332 S2] 号由 repo deps stamp(§4.6 防绕过),不再经 input 传递。
       const row = await repoFor(ctx, "benchmark.createSource").createSource({
@@ -183,6 +186,7 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
     },
 
     async toggleSource(ctx, sourceId, enabled) {
+      await assertWritableWorkspace(db,ctx);
       const row = await repoFor(ctx, "benchmark.toggleSource").setSourceEnabled(
         sourceId,
         enabled,
@@ -191,6 +195,7 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
     },
 
     async removeSource(ctx, sourceId) {
+      await assertWritableWorkspace(db,ctx);
       const row = await repoFor(ctx, "benchmark.removeSource").removeSource(sourceId);
       return toBenchmarkSourceDto(row);
     },
@@ -238,6 +243,7 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
     },
 
     async markTeardownDone(ctx, workId) {
+      await assertWritableWorkspace(db,ctx);
       await repoFor(ctx, "benchmark.markTeardownDone").markTeardownDone(workId);
     },
 
@@ -254,6 +260,7 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
     },
 
     async saveWorkTranscript(ctx, workId, transcript, status) {
+      await assertWritableWorkspace(db,ctx);
       await repoFor(ctx, "benchmark.saveWorkTranscript").saveTranscript(
         workId,
         transcript,
@@ -262,6 +269,7 @@ export function createBenchmarkService(deps: ServiceDeps): BenchmarkService {
     },
 
     async recordWork(ctx, input) {
+      await assertWritableWorkspace(db,ctx);
       // [T-332 S2] 号由 repo deps stamp(采集 runtime ctx 账号由 job 行派生,ISO-06)。
       const { inserted } = await repoFor(ctx, "benchmark.recordWork").upsertWork({
         sourceId: input.sourceId,

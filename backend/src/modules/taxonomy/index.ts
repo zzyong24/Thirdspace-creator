@@ -38,3 +38,5 @@ export {
 } from "./taxonomy.schema";
 
 export { createAssetTagProposalService, type AssetTagTarget, type AssetTagProposal, type AssetTagAdoptionResult } from "./asset-tag-proposal.service";
+
+export type {TaxonomyEntityAccess} from "./taxonomy.service";

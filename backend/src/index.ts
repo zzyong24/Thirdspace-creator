@@ -277,3 +277,11 @@ export { eq, and, or, asc, desc, sql, isNull, count, like, ilike, inArray, gte, 
 export { assetTagAdoptions, knowledgeAdoptions } from "./schema/proposal-adoptions";
 
 export { executionBrowserProfileLeases } from "./schema/execution-browser-profile-leases";
+
+export {workspaceKey,workspaceFilter,workspaceStamp,requireWorkspace,assertWritableWorkspace,type WorkspaceKey} from "./workspace-scope";
+
+export {ConflictError} from "./errors";
+
+export {resourceAccessGrants,workspaceBlobObjects} from "./schema/resource-access";
+
+export {resourceAccessGrantUses} from "./schema/resource-access";

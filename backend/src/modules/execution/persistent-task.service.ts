@@ -1,3 +1,6 @@
+import {PRIVATE_COLLECTION_SOURCE_KINDS,assertPrivateCollectorJob,assertExecutionTaskWorkspaceAdmission} from '../scheduling';
+import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
+import {lockWorkspaceMembership,assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import {executionBudgetSchema, executionBudgetDeadline, isContinuousExecutionBudget, executionAttemptAvailable, type ExecutionBudget} from "@creatoros/contract/execution-worker";
 import {recoverableAssetCalls} from "./asset-execution-recovery";
 import {executionEvidence} from "../../schema/intelligence";
@@ -39,7 +42,8 @@ export type PersistentTaskKind =
   | "radar_project_upgrade"
   | "script_candidate"
   | "automation_sync"
-  | "migration";
+  | "migration"
+  | "account_binding";
 export type PersistentTaskOwnerType =
   | "ai_task"
   | "source"
@@ -48,7 +52,8 @@ export type PersistentTaskOwnerType =
   | "transform"
   | "project"
   | "scheduled_job"
-  | "migration";
+  | "migration"
+  | "account_binding";
 export type PersistentTaskStatus = ExecutionTaskResourceV2["status"];
 export type PersistentTaskCommand = "pause" | "resume" | "cancel" | "retry";
 
@@ -116,7 +121,7 @@ export interface PersistentTaskService {
     executionMode?: "model.generate" | "model" | "agentic.run" | "chat.run" | "scheduled.flywheel" | "benchmark.transcribe";
     leaseSeconds?: number;
     /** 仅 worker 内部入场协调：跳过本消费者正在执行的精确属主。 */
-    excludeAccounts?: ReadonlyArray<{userId:string;accountId:string}>;
+    excludeAccounts?: ReadonlyArray<{userId:string;accountId:string|null;groupId?:string|null}>;
   }): Promise<PersistentTaskClaim | null>;
   claimTask(input: {
     taskId: string;
@@ -175,6 +180,7 @@ function toResource(row: TaskRow): ExecutionTaskResourceV2 {
     id: row.id,
     userId: row.userId,
     accountId: row.accountId,
+    groupId:row.groupId??null,groupVersion:row.groupVersion??null,membershipVersion:row.membershipVersion??null,
     kind: row.kind as PersistentTaskKind,
     ownerType: row.ownerType as PersistentTaskOwnerType,
     ownerId: row.ownerId,
@@ -280,7 +286,7 @@ export function createPersistentTaskService(
     taskId: string,
     op: string,
   ): Promise<TaskRow> {
-    const accountId = requireAccountId(ctx.accountId, op);
+    requireWorkspace(ctx);
     const [row] = await db
       .select()
       .from(executionTasks)
@@ -288,7 +294,7 @@ export function createPersistentTaskService(
         and(
           eq(executionTasks.id, taskId),
           eq(executionTasks.userId, ctx.userId),
-          eq(executionTasks.accountId, accountId),
+          workspaceFilter(executionTasks,ctx),
         ),
       )
       .limit(1);
@@ -309,10 +315,12 @@ export function createPersistentTaskService(
 
   return {
     async enqueue(ctx, input) {
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "execution.tasks.enqueue",
-      );
+      requireWorkspace(ctx);
+      return db.transaction(async tx => {
+      const jobPayload=input.payload.job as {id?:string;sourceKind?:string}|undefined;
+      const privateAdmission=input.kind==="automation_sync"&&input.ownerType==="scheduled_job"&&ctx.source==="ingestion"&&!!ctx.groupId&&!!ctx.accountId&&jobPayload?.id===input.ownerId&&PRIVATE_COLLECTION_SOURCE_KINDS.has(jobPayload?.sourceKind??"");
+      const frozen=await lockWorkspaceMembership(tx,ctx,{allowArchived:privateAdmission});
+      if(privateAdmission){const actual=await assertPrivateCollectorJob(tx as unknown as Db,ctx,input.ownerId,jobPayload!.sourceKind);input={...input,payload:{...input.payload,job:{id:actual.id,accountId:actual.accountId,groupId:actual.groupId,groupVersion:actual.groupVersion,membershipVersion:actual.membershipVersion,sourceKind:actual.sourceKind,target:actual.target??{},schedule:actual.schedule,enabled:actual.enabled}}};}
       if (!input.ownerId || !input.idempotencyKey) {
         throw new ExecutionValidationError(
           "ownerId 与 idempotencyKey 不能为空",
@@ -332,7 +340,7 @@ export function createPersistentTaskService(
         deadlineAt: executionBudget === null ? null : executionBudgetDeadline(executionBudget, stamp),
         id: nextId("execution-task"),
         userId: ctx.userId,
-        accountId,
+        accountId:frozen.accountId,groupId:frozen.groupId,groupVersion:frozen.groupVersion,membershipVersion:frozen.membershipVersion,
         kind: input.kind,
         ownerType: input.ownerType,
         ownerId: input.ownerId,
@@ -352,20 +360,20 @@ export function createPersistentTaskService(
         createdAt: stamp,
         updatedAt: stamp,
       };
-      const [inserted] = await db
+      const [inserted] = await tx
         .insert(executionTasks)
         .values(row)
         .onConflictDoNothing()
         .returning();
       if (inserted) return toResource(inserted);
 
-      const [existing] = await db
+      const [existing] = await tx
         .select()
         .from(executionTasks)
         .where(
           and(
             eq(executionTasks.userId, ctx.userId),
-            eq(executionTasks.accountId, accountId),
+            workspaceFilter(executionTasks,ctx),
             eq(executionTasks.kind, input.kind),
             eq(executionTasks.idempotencyKey, input.idempotencyKey),
           ),
@@ -375,13 +383,13 @@ export function createPersistentTaskService(
         // source_sync 有 active-owner 部分唯一索引。手动点击与定时 tick 可能用
         // 不同 idempotencyKey 同时排队；唯一冲突后复用赢家，而不是把正常并发
         // 误报为 500。run 层随后也会按 executionTaskId 复用同一条运行记录。
-        const [activeOwnerTask] = await db
+        const [activeOwnerTask] = await tx
           .select()
           .from(executionTasks)
           .where(
             and(
               eq(executionTasks.userId, ctx.userId),
-              eq(executionTasks.accountId, accountId),
+              workspaceFilter(executionTasks,ctx),
               eq(executionTasks.kind, input.kind),
               eq(executionTasks.ownerType, input.ownerType),
               eq(executionTasks.ownerId, input.ownerId),
@@ -419,6 +427,7 @@ export function createPersistentTaskService(
         );
       }
       return toResource(existing);
+      });
     },
 
     async get(ctx, taskId) {
@@ -428,13 +437,10 @@ export function createPersistentTaskService(
     },
 
     async list(ctx, query = {}) {
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "execution.tasks.listPersistent",
-      );
+      requireWorkspace(ctx);
       const filters = [
         eq(executionTasks.userId, ctx.userId),
-        eq(executionTasks.accountId, accountId),
+        workspaceFilter(executionTasks,ctx),
       ];
       if (query.kind) filters.push(eq(executionTasks.kind, query.kind));
       if (query.ownerId) {
@@ -462,10 +468,8 @@ export function createPersistentTaskService(
     },
 
     async command(ctx, input) {
-      const accountId = requireAccountId(
-        ctx.accountId,
-        "execution.tasks.command",
-      );
+      await assertWritableWorkspace(db,ctx);
+      requireWorkspace(ctx);
       const taskIds = [...new Set(input.taskIds)];
       if (
         taskIds.length === 0 ||
@@ -477,7 +481,7 @@ export function createPersistentTaskService(
         );
       }
       return db.transaction(async (tx) => {
-        const discovered = await tx.select().from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,accountId)));
+        const discovered = await tx.select().from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
         const lockIds=[...new Set([...taskIds,...discovered.map(scheduledChildId).filter((id):id is string=>Boolean(id))])];
         const rows = await tx
           .select()
@@ -486,7 +490,7 @@ export function createPersistentTaskService(
             and(
               inArray(executionTasks.id, lockIds),
               eq(executionTasks.userId, ctx.userId),
-              eq(executionTasks.accountId, accountId),
+              workspaceFilter(executionTasks,ctx),
             ),
           ).orderBy(asc(executionTasks.id)).for("update");
         if (rows.length !== lockIds.length) {
@@ -496,6 +500,10 @@ export function createPersistentTaskService(
         const parents=rows.filter(row=>taskIds.includes(row.id)&&scheduledChildId(row));
         for(const parent of parents){const child=rows.find(row=>row.id===scheduledChildId(parent));if(!child||asPayload(child.payload).parentExecutionTaskId!==parent.id)throw new ConflictError('调度链接变更，请重新执行控制命令');assertScheduledChild(parent,child);}
         const effectiveIds=[...new Set(taskIds.map(id=>scheduledChildId(rows.find(row=>row.id===id)!)??id))];
+        // 绑定只有开始、核对和取消协议；重开必须终态后用新意图，不借通用控制平行执行扫码。
+        if(input.command!=="cancel"&&rows.some(row=>effectiveIds.includes(row.id)&&row.kind==="account_binding")){
+          throw new ExecutionValidationError("扫码绑定仅允许取消；完成停止后请重新发起绑定，不支持暂停、继续或重试");
+        }
         // 旧素材核对态没有可证明的模型输入/回执，不能通过通用继续或重试获得执行权。
         // 同时覆盖升级前已保存为 waiting_user 的记录；已有候选采纳不经过此控制端口。
         if(input.command==='resume'||input.command==='retry'){
@@ -575,8 +583,8 @@ export function createPersistentTaskService(
       return db.transaction(async (tx) => {
         const filters = [claimableAt(stamp)];
         for(const owner of input.excludeAccounts??[]){
-          if(!owner.userId||!owner.accountId)throw new ExecutionValidationError("排除账号必须有完整属主");
-          filters.push(sql`NOT (${executionTasks.userId} = ${owner.userId} AND ${executionTasks.accountId} = ${owner.accountId})`);
+          if(!owner.userId||(!owner.accountId&&!owner.groupId))throw new ExecutionValidationError("排除账号必须有完整属主");
+          filters.push(sql`NOT (${executionTasks.userId} = ${owner.userId} AND ${workspaceFilter(executionTasks,{accountId:owner.accountId,groupId:owner.groupId})})`);
         }
         if (input.executionMode === "benchmark.transcribe") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'benchmark.transcribe'`);
         if (input.executionMode === "scheduled.flywheel") filters.push(sql`${executionTasks.kind} = 'ai_task' AND ${executionTasks.payload}->'modelInput'->>'kind' = 'scheduled.flywheel'`);
@@ -601,9 +609,9 @@ export function createPersistentTaskService(
           .from(executionTasks)
           .where(and(...filters))
           .orderBy(desc(executionTasks.priority), asc(executionTasks.createdAt), asc(executionTasks.id))
-          .limit(1)
-          .for("update", {skipLocked: true});
+          .limit(1);
         for (const candidate of candidates) {
+          try{await assertExecutionTaskWorkspaceAdmission(tx,candidate);}catch(error){await tx.update(executionTasks).set({status:"blocked",lastErrorCode:"STALE_WORKSPACE_MEMBERSHIP",lastErrorMessage:error instanceof Error?error.message:"任务归属已失效",updatedAt:stamp}).where(eq(executionTasks.id,candidate.id));continue;}
           const [claimed] = await tx
             .update(executionTasks)
             .set({
@@ -646,7 +654,11 @@ export function createPersistentTaskService(
           "taskId 与 workerId 不能为空",
         );
       }
-      const [claimed] = await db
+      return db.transaction(async tx=>{
+      const [snapshot]=await tx.select().from(executionTasks).where(and(eq(executionTasks.id,input.taskId),claimableAt(stamp)));
+      if(!snapshot)return null;
+      try{await assertExecutionTaskWorkspaceAdmission(tx,snapshot);}catch(error){await tx.update(executionTasks).set({status:"blocked",lastErrorCode:"STALE_WORKSPACE_MEMBERSHIP",lastErrorMessage:error instanceof Error?error.message:"任务归属已失效",updatedAt:stamp}).where(eq(executionTasks.id,snapshot.id));return null;}
+      const [claimed] = await tx
         .update(executionTasks)
         .set({
           status: "running",
@@ -674,6 +686,7 @@ export function createPersistentTaskService(
           fenceToken: claimed.fenceToken!,
         },
       };
+      });
     },
 
     async heartbeat(input) {
@@ -848,6 +861,8 @@ export function createPersistentTaskService(
             and(recoveryDueAt(stamp), input.kinds ? inArray(executionTasks.kind, input.kinds) : undefined),
           ).orderBy(asc(executionTasks.id)).for("update");
         for (const row of expired) {
+          // 绑定取消须由专属恢复端口确认 owned staging 窗口停止及清理，不能按租约期限假报已取消。
+          if(row.kind === "account_binding")continue;
           let target: PersistentTaskStatus | "unknown_result";
           const calls = row.kind === "ai_task" ? await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)) : [];
           const atomicPending=uncommittedChatTaskCalls(row,calls);
@@ -857,7 +872,7 @@ export function createPersistentTaskService(
             calls.find(call=>call.id===callId)!.status="reserved";
           }
           const recoverable=recoverableChatNodeParents(row,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,row.id)));
-          const assetCalls=await recoverableAssetCalls({tx,task:row,context:{userId:row.userId,accountId:row.accountId,requestId:`recovery:${row.id}:${row.attempt}`,source:"ai"}},calls,stamp);
+          const assetCalls=await recoverableAssetCalls({tx,task:row,context:{userId:row.userId,accountId:row.accountId,groupId:row.groupId,requestId:`recovery:${row.id}:${row.attempt}`,source:"ai"}},calls,stamp);
           const completedParents=[...assetCalls,...recoverable.completedHooks,...recoverable.resumableHooks,...recoverable.structured,...recoverable.webReads,...recoverable.scriptDrafts];
           if (row.status === "pause_requested") {
             target = "paused";

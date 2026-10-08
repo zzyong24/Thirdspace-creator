@@ -37,3 +37,27 @@ it("已确认卡片展示原推荐和现选值，不允许产生未保存改选�
   rerender(<TopicCandidateEditor {...props} transform={{ ...transform, outputSnapshot: { title: "旧卡" } }} />);
   expect(screen.getByText("原推荐：未推荐")).toBeInTheDocument();
 });
+
+it("[T-1017] 无标题纯文本可直接编辑复制，采纳携带当前编辑正文", async () => {
+  const user = userEvent.setup();
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText } });
+  const onConfirm = vi.fn(), onUpgradeProject = vi.fn();
+  const draft = { generationMode: "rewrite_only" as const, contentText: "没有标题的纯文本改写稿", sourceSnapshotId: "snapshot", generatedFromTranscriptHash: "hash", personalizationStatus: "not_applied" as const, templateVersion: "v3" };
+  const props = { sourceTranscript: "真实原文", busy: false, retryDisabled: false, onRetry: vi.fn(), onConfirm, onUpgradeProject };
+  const transform = { id: "rewrite", status: "candidate" as const, taskStatus: "succeeded" as const, targetTopicId: null, outputSnapshot: { generationMode: "rewrite_only" as const, personalizationStatus: "not_applied" as const, adaptedDraft: draft } };
+  const { rerender } = render(<TopicCandidateEditor {...props} transform={transform} />);
+  const editor = screen.getByLabelText("我的改写初稿");
+  expect(editor).toBeEnabled();
+  await user.clear(editor); await user.type(editor, "用户编辑后的可用正文");
+  await user.click(screen.getByRole("button", { name: /复制/ }));
+  expect(writeText).toHaveBeenCalledWith("用户编辑后的可用正文");
+  await user.click(screen.getByRole("button", { name: "确认写入选题池" }));
+  expect(onConfirm).toHaveBeenCalledWith("rewrite", expect.objectContaining({ adaptedDraft: expect.objectContaining({ contentText: "用户编辑后的可用正文" }) }));
+  rerender(<TopicCandidateEditor {...props} generationPending transform={transform} />);
+  expect(screen.getByRole("button", { name: "确认写入选题池" })).toBeDisabled();
+  expect(editor).toBeDisabled();
+  expect(screen.getByRole("button", { name: /复制/ })).toBeEnabled();
+  rerender(<TopicCandidateEditor {...props} transform={{ ...transform, status: "confirmed", targetTopicId: "topic", outputSnapshot: { ...transform.outputSnapshot, adoptedDraftContentText: "服务端已采纳编辑稿" } }} />);
+  expect(editor).toHaveValue("服务端已采纳编辑稿");
+});

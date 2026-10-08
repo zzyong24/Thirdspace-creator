@@ -39,7 +39,8 @@ export const learnings = pgTable(
   {
     id: text("id").primaryKey(),
     userId: text("user_id").notNull(),
-    accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离(经验/复盘归到号);nullable 稳定终态
+    groupId: text("group_id"),
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离(经验/复盘归到号);nullable 稳定终态
     reviewId: text("review_id"), // nullable — a Learning can exist without a Review (SPEC §22 reuse)
     // [T-118a gate-F3] 复盘产经验的来源作品(project-scoped 读的锚)。nullable —— 手录/非复盘
     // 来源的经验没有归属作品。review.analyze 的 learning_list 采纳时带上 task.projectId(见
@@ -64,10 +65,13 @@ export const learnings = pgTable(
     updatedAt: text("updated_at").notNull(),
   },
   (table) => [
+    uniqueIndex("ux_learnings_group_content_fingerprint")
+      .on(table.userId, table.groupId, table.contentFingerprint)
+      .where(sql`${table.groupId} IS NOT NULL AND ${table.validationStatus} <> 'discarded' AND ${table.contentFingerprint} IS NOT NULL`),
     uniqueIndex("ux_learnings_active_content_fingerprint")
       .on(table.userId, table.accountId, table.contentFingerprint)
       .where(
-        sql`${table.validationStatus} <> 'discarded' AND ${table.contentFingerprint} IS NOT NULL`,
+        sql`${table.accountId} IS NOT NULL AND ${table.validationStatus} <> 'discarded' AND ${table.contentFingerprint} IS NOT NULL`,
       ),
   ],
 );
@@ -75,7 +79,8 @@ export const learnings = pgTable(
 export const learningApplications = pgTable("learning_applications", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(), // denormalized ownership column (foundation §1)
-  accountId: text("account_id").notNull(), // [T-136 多账号] 按号隔离;nullable 稳定终态
+  groupId: text("group_id"),
+  accountId: text("account_id"), // [T-136 多账号] 按号隔离;nullable 稳定终态
   learningId: text("learning_id").notNull(),
   projectId: text("project_id").notNull(),
   contentOutputId: text("content_output_id"), // nullable

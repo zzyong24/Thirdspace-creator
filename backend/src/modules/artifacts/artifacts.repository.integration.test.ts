@@ -1,3 +1,8 @@
+import {projects,type Db as FixtureDb} from '@creatoros/backend';
+async function seedOwnedProjects(db:FixtureDb){
+ const rows=([["project-1", "user-a", "acct-default"], ["project-b", "user-b", "acct-default"], ["p-shared", "user-a", "acct-default"], ["p-shared-b", "user-b", "acct-default"], ["p-recon", "user-a", "acct-default"], ["proj-shared-1", "user-a", "acct-1"], ["proj-shared-2", "user-a", "acct-2"]] as Array<[string,string,string]>).map(([id,userId,accountId])=>({id,userId,accountId,title:'真实测试父项目',brief:'',creationMode:'guided',status:'active',currentStage:'script',startedAt:new Date().toISOString(),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}));
+ await db.insert(projects).values(rows).onConflictDoNothing();
+}
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, eq, type Db } from "@creatoros/backend";
 import {
@@ -43,6 +48,7 @@ let repoA: ArtifactRepository;
 
 beforeEach(async () => {
   ({ db } = await createDb());
+  await seedOwnedProjects(db);
   repoA = createArtifactRepository(db, deterministicDeps(A));
 });
 
@@ -56,7 +62,7 @@ async function makeArtifact(
   }> = {},
 ) {
   return repo.create({
-    projectId: overrides.projectId ?? "project-1",
+    projectId: overrides.projectId ?? (repo===repoA?"project-1":"project-b"),
     title: overrides.title ?? "脚本",
     artifactType: overrides.artifactType ?? "master_script",
     stage: overrides.stage ?? "script",
@@ -93,7 +99,7 @@ describe("artifacts.repository — ownership boundary (Step 2)", () => {
   it("listByProject only returns the caller's artifacts", async () => {
     const repoB = createArtifactRepository(db, deterministicDeps(B));
     await makeArtifact(repoA, { projectId: "p-shared", title: "A1" });
-    await makeArtifact(repoB, { projectId: "p-shared", title: "B1" });
+    await makeArtifact(repoB, { projectId: "p-shared-b", title: "B1" });
 
     const aRows = await repoA.listByProject("p-shared");
     expect(aRows.map((r) => r.title)).toEqual(["A1"]);
@@ -398,20 +404,20 @@ describe("artifacts.repository — per-account strict isolation (T-332 S2)", () 
     const repoAcct1 = createArtifactRepository(db, deterministicDeps(A, "acct-1"));
     const repoAcct2 = createArtifactRepository(db, deterministicDeps(A, "acct-2"));
     await repoAcct1.create({
-      projectId: "proj-shared",
+      projectId: "proj-shared-1",
       title: "号1稿",
       artifactType: "master_script",
       stage: "script",
     });
     await repoAcct2.create({
-      projectId: "proj-shared",
+      projectId: "proj-shared-2",
       title: "号2稿",
       artifactType: "master_script",
       stage: "script",
     });
-    const list1 = await repoAcct1.listByProject("proj-shared");
+    const list1 = await repoAcct1.listByProject("proj-shared-1");
     expect(list1.map((a) => a.title)).toEqual(["号1稿"]);
-    const list2 = await repoAcct2.listByProject("proj-shared");
+    const list2 = await repoAcct2.listByProject("proj-shared-2");
     expect(list2.map((a) => a.title)).toEqual(["号2稿"]);
   });
 
@@ -419,7 +425,7 @@ describe("artifacts.repository — per-account strict isolation (T-332 S2)", () 
     const repoAcct1 = createArtifactRepository(db, deterministicDeps(A, "acct-1"));
     const repoAcct2 = createArtifactRepository(db, deterministicDeps(A, "acct-2"));
     const a2 = await repoAcct2.create({
-      projectId: "proj-shared",
+      projectId: "proj-shared-2",
       title: "号2稿",
       artifactType: "master_script",
       stage: "script",
@@ -434,7 +440,7 @@ describe("artifacts.repository — per-account strict isolation (T-332 S2)", () 
   it("create stamp:artifact 行落库带 accountId", async () => {
     const repoAcct1 = createArtifactRepository(db, deterministicDeps(A, "acct-1"));
     const a = await repoAcct1.create({
-      projectId: "proj-shared",
+      projectId: "proj-shared-1",
       title: "号1稿",
       artifactType: "master_script",
       stage: "script",
@@ -448,7 +454,7 @@ describe("artifacts.repository — per-account strict isolation (T-332 S2)", () 
     const repoAcct1 = createArtifactRepository(db, deterministicDeps(A, "acct-1"));
     const repoAcct2 = createArtifactRepository(db, deterministicDeps(A, "acct-2"));
     const a1 = await repoAcct1.create({
-      projectId: "proj-shared",
+      projectId: "proj-shared-1",
       title: "号1稿",
       artifactType: "master_script",
       stage: "script",

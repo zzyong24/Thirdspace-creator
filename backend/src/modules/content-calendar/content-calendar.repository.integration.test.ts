@@ -1,3 +1,4 @@
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { describe, it, expect, beforeEach } from "vitest";
 import { createDb, projects, type Db } from "@creatoros/backend";
 import { PGlite } from "@electric-sql/pglite";
@@ -41,6 +42,7 @@ describe("content-calendar repository", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    await seedAdjacentContent(db,{userId:"user-a",accountId:ACC,source:"user",requestId:"test"},["out-1"]);
   });
 
   it("round-trips an entry with column defaults intact", async () => {

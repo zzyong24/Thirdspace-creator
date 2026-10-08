@@ -1,3 +1,4 @@
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -133,6 +134,7 @@ describe("G20 — domain acceptance (SPEC §22 + 七步 §6)", () => {
   let db: Db;
   beforeEach(async () => {
     ({ db } = await createDb());
+    await seedAdjacentContent(db,ctxA,["o"]);
   });
 
   it("immutability §6.2: lock is idempotent (no re-stamp); a locked prediction is never edited/unlocked", async () => {

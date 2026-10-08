@@ -1,10 +1,12 @@
+import {lockWorkspaceMembership} from "../platform-account/membership-lock.service";
 import { createHash } from "node:crypto";
-import { and, eq, knowledgeAdoptions, knowledgeItems, knowledgeRevisions, requireAccountId, type Db } from "@creatoros/backend";
+import { and, eq, knowledgeAdoptions, knowledgeItems, knowledgeRevisions, workspaceKey,workspaceStamp,workspaceFilter, type Db } from "@creatoros/backend";
 import { knowledgeProposal, type KnowledgeProposal, type RequestContext } from "@creatoros/contract";
 import { ConflictError } from "./knowledge.errors";
 
 const digest = (value: unknown) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
-const targetId = (ctx: RequestContext, proposalId: string) => `knowledge-proposal:${digest([ctx.userId, requireAccountId(ctx.accountId, "knowledge.proposal"), proposalId])}`;
+const scopeIntent=(ctx:RequestContext,proposalId:string)=>{const scope=workspaceKey(ctx);return scope.kind==="group"?[ctx.userId,"group",scope.id,proposalId]:[ctx.userId,scope.id,proposalId];};
+const targetId = (ctx: RequestContext, proposalId: string) => `knowledge-proposal:${digest(scopeIntent(ctx,proposalId))}`;
 
 /** 生成候选形状，不写知识条目；真实父任务、调用和证据引用由调用方绑定。 */
 export function prepareKnowledgeProposal(ctx: RequestContext, input: {
@@ -21,18 +23,19 @@ export function createKnowledgeProposalAdoptionService(db: Db, now = () => new D
   return {
     async adopt(ctx: RequestContext, input: KnowledgeProposal, transaction?: Parameters<Parameters<Db["transaction"]>[0]>[0]): Promise<{ knowledgeId: string; revisionId: string }> {
       const proposal = knowledgeProposal.parse(input);
-      const accountId = requireAccountId(ctx.accountId, "knowledge.adoptProposal");
+      const scope=workspaceKey(ctx),scopeStamp=workspaceStamp(scope);
       if (proposal.target.knowledgeId !== targetId(ctx, proposal.proposalId)) throw new ConflictError("知识候选目标与当前归属不符");
       // SEMANTIC_BOUNDARY_ALLOW: 内容摘要仅用于不可变候选幂等校验，不做语义分类。
       const sourceDigest = digest(proposal);
-      const id = `knowledge-adoption:${digest([ctx.userId, accountId, proposal.proposalId])}`;
+      const id = `knowledge-adoption:${digest(scopeIntent(ctx,proposal.proposalId))}`;
       const operation = async (tx: Parameters<Parameters<Db["transaction"]>[0]>[0]) => {
+        await lockWorkspaceMembership(tx,{...ctx,...scopeStamp});
         const [reserved] = await tx.insert(knowledgeAdoptions).values({
-          id, userId: ctx.userId, accountId, proposalId: proposal.proposalId, sourceDigest, result: {}, createdAt: now(),
+          id, userId: ctx.userId, ...scopeStamp, proposalId: proposal.proposalId, sourceDigest, result: {}, createdAt: now(),
         }).onConflictDoNothing().returning();
         if (!reserved) {
           const [receipt] = await tx.select().from(knowledgeAdoptions).where(and(
-            eq(knowledgeAdoptions.userId, ctx.userId), eq(knowledgeAdoptions.accountId, accountId), eq(knowledgeAdoptions.proposalId, proposal.proposalId),
+            eq(knowledgeAdoptions.userId, ctx.userId), workspaceFilter(knowledgeAdoptions,scope), eq(knowledgeAdoptions.proposalId, proposal.proposalId),
           ));
           if (!receipt || receipt.sourceDigest !== sourceDigest) throw new ConflictError("同一知识候选内容已变化，请重新生成候选");
           const result = receipt.result as { knowledgeId?: unknown; revisionId?: unknown };
@@ -43,7 +46,7 @@ export function createKnowledgeProposalAdoptionService(db: Db, now = () => new D
         const revisionId = `${knowledgeId}:revision:1`;
         const stamp = now();
         const [created] = await tx.insert(knowledgeItems).values({
-          id: knowledgeId, userId: ctx.userId, accountId, currentRevisionId: revisionId,
+          id: knowledgeId, userId: ctx.userId, ...scopeStamp, currentRevisionId: revisionId,
           title: proposal.content.title, knowledgeType: "reference", sourceType: "import",
           sourceNote: proposal.content.sourceNote, sourceMetadata: { proposalId: proposal.proposalId, ...proposal.source },
           status: "active", createdAt: stamp, updatedAt: stamp,

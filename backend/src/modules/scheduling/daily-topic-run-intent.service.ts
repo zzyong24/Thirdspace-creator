@@ -1,3 +1,5 @@
+import {requireWorkspace,workspaceFilter} from "../../workspace-scope";
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import {and,eq,aiTasks,jobRuns,scheduledJobs,requireAccountId,type Db} from '@creatoros/backend';
 import type {RequestContext} from '@creatoros/contract';
 import {z} from 'zod';
@@ -11,13 +13,14 @@ export function createDailyTopicRunIntentService(db:Db,deps:{now:()=>string;next
 export function createScheduledRunIntentService(db:Db,deps:{now:()=>string;nextId:(prefix:string)=>string},sourceKinds:readonly string[]){
  return {
   async ensureRunForTask(ctx:RequestContext,aiTaskId:string){
-   const accountId=requireAccountId(ctx.accountId,'scheduling.ensureDailyRun');
+   requireWorkspace(ctx);
    return db.transaction(async tx=>{
-    const [task]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,aiTaskId),eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,accountId))).for('update');
+    const [task]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,aiTaskId),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx))).for('update');
     if(!task||!sourceKinds.some(kind=>task.taskType===`scheduled.${kind}`))throw new OwnershipError('调度任务不存在');
+    await assertFrozenWorkspaceMembership(tx,{userId:task.userId,groupId:task.groupId,accountId:task.accountId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion},{allowArchived:!!task.accountId});
     const input=task.inputData as Record<string,unknown>;
     if(typeof input.jobId!=='string'||!input.jobId)throw new ValidationError('调度缺少真实作业');
-    const [job]=await tx.select().from(scheduledJobs).where(and(eq(scheduledJobs.id,input.jobId),eq(scheduledJobs.userId,ctx.userId),eq(scheduledJobs.accountId,accountId))).for('update');
+    const [job]=await tx.select().from(scheduledJobs).where(and(eq(scheduledJobs.id,input.jobId),eq(scheduledJobs.userId,ctx.userId),workspaceFilter(scheduledJobs,ctx))).for('update');
     if(!job||task.taskType!==`scheduled.${job.sourceKind}`)throw new OwnershipError('调度作业不存在');
     const existing=await tx.select().from(jobRuns).where(eq(jobRuns.aiTaskId,task.id));
     if(existing.length){
@@ -32,7 +35,7 @@ export function createScheduledRunIntentService(db:Db,deps:{now:()=>string;nextI
     if(input.jobRunId!==undefined)throw new ValidationError('调度原运行引用不存在，不能另建运行记录');
     const intent=intentSchema.safeParse(input.scheduledRun);
     if(!intent.success)throw new ValidationError('调度缺少有效冻结调度意图，不能猜测恢复');
-    const [run]=await tx.insert(jobRuns).values({id:deps.nextId('run'),userId:ctx.userId,jobId:job.id,aiTaskId:task.id,status:'running',itemsNew:0,itemsUpdated:0,error:null,scheduledFor:intent.data.scheduledFor,startedAt:deps.now(),finishedAt:null,progress:null}).returning();
+    const [run]=await tx.insert(jobRuns).values({id:deps.nextId('run'),userId:ctx.userId,groupId:task.groupId,groupVersion:task.groupVersion,membershipVersion:task.membershipVersion,jobId:job.id,aiTaskId:task.id,status:'running',itemsNew:0,itemsUpdated:0,error:null,scheduledFor:intent.data.scheduledFor,startedAt:deps.now(),finishedAt:null,progress:null}).returning();
     return run!;
    });
   },

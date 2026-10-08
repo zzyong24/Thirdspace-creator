@@ -138,7 +138,7 @@ describe("taxonomy.transport (contract conformance)", () => {
       "taxonomy.entityTags.assign",
       {
         body: {
-          entityType: "asset",
+          entityType: "project",
           entityId: "a-1",
           tagIds: [created.data.id],
         },

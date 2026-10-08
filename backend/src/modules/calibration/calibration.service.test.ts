@@ -1,3 +1,5 @@
+import {learnings as learningRows} from "../../schema/learnings";
+import {seedAdjacentContent} from "../../integration/adjacent-domain-fixtures";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createDb, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
@@ -48,6 +50,8 @@ describe("calibration service", () => {
 
   beforeEach(async () => {
     ({ db } = await createDb());
+    await seedAdjacentContent(db,ctxFor("user-a"),["output-1","output-nested","o"]);
+    await db.insert(learningRows).values({id:"learning-1",userId:ctxFor("user-a").userId,accountId:ctxFor("user-a").accountId,title:"真实人工确认经验",createdAt:NOW,updatedAt:NOW});
     let seq = 0;
     adjustConfidence = vi.fn(
       async () => {},
