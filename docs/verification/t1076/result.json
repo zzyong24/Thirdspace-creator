@@ -1,0 +1,44 @@
+{
+  "taskId": "T-1076",
+  "status": "PASS_EXACT_OBSOLETE_PACKAGE_CLEANUP",
+  "observedAt": "2026-10-08T08:09:37.734122+00:00",
+  "authorization": "用户明确要求清理旧安装包和垃圾文件",
+  "plan": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1076-obsolete-package-cleanup/plan.json",
+    "sha256": "4567824ed071d12838cbd6c41171b682cdbe47793e12e501ddb43746aa5e6a9a",
+    "bytes": 13824
+  },
+  "result": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1076-obsolete-package-cleanup/result.json",
+    "sha256": "3eefe5ab06ad23ff68dbf3e23eadc061ff56ca2a75285c5d7b15577be10f580f",
+    "bytes": 8928
+  },
+  "deletedPackageCount": 16,
+  "detachedOldImageCount": 6,
+  "deletedPathsAbsent": true,
+  "observedFreedGiB": 9.479389190673828,
+  "observedFreeGiB": 15.132926940917969,
+  "latestPackageCopiesPreserved": 2,
+  "latestPackageSHA256": "7060b1732a433148ce722df7b0e6f2f18de971f11cebb9a5d8a77d71efb3543d",
+  "backupRootsPreserved": 16,
+  "currentPublicCLI": {
+    "connected": true,
+    "access": "full",
+    "exit": 0,
+    "stdout": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1076-after-cleanup-status-20261008.stdout.json",
+      "sha256": "5e6876b254501a4ce68897c5048873bb0a068d4e522a90d12be41f10c8105d71",
+      "bytes": 198
+    },
+    "receipt": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/t1062-20261005-wm9zxxwl/t1074-installed/t1076-after-cleanup-status-20261008.receipt.json",
+      "sha256": "a7fc6ccd042970491bf475001047a3550dc50d5b48225761b2a1e5dd2289cb83",
+      "bytes": 247
+    }
+  },
+  "productCodeModified": false,
+  "userDataOrEvidenceLogsDeleted": false,
+  "oldPackageBinaryRetention": "仅旧DMG本体按用户授权删除；其历史验证、摘要与日志保留，缺失不是改写历史PASS",
+  "globalReconcileNotRerunForMinorFileCleanup": true,
+  "wholeFunctionalAcceptance": false
+}

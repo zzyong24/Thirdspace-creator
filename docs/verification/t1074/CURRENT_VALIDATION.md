@@ -227,3 +227,5 @@ flowchart LR
 对账程序本轮实际输出仍为37错误/1告警；外层随后读取命令的exit0不能当作reconcile通过，本次完整新raw log未捕获。上一完整实际exit1的原日志与旧欠债保留，不写成整仓全绿。
 
 本轮旧安装版公共手工视频链经独立只读复核通过，限定结论`PASS_BOUNDED_CURRENT_INSTALLED_PUBLIC_MANUAL_VIDEO`，0个未闭合范围内问题。报告`t1074-installed/t1075-installed-public-video-independent-review.json` SHA`d9022948b29845d3e5b1efd9abc650288d30214bd5b8d0a06400b3e12bff646c`，绑定506个引用；69捕获和追加7个只读describe分开记录，错误入口和首次失败保留。该PASS不覆盖原生UI、Undo/Redo、自然语言视频、两引擎矩阵、401采纳或新b640安装。05:50 UTC再次公开status exit0，磁盘约5.76GiB、需至少10GiB总可用空间，新鲜备份/stage/新安装仍全false；新观察见result.json，原索引与已签独评不回写。
+
+用户随后明确授权清理旧包/垃圾；T1076已实际删除16个旧DMG并正常卸载6镜像，净释放约9.48GiB，可用约15.13GiB。最新两份b640包、当前App、全部备份和原验收日志保留，公共CLI full；此前磁盘不足是历史快照，当前空间前置已满足，但尚不能写成新鲜备份或安装PASS。详见[清理证据](../t1076/CURRENT_VALIDATION.md)。

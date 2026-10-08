@@ -340,7 +340,7 @@
     "全系统两引擎原生界面、视频调整及页签切换矩阵未签。",
     "后端原2测试类型错误、boundary7、semantic原1、timeout入口缺失及全局旧37errors/1warning不伪绿。"
   ],
-  "updatedAt": "2026-10-08T05:51:12.065150+00:00",
+  "updatedAt": "2026-10-08T08:09:37.734122+00:00",
   "localPackage": {
     "candidateCommit": "b64061ab6bee213c939bf97ad19f423c7090a5ef",
     "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
@@ -416,5 +416,11 @@
     "newPackageInstalled": false,
     "nativeUIAccepted": false,
     "AINaturalLanguageVideoAccepted": false
-  }
+  },
+  "userAuthorizedOldPackageCleanup": {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1076/result.json",
+    "sha256": "5d35ccaf7198195d5f7ab8530d81321a058a93e3481fcc4732b66d5ec35fd0e6",
+    "bytes": 1966
+  },
+  "currentSpaceAfterCleanupGiB": 15.132926940917969
 }

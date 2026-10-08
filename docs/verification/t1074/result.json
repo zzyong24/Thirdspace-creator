@@ -1,6 +1,6 @@
 {
   "taskId": "T-1074",
-  "updatedAt": "2026-10-08T05:51:12.065150+00:00",
+  "updatedAt": "2026-10-08T08:09:37.734122+00:00",
   "taskComplete": false,
   "sourceBaseBeforeCommit": "fbb861d433eae12b5824709916a669c7a0400aa5",
   "specSHA256": "c33f1a6a06bcb5a4782abda16153c0877654f707a733612d3773060e251ed411",
@@ -976,5 +976,11 @@
     "fullNewRawLogCaptured": false,
     "outerReadCommandExitZeroIsNotReconcilePass": true,
     "previousLoggedExit1EvidenceRetained": true
-  }
+  },
+  "userAuthorizedOldPackageCleanup": {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1076/result.json",
+    "sha256": "5d35ccaf7198195d5f7ab8530d81321a058a93e3481fcc4732b66d5ec35fd0e6",
+    "bytes": 1966
+  },
+  "currentSpaceAfterCleanupGiB": 15.132926940917969
 }
