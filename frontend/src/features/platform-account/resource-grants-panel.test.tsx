@@ -1,5 +1,6 @@
 import {beforeEach,it,expect,vi} from 'vitest';
-import {render,screen,fireEvent,waitFor} from '@testing-library/react';
+import {render,screen,fireEvent,waitFor,act} from '@testing-library/react';
+import {StrictMode} from 'react';
 import {ResourceGrantsPanel} from './resource-grants-panel';
 const mock=vi.hoisted(()=>({groupId:'origin',list:vi.fn(),preview:vi.fn(),revoke:vi.fn(),deletion:vi.fn(),transport:vi.fn()}));
 vi.mock('@creatoros/contract',()=>({ENDPOINTS:{},createClient:()=> ({listGroupResourceGrants:mock.list,previewGroupResourceGrantRevoke:mock.preview,revokeGroupResourceGrant:mock.revoke,previewAssetDelete:mock.deletion})}));
@@ -27,4 +28,75 @@ it('读取中切组立即清空旧资源，迟到响应不会回写',async()=>{
 
 it('每个面板请求冻结真实组并清空平台筛选，异步请求不重新取当前组',async()=>{
  render(<ResourceGrantsPanel group={group}/>);await screen.findByRole('button',{name:'查看影响'});expect(mock.transport).toHaveBeenCalledWith('/api/v1',{groupId:'origin',accountId:null});
+});
+
+it('StrictMode重挂载后完成当前读取，不永久停在加载',async()=>{
+ mock.list.mockReset().mockResolvedValue([grant]);
+ render(<StrictMode><ResourceGrantsPanel group={group}/></StrictMode>);
+ await act(async()=>{await Promise.resolve();});
+ expect(mock.list).toHaveBeenCalled();
+ expect(screen.queryByText('正在读取共享资源…')).not.toBeInTheDocument();
+ expect(screen.getByText('真实封面素材')).toBeInTheDocument();
+ expect(screen.getByRole('button',{name:'重新读取'})).toBeEnabled();
+});
+it('旧读取真实完成前切组不并发，完成后只显示当前组结果',async()=>{
+ mock.list.mockReset().mockResolvedValue([grant]);
+ let finish!:(v:unknown)=>void;let active=0,maxActive=0;
+ mock.list.mockImplementationOnce(()=>{active++;maxActive=Math.max(maxActive,active);return new Promise(resolve=>{finish=value=>{active--;resolve(value);};});}).mockImplementationOnce(async()=>{active++;maxActive=Math.max(maxActive,active);active--;return [{...grant,resourceTitle:'当前组素材'}];});
+ const view=render(<ResourceGrantsPanel group={group}/>);
+ await waitFor(()=>expect(mock.list).toHaveBeenCalledTimes(1),{timeout:120_000});
+ mock.groupId='target';view.rerender(<ResourceGrantsPanel group={{...group,id:'target',name:'品牌二组'}}/>);
+ await act(async()=>{await Promise.resolve();});
+ expect(mock.list).toHaveBeenCalledTimes(1);
+ await act(async()=>{finish([grant]);});
+ expect(mock.list).toHaveBeenCalledTimes(2);expect(maxActive).toBe(1);
+ expect(screen.queryByText('真实封面素材')).not.toBeInTheDocument();
+ expect(screen.getByText('当前组素材')).toBeInTheDocument();
+ expect(screen.getByRole('button',{name:'重新读取'})).toBeEnabled();
+ expect(mock.transport).toHaveBeenLastCalledWith('/api/v1',{groupId:'target',accountId:null});
+});
+it('等待旧读取时再次切组，过期排队不发送，仅最后当前组读取',async()=>{
+ mock.list.mockReset().mockResolvedValue([grant]);
+ let finish!:(v:unknown)=>void;mock.list.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;})).mockResolvedValueOnce([{...grant,resourceTitle:'最终组素材'}]);
+ const view=render(<ResourceGrantsPanel group={group}/>);
+ await waitFor(()=>expect(mock.list).toHaveBeenCalledTimes(1),{timeout:120_000});
+ mock.groupId='target';view.rerender(<ResourceGrantsPanel group={{...group,id:'target'}}/>);
+ mock.groupId='latest';view.rerender(<ResourceGrantsPanel group={{...group,id:'latest'}}/>);
+ await act(async()=>{finish([grant]);});
+ expect(mock.list).toHaveBeenCalledTimes(2);
+ expect(screen.getByText('最终组素材')).toBeInTheDocument();
+ expect(screen.queryByText('真实封面素材')).not.toBeInTheDocument();
+});
+it('排队后卸载不发新请求，也不回写或报卸载更新',async()=>{
+ mock.list.mockReset().mockResolvedValue([grant]);
+ let finish!:(v:unknown)=>void;mock.list.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+ const view=render(<ResourceGrantsPanel group={group}/>);
+ await waitFor(()=>expect(mock.list).toHaveBeenCalledTimes(1),{timeout:120_000});
+ mock.groupId='target';view.rerender(<ResourceGrantsPanel group={{...group,id:'target'}}/>);view.unmount();
+ await act(async()=>{finish([grant]);});
+ expect(mock.list).toHaveBeenCalledTimes(1);
+ expect(screen.queryByText('真实封面素材')).not.toBeInTheDocument();
+});
+it('排队期间当前组失效，权限错误结束加载且不读取未进入的组',async()=>{
+ mock.list.mockReset().mockResolvedValue([grant]);
+ let finish!:(v:unknown)=>void;mock.list.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+ const view=render(<ResourceGrantsPanel group={group}/>);
+ await waitFor(()=>expect(mock.list).toHaveBeenCalledTimes(1),{timeout:120_000});
+ view.rerender(<ResourceGrantsPanel group={{...group,id:'target'}}/>);
+ await act(async()=>{finish([grant]);});
+ expect(mock.list).toHaveBeenCalledTimes(1);
+ expect(screen.getByRole('alert')).toHaveTextContent('请先进入此账号组');
+ expect(screen.queryByText('正在读取共享资源…')).not.toBeInTheDocument();
+ expect(screen.getByRole('button',{name:'重新读取'})).toBeEnabled();
+});
+it('同轮次重复重读共用在途请求，结束后可继续重读',async()=>{
+ mock.list.mockReset().mockResolvedValue([grant]);
+ render(<ResourceGrantsPanel group={group}/>);await screen.findByRole('button',{name:'查看影响'});
+ let finish!:(v:unknown)=>void;mock.list.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+ const read=screen.getByRole('button',{name:'重新读取'});
+ act(()=>{fireEvent.click(read);fireEvent.click(read);});
+ await waitFor(()=>expect(mock.list).toHaveBeenCalledTimes(2),{timeout:120_000});
+ await act(async()=>{finish([grant]);});
+ expect(read).toBeEnabled();expect(mock.list).toHaveBeenCalledTimes(2);
+ fireEvent.click(read);await waitFor(()=>expect(mock.list).toHaveBeenCalledTimes(3),{timeout:120_000});
 });

@@ -16,12 +16,38 @@ export function ResourceGrantsPanel({group,onChanged,onBusyChange,disabled=false
  const api=React.useMemo(()=>createClient(ENDPOINTS,createHttpTransport("/api/v1",{groupId:group.id,accountId:null})),[group.id]);
  const [grantLimit,setGrantLimit]=React.useState(10),[consumerLimit,setConsumerLimit]=React.useState(8);
  const [rows,setRows]=React.useState<GroupResourceGrantResource[]>([]),[plan,setPlan]=React.useState<GroupResourceRevokePreview|null>(null),[deletion,setDeletion]=React.useState<DeletePreview|null>(null),[showRevoked,setShowRevoked]=React.useState(false),[loading,setLoading]=React.useState(true),[busy,setBusy]=React.useState(false),[error,setError]=React.useState<string|null>(null),[message,setMessage]=React.useState<string|null>(null),[stale,setStale]=React.useState(false);
- const alive=React.useRef(false),epoch=React.useRef(0),writeEpoch=React.useRef(0),busyChange=React.useRef(onBusyChange),working=React.useRef(false),reading=React.useRef<Promise<void>|null>(null),release=React.useRef<(()=>void)|null>(null);
+ const alive=React.useRef(false),epoch=React.useRef(0),writeEpoch=React.useRef(0),busyChange=React.useRef(onBusyChange),working=React.useRef(false),reading=React.useRef<{epoch:number;promise:Promise<void>}|null>(null),release=React.useRef<(()=>void)|null>(null);
  React.useEffect(()=>{busyChange.current=onBusyChange;},[onBusyChange]);
  const current=React.useCallback(()=>readCurrentGroupId()===group.id,[group.id]);
  const check=React.useCallback(()=>{if(!alive.current||!current()||(working.current&&writeEpoch.current!==epoch.current))throw Error("请先进入此账号组，再查看共享资源。");},[current]);
- const load=React.useCallback(()=>{if(reading.current)return reading.current;const ticket=epoch.current;reading.current=Promise.resolve().then(async()=>{try{check();setLoading(true);const result=await api.listGroupResourceGrants({params:undefined,query:undefined,body:undefined});check();if(ticket!==epoch.current)return;if(!Array.isArray(result))throw Error("共享授权列表读取失败，请重试。");setRows(result);setError(null);}catch(e){if(alive.current&&ticket===epoch.current)setError(workspaceErrorCopy(e,"共享授权读取失败。"));}finally{if(alive.current&&ticket===epoch.current)setLoading(false);}}).finally(()=>{reading.current=null;});return reading.current;},[check,api]);
- React.useEffect(()=>{alive.current=true;void load();const expire=()=>{epoch.current++;};const scopeChanged=()=>{if(current())return;expire();setRows([]);setPlan(null);setDeletion(null);setMessage(null);setError("账号组已切换，请在当前账号组重新查看共享资源。");setLoading(false);};window.addEventListener("creatoros:accounts-changed",scopeChanged);return()=>{alive.current=false;expire();window.removeEventListener("creatoros:accounts-changed",scopeChanged);release.current?.();release.current=null;busyChange.current?.(false);};},[current,load]);
+ const load=React.useCallback(():Promise<void>=>{
+  const ticket=epoch.current,pending=reading.current;
+  if(pending){
+   if(pending.epoch===ticket)return pending.promise;
+   // 等原请求完全收尾；等待者保留自己的轮次，不替过期调用重新盖章。
+   return pending.promise.then(()=>{if(!alive.current||ticket!==epoch.current)return;return load();});
+  }
+  const request={epoch:ticket,promise:Promise.resolve()};
+  request.promise=Promise.resolve().then(async()=>{
+   if(!alive.current||ticket!==epoch.current)return;
+   try{
+    check();setLoading(true);
+    const result=await api.listGroupResourceGrants({params:undefined,query:undefined,body:undefined});
+    check();if(ticket!==epoch.current)return;
+    if(!Array.isArray(result))throw Error("共享授权列表读取失败，请重试。");
+    setRows(result);setError(null);
+   }catch(e){if(alive.current&&ticket===epoch.current)setError(workspaceErrorCopy(e,"共享授权读取失败。"));}
+   finally{if(alive.current&&ticket===epoch.current)setLoading(false);}
+  }).finally(()=>{if(reading.current===request)reading.current=null;});
+  reading.current=request;return request.promise;
+ },[check,api]);
+ React.useEffect(()=>{
+  alive.current=true;setRows([]);setPlan(null);setDeletion(null);setMessage(null);setError(null);setStale(false);setLoading(true);void load();
+  const expire=()=>{epoch.current++;};
+  const scopeChanged=()=>{if(current())return;expire();setRows([]);setPlan(null);setDeletion(null);setMessage(null);setError("账号组已切换，请在当前账号组重新查看共享资源。");setLoading(false);};
+  window.addEventListener("creatoros:accounts-changed",scopeChanged);
+  return()=>{alive.current=false;expire();window.removeEventListener("creatoros:accounts-changed",scopeChanged);release.current?.();release.current=null;busyChange.current?.(false);};
+ },[current,load]);
  async function action(run:()=>Promise<void>){if(working.current||disabled)return;working.current=true;const ticket=epoch.current;writeEpoch.current=ticket;setBusy(true);setError(null);release.current=beginForegroundActivity("共享资源管理");onBusyChange?.(true);try{check();await run();}catch(e){if(alive.current&&ticket===epoch.current){setError(workspaceErrorCopy(e,"操作未完成，请重试。"));setStale(true);}}finally{working.current=false;release.current?.();release.current=null;if(alive.current&&ticket===epoch.current){setBusy(false);onBusyChange?.(false);}}}
  async function preview(id:string){await action(async()=>{const result=await api.previewGroupResourceGrantRevoke({params:{grantId:id},query:undefined,body:undefined});check();setPlan(result);setConsumerLimit(8);setDeletion(null);setMessage(null);setStale(false);});}
  async function revoke(){if(!plan||stale)return;const chosen=plan;await action(async()=>{await api.revokeGroupResourceGrant({params:{grantId:chosen.id},query:undefined,body:{digest:chosen.digest,expectedOriginVersion:chosen.originVersion,expectedTargetVersion:chosen.targetVersion}});check();const verified=await api.previewGroupResourceGrantRevoke({params:{grantId:chosen.id},query:undefined,body:undefined});check();if(!verified.revokedAt)throw Error("撤销状态尚未核对，请重新读取影响。");setPlan(verified);setRows(old=>old.map(row=>row.id===verified.id?verified:row));setMessage("授权已撤销，使用记录保留。");setStale(false);await load();check();await onChanged?.();});}

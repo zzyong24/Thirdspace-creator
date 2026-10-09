@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "PASS（0 findings）：仅复核T1105证据叙述校准。当前SPEC SHA256 4a49467fc9eb340708f845f3f14634bec4a9e8cfbb531c7f76aba2ebbe71d072；将唯一新增文字逆换回原句后SHA256精确等于初审SPEC c1a7a32d35237826a6fa4b15af25e58c4bf60cc1b150bf98512056844d695fc0，其余全文不变。实现前browser-red实际exit0，只记公共基线PASS且明确未复现spinner；前置RED由已发生StrictMode与延迟切组组件行为提供；实现后仍保留完整公共Chrome旅程、功能、权限、写集、120秒观察预算与全部Gate。DEC-T1105-EVIDENCE已记录，原初审/原回执不覆盖。宪法docs/产品定位.md SHA256 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。仅该规格校准复审，不代签整体实施Gate、安装或父任务。",
+  "findings": []
+}

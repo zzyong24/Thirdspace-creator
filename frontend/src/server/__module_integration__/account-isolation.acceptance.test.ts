@@ -333,7 +333,7 @@ describe("[T-332 S6] 双号全域交叉泄漏 = 0(ISO-08,dispatch 真链)", () =
     expect(bStill.status).toBe("active");
   });
 
-  it("发布/修订:跨号 pub/revision/父锚 404;C-09 外键锚跨号触碰 = 报错不静默", async () => {
+  it("发布/修订:跨号 pub/revision/父锚 404;账号事实锚独立且同号不同项目不能抢占", async () => {
     // 各自独立项目(不复用会被「项目域」删除的 fixture)。
     const { outputId: outA } = await createProjectWithOutput(A, "发布域项目");
     const { outputId: outB } = await createProjectWithOutput(B, "发布域项目");
@@ -381,19 +381,30 @@ describe("[T-332 S6] 双号全域交叉泄漏 = 0(ISO-08,dispatch 真链)", () =
       query: undefined,
       body: undefined,
     });
-    // C-09(§3.1/§4.5):(platform, external_id) 是 user 级平台事实锚 —— B 在自己号 ctx 下
-    // 登记 A 号的 externalId,findByExternalKey 命中 A 行 + 号不一致 → 数据 bug 必须炸出来
-    // (500),绝不静默返回/静默改归属(§11.4「findByExternalKey 号不一致 → 报错不静默」)。
-    const clash = await call(B, "outputs.publications.register", {
-      params: { outputId: outB },
-      query: undefined,
+    // T1062已确认事实锚含真实账号：两个账号可登记同一外部ID，不能改A原锚。
+    const beforeA = await ok(A, "publications.get", {params:{publicationId:pubA.id}});
+    const independentB = await ok<{id:string;contentOutputId:string;accountId:string;externalId:string}>(B, "outputs.publications.register", {
+      params: { outputId: outB }, query: undefined,
       body: { platform: "douyin", externalId: "iso-ext-a" },
     });
-    // 报错(dispatch 对无 code 的错走字符串 error 信封,HTTP 400):绝不 200、绝不带 data
-    // (静默返回 A 的行 = 静默收编,才是要防的事故)。
-    expect(clash.status).toBeGreaterThanOrEqual(400);
-    expect(clash.body.data).toBeUndefined();
-    expect(JSON.stringify(clash.body.error)).toContain("归属号与当前 ctx 不一致");
+    expect(independentB.id).not.toBe(pubA.id);
+    expect(independentB.contentOutputId).toBe(outB);
+    expect(independentB.accountId).toBe(B);
+    expect(independentB.externalId).toBe("iso-ext-a");
+    expect(await ok(A,"publications.get",{params:{publicationId:pubA.id}})).toEqual(beforeA);
+    await expect404(A,"publications.get",{params:{publicationId:independentB.id}});
+    // 同一账号的另一个真实项目不能抢占这个事实锚，失败也不改现归属。
+    const beforeB=await ok(B,"publications.get",{params:{publicationId:independentB.id}});
+    const {outputId:anotherB}=await createProjectWithOutput(B,"另一个发布项目");
+    const conflict=await call(B,"outputs.publications.register",{
+      params:{outputId:anotherB},query:undefined,body:{platform:"douyin",externalId:"iso-ext-a"},
+    });
+    expect(conflict.status).toBe(409);
+    expect(conflict.body.data).toBeUndefined();
+    expect(conflict.body.error?.code).toBe("ConflictError");
+    expect(conflict.body.error?.details?.reason).toBe("external_work_owned_by_another_project");
+    expect(await ok(B,"publications.get",{params:{publicationId:independentB.id}})).toEqual(beforeB);
+
   });
 
   it("复盘/经验:review 经父锚跨号 404;learning 同名各建互不可见", async () => {

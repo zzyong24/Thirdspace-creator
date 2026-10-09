@@ -1,0 +1,313 @@
+{
+  "schema": "independent-implementation-review/v1",
+  "taskId": "T-1105",
+  "createdAt": "2026-10-09T04:54:30.681944+00:00",
+  "reviewerRole": "独立只读实施与有限体验复核",
+  "verdict": "PASS_LIMITED_IMPLEMENTATION_AND_JOURNEY",
+  "findings": [],
+  "gitHeadObserved": "d35f7d57ff952d306071eb40d34127956b067906",
+  "originalImplementationBase": "d35f7d57ff952d306071eb40d34127956b067906",
+  "sourceHashes": {
+    "docs/features/t1105-shared-resource-loading.md": "4a49467fc9eb340708f845f3f14634bec4a9e8cfbb531c7f76aba2ebbe71d072",
+    "frontend/src/features/platform-account/resource-grants-panel.tsx": "92705c667ef8efa7dcbf7b918f7a2beb171c6699151d88feb9292d863b3539be",
+    "frontend/src/features/platform-account/resource-grants-panel.test.tsx": "e31131d31b9eadeb1076f6cbf22c22ad93fc454353aeea38520860b684aa675a",
+    "frontend/tests/e2e/shared-resource-lifecycle.spec.ts": "6b02091c6facb108242a08af65f9dff12a97ef66465f6a2e29d0ba84e11413fc",
+    "docs/verification/t1105/run-journey.mjs": "8880616240beef9d117b21ae5bb03d427be578b068f72cd019a3f038ab85cafe",
+    "orchestrator/process/reconcile.config.json": "8a53dc17c87d7320ed06d49e2863a499c6913bb1c8e8f958e1b2695210975b94",
+    "orchestrator/process/modules.config.json": "a1d4797a942b93efc60a14210689807fe3942216838b84ee42fece3e1ec07cda",
+    "docs/产品定位.md": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "orchestrator/DECISION_LOG.md": "efdff9c7344c710feb6c9857e842f722739812749c84b328bba656653fb99b8e",
+    "frontend/tests/helpers/test-environment.ts": "896135fec54b145446ba9de011568a3c518dd52e5aa81e2a97eeaf37081aed85",
+    "frontend/tests/helpers/network-policy.ts": "6f1595adf64ec933b0f39ec52449c57f4764694d5aec69a99b57bb865f213b2b",
+    "frontend/playwright.config.ts": "b6f65e248dcd83f3181288563e3a104d8847363c2c65269ecf519507fa3bd39c"
+  },
+  "evidenceHashes": {
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/strictmode-diagnostic-red.json": "c298b60c0735b48b203f62fe5446d48d21463dbad76c3ed0eee6354cccccfa0f",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/strictmode-diagnostic-red.log": "42eedc9ef5992c25f47b3ec03538d1cf3ff35261a9ad759ff7dc6066da0a9b47",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/strictmode-diagnostic-red-loaded.json": "edec119ba0e1c628ea54287e65ae2c2a38e8fbc3293d93c2037306b4537d4f4b",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/strictmode-diagnostic-red-loaded.log": "aedd91bc6f46f35b52b5d219932475648d0a296e153706ed493a4e4c6a5d5c23",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/strictmode-diagnostic-red-aliased.json": "97771595d3ad5d6fff460bec867aad9b7b7aad6589ed2acf57f2335ec20bd4bb",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/strictmode-diagnostic-red-aliased.log": "74117a11990cbae87ca38e626a6abc0d89d8715e307882905e03568146b49904",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/unit-red.json": "c71693965ca6f09ff6c42342d1c7bc1fb3d6a52d69f83c2cc2a07c6b1e1eeaed",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/unit-red.log": "445b1d0084f30a5d4962148a13bba1719820e2a8a42b637c0a7fd4e9538783fa",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/unit-red-reset.json": "e8a065fa4a31c09b654e523e506ce379180d76c347a92ba1d66d04a3e6628195",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/unit-red-reset.log": "151dd9d4817aa765af7674c1eb920a19bdfc95c6cc247edff23c1573507552f4",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/unit-green.json": "3fddda423b8cf89b31e7819069fd3b27b9493ba2385fb4999044671df9315009",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/unit-green.log": "47d1c90984ef245e56668b033af0aa1c0e9e585eec8492d763fb23c24e38739d",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/browser-red.json": "2e05d7f32d047ef593e7df8018eb31ff442f0b616f18dfbf34e8d8119fb4f69a",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/browser-red.log": "3960f447dd9eb87dec270af923086b1af4adb28f36e2c3e39425a54d3b002403",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/browser-green.json": "9d268aa2849d31b8fe62000ed281de0b3f02eb3ea0a6d9414386313ed123385f",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/browser-green.log": "3960f447dd9eb87dec270af923086b1af4adb28f36e2c3e39425a54d3b002403",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/frontend-typecheck.json": "8c4b6dde0a481ab066d57997d7fbf807474173269d272f8043a222a9932edb0b",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/frontend-typecheck.log": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/led047.json": "3998b5c1e32bce8439cb519e9b1ab496269b4810b0e9c0f759d44579c8d3c1cf",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/led047.log": "445f62169eaca81b0b01131d27cd191b9dbe94cd80dc4f77f9b848ca165615a2",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/diagnostic-probe-binding.json": "77f29f7d6dbd82420b397aafbafc74b553f81b744a789aeb99b8a95c62f03ede",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/resource-grants-red-probe.test.tsx": "452bf2a858126003c41f51719799e082c666ef222e44bb821b8c5f6982a19899",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/diagnostic-vitest.config.ts": "064aa11ffe92b175e3c6b87992deb542d99778b450f2f19724b01072cbe0734e",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1105/journey.log": "8d6b83de3c0ecebecf05d54ff656317c7ee2c31abed24bb89be2a1636e456071",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1105/resource-copy.json": "8142eda508b302ee309a0b3d4dd45a51bc35e099a51d0995ffecb364e7d3c938",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1105/visible-copy.json": "d8ad95407cb2d4c73418246bd0f26fa88f99f5ab97de179d70c22f8a3e8363e6",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1105/screenshots/t1105-resource-error.png": "7e0ae760d03df80b3cea28743123b5ff8085e69b6126fbf25ea5f4a0c12dfe54",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1105/screenshots/t1105-resource-narrow.png": "25320dc5ba66e1223d98f55f5850457bea19c10fff8793ccc300b3651e0eec6e",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1105/screenshots/t1105-resource-normal.png": "63aab681befa5c82731146af334cae0c8ebd2612583c02fda7a2856e621b9f8e"
+  },
+  "evidenceRuns": {
+    "strictmode-diagnostic-red": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/diagnostic-vitest.config.ts"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:28:06.539580+00:00",
+      "finishedAt": "2026-10-09T04:28:11.637286+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 5.097304083989002,
+      "logSha256": "42eedc9ef5992c25f47b3ec03538d1cf3ff35261a9ad759ff7dc6066da0a9b47"
+    },
+    "strictmode-diagnostic-red-loaded": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/diagnostic-vitest.config.ts"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:29:12.331008+00:00",
+      "finishedAt": "2026-10-09T04:29:13.782055+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 1.4509210840042215,
+      "logSha256": "aedd91bc6f46f35b52b5d219932475648d0a296e153706ed493a4e4c6a5d5c23"
+    },
+    "strictmode-diagnostic-red-aliased": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1105/diagnostic-vitest.config.ts"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:30:24.311323+00:00",
+      "finishedAt": "2026-10-09T04:30:26.044554+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 1.7330843749805354,
+      "logSha256": "74117a11990cbae87ca38e626a6abc0d89d8715e307882905e03568146b49904"
+    },
+    "unit-red": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/platform-account/resource-grants-panel.test.tsx",
+        "--retry=0",
+        "--testTimeout=360000",
+        "--hookTimeout=120000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:45:29.650536+00:00",
+      "finishedAt": "2026-10-09T04:45:40.327666+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 10.676711750013055,
+      "logSha256": "445b1d0084f30a5d4962148a13bba1719820e2a8a42b637c0a7fd4e9538783fa"
+    },
+    "unit-red-reset": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/platform-account/resource-grants-panel.test.tsx",
+        "--retry=0",
+        "--testTimeout=360000",
+        "--hookTimeout=120000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:46:06.123332+00:00",
+      "finishedAt": "2026-10-09T04:46:16.456141+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 10.332567417004611,
+      "logSha256": "151dd9d4817aa765af7674c1eb920a19bdfc95c6cc247edff23c1573507552f4"
+    },
+    "unit-green": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/platform-account/resource-grants-panel.test.tsx",
+        "--retry=0",
+        "--testTimeout=360000",
+        "--hookTimeout=120000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:47:41.816113+00:00",
+      "finishedAt": "2026-10-09T04:47:45.379601+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 3.5633165419858415,
+      "logSha256": "47d1c90984ef245e56668b033af0aa1c0e9e585eec8492d763fb23c24e38739d"
+    },
+    "browser-red": {
+      "argv": [
+        "node",
+        "docs/verification/t1105/run-journey.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:44:32.023807+00:00",
+      "finishedAt": "2026-10-09T04:46:55.250561+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 143.2258299170062,
+      "logSha256": "3960f447dd9eb87dec270af923086b1af4adb28f36e2c3e39425a54d3b002403"
+    },
+    "browser-green": {
+      "argv": [
+        "node",
+        "docs/verification/t1105/run-journey.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:47:41.815953+00:00",
+      "finishedAt": "2026-10-09T04:48:30.302727+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 48.48614370901487,
+      "logSha256": "3960f447dd9eb87dec270af923086b1af4adb28f36e2c3e39425a54d3b002403"
+    },
+    "frontend-typecheck": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "typecheck"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:49:13.299013+00:00",
+      "finishedAt": "2026-10-09T04:51:01.465384+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 108.16506566599128,
+      "logSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035"
+    },
+    "led047": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/copilot/ai-copilot-interactions.test.tsx",
+        "src/features/knowledge/knowledge-dump-zone.test.tsx",
+        "src/features/topics/topics-interactions.test.tsx",
+        "src/components/overlays/overlay-routing.test.tsx",
+        "src/lib/copilot-navigation.test.ts",
+        "src/features/copilot/chat-tool-trace.test.tsx",
+        "src/features/automations/run-controls.test.tsx",
+        "src/features/automations/cadence.test.ts",
+        "--retry=0",
+        "--testTimeout=120000",
+        "--hookTimeout=120000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:50:26.559533+00:00",
+      "finishedAt": "2026-10-09T04:50:58.745921+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 32.18604500000947,
+      "logSha256": "445f62169eaca81b0b01131d27cd191b9dbe94cd80dc4f77f9b848ca165615a2"
+    }
+  },
+  "mechanicalProofs": {
+    "originalSixTestBodiesExactlyPreserved": true,
+    "productActionAndJsxSuffixExactlyPreserved": true,
+    "reconcileConfigOnlyAddedKey": "/frontend_verify_commands/shared-resource-lifecycle:e2e",
+    "specRecheckInverseSha256": "c1a7a32d35237826a6fa4b15af25e58c4bf60cc1b150bf98512056844d695fc0"
+  },
+  "checks": [
+    {
+      "id": "READ-LIFECYCLE",
+      "status": "PASS",
+      "evidence": "epoch与Promise同记录；同epoch共享；新epoch等待旧Promise完整finally释放；队列冻结ticket并在发HTTP前核alive/epoch；check保留真实当前group；finally仅清自身reading；scope effect清旧显示。"
+    },
+    {
+      "id": "WRITE-BOUNDARY",
+      "status": "PASS",
+      "evidence": "原action/preview/revoke/deletion/digest/版本/foreground/busy及JSX后缀逐字保持；原6例正文逐字保持。"
+    },
+    {
+      "id": "COMPONENT-TDD",
+      "status": "PASS",
+      "evidence": "合法StrictMode探针6PASS/1FAIL；隔离mockReset后RED8PASS/4行为FAIL，同argvGREEN12PASS；未把残留mock污染的4失败算产品缺陷。"
+    },
+    {
+      "id": "PUBLIC-BASELINE",
+      "status": "PASS_BASELINE_NOT_RED",
+      "evidence": "browser-red命名的原回执exit0/143.226s；没有公共spinner RED，已按唯一SPEC文字修改诚实校准。"
+    },
+    {
+      "id": "PUBLIC-GREEN",
+      "status": "PASS_LIMITED",
+      "evidence": "browser-green exit0/48.486s；实际journey.log一例PASS；正式隔离Chrome/PGlite与公共dispatch读取，只有一次明确HTTP500为错误响应替身。"
+    },
+    {
+      "id": "VISUAL",
+      "status": "PASS_LIMITED",
+      "evidence": "实际view_image查看正常、错误、窄窗3PNG；为空列表面板裁图，重读可见，错误反馈清楚，未观察明显挤压或裁断；1366x900与900x900来自实际旅程参数。"
+    },
+    {
+      "id": "FRONTEND-TYPE",
+      "status": "PASS",
+      "evidence": "next typegen && tsc --noEmit实际exit0/108.165s。"
+    },
+    {
+      "id": "LED047",
+      "status": "PASS",
+      "evidence": "实际8文件174PASS exit0/32.186s。"
+    },
+    {
+      "id": "BOUNDARY-SEMANTIC-ORPHAN",
+      "status": "NOT_INDEPENDENTLY_BOUND",
+      "evidence": "主会话报告已执行exit0，但本报告截止未读到相应完整回执/日志；不据消息代签。"
+    },
+    {
+      "id": "FULL-RECONCILE",
+      "status": "PENDING",
+      "evidence": "未在本限定复核取得实际终态。"
+    },
+    {
+      "id": "INSTALLED-APP",
+      "status": "UNVERIFIED",
+      "evidence": "当前候选仅源码与隔离Chrome旅程，本复核未安装或操作当前App。"
+    }
+  ],
+  "specRecheck": {
+    "status": "PASS",
+    "packet": "SPEC_RECHECK_INPUT.json",
+    "specSha256": "4a49467fc9eb340708f845f3f14634bec4a9e8cfbb531c7f76aba2ebbe71d072",
+    "priorSpecSha256": "c1a7a32d35237826a6fa4b15af25e58c4bf60cc1b150bf98512056844d695fc0",
+    "findings": []
+  },
+  "limits": [
+    "本评审没有运行测试、HTTP、模型、业务CLI、App或数据库，也没有修改仓库/产品/控制面。",
+    "组件请求使用合成mock；公共旅程仅正常真实空授权组及一次500恢复，不代签真实用户共享授权撤销/删除或安装版。",
+    "旧公共基线没有复现spinner；不能声称公共RED或原失败在全部浏览器环境必现。",
+    "父T1062/T1102/Pi272及其它任务、全功能矩阵均不在此结论内。",
+    "源码或测试/runner/规格字节再变更须重绑；报告不能代签未完成Gate或task complete。"
+  ]
+}

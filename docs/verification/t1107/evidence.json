@@ -1,0 +1,144 @@
+{
+  "sourceBase": "d35f7d57ff952d306071eb40d34127956b067906",
+  "runs": {
+    "ownership-diagnostic": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "--config",
+        "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1107/diagnostic-vitest.config.ts",
+        "-t",
+        "发布/修订"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:48:40.623825+00:00",
+      "finishedAt": "2026-10-09T04:48:55.644861+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 15.020830499997828,
+      "logSha256": "372cfe65c55f8c6906f48417c70ee1b50995d3d0624c94e41090b9731c69638b"
+    },
+    "public-green": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/server/__module_integration__/platform-account.persistence-client.test.ts",
+        "src/server/__module_integration__/account-isolation.acceptance.test.ts",
+        "src/server/__module_integration__/platform-collection.persistence-client.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:53:38.906667+00:00",
+      "finishedAt": "2026-10-09T04:55:08.140327+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 89.23280125000747,
+      "logSha256": "903d33996013e98a7b142f8b9faaa638a545e6c8ebba749360913bc63207808a"
+    },
+    "publishing-baseline": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/modules/publishing/publishing.service.test.ts",
+        "src/modules/publishing/publishing.repository.test.ts",
+        "src/modules/publishing/publishing.transport.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:50:48.880188+00:00",
+      "finishedAt": "2026-10-09T04:54:33.041949+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 224.16034466700512,
+      "logSha256": "c4552ac20cec1ff0120b190427256625d49de4d785df1b8b1bce7cbd651670cf"
+    },
+    "spec-review-initial": {
+      "argv": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-1107",
+        "--spec",
+        "docs/features/t1107-platform-public-regression.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/features/t1107-platform-public-regression.review-input.json",
+        "--review",
+        "docs/features/t1107-platform-public-regression.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "independent",
+        "--model",
+        "gpt-6"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:52:29.715537+00:00",
+      "finishedAt": "2026-10-09T04:52:29.991225+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.27492387499660254,
+      "logSha256": "3d5fb03dc54784235d205817cddbcd840b0b536d7e6a958f827bf3cf9cab2b01"
+    },
+    "spec-review-recheck": {
+      "argv": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-1107",
+        "--spec",
+        "docs/features/t1107-platform-public-regression.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/features/t1107-platform-public-regression.review-input.json",
+        "--review",
+        "docs/features/t1107-platform-public-regression.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "independent",
+        "--model",
+        "gpt-6"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:53:36.498358+00:00",
+      "finishedAt": "2026-10-09T04:53:36.813730+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.3152542909956537,
+      "logSha256": "b3fb38da4adc969abdd1e1ef041f8e737226bb8a623dcb06861242b30fa974d5"
+    },
+    "task-start": {
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "start",
+        "T-1107"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:53:37.688541+00:00",
+      "finishedAt": "2026-10-09T04:53:37.972716+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.2839329580019694,
+      "logSha256": "9bd1250edac0f5561f62e73e66c58d9532ca444508fcc7afa63e7b501dce9d5b"
+    }
+  },
+  "taskComplete": false,
+  "installed": false,
+  "fullReconcile": "本轮待执行；原42失败由T1018/T1081/T1082等保留"
+}

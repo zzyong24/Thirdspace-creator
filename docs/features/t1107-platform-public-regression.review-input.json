@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "PASS：REV-001 已销账。SPEC 字节未变；T-1107 现已具有精确模块绑定，产品源写集为空，业务测试写入仅限原两个测试，并绑定了聚焦公共链、publishing 完整回归、双端类型和三项静态门及 reconcile。尚未开始实现或测试，本结论只允许进入 taskctl start。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:15:5076fa9cacfd6a0a",
+        "quote": "仅修改两个测试："
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:20:c0447b3e89624969",
+        "quote": "修测试前独立SPEC初审与taskctl start；原真实22/2及追加日志只算实际发生结果，不补历史RED。"
+      },
+      "where": "orchestrator/process/modules.config.json",
+      "failure_mode": "当前 modules.config.json 中不存在 T-1107 条目。因而 taskctl start 前无法把本 SPEC 的两个测试写集和聚焦/公共链验证命令绑定到任务包；实施可能在未受控路径上修改，或漏跑 retry=0、平台公共链与 publishing 回归，却仍无法由 context compile 检出。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:9fd4ece9fb38d1bb81fa542f9e89335c5eb31b916cd765fbbab45f4e33ced966:orchestrator/process/modules.config.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:20:c0447b3e89624969",
+      "suggestion": "在实施前增加 T-1107 精确模块绑定：产品写集为空、测试写集仅为 SPEC 第17–18行两个既有测试，控制/证据路径单列；验证命令覆盖 SPEC 第20行规定的 retry=0 聚焦运行、platform-collection 公共接口、publishing 完整回归、类型与静态门。随后重新 context compile 并提交 recheck 证据。",
+      "resolution_evidence": "EVIDENCE-SHA256:a1d4797a942b93efc60a14210689807fe3942216838b84ee42fece3e1ec07cda:orchestrator/process/modules.config.json（T-1107 精确模块：无产品源路径，两个测试路径及控制/证据路径；聚焦 retry=0/180000、publishing 三文件、双端类型、boundary/semantic/orphan/reconcile）",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}
