@@ -21,7 +21,7 @@ it("120个项目批量读取保持集合和账号，空集合不继续查询", a
 });
 it("同次首页共享三处解析，后续及跨号请求独立", async()=>{
  const resolve=vi.fn(async(c:RequestContext)=>[`pub-${c.accountId}`]);
- const getDashboardRollup=vi.fn(async()=>({snapshotCount:1,plays:12,likes:2,shares:1,finishCount:0,followerGain:0}));
+ const getDashboardRollup=vi.fn(async()=>({snapshotCount:1,plays:12,likes:2,shares:1,finishCount:0,finishAvg:null,followerGain:0}));
  const getDailyPlayTrend=vi.fn(async()=>[]);
  const hasImportedProjects=vi.fn(async()=>true);
  const getRecentPublicationsWithTitle=vi.fn(async()=>[]);
@@ -31,7 +31,7 @@ it("同次首页共享三处解析，后续及跨号请求独立", async()=>{
  contentCalendarService:{getCalendarRequestContext:async()=>({today:'2026-09-09'}),listActiveProjectSchedules:async()=>[]},platformAccountService:{listAccounts:async()=>({rows:[]})},candidateService:{listCandidates:async()=>({rows:[]})},learningsService:{getSuggestions:async()=>[]},notificationsServiceForQuery:{getUnreadCount:async()=>0},resolveImportedPublicationIds:resolve,
  } as unknown as Parameters<typeof createDashboardApplication>[0]);
  const first=await app.getDashboard(ctx);
- expect(first.error).toBeNull();expect(first.metrics.find(m=>m.id==='d-views')?.value).toBe('12');
+ expect(first.error).toBeNull();expect(first.metrics.find(m=>m.id==='d-finish')?.value).toBe('—');expect(first.metrics.find(m=>m.id==='d-views')?.value).toBe('12');
  expect(resolve).toHaveBeenCalledExactlyOnceWith(ctx);
  expect(hasImportedProjects).toHaveBeenCalledExactlyOnceWith(ctx);
  expect(getRecentPublicationsWithTitle).toHaveBeenCalledWith(ctx,{limit:100,publicationIds:['pub-a'],displayLimit:5});
@@ -45,7 +45,7 @@ function dashboardPorts(){
  return {
   projectsService:{getDashboardSummary:vi.fn(async()=>({todos:[],continueCreating:null})),hasImportedProjects:vi.fn(async()=>true),listProjectsForComposition:vi.fn(async()=>[]),listOutputRefsByProjects:vi.fn(async()=>[])},
   publishingService:{getRecentPublicationsWithTitle:vi.fn(async()=>[]),listPublicationsByOutputIds:vi.fn(async()=>[])},
-  analyticsService:{getDashboardRollup:vi.fn(async()=>({snapshotCount:1,plays:12,likes:2,shares:1,finishCount:0,followerGain:9})),getDailyPlayTrend:vi.fn(async()=>[])},
+  analyticsService:{getDashboardRollup:vi.fn(async()=>({snapshotCount:1,plays:12,likes:2,shares:1,finishCount:0,finishAvg:null,followerGain:9})),getDailyPlayTrend:vi.fn(async()=>[])},
   executionService:{list:vi.fn(async()=>({rows:[]}))},
   contentCalendarService:{getCalendarRequestContext:vi.fn(async()=>({today:'2026-09-14'})),listActiveProjectSchedules:vi.fn(async()=>[])},
   platformAccountService:{listAccounts:vi.fn(async()=>({rows:[]}))},candidateService:{listCandidates:vi.fn(async()=>({rows:[]}))},learningsService:{getSuggestions:vi.fn(async()=>[])},notificationsServiceForQuery:{getUnreadCount:vi.fn(async()=>0)},resolveImportedPublicationIds:vi.fn(async()=>[]),

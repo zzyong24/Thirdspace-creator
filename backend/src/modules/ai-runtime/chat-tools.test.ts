@@ -1,5 +1,5 @@
 import {prepareChatToolDefinitions} from "./chat-tool-definitions";
-import {chatWorkerInputSchema} from "@creatoros/contract/execution-worker";
+import {redfoxInputSchema,chatWorkerInputSchema} from "@creatoros/contract/execution-worker";
 import {prepareChatToolParameters} from "./chat-tool-parameters";
 import { createHash } from "node:crypto";
 import { describe, it, expect, vi } from "vitest";
@@ -4562,7 +4562,24 @@ it.each(["selected","project"])("全部现有工具参数及%s改稿变体可建
    if(node.type==="boolean")return false;
    return null;
   };
-  const legal=sample(schema);expect(parameters.safeParse(legal).success,name).toBe(true);expect(parameters.parse(legal),name).toEqual(legal);
+  const redfoxLegal={action:"hotspots",startDate:"2026-10-01",endDate:"2026-10-09"};
+  const legal=name==="redfox.query"?redfoxLegal:sample(schema);expect(parameters.safeParse(legal).success,name).toBe(true);expect(parameters.parse(legal),name).toEqual(legal);
+  if(name==="redfox.query"){
+   const actions: Record<string,unknown>[]=[
+    redfoxLegal,{action:"search",keyword:" 创作 "},{action:"accountWorks",authorUrl:"https://www.douyin.com/user/test"},
+    {action:"detail",workId:"123456"},{action:"transcriptSubmit",url:"https://www.douyin.com/video/123456"},{action:"transcriptResult",taskId:"task-original"},
+   ];
+   for(const action of actions){
+    expect(parameters.parse(action)).toEqual(redfoxInputSchema.parse(action));
+    expect(parameters.safeParse({...action,__unexpected:true}).success).toBe(false);
+   }
+   for(const invalid of [
+    {...redfoxLegal,keyword:"混入其它动作字段"},{...redfoxLegal,startDate:"短日期"},
+    {action:"accountWorks",authorUrl:"https://www.douyin.com/user/test",offset:21},
+    {action:"search",keyword:"   "},{action:"search",keyword:"创作",page:101},
+    {action:"detail",workId:"abc"},{action:"transcriptSubmit",url:"不是URL"},{action:"transcriptResult",taskId:""},
+   ])expect(parameters.safeParse(invalid).success).toBe(false);
+  }
   expect(parameters.safeParse("非对象").success,name).toBe(false);
   expect(parameters.safeParse({}).success,name).toBe(!Array.isArray(schema.required) || schema.required.length===0);
   if(schema.additionalProperties===false)expect(parameters.safeParse({__unexpected:true}).success,name).toBe(false);

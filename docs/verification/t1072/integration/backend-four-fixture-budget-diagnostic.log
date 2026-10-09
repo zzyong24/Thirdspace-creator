@@ -1,0 +1,71 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+ ❯ src/modules/intelligence/transcript-runner.test.ts (3 tests | 3 failed) 29271ms
+     × [T-632] 启动恢复会持续消费全部历史积压，不在 20 条后停止 8626ms
+     × 只有用户排队的 item 会调用 ASR，并把正文写回 item transcript 7340ms
+     × ASR 未配置时任务与逐字稿都进入 blocked，不伪装为成功空文本 13301ms
+ ❯ src/application/collection/cover-file-repair.test.ts (2 tests | 1 failed) 2298ms
+   × 真实临时文件删除后，经候选、补采、版本保存整链恢复可读图片，保留好封面 2295ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/application/collection/cover-file-repair.test.ts > 真实临时文件删除后，经候选、补采、版本保存整链恢复可读图片，保留好封面
+OwnershipError: 内容产物归属校验不可用
+ ❯ assertOutputOwned src/modules/publishing/publishing.service.ts:460:57
+    458|     outputId: string,
+    459|   ): Promise<void> {
+    460|     if (!deps.resolveOutputOwner) {if(ctx.groupId)throw new OwnershipE…
+       |                                                         ^
+    461|     const owner = await deps.resolveOutputOwner(ctx, outputId);
+    462|     if (!owner) {
+ ❯ Object.createImportedPublication src/modules/publishing/publishing.service.ts:1011:13
+ ❯ src/application/collection/cover-file-repair.test.ts:37:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/modules/intelligence/transcript-runner.test.ts > T-482 手动逐字稿持久队列 > [T-632] 启动恢复会持续消费全部历史积压，不在 20 条后停止
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/modules/intelligence/transcript-runner.test.ts:29:3
+     27|
+     28| describe("T-482 手动逐字稿持久队列", () => {
+     29|   it("[T-632] 启动恢复会持续消费全部历史积压，不在 20 条后停止", async () => {
+       |   ^
+     30|     const { db, client } = await createDb();
+     31|     const d = deps();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/modules/intelligence/transcript-runner.test.ts > T-482 手动逐字稿持久队列 > 只有用户排队的 item 会调用 ASR，并把正文写回 item transcript
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/modules/intelligence/transcript-runner.test.ts:120:3
+    118|   });
+    119|
+    120|   it("只有用户排队的 item 会调用 ASR，并把正文写回 item transcript", async () => {
+       |   ^
+    121|     const { db, client } = await createDb();
+    122|     const d = deps();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/modules/intelligence/transcript-runner.test.ts > T-482 手动逐字稿持久队列 > ASR 未配置时任务与逐字稿都进入 blocked，不伪装为成功空文本
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/modules/intelligence/transcript-runner.test.ts:166:3
+    164|   });
+    165|
+    166|   it("ASR 未配置时任务与逐字稿都进入 blocked，不伪装为成功空文本", async () => {
+       |   ^
+    167|     const { db, client } = await createDb();
+    168|     const d = deps();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 1 passed (5)
+   Start at  16:01:45
+   Duration  56.11s (transform 16.03s, setup 0ms, import 23.22s, tests 31.57s, environment 0ms)
+

@@ -1,0 +1,137 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+ ❯ src/application/collection/cover-file-repair.test.ts (2 tests | 1 failed) 1683ms
+   × 真实临时文件删除后，经候选、补采、版本保存整链恢复可读图片，保留好封面 1680ms
+ ❯ src/modules/ai-runtime/chat-tools.test.ts (223 tests | 2 failed) 179ms
+   × 全部现有工具参数及selected改稿变体可建立真实宿主校验 31ms
+   × 全部现有工具参数及project改稿变体可建立真实宿主校验 11ms
+ ❯ src/application/queries/dashboard-read-performance.test.ts (4 tests | 3 failed) 27ms
+   × 同次首页共享三处解析，后续及跨号请求独立 19ms
+   × 首页慢项目摘要不阻塞独立排期和运行状态，下一次仍实时读取 2ms
+   × 账号基线读取失败不能当成零基线，恢复后才可显示真实期内增长 1ms
+ ❯ src/modules/intelligence/transcript-runner.test.ts (3 tests | 1 failed) 4257ms
+     × [T-632] 启动恢复会持续消费全部历史积压，不在 20 条后停止 1977ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/application/collection/cover-file-repair.test.ts > 真实临时文件删除后，经候选、补采、版本保存整链恢复可读图片，保留好封面
+OwnershipError: 内容产物已归组或不可写，请重新选择工作区
+ ❯ assertOutputParents src/modules/publishing/publishing.service.ts:367:39
+
+ ❯ src/modules/publishing/publishing.service.ts:350:7
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  src/application/queries/dashboard-read-performance.test.ts > 同次首页共享三处解析，后续及跨号请求独立
+AssertionError: expected { …(2) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "code": "dashboard_compose_failed",
+  "message": "Cannot read properties of undefined (reading 'toFixed')",
+}
+
+ ❯ src/application/queries/dashboard-read-performance.test.ts:34:22
+     32|  } as unknown as Parameters<typeof createDashboardApplication>[0]);
+     33|  const first=await app.getDashboard(ctx);
+     34|  expect(first.error).toBeNull();expect(first.metrics.find(m=>m.id==='d…
+       |                      ^
+     35|  expect(resolve).toHaveBeenCalledExactlyOnceWith(ctx);
+     36|  expect(hasImportedProjects).toHaveBeenCalledExactlyOnceWith(ctx);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  src/application/queries/dashboard-read-performance.test.ts > 首页慢项目摘要不阻塞独立排期和运行状态，下一次仍实时读取
+AssertionError: expected { …(2) } to be null
+
+- Expected:
+null
+
++ Received:
+{
+  "code": "dashboard_compose_failed",
+  "message": "Cannot read properties of undefined (reading 'toFixed')",
+}
+
+ ❯ src/application/queries/dashboard-read-performance.test.ts:59:42
+     57|  const app=createDashboardApplication(ports as unknown as Parameters<t…
+     58|  await vi.waitFor(()=>{expect(ports.contentCalendarService.getCalendar…
+     59|  release();expect((await pending).error).toBeNull();await app.getDashb…
+       |                                          ^
+     60|  expect(ports.contentCalendarService.getCalendarRequestContext).toHave…
+     61|  expect(ports.publishingService.getRecentPublicationsWithTitle).toHave…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  src/application/queries/dashboard-read-performance.test.ts > 账号基线读取失败不能当成零基线，恢复后才可显示真实期内增长
+AssertionError: expected undefined to match object { label: '总粉丝', value: '—' }
+
+- Expected:
+{
+  "label": "总粉丝",
+  "value": "—",
+}
+
++ Received:
+undefined
+
+ ❯ src/application/queries/dashboard-read-performance.test.ts:66:96
+     64|  const ports=dashboardPorts();ports.platformAccountService.listAccount…
+     65|  const app=createDashboardApplication(ports as unknown as Parameters<t…
+     66|  const failed=await app.getDashboard(ctx);expect(failed.metrics.find(m…
+       |                                                                                                ^
+     67|  const recovered=await app.getDashboard(ctx);expect(recovered.metrics.…
+     68| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  src/modules/ai-runtime/chat-tools.test.ts > 全部现有工具参数及selected改稿变体可建立真实宿主校验
+ FAIL  src/modules/ai-runtime/chat-tools.test.ts > 全部现有工具参数及project改稿变体可建立真实宿主校验
+AssertionError: redfox.query: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/modules/ai-runtime/chat-tools.test.ts:4565:79
+    4563|    return null;
+    4564|   };
+    4565|   const legal=sample(schema);expect(parameters.safeParse(legal).succes…
+       |                                                                               ^
+    4566|   expect(parameters.safeParse("非对象").success,name).toBe(false);
+    4567|   expect(parameters.safeParse({}).success,name).toBe(!Array.isArray(sc…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  src/modules/intelligence/transcript-runner.test.ts > T-482 手动逐字稿持久队列 > [T-632] 启动恢复会持续消费全部历史积压，不在 20 条后停止
+AssertionError: expected 10 to be 25 // Object.is equality
+
+- Expected
++ Received
+
+- 25
++ 10
+
+ ❯ src/modules/intelligence/transcript-runner.test.ts:68:25
+     66|       });
+     67|
+     68|       expect(processed).toBe(total);
+       |                         ^
+     69|       expect(maxActive).toBe(2);
+     70|       await expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+
+ Test Files  4 failed | 22 passed (26)
+      Tests  7 failed | 740 passed (747)
+   Start at  15:50:58
+   Duration  91.99s (transform 4.78s, setup 0ms, import 20.10s, tests 159.52s, environment 3ms)
+

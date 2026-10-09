@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+ ❯ src/application/collection/cover-file-repair.test.ts (2 tests | 1 failed) 9340ms
+   × 真实临时文件删除后，经候选、补采、版本保存整链恢复可读图片，保留好封面 5947ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/application/collection/cover-file-repair.test.ts > 真实临时文件删除后，经候选、补采、版本保存整链恢复可读图片，保留好封面
+OwnershipError: 内容产物归属校验不可用
+ ❯ assertOutputOwned src/modules/publishing/publishing.service.ts:460:57
+    458|     outputId: string,
+    459|   ): Promise<void> {
+    460|     if (!deps.resolveOutputOwner) {if(ctx.groupId)throw new OwnershipE…
+       |                                                         ^
+    461|     const owner = await deps.resolveOutputOwner(ctx, outputId);
+    462|     if (!owner) {
+ ❯ Object.createImportedPublication src/modules/publishing/publishing.service.ts:1011:13
+ ❯ src/application/collection/cover-file-repair.test.ts:39:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 231 passed (232)
+   Start at  16:03:39
+   Duration  25.39s (transform 15.02s, setup 0ms, import 26.12s, tests 21.47s, environment 1ms)
+

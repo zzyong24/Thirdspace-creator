@@ -18,3 +18,20 @@
 桌面原4场景中复制入口测试失败并非缺依赖，而是构建后用共享ai-worker/dist与staged bytes做deepEqual；另一并行真实构建的cwd不同改变bundle路径注释，1134164与1134830字节不等。test-only以临时source-repo复制真实src/scripts/package.json，依赖指向现真实node_modules，执行原生产builder仅写隔离dist，再保完整bytes deepEqual；从隔离资源解析声明依赖、原返回路径、包外cwd、真实fork及model.generate/model.structured ready能力均保持，原10000/15000ms预算不动。frontend-final-two-fixtures-green.log桌面4/4通过，聊天当次仍1失败，不能把联合日志整体称GREEN。未改生产stage helper、guards或原四场景。
 
 三生产组修复3a551fb5独立实现复核已完成，报告位于Growth completion/creator-group-generation-implementation-review.md，精确三文件未发现新增具体guard blocker。其14/82/15/1证据不替代整套或正式安装版。最终全套仍须重跑，母提案未批准未实现。
+
+最终重跑frontend-final-repaired-full.log exit0：414files413通过/1跳过，3612tests3610通过/1跳过/1todo，581.41秒。源码6dd9db7a冻结、maxWorkers2/retry0、无timeoutoverride。skip/todo不算通过；真实安装/双机/母新增行为仍未验。
+
+## 已授权的后台四文件测试工程写集
+
+原 backend-control-lessons-real.log exit1：26文件4失败/22通过，747项7失败/740通过，91.99秒；源码6dd9db7a，maxWorkers2/retry0，无timeout覆盖。保留全部原场景和失败日志。
+
+1. backend/src/application/collection/cover-file-repair.test.ts：原1失败/1通过；T1022 §60/63/70 的父项目、产物与工作区锁要求下，旧fixture引用不存在的output。通过正常组/账号/Projects公开创建真实父对象，原文件删除、补采、版本和好封面回读均保。
+2. backend/src/application/queries/dashboard-read-performance.test.ts：原3失败/1通过；当前AnalyticsRollupDTO的finishAvg是number|null，mock漏字段产生undefined。补真实null，保共享读取、跨号隔离、慢摘要、失败恢复与计量断言。
+3. backend/src/modules/ai-runtime/chat-tools.test.ts：原2失败/221通过；当前已批准Redfox严格action union不允许混入其它动作字段。保全部工具/两种改稿变体，补六合法动作及混字段、非法值拒绝；不改production parser/guard。
+4. backend/src/modules/intelligence/transcript-runner.test.ts：原1失败/2通过；T632持续恢复与当前bounded RecoveryWakeCoordinator装配一致。真实coordinator按maxTasks4/concurrency2多波处理25原任务，校验单lane不重叠、原IDs全部完成、stop后零新调用；保原其它两场景与原时间预算。
+
+父已精确授权仅上述test文件及证据，不改production maxTasks/concurrency/strict guard，不删测试、不增timeout。
+
+首轮4files为2失败/230通过：仪表盘4/4、工具223/223通过，封面与队列原5s超时。随后单worker诊断的所有4个DB场景仍5s超时，backend-four-fixture-budget-diagnostic.log保。按仓库既有beforeEach/afterEach fixture模式，每例真实createDb全部迁移初始化与关闭独立执行，原业务测试5s预算、hook默认预算均不改；不把迁移失败排除，hook失败仍算整例未通过。修正测试driver把maxTasks4/concurrency2/control传入drain真实第二options参数，保原第一轮失败不冒GREEN。
+
+最终 backend-four-fixture-real-ports.log exit0：4files/232tests全部通过，16.48秒，maxWorkers2/retry0，无timeoutoverride。封面补入production同源resolveOutputOwner、真实membership锁、assertTargetAccount、assertCoverOwned后正常恢复；中间缺端口两份FAIL完整保。队列25原IDs全部succeeded、queued0、每波maxTasks4/concurrency2、单lane最大1、真实ASR最大2及stop后wake/run零新增均通过。实际4文件SHA256绑定backend-four-fixture-result.json。后台全tsc当前仍FAIL：初轮17项含本轮5项已修；其它测试旧接口须独立同基线核查，未声称后台类型全部通过。
