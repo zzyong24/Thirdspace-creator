@@ -1,0 +1,8 @@
+原 LED-055 原命令复跑，未改源码或预算参数；整体 exit 0。
+首次 RUN 行在工具调用结果，以下为后端工具 session 75600 的实际后续 stdout。
+
+ Test Files  3 passed (3)
+      Tests  61 passed (61)
+   Start at  13:47:51
+   Duration  24.02s (transform 8.60s, setup 0ms, import 14.07s, tests 41.73s, environment 0ms)
+

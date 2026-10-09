@@ -1,8 +1,8 @@
 {
   "task_id": "T-1106",
   "outcome": "passed",
-  "startedAt": "2026-10-09T04:57:55.916Z",
-  "completedAt": "2026-10-09T04:58:11.659Z",
+  "startedAt": "2026-10-09T05:51:11.788Z",
+  "completedAt": "2026-10-09T05:51:50.941Z",
   "browser": "Google Chrome (Playwright channel chrome)",
   "source_witness": [
     {
@@ -21,11 +21,11 @@
   "evidence_scope": "隔离fixture仅证明前端操作链；不证明平台认证、模型运行或安装版任务恢复",
   "steps": [
     {
-      "at": "2026-10-09T04:58:08.496Z",
+      "at": "2026-10-09T05:51:47.143Z",
       "action": "初始状态：历史失败明确，主要重试入口可用，内部术语已转为账号核对提示",
       "fixtureCalls": [
         {
-          "at": "2026-10-09T04:58:07.473Z",
+          "at": "2026-10-09T05:51:45.186Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -35,7 +35,7 @@
       ]
     },
     {
-      "at": "2026-10-09T04:58:08.713Z",
+      "at": "2026-10-09T05:51:47.287Z",
       "action": "1024窄窗可见面板实际几何",
       "narrowBoxes": [
         {
@@ -89,7 +89,7 @@
       ],
       "fixtureCalls": [
         {
-          "at": "2026-10-09T04:58:07.473Z",
+          "at": "2026-10-09T05:51:45.186Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -99,11 +99,11 @@
       ]
     },
     {
-      "at": "2026-10-09T04:58:09.726Z",
+      "at": "2026-10-09T05:51:48.542Z",
       "action": "主重试调用startRun一次，未扫码；在途刷新后主要重试禁用、扫码入口隐藏且未重复提交",
       "fixtureCalls": [
         {
-          "at": "2026-10-09T04:58:07.473Z",
+          "at": "2026-10-09T05:51:45.186Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -111,27 +111,27 @@
           }
         },
         {
-          "at": "2026-10-09T04:58:09.231Z",
+          "at": "2026-10-09T05:51:48.096Z",
           "method": "startRun",
           "input": {
             "sourceId": "intelligence-source-d001a725-1281",
-            "idempotencyKey": "manual-sync:2c2b41b0-e496-419d-bc6b-3179a66d8678",
+            "idempotencyKey": "manual-sync:ef1171ae-71c4-4eee-ad0d-c0c73fbe1d0b",
             "collectorAccountId": "acct-ae1a8346-9"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.524Z",
+          "at": "2026-10-09T05:51:48.417Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         }
       ]
     },
     {
-      "at": "2026-10-09T04:58:09.764Z",
+      "at": "2026-10-09T05:51:48.558Z",
       "action": "合成同步回执结束后真实组件恢复同步入口；此结果不代表平台认证通过",
       "fixtureCalls": [
         {
-          "at": "2026-10-09T04:58:07.473Z",
+          "at": "2026-10-09T05:51:45.186Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -139,32 +139,32 @@
           }
         },
         {
-          "at": "2026-10-09T04:58:09.231Z",
+          "at": "2026-10-09T05:51:48.096Z",
           "method": "startRun",
           "input": {
             "sourceId": "intelligence-source-d001a725-1281",
-            "idempotencyKey": "manual-sync:2c2b41b0-e496-419d-bc6b-3179a66d8678",
+            "idempotencyKey": "manual-sync:ef1171ae-71c4-4eee-ad0d-c0c73fbe1d0b",
             "collectorAccountId": "acct-ae1a8346-9"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.524Z",
+          "at": "2026-10-09T05:51:48.417Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:09.742Z",
+          "at": "2026-10-09T05:51:48.546Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         }
       ]
     },
     {
-      "at": "2026-10-09T04:58:10.105Z",
+      "at": "2026-10-09T05:51:48.928Z",
       "action": "重试升级使用原taskId的retry命令，未新enqueue，checkpoint保留原转写子任务",
       "fixtureCalls": [
         {
-          "at": "2026-10-09T04:58:07.473Z",
+          "at": "2026-10-09T05:51:45.186Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -172,35 +172,35 @@
           }
         },
         {
-          "at": "2026-10-09T04:58:09.231Z",
+          "at": "2026-10-09T05:51:48.096Z",
           "method": "startRun",
           "input": {
             "sourceId": "intelligence-source-d001a725-1281",
-            "idempotencyKey": "manual-sync:2c2b41b0-e496-419d-bc6b-3179a66d8678",
+            "idempotencyKey": "manual-sync:ef1171ae-71c4-4eee-ad0d-c0c73fbe1d0b",
             "collectorAccountId": "acct-ae1a8346-9"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.524Z",
+          "at": "2026-10-09T05:51:48.417Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:09.742Z",
+          "at": "2026-10-09T05:51:48.546Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:09.816Z",
+          "at": "2026-10-09T05:51:48.601Z",
           "method": "commandTask",
           "input": {
             "taskId": "execution-task-db19e969-418",
             "command": "retry",
-            "idempotencyKey": "upgrade-execution-task-db19e969-418:df719e0d-a55a-47e5-895d-273fa0d587ee"
+            "idempotencyKey": "upgrade-execution-task-db19e969-418:353ac015-58f8-4541-a6be-2fb056e44f82"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.826Z",
+          "at": "2026-10-09T05:51:48.608Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -210,11 +210,11 @@
       ]
     },
     {
-      "at": "2026-10-09T04:58:10.124Z",
+      "at": "2026-10-09T05:51:48.938Z",
       "action": "独立扫码场景：仅在fixture内重置同一份历史LOGIN_REQUIRED投影，未访问平台",
       "fixtureCalls": [
         {
-          "at": "2026-10-09T04:58:07.473Z",
+          "at": "2026-10-09T05:51:45.186Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -222,35 +222,35 @@
           }
         },
         {
-          "at": "2026-10-09T04:58:09.231Z",
+          "at": "2026-10-09T05:51:48.096Z",
           "method": "startRun",
           "input": {
             "sourceId": "intelligence-source-d001a725-1281",
-            "idempotencyKey": "manual-sync:2c2b41b0-e496-419d-bc6b-3179a66d8678",
+            "idempotencyKey": "manual-sync:ef1171ae-71c4-4eee-ad0d-c0c73fbe1d0b",
             "collectorAccountId": "acct-ae1a8346-9"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.524Z",
+          "at": "2026-10-09T05:51:48.417Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:09.742Z",
+          "at": "2026-10-09T05:51:48.546Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:09.816Z",
+          "at": "2026-10-09T05:51:48.601Z",
           "method": "commandTask",
           "input": {
             "taskId": "execution-task-db19e969-418",
             "command": "retry",
-            "idempotencyKey": "upgrade-execution-task-db19e969-418:df719e0d-a55a-47e5-895d-273fa0d587ee"
+            "idempotencyKey": "upgrade-execution-task-db19e969-418:353ac015-58f8-4541-a6be-2fb056e44f82"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.826Z",
+          "at": "2026-10-09T05:51:48.608Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -260,11 +260,11 @@
       ]
     },
     {
-      "at": "2026-10-09T04:58:10.826Z",
+      "at": "2026-10-09T05:51:49.665Z",
       "action": "取消返回原扫码入口并恢复焦点，未发起认证；可再次打开",
       "fixtureCalls": [
         {
-          "at": "2026-10-09T04:58:07.473Z",
+          "at": "2026-10-09T05:51:45.186Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -272,35 +272,35 @@
           }
         },
         {
-          "at": "2026-10-09T04:58:09.231Z",
+          "at": "2026-10-09T05:51:48.096Z",
           "method": "startRun",
           "input": {
             "sourceId": "intelligence-source-d001a725-1281",
-            "idempotencyKey": "manual-sync:2c2b41b0-e496-419d-bc6b-3179a66d8678",
+            "idempotencyKey": "manual-sync:ef1171ae-71c4-4eee-ad0d-c0c73fbe1d0b",
             "collectorAccountId": "acct-ae1a8346-9"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.524Z",
+          "at": "2026-10-09T05:51:48.417Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:09.742Z",
+          "at": "2026-10-09T05:51:48.546Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:09.816Z",
+          "at": "2026-10-09T05:51:48.601Z",
           "method": "commandTask",
           "input": {
             "taskId": "execution-task-db19e969-418",
             "command": "retry",
-            "idempotencyKey": "upgrade-execution-task-db19e969-418:df719e0d-a55a-47e5-895d-273fa0d587ee"
+            "idempotencyKey": "upgrade-execution-task-db19e969-418:353ac015-58f8-4541-a6be-2fb056e44f82"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.826Z",
+          "at": "2026-10-09T05:51:48.608Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -308,14 +308,19 @@
           }
         },
         {
-          "at": "2026-10-09T04:58:10.525Z",
+          "at": "2026-10-09T05:51:49.192Z",
+          "method": "getItem",
+          "input": "intelligence-item-db19e969-156"
+        },
+        {
+          "at": "2026-10-09T05:51:49.418Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         }
       ]
     },
     {
-      "at": "2026-10-09T04:58:10.984Z",
+      "at": "2026-10-09T05:51:49.938Z",
       "action": "Esc关闭后的实际焦点",
       "focusedElement": {
         "tag": "BUTTON",
@@ -324,7 +329,7 @@
       },
       "fixtureCalls": [
         {
-          "at": "2026-10-09T04:58:07.473Z",
+          "at": "2026-10-09T05:51:45.186Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -332,35 +337,35 @@
           }
         },
         {
-          "at": "2026-10-09T04:58:09.231Z",
+          "at": "2026-10-09T05:51:48.096Z",
           "method": "startRun",
           "input": {
             "sourceId": "intelligence-source-d001a725-1281",
-            "idempotencyKey": "manual-sync:2c2b41b0-e496-419d-bc6b-3179a66d8678",
+            "idempotencyKey": "manual-sync:ef1171ae-71c4-4eee-ad0d-c0c73fbe1d0b",
             "collectorAccountId": "acct-ae1a8346-9"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.524Z",
+          "at": "2026-10-09T05:51:48.417Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:09.742Z",
+          "at": "2026-10-09T05:51:48.546Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:09.816Z",
+          "at": "2026-10-09T05:51:48.601Z",
           "method": "commandTask",
           "input": {
             "taskId": "execution-task-db19e969-418",
             "command": "retry",
-            "idempotencyKey": "upgrade-execution-task-db19e969-418:df719e0d-a55a-47e5-895d-273fa0d587ee"
+            "idempotencyKey": "upgrade-execution-task-db19e969-418:353ac015-58f8-4541-a6be-2fb056e44f82"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.826Z",
+          "at": "2026-10-09T05:51:48.608Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -368,18 +373,23 @@
           }
         },
         {
-          "at": "2026-10-09T04:58:10.525Z",
+          "at": "2026-10-09T05:51:49.192Z",
+          "method": "getItem",
+          "input": "intelligence-item-db19e969-156"
+        },
+        {
+          "at": "2026-10-09T05:51:49.418Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         }
       ]
     },
     {
-      "at": "2026-10-09T04:58:11.118Z",
+      "at": "2026-10-09T05:51:50.076Z",
       "action": "Esc关闭扫码弹窗并返回原入口焦点，重新打开仍使用原采集账号",
       "fixtureCalls": [
         {
-          "at": "2026-10-09T04:58:07.473Z",
+          "at": "2026-10-09T05:51:45.186Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -387,35 +397,35 @@
           }
         },
         {
-          "at": "2026-10-09T04:58:09.231Z",
+          "at": "2026-10-09T05:51:48.096Z",
           "method": "startRun",
           "input": {
             "sourceId": "intelligence-source-d001a725-1281",
-            "idempotencyKey": "manual-sync:2c2b41b0-e496-419d-bc6b-3179a66d8678",
+            "idempotencyKey": "manual-sync:ef1171ae-71c4-4eee-ad0d-c0c73fbe1d0b",
             "collectorAccountId": "acct-ae1a8346-9"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.524Z",
+          "at": "2026-10-09T05:51:48.417Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:09.742Z",
+          "at": "2026-10-09T05:51:48.546Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:09.816Z",
+          "at": "2026-10-09T05:51:48.601Z",
           "method": "commandTask",
           "input": {
             "taskId": "execution-task-db19e969-418",
             "command": "retry",
-            "idempotencyKey": "upgrade-execution-task-db19e969-418:df719e0d-a55a-47e5-895d-273fa0d587ee"
+            "idempotencyKey": "upgrade-execution-task-db19e969-418:353ac015-58f8-4541-a6be-2fb056e44f82"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.826Z",
+          "at": "2026-10-09T05:51:48.608Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -423,18 +433,23 @@
           }
         },
         {
-          "at": "2026-10-09T04:58:10.525Z",
+          "at": "2026-10-09T05:51:49.192Z",
+          "method": "getItem",
+          "input": "intelligence-item-db19e969-156"
+        },
+        {
+          "at": "2026-10-09T05:51:49.418Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         }
       ]
     },
     {
-      "at": "2026-10-09T04:58:11.544Z",
+      "at": "2026-10-09T05:51:50.736Z",
       "action": "用户显式打开扫码窗口，调用原collector，待扫码时没有启动第二次同步",
       "fixtureCalls": [
         {
-          "at": "2026-10-09T04:58:07.473Z",
+          "at": "2026-10-09T05:51:45.186Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -442,35 +457,35 @@
           }
         },
         {
-          "at": "2026-10-09T04:58:09.231Z",
+          "at": "2026-10-09T05:51:48.096Z",
           "method": "startRun",
           "input": {
             "sourceId": "intelligence-source-d001a725-1281",
-            "idempotencyKey": "manual-sync:2c2b41b0-e496-419d-bc6b-3179a66d8678",
+            "idempotencyKey": "manual-sync:ef1171ae-71c4-4eee-ad0d-c0c73fbe1d0b",
             "collectorAccountId": "acct-ae1a8346-9"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.524Z",
+          "at": "2026-10-09T05:51:48.417Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:09.742Z",
+          "at": "2026-10-09T05:51:48.546Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:09.816Z",
+          "at": "2026-10-09T05:51:48.601Z",
           "method": "commandTask",
           "input": {
             "taskId": "execution-task-db19e969-418",
             "command": "retry",
-            "idempotencyKey": "upgrade-execution-task-db19e969-418:df719e0d-a55a-47e5-895d-273fa0d587ee"
+            "idempotencyKey": "upgrade-execution-task-db19e969-418:353ac015-58f8-4541-a6be-2fb056e44f82"
           }
         },
         {
-          "at": "2026-10-09T04:58:09.826Z",
+          "at": "2026-10-09T05:51:48.608Z",
           "method": "listProjectUpgrades",
           "input": {
             "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -478,29 +493,29 @@
           }
         },
         {
-          "at": "2026-10-09T04:58:10.525Z",
+          "at": "2026-10-09T05:51:49.192Z",
+          "method": "getItem",
+          "input": "intelligence-item-db19e969-156"
+        },
+        {
+          "at": "2026-10-09T05:51:49.418Z",
           "method": "getRun",
           "input": "fixture-new-run-1"
         },
         {
-          "at": "2026-10-09T04:58:11.349Z",
+          "at": "2026-10-09T05:51:50.452Z",
           "method": "reconnectCollector",
           "input": {
             "collectorAccountId": "acct-ae1a8346-9",
             "sourceType": "creator_profile"
           }
-        },
-        {
-          "at": "2026-10-09T04:58:11.475Z",
-          "method": "getItem",
-          "input": "intelligence-item-db19e969-156"
         }
       ]
     }
   ],
   "calls": [
     {
-      "at": "2026-10-09T04:58:07.473Z",
+      "at": "2026-10-09T05:51:45.186Z",
       "method": "listProjectUpgrades",
       "input": {
         "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -508,35 +523,35 @@
       }
     },
     {
-      "at": "2026-10-09T04:58:09.231Z",
+      "at": "2026-10-09T05:51:48.096Z",
       "method": "startRun",
       "input": {
         "sourceId": "intelligence-source-d001a725-1281",
-        "idempotencyKey": "manual-sync:2c2b41b0-e496-419d-bc6b-3179a66d8678",
+        "idempotencyKey": "manual-sync:ef1171ae-71c4-4eee-ad0d-c0c73fbe1d0b",
         "collectorAccountId": "acct-ae1a8346-9"
       }
     },
     {
-      "at": "2026-10-09T04:58:09.524Z",
+      "at": "2026-10-09T05:51:48.417Z",
       "method": "getRun",
       "input": "fixture-new-run-1"
     },
     {
-      "at": "2026-10-09T04:58:09.742Z",
+      "at": "2026-10-09T05:51:48.546Z",
       "method": "getRun",
       "input": "fixture-new-run-1"
     },
     {
-      "at": "2026-10-09T04:58:09.816Z",
+      "at": "2026-10-09T05:51:48.601Z",
       "method": "commandTask",
       "input": {
         "taskId": "execution-task-db19e969-418",
         "command": "retry",
-        "idempotencyKey": "upgrade-execution-task-db19e969-418:df719e0d-a55a-47e5-895d-273fa0d587ee"
+        "idempotencyKey": "upgrade-execution-task-db19e969-418:353ac015-58f8-4541-a6be-2fb056e44f82"
       }
     },
     {
-      "at": "2026-10-09T04:58:09.826Z",
+      "at": "2026-10-09T05:51:48.608Z",
       "method": "listProjectUpgrades",
       "input": {
         "groupId": "grp_legacy_acct-ae1a8346-9",
@@ -544,22 +559,22 @@
       }
     },
     {
-      "at": "2026-10-09T04:58:10.525Z",
+      "at": "2026-10-09T05:51:49.192Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T05:51:49.418Z",
       "method": "getRun",
       "input": "fixture-new-run-1"
     },
     {
-      "at": "2026-10-09T04:58:11.349Z",
+      "at": "2026-10-09T05:51:50.452Z",
       "method": "reconnectCollector",
       "input": {
         "collectorAccountId": "acct-ae1a8346-9",
         "sourceType": "creator_profile"
       }
-    },
-    {
-      "at": "2026-10-09T04:58:11.475Z",
-      "method": "getItem",
-      "input": "intelligence-item-db19e969-156"
     }
   ],
   "browserErrors": []
