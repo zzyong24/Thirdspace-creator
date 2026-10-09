@@ -115,6 +115,7 @@ function KnowledgeLibraryWorkspace({
     setPreviousInitial(initial);
     setVm(initial);
   }
+  const [moreOpen, setMoreOpen] = React.useState(false);
   const [directoryOpen, setDirectoryOpen] = React.useState(false);
   const [modal, setModal] = React.useState<Modal>(null);
   const [modalTarget, setModalTarget] = React.useState<LibraryItem | null>(
@@ -746,7 +747,7 @@ function KnowledgeLibraryWorkspace({
                     <ArrowUpRight />
                     用到项目
                   </Button>
-                  <DropdownMenu>
+                  <DropdownMenu open={moreOpen} onOpenChange={setMoreOpen}>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
@@ -765,9 +766,10 @@ function KnowledgeLibraryWorkspace({
                           className={selectClass}
                           value={selected.folderId ?? ""}
                           disabled={busy || !!vm.folderError}
-                          onChange={(e) =>
-                            void move(selected.id, e.target.value || null)
-                          }
+                          onChange={(e) => {
+                            setMoreOpen(false);
+                            void move(selected.id, e.target.value || null);
+                          }}
                         >
                           <option value="">未放入文件夹</option>
                           {vm.folders.map((f) => (
