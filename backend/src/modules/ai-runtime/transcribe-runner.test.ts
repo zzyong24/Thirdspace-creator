@@ -3,7 +3,7 @@ import {createServer,type Server} from 'node:http';
 import {isDeepStrictEqual} from 'node:util';
 import {createDb,aiTasks,aiTaskSteps,executionTasks,executionCalls,projects,eq,type Db} from '@creatoros/backend';
 import type {RequestContext} from '@creatoros/contract';
-import {workerPortInputSchemas,type WorkerPort} from '@creatoros/contract/execution-worker';
+import {workerPortInputSchemas,transcribeAsrPlanSchema,type WorkerPort} from '@creatoros/contract/execution-worker';
 import {localWhisperSpec,createOpenaiAsrAdapter,createWhisperLocalAdapter,type MultimodalSpec,type MultimodalProviderRegistry} from '@creatoros/ai-worker';
 import type {FetchVideoSourceOptions,FetchVideoSourceDeps,DouyinVideoSource} from '../../../../ai-worker/src/runtime/douyin-transcribe-source';
 import {runTranscribeInWorker} from '../../../../ai-worker/src/execution/transcribe-worker-run';
@@ -143,9 +143,16 @@ it('逐字稿已落库后，后续重建排队失败只告警，不反向把转�
 it('在线失败后本地成功时接受 host 回传的真实 whisper-local 执行规格',async()=>{
  const f=await fixture({ids:['fallback-local'],local:true});expect(await f.run()).toEqual({status:'succeeded'});expect((await f.texts())[0]?.text).toBe('本地真实逐字稿');expect(f.fetcher).toHaveBeenCalledTimes(1);expect(f.pipeline).toHaveBeenCalledTimes(1);expect((await f.rows()).calls.map(row=>({key:row.operationKey,status:row.status}))).toEqual([{key:'transcribe:fallback-local/asr/1',status:'rejected'},{key:'transcribe:fallback-local/local-asr/1',status:'settled'}]);
 });
-it('F7-a:按DEC-ASR-022完全未配云ASR仍本地成功，显式无效云配置不能被本地回退掩盖',async()=>{
+it('F7-a:按后续T768完全未配或坏云配置安全丢弃并本地一次，不使用不可信线上规格',async()=>{
  const f=await fixture({ids:['a1','a2'],noCloud:true});expect(await f.run()).toEqual({status:'succeeded'});expect(f.fetcher).not.toHaveBeenCalled();expect(f.pipeline).toHaveBeenCalledTimes(2);expect(await f.texts()).toHaveLength(2);
- const invalid=await fixture({ids:['invalid-cloud'],invalidCloud:true});await invalid.run();expect(invalid.fetcher).not.toHaveBeenCalled();expect(invalid.pipeline).not.toHaveBeenCalled();expect((await invalid.rows()).execution.status).toBe('waiting_user');
+ const invalid=await fixture({ids:['invalid-cloud'],invalidCloud:true});
+ expect(await invalid.run()).toEqual({status:'succeeded'});
+ expect(invalid.fetcher).not.toHaveBeenCalled();expect(invalid.prepareSpec).not.toHaveBeenCalled();expect(invalid.pipeline).toHaveBeenCalledTimes(1);
+ expect(await invalid.texts()).toMatchObject([{awemeId:'invalid-cloud',text:'本地真实逐字稿'}]);
+ const rows=await invalid.rows(),payload=rows.execution.payload as Record<string,unknown>,plans=payload.transcribeAsrPlans as Record<string,unknown>;
+ expect(transcribeAsrPlanSchema.parse(plans['invalid-cloud']).identity).toMatchObject({protocol:'whisper-local.v1',provider:'whisper-local'});
+ expect(rows.calls.map(row=>({operationKey:row.operationKey,status:row.status}))).toEqual([{operationKey:'transcribe:invalid-cloud/local-asr/1',status:'settled'}]);
+ expect(rows.business.status).toBe('succeeded');expect(JSON.stringify(rows)).not.toContain('synthetic-key');
 });
 it('F7-b:多 aweme,其中一条 streamAudio 抛 → 该 aweme 失败、其余成功、任务不整体崩(markSucceeded 带失败计数)',async()=>{
  const f=await fixture({ids:['ok1','bad','ok2'],streamFailure:'bad'});await f.run();expect(f.fetcher).toHaveBeenCalledTimes(2);expect(await f.texts()).toHaveLength(2);

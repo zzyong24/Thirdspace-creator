@@ -1,0 +1,24 @@
+{
+  "status": "approved_test_only_applied",
+  "old_claim_corrected": true,
+  "proposed_production_files": [],
+  "proposed_test_files": [
+    "backend/src/modules/ai-runtime/transcribe-runner.test.ts"
+  ],
+  "source_sha256": {
+    "docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md": "f0771cc886f5f56646b8431bf2e939952ecaa7297a05c0b888e23f7ffdb4fec2",
+    "docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.review.md": "e6c699d4d7edb84d4ce1442c5c88276ae7cfe6ada80b67bc3e64e6b3c4b6c025",
+    "backend/src/modules/ai-runtime/multimodal/resolve.ts": "16df4d73b47d64287c82d057f7790522b3145e84bd786fec9d3c648e5e77dcc8",
+    "backend/src/modules/execution/execution-transcribe-preparation.service.ts": "2bb0a837c6b503723ffee8da3afb703774812978762fbf605cde2a47c5003bad"
+  },
+  "new_formal_review_recorded": false,
+  "backend_typecheck_exit": 0,
+  "final_suite": {
+    "total": 170,
+    "pass": 137,
+    "fail": 33,
+    "chat_fail": 22,
+    "transcribe_fail": 11,
+    "exit": 1
+  }
+}
