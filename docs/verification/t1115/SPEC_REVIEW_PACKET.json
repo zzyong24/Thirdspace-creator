@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：T1115 SPEC SHA dd00528cef1f1ed9515db739ff0dd5e1c40fbf85c8e4e5fba449d224be8eae8b 与 modules SHA cbd06d9a11a5645f6215f388bb0a99f200e23ac456064025a951e4b654cd5428 精确限定为 backend Vitest 默认 test/hook 120000ms 和同一归档入口两个 SQL 锁竞争 it 的第三参数 120000ms。真实 RED 为原入口 107.851851秒 exit1、55PASS/4SKIP，唯一失败是 execution-lease beforeAll 的 Vitest 默认 hook 10000ms；方案保留原59例正文、隔离PG、maxWorkers=2、非零退出、清理、产品deadline及更长局部预算。完整reconcile、timeout-policy和T1116未知仍必须如实保留。产品宪法实际文件为 docs/产品定位.md SHA 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。",
+  "findings": []
+}

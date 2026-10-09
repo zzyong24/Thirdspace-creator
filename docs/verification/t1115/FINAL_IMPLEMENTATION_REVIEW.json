@@ -1,0 +1,55 @@
+{
+  "schema": "creatoros-independent-final-implementation-review/v1",
+  "taskId": "T-1115",
+  "reviewedAt": "2026-10-09T09:26:24.834203+00:00",
+  "verdict": "PASS_LIMITED_T1115_SCOPE_COMPLETE_WITH_RETAINED_GLOBAL_FAILURES",
+  "findings": [],
+  "specSha256": "dd00528cef1f1ed9515db739ff0dd5e1c40fbf85c8e4e5fba449d224be8eae8b",
+  "modulesSha256": "cbd06d9a11a5645f6215f388bb0a99f200e23ac456064025a951e4b654cd5428",
+  "initialReview": "PASS[REV:61382e511aa5]",
+  "sourceHashes": {
+    "backend/vitest.config.ts": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07",
+    "backend/src/integration/startup-group-collectors.postgres.integration.test.ts": "969c43578cc96a84ac8714c194443efa24fce531c73203f0c3bf2b8706a544e3"
+  },
+  "evidenceHashes": {
+    "global-source-freeze.json": "86b77ff04cc6b55985b6defd3b8e25799c43b30f26b6e93c8aed24c17c8882e3",
+    "archive-original.json": "0fe6d40b4870c06e09712f39b80b3adfdb14db4c33bea1837975a3ff9c615810",
+    "archive-default-green.json": "251600291880b10c1a4390a040c75b5cb8a7825342c7622b8abfdbb9e4f43981",
+    "full-inner-LED-052.json": "77d3d904b811a54f64e6838cfb50b7f4fd14c3440e23c20eff3a66c0fa464baf",
+    "full-inner-LED-052.log": "9421c01e0ae04a96329d304f5fe7e8a286c3851a4f9f12190c1f1ed73d64aece",
+    "full-inner-LED-027.json": "c6095b1207aea2fd308f23844810049249618cf313530376102566ba7584f401",
+    "full-inner-LED-027.log": "c5d250d619e0f6afa25f9e05d91a054afd083ac32eabc93d8518b0300e1868c0",
+    "full-reconcile.json": "ce2095419fe8c3999dc1588f6f5e7d9f4966a9cb0de11917798fa587f61226fd",
+    "full-reconcile.log": "bf20c0f903ee7449fb654033fa8b134ff44198027843196f783923b21a9f01bd",
+    "global-comparison.json": "1ee0513984b0d57b488ad8b6bf8054c9ee5a459102943d0ebeb5327134d780ad"
+  },
+  "implementationFacts": [
+    "相对base 82e235f仅backend Vitest默认testTimeout 30000→120000并新增hookTimeout120000，以及两个startup SQL锁竞争it第三参数30000→120000；测试正文、断言、SQL、采样、释放与清理未改。",
+    "原入口相同PG环境/原wrapper/maxWorkers=2、不加CLI预算或retry：RED 55PASS/4SKIP exit1；GREEN 59PASS/0skip exit0。",
+    "完整reconcile的原LED052内层59PASS、LED027后端44PASS+前端5PASS，均0skip/exit0；私有捕获只增加输出可见性。",
+    "backend type、diff、boundary、semantic、orphan实际exit0；timeout动态166PASS，静态27项仍exit1且五字段与T1080保留记录一致。"
+  ],
+  "globalBoundary": {
+    "reconcileExitCode": 1,
+    "elapsedSeconds": 1645.0665647499845,
+    "errorCount": 41,
+    "warningCount": 0,
+    "removedRelativeToT1114": [
+      "LED-052",
+      "LED-027"
+    ],
+    "newErrors": [],
+    "retainedExactlyT1114OutsideTwo": true,
+    "retainedExactlyT1112ErrorLines": true
+  },
+  "completionDecision": {
+    "mayCompleteT1115": true,
+    "requiredEvidence": "taskctl完成证据必须写明完整reconcile exit1/41errors、T1081静态27保留、T1116历史内层原因仍UNKNOWN及其它原全局任务。"
+  },
+  "notProven": [
+    "T1116历史全局LED-027失败原因",
+    "完整reconcile或全功能全绿",
+    "安装版变化（当前App仍source54af33d0）",
+    "原生UI、Pi联合候选、用户数据或模型行为"
+  ]
+}

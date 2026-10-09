@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-1115 | 核对归档执行回归在本轮完整对账中的再次失败 | 🔨 待办 | — | — | [实际诊断](docs/features/t1115-archive-global-regression.md) | 用户要求发现问题建task修复；T1114完整对账43FAIL，比T1112多LED052/027。LED052两种PG配置均已传入，尚无内层日志；先原命令独立复现与预算/PG核对，不放宽归档执行或幂等，不把已有历史失败推定为当前根因。 |
+| T-1115 | 修复原归档验收入口默认初始化10秒与执行30秒预算 | ✅ 待办 | PASS[REV:61382e511aa5] | — | [SPEC及原诊断](docs/features/t1115-archive-global-regression.md) | 原入口实际55PASS/4SKIP，lease beforeAll触发10000ms；只修backend Vitest test/hook默认及同入口两it预算120秒，保原PG/权限/竞争/退出码，先独评再原59例与完整对账复验。不把T1116独立49PASS当根因或全功能完成。 |
 | T-1116 | 核对稿件并发保存回归在本轮完整对账中的再次失败 | 🔨 待办 | — | — | [实际诊断](docs/features/t1116-artifact-cas-global-regression.md) | T1114新增相对失败LED027，原41失败保留；实际全局没有保存内层断言，先原两段命令逐段取得真实失败，核CAS/事务/初始化预算。未确认产品根因，不删除竞争或版本断言，不能称已修或全功能PASS。 |
 | T-1114 | 补齐原聊天模型调用的工作区归属只读摘要诊断 | ✅ 待办 | PASS[REV:aa44cb7e4c35] | — | [SPEC](docs/features/t1114-owned-model-call-summary.md) | 承接T1103原task272缺图文与不可见回执；只新增owner校验后的已结算分片/最终参数一致性摘要，不返回正文/密钥/字段名。先独评RED/GREEN及公共链，main无备份新包对原任务读取；不修parser、不重发模型、不代签联合候选。 |
 | T-1112 | 修复纯账号组读取 AI 工作台能力目录被要求平台账号 | ✅ 待办 | PASS[REV:7e93c8940e44] | — | [SPEC](docs/features/t1112-group-workbench-capabilities.md) | 879646新安装版18项正式读取17PASS/1FAIL，workbench.capabilities.list返回428；已核操作归属声明及transport二次账号门。仅修目录纯组读取，真实组鉴权与其它七项账号门不变；先独评RED/GREEN及正式公共组合，再main无备份出包安装复验。不代签T1103候选。 |

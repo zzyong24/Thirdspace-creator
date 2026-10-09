@@ -7012,6 +7012,60 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1115": {
+      "task_id": "T-1115",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1115-archive-global-regression.md",
+        "docs/features/t1116-artifact-cas-global-regression.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/engineering/timeout-policy.md",
+        "backend/vitest.config.ts",
+        "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "backend/src/modules/execution/execution-lease.service.test.ts",
+        "backend/src/modules/execution/execution-call-ledger.service.test.ts",
+        "docs/verification/t1022/run-archive-guard.mjs",
+        "tools/timeout-policy/verify.mjs"
+      ],
+      "write_set": [
+        "backend/vitest.config.ts",
+        "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+        "docs/features/t1115-archive-global-regression.md",
+        "docs/features/t1115-archive-global-regression.review.md",
+        "docs/verification/t1115/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/.lessons-stats.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node docs/verification/t1022/run-archive-guard.mjs",
+          "pnpm --dir backend exec vitest run src/modules/artifacts/artifacts.repository.integration.test.ts src/modules/artifacts/artifacts.service.test.ts",
+          "pnpm --dir frontend exec vitest run src/features/copilot/chat-script-patch-card.test.tsx",
+          "pnpm --dir backend typecheck",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node orchestrator/process/pmem.mjs sync",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

@@ -1,3 +1,3 @@
 import { defineConfig } from "vitest/config";
-// 后端真实 PGlite 迁移与服务组合测试统一使用有限执行预算；不改变产品、模型或 runner 的 deadline。
-export default defineConfig({ test: { include: ["src/**/*.test.ts"], testTimeout: 30_000 } });
+// PGlite 初始化/清理与测试执行均保留至少两分钟；局部更长预算和产品任务 deadline 不变。
+export default defineConfig({ test: { include: ["src/**/*.test.ts"], testTimeout: 120_000, hookTimeout: 120_000 } });
