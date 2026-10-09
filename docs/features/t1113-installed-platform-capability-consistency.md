@@ -22,3 +22,9 @@ flowchart LR
 ## 核对边界与后续准入
 
 只读核对两目录的provider/legacy装配、正式operation/CLI说明、账号组UI与AI功能提示如何选择真实入口，区分服务本身不可用和发现规则缺口。若已有明确且可达的跨目录回退规则，保留事实并按真实证据处置；若存在缺口，先精确必要写集、SPEC/DEC和独立评审再改，追加覆盖真实装配/目录/公共操作与权限的回归。不得用模拟flag代表安装扫码，不新建真实绑定/采集、读取Cookie或密钥，不清历史，不借本任务修改T1103 parser。
+
+## 实际诊断结论
+
+独立只读复核确认两目录对应不同正式入口，未发现AI发现或执行缺口。AI固定读取目录含accounts.bindingCapabilities；功能发现accounts域列出该GET和account.bind.start；prepare重新读原能力，采用预约原唯一扫码owner，而非platforms.bind.begin。新sourceAdapters目录没有抖音adapter，如实返回SOURCE_UNMAPPED；不能据此关闭旧扫码或把新目录标为已支持。
+
+原真实PG组合选中发现、扫码采用、组版本冲突三项实际3PASS/72未选，17.755秒exit0；原外部登录stage未调用。报告和实际命令见docs/verification/t1113/current-evidence.json。不改产品、不声称实际安装扫码成功或完整AI现场验收；本任务以查明差异为结论，真实T1103故障仍待修复。

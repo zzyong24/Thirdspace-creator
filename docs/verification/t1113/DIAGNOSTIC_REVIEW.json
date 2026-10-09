@@ -1,0 +1,57 @@
+{
+  "schema": "t1113-independent-readonly-diagnosis/v1",
+  "reviewedAt": "2026-10-09T07:32:18.780000+00:00",
+  "sourceCommit": "e0b5947181430c276cde34dd909f43f36ad68ccc",
+  "verdict": "NO_CONFIRMED_PRODUCT_DEFECT_CATALOGS_DESCRIBE_DISTINCT_ENTRY_POINTS",
+  "sourceHashes": {
+    "docs/features/t1113-installed-platform-capability-consistency.md": "d08930c57fef631b19d0bfb7b57f85d7a5e1e6ca2876a081d9551ce0a97f6b27",
+    "backend/src/modules/platform-collection/platform-collection.service.ts": "b12e60e78e8ddb0212a6d7c365c099a07f40bc3d85d76648973c659b7fc11317",
+    "backend/src/application/chat/assistant-system-root.ts": "7fc71a6c6a86805760a663d60aac7b3fd04443f389b6f2de23199f0b860b5fa3",
+    "contract/src/resources/assistant-system.ts": "a258e187b20bd54c994d2bbff7a25e281506ced3862ca8f92963f0916cbc063b",
+    "frontend/src/server/persistence-client.ts": "9720dc8c79284ff28747537673951824fb46e35b7ba842694405320261c0c3a1",
+    "backend/src/modules/platform-account/platform-account.service.ts": "c120109e4edf2a04df84b4733b8b0535cfdb3df444e2b0a6d704f3b7b919a9ee",
+    "backend/src/modules/platform-account/account-binding.service.ts": "9326b302bd429778657617ed3d4f9e5bf203a8dce07def4e3fe5f32018209bc4"
+  },
+  "findings": [],
+  "observations": [
+    {
+      "id": "OBS-001",
+      "status": "confirmed_non_defect",
+      "statement": "accounts.bindingCapabilities describes the established account binding service. Douyin is backed by createDouyinAccountBindingStage and account.bind.start."
+    },
+    {
+      "id": "OBS-002",
+      "status": "confirmed_non_defect",
+      "statement": "platforms.capabilities.list describes the separate platform-collection sourceAdapters surface. Douyin is intentionally absent there, so platforms.bind.begin returns SOURCE_UNMAPPED without contradicting the legacy account binding route."
+    },
+    {
+      "id": "OBS-003",
+      "status": "confirmed_reachable",
+      "statement": "AI fixed read catalog contains accounts.bindingCapabilities; system.features accounts domain advertises accounts.* and account.bind.start; prepare re-reads the selected platform capability and adoption reserves through the original accounts.bind.start owner."
+    }
+  ],
+  "aiChain": [
+    "system.features(feature=accounts) returns the accounts domain, reads prefixes accountGroups./accounts., and action account.bind.start.",
+    "system.read accepts accounts.bindingCapabilities through the frozen assistantReadEndpoints catalog.",
+    "system.action.propose account.bind.start is schema-bound to platform and expectedGroupVersion.",
+    "owner.prepare loads the real group and accounts binding capability and rejects unavailable/non-QR methods.",
+    "adoption uses reserveInTransaction on the original account binding owner, then wakeReserved after commit; it does not call platforms.bind.begin."
+  ],
+  "securityBoundary": [
+    "Catalog visibility is not execution authorization. Group/version/capability are revalidated during prepare and original owner authorization is retained during adoption.",
+    "No evidence supports changing platforms.capabilities.list Douyin to supported=true; that would falsely claim a source adapter exists.",
+    "No evidence supports removing Douyin from accounts.bindingCapabilities; the composition contains the dedicated Douyin binding stage."
+  ],
+  "evidenceStillRequiredBeforeClaimingInstalledQrSuccess": [
+    "Isolated public composition: accounts.bindingCapabilities returns Douyin QR, account.bind.start creates a group-owned queued run, status/cancel retain ownership; no cookies or secrets inspected.",
+    "AI public chain: system.features→system.read(accounts.bindingCapabilities)→proposal→explicit adoption reaches the same account.bind.start owner, with candidate remaining unexecuted before adoption.",
+    "Installed/manual QR success requires an authorized real scan and verified identity receipt. It has not occurred and must remain pending.",
+    "Separate platform-collection test must continue proving Douyin platforms.bind.begin rejects SOURCE_UNMAPPED, so future changes do not silently conflate the two surfaces."
+  ],
+  "testBoundary": [
+    "Use isolated DB and stub only the external browser/login stage while retaining real services, transports, owner, group/version and receipts.",
+    "Do not hardcode a successful identity, read cookies/tokens, or treat a mocked QR stage as installed scan success.",
+    "Regression should assert both catalogs simultaneously and name their distinct operations, avoiding a superficial equality assertion."
+  ],
+  "conclusion": "The observed difference is coherent with current architecture and does not establish an AI discovery or execution defect. T1113 can remain a diagnosis record unless a real public-chain test fails; no product write set is justified from the catalog difference alone."
+}
