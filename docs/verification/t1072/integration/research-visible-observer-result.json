@@ -1,0 +1,67 @@
+{
+  "sourceParent": "c4e13e27d5ecfaec67d9da0a80d3de667e5c3aaa",
+  "codeWriteSet": [
+    "backend/src/modules/ai-runtime/agentic-research-worker.integration.test.ts"
+  ],
+  "codeSha256": "ebdb6ef798bf893542485e902cf86a45402903eaa8af761cbee9c5f83b3b96d0",
+  "productionChanged": false,
+  "originalResearchInputs": 3,
+  "originalResearchExpectedStatusUnchanged": [
+    "succeeded",
+    "partial",
+    "partial"
+  ],
+  "originalResearchRequestsUnchanged": [
+    6,
+    5,
+    4
+  ],
+  "observerControls": {
+    "passed": 18,
+    "failed": 0,
+    "filteredOriginalCases": 3,
+    "durationSeconds": 45.13,
+    "exit": 0
+  },
+  "firstOriginalThree": {
+    "passed": 0,
+    "failed": 3,
+    "testsDurationSeconds": 75.16,
+    "durationSeconds": 115.78,
+    "exit": 1
+  },
+  "firstRelatedExpanded54Plus18": {
+    "passed": 64,
+    "failed": 3,
+    "notExecutedHookFailure": 5,
+    "total": 72,
+    "durationSeconds": 179.98,
+    "exit": 1
+  },
+  "original46Plus18Bounded": {
+    "passed": 58,
+    "failed": 6,
+    "total": 64,
+    "originalInventoryPassed": 40,
+    "originalInventoryFailed": 6,
+    "observerControlsPassed": 18,
+    "redfoxTimeoutFailures": 3,
+    "researchBusinessFailures": 3,
+    "durationSeconds": 149.8,
+    "exit": 1,
+    "maxWorkers": 2,
+    "retry": 0
+  },
+  "backendTypecheckExit": 0,
+  "fixtureIdentityAndExplicitLimitProposalApplied": false,
+  "logs": {
+    "backend-research-visible-observer-first-three.log": "5399bdc758bfd229c8b1edb562895069115883a2e75f459add9dad532890588b",
+    "backend-research-visible-observer-controls-first.log": "01ec4532a9a3c33b4a233c9b0c8a40d10e30281fc7d6ea62944274d7c942f5e8",
+    "backend-research-visible-observer-controls-final.log": "a01f217bb48001c525c82c6984565096fe83f0f081ce735fbea9695a70378d54",
+    "backend-research-visible-observer-typecheck-first.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "backend-research-visible-observer-related-final.log": "b9a96307e8e27a73d569906ee9fc13ed2249c719daa241738c449ee25629ea0b",
+    "backend-research-visible-observer-typecheck-final.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "backend-research-visible-observer-original46-bounded.log": "87ac7ad2a6c3fc8a8cfde1219048d79d6c493a787df123759a170ec0766fda8c"
+  },
+  "patchSha256": "8a06337f0aa72d80305704cd893c5016eb763afc54f74fcaa676999276da0041"
+}

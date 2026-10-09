@@ -4,6 +4,8 @@ import {mkdtemp,readFile,rm,writeFile} from "node:fs/promises";
 import {resolve,join} from "node:path";
 import {execFileSync} from "node:child_process";
 import {expect,it} from "vitest";
+import {z} from "zod";
+import {agenticToolOutcomeSchema} from "@creatoros/contract/execution-worker";
 import {createDb,aiTasks,aiTaskResults,executionTasks,executionCalls,knowledgeItems,knowledgeRevisions,knowledgeAdoptions,executionEvidence,eq} from "@creatoros/backend";
 import {createKnowledgeProposalAdoptionService,createKnowledgeService,createKnowledgeRepository} from "../knowledge";
 import {createBrowserSessionsService} from "../browser-sessions";
@@ -13,6 +15,140 @@ import {createAiService} from "../ai/ai.service";
 import {createAgenticWorkerDispatcher} from "../execution/model-worker-dispatcher";
 import {createAgenticResearchTools} from "./agentic-research-tools";
 import {createAgenticBusinessExecutionService} from "./agentic-business-execution.service";
+
+
+// 模拟供应商只解释实际收到的当前观察；完整账本只用于后面的验收断言。
+const FRAGMENT_PREFIX="[本次传输仅显示结果首尾片段，完整回执保留；需要证据请继续读取原来源。]\n";
+const FRAGMENT_MIDDLE="\n[…中间省略…]\n";
+const readIdentity=z.object({evidenceRef:z.string().regex(/^evidence_/),snapshotId:z.string().regex(/^[0-9a-f]{64}$/),sourceUrl:z.string().url(),title:z.string()}).strict();
+const readMeta=z.object({offset:z.number().int().nonnegative(),nextOffset:z.number().int().positive().nullable(),totalLength:z.number().int().positive(),truncated:z.boolean()}).strict();
+const readPage=readIdentity.extend({text:z.string(),...readMeta.shape}).strict();
+type ModelReadPage=z.infer<typeof readPage>;
+const tailSchema=z.object({data:readMeta,error:z.null(),continuation:agenticToolOutcomeSchema.shape.continuation,sideEffect:z.literal("none")}).strict();
+function requireToken(text:string,offset:number,token:string){
+ if(!text.startsWith(token,offset))throw new Error("MODEL_OBSERVATION_SHAPE_INVALID");
+ return offset+token.length;
+}
+function completeString(text:string,start:number){
+ if(text[start]!=="\"")throw new Error("MODEL_OBSERVATION_STRING_INVALID");
+ let escaped=false;
+ for(let i=start+1;i<text.length;i++){
+  if(escaped){escaped=false;continue;}
+  if(text[i]==="\\"){escaped=true;continue;}
+  if(text[i]==="\"")return {value:z.string().parse(JSON.parse(text.slice(start,i+1))),end:i+1};
+ }
+ throw new Error("MODEL_OBSERVATION_STRING_INCOMPLETE");
+}
+function completeArrayEnd(text:string,start:number){
+ if(text[start]!=="[")throw new Error("MODEL_OBSERVATION_ARRAY_INVALID");
+ const stack:string[]=[];let quoted=false,escaped=false;
+ for(let i=start;i<text.length;i++){
+  const char=text[i];
+  if(quoted){if(escaped)escaped=false;else if(char==="\\")escaped=true;else if(char==="\"")quoted=false;continue;}
+  if(char==="\""){quoted=true;continue;}
+  if(char==="["||char==="{")stack.push(char);
+  else if(char==="]"||char==="}"){
+   if(stack.pop()!==(char==="]"?"[":"{"))throw new Error("MODEL_OBSERVATION_ARRAY_INVALID");
+   if(stack.length===0)return i+1;
+  }
+ }
+ throw new Error("MODEL_OBSERVATION_ARRAY_INCOMPLETE");
+}
+function validateObservedRead(data:ModelReadPage,status:string,continuation:z.infer<typeof agenticToolOutcomeSchema.shape.continuation>,evidence:z.infer<typeof agenticToolOutcomeSchema.shape.evidence>){
+ if(evidence.length!==1)throw new Error("MODEL_OBSERVATION_EVIDENCE_INVALID");
+ const item=evidence[0]!;
+ if(item.entityId!==data.evidenceRef||item.version!==data.snapshotId||item.sourceUrl!==data.sourceUrl||item.title!==data.title||item.text!==data.text)throw new Error("MODEL_OBSERVATION_IDENTITY_MISMATCH");
+ if(status!==(data.truncated?"partial":"ok")||data.text.length===0||data.text.length>12000)throw new Error("MODEL_OBSERVATION_PAGE_INVALID");
+ const end=data.offset+data.text.length;
+ if(data.truncated){
+  if(data.nextOffset!==end||end>=data.totalLength||continuation?.evidenceRef!==data.evidenceRef||continuation.nextOffset!==end||continuation.totalChars!==data.totalLength)throw new Error("MODEL_OBSERVATION_OFFSET_MISMATCH");
+ }else if(data.nextOffset!==null||continuation!==null||end!==data.totalLength)throw new Error("MODEL_OBSERVATION_OFFSET_MISMATCH");
+ return data;
+}
+function observeReadContent(content:string):{mode:"full"|"fragment";data:ModelReadPage}{
+ if(!content.startsWith(FRAGMENT_PREFIX)){
+  const wrapper=z.object({summary:z.string(),evidence:agenticToolOutcomeSchema}).strict().parse(JSON.parse(content));
+  if(wrapper.evidence.error!==null||wrapper.evidence.sideEffect!=="none")throw new Error("MODEL_OBSERVATION_NOT_SUCCESSFUL_READ");
+  const data=readPage.parse(wrapper.evidence.data);
+  return {mode:"full",data:validateObservedRead(data,wrapper.evidence.status,wrapper.evidence.continuation,wrapper.evidence.evidence)};
+ }
+ const parts=content.slice(FRAGMENT_PREFIX.length).split(FRAGMENT_MIDDLE);
+ if(parts.length!==2||parts[0]!.length!==16000||parts[1]!.length!==8000)throw new Error("MODEL_OBSERVATION_FRAGMENT_INVALID");
+ const head=parts[0]!,tail=parts[1]!;
+ let cursor=requireToken(head,0,'{"summary":');cursor=completeString(head,cursor).end;
+ cursor=requireToken(head,cursor,',"evidence":{"status":');const status=completeString(head,cursor);cursor=status.end;
+ cursor=requireToken(head,cursor,',"summary":');cursor=completeString(head,cursor).end;
+ cursor=requireToken(head,cursor,',"evidence":');const end=completeArrayEnd(head,cursor);
+ const evidence=agenticToolOutcomeSchema.shape.evidence.parse(JSON.parse(head.slice(cursor,end)));
+ if(evidence.length!==1||typeof evidence[0]!.text!=="string")throw new Error("MODEL_OBSERVATION_EVIDENCE_INVALID");
+ cursor=requireToken(head,end,',"data":{');
+ const visibleIdentity:Record<string,string>={};
+ for(const [i,key] of ["evidenceRef","snapshotId","sourceUrl","title"].entries()){
+  cursor=requireToken(head,cursor,`${i?",":""}"${key}":`);
+  const value=completeString(head,cursor);visibleIdentity[key]=value.value;cursor=value.end;
+ }
+ const identity=readIdentity.parse(visibleIdentity);
+ cursor=requireToken(head,cursor,',"text":');
+ // 首窗正文在前面的完整证据数组已出现。这里只核重复data.text可见首尾，绝不补省略段给模型。
+ const quotedText=JSON.stringify(evidence[0]!.text);
+ const dataHead=head.slice(cursor);
+ if(dataHead.length>=quotedText.length||!quotedText.startsWith(dataHead))throw new Error("MODEL_OBSERVATION_TEXT_PREFIX_INVALID");
+ const tailStart=tail.lastIndexOf('\",\"offset\":');
+ if(tailStart<0||!quotedText.endsWith(tail.slice(0,tailStart+1)))throw new Error("MODEL_OBSERVATION_TEXT_SUFFIX_INVALID");
+ const ending=tailSchema.parse(JSON.parse('{"data":{'+tail.slice(tailStart+2,-1)));
+ const data=readPage.parse({...identity,text:evidence[0]!.text,...ending.data});
+ return {mode:"fragment",data:validateObservedRead(data,status.value,ending.continuation,evidence)};
+}
+function latestModelRead(raw:string){
+ const body=z.object({messages:z.array(z.object({role:z.string(),content:z.unknown().optional()}))}).parse(JSON.parse(raw));
+ const messages=body.messages.filter(row=>row.role==="tool");
+ for(const row of messages)z.string().parse(row.content);
+ const latest=messages.at(-1);if(!latest)throw new Error("MODEL_OBSERVATION_MISSING");
+ return observeReadContent(z.string().parse(latest.content));
+}
+
+function visibleReadFixture(){
+ const identity={evidenceRef:"evidence_observer",snapshotId:"a".repeat(64),sourceUrl:"https://research.example.com/observer",title:"观察驱动公开fixture"};
+ const text="首窗可核实事实"+"观察正文".repeat(2998)+"尾边界";
+ const body=text.slice(0,12000).padEnd(12000,"文");
+ const data=readPage.parse({...identity,text:body,offset:0,nextOffset:12000,totalLength:12004,truncated:true});
+ const outcome=agenticToolOutcomeSchema.parse({status:"partial",summary:"公开驱动正常读窗",evidence:[{entityId:identity.evidenceRef,version:identity.snapshotId,sourceUrl:identity.sourceUrl,title:identity.title,text:body}],data,error:null,continuation:{evidenceRef:identity.evidenceRef,nextOffset:12000,totalChars:12004},sideEffect:"none"});
+ const full=JSON.stringify({summary:outcome.summary,evidence:outcome});
+ if(full.length<=24000)throw new Error("正控制没有进入真实传输缩减阈值");
+ return {data,full,fragment:FRAGMENT_PREFIX+full.slice(0,16000)+FRAGMENT_MIDDLE+full.slice(-8000)};
+}
+it("观察驱动正控制：完整JSON与精确首尾片段只取可见同源字段",()=>{
+ const f=visibleReadFixture();
+ expect(observeReadContent(f.full)).toEqual({mode:"full",data:f.data});
+ expect(observeReadContent(f.fragment)).toEqual({mode:"fragment",data:f.data});
+ const raw=JSON.stringify({messages:[{role:"tool",content:"历史内容不作为当前观察"},{role:"tool",content:f.fragment}]});
+ expect(latestModelRead(raw)).toEqual({mode:"fragment",data:f.data});
+
+});
+it.each([
+ ["无标记畸形JSON",(f:ReturnType<typeof visibleReadFixture>)=>f.full.slice(0,-1)],
+ ["无标记任意文字",()=>"不是合法JSON观察"],
+ ["不同前缀",(f:ReturnType<typeof visibleReadFixture>)=>f.fragment.replace("本次传输","本次输出")],
+ ["重复中间标记",(f:ReturnType<typeof visibleReadFixture>)=>f.fragment+FRAGMENT_MIDDLE],
+ ["短头",(f:ReturnType<typeof visibleReadFixture>)=>f.fragment.slice(0,FRAGMENT_PREFIX.length+15999)+f.fragment.slice(FRAGMENT_PREFIX.length+16000)],
+ ["短尾",(f:ReturnType<typeof visibleReadFixture>)=>f.fragment.slice(0,-1)],
+ ["data身份与完整证据不符",(f:ReturnType<typeof visibleReadFixture>)=>f.fragment.replace('"evidenceRef":"evidence_observer"','"evidenceRef":"evidence_badvalue"')],
+ ["完整证据snapshot身份不符",(f:ReturnType<typeof visibleReadFixture>)=>f.fragment.replace('"version":"'+"a".repeat(64)+'"','"version":"'+"b".repeat(64)+'"')],
+ ["续读位置不连续",(f:ReturnType<typeof visibleReadFixture>)=>f.fragment.replaceAll('"nextOffset":12000','"nextOffset":12001')],
+ ["续读来源不符",(f:ReturnType<typeof visibleReadFixture>)=>f.full.replace('"continuation":{"evidenceRef":"evidence_observer"','"continuation":{"evidenceRef":"evidence_other"')],
+ ["片段首正文受损",(f:ReturnType<typeof visibleReadFixture>)=>f.fragment.slice(0,FRAGMENT_PREFIX.length+15999)+"错"+f.fragment.slice(FRAGMENT_PREFIX.length+16000)],
+ ["片段尾正文受损",(f:ReturnType<typeof visibleReadFixture>)=>f.fragment.slice(0,f.fragment.indexOf(FRAGMENT_MIDDLE)+FRAGMENT_MIDDLE.length)+"错"+f.fragment.slice(f.fragment.indexOf(FRAGMENT_MIDDLE)+FRAGMENT_MIDDLE.length+1)],
+ ["完整状态不符合读窗",(f:ReturnType<typeof visibleReadFixture>)=>f.full.replace('"status":"partial"','"status":"ok"')],
+ ["末尾字段缺失",(f:ReturnType<typeof visibleReadFixture>)=>f.full.replace(',"truncated":true','')],
+ ["副作用不为只读",(f:ReturnType<typeof visibleReadFixture>)=>f.full.replace('"sideEffect":"none"','"sideEffect":"committed"')],
+ ["普通完整JSON额外字段",(f:ReturnType<typeof visibleReadFixture>)=>f.full.slice(0,-1)+',"invented":true}'],
+] as const)("观察驱动拒绝反例：%s",(_label,mutate)=>{
+ const f=visibleReadFixture();expect(()=>observeReadContent(mutate(f))).toThrow();
+});
+it("观察驱动拒绝HTTP错误content类型和缺最新观察",()=>{
+ expect(()=>latestModelRead(JSON.stringify({messages:[{role:"tool",content:{invented:true}}]}))).toThrow();
+ expect(()=>latestModelRead(JSON.stringify({messages:[{role:"assistant",content:"未读来源"}]}))).toThrow();
+});
 
 it.each([{maxCalls:20,expectedRequests:6,expectedStatus:"succeeded",repair:true},{maxCalls:10,expectedRequests:5,expectedStatus:"partial",repair:true},{maxCalls:8,expectedRequests:4,expectedStatus:"partial",repair:false}])("真实Pi与跨进程研究端口：长文、自修复与采纳，调用上限 $maxCalls",async({maxCalls,expectedRequests,expectedStatus,repair})=>{
  const directory=await mkdtemp(resolve("../ai-worker/node_modules/.research-integration-"));
@@ -34,21 +170,17 @@ it.each([{maxCalls:20,expectedRequests:6,expectedStatus:"succeeded",repair:true}
  await sessions.saveState(ctx,"research.example.com",JSON.stringify({cookies:[{name:"session",value:privateCookie,domain:".research.example.com",path:"/"}],origins:[]}));
  const initialSession=await sessions.getStateVersioned(ctx,"research.example.com");
  const requests:string[]=[];let serverError:unknown;
- let firstWindow:{evidenceRef:string;snapshotId:string;nextOffset:number;text:string}|undefined;
- let nextWindow:{text:string;nextOffset:null}|undefined;
- const extractToolData=(raw:string)=>{
-  const body=JSON.parse(raw) as {messages:Array<{role:string;content:string}>};
-  return body.messages.filter(row=>row.role==="tool").map(row=>JSON.parse(row.content) as {evidence:{data?:Record<string,unknown>;error?:{code:string}}});
- };
+ let firstWindow:ModelReadPage|undefined;
+ let nextWindow:ModelReadPage|undefined;
  const server=createServer(async(req,res)=>{
   try{
    const chunks:Buffer[]=[];for await(const chunk of req)chunks.push(Buffer.from(chunk));const raw=Buffer.concat(chunks).toString("utf8");requests.push(raw);
    const index=requests.length+(!repair && requests.length>=4?1:0);let name:string|undefined,args:unknown;
    if(index===1){name="web.search";args={query:"受控调研来源"};}
    else if(index===2){expect(raw).toContain(sourceUrl);name="web.read";args={url:sourceUrl};}
-   else if(index===3){firstWindow=extractToolData(raw).at(-1)!.evidence.data as typeof firstWindow;expect(firstWindow?.evidenceRef).toMatch(/^evidence_/);expect(firstWindow?.nextOffset).toBe(12000);expect(firstWindow?.text).toContain("首窗可核实事实");name="web.read";args={url:sourceUrl,offset:firstWindow!.nextOffset,snapshotId:firstWindow!.snapshotId,evidenceRef:firstWindow!.evidenceRef};}
-   else if(index===4){nextWindow=extractToolData(raw).at(-1)!.evidence.data as typeof nextWindow;expect(nextWindow?.nextOffset).toBeNull();expect(nextWindow?.text).toContain("尾窗可核实事实");name="knowledge.write";args={title:"调研知识候选",note:"已阅读首窗与尾窗的真实fixture事实。",sourceNote:sourceUrl,evidenceRefs:["invented-source"]};}
-   else if(index===5){if(repair)expect(raw).toContain("invalid_input");else {nextWindow=extractToolData(raw).at(-1)!.evidence.data as typeof nextWindow;expect(nextWindow?.text).toContain("尾窗可核实事实");}expect(await f.db.select().from(knowledgeItems)).toHaveLength(0);expect((await f.db.select().from(aiTaskResults)).filter(row=>row.resultType==="agentic_proposal_staged")).toHaveLength(0);name="knowledge.write";args={title:"调研知识候选",note:"已阅读首窗与尾窗的真实fixture事实。",sourceNote:sourceUrl,evidenceRefs:[firstWindow!.evidenceRef]};}
+   else if(index===3){const observed=latestModelRead(raw);expect(observed.mode).toBe("fragment");firstWindow=observed.data;expect(firstWindow?.evidenceRef).toMatch(/^evidence_/);expect(firstWindow?.nextOffset).toBe(12000);expect(firstWindow?.text).toContain("首窗可核实事实");name="web.read";args={url:sourceUrl,offset:firstWindow!.nextOffset,snapshotId:firstWindow!.snapshotId,evidenceRef:firstWindow!.evidenceRef};}
+   else if(index===4){const observed=latestModelRead(raw);expect(observed.mode).toBe("full");nextWindow=observed.data;expect(nextWindow!.offset).toBe(firstWindow!.nextOffset);expect(nextWindow!.snapshotId).toBe(firstWindow!.snapshotId);expect(nextWindow!.evidenceRef).toBe(firstWindow!.evidenceRef);expect(nextWindow?.nextOffset).toBeNull();expect(nextWindow?.text).toContain("尾窗可核实事实");name="knowledge.write";args={title:"调研知识候选",note:"已阅读首窗与尾窗的真实fixture事实。",sourceNote:sourceUrl,evidenceRefs:["invented-source"]};}
+   else if(index===5){if(repair)expect(raw).toContain("invalid_input");else {nextWindow=latestModelRead(raw).data;expect(nextWindow?.text).toContain("尾窗可核实事实");}expect(await f.db.select().from(knowledgeItems)).toHaveLength(0);expect((await f.db.select().from(aiTaskResults)).filter(row=>row.resultType==="agentic_proposal_staged")).toHaveLength(0);name="knowledge.write";args={title:"调研知识候选",note:"已阅读首窗与尾窗的真实fixture事实。",sourceNote:sourceUrl,evidenceRefs:[firstWindow!.evidenceRef]};}
    else if(index!==6)throw new Error("模型发生非预期额外调用");
    const delta=name?{role:"assistant",tool_calls:[{index:0,id:`tool-${index}`,type:"function",function:{name,arguments:JSON.stringify(args)}}]}:{role:"assistant",content:"已完整读取来源并生成知识候选，请采纳。"};
    const base={id:`response-${index}`,object:"chat.completion.chunk",created:1,model:"test"};res.writeHead(200,{"content-type":"text/event-stream"});res.end(`data: ${JSON.stringify({...base,choices:[{index:0,delta,finish_reason:null}]})}\n\ndata: ${JSON.stringify({...base,choices:[{index:0,delta:{},finish_reason:name?"tool_calls":"stop"}],usage:{prompt_tokens:3,completion_tokens:4,total_tokens:7}})}\n\ndata: [DONE]\n\n`);
