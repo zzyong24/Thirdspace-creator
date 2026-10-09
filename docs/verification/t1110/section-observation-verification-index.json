@@ -1,0 +1,46 @@
+{
+  "evidence": [
+    {
+      "path": "docs/verification/t1110/section-observation-root-red.log",
+      "sha256": "7dc4e601ef586f17c2ed657e879a0f9691bf3f0ecfb332f8ab5005509763c350",
+      "toolExitCode": 1
+    },
+    {
+      "path": "docs/verification/t1110/section-observation-root-green.log",
+      "sha256": "00a8edf4e20f7be2f60c30e19b5fedf87c22ef64cc9bdc78cb0a4a262caa7929",
+      "toolExitCode": 0
+    },
+    {
+      "path": "docs/verification/t1110/section-observation-root-type.log",
+      "sha256": "5ede27c831cd531d5db5d6d3168185b27337cce2d5b124b5a95c3e7219cf1bc8",
+      "toolExitCode": 0
+    },
+    {
+      "path": "docs/verification/t1110/cloned-shadow-preparation-audit.md",
+      "sha256": "4c263222ec8b4dd50f0eff534d85a21cd0dc04f5b6c5db35383dfa575b83dd68"
+    },
+    {
+      "path": "docs/verification/t1110/section-author-code-audit.md",
+      "sha256": "fe32b2ed7e50f20c828fec04e34ffa2793d7e9c015a73e76cf0ad3e9be6b3280"
+    },
+    {
+      "path": "docs/verification/t1110/section-independent-review.md",
+      "sha256": "3bcbaeb487fc12b9272640c61af5b1750d8460a7471f74b2de8afa0d39b5c8ab",
+      "scope": "独立增量源码审查；不代签实际平台或完整共享guard生命周期"
+    }
+  ],
+  "red": {
+    "failed": 7,
+    "skipped": 60,
+    "total": 67,
+    "retry": 0
+  },
+  "green": {
+    "files": 3,
+    "passed": 67,
+    "retry": 0
+  },
+  "typeCheck": "actual tool exit0",
+  "browserProof": false,
+  "scope": "固定五字段失败观测及显式SDK启动预算；共享guard预检与实际平台仍待验"
+}

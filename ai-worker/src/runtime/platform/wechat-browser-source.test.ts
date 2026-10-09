@@ -1,3 +1,6 @@
+import {chromium} from '@playwright/test';
+import * as guardModule from '../browser/chromium-guard';
+import * as launchModule from '../browser/browser-launch';
 import {Readable} from 'node:stream';
 import type {BrowserContext,Download,Frame,Locator,Page} from '@playwright/test';
 import {describe,expect,it,vi} from 'vitest';
@@ -169,5 +172,64 @@ describe('T1110 微信受管browser source（明确浏览器fixture）',()=>{
   await expect(run).rejects.toThrow('fixture cancel at download completion');
   // 外层race已结束仍等待当前event-loop结算，以覆盖旧内部promise晚交callback的真实风险。
   await new Promise<void>(resolve=>setTimeout(resolve,0));expect(onReport).not.toHaveBeenCalled();expect(f.openProfile).toHaveBeenCalledOnce();
+ });
+});
+
+// 候选诊断/SDK预算回归：仅合成SDK和生命周期端口，不启动浏览器。
+describe('T1110 五字段内部快照与default-open预算候选',()=>{
+ const observation={exactTabCount:1,visibleTabCount:0,frameElementVisible:false,documentReadyState:'complete',bodyTextLength:123};
+ it('SECTION_MISSING诊断重构五字段，不复制额外secret或引用原对象',async()=>{
+  const f=fixture(),payload={...observation,url:'https://secret.invalid/?token=fixture-private',Cookie:'fixture-cookie'};
+  const error=Object.assign(new WechatBrowserSourceError('REPORT_SECTION_MISSING','fixture original'),{observation:payload});
+  vi.mocked(f.reportWitness.prepare).mockRejectedValueOnce(error);const onDiagnostic=vi.fn();
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(error);
+  expect(onDiagnostic).toHaveBeenCalledWith({platform:'wechatVideo',stage:'prepare',kind:'channelsDaily',code:'REPORT_SECTION_MISSING',exceptionName:'WechatBrowserSourceError',observation});
+  expect(onDiagnostic.mock.calls[0]?.[0].observation).not.toBe(payload);expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('fixture-private');expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('fixture-cookie');expect(f.onStopped).toHaveBeenCalledOnce();
+ });
+ it.each([{...observation,bodyTextLength:Infinity},{...observation,documentReadyState:'fixture-secret'},{...observation,visibleTabCount:2}])('非法五字段快照不输出，原失败与停止仍保留',async payload=>{
+  const f=fixture(),error=Object.assign(new WechatBrowserSourceError('REPORT_SECTION_MISSING','fixture original'),{observation:payload}),onDiagnostic=vi.fn();
+  vi.mocked(f.reportWitness.prepare).mockRejectedValueOnce(error);
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(error);
+  expect(onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('observation');expect(f.onStopped).toHaveBeenCalledOnce();
+ });
+ it('其他错误不接受SECTION观察字段',async()=>{
+  const f=fixture(),error=Object.assign(new WechatBrowserSourceError('REPORT_WINDOW_MISSING','fixture original'),{observation}),onDiagnostic=vi.fn();vi.mocked(f.reportWitness.prepare).mockRejectedValueOnce(error);
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(error);expect(onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('observation');
+ });
+ it('公开source默认open为SDK显式120秒，guard覆盖双试和清理',async()=>{
+  const f=fixture(),guard=vi.spyOn(guardModule,'guardedLaunch').mockImplementation(async(_directory,launch)=>launch()),realLaunch=launchModule.launchWithBrowser;
+  const fallback=vi.spyOn(launchModule,'launchWithBrowser').mockImplementation(run=>realLaunch(run,{resolveBundledExecutable:async()=>'/synthetic/browser'}));
+  const sdk=vi.spyOn(chromium,'launchPersistentContext').mockResolvedValue(f.context);
+  try{
+   const source=createWechatBrowserSource({identityWitness:f.identityWitness,reportWitness:f.reportWitness});await source.login('wechatVideo','/tmp/t1110-candidate-sdk-profile',f.controls);
+   expect(sdk).toHaveBeenCalledOnce();expect(sdk.mock.calls[0]?.[1]).toMatchObject({channel:'chrome',timeout:120000,headless:false});
+   expect(guard.mock.calls[0]?.[2]).toMatchObject({timeoutMs:370000,queueTimeoutMs:370000,onStopped:f.onStopped});expect(f.close).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
+  }finally{sdk.mockRestore();fallback.mockRestore();guard.mockRestore();}
+ });
+ it('默认open fallback沿同父deadline重新取剩余预算，不能续两分钟',async()=>{
+  vi.useFakeTimers();vi.setSystemTime(Date.parse('2026-10-09T04:00:00Z'));const f=fixture();
+  const guard=vi.spyOn(guardModule,'guardedLaunch').mockImplementation(async(_directory,launch)=>launch()),realLaunch=launchModule.launchWithBrowser;
+  const fallback=vi.spyOn(launchModule,'launchWithBrowser').mockImplementation(run=>realLaunch(run,{resolveBundledExecutable:async()=>'/synthetic/browser'}));
+  const sdk=vi.spyOn(chromium,'launchPersistentContext').mockImplementationOnce(async()=>{vi.setSystemTime(Date.now()+45000);throw Error('fixture first launch failed');}).mockResolvedValueOnce(f.context);
+  try{
+   const deadlineAt=new Date(Date.now()+90000).toISOString(),source=createWechatBrowserSource({identityWitness:f.identityWitness,reportWitness:f.reportWitness});await source.login('wechatVideo','/tmp/t1110-candidate-sdk-profile', {...f.controls,deadlineAt});
+   expect(sdk).toHaveBeenCalledTimes(2);expect(sdk.mock.calls[0]?.[1]).toMatchObject({channel:'chrome',timeout:90000});expect(sdk.mock.calls[1]?.[1]).toMatchObject({executablePath:'/synthetic/browser',timeout:45000});
+   expect(vi.mocked(f.page.goto).mock.calls[0]?.[1]?.timeout).toBe(45000);expect(f.onStopped).toHaveBeenCalledOnce();
+  }finally{sdk.mockRestore();fallback.mockRestore();guard.mockRestore();vi.useRealTimers();}
+ });
+ it('managed原end明确冻结，默认串行启动余量和显式较早预算不续期',async()=>{
+  vi.useFakeTimers();vi.setSystemTime(Date.parse('2026-10-09T04:00:00Z'));try{
+   const f=fixture(),start=Date.now();await f.source.login('wechatVideo','/fixture-profile',f.controls);
+   const first=f.openProfile.mock.calls[0]?.[2] as {deadlineAt?:string};expect(Date.parse(first.deadlineAt!)-start).toBe(1850000);
+   f.openProfile.mockClear();await f.source.login('wechatVideo','/fixture-profile',{...f.controls,timeoutMs:120000});const next=f.openProfile.mock.calls[0]?.[2] as {deadlineAt?:string};expect(Date.parse(next.deadlineAt!)-start).toBe(120000);
+  }finally{vi.useRealTimers();}
+ });
+ it('原取消后fallback不得再次调用SDK，default-open保原signal',async()=>{
+  const f=fixture(),controller=new AbortController(),reason=Error('fixture user cancel');
+  const guard=vi.spyOn(guardModule,'guardedLaunch').mockImplementation(async(_directory,launch,options)=>{try{return await launch();}catch(error){await options?.onStopped?.();throw error;}}),realLaunch=launchModule.launchWithBrowser;
+  const fallback=vi.spyOn(launchModule,'launchWithBrowser').mockImplementation(run=>realLaunch(run,{resolveBundledExecutable:async()=>'/synthetic/browser'}));
+  const logging=vi.spyOn(console,'error').mockImplementation(()=>{}),sdk=vi.spyOn(chromium,'launchPersistentContext').mockImplementationOnce(async()=>{controller.abort(reason);throw Error('fixture first launch interrupted');}).mockResolvedValue(f.context);
+  try{const source=createWechatBrowserSource({identityWitness:f.identityWitness,reportWitness:f.reportWitness});await expect(source.login('wechatVideo','/tmp/t1110-candidate-sdk-profile',{...f.controls,signal:controller.signal})).rejects.toBe(reason);expect(sdk).toHaveBeenCalledOnce();expect(f.identityWitness.read).not.toHaveBeenCalled();expect(f.onStopped).toHaveBeenCalledOnce();}
+  finally{sdk.mockRestore();logging.mockRestore();fallback.mockRestore();guard.mockRestore();}
  });
 });

@@ -8,7 +8,7 @@ const here=dirname(fileURLToPath(import.meta.url)),repo=resolve(process.env.T111
 const witnessPath=process.env.T1110_REPORT_WITNESS;
 if(!witnessPath||!existsSync(witnessPath))throw Error('须显式提供root已脱敏实报表投影，不读取原私人文件');
 const witness=normalizeWitness(witnessPath,{observedAt:process.env.T1110_REPORT_OBSERVED_AT});
-const shadowFile=execFileSync(process.execPath,[join(here,'prepare-next.mjs')],{cwd:repo,env:{PATH:process.env.PATH,TMPDIR:process.env.TMPDIR,T1110_REPO_ROOT:repo},encoding:'utf8',timeout:960000,maxBuffer:16*1024*1024}).trim();
+const shadowFile=execFileSync(process.execPath,[join(here,'prepare-next.mjs')],{cwd:repo,env:{PATH:process.env.PATH,TMPDIR:process.env.TMPDIR,T1110_REPO_ROOT:repo},encoding:'utf8',timeout:1440000,maxBuffer:16*1024*1024}).trim();
 const shadow=JSON.parse(readFileSync(shadowFile,'utf8'));
 const port=Number(process.env.T1110_TEST_PORT??31411);if(!Number.isInteger(port)||port<1024||port>65535||port===31410)throw Error('必须使用与root 31410真人隔离产品服务不同的测试端口');
 // 原有loopback guard接受IPv6；使用::1隔开root 127.0.0.1的选择cookie与测试localStorage，不改安全守卫。
@@ -23,6 +23,6 @@ try {
   const end=Date.now()+480000;let ready=false;
   while(Date.now()<end){if(spawnError)throw spawnError;if(child.exitCode!==null)throw Error(`隔离Next启动退出${child.exitCode}，见${logPath}`);try{const response=await fetch(origin,{signal:AbortSignal.timeout(120000)});if(response.ok){ready=true;break;}if(response.status>=500)throw Object.assign(Error('影子服务页面HTTP '+response.status+'，见'+logPath),{fatalStartup:true});}catch(error){if(error?.fatalStartup)throw error;}await new Promise(done=>setTimeout(done,1000));}
   if(!ready)throw Error('隔离Next未在完整启动预算内就绪');
-  const state={schema:'t1110-ego-server/v1',...shadow,shadowManifest:shadowFile,origin,output,normalizedWitness:normalizedPath,serverPid:child.pid,serverLog:logPath,startedAt:new Date().toISOString(),dataRoot:env.PGLITE_DATA_DIR,identityProof:false,execution:'fixture-only-no-platform-proof'};
+  const state={...shadow,schema:'t1110-ego-server/v1',shadowManifest:shadowFile,origin,output,normalizedWitness:normalizedPath,serverPid:child.pid,serverLog:logPath,startedAt:new Date().toISOString(),dataRoot:env.PGLITE_DATA_DIR,identityProof:false,execution:'fixture-only-no-platform-proof'};
   const file=join(shadow.root,'ego-server-state.json');writeFileSync(file,JSON.stringify(state,null,2)+'\n');closeSync(logFd);child.unref();process.stdout.write(`${file}\n`);
 } catch(error) {try{process.kill(-child.pid,'SIGTERM');}catch{}closeSync(logFd);throw error;}

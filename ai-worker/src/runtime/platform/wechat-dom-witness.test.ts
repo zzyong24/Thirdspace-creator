@@ -3,7 +3,7 @@ import {Readable} from 'node:stream';
 import type {Page,Frame,Response,BrowserContext,Download,Locator} from '@playwright/test';
 import {describe,it,expect,vi} from 'vitest';
 import {readWechatIdentityDom,readWechatReportDom,readChannelsWorksResponse,createVerifiedWechatDomWitnesses} from './wechat-dom-witness';
-import {createWechatBrowserSource,type WechatOperationControls} from './wechat-browser-source';
+import {createWechatBrowserSource,type WechatOperationControls,WechatBrowserSourceError} from './wechat-browser-source';
 // 普通DOM和原生响应的合成协议夹具；不连接账户、不伪称真人扫码。
 function surface(html:string,url:string){
  const dom=new JSDOM(html,{url,runScripts:'outside-only'});
@@ -140,4 +140,66 @@ describe('T1110 已实测普通DOM协议（合成fixture）',()=>{
    await vi.advanceTimersByTimeAsync(0);expect(onReport).toHaveBeenCalledTimes(2);expect(page.off).toHaveBeenCalled();
   }finally{vi.useRealTimers();}
  },180000);
+});
+
+// 五字段失败观察：全链仅浏览器/时间为明确合成fixture，不运行真实平台。
+function missingSectionFixture(mode:'ok'|'throw'|'pending'='ok',exactCount=1,frameVisible=false){
+ let current=channels+'/platform',release!:(value:unknown)=>void,entered!:()=>void;
+ const pending=new Promise<unknown>(resolve=>{release=resolve;}),probing=new Promise<void>(resolve=>{entered=resolve;});
+ const onStopped=vi.fn(async()=>{}),onReport=vi.fn(async()=>{}),onDiagnostic=vi.fn();
+ const exact={count:vi.fn(async()=>exactCount),filter:()=>tab},tab={count:vi.fn(async()=>0),click:vi.fn()};
+ const handle={isVisible:vi.fn(async()=>frameVisible),dispose:vi.fn(async()=>{})};
+ const stats=surface(visible+'<p>fixture-private-body-token</p>',channels+'/micro/statistic/post');
+ Object.defineProperty(stats.dom.window.document,'readyState',{value:'complete'});
+ Object.defineProperty(stats.dom.window.HTMLElement.prototype,'innerText',{get(){return this.textContent??'';}});
+ const evaluate=vi.fn(async(fn:Function,arg:unknown)=>{entered();if(mode==='throw')throw Error('Cookie=fixture-private-cookie https://secret.invalid/token /private/profile');if(mode==='pending')return pending;return stats.page.evaluate(fn as never,arg);});
+ const frame={url:()=>channels+'/micro/statistic/post',getByText:()=>exact,locator:vi.fn(),frameElement:vi.fn(async()=>handle),evaluate} as unknown as Frame;
+ const main=surface(visible+'<h2 class="finder-nickname">合成本人</h2><span id="finder-uid-copy" class="finder-uniq-id" data-clipboard-text="synthetic-stable-id">synthetic-stable-id</span>',channels+'/platform');
+ const page={url:()=>current,goto:async(url:string)=>{current=url;},evaluate:main.page.evaluate,locator:()=>({evaluateAll:async()=>[]}),frames:()=>[frame]} as unknown as Page;
+ const close=vi.fn(async()=>{await onStopped();}),context={pages:()=>[page],close} as unknown as BrowserContext;
+ const witnesses=createVerifiedWechatDomWitnesses(),source=createWechatBrowserSource({...witnesses,openProfile:async()=>context});
+ return {source,witnesses,page,frame,tab,exact,handle,evaluate,close,onStopped,onReport,onDiagnostic,probing,release:(value:unknown)=>release(value)};
+}
+describe('T1110 SECTION_MISSING一次受限失败观察候选',()=>{
+ it.each([[1,false],[0,true]] as const)('实际source失败后仅取同frame固定数字：exact=%s visibleFrame=%s',async(exactCount,frameVisible)=>{
+  vi.useFakeTimers();vi.setSystemTime(Date.parse('2026-10-09T04:00:00Z'));try{
+   const f=missingSectionFixture('ok',exactCount,frameVisible),run=f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','synthetic-stable-id',{deadlineAt:new Date(Date.now()+360000).toISOString(),onStopped:f.onStopped,onDiagnostic:f.onDiagnostic},f.onReport),rejected=expect(run).rejects.toMatchObject({code:'REPORT_SECTION_MISSING'});
+   await vi.advanceTimersByTimeAsync(120000);await rejected;
+   expect(f.evaluate).toHaveBeenCalledOnce();expect(f.frame.frameElement).toHaveBeenCalledOnce();expect(f.handle.dispose).toHaveBeenCalledOnce();
+   const event=f.onDiagnostic.mock.calls[0]?.[0];expect(event).toMatchObject({stage:'prepare',kind:'channelsDaily',code:'REPORT_SECTION_MISSING',observation:{exactTabCount:exactCount,visibleTabCount:0,frameElementVisible:frameVisible,documentReadyState:'complete'}});expect(event.observation.bodyTextLength).toBeGreaterThan(0);expect(Object.keys(event.observation).sort()).toEqual(['bodyTextLength','documentReadyState','exactTabCount','frameElementVisible','visibleTabCount']);expect(JSON.stringify(event)).not.toContain('fixture-private');
+   expect(f.tab.click).not.toHaveBeenCalled();expect(f.frame.locator).not.toHaveBeenCalled();expect(f.onReport).not.toHaveBeenCalled();expect(f.close).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
+  }finally{vi.useRealTimers();}
+ });
+ it('probe自身异常保原SECTION_MISSING，不输出probe秘密并按原停止',async()=>{
+  vi.useFakeTimers();try{const f=missingSectionFixture('throw'),run=f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','synthetic-stable-id',{onStopped:f.onStopped,onDiagnostic:f.onDiagnostic},f.onReport),rejected=expect(run).rejects.toMatchObject({code:'REPORT_SECTION_MISSING'});await vi.advanceTimersByTimeAsync(120000);await rejected;expect(f.evaluate).toHaveBeenCalledOnce();expect(f.onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('observation');expect(JSON.stringify(f.onDiagnostic.mock.calls)).not.toContain('fixture-private');expect(f.onStopped).toHaveBeenCalledOnce();}finally{vi.useRealTimers();}
+ });
+ it.each(['cancel','deadline'] as const)('挂起probe中%s优先，实停后晚快照不附加、不发第二诊断',async mode=>{
+  vi.useFakeTimers();try{
+   const f=missingSectionFixture('pending'),controller=new AbortController(),deadlineAt=new Date(Date.now()+180000).toISOString();
+   const run=f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','synthetic-stable-id',{signal:controller.signal,deadlineAt,onStopped:f.onStopped,onDiagnostic:f.onDiagnostic},f.onReport),rejected=expect(run).rejects.toMatchObject(mode==='cancel'?{message:'fixture user cancelled'}:{code:'EXECUTION_DEADLINE_EXCEEDED'});
+   await vi.advanceTimersByTimeAsync(120000);await f.probing;if(mode==='cancel')controller.abort(Error('fixture user cancelled'));else await vi.advanceTimersByTimeAsync(60000);await rejected;expect(f.onStopped).toHaveBeenCalled();expect(f.onDiagnostic).toHaveBeenCalledOnce();expect(f.onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('observation');
+   f.release({documentReadyState:'complete',bodyTextLength:44});await vi.advanceTimersByTimeAsync(0);expect(f.onDiagnostic).toHaveBeenCalledOnce();expect(f.onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('observation');expect(f.onReport).not.toHaveBeenCalled();expect(f.tab.click).not.toHaveBeenCalled();
+  }finally{vi.useRealTimers();}
+ });
+ it('失败观察自己的有限上限不续期也不取代原missing',async()=>{
+  vi.useFakeTimers();try{const f=missingSectionFixture('pending'),run=f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','synthetic-stable-id',{deadlineAt:new Date(Date.now()+360000).toISOString(),onStopped:f.onStopped,onDiagnostic:f.onDiagnostic}),rejected=expect(run).rejects.toMatchObject({code:'REPORT_SECTION_MISSING'});await vi.advanceTimersByTimeAsync(120000);await f.probing;await vi.advanceTimersByTimeAsync(120000);await rejected;expect(f.onStopped).toHaveBeenCalledOnce();expect(f.onDiagnostic.mock.calls[0]?.[0]).not.toHaveProperty('observation');f.release({documentReadyState:'complete',bodyTextLength:5});await vi.advanceTimersByTimeAsync(0);expect(f.onDiagnostic).toHaveBeenCalledOnce();}finally{vi.useRealTimers();}
+ });
+ it('原期限已到但signal尚未派发，不能吞预算错误或启动probe',async()=>{
+  vi.useFakeTimers();try{
+   const f=missingSectionFixture(),controller=new AbortController(),end=Date.now()+120000;
+   const control:WechatOperationControls={signal:controller.signal,timeoutMs:()=>{const remaining=end-Date.now();if(remaining<=0)throw new WechatBrowserSourceError('EXECUTION_DEADLINE_EXCEEDED','fixture original deadline');return remaining;}};
+   const run=f.witnesses.reportWitness.prepare(f.page,'wechatVideo','channelsDaily',control),rejected=expect(run).rejects.toMatchObject({code:'EXECUTION_DEADLINE_EXCEEDED'});await vi.advanceTimersByTimeAsync(120000);await rejected;expect(controller.signal.aborted).toBe(false);expect(f.evaluate).not.toHaveBeenCalled();expect(f.frame.frameElement).not.toHaveBeenCalled();
+  }finally{vi.useRealTimers();}
+ });
+ it('合法就绪路径不观察iframe失败快照，不改变原日期选择',async()=>{
+  const days=Array.from({length:30},(_,i)=>new Date(Date.parse('2026-09-09T00:00:00Z')+i*86400000).toISOString().slice(0,10));
+  const s=surface(visible+'<div class="filter-row"><div class="filter-extra"><a>下载表格</a></div><input value="2" type="radio" checked></div><div class="ant-table-body"><table>'+days.map(day=>'<tr><td>'+day+'</td></tr>').join('')+'</table></div>',channels+'/micro/statistic/post');
+  const locator={count:async()=>1,filter:()=>locator,click:vi.fn()},frameElement=vi.fn();const frame={...s.page,frameElement,locator:()=>locator,getByText:()=>locator} as unknown as Frame;
+  const page={url:()=>channels+'/platform',locator:()=>({evaluateAll:async()=>[]}),goto:async()=>{},frames:()=>[frame]} as unknown as Page;
+  const result=await createVerifiedWechatDomWitnesses({now:()=>Date.parse('2026-10-09T04:00:00Z')}).reportWitness.prepare(page,'wechatVideo','channelsDaily',controls);
+  expect(result.state.selection).toMatchObject({startDate:'2026-09-09',endDate:'2026-10-08'});expect(result.state.dates).toHaveLength(30);expect(frameElement).not.toHaveBeenCalled();
+ });
+ it('重复标签没有失败观察，仍不点击不查日期',async()=>{
+  const f=missingSectionFixture();vi.mocked(f.tab.count).mockResolvedValue(2);await expect(f.witnesses.reportWitness.prepare(f.page,'wechatVideo','channelsDaily',controls)).rejects.toMatchObject({code:'REPORT_SECTION_AMBIGUOUS'});expect(f.evaluate).not.toHaveBeenCalled();expect(f.frame.frameElement).not.toHaveBeenCalled();expect(f.tab.click).not.toHaveBeenCalled();expect(f.frame.locator).not.toHaveBeenCalled();
+ });
 });

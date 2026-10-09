@@ -84,3 +84,11 @@ LED047首轮并发8文件173PASS/1FAIL，原run-controls异步查询在并行负
 随后从实际平台表公众号行打开原弹窗并启动`execution-task-34ba48c1-61`，Ego20交还用户。该任务先waiting_verification，后15:16:09Z实际failed、accountId为空，公开错误为“微信后台页面或原生下载暂未完成，请查看原任务”。本次没有binding分段诊断，根因未知；窗口已结束，不再要求扫描旧窗口，也不称公众号绑定成功。后续新增binding脱敏日志须先完成实际检查，再启动明确的新扫码intent。
 
 默认Turbopack的第二次影子Next启动也实际失败：隔离副本第三方依赖链接回原工作树，Next无法在其root内解析next/package.json。保留原next.log和启动失败；新QA准备器复制必要依赖，保留相对链接并校验副本inode/链接范围、原安装及HEAD首末一致。新增辅助脚本纳入PAGE_SPEC watched_paths。此修改仅准备验收环境，尚未执行复制、页面编译或Chrome旅程，未签PASS。
+
+## 五字段观测回归与QA准备实证
+
+root在正式树先仅加入测试，新增靶向实际7FAIL/60SKIP（67例、retry0），再采纳生产实现，完整三文件67PASS与worker类型actual exit0。五字段只在同一frame的typed标签缺失后读取一次，并独立验证/重构；取消、实际原期限、晚快照和停止未确认仍走原链。SDK显式120秒裁剪到同一原end，fallback重取余量；共享guard预检在其race前等待的既有边界未被这些mock测试覆盖，不称完整浏览器生命周期已通过。
+
+新的公众号原扫码任务`execution-task-a1e2c022-51`收到用户“已扫码并选择公众号”后，实际readIdentity/IDENTITY_MISSING，仍未有绑定账号。该证据只说明普通稳定身份未读到，没有登录过期证据；不重写原failed任务，不自动把研究身份传给产品。
+
+隔离QA准备实际成功于HEAD`88b663a6`：106220个regular文件、4986个链接，source/clone首末摘要一致、0共享inode/逃根/broken链接，Next16.2.9实际解析位于影子根；独评再次逐个核验，页面编译也已实际HTTP200。但首次旅程未进入页面：Ego服务进程没有收到shell自定义环境变量，先在参数检查失败；原server state另有spread覆盖schema的静态缺陷。这两处修复、准备预算按独评扩至1440秒（覆盖4git+archive/tar+5cp+收尾）。原服务经PID归属核对后停止，失败文件和日志保留；必须在新冻结源码上重跑，不能把准备成功当页面PASS。

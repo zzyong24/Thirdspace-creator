@@ -2,7 +2,8 @@
 // 真实Next路由/SSR/UI/公开账号组服务；report-read及同步执行状态是明确隔离fixture，不能证明微信认证。
 const fs=await import('node:fs/promises'),path=await import('node:path'),crypto=await import('node:crypto'),cp=await import('node:child_process');
 const {default:assert}=await import('node:assert/strict');
-const serverFile=process.env.T1110_EGO_SERVER_STATE,label=process.env.T1110_EGO_PAGE_LABEL;
+const configuration=typeof __t1110RootConfiguration==='undefined'?{}:__t1110RootConfiguration;
+const serverFile=configuration.serverFile,label=configuration.label;
 if(!serverFile||!label)throw Error('须root显式提供隔离server state和已分配的同空间测试Page label；不自动占用真人平台p1');
 const server=JSON.parse(await fs.readFile(serverFile,'utf8'));
 assert.equal(server.schema,'t1110-ego-server/v1');assert.equal(new URL(server.origin).hostname,'[::1]');

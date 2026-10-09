@@ -58,14 +58,32 @@
     }
   ],
   "allReportsSaved": false,
-  "officialProductBinding": {
-    "runId": "execution-task-34ba48c1-61",
-    "status": "failed",
-    "accountId": null,
-    "startedAt": "2026-10-09T15:14:14.769Z",
-    "updatedAt": "2026-10-09T15:16:09.248Z",
-    "rootCause": "unknown-no-binding-stage-diagnostic",
-    "error": "微信后台页面或原生下载暂未完成，请查看原任务"
-  },
-  "browserJourney": "not-yet-executed-two-shadow-startup-failures-retained"
+  "officialProductBinding": "not-yet-succeeded",
+  "browserJourney": "not-yet-entered-page-shell-environment-not-forwarded",
+  "officialAttempts": [
+    {
+      "runId": "execution-task-34ba48c1-61",
+      "status": "failed",
+      "accountId": null,
+      "startedAt": "2026-10-09T15:14:14.769Z",
+      "updatedAt": "2026-10-09T15:16:09.248Z",
+      "rootCause": "unknown-no-binding-stage-diagnostic",
+      "error": "微信后台页面或原生下载暂未完成，请查看原任务"
+    },
+    {
+      "runId": "execution-task-a1e2c022-51",
+      "groupId": "grp-4eb3a857-5",
+      "platform": "wechatOfficial",
+      "status": "failed",
+      "accountId": null,
+      "error": "微信后台数据尚未就绪，请查看原任务",
+      "createdAt": "2026-10-09T15:30:41.690Z",
+      "updatedAt": "2026-10-09T15:39:18.698Z",
+      "http": 200,
+      "diagnostic": {
+        "stage": "readIdentity",
+        "code": "IDENTITY_MISSING"
+      }
+    }
+  ]
 }

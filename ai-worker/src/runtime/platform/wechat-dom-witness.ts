@@ -1,7 +1,7 @@
-import type {Frame,Page,Response,Request} from '@playwright/test';
+import type {Frame,Page,Response,Request,Locator} from '@playwright/test';
 import type {NativeReportKind,NativeReportPayload} from '@creatoros/contract';
 import {setTimeout as delay} from 'node:timers/promises';
-import {WechatBrowserSourceError,type WechatCreatorPlatform,type WechatIdentityWitness,type WechatOperationControls,type WechatReportPageState,type WechatReportWitness} from './wechat-browser-source';
+import {WechatBrowserSourceError,type WechatCreatorPlatform,type WechatIdentityWitness,type WechatOperationControls,type WechatReportPageState,type WechatReportWitness,type WechatSectionObservation} from './wechat-browser-source';
 
 // T1110 2026-10-09普通账号页/原生详情实测。只核身份、日期、响应和完整性，不做语义选择。
 // SEMANTIC_BOUNDARY_ALLOW: DOM标签、日期格式和原生响应为固定协议，不解释内容或推断指标累计口径。
@@ -26,6 +26,26 @@ function windowFor(now:number,work:boolean){
 async function observe<T>(controls:WechatOperationControls,read:()=>Promise<T|null>,code:string,requested?:number):Promise<T>{
  const end=Date.now()+controls.timeoutMs(requested);
  for(;;){controls.signal.throwIfAborted();const value=await read();controls.signal.throwIfAborted();if(value!==null)return value;if(Date.now()>=end)return fail(code,'微信后台数据尚未就绪，请查看原任务');await delay(250,undefined,{signal:controls.signal});}
+}
+/** 一次失败后的固定数字快照；不读取/返回正文、链接或身份，不改原报表选择。 */
+async function readMissingSectionObservation(frame:Frame,exact:Locator,visible:Locator,controls:WechatOperationControls):Promise<WechatSectionObservation|undefined>{
+ controls.signal.throwIfAborted();const timeoutMs=controls.timeoutMs(120000);
+ let timer:ReturnType<typeof setTimeout>|undefined,onAbort:(()=>void)|undefined;
+ const probing=Promise.resolve().then(async()=>{
+  controls.signal.throwIfAborted();
+  const [exactTabCount,visibleTabCount,frameElementVisible,documentState]=await Promise.all([
+   exact.count(),visible.count(),
+   (async()=>{const element=await frame.frameElement();try{return await element.isVisible();}finally{await element.dispose().catch(()=>{});}})(),
+   frame.evaluate(()=>({documentReadyState:document.readyState,bodyTextLength:(document.body?.innerText??'').length})),
+  ]);
+  return {exactTabCount,visibleTabCount,frameElementVisible,...documentState};
+ });
+ try{
+  const observation=await Promise.race([probing,new Promise<undefined>((resolve,reject)=>{
+   timer=setTimeout(()=>resolve(undefined),timeoutMs);onAbort=()=>reject(controls.signal.reason);controls.signal.addEventListener('abort',onAbort,{once:true});if(controls.signal.aborted)onAbort();
+  })]);
+  controls.signal.throwIfAborted();controls.timeoutMs(120000);return observation;
+ }finally{if(timer)clearTimeout(timer);if(onAbort)controls.signal.removeEventListener('abort',onAbort);}
 }
 export async function readWechatIdentityDom(page:Page,platform:WechatCreatorPlatform){
  const url=nativeUrl(page.url(),origins[platform],platform);
@@ -155,8 +175,15 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
    const framePath=kind==='channelsFollowers'?'/micro/statistic/follower':'/micro/statistic/post';
    scope=await observe(controls,async()=>{const frames=page.frames().filter(frame=>{try{const u=nativeUrl(frame.url(),origins[platform],platform);return u.pathname===framePath;}catch{return false;}});return frames.length===1?frames[0]!:null;},'REPORT_PAGE_MISSING');
    const section=kind==='channelsDaily'?'全部视频':kind==='channelsWorks'?'单篇视频':'关注者增长';
-   const tab=scope.getByText(section,{exact:true}).filter({visible:true});
-   await observe(controls,async()=>{const count=await tab.count();if(count>1)return fail('REPORT_SECTION_AMBIGUOUS','原生报表标签不唯一');return count===1?true:null;},'REPORT_SECTION_MISSING');
+   const exactTab=scope.getByText(section,{exact:true}),tab=exactTab.filter({visible:true});
+   try{await observe(controls,async()=>{const count=await tab.count();if(count>1)return fail('REPORT_SECTION_AMBIGUOUS','原生报表标签不唯一');return count===1?true:null;},'REPORT_SECTION_MISSING');}
+   catch(error){
+    controls.signal.throwIfAborted();
+    if(!(error instanceof WechatBrowserSourceError)||error.code!=='REPORT_SECTION_MISSING')throw error;
+    try{const observation=await readMissingSectionObservation(scope as Frame,exactTab,tab,controls);controls.signal.throwIfAborted();controls.timeoutMs(120000);if(observation)error.observation=observation;}
+    catch{controls.signal.throwIfAborted();controls.timeoutMs(120000);}
+    throw error;
+   }
    await tab.click({timeout:controls.timeoutMs()});
    const thirty=scope.locator(detail+' label:has(input[value="2"])').filter({visible:true}),seven=scope.locator(detail+' label:has(input[value="1"])').filter({visible:true});
    await observe(controls,async()=>await thirty.count()===1&&await seven.count()===1?true:null,'REPORT_WINDOW_MISSING');
