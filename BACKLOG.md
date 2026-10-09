@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1107 | 调研视频号与公众号创作者数据获取及现有采集接入方法 | 🔨 | — | — | [范围](docs/features/t1107-wechat-creator-data-research.md) | 用户2026-10-09要求研究能否类似现有三平台拉取创作者数据；核官方接口、扫码后台、本人/授权账号与公开对标数据边界，给来源与接入建议；本轮仅只读调研，不改产品或真实登录。 |
 | T-1106 | 修复内容雷达误提示登录与作品升级任务缺少账号归属 | ✅ | PASS[REV:adea7b8c396b] | PASS:e0a14deeab3e | [SPEC](docs/features/t1106-radar-auth-owner.md) · [页面契约](docs/features/t1106-radar-auth-owner.PAGE_SPEC.md) · [验收](docs/verification/t1106/FRONTEND_VALIDATION_REPORT.md) | 用户2026-10-09截图：Cookie仍有效却提示登录，升级错误暴露内部冻结版本术语；先核真实状态与公开任务链，修旧任务可信归属与对应恢复文案，保原ID/Cookie/跨组保护。 |
 | T-1106-related-gates | 核对雷达既有改写候选状态断言与全局验收欠债 | 📋 | — | — | [原基线](docs/verification/t1106/related-baseline.md) | T1106扩大前端75PASS/3旧FAIL，原d35快照同名同因3FAIL；超时静态旧短预算仍归T1018/T1081，本轮全局45FAIL保留；LED055首次触发原命令118PASS、首因未定。仅登记根因，不删断言或冒称本轮已修复。 |
 | T-1101 | 修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集 | 🔨 | PASS[REV:146ff2046c2c] | 待验 | [SPEC](docs/features/t1101-canvas-binding-collection.md) | 用户2026-10-09截图明确要求：素材只显示预览；生成中禁止重复提交、已有结果再生成需确认；图片连线传递默认参考；扫码入口放平台能力表，删除刷新和下方重复框；三平台独立采集错峰执行。来源f97a80da已完成；main重新初审和组合验收，原PASS不代签当前树。不发布、不改真实Cookie。 |

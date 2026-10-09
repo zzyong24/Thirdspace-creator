@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t1101-canvas-binding @ e19fd2d2
+LAST_SYNCED: codex/t1101-canvas-binding @ 1e10a99d
 
 ## 这是什么(定位)
 
@@ -23,6 +23,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-1107 调研视频号与公众号创作者数据获取及现有采集接入方法
 - [open] T-1106-related-gates 核对雷达既有改写候选状态断言与全局验收欠债
 - [wip] T-1101 修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集
 - [open] T-1101-global-gates 核对独立main工作树全局对账失败及历史收据漂移

@@ -6708,6 +6708,42 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1107": {
+      "task_id": "T-1107",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "research"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1107-wechat-creator-data-research.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/platform-account/**",
+        "backend/src/modules/platform-collection/**",
+        "backend/src/modules/ai-runtime/collection-bootstrap.ts",
+        "frontend/src/server/persistence-client.ts",
+        "contract/src/resources/platform-capabilities.ts"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "PROJECT.md",
+        "docs/features/t1107-wechat-creator-data-research.md",
+        "docs/research/2026-10-09-wechat-creator-data.md",
+        "docs/research/evidence/t1107-official-sources.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1107.md"
+      ],
+      "verify_commands": {
+        "research": [
+          "git diff --check",
+          "python3 -m json.tool docs/research/evidence/t1107-official-sources.json > /dev/null"
+        ]
+      }
     }
   }
 }

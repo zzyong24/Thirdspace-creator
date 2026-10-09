@@ -1,0 +1,310 @@
+{
+  "task": "T-1107",
+  "checked_at_utc": "2026-10-09T07:37:56.844310+00:00",
+  "scope": "官方公开资料与源码只读研究；未登录真实账号、未实调用经营数据API、未改产品",
+  "code_baseline": "1e10a99d",
+  "sources": [
+    {
+      "url": "https://developers.weixin.qq.com/doc/subscription/guide/",
+      "final_url": "https://developers.weixin.qq.com/doc/subscription/guide/",
+      "status": 200,
+      "sha256": "8918ef89e6255480ee037ac90a9dd57607c8717800b2be5df1c0e85cec8344ab",
+      "bytes": 31334,
+      "text_file": "/tmp/t1107-official-docs/00.txt",
+      "retrieval_method": "无Cookie的公开HTTP GET",
+      "raw_file": "/tmp/t1107-official-docs/00.html",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://developers.weixin.qq.com/doc/service/api/wedata/news/api_getarticlesummary",
+      "final_url": "https://developers.weixin.qq.com/doc/service/api/wedata/news/api_getarticlesummary",
+      "status": 200,
+      "sha256": "708357e6069f14a40a9bf3e9c64309208c5270607df5e7fe438231c39a5c419a",
+      "bytes": 99785,
+      "text_file": "/tmp/t1107-official-docs/01.txt",
+      "retrieval_method": "无Cookie的公开HTTP GET",
+      "raw_file": "/tmp/t1107-official-docs/01.html",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://developers.weixin.qq.com/doc/service/api/wedata/news/api_getarticletotal",
+      "final_url": "https://developers.weixin.qq.com/doc/service/api/wedata/news/api_getarticletotal",
+      "status": 200,
+      "sha256": "9f6d3d3f3fde0805ce1f2c1c360328b564db03ebaff9671deaa18595e6bf0b17",
+      "bytes": 109409,
+      "text_file": "/tmp/t1107-official-docs/02.txt",
+      "retrieval_method": "无Cookie的公开HTTP GET",
+      "raw_file": "/tmp/t1107-official-docs/02.html",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://developers.weixin.qq.com/doc/service/api/wedata/news/api_getarticleread",
+      "final_url": "https://developers.weixin.qq.com/doc/service/api/wedata/news/api_getarticleread",
+      "status": 200,
+      "sha256": "2990c858b28a127a055609ad8add43b3a308525c4514181919bd52659f1ab4fc",
+      "bytes": 101405,
+      "text_file": "/tmp/t1107-official-docs/03.txt",
+      "retrieval_method": "无Cookie的公开HTTP GET",
+      "raw_file": "/tmp/t1107-official-docs/03.html",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://developers.weixin.qq.com/doc/service/api/wedata/news/api_getarticletotaldetail",
+      "final_url": "https://developers.weixin.qq.com/doc/service/api/wedata/news/api_getarticletotaldetail",
+      "status": 200,
+      "sha256": "965024b66c5fe0ac236f2f1144949ae1c5b2588c35eca0d65be9c136a8eba0d1",
+      "bytes": 118642,
+      "text_file": "/tmp/t1107-official-docs/04.txt",
+      "retrieval_method": "无Cookie的公开HTTP GET",
+      "raw_file": "/tmp/t1107-official-docs/04.html",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://developers.weixin.qq.com/doc/service/api/wedata/user/api_getusersummary",
+      "final_url": "https://developers.weixin.qq.com/doc/service/api/wedata/user/api_getusersummary",
+      "status": 200,
+      "sha256": "ab843143e8ff4cc283a42e6b8827fc4b8a351649dbe5b64a6dd50f81ec58ba4e",
+      "bytes": 96791,
+      "text_file": "/tmp/t1107-official-docs/05.txt",
+      "retrieval_method": "无Cookie的公开HTTP GET",
+      "raw_file": "/tmp/t1107-official-docs/05.html",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://developers.weixin.qq.com/doc/service/api/wedata/user/api_getusercumulate",
+      "final_url": "https://developers.weixin.qq.com/doc/service/api/wedata/user/api_getusercumulate",
+      "status": 200,
+      "sha256": "9167d3606bfc609013b6f79a6f939105684e7e6fe1fff7ca6a2d3aff37e80172",
+      "bytes": 95550,
+      "text_file": "/tmp/t1107-official-docs/06.txt",
+      "retrieval_method": "无Cookie的公开HTTP GET",
+      "raw_file": "/tmp/t1107-official-docs/06.html",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://developers.weixin.qq.com/doc/subscription/guide/product/analysis_data/analysis_data.html",
+      "final_url": "https://developers.weixin.qq.com/doc/subscription/guide/product/analysis_data/analysis_data.html",
+      "status": 200,
+      "sha256": "7ce897fcc675a65a6b7bd1f2337dfaa234998a5244b7f2617229391710feb98d",
+      "bytes": 38213,
+      "text_file": "/tmp/t1107-official-docs/07.txt",
+      "retrieval_method": "无Cookie的公开HTTP GET",
+      "raw_file": "/tmp/t1107-official-docs/07.html",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://developers.weixin.qq.com/doc/service/api/wedata/news/api_getarticleshare",
+      "final_url": "https://developers.weixin.qq.com/doc/service/api/wedata/news/api_getarticleshare",
+      "status": 200,
+      "sha256": "5d41d44f1480fee609a922948f72908eb67b54125a7d8eb93002fdf0ae086c93",
+      "bytes": 98200,
+      "text_file": "/tmp/t1107-official-docs/08.txt",
+      "retrieval_method": "无Cookie的公开HTTP GET",
+      "raw_file": "/tmp/t1107-official-docs/08.html",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://developers.weixin.qq.com/doc/service/api/wedata/news/api_getbizsummary",
+      "final_url": "https://developers.weixin.qq.com/doc/service/api/wedata/news/api_getbizsummary",
+      "status": 200,
+      "sha256": "6cac860fdca71edf48e538dbdaf3d1b99d815925840d003959e2f55a33ef510c",
+      "bytes": 103647,
+      "text_file": "/tmp/t1107-official-docs/09.txt",
+      "retrieval_method": "无Cookie的公开HTTP GET",
+      "raw_file": "/tmp/t1107-official-docs/09.html",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://developers.weixin.qq.com/doc/service/api/base/api_getstableaccesstoken.html",
+      "final_url": "https://developers.weixin.qq.com/doc/service/api/base/api_getstableaccesstoken.html",
+      "status": 200,
+      "sha256": "47eaed6a3187cab792363f5e3d03c69d789d13490f0c02cd48003503b8fc352d",
+      "bytes": 103419,
+      "text_file": "/tmp/t1107-official-docs/10.txt",
+      "retrieval_method": "无Cookie的公开HTTP GET",
+      "raw_file": "/tmp/t1107-official-docs/10.html",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://mp.weixin.qq.com/",
+      "final_url": "https://mp.weixin.qq.com/",
+      "status": 200,
+      "sha256": "493ff7dc43176a55c6a5ee0db0f0f8bee44efeedd8487154a8e04ab74f1fa47c",
+      "bytes": 60885,
+      "text_file": "/tmp/t1107-official-docs/11.txt",
+      "retrieval_method": "无Cookie的公开HTTP GET",
+      "raw_file": "/tmp/t1107-official-docs/11.html",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://developers.weixin.qq.com/doc/subscription/guide/dev/api/",
+      "final_url": "https://developers.weixin.qq.com/doc/subscription/guide/dev/api/",
+      "status": 200,
+      "sha256": "96823b47d402f7740b8ef0e624a8c32c413b58198ae607a71777ed870f9db1c3",
+      "bytes": 37338,
+      "text_file": "/tmp/t1107-official-docs/12.txt",
+      "retrieval_method": "无Cookie的公开HTTP GET",
+      "raw_file": "/tmp/t1107-official-docs/12.html",
+      "sha256_verified": true
+    },
+    {
+      "requested_url": "https://channels.weixin.qq.com/login",
+      "final_url": "https://channels.weixin.qq.com/login",
+      "status": 200,
+      "sha256": "2054b3782c8cbdb40a9b4381430d3ded60233421b9ae4baf74c3a60ebfbc005f",
+      "file": "/tmp/t1107-public-channels-radar-20261009/0.html",
+      "retrieval_method": "独立研究Agent，无Cookie公开HTTP GET",
+      "sha256_verified": true
+    },
+    {
+      "requested_url": "https://developers.weixin.qq.com/doc/channels/",
+      "final_url": "https://developers.weixin.qq.com/doc/channels/",
+      "status": 200,
+      "sha256": "f6a9becbb236f693a55a7ebdbdef436f835b3707f6db48c4c0eb1495706540a4",
+      "file": "/tmp/t1107-public-channels-radar-20261009/1.html",
+      "retrieval_method": "独立研究Agent，无Cookie公开HTTP GET",
+      "sha256_verified": true
+    },
+    {
+      "requested_url": "https://developers.weixin.qq.com/doc/channels/API/windowproduct/getaccesstoken.html",
+      "final_url": "https://developers.weixin.qq.com/doc/channels/api/basic/api_getaccesstoken.html",
+      "status": 200,
+      "sha256": "ea925ef0a1a828f83b3c98146db38f56b9acdc3e055dcbcf638923dc458209e4",
+      "file": "/tmp/t1107-public-channels-radar-20261009/2.html",
+      "retrieval_method": "独立研究Agent，无Cookie公开HTTP GET",
+      "sha256_verified": true
+    },
+    {
+      "requested_url": "https://developers.weixin.qq.com/doc/channels/api/channels/live/api_getfinderliverecordlist.html",
+      "final_url": "https://developers.weixin.qq.com/doc/channels/api/channels/live/api_getfinderliverecordlist.html",
+      "status": 200,
+      "sha256": "5d9e8b85ceca334c7a0c4dbf082b55eac891f3e005912a21f4b2d59717caa322",
+      "file": "/tmp/t1107-public-channels-radar-20261009/api_getfinderliverecordlist.html",
+      "retrieval_method": "独立研究Agent，无Cookie公开HTTP GET",
+      "sha256_verified": true
+    },
+    {
+      "requested_url": "https://developers.weixin.qq.com/doc/channels/api/channels/livedashboard/api_getlivedata.html",
+      "final_url": "https://developers.weixin.qq.com/doc/channels/api/channels/livedashboard/api_getlivedata.html",
+      "status": 200,
+      "sha256": "4e9a4330a0b539b3dfe2644783829a851cb75ba005c7d42bd15de88fc736a96d",
+      "file": "/tmp/t1107-public-channels-radar-20261009/api_getlivedata.html",
+      "retrieval_method": "独立研究Agent，无Cookie公开HTTP GET",
+      "sha256_verified": true
+    },
+    {
+      "requested_url": "https://developers.weixin.qq.com/doc/channels/api/channels/compass/api_getfinderoverall.html",
+      "final_url": "https://developers.weixin.qq.com/doc/channels/api/channels/compass/api_getfinderoverall.html",
+      "status": 200,
+      "sha256": "09f7f4a331839c7e7bbc4dfcf60ac302bc387dfc436849a89babc48bc692e886",
+      "file": "/tmp/t1107-public-channels-radar-20261009/api_getfinderoverall.html",
+      "retrieval_method": "独立研究Agent，无Cookie公开HTTP GET",
+      "sha256_verified": true
+    },
+    {
+      "requested_url": "https://developers.weixin.qq.com/doc/channels/api/channels/leadslive/api_getfinderattrbyappid.html",
+      "final_url": "https://developers.weixin.qq.com/doc/channels/api/channels/leadslive/api_getfinderattrbyappid.html",
+      "status": 200,
+      "sha256": "63e9353c96122f5e15486bab0c8d745fd60e5df1d11e8819a6dc690bebaf2980",
+      "file": "/tmp/t1107-public-channels-radar-20261009/api_getfinderattrbyappid.html",
+      "retrieval_method": "独立研究Agent，无Cookie公开HTTP GET",
+      "sha256_verified": true
+    },
+    {
+      "requested_url": "https://developers.weixin.qq.com/doc/channels/api/channels/leadslive/api_getfinderlivedatalist.html",
+      "final_url": "https://developers.weixin.qq.com/doc/channels/api/channels/leadslive/api_getfinderlivedatalist.html",
+      "status": 200,
+      "sha256": "da759fcdc6817a36aa5b64a117f9e0f538f46aa0e82bc0554c9dc42cf82a9fc8",
+      "file": "/tmp/t1107-public-channels-radar-20261009/api_getfinderlivedatalist.html",
+      "retrieval_method": "独立研究Agent，无Cookie公开HTTP GET",
+      "sha256_verified": true
+    },
+    {
+      "requested_url": "https://developers.weixin.qq.com/doc/oplatform/developers/dev/guide",
+      "final_url": "https://developers.weixin.qq.com/doc/oplatform/developers/dev/guide",
+      "status": 200,
+      "sha256": "3b8a5db727d8c77e0825106d4bf0ab6a7189c561894f4f14f7cb6e45c3c64bb2",
+      "file": "/tmp/t1107-public-channels-radar-20261009/guide",
+      "retrieval_method": "独立研究Agent，无Cookie公开HTTP GET",
+      "sha256_verified": true
+    },
+    {
+      "requested_url": "https://developers.weixin.qq.com/doc/oplatform/developers/dev/appid",
+      "final_url": "https://developers.weixin.qq.com/doc/oplatform/developers/dev/appid",
+      "status": 200,
+      "sha256": "766ee9d981525fbf33e22dc7e6a18b11f8bf14167190215a5073da77413f3937",
+      "file": "/tmp/t1107-public-channels-radar-20261009/appid",
+      "retrieval_method": "独立研究Agent，无Cookie公开HTTP GET",
+      "sha256_verified": true
+    },
+    {
+      "requested_url": "https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/2.0/Before_Develop/call_interface",
+      "final_url": "https://developers.weixin.qq.com/doc/oplatform/Third-party_Platforms/2.0/Before_Develop/call_interface",
+      "status": 200,
+      "sha256": "d4fdb6ba6ae04248031d9b593874a175513d45c8c3ddfc6b046dc225c28de946",
+      "file": "/tmp/t1107-public-channels-radar-20261009/call_interface",
+      "retrieval_method": "独立研究Agent，无Cookie公开HTTP GET",
+      "sha256_verified": true
+    },
+    {
+      "requested_url": "https://training.tencentads.com/uploads/202108/0rhYyjKh_vk9HWG.pdf",
+      "final_url": "https://training.tencentads.com/uploads/202108/0rhYyjKh_vk9HWG.pdf",
+      "status": 200,
+      "sha256": "031ac57ec6ec59f2e366d9db6a7e6f3a706a6ea33912d207bcf445f2bc30533c",
+      "file": "/tmp/t1107-public-channels-radar-20261009/0rhYyjKh_vk9HWG.pdf",
+      "retrieval_method": "独立研究Agent，无Cookie公开HTTP GET",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://channels.weixin.qq.com/login.html",
+      "final_url": "https://channels.weixin.qq.com/login.html",
+      "status": 200,
+      "sha256": "e2f031879a696b20cb33369d6ee8bf28786fd921a40bfd71f71c5be2883f41a3",
+      "bytes": 3858,
+      "raw_file": "/tmp/t1107-official-docs/13.html",
+      "retrieval_method": "无Cookie公开HTTP GET",
+      "sha256_verified": true
+    },
+    {
+      "url": "https://developers.weixin.qq.com/doc/channels/api/channels/livedashboard/api_getlivelist.html",
+      "final_url": "https://developers.weixin.qq.com/doc/channels/api/channels/livedashboard/api_getlivelist.html",
+      "status": 200,
+      "sha256": "3695224d79025a86af0d18958ffd135ac42664abfaf8a01833f6e174c669c6d5",
+      "bytes": 50467,
+      "raw_file": "/tmp/t1107-official-docs/14.html",
+      "retrieval_method": "无Cookie公开HTTP GET",
+      "sha256_verified": true
+    }
+  ],
+  "review": {
+    "reviewer": "/root/spec_review",
+    "status": "通过，无其他发现",
+    "report_sha256": "974795620111974163b7921befb408d44c369903ada143bc8da88e15bfcd25bd",
+    "scope": "PLAN资料事实审查；不代表真实账号采集或运行时验收",
+    "checks": "27原始来源SHA匹配，22远程链接有取证；权限、日期、UV/PV、旧新接口与视频号场景限制一致",
+    "corrected_findings": [
+      "2021后台培训不当作2026现行能力",
+      "补配套直播列表仅电商限制与来源链接"
+    ]
+  },
+  "verification": {
+    "product_code_changed": false,
+    "real_account_probe": false,
+    "global_reconcile": "沿用T1106实际45ERROR/0WARN记录；没有重跑不声称本轮全绿",
+    "global_debt_refs": [
+      "T-1106-related-gates",
+      "T-1101-global-gates"
+    ],
+    "review_receipt_audit": "reviewctl audit --scope T-1107实际忽略scope并运行全局：exit1，23项既有review债务，无T1107项；未称PASS",
+    "packet_initial_attempt": "context-compile首次exit2，缺T1107 binding；后续补本任务文档控制绑定，保留初次事实",
+    "document_check": {
+      "local_links_exist": true,
+      "all_remote_links_have_http200_metadata": true,
+      "all_raw_hashes_match": true,
+      "remote_links": 22,
+      "sources": 27,
+      "report_sha256": "974795620111974163b7921befb408d44c369903ada143bc8da88e15bfcd25bd"
+    },
+    "packet_after_binding": "context-compile T-1107 exit0，本任务研究写集与verify已绑定"
+  }
+}
