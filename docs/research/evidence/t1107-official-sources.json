@@ -305,6 +305,8 @@
       "sources": 27,
       "report_sha256": "974795620111974163b7921befb408d44c369903ada143bc8da88e15bfcd25bd"
     },
-    "packet_after_binding": "context-compile T-1107 exit0，本任务研究写集与verify已绑定"
+    "packet_after_binding": "context-compile T-1107 exit0，本任务研究写集与verify已绑定",
+    "backlog_completion": "taskctl complete T-1107 exit0，已写审计event；研究交付完成",
+    "progress_closure": "progress done T-1107:research实际exit2：全局T1026旧write_set格式被拒，属既登记T1083；未改旧格式或手改progress状态，T1107进度步骤仍pending；不冒称该命令通过"
   }
 }
