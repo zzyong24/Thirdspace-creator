@@ -1,0 +1,252 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > F7-b:多 aweme,其中一条 streamAudio 抛 → 该 aweme 失败、其余成功、任务不整体崩(markSucceeded 带失败计数)
+回执相等白名单 {"keysFrozen":["reason","applied","transcript"],"keysParsed":["applied","transcript","reason"],"deepEqual":true,"jsonEqual":false}
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > F7-b:多 aweme,其中一条 streamAudio 抛 → 该 aweme 失败、其余成功、任务不整体崩(markSucceeded 带失败计数)
+回执相等白名单 {"keysFrozen":["reason","applied","transcript"],"keysParsed":["applied","transcript","reason"],"deepEqual":true,"jsonEqual":false}
+
+stderr | src/modules/ai-runtime/transcribe-runner.test.ts > 已有事实恢复口播稿且恢复失败不重复 ASR (失败=true)
+隔离宿主端口失败 prepareTranscribeItem temporary restore failure
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > 图集作品 → 写占位锚(source:image-album + skipMasterScript),不抽音不 ASR,计数单列不算失败
+回执相等白名单 {"keysFrozen":["reason","applied","transcript"],"keysParsed":["applied","transcript","reason"],"deepEqual":true,"jsonEqual":false}
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > ffmpeg 重试后仍失败 → 单作品失败继续,汇总带分类计数(ffmpeg 1)
+回执相等白名单 {"keysFrozen":["reason","applied","transcript"],"keysParsed":["applied","transcript","reason"],"deepEqual":true,"jsonEqual":false}
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > 全批撞冷却 → 等冷却结束重试子集一次 → 全部成功,任务 markSucceeded
+回执相等白名单 {"keysFrozen":["reason","applied","transcript"],"keysParsed":["applied","transcript","reason"],"deepEqual":true,"jsonEqual":false}
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > 全批撞冷却 → 等冷却结束重试子集一次 → 全部成功,任务 markSucceeded
+回执相等白名单 {"keysFrozen":["reason","applied","transcript"],"keysParsed":["applied","transcript","reason"],"deepEqual":true,"jsonEqual":false}
+
+stderr | src/modules/ai-runtime/transcribe-runner.test.ts > 未注入冷却端口(旧 host)→ 零回归:冷却失败按原样终态,不重试
+隔离宿主端口失败 acquireTranscribeChannel 来源通道端口未装配
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > 后处理生效 → ensure 收到校正稿(非 ASR 原文),步骤注记「纠错+断句完成」,任务成功
+[structured-node] template=transcript.postprocess.inline status=error durationMs=0 path=text_compat modelCalls=1 inputTokens=0 outputTokens=0
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > 后处理生效 → ensure 收到校正稿(非 ASR 原文),步骤注记「纠错+断句完成」,任务成功
+[structured-node] template=transcript.postprocess.inline status=ok durationMs=209 path=text_compat modelCalls=1 inputTokens=10 outputTokens=12
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > 后处理生效 → ensure 收到校正稿(非 ASR 原文),步骤注记「纠错+断句完成」,任务成功
+[structured-node] template=transcript.postprocess.inline status=ok durationMs=1 path=text_compat modelCalls=1 inputTokens=10 outputTokens=12
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > 后处理生效 → ensure 收到校正稿(非 ASR 原文),步骤注记「纠错+断句完成」,任务成功
+回执相等白名单 {"keysFrozen":["reason","applied","transcript"],"keysParsed":["applied","transcript","reason"],"deepEqual":true,"jsonEqual":false}
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > 后处理未执行(applied:false + reason)→ 落 ASR 原文,步骤注记「后处理未执行:<原因>」,不阻断
+回执相等白名单 {"keysFrozen":["reason","applied","transcript"],"keysParsed":["applied","transcript","reason"],"deepEqual":true,"jsonEqual":false}
+
+stderr | src/modules/ai-runtime/transcribe-runner.test.ts > 后处理直接抛错(实现违约)→ runner 双保险接住:落原文 + 注记,任务仍成功
+隔离宿主端口失败 prepareTranscribePostprocess 后处理内部崩了
+
+stderr | src/modules/ai-runtime/transcribe-runner.test.ts > 未注入后处理端口(旧 host / 缺省)→ 零回归:落 ASR 原文,无后处理注记
+隔离宿主端口失败 prepareTranscribePostprocess 后处理端口未装配
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts (30 tests | 11 failed) 9707ms
+   × F7-b:多 aweme,其中一条 streamAudio 抛 → 该 aweme 失败、其余成功、任务不整体崩(markSucceeded 带失败计数) 632ms
+   × 已有事实恢复口播稿且恢复失败不重复 ASR (失败=true) 79ms
+   × 图集作品 → 写占位锚(source:image-album + skipMasterScript),不抽音不 ASR,计数单列不算失败 346ms
+   × ffmpeg 重试后仍失败 → 单作品失败继续,汇总带分类计数(ffmpeg 1) 292ms
+   × 全批撞冷却 → 等冷却结束重试子集一次 → 全部成功,任务 markSucceeded 784ms
+   × 冷却剩余超等待上限 → 诚实不等(sleep 不被调),失败照旧终态 48ms
+   × 未注入冷却端口(旧 host)→ 零回归:冷却失败按原样终态,不重试 39ms
+   × 后处理生效 → ensure 收到校正稿(非 ASR 原文),步骤注记「纠错+断句完成」,任务成功 537ms
+   × 后处理未执行(applied:false + reason)→ 落 ASR 原文,步骤注记「后处理未执行:<原因>」,不阻断 275ms
+   × 后处理直接抛错(实现违约)→ runner 双保险接住:落原文 + 注记,任务仍成功 126ms
+   × 未注入后处理端口(旧 host / 缺省)→ 零回归:落 ASR 原文,无后处理注记 135ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > F7-b:多 aweme,其中一条 streamAudio 抛 → 该 aweme 失败、其余成功、任务不整体崩(markSucceeded 带失败计数)
+AssertionError: expected 'failed' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "failed"
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:159:58
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 已有事实恢复口播稿且恢复失败不重复 ASR (失败=true)
+AssertionError: expected 'unknown_result' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "unknown_result"
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:165:317
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 图集作品 → 写占位锚(source:image-album + skipMasterScript),不抽音不 ASR,计数单列不算失败
+AssertionError: expected '作品 album1：图集作品，无口播音频\n作品 vid1：逐字稿已保存' to contain '图集跳过 1 条'
+
+- Expected
++ Received
+
+- 图集跳过 1 条
++ 作品 album1：图集作品，无口播音频
++ 作品 vid1：逐字稿已保存
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:169:63
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > ffmpeg 重试后仍失败 → 单作品失败继续,汇总带分类计数(ffmpeg 1)
+AssertionError: expected 'failed' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "failed"
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:173:276
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 全批撞冷却 → 等冷却结束重试子集一次 → 全部成功,任务 markSucceeded
+AssertionError: expected "vi.fn()" to be called with arguments: [ 965000, undefined, { …(1) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+@@ -1,7 +1,7 @@
+  [
+-   965000,
++   960000,
+    undefined,
+    {
+      "signal": AbortSignal {
+        Symbol(kEvents): Map {},
+        Symbol(events.maxEventTargetListeners): 0,
+
+
+Number of calls: 1
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:180:221
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 冷却剩余超等待上限 → 诚实不等(sleep 不被调),失败照旧终态
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 2 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      3600000,
+      undefined,
+      Object {
+        "signal": AbortSignal {
+          Symbol(kEvents): Map {},
+          Symbol(events.maxEventTargetListeners): 0,
+          Symbol(events.maxEventTargetListenersWarned): false,
+          Symbol(kHandlers): Map {},
+          Symbol(kAborted): false,
+          Symbol(kReason): undefined,
+          Symbol(kComposite): false,
+        },
+      },
+    ]
+
+  2nd vi.fn() call:
+
+    Array [
+      3600000,
+      undefined,
+      Object {
+        "signal": AbortSignal {
+          Symbol(kEvents): Map {},
+          Symbol(events.maxEventTargetListeners): 0,
+          Symbol(events.maxEventTargetListenersWarned): false,
+          Symbol(kHandlers): Map {},
+          Symbol(kAborted): false,
+          Symbol(kReason): undefined,
+          Symbol(kComposite): false,
+        },
+      },
+    ]
+
+
+Number of calls: 2
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:182:147
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 未注入冷却端口(旧 host)→ 零回归:冷却失败按原样终态,不重试
+AssertionError: expected 'unknown_result' to be 'failed' // Object.is equality
+
+Expected: "failed"
+Received: "unknown_result"
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:183:211
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 后处理生效 → ensure 收到校正稿(非 ASR 原文),步骤注记「纠错+断句完成」,任务成功
+AssertionError: expected '逐字稿X' to be '逐字稿X(已校正)' // Object.is equality
+
+Expected: "逐字稿X(已校正)"
+Received: "逐字稿X"
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:184:166
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 后处理未执行(applied:false + reason)→ 落 ASR 原文,步骤注记「后处理未执行:<原因>」,不阻断
+AssertionError: expected '作品 a1：逐字稿已保存' to contain '后处理未执行:'
+
+Expected: "后处理未执行:"
+Received: "作品 a1：逐字稿已保存"
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:185:292
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 后处理直接抛错(实现违约)→ runner 双保险接住:落原文 + 注记,任务仍成功
+AssertionError: expected undefined to be '逐字稿X' // Object.is equality
+
+- Expected:
+"逐字稿X"
+
++ Received:
+undefined
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:186:157
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > 未注入后处理端口(旧 host / 缺省)→ 零回归:落 ASR 原文,无后处理注记
+AssertionError: expected undefined to be '逐字稿X' // Object.is equality
+
+- Expected:
+"逐字稿X"
+
++ Received:
+undefined
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:187:158
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/11]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  11 failed | 159 passed (170)
+   Start at  18:58:43
+   Duration  74.60s (transform 7.68s, setup 0ms, import 19.94s, tests 53.41s, environment 0ms)
+

@@ -1,0 +1,49 @@
+{
+  "source_commit": "c4e13e27d5ecfaec67d9da0a80d3de667e5c3aaa",
+  "current_source_commit": "af34bef454d4bab319e75806c068b9f3a7f8bf3f",
+  "three_source_files_unchanged_since_c4": true,
+  "code_sha256": {
+    "backend/src/modules/execution/video-render/template.ts": "ab28b3ef082caeacee34046ecce987dcf8a48b4c622d494dd075b6cc2675aa21",
+    "backend/src/modules/execution/video-render/template.test.ts": "d562ccdbda9717411a378533d6d47a957f484b9f3dc0e88732e28a9371636a0f",
+    "backend/src/modules/execution/video-render/__snapshots__/template.test.ts.snap": "9fee54f497af706a6365269260e9b99850b71aa423a18d5f7df5af591e257768"
+  },
+  "actual_diff": {
+    "path": "MOTION_C4_IMPLEMENTATION.diff",
+    "sha256": "caa38a9e6a83412cdceb7cbcb7e8e84c5e48ac0bd2ecf10fec92f4431749d732"
+  },
+  "evidence": {
+    "backend-motion-duration-baseline-accurate-red.log": "74123b846cb00fd537a7cfe02c7cd3d659503fa158f8dd302d6b681dd4ffe15f",
+    "backend-motion-duration-final-template88.log": "b8e181531270342faef6e9dcd3eabc3ab2ab2fd9229737c6654c92835f868628",
+    "lesson024-motion-required-tests-green.log": "0c0e4549ec25ef6db54f326a94098ed9e0f60e6a0a40ee675ca87d9c2e53bc21",
+    "lesson024-motion-actual-preview-green.log": "41946f0ab1eded7fdca158934371b3949ec2edb5a3c2c05fa3134cd0284a39d6",
+    "motion-t902-existing-safety-render.log": "196295be566b149cb7d1b29e04580392f2b60833d4d0f92286bbb8b841b754b0",
+    "backend-motion-duration-corrected-typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "motion-timeline-duration-result.json": "363a660811ab0a3dc0e9577fcbf8b7bcb3dac35fba5a515059073aac03f6aa5c"
+  },
+  "screenshots": {
+    "source_original_known_t794_directory": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t794-preview.2rCt1c",
+    "archived_directory": "docs/verification/t1072/integration/motion-t794-preview-artifacts",
+    "sha256": {
+      "landscape-1.png": "3fb73d5d10d1dfc81f227014dde91dbffd50ac6ebbfed6a7720ffeaa37d65b66",
+      "landscape-2.png": "bb0a8875cab5d1db4f1c03a4d2dfddc97876e4b55084aa4997e55e282e841d55",
+      "landscape-3.png": "9ed1228b783ce659f2e44b6dc8e46e0ca4189374dc7d5eb738e4dcddf6f1300f",
+      "landscape-4.png": "68542b997f068f1888280bb590ebaac446e7a26f00fc3a067b58bbceaa2bc151",
+      "landscape-5.png": "0aa2d4f7d37988db4c947a30a7139d8230eef6698b67864d9714082c5fc7058a",
+      "portrait-1.png": "efa7913bc242dd382c11aecfdfd1af705dcb6660bd214809726baff1a4f2d988",
+      "portrait-2.png": "40f0f5f1f7ce34ada1e079f43799092ceed797eca365896f9211d3f5fd95817b",
+      "portrait-3.png": "deed5eb62e4985b22051cab183547255470937ab91867b21059bcaebaa72df4c",
+      "portrait-4.png": "4c0a8f6b4008887b28321506cfc428a5b290a79c01dd99450196659376ecfca0",
+      "portrait-5.png": "9a903489f185bf2af44c7c72f6569ea4c40ff5617275e15a13334b8c8a76a57a"
+    }
+  },
+  "counts": {
+    "template": 88,
+    "template_original": 80,
+    "template_new_boundary": 8,
+    "led024_worker": 11,
+    "led024_backend": 186,
+    "led024_frontend": 12
+  },
+  "screenshots_are_original_run_not_rerun": true,
+  "new_implementation_review_recorded": false
+}

@@ -1,0 +1,18 @@
+{
+  "source_commit": "af34bef454d4bab319e75806c068b9f3a7f8bf3f",
+  "command": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/ai-runtime/video-decisions-runner.test.ts",
+    "--maxWorkers=1",
+    "--retry=0"
+  ],
+  "exit_code": 0,
+  "log_sha256": "ea9ec33b27d732fac7bc3097fd7b387a25e1b9f23028238d7ab499037a067166",
+  "production_changed": false,
+  "guard_changed": false
+}

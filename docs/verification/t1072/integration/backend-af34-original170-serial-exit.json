@@ -1,0 +1,35 @@
+{
+  "source_commit": "af34bef454d4bab319e75806c068b9f3a7f8bf3f",
+  "command": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/ai-runtime/asset-business-execution.service.test.ts",
+    "src/modules/ai-runtime/chat-assembly.test.ts",
+    "src/modules/ai-runtime/signal-quality.test.ts",
+    "src/modules/ai-runtime/transcribe-runner.test.ts",
+    "src/modules/execution/asset-worker-runtime.integration.test.ts",
+    "--maxWorkers=1",
+    "--retry=0"
+  ],
+  "started_at": "2026-10-09T10:58:40.417682+00:00",
+  "original_inventory": 170,
+  "max_workers": 1,
+  "retry": 0,
+  "timeout_override": false,
+  "terminal_expected_changed": false,
+  "source_sha256": {
+    "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts": "376e0661acf900435a0aa946055eba3d7b51b1f3eab877302c3ca241a65725d6",
+    "backend/src/modules/ai-runtime/chat-assembly.test.ts": "db5061e8e74491a990bc7a2ede431d7911cb7a2b9c9e5bd3f90fb7206c1d61a5",
+    "backend/src/modules/ai-runtime/signal-quality.test.ts": "01848ec4ab57849f7061aea0fd5ed57ed999b8da7dfd6fd2a5272516708bca47",
+    "backend/src/modules/ai-runtime/transcribe-runner.test.ts": "2d68dce52f9884928d4e83174b5c3d57a0ee737e7ef5f936a7f99096e2ae4d66",
+    "backend/src/modules/execution/asset-worker-runtime.integration.test.ts": "10b6e74100bfa598fb5c84cb9e1d606efb1e113b06d79532f95d35f8129aaf16"
+  },
+  "exit_code": 1,
+  "completed_at": "2026-10-09T10:59:58.372374+00:00",
+  "source_after_unchanged": true,
+  "log_sha256": "8ad03d40427360cc9da76ff794ab05f1fdded030e0276bb4a2e7b614b5abff45"
+}
