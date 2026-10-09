@@ -4,7 +4,7 @@ import type {createWorkbenchPublicService} from "./workbench-public.service";
 import type {createExecutionStreamService} from "./execution-stream.service";
 import type {createWorkbenchArtifactReadService} from "./workbench-artifact.service";
 
-export const WORKBENCH_OP_IDS=["workbench.tasks.inspect","workbench.tasks.events","workbench.capabilities.list","workbench.artifacts.list","workbench.artifacts.read","workbench.artifacts.render","workbench.artifacts.reconcile","workbench.files.reconcile"] as const;
+export const WORKBENCH_OP_IDS=["workbench.tasks.inspect","workbench.tasks.events","workbench.capabilities.list","workbench.modelCalls.summary","workbench.artifacts.list","workbench.artifacts.read","workbench.artifacts.render","workbench.artifacts.reconcile","workbench.files.reconcile"] as const;
 export function createWorkbenchPublicTransport(deps:{
   tasks:ReturnType<typeof createWorkbenchPublicService>;
   stream:Pick<ReturnType<typeof createExecutionStreamService>,"read">;
@@ -15,10 +15,11 @@ export function createWorkbenchPublicTransport(deps:{
   reconcileFile?:(ctx:RequestContext,taskId:string,operationId:string)=>Promise<unknown>;
 }):Transport{return {async request(endpoint,input,ctx){
   if(!ctx)throw new AuthenticationError();
-  if(!ctx.accountId&&!(endpoint.id==="workbench.capabilities.list"&&ctx.groupId))throw new OwnershipError("当前账号不存在");
+  if(!ctx.accountId&&!((endpoint.id==="workbench.capabilities.list"||endpoint.id==="workbench.modelCalls.summary")&&ctx.groupId))throw new OwnershipError("当前账号不存在");
   const i=(input??{}) as {params?:unknown;query?:unknown;body?:unknown};
   let data:unknown;
   switch(endpoint.id){
+    case "workbench.modelCalls.summary":{const p=ENDPOINTS.readWorkbenchModelCallSummary.params.parse(i.params),q=ENDPOINTS.readWorkbenchModelCallSummary.query.parse(i.query??{});data=await deps.tasks.modelCallSummary(ctx,p.taskId,q);break;}
     case "workbench.tasks.inspect":{const p=ENDPOINTS.inspectWorkbenchTask.params.parse(i.params),q=ENDPOINTS.inspectWorkbenchTask.query.parse(i.query??{});data=await deps.tasks.inspect(ctx,p.taskId,q);break;}
     case "workbench.tasks.events":{const p=ENDPOINTS.readWorkbenchEvents.params.parse(i.params),q=ENDPOINTS.readWorkbenchEvents.query.parse(i.query??{});data=await deps.stream.read(ctx,p.taskId,q);break;}
     case "workbench.capabilities.list":data=deps.capabilities();break;

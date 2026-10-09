@@ -54,7 +54,7 @@ const READ_OPERATIONS = [
 
   "outputs.conversions.get",
   "analytics.comments.failures.list",
-  "workbench.tasks.inspect", "workbench.tasks.events", "workbench.capabilities.list",
+  "workbench.tasks.inspect", "workbench.tasks.events", "workbench.capabilities.list", "workbench.modelCalls.summary",
   "workbench.artifacts.list", "workbench.artifacts.read", "workbench.artifacts.render",
 
   "analytics.traffic.get",

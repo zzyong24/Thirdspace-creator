@@ -3,6 +3,19 @@ import {ENDPOINTS} from "../src/endpoints";
 import {getCliOperationPolicy} from "../src/cli-policy";
 
 describe("新增 Agent 能力公开 CLI 契约",()=>{
+  it("只读模型摘要可发现，分页严格且无效回执不伪造零统计",()=>{
+    const endpoint=Object.values(ENDPOINTS).find(e=>e.id as string==="workbench.modelCalls.summary")!;
+    expect(endpoint).toBeDefined();
+    expect(getCliOperationPolicy(endpoint.id)?.effect).toBe("read");
+    expect(endpoint.query!.parse({})).toEqual({afterSequence:0,limit:5});
+    for(const query of [{limit:0},{limit:21},{afterSequence:-1},{raw:true}])expect(endpoint.query!.safeParse(query).success).toBe(false);
+    const row={callId:"model-1",sequence:1,finishReason:null,receiptState:"invalid",toolCount:null,toolsTruncated:null,tools:[]};
+    const data={taskId:"task",aiTaskId:"ai",conversationId:"conversation",sourceMessageId:"source",calls:[row],nextSequence:1,hasMore:false};
+    expect(endpoint.response.parse(data)).toEqual(data);
+    for(const patch of [{input:"secret"},{stream:[]},{digest:"a".repeat(64)},{providerMetadata:{token:"secret"}}])expect(endpoint.response.safeParse({...data,calls:[{...row,...patch}]}).success).toBe(false);
+    expect(endpoint.response.safeParse({...data,calls:[{...row,toolCount:0}]}).success).toBe(false);
+    expect(endpoint.response.safeParse({...data,calls:[{...row,toolsTruncated:false}]}).success).toBe(false);
+  });
   it.each(["unknown_result","retry_wait","waiting_user","partial"])("持久进度保留真实 %s 状态，不用展示枚举阻断读取",status=>{
     expect(ENDPOINTS.readWorkbenchEvents.response.parse({events:[],nextSequence:0,hasMore:false,status,attempt:1}).status).toBe(status);
   });

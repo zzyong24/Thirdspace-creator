@@ -1,15 +1,35 @@
-import {and,asc,eq,gte,inArray,sql,executionCalls,executionTasks,type Db} from "@creatoros/backend";
+import {and,asc,eq,gte,inArray,isNull,sql,aiTasks,executionCalls,executionTasks,type Db} from "@creatoros/backend";
 import {workbenchCapabilitySchema} from "@creatoros/contract/agent-workbench";
 import {z} from "zod";
 import type {RequestContext} from "@creatoros/contract";
 import {agenticToolOperationKey} from "./agentic-tool-binding";
 import {createPersistentTaskService} from "./persistent-task.service";
 import {createWorkbenchPlanService} from "./workbench-plan.service";
+import {chatWorkerInputSchema} from "@creatoros/contract/execution-worker";
+import {workspaceFilter} from "../../workspace-scope";
+import {chatInputDigest,chatHistoryDigest,readChatTurnSnapshot} from "../ai/chat-turn-submission.service";
+import {ConflictError} from "./execution.errors";
+import {summarizeModelReceipt} from "./model-call-summary";
+const object=(value:unknown):Record<string,unknown>=>value!==null&&typeof value==="object"&&!Array.isArray(value)?value as Record<string,unknown>:{};
 
 /** 只投影当前账号的计划与调用回执，不输出模型输入、供应商配置或租约凭据。 */
 export function createWorkbenchPublicService(db:Db){
   const tasks=createPersistentTaskService(db),plans=createWorkbenchPlanService(db);
-  return {async inspect(ctx:RequestContext,taskId:string,input:{afterSequence:number;limit:number}){
+  return {
+   async modelCallSummary(ctx:RequestContext,taskId:string,input:{afterSequence:number;limit:number}){
+    await tasks.get(ctx,taskId);
+    const [task]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,taskId),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
+    const [business]=task?await db.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx))):[];
+    const payload=object(task?.payload),frozen=chatWorkerInputSchema.safeParse(payload.modelInput),source=object(business?.inputData);
+    if(!task||task.kind!=="ai_task"||task.ownerType!=="ai_task"||!business||business.taskType!=="copilot.assist"||payload.aiTaskId!==business.id||source.kind!=="chat.run"||!frozen.success||frozen.data.userId!==task.userId||frozen.data.accountId!==task.accountId||(frozen.data.groupId??null)!==task.groupId||business.accountId!==task.accountId||business.groupId!==task.groupId||source.conversationId!==frozen.data.conversationId||source.sourceMessageId!==frozen.data.sourceMessageId||source.modelInputDigest!==chatInputDigest(frozen.data))throw new ConflictError("模型摘要来源映射无效");
+    const frozenCtx={...ctx,userId:task.userId,accountId:task.accountId,groupId:task.groupId};
+    const snapshot=await readChatTurnSnapshot(db,frozenCtx,{conversationId:frozen.data.conversationId,sourceMessageId:frozen.data.sourceMessageId});
+    if(business.projectId!==snapshot.conversation.projectId||object(snapshot.sourceMessage.modelMetadata).chatTaskId!==business.id||source.historyDigest!==chatHistoryDigest(snapshot)||JSON.stringify(source.historyMessageIds)!==JSON.stringify(snapshot.messages.map(message=>message.id)))throw new ConflictError("模型摘要历史映射已变化");
+    const rows=await db.select({id:executionCalls.id,sequence:executionCalls.sequence,providerResult:executionCalls.providerResult}).from(executionCalls).where(and(eq(executionCalls.executionTaskId,task.id),eq(executionCalls.kind,"model"),isNull(executionCalls.parentCallId),eq(executionCalls.status,"settled"),gte(executionCalls.sequence,input.afterSequence+1))).orderBy(asc(executionCalls.sequence)).limit(input.limit+1);
+    const calls=rows.slice(0,input.limit).map(row=>({callId:row.id,sequence:row.sequence,...summarizeModelReceipt(row.providerResult)}));
+    return {taskId:task.id,aiTaskId:business.id,conversationId:snapshot.conversation.id,sourceMessageId:snapshot.sourceMessage.id,calls,nextSequence:calls.at(-1)?.sequence??input.afterSequence,hasMore:rows.length>input.limit};
+   },
+   async inspect(ctx:RequestContext,taskId:string,input:{afterSequence:number;limit:number}){
     const task=await tasks.get(ctx,taskId);
     const plan=await plans.read(ctx,taskId);
     const [frozen]=await db.select({conversationId:sql<string|null>`${executionTasks.payload}->'modelInput'->>'conversationId'`,sourceMessageId:sql<string|null>`${executionTasks.payload}->'modelInput'->>'sourceMessageId'`,capabilities:sql<unknown>`${executionTasks.payload}->'modelInput'->'workbenchCapabilities'`,tools:sql<unknown>`${executionTasks.payload}->'modelInput'->'tools'`}).from(executionTasks).where(and(eq(executionTasks.id,task.id),eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,ctx.accountId!)));

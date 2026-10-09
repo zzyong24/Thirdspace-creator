@@ -6943,6 +6943,75 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1114": {
+      "task_id": "T-1114",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1114-owned-model-call-summary.md",
+        "docs/features/t1103-pi-joint-argument-diagnosis.md",
+        "docs/research/t1103-pi-joint-arguments.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/execution/workbench-public.service.ts",
+        "backend/src/modules/execution/workbench-public.transport.ts",
+        "backend/src/modules/execution/persistent-task.service.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.ts",
+        "backend/src/workspace-scope.ts",
+        "contract/src/internal/execution-worker.ts",
+        "contract/src/operations/workbench.ts",
+        "contract/src/cli-policy.ts",
+        "contract/src/workspace-operation-scope.ts",
+        "backend/src/integration/group-workbench-capabilities.integration.test.ts"
+      ],
+      "write_set": [
+        "contract/src/operations/workbench.ts",
+        "contract/src/cli-policy.ts",
+        "contract/src/workspace-operation-scope.ts",
+        "backend/src/modules/execution/model-call-summary.ts",
+        "backend/src/modules/execution/workbench-public.service.ts",
+        "backend/src/modules/execution/workbench-public.transport.ts",
+        "contract/tests/workbench-public.test.ts",
+        "contract/tests/workspace-operation-scope.test.ts",
+        "backend/src/modules/execution/model-call-summary.test.ts",
+        "backend/src/integration/owned-model-call-summary.integration.test.ts",
+        "docs/features/t1114-owned-model-call-summary.md",
+        "docs/features/t1114-owned-model-call-summary.review.md",
+        "docs/verification/t1114/SPEC_REVIEW.md",
+        "docs/verification/t1114/SPEC_REVIEW_PACKET.json",
+        "docs/verification/t1114/IMPLEMENTATION_REVIEW.md",
+        "docs/verification/t1114/IMPLEMENTATION_REVIEW.json",
+        "docs/verification/t1114/VALIDATION.md",
+        "docs/verification/t1114/current-evidence.json",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm --dir contract exec vitest run tests/workbench-public.test.ts tests/workspace-operation-scope.test.ts --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir backend exec vitest run src/modules/execution/model-call-summary.test.ts src/integration/owned-model-call-summary.integration.test.ts src/integration/group-workbench-capabilities.integration.test.ts src/modules/execution/workbench-public.test.ts src/modules/cli-invocations/cli-invocations.service.test.ts --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir frontend exec vitest run src/app/api/v1/dispatch/route.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm --dir contract typecheck",
+          "pnpm --dir backend typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

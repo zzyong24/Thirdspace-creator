@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1114 | 补齐原聊天模型调用的工作区归属只读摘要诊断 | 🔨 待办 | PASS[REV:aa44cb7e4c35] | — | [SPEC](docs/features/t1114-owned-model-call-summary.md) | 承接T1103原task272缺图文与不可见回执；只新增owner校验后的已结算分片/最终参数一致性摘要，不返回正文/密钥/字段名。先独评RED/GREEN及公共链，main无备份新包对原任务读取；不修parser、不重发模型、不代签联合候选。 |
 | T-1112 | 修复纯账号组读取 AI 工作台能力目录被要求平台账号 | ✅ 待办 | PASS[REV:7e93c8940e44] | — | [SPEC](docs/features/t1112-group-workbench-capabilities.md) | 879646新安装版18项正式读取17PASS/1FAIL，workbench.capabilities.list返回428；已核操作归属声明及transport二次账号门。仅修目录纯组读取，真实组鉴权与其它七项账号门不变；先独评RED/GREEN及正式公共组合，再main无备份出包安装复验。不代签T1103候选。 |
 | T-1113 | 核对抖音扫码与采集在两份公共能力目录中的差异 | ✅ 待办 | — | — | [实际诊断](docs/features/t1113-installed-platform-capability-consistency.md) | 已核不同入口：账号绑定目录走既有抖音stage，统一目录仅新sourceAdapters；AI已发现accounts目录并经原owner采用，独立诊断无已确认缺陷。原PG组合3PASS/72未选，未扫码、未改flag，证据见诊断；不代签T1103。 |
 | T-1101 | 修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集 | 🔨 | PASS[REV:146ff2046c2c] | 待验 | [SPEC](docs/features/t1101-canvas-binding-collection.md) | 用户2026-10-09截图明确要求：素材只显示预览；生成中禁止重复提交、已有结果再生成需确认；图片连线传递默认参考；扫码入口放平台能力表，删除刷新和下方重复框；三平台独立采集错峰执行。来源f97a80da已完成；main重新初审和组合验收，原PASS不代签当前树。不发布、不改真实Cookie。 |

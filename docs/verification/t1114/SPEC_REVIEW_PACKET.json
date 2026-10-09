@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：当前SPEC SHA 4099eec59cd87db242acc198e4748dfe6f61673dae2308383000f44001caa103 将T1103取证限定为owner只读GET，不改parser、Worker、SDK、数据库或执行策略。新增历史兼容规则与0130真实SQL一致：0130只回填会话/稿件来源为经证明的grp_legacy，未改execution/AI/modelInput；NULL+account冻结任务仍保持NULL任务映射并只允许原legacy workspaceFilter可达的NULL或同账号canonical来源，完全canonical任务严格同canonical，禁止凭grp_legacy字符串放宽。DTO、stream grammar、隐私、分页、纯组/旧账号/归档、六生产四测试与modules SHA af5c6b91f2ef526ab5dbd8fbda55a816cfb37c1be8bcee4782c1bf2fa20ea073均闭合。record前首版packet未记录，当前packet为最终initial。",
+  "findings": []
+}

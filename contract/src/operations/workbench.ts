@@ -14,7 +14,17 @@ const hash=z.string().regex(/^[a-f0-9]{64}$/);
 const diagnostics=z.object({schemaVersion:z.literal(1),status:z.enum(["analyzed","unavailable","not_applicable"]),sourceHash:hash,scriptCount:z.number().int().nonnegative(),externalResourceCount:z.number().int().nonnegative(),staticSvgCount:z.number().int().nonnegative(),staticTableCount:z.number().int().nonnegative(),staticImgCount:z.number().int().nonnegative(),degraded:z.boolean(),repairAdvice:z.array(z.string())}).strict();
 const lineage=z.object({artifactId:id,currentVersion:z.number().int().nonnegative(),status:z.string(),pendingOperationId:z.string().nullable(),lastOperationId:z.string().nullable(),lastErrorCode:z.string().nullable(),migrationReason:z.string().nullable()}).strict();
 
+const modelToolSummary=z.object({index:z.number().int().nonnegative(),toolCallId:z.string().min(1).max(256).nullable(),streamPartCount:z.number().int().nonnegative(),streamUtf8Bytes:z.number().int().nonnegative().nullable(),finalUtf8Bytes:z.number().int().nonnegative().nullable(),streamStrictObject:z.boolean().nullable(),finalStrictObject:z.boolean().nullable(),observedConsistency:z.enum(["equal","different","unavailable"]),reason:z.enum(["matched","different","no_stream","invalid_content","invalid_identity","missing_segments","duplicate_segments","unordered_segments","invalid_segments","stream_not_object","final_not_object"])}).strict();
+const modelIdentity={callId:id,sequence:z.number().int().positive()};
+const modelCallSummary=z.discriminatedUnion("receiptState",[
+ z.object({...modelIdentity,receiptState:z.literal("valid"),finishReason:z.string(),toolCount:z.number().int().nonnegative(),toolsTruncated:z.boolean(),tools:z.array(modelToolSummary).max(100)}).strict(),
+ z.object({...modelIdentity,receiptState:z.literal("invalid"),finishReason:z.null(),toolCount:z.null(),toolsTruncated:z.null(),tools:z.array(z.never()).max(0)}).strict(),
+]);
+
 export const workbenchOperations={
+  readWorkbenchModelCallSummary:defineEndpoint({id:"workbench.modelCalls.summary",method:"GET",path:"/workbench/tasks/:taskId/model-calls/summary",params:taskParams,
+    query:z.object({afterSequence:z.number().int().nonnegative().default(0),limit:z.number().int().min(1).max(20).default(5)}).strict(),
+    response:z.object({taskId:id,aiTaskId:id,conversationId:id,sourceMessageId:id,calls:z.array(modelCallSummary).max(20),nextSequence:z.number().int().nonnegative(),hasMore:z.boolean()}).strict(),fr}),
   inspectWorkbenchTask:defineEndpoint({id:"workbench.tasks.inspect",method:"GET",path:"/workbench/tasks/:taskId",params:taskParams,
     query:z.object({afterSequence:z.number().int().nonnegative().default(0),limit:z.number().int().min(1).max(100).default(50)}).strict(),
     response:z.object({task:executionTaskResourceV2,conversationId:id.nullable(),sourceMessageId:id.nullable(),frozenCapabilities:z.array(workbenchCapabilitySchema),frozenTools:z.array(z.object({name:z.string(),version:z.string(),effect:z.string().nullable(),execution:z.string().nullable()}).strict()),plan:workbenchPlanSchema.nullable(),calls:z.array(z.object({

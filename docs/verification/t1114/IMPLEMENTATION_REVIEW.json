@@ -1,0 +1,90 @@
+{
+  "schema": "creatoros-independent-implementation-review/v1",
+  "taskId": "T-1114",
+  "reviewedAt": "2026-10-09T07:56:35.123001+00:00",
+  "verdict": "PASS_LIMITED_T1114_IMPLEMENTATION",
+  "findings": [],
+  "scope": {
+    "productFiles": [
+      "contract/src/operations/workbench.ts",
+      "contract/src/cli-policy.ts",
+      "contract/src/workspace-operation-scope.ts",
+      "backend/src/modules/execution/model-call-summary.ts",
+      "backend/src/modules/execution/workbench-public.service.ts",
+      "backend/src/modules/execution/workbench-public.transport.ts"
+    ],
+    "testFiles": [
+      "contract/tests/workbench-public.test.ts",
+      "contract/tests/workspace-operation-scope.test.ts",
+      "backend/src/modules/execution/model-call-summary.test.ts",
+      "backend/src/integration/owned-model-call-summary.integration.test.ts"
+    ],
+    "sourceHashes": {
+      "contract/src/operations/workbench.ts": "10940f09cf7c76b1473776c366e307fa5225a15e920b9079362ce5c04d9aaeda",
+      "contract/src/cli-policy.ts": "c58542031958783463be955d1e7d8581da606d6c0c61fdde4aa79e7a04b69f6c",
+      "contract/src/workspace-operation-scope.ts": "7da9dacff4427812ad88ba5e8b25d84674462752cf0e7453e1dac8fe40f250f1",
+      "backend/src/modules/execution/model-call-summary.ts": "5224b94f0550921d8faad46a59338e5758a0f39c49a1367e40fea2dd41d8b6c1",
+      "backend/src/modules/execution/workbench-public.service.ts": "f9401f1beb4286178a0fb88c1f5f6004f4ac04eac501dea1cfb4723d4870b6a8",
+      "backend/src/modules/execution/workbench-public.transport.ts": "5275d186348b44c2cc88ab62153d8179a4fae67ff7c13b61ec8fc20c7ac27ef3",
+      "contract/tests/workbench-public.test.ts": "1d44906657cb0fd9c69dd420b6ee840f8555ce0cdb2285d9c64237f46a529c0a",
+      "contract/tests/workspace-operation-scope.test.ts": "e26d0cbba5039a2de2da072e6a70f8ac83b1f303006b7023578f46840abb26ae",
+      "backend/src/modules/execution/model-call-summary.test.ts": "06db4fd85ff9bd721dd6e3b7b0e9e089d2586c2eca68c8bc947a520d087db499",
+      "backend/src/integration/owned-model-call-summary.integration.test.ts": "58e0a729327f3cbc198a6d4519e33342545f5fa8840ffa222efa1ddc8aa3aea7"
+    },
+    "referenceHashes": {
+      "docs/features/t1114-owned-model-call-summary.md": "4099eec59cd87db242acc198e4748dfe6f61673dae2308383000f44001caa103",
+      "orchestrator/process/modules.config.json": "af5c6b91f2ef526ab5dbd8fbda55a816cfb37c1be8bcee4782c1bf2fa20ea073",
+      "docs/产品定位.md": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "orchestrator/SYSTEM_ARCHITECTURE.md": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    }
+  },
+  "evidence": {
+    "contract-red.json": "e27a369e58a2919d32d2443f727fe5762ce0bcc2519092f8536606a11423ac2b",
+    "public-red.json": "3fdd3740faf4a79df277583d24489cd829c18a27b9065f329ca09047f563d1c0",
+    "public-red-valid-fixture.json": "6805be2e884de091b66413ada013d85f5fdca6b1b5e0dab13e3a9d0ac844e26c",
+    "public-red-closed-fixture.json": "df27939f99a8e80597019fda20ea762e8aa70779c3ef2c5341eac646bc287eda",
+    "contract-green.json": "1c23e9db50cdb27cac281f74404b99c8fd95568cd282430f6c4e27eb09467c56",
+    "backend-green.json": "e3da7a9ab7338fad404a74a65ecff703434a7eda931cc4d02eec61594da75d97",
+    "contract-typecheck.json": "ddffd5303652533f1655e2fbe5af6a1d9550814fbf8391bd71d7722a9b779b18",
+    "backend-typecheck.json": "ab6c39b2e967a508863f72634fbf387028476d9866340af1da94dbdfecb10811",
+    "public-empty-green.json": "c5a667d55c3caa7a02e9732b989d6c024bc9b98cb85f1d5f8a077da5e003bac6"
+  },
+  "validatedFacts": [
+    "公开合同新增严格 GET workbench.modelCalls.summary；分页输入和有效/无效摘要均为 strict DTO，未知字段、原文、headers、token、key 名和 digest 不进入响应。",
+    "公共 service 从 persistent task、execution、AI task、冻结 chat snapshot、conversation/source 历史逐层核 user/workspace/task/business/execution/digest；纯组、旧账号和 canonical 任务沿冻结来源分别读取，未以 grp_legacy 字符串替代真实归属。",
+    "invalid provider receipt 固定返回 receipt_invalid 且工具数组为空；valid receipt 只机械比较已保存 content 与 stream 分片，保留数组顺序与严格结构，不推断供应商原始 wire。",
+    "transport 仅为 capabilities 与本端点开放纯组上下文，原七项仍要求平台账号；跨 user/group/account、缺 workspace/auth、归档历史读取、payload/source/conversation/digest 错配均有真实公共组合覆盖。",
+    "SDK 晚到的工具身份只形成 saved evidence consistency；接口及测试未声称原 HTTP/SSE 字节与保存值相等。",
+    "新增真实公共组合覆盖：任务存在而唯一模型调用仍为 started 时，afterSequence=19 返回 calls=[]、nextSequence=19、hasMore=false；任务、AI任务、会话、来源身份与业务快照保持不变。"
+  ],
+  "actualResults": {
+    "contract": {
+      "result": "2 files / 14 tests PASS, 0 skip",
+      "receipt": "contract-green.json",
+      "exitCode": 0
+    },
+    "backend": {
+      "result": "5 files / 55 tests PASS, 0 skip",
+      "receipt": "backend-green.json",
+      "exitCode": 0
+    },
+    "contractTypecheck": {
+      "exitCode": 0,
+      "receipt": "contract-typecheck.json"
+    },
+    "backendTypecheck": {
+      "exitCode": 0,
+      "receipt": "backend-typecheck.json"
+    },
+    "publicEmpty": {
+      "result": "1 file / 14 tests PASS, 0 skip",
+      "receipt": "public-empty-green.json",
+      "exitCode": 0
+    }
+  },
+  "historyAndLimits": [
+    "保留 contract 行为 RED 12PASS/2FAIL；public 闭合 fixture 行为 RED 7PASS/6FAIL。最初两次 public fixture 因缺 capability、parentCall 外键而失败，只记夹具校准，不冒充产品 RED。",
+    "本结论不证明 T1103 parser 修复、不构成第三次模型实验、不证明供应商原始 HTTP/SSE wire、不代表安装版、真实模型、UI、完整 reconcile 或全功能 PASS。",
+    "原有限实施复核已逐字保存为 IMPLEMENTATION_REVIEW.pre-empty-review.md/json；本轮仅重绑新增空结果公共组合与该测试文件 SHA。"
+  ]
+}

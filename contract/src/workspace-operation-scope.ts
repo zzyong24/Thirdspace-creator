@@ -7,6 +7,7 @@ import type { EndpointId } from "./cli-policy";
  */
 export type WorkspaceOperationScope = "user" | "group" | "platform-account" | "project-derived";
 export const WORKSPACE_OPERATION_SCOPES = {
+  "workbench.modelCalls.summary": "group",
   // account-groups
   "groupResourceGrants.list": "group",
   "groupResourceGrants.previewRevoke": "group",
