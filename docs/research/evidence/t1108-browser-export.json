@@ -1,0 +1,176 @@
+{
+  "task": "T-1108",
+  "checked_at_utc": "2026-10-09T08:24:55.315891+00:00",
+  "scope": "微信本人后台原生导出路线核验；本轮未改产品/账号/凭据/计划或导入CreatorOS",
+  "code_baseline": "1e10a99d",
+  "browser": {
+    "skill": "ego-browser 2.0.0",
+    "task_space_id": 20,
+    "status": "已handOff给用户；视频号待本人微信登录确认"
+  },
+  "official_account_content": {
+    "public_entry": "https://mp.weixin.qq.com/",
+    "authenticated_page_path": "/misc/appmsganalysis",
+    "native_export_label": "下载数据明细",
+    "native_export_action": "download_summary_tendency",
+    "date_range": [
+      "2026-09-09",
+      "2026-10-08"
+    ],
+    "date_selection": "页面默认；未操作日期筛选",
+    "http_status": 200,
+    "container": "OLE/BIFF binary XLS",
+    "file": {
+      "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/wechat-browser-export-20261009/公众号-内容分析数据.xls",
+      "bytes": 45056,
+      "sha256": "3eb0c69ff39436218960cb93f31bb90414f2d5659f340e03d5f7f1c7440cffa9"
+    },
+    "parse_result": {
+      "parser": "xlrd 2.0.2（临时目录，未加项目依赖）",
+      "worksheet_rows": 243,
+      "worksheet_columns": 16,
+      "blocks": [
+        {
+          "headers": [
+            "日期",
+            "渠道",
+            "阅读人数"
+          ],
+          "nonempty_data_rows": 240
+        },
+        {
+          "headers": [
+            "日期",
+            "分享人数",
+            "跳转阅读原文人数",
+            "微信收藏人数",
+            "发表篇数"
+          ],
+          "nonempty_data_rows": 30
+        },
+        {
+          "headers": [
+            "传播渠道",
+            "发表日期",
+            "内容标题",
+            "阅读人数",
+            "阅读人数占比"
+          ],
+          "nonempty_data_rows": 60
+        }
+      ]
+    }
+  },
+  "official_account_users": {
+    "public_entry": "https://mp.weixin.qq.com/",
+    "authenticated_page_path": "/misc/useranalysis",
+    "native_export_label": "下载表格",
+    "date_range": [
+      "2026-09-08",
+      "2026-10-08"
+    ],
+    "date_selection": "页面默认；未操作日期筛选",
+    "http_status": 200,
+    "response_filename": "user_analysis.xls",
+    "response_content_type": "application/vnd.ms-excel",
+    "container": "Excel-compatible HTML table (platform .xls extension)",
+    "file": {
+      "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/wechat-browser-export-20261009/公众号-用户增长数据.xls",
+      "bytes": 7401,
+      "sha256": "8b0b502db829d7cf653edd5eab7e55a7856c6b303c672b491e50841d8fb62098"
+    },
+    "parse_result": {
+      "parser": "lxml HTML table rows",
+      "headers": [
+        "时间",
+        "新关注人数",
+        "取消关注人数",
+        "净增关注人数",
+        "累积关注人数"
+      ],
+      "daily_data_rows": 31,
+      "numeric_columns_valid": true
+    }
+  },
+  "download_attempts": [
+    {
+      "step": "内容分析原生链接点击 + 原页面waitForEvent(download)",
+      "result": "FAILED",
+      "timeout_ms": 120000,
+      "observed": "短暂新窗口出现后消失；原页面事件未收到；未确定SDK根因"
+    },
+    {
+      "step": "当前页面原生导出链接 + 同一页面page.fetch(saveAs)",
+      "result": "PASS",
+      "timeout_ms": 120000,
+      "files_received": 2,
+      "file_parse_pass": true,
+      "boundary": "不读取/复制Cookie，不猜端点，使用已有授权浏览器会话"
+    }
+  ],
+  "channels": {
+    "public_entry": "https://channels.weixin.qq.com/login.html",
+    "observed_public_capabilities": [
+      "数据中心：视频、直播和粉丝数据",
+      "作品详细数据下载"
+    ],
+    "observed_auth_ui": [
+      "首次扫码入口",
+      "后续微信快捷登录入口"
+    ],
+    "authenticated_creator_data_read": false,
+    "export_downloaded": false,
+    "status": "待用户本人微信登录；已交接页面，未继续操作或宣称本人导出成功",
+    "public_observation_file": "docs/research/evidence/t1108-channels-public-observation.txt",
+    "public_observation_sha256": "d204a50aed84c316e62b8d010197b1ab4219212111226d67f046d2f1f8487882",
+    "independent_public_source": {
+      "url": "https://res.wx.qq.com/t/wx_fed/finder/helper/finder-helper-web/res/static/js/login.87a781f6.js",
+      "discovery": "当前官方login.html真实script src",
+      "retrieval": "独立评审者无登录会话HTTP读取",
+      "http_status": 200,
+      "bytes": 114266,
+      "sha256": "e4dde6a78fa0d9af557679e8c51181514ad6f07b62bcf8093edd26aa1763f173",
+      "supports": "数据中心及作品详细数据下载的公开介绍，不证明本人后台实测"
+    }
+  },
+  "local_screenshots": [
+    {
+      "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/wechat-browser-export-20261009/公众号-内容分析.png",
+      "bytes": 95598,
+      "sha256": "fb6183b770b1c5d2f3b11c0b25d13d9309f1b9d59589e90df17641c0cafa804a"
+    },
+    {
+      "local_path": "/Users/zyongzhu/CreatorOS-local-acceptance/wechat-browser-export-20261009/公众号-用户分析.png",
+      "bytes": 97521,
+      "sha256": "1d3332902b434a042d769fec15608a53a939eb7a08c38337d0b032ea6966771b"
+    }
+  ],
+  "review": {
+    "status": "PASS",
+    "report_sha256": "8724af8e3fbc4406a71c69e46ca8bdfc12639f6bb6f3ec44dfedc23f88bead65",
+    "reviewer": "/root/spec_review",
+    "checked_at_utc": "2026-10-09T08:30:54.516215+00:00",
+    "basis": [
+      "独立解析两份本机文件，哈希/字节/容器/字段/日期/行数一致",
+      "报告保留下载等待失败及真实恢复，不泛化为长期/全字段/CreatorOS已接入",
+      "父线程公开DOM介绍与独立读取官方无会话公开脚本文字一致，视频号本人后台仍未验证"
+    ]
+  },
+  "privacy": "仓库无原始报表/截图、内容标题、账号统计值、Cookie或带登录token的URL，仅字段/哈希/本机路径",
+  "validation_limits": [
+    "公众号仅一次已有会话，未测试扫码重登/重启/过期/日期筛选/定时稳定性",
+    "未接入CreatorOS",
+    "视频号本人后台未登录、未导出"
+  ],
+  "global_gates": "产品源码、依赖与Gate环境未变，按公共流程复用T1106真实失败基线与T1107范围外旧欠债记录；不声明全绿",
+  "validation": {
+    "diff_check": "PASS",
+    "json_fields": "PASS",
+    "relative_links": "PASS",
+    "export_file_hashes": "PASS",
+    "login_parameter_scan": "PASS",
+    "product_source_unchanged": "PASS",
+    "pmem_sync": "PASS",
+    "global_reconcile": "未重跑；源码/依赖/全局Gate环境未变，按公共流程复用T1106真实45ERROR/0WARN及范围外欠债，未宣称全绿"
+  }
+}
