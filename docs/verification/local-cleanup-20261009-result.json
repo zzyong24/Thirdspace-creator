@@ -1,0 +1,8 @@
+{
+  "target": "/Users/zyongzhu/CreatorOS-local-acceptance",
+  "target_exists": false,
+  "before_free_bytes": 15926546432,
+  "after_free_bytes": 66370461696,
+  "free_delta_bytes": 50443915264,
+  "elapsed_seconds": 112.81
+}
