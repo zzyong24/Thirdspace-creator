@@ -17,11 +17,11 @@ mkdirSync(join(output,'screenshots'),{recursive:true});
 const normalizedPath=join(shadow.root,'representative-report-pack.json');writeFileSync(normalizedPath,JSON.stringify(witness,null,2)+'\n');
 const logPath=join(shadow.root,'next.log'),logFd=openSync(logPath,'a');
 const env={PATH:process.env.PATH??'',LANG:'zh_CN.UTF-8',TMPDIR:shadow.root,NO_PROXY:'::1,[::1],localhost,127.0.0.1',no_proxy:'::1,[::1],localhost,127.0.0.1',DATABASE_URL:'',PGLITE_DATA_DIR:join(shadow.root,'pglite'),CREATOROS_DOUYIN_AUTH_DIR:join(shadow.root,'auth-douyin'),CREATOROS_WEB_AUTH_DIR:join(shadow.root,'auth-web'),CREATOROS_RUNTIME_ROOT:join(shadow.root,'runtime'),CREATOROS_MASTER_KEY_FILE:join(shadow.root,'unused-test-master-key'),CREATOROS_DISABLE_SCHEDULER:'1',CREATOROS_DEV_MODE:'1',CREATOROS_T1110_PAGE_FIXTURE:'isolated-shadow-v1',CREATOROS_T1110_REPORT_WITNESS:normalizedPath,CREATOROS_T1110_FIXTURE_CONTROL:shadow.control,CREATOROS_T1110_FIXTURE_LOG:shadow.fixtureLog};
-const child=spawn('pnpm',['--dir',join(shadow.shadow,'frontend'),'dev','--webpack','--hostname','::1','--port',String(port)],{cwd:shadow.shadow,env,stdio:['ignore',logFd,logFd],detached:true});
+const child=spawn('pnpm',['--dir',join(shadow.shadow,'frontend'),'dev','--hostname','::1','--port',String(port)],{cwd:shadow.shadow,env,stdio:['ignore',logFd,logFd],detached:true});
 let spawnError;child.once('error',e=>{spawnError=e;});
 try {
   const end=Date.now()+480000;let ready=false;
-  while(Date.now()<end){if(spawnError)throw spawnError;if(child.exitCode!==null)throw Error(`隔离Next启动退出${child.exitCode}，见${logPath}`);try{const response=await fetch(origin,{signal:AbortSignal.timeout(120000)});if(response.ok){ready=true;break;}}catch{}await new Promise(done=>setTimeout(done,1000));}
+  while(Date.now()<end){if(spawnError)throw spawnError;if(child.exitCode!==null)throw Error(`隔离Next启动退出${child.exitCode}，见${logPath}`);try{const response=await fetch(origin,{signal:AbortSignal.timeout(120000)});if(response.ok){ready=true;break;}if(response.status>=500)throw Object.assign(Error('影子服务页面HTTP '+response.status+'，见'+logPath),{fatalStartup:true});}catch(error){if(error?.fatalStartup)throw error;}await new Promise(done=>setTimeout(done,1000));}
   if(!ready)throw Error('隔离Next未在完整启动预算内就绪');
   const state={schema:'t1110-ego-server/v1',...shadow,shadowManifest:shadowFile,origin,output,normalizedWitness:normalizedPath,serverPid:child.pid,serverLog:logPath,startedAt:new Date().toISOString(),dataRoot:env.PGLITE_DATA_DIR,identityProof:false,execution:'fixture-only-no-platform-proof'};
   const file=join(shadow.root,'ego-server-state.json');writeFileSync(file,JSON.stringify(state,null,2)+'\n');closeSync(logFd);child.unref();process.stdout.write(`${file}\n`);

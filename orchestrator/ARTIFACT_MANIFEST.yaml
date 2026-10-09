@@ -74,7 +74,7 @@ stages:
     artifacts:
       - existing: "docs/features/t1022-account-group-workspace.md (原版增补页面约束独立复核PASS[REV:2f179f8d9380]；历史归属迁移待确认，未进入生产实现)"
       - existing: "docs/features/t1022-account-group-workspace/style-explorer.html (现状与用户指定的原版增补预览；A/B退出候选，非产品UI验收PASS)"
-      - existing: "docs/features/t1110-wechat-browser-collection.md (T-1110独评及窗口复评PASS[REV:b6b7772b74ff]；代码主体及真实普通身份/日期witness已装配，五份私人实文件解析通过；用户允许后taskctl实际resume，真人产品扫码/完整采集/页面验收仍待验证)"
+      - existing: "docs/features/t1110-wechat-browser-collection.md (T-1110独评及窗口复评PASS[REV:b6b7772b74ff]；五份私人实文件解析通过，视频号产品真人扫码实际成功；最新浏览器协议49PASS，实际原生采集仍failed/0报表，公众号产品扫码与页面旅程待验，不完成)"
       - existing: "docs/features/t1110-wechat-browser-collection.PAGE_SPEC.md (局部页面契约；无真实浏览器PASS)"
       - existing: "backend/src"
       - existing: "frontend/src"

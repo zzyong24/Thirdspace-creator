@@ -156,9 +156,10 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
    scope=await observe(controls,async()=>{const frames=page.frames().filter(frame=>{try{const u=nativeUrl(frame.url(),origins[platform],platform);return u.pathname===framePath;}catch{return false;}});return frames.length===1?frames[0]!:null;},'REPORT_PAGE_MISSING');
    const section=kind==='channelsDaily'?'全部视频':kind==='channelsWorks'?'单篇视频':'关注者增长';
    const tab=scope.getByText(section,{exact:true}).filter({visible:true});
-   if(await tab.count()===1)await tab.click({timeout:controls.timeoutMs()});
+   await observe(controls,async()=>{const count=await tab.count();if(count>1)return fail('REPORT_SECTION_AMBIGUOUS','原生报表标签不唯一');return count===1?true:null;},'REPORT_SECTION_MISSING');
+   await tab.click({timeout:controls.timeoutMs()});
    const thirty=scope.locator(detail+' label:has(input[value="2"])').filter({visible:true}),seven=scope.locator(detail+' label:has(input[value="1"])').filter({visible:true});
-   if(await thirty.count()!==1||await seven.count()!==1)return fail('REPORT_WINDOW_MISSING','未找到唯一详情日期控件');
+   await observe(controls,async()=>await thirty.count()===1&&await seven.count()===1?true:null,'REPORT_WINDOW_MISSING');
    await seven.click({timeout:controls.timeoutMs()});
    if(kind==='channelsWorks'){
     const frame=scope as Frame,newRequests=new Set<Request>();

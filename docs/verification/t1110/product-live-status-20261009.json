@@ -1,0 +1,48 @@
+{
+  "scope": "本次临时独立产品PGlite环境，真实public API；研究profile没有被迁移",
+  "binding": {
+    "http": 200,
+    "observedAt": "2026-10-09T14:27:51.680Z",
+    "runId": "execution-task-3eba3525-15",
+    "platform": "wechatVideo",
+    "status": "succeeded",
+    "accountId": "acct-3eba3525-70",
+    "error": null,
+    "platformIdentitySha256": "24866f23b434a6cd0036756fa03e575529a50623c67b38d9e1b232fade378d75"
+  },
+  "attempts": [
+    {
+      "name": "original-window",
+      "http": 200,
+      "attemptId": "collection-5d521b69-104",
+      "status": "failed",
+      "committedPages": 0,
+      "reasonCode": "EXPORT_FAILED",
+      "startedAt": "2026-10-09T14:41:15.801Z",
+      "updatedAt": "2026-10-09T14:41:37.579Z"
+    },
+    {
+      "name": "render-wait",
+      "http": 200,
+      "attemptId": "collection-dfe56a37-49",
+      "status": "failed",
+      "committedPages": 0,
+      "reasonCode": "EXPORT_FAILED",
+      "startedAt": "2026-10-09T14:50:58.757Z",
+      "updatedAt": "2026-10-09T14:53:25.876Z"
+    },
+    {
+      "name": "section-diagnostic",
+      "http": 200,
+      "attemptId": "collection-8d52aafb-55",
+      "status": "failed",
+      "committedPages": 0,
+      "reasonCode": "EXPORT_FAILED",
+      "startedAt": "2026-10-09T14:57:03.870Z",
+      "updatedAt": "2026-10-09T14:57:26.941Z"
+    }
+  ],
+  "allReportsSaved": false,
+  "officialProductBinding": "not-yet-tested",
+  "browserJourney": "not-yet-executed"
+}

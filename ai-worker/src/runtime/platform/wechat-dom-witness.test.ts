@@ -67,6 +67,29 @@ describe('T1110 已实测普通DOM协议（合成fixture）',()=>{
   expect(result).toEqual({selection:{startDate:'2026-09-10',endDate:'2026-10-09',timeZone:'Asia/Shanghai',meaning:'publishedDates'},reportedRows:13});
   for(const bad of [response(1788969600000,1791475200000,13,{frame:f}),response(1788969600,1791475200,13,{frame:{} as Frame}),response(1788969600,1791475200,13,{frame:f,errCode:1}),response(1788969600,1791475200,13,{frame:f,status:500})]) await expect(readChannelsWorksResponse(bad,f,controls)).rejects.toMatchObject({code:'REPORT_RESPONSE_INVALID'});
  });
+ it.each(['channelsDaily','channelsFollowers'] as const)('%s等待实际标签和详情日期控件渲染后才选择近30天',async kind=>{
+  const events:string[]=[],days=Array.from({length:30},(_,i)=>new Date(Date.parse('2026-09-09T00:00:00Z')+i*86400000).toISOString().slice(0,10));
+  const html=visible+'<div class="filter-row"><div class="filter-extra"><a>下载表格</a></div><input type="radio" value="2" checked></div><div class="ant-table-body"><table>'+days.map(day=>'<tr><td>'+day+'</td></tr>').join('')+'</table></div>';
+  const path=kind==='channelsFollowers'?'/micro/statistic/follower':'/micro/statistic/post',s=surface(html,channels+path);
+  let tabReads=0,thirtyReads=0,sevenReads=0,tabClicked=false;
+  const tab={filter:()=>tab,count:async()=>++tabReads===1?0:1,click:async()=>{tabClicked=true;events.push('tab');}};
+  const thirty={filter:()=>thirty,count:async()=>{expect(tabClicked).toBe(true);return ++thirtyReads===1?0:1;},click:async()=>{events.push('30');}};
+  const seven={filter:()=>seven,count:async()=>{expect(tabClicked).toBe(true);return ++sevenReads===1?0:1;},click:async()=>{events.push('7');}};
+  const download={filter:()=>download,count:async()=>1};
+  const frame={...s.page,locator:(selector:string)=>selector.includes('value="2"')?thirty:seven,getByText:(text:string)=>text==='下载表格'?download:tab} as unknown as Frame;
+  const page={url:()=>channels+'/platform',locator:()=>({evaluateAll:async()=>[]}),goto:async()=>{},frames:()=>[frame]} as unknown as Page;
+  const witness=createVerifiedWechatDomWitnesses({now:()=>Date.parse('2026-10-09T04:00:00Z')}).reportWitness;
+  const result=await witness.prepare(page,'wechatVideo',kind,controls);
+  expect(events).toEqual(['tab','7','30']);expect(tabReads).toBeGreaterThan(1);expect(thirtyReads).toBeGreaterThan(1);expect(sevenReads).toBeGreaterThan(1);
+  expect(result.state.selection).toMatchObject({startDate:'2026-09-09',endDate:'2026-10-08'});expect(result.state.dates).toHaveLength(30);
+ },180000);
+ it('重复可见报表标签明确拒绝，不点击第一项或继续选日期',async()=>{
+  const click=vi.fn(),locator=vi.fn();const tab={filter:()=>tab,count:async()=>2,click};
+  const frame={url:()=>channels+'/micro/statistic/post',getByText:()=>tab,locator} as unknown as Frame;
+  const page={url:()=>channels+'/platform',locator:()=>({evaluateAll:async()=>[]}),goto:async()=>{},frames:()=>[frame]} as unknown as Page;
+  await expect(createVerifiedWechatDomWitnesses().reportWitness.prepare(page,'wechatVideo','channelsDaily',controls)).rejects.toMatchObject({code:'REPORT_SECTION_AMBIGUOUS'});
+  expect(click).not.toHaveBeenCalled();expect(locator).not.toHaveBeenCalled();
+ });
  it('近30天明确命中详情控件；先监听原生response后点击，不选趋势first',async()=>{
   let clicked=false;const order:string[]=[];
   const frame={} as Frame;

@@ -4692,7 +4692,7 @@ dispatchIntelligenceRun});
     authorizeProfile:async(c,lease,signal)=>{signal.throwIfAborted();return profileAuthority.authorizeBindingTarget(c,lease.accountId,(scope,id)=>platformAccountService.getAccount(scope,id));},
     acquireProfile:(authDir,signal)=>hostProfileLifecycle.acquire(authDir,signal),
     parseReport:async input=>(await import('@creatoros/ai-worker/platform/wechat-native-report-parser')).parseWechatNativeReport(input),
-    collectReports:async options=>{await wechatSource.collectNativeReports(options.platform,options.directory,options.expectedPlatformIdentity,{signal:options.signal,deadlineAt:new Date(options.deadlineAt).toISOString(),onStopped:options.onStopped,onStopUnconfirmed:options.onStopUnconfirmed},report=>options.onReport({...report,platform:options.platform}));},
+    collectReports:async options=>{await wechatSource.collectNativeReports(options.platform,options.directory,options.expectedPlatformIdentity,{signal:options.signal,deadlineAt:new Date(options.deadlineAt).toISOString(),onStopped:options.onStopped,onStopUnconfirmed:options.onStopUnconfirmed,onDiagnostic:event=>console.warn('[wechat-native-report]',event)},report=>options.onReport({...report,platform:options.platform}));},
     onStopUnconfirmed:(attemptId,retry)=>{pendingWechatStops.set(attemptId,retry);hostBrowserShutdownScope.register(async()=>{await retry();pendingWechatStops.delete(attemptId);});},
   });
   const executeWechatCollection=async(c:RequestContext,run:CollectionRunResource,signal?:AbortSignal)=>{

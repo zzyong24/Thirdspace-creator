@@ -1,7 +1,7 @@
 import {Readable} from 'node:stream';
 import type {BrowserContext,Download,Frame,Locator,Page} from '@playwright/test';
 import {describe,expect,it,vi} from 'vitest';
-import {createWechatBrowserSource,createWechatNativeDomReportWitness,type WechatCreatorPlatform,type WechatIdentityWitness,type WechatReportWitness,type WechatReportPageState} from './wechat-browser-source';
+import {createWechatBrowserSource,createWechatNativeDomReportWitness,type WechatCreatorPlatform,type WechatIdentityWitness,type WechatReportWitness,type WechatReportPageState,WechatBrowserSourceError} from './wechat-browser-source';
 // 仅Chromium/页面/下载为明确fixture，实际source负责账号核对、原生事件、字节边界和停止协议。
 // 不连接真实账号，不把以下displayName或stable ID宣称为两平台已测身份字段。
 const origins={wechatOfficial:'https://mp.weixin.qq.com',wechatVideo:'https://channels.weixin.qq.com'};
@@ -58,6 +58,40 @@ describe('T1110 微信受管browser source（明确浏览器fixture）',()=>{
   const download=fixture();download.setDownloadFailure(Error('fixture download failed'));await expect(download.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',download.controls)).rejects.toMatchObject({code:'DOWNLOAD_FAILED'});
   expect(download.onStopped).toHaveBeenCalledOnce();
  });
+ it.each([false,true])('首份prepare失败只发固定诊断，诊断回调抛错=%s仍拒绝并确认实停',async throwing=>{
+  const f=fixture(),secret='https://channels.weixin.qq.com/?token=private-test-token /private/profile Cookie=test-secret';
+  vi.mocked(f.reportWitness.prepare).mockRejectedValueOnce(Error(secret));
+  const onDiagnostic=vi.fn(()=>{if(throwing)throw Error('diagnostic callback '+secret);});
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED'});
+  expect(onDiagnostic).toHaveBeenCalledOnce();
+  expect(onDiagnostic).toHaveBeenCalledWith({platform:'wechatVideo',stage:'prepare',kind:'channelsDaily',code:'BROWSER_OPERATION_FAILED',exceptionName:'Error'});
+  expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('private-test-token');expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('/private/profile');expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('test-secret');
+  expect(f.close).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
+ });
+ it.each([
+  ['net::ERR_ABORTED at https://channels.weixin.qq.com/?token=private-test-token','NAVIGATION_ABORTED'],
+  ['net::ERR_CONNECTION_RESET at https://channels.weixin.qq.com/?token=private-test-token','CONNECTION_RESET'],
+  ['net::ERR_TUNNEL_CONNECTION_FAILED at https://channels.weixin.qq.com/?token=private-test-token','TUNNEL_CONNECTION_FAILED'],
+  ['Target page, context or browser has been closed Cookie=test-secret','TARGET_CLOSED'],
+ ])('导航失败分类%s仅发固定协议类别，不改变原普通失败和关闭',async(message,failureKind)=>{
+  const f=fixture(),onDiagnostic=vi.fn();vi.mocked(f.page.goto).mockRejectedValueOnce(Error(message));
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toMatchObject({code:'BROWSER_OPERATION_FAILED'});
+  expect(onDiagnostic).toHaveBeenCalledWith({platform:'wechatVideo',stage:'navigate',code:'BROWSER_OPERATION_FAILED',exceptionName:'Error',failureKind});
+  expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('private-test-token');expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('Cookie');
+  expect(f.identityWitness.read).not.toHaveBeenCalled();expect(f.reportWitness.prepare).not.toHaveBeenCalled();expect(f.close).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
+ });
+ it('登录复核自身失败不覆盖原窗口错误，不能据失败探针判掉登录',async()=>{
+  const f=fixture();vi.mocked(f.reportWitness.prepare).mockRejectedValueOnce(new WechatBrowserSourceError('REPORT_WINDOW_MISSING','fixture window missing'));
+  vi.mocked(f.identityWitness.isLoggedOut).mockResolvedValueOnce(false).mockRejectedValueOnce(ReferenceError('fixture failed probe'));
+  const onDiagnostic=vi.fn();await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toMatchObject({code:'REPORT_WINDOW_MISSING'});
+  expect(onDiagnostic).toHaveBeenCalledWith({platform:'wechatVideo',stage:'prepare',kind:'channelsDaily',code:'REPORT_WINDOW_MISSING',exceptionName:'WechatBrowserSourceError'});expect(f.onStopped).toHaveBeenCalledOnce();
+ });
+ it('SourceError的任意code与name不进入固定诊断，原异常仍按原类型拒绝',async()=>{
+  const f=fixture(),error=new WechatBrowserSourceError('private-source-code','secret-message');error.name='private-error-name';
+  vi.mocked(f.reportWitness.prepare).mockRejectedValueOnce(error);const onDiagnostic=vi.fn();
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(error);
+  expect(onDiagnostic).toHaveBeenCalledWith({platform:'wechatVideo',stage:'prepare',kind:'channelsDaily',code:'BROWSER_OPERATION_FAILED',exceptionName:'UnknownError'});expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('private-');expect(f.onStopped).toHaveBeenCalledOnce();
+ });
  it.each(['wechatOfficial','wechatVideo'] as const)('%s逐份接收原生字节；监听在点击前；callback完成后才读下一份',async(platform)=>{
   const f=fixture(platform),received:string[]=[];
   const result=await f.source.collectNativeReports(platform,'/fixture-profile','fixture-platform-id',f.controls,async report=>{received.push(report.kind);f.order.push('commit:'+report.kind);expect(report.bytes).toEqual(f.bytes.get(report.kind));});
@@ -92,6 +126,12 @@ describe('T1110 微信受管browser source（明确浏览器fixture）',()=>{
   const foreign=fixture('wechatOfficial');foreign.setHref('https://other.invalid/export');foreign.setDownloadFailure(Error('fixture popup timeout'));
   await expect(foreign.source.collectNativeReports('wechatOfficial','/fixture-profile','fixture-platform-id',foreign.controls)).rejects.toMatchObject({code:'SOURCE_URL_INVALID'});expect(foreign.request.get).not.toHaveBeenCalled();expect(foreign.locator.click).not.toHaveBeenCalled();
   const huge=fixture();huge.bytes.set('channelsDaily',new Uint8Array(25*1024*1024+1));await expect(huge.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',huge.controls)).rejects.toMatchObject({code:'REPORT_TOO_LARGE'});
+ });
+ it('诊断抛错且关闭未确认仍保宿主租约及原重试，不伪称停止',async()=>{
+  const f=fixture();vi.mocked(f.reportWitness.prepare).mockRejectedValueOnce(Error('fixture prepare failed'));f.close.mockRejectedValueOnce(Error('fixture close failed'));
+  const onDiagnostic=vi.fn(()=>{throw Error('fixture logger failed');});
+  await expect(f.source.collectNativeReports('wechatVideo','/fixture-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toMatchObject({code:'BROWSER_STOP_UNCONFIRMED',resourceStopUnconfirmed:true});
+  expect(onDiagnostic).toHaveBeenCalledOnce();expect(f.onStopped).not.toHaveBeenCalled();const retry=f.onStopUnconfirmed.mock.calls[0]?.[0];expect(retry).toBeTypeOf('function');await retry!();expect(f.onStopped).toHaveBeenCalledOnce();expect(f.close).toHaveBeenCalledTimes(2);
  });
  it('关闭失败保onStopUnconfirmed原重试，未实际关闭不释放宿主',async()=>{
   const f=fixture();f.close.mockRejectedValueOnce(Error('fixture stop unconfirmed'));

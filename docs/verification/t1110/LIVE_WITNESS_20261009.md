@@ -62,3 +62,17 @@ LED047首轮并发8文件173PASS/1FAIL，原run-controls异步查询在并行负
 新增独立闭合复核`t1110-witness-bind-closure-audit.md`核实际37/7/57与源码SHA；只签源代码接缝，没有代签真人或视觉。root曾误用三个不存在的check-*.mjs命令导致MODULE_NOT_FOUND，实际无Gate运行，日志另标command-invalid；随后按现有正式scan命令执行。此前context/progress唯一步骤缺失以及旧46个全局失败继续保留，不用局部回归替换全局事实。
 
 产品已在同一隔离PGlite根温和重启配置，原failed扫码任务仍保留。root经实际表格弹窗明确开始新intent，公开索引为`execution-task-3eba3525-15`，实际页面等待扫码验证；Ego20已handoff给用户，未在用户控制时继续浏览。后续本人绑定和平台采集均仍待验证。
+
+## 后续实际绑定与未通过的同步
+
+第二次产品扫码的公开`accounts.bind.status`实际HTTP200、succeeded，accountId为`acct-3eba3525-70`，error为空。公开账号与账号组回读确认真实成员；稳定平台身份摘要与上文普通后台一致。初始化的视频号self.metrics任务实际启用，cron为`15 */2 * * *`。产品使用本次临时根中的独立登录环境，没有搬运研究登录。确认成功后才重新takeOver原Ego空间20。公众号产品扫码尚未执行，这些事实只签视频号绑定。
+
+绑定后原计划任务实际`EXPORT_FAILED`、0报表。root未改变原任务ID或终态，随后为定位问题明确建立新的手动intent。`collection-5d521b69-104`实际failed、0页，安全诊断为prepare/channelsDaily/REPORT_WINDOW_MISSING。对普通页面的实际DOM观察表明：全部视频与关注者增长都有唯一`.filter-row:has(.filter-extra)`详情行，日期radio值仍为1/2/3；不是另一个日期协议。一次普通导航domcontentloaded后iframe数组尚为空；随后的观察发生平台逻辑异常与研究页登录跳转，不能把这轮桥接失败记成真实采集PASS。
+
+代码另有可确定的渲染时序缺口：标签尚未出现时跳过点击，日期控件尚未出现时立即拒绝。两种日报标签/控件延迟用例实际RED（2FAIL/11PASS，继承仓库retry配置），改为沿原signal/剩余预算等待唯一可见标签并点击、再等唯一详情日期控件。完整30个实际日期、单篇新请求响应/真实总数及下载前复核均未放宽。新增重复标签用例明确拒绝，不能取第一项。
+
+修复后的实际新intent `collection-dfe56a37-49`仍failed/0页，安全诊断为prepare/channelsDaily/REPORT_PAGE_MISSING；所以渲染缺口修复没有闭合实际采集。下一次分段诊断intent `collection-8d52aafb-55`更早在navigate发生BROWSER_OPERATION_FAILED/Error，同样failed/0页；没有证据证明两次同因，更不能推断Cookie过期。当前细分iframe、标签缺失/重复，并增加固定Chromium导航/目标关闭分类，仍不输出message、stack、URL、目录、身份或Cookie。
+
+内部诊断首次5个必要用例均有当场RED，之后三文件42PASS；日期等待后完整44PASS、重复标签后45PASS；4个固定导航类别用例当场4FAIL，最新完整三文件49PASS。错误parser路径的一轮实际只运行两文件35PASS，另留`render-ready-wrong-path-partial.log`，没有当作完整回归。worker与frontend新类型检查实际exit0。安全索引见`diagnostic-source-verification-index.json`；独评只覆盖源码/已有日志，不代签真人采集。
+
+双视口影子Next旅程还没有执行：首次启动器强制webpack，真实页面HTTP500（node:crypto UnhandledSchemeError），原启动日志保留。启动器改用产品默认Turbopack，并在HTTP500时明确失败；本次修正尚待实际启动与浏览器验证，不改产品配置或安全守卫。视频号三报表/公众号两报表完整公开入库以及实际页面验收继续待验，任务保持进行中。
