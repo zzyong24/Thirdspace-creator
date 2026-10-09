@@ -1,0 +1,120 @@
+{
+  "observedAt": "2026-10-09T04:22:30.313583+00:00",
+  "main": "1889f349b256352b849964d461efde295c589247",
+  "source": "f97a80da002db91dcdeac464203828dd9268cbd3",
+  "records": [
+    {
+      "head": "1889f349b256352b849964d461efde295c589247",
+      "path": "BACKLOG.md",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/main-before-merge/BACKLOG.md",
+      "sha256": "82c418d8389be1b885f5dd31afcbaddc404e99bc4d0c6384ef263ab3abea0633",
+      "gitBlob": "b309b9f036721a7224f10f85d4bf18fc93d46261"
+    },
+    {
+      "head": "1889f349b256352b849964d461efde295c589247",
+      "path": "PROJECT.md",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/main-before-merge/PROJECT.md",
+      "sha256": "0b6f5584ced6cfc3815723a7f56c9e4e38c1449f2319d0dc282f337c85ae2b83",
+      "gitBlob": "2fe48a94495a9d54ab88b721b19c7309e676536e"
+    },
+    {
+      "head": "1889f349b256352b849964d461efde295c589247",
+      "path": "orchestrator/.lessons-stats.json",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/main-before-merge/orchestrator/.lessons-stats.json",
+      "sha256": "32ca654ba772f4d63d40dc3ee8552dc94168706270d535c83b6174a6fa306487",
+      "gitBlob": "89c2a0c8138fb4bf4820ef063bc26f1fe63206a1"
+    },
+    {
+      "head": "1889f349b256352b849964d461efde295c589247",
+      "path": "orchestrator/DECISION_LOG.md",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/main-before-merge/orchestrator/DECISION_LOG.md",
+      "sha256": "4895c1652b513f3f8879f9956886f2c914cd7c62d5d55774a8524022acfce525",
+      "gitBlob": "80f3cbd6274c4ec7a98022cb9de45e04a64eada7"
+    },
+    {
+      "head": "1889f349b256352b849964d461efde295c589247",
+      "path": "orchestrator/events.ndjson",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/main-before-merge/orchestrator/events.ndjson",
+      "sha256": "73fb2967d6bfdc682116443c9de7926f5834f4d15ab3aab404a89335cf01a858",
+      "gitBlob": "1a7d6ea0353dc1d0e27435a99317b7b3b4c8e446"
+    },
+    {
+      "head": "1889f349b256352b849964d461efde295c589247",
+      "path": "orchestrator/review-events.ndjson",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/main-before-merge/orchestrator/review-events.ndjson",
+      "sha256": "d58aa8fc119d5d0a36afd57ea74cc167c0a44f6cdfce8abdbe55e9100b479640",
+      "gitBlob": "17c36a1297284fc79655f1603a79460338bd4ae9"
+    },
+    {
+      "head": "f97a80da002db91dcdeac464203828dd9268cbd3",
+      "path": "BACKLOG.md",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/source-f97a80da/BACKLOG.md",
+      "sha256": "bb3819925f82f30e9ceb9a3eb3b78fca8d7671f173ea97c758cb9b966529041a",
+      "gitBlob": "44c4ffcccb2012ec687dd51bd35330b6292132d0"
+    },
+    {
+      "head": "f97a80da002db91dcdeac464203828dd9268cbd3",
+      "path": "PROJECT.md",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/source-f97a80da/PROJECT.md",
+      "sha256": "1ea9df0c7be0f09f34db93bf9538fffdf03d682a9bc43105fca49331c326493f",
+      "gitBlob": "bf012e12e085c04e422ec50917124332dcdabee0"
+    },
+    {
+      "head": "f97a80da002db91dcdeac464203828dd9268cbd3",
+      "path": "orchestrator/.lessons-stats.json",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/source-f97a80da/orchestrator/.lessons-stats.json",
+      "sha256": "4f1dd8403e780a91883ae9acf449c0c0adb843be24f0b77b1d9bbd88dc3bc117",
+      "gitBlob": "1224ca5f0736b869529d1cb352a79e2edf8436b0"
+    },
+    {
+      "head": "f97a80da002db91dcdeac464203828dd9268cbd3",
+      "path": "orchestrator/DECISION_LOG.md",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/source-f97a80da/orchestrator/DECISION_LOG.md",
+      "sha256": "ae18747b70f99b7da9be71ef77b759d0267364141fab52619e688dc2709058ea",
+      "gitBlob": "42fa9fd0d619810b018090722224afa0b21c393b"
+    },
+    {
+      "head": "f97a80da002db91dcdeac464203828dd9268cbd3",
+      "path": "orchestrator/events.ndjson",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/source-f97a80da/orchestrator/events.ndjson",
+      "sha256": "eb88936e7c51e6d9bc955a19cccf686db3c30a86d04d428edd849b1ffa085ee7",
+      "gitBlob": "ad955458b7e4bbef8aa343b9227fbda962af0c2e"
+    },
+    {
+      "head": "f97a80da002db91dcdeac464203828dd9268cbd3",
+      "path": "orchestrator/review-events.ndjson",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/source-f97a80da/orchestrator/review-events.ndjson",
+      "sha256": "4c9a079263430c7d9be401183e5e4c4368a8b2b4128a08560021c5030eb7d5f3",
+      "gitBlob": "b9fe41476b5c2a87235f303e953dd3e110c58a49"
+    },
+    {
+      "head": "f97a80da002db91dcdeac464203828dd9268cbd3",
+      "path": "docs/features/t1101-canvas-binding-collection.review.md",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/source-f97a80da/docs/features/t1101-canvas-binding-collection.review.md",
+      "sha256": "6606bb634c00e85946756749c09896df7a5ce8991e3a07181adedeb46d37fc11",
+      "gitBlob": "1a0a40e5ce016dcb843bd77bf388160c0893945e"
+    },
+    {
+      "head": "f97a80da002db91dcdeac464203828dd9268cbd3",
+      "path": "docs/verification/t1101/FRONTEND_VALIDATION_REPORT.md",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/source-f97a80da/docs/verification/t1101/FRONTEND_VALIDATION_REPORT.md",
+      "sha256": "157232d4ae5bab1f2d3fa1db82c6d1a5d62400b07cd2f43dbdd4d60da96b139b",
+      "gitBlob": "b64a48c9c1be5d0a47d56fedb6c5cdab0535bbb8"
+    },
+    {
+      "head": "f97a80da002db91dcdeac464203828dd9268cbd3",
+      "path": "docs/verification/t1101/visible-copy.json",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/source-f97a80da/docs/verification/t1101/visible-copy.json",
+      "sha256": "2090d6f800430fc2316ae5e6c935e2a68c084172b5bad09418d50258388b827b",
+      "gitBlob": "dbbdc1b9d2ae5e81cc9ec2153aae3cee0005ade4"
+    },
+    {
+      "head": "f97a80da002db91dcdeac464203828dd9268cbd3",
+      "path": "docs/verification/t1101/journey.log",
+      "archivePath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-integration/source-f97a80da/docs/verification/t1101/journey.log",
+      "sha256": "075a0b9b98efc3e33b9deb67fed12321f3613607d5d740a7c3f5fc98befba78d",
+      "gitBlob": "45699b353510feb3b2039f6cd49f99d761d661ac"
+    }
+  ],
+  "originalChainsRehashed": false
+}

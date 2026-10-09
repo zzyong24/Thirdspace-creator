@@ -7,13 +7,15 @@ import {OwnershipError,ConflictError} from '../../errors';
 import {aiTasks} from '../../schema/ai';
 import {assertFrozenWorkspaceMembership,type FrozenWorkspace,type MembershipTransaction} from '../platform-account/membership-lock.service';
 export const PRIVATE_COLLECTION_SOURCE_KINDS:ReadonlySet<string>=new Set(['self.metrics','self.traffic','comments','self.detail']);
+/** SEMANTIC_BOUNDARY_ALLOW: 平台协议能力准入，不做内容或创作选择。 */
+export function supportsPrivateCollection(platform:string,sourceKind:string){return platform==='douyin'?PRIVATE_COLLECTION_SOURCE_KINDS.has(sourceKind):(platform==='kuaishou'||platform==='xiaohongshu')&&sourceKind==='self.metrics';}
 /** 内部调度口：只验证实际账号私有采集job/成员，不授予组内容创作写权。调用者先持同一account/member锁。 */
 export async function assertPrivateCollectorJob(db:Db,ctx:RequestContext,jobId:string,sourceKind?:string){
  if(!ctx.accountId||!ctx.groupId)throw new OwnershipError('私有采集缺少真实账号组');
  const member=await createAccountGroupService({db,now:()=>'',nextId:()=>''}).forAccount(ctx,ctx.accountId);
- if(member.status!=='active'||member.platform!=='douyin'||member.groupId!==ctx.groupId||(ctx.membershipVersion!==undefined&&member.version!==ctx.membershipVersion))throw new ConflictError('采集账号归属或能力已改变');
+ if(member.status!=='active'||member.groupId!==ctx.groupId||(ctx.membershipVersion!==undefined&&member.version!==ctx.membershipVersion))throw new ConflictError('采集账号归属或能力已改变');
  const [job]=await db.select().from(scheduledJobs).where(and(eq(scheduledJobs.id,jobId),eq(scheduledJobs.userId,ctx.userId),eq(scheduledJobs.accountId,ctx.accountId),eq(scheduledJobs.groupId,ctx.groupId)));
- if(!job||!PRIVATE_COLLECTION_SOURCE_KINDS.has(job.sourceKind)||(sourceKind!==undefined&&sourceKind!==job.sourceKind)||job.membershipVersion!==member.version)throw new ConflictError('采集作业与当前真实账号归属不符');
+ if(!job||!supportsPrivateCollection(member.platform,job.sourceKind)||(sourceKind!==undefined&&sourceKind!==job.sourceKind)||job.membershipVersion!==member.version)throw new ConflictError('采集作业与当前真实账号归属不符');
  return job;
 }
 

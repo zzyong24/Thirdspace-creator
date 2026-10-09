@@ -160,17 +160,22 @@ it("真人身份不能通过纯提示词或编导清空降级，比例来自适�
  expect(caps.modes.find(m=>m.mode==="text_to_image")!.aspectRatios).toContain("21:9");
 });
 
-it("未知提交恢复冻结原输入；编辑后拒绝旧恢复，成功页不重进提交",async()=>{
+it("未知提交恢复冻结原输入；编辑后继续原预约，阻断新attempt，成功页不重进提交",async()=>{
  submit.mockClear();const s=service(),created=await s.create(ctx("account-a"),{title:"恢复守卫"});
  let saved=await s.save(ctx("account-a"),created.id,{expectedRevision:1,document:doc([imageNode("restore-node")])});
  submit.mockRejectedValueOnce(new Error("未知响应"));
  await expect(s.generate(ctx("account-a"),saved.id,"restore-node",{expectedRevision:saved.revision,attemptId:"unknown-restore-attempt-1"})).rejects.toThrow("未知响应");
  saved=await s.save(ctx("account-a"),saved.id,{expectedRevision:saved.revision,document:doc([{...imageNode("restore-node"),prompt:"明确修改输入"}])});
- await expect(s.generate(ctx("account-a"),saved.id,"restore-node",{expectedRevision:saved.revision,attemptId:"unknown-restore-attempt-1"})).rejects.toThrow("输入已编辑");
  expect(submit).toHaveBeenCalledTimes(1);
- const fresh=await s.generate(ctx("account-a"),saved.id,"restore-node",{expectedRevision:saved.revision,attemptId:"new-creation-attempt-1"});
- expect(await s.generate(ctx("account-a"),saved.id,"restore-node",{expectedRevision:saved.revision,attemptId:"new-creation-attempt-1"})).toMatchObject({taskId:fresh.taskId});
- expect(submit).toHaveBeenCalledTimes(2);
+ await expect(s.generate(ctx("account-a"),saved.id,"restore-node",{expectedRevision:saved.revision,attemptId:"new-creation-attempt-1"})).rejects.toThrow("原提交结果尚未明确");
+ const resumed=await s.generate(ctx("account-a"),saved.id,"restore-node",{expectedRevision:saved.revision,attemptId:"unknown-restore-attempt-1"});
+ expect(submit).toHaveBeenCalledTimes(2);expect(submit.mock.calls[1]![1]).toMatchObject({attemptId:'unknown-restore-attempt-1',inputData:{prompt:'山间日出'}});
+ expect((await s.get(ctx('account-a'),saved.id)).document.nodes[0]).toMatchObject({prompt:'明确修改输入'});
+ expect(await s.generate(ctx('account-a'),saved.id,'restore-node',{expectedRevision:saved.revision,attemptId:'unknown-restore-attempt-1'})).toMatchObject({taskId:resumed.taskId});expect(submit).toHaveBeenCalledTimes(2);
+ saved=await s.save(ctx("account-a"),saved.id,{expectedRevision:saved.revision,document:doc([imageNode("restore-node"),imageNode("unrelated-node")])});
+ const fresh=await s.generate(ctx("account-a"),saved.id,"unrelated-node",{expectedRevision:saved.revision,attemptId:"new-creation-attempt-1"});
+ expect(await s.generate(ctx("account-a"),saved.id,"unrelated-node",{expectedRevision:saved.revision,attemptId:"new-creation-attempt-1"})).toMatchObject({taskId:fresh.taskId});
+ expect(submit).toHaveBeenCalledTimes(3);
 });
 
 it("可信真人模板不能通过篡改客户端视觉字段降级文生图",async()=>{
@@ -257,3 +262,9 @@ it.skipIf(!canvasLockPg)('T1062真实PG Canvas公共generate同组双父Lock观�
   expect(await setup.db.select().from(canvasGenerationLinks)).toEqual(before.links);expect(await setup.db.select().from(aiTasks)).toEqual(before.tasks);expect(await setup.db.select().from(executionTasks)).toEqual(before.executions);expect(await setup.db.select().from(executionCalls)).toHaveLength(0);
  }finally{if(held&&blocker)await blocker.query('ROLLBACK');await Promise.allSettled(pending);blocker?.release();const closed=await Promise.allSettled(runtimes.map(runtime=>runtime.pool.end()));try{await admin.query(`DROP DATABASE ${name} WITH (FORCE)`);}finally{await admin.end();}for(const result of closed)if(result.status==='rejected')throw result.reason;}
 },30000);
+
+it('同节点任务运行或提交未知时拒绝新attempt，原attempt仍可回读，终态允许再次生成',async()=>{
+ const states=new Map<string,string>();const s=service({readTask:async(c,id)=>({id,userId:c.userId,attemptId:id.slice(5),taskType:'asset.generate',projectId:null,inputData:submitted.get(id),status:states.get(id)??'running'})});const c=ctx('account-a'),created=await s.create(c,{title:'防重复'}),saved=await s.save(c,created.id,{expectedRevision:1,document:doc([imageNode('node')])});submit.mockClear();
+ const first=await s.generate(c,created.id,'node',{expectedRevision:saved.revision,attemptId:'first-active-attempt'});await expect(s.generate(c,created.id,'node',{expectedRevision:saved.revision,attemptId:'duplicate-new-attempt'})).rejects.toThrow('仍在生成');expect((await s.listTasks(c,created.id))).toHaveLength(1);expect(await s.generate(c,created.id,'node',{expectedRevision:saved.revision,attemptId:'first-active-attempt'})).toMatchObject({taskId:first.taskId});expect(submit).toHaveBeenCalledOnce();
+ states.set(first.taskId!,'awaiting_confirmation');await expect(s.generate(c,created.id,'node',{expectedRevision:saved.revision,attemptId:'explicit-regenerate-attempt'})).resolves.toBeTruthy();expect(submit).toHaveBeenCalledTimes(2);
+});

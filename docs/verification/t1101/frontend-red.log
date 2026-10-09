@@ -1,0 +1,2172 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend
+
+(node:48297) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:48296) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/features/platform-account/account-group-manager.test.tsx > 能力读取失败保留合法登记路径并提供重读，不假报不可用
+[describeUserError] Error: 能力读取失败
+    at /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend/src/features/platform-account/account-group-manager.test.tsx:44:100
+    at file:///Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64
+
+stderr | src/features/platform-account/account-group-manager.test.tsx > 能力读取失败保留合法登记路径并提供重读，不假报不可用
+[describeUserError] [TypeError: Failed to parse URL from /api/v1/dispatch] {
+  [cause]: TypeError: Invalid URL
+      at new URL (node:internal/url:819:25)
+      at new URL (file:///Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/chunks/index.DC7d2Pf8.js:557:2)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at fetchCreatorApi (/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend/src/lib/http-transport.ts:98:10)
+      at Object.request (/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend/src/lib/http-transport.ts:165:25)
+      at Object.client.<computed> [as listGroupResourceGrants] (/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/contract/src/client.ts:60:35)
+      at /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend/src/features/platform-account/resource-grants-panel.tsx:23:206 {
+    code: 'ERR_INVALID_URL',
+    input: '/api/v1/dispatch'
+  }
+}
+
+stderr | src/features/platform-account/account-group-manager.test.tsx > 三平台扫码入口在能力表内，删除常驻刷新及重复扫码框
+[describeUserError] [TypeError: Failed to parse URL from /api/v1/dispatch] {
+  [cause]: TypeError: Invalid URL
+      at new URL (node:internal/url:819:25)
+      at new URL (file:///Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/chunks/index.DC7d2Pf8.js:557:2)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at fetchCreatorApi (/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend/src/lib/http-transport.ts:98:10)
+      at Object.request (/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend/src/lib/http-transport.ts:165:25)
+      at Object.client.<computed> [as listGroupResourceGrants] (/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/contract/src/client.ts:60:35)
+      at /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend/src/features/platform-account/resource-grants-panel.tsx:23:206 {
+    code: 'ERR_INVALID_URL',
+    input: '/api/v1/dispatch'
+  }
+}
+
+ ❯ src/features/platform-account/account-group-manager.test.tsx (16 tests | 2 failed) 3869ms
+   × 能力读取失败保留合法登记路径并提供重读，不假报不可用 189ms
+   × 三平台扫码入口在能力表内，删除常驻刷新及重复扫码框 1043ms
+ ❯ src/features/creative-canvas/canvas-editor.test.tsx (13 tests | 5 failed) 4351ms
+   × 原编辑器从exact selector展示历史file，candidate在原确认前不能放到正式Canvas 279ms
+   × 生成任务排队及运行时锁定按钮，读取失败也不能再次提交 1058ms
+   × 有候选再次生成先确认，取消无新提交，确认只提交一次 1064ms
+   × 已有连线读取上游候选精确文件填下游默认参考，保留手动参考 1067ms
+   × 画布素材缩略图不显示名称和规格，保留可访问预览与选用 236ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/creative-canvas/canvas-editor.test.tsx > 原编辑器从exact selector展示历史file，candidate在原确认前不能放到正式Canvas
+AssertionError: expected "vi.fn()" to be called with arguments: [ { params: { …(2) }, …(2) } ]
+
+Number of calls: 0
+
+ ❯ src/features/creative-canvas/canvas-editor.test.tsx:17:698
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  src/features/creative-canvas/canvas-editor.test.tsx > 生成任务排队及运行时锁定按钮，读取失败也不能再次提交
+TestingLibraryElementError: Unable to find role="button" and name "生成中…"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<main[39m
+      [33mclass[39m=[32m"flex h-full min-h-0 flex-col bg-background"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"flex flex-wrap items-center gap-x-4 gap-y-2 border-b bg-card/80 px-4 py-2.5"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-arrow-left size-4"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m12 19-7-7 7-7"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M19 12H5"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m画布库[0m
+        [36m</button>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-w-0 flex-1"[39m
+        [36m>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"sr-only"[39m
+            [33mfor[39m=[32m"canvas-title"[39m
+          [36m>[39m
+            [0m画布标题[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-label[39m=[32m"画布标题"[39m
+            [33mclass[39m=[32m"w-full min-w-40 max-w-sm rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold outline-none hover:border-border focus:border-primary"[39m
+            [33mid[39m=[32m"canvas-title"[39m
+            [33mvalue[39m=[32m"原画布"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"inline-flex items-center gap-1.5 text-xs text-muted-foreground"[39m
+          [33mrole[39m=[32m"status"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-check size-3.5"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M20 6 9 17l-5-5"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m已保存[0m
+        [36m</span>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-save size-3.5"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M7 3v4a1 1 0 0 0 1 1h7"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m保存[0m
+        [36m</button>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-1 border-l pl-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m撤销[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m重做[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0m归档[0m
+        [36m</button>[39m
+      [36m</header>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap items-center gap-2 border-b bg-card/50 px-5 py-2 text-xs"[39m
+      [36m>[39m
+        [36m<svg[39m
+          [33maria-hidden[39m=[32m"true"[39m
+          [33mclass[39m=[32m"lucide lucide-layers size-4 text-primary"[39m
+          [33mfill[39m=[32m"none"[39m
+          [33mheight[39m=[32m"24"[39m
+          [33mstroke[39m=[32m"currentColor"[39m
+          [33mstroke-linecap[39m=[32m"round"[39m
+          [33mstroke-linejoin[39m=[32m"round"[39m
+          [33mstroke-width[39m=[32m"2"[39m
+          [33mviewBox[39m=[32m"0 0 24 24"[39m
+          [33mwidth[39m=[32m"24"[39m
+          [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+        [36m>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"[39m
+          [36m/>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"[39m
+          [36m/>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"[39m
+          [36m/>[39m
+        ...
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<main[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col bg-background"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"flex flex-wrap items-center gap-x-4 gap-y-2 border-b bg-card/80 px-4 py-2.5"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-arrow-left size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m12 19-7-7 7-7"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M19 12H5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m画布库[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0 flex-1"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"sr-only"[39m
+              [33mfor[39m=[32m"canvas-title"[39m
+            [36m>[39m
+              [0m画布标题[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33maria-label[39m=[32m"画布标题"[39m
+              [33mclass[39m=[32m"w-full min-w-40 max-w-sm rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold outline-none hover:border-border focus:border-primary"[39m
+              [33mid[39m=[32m"canvas-title"[39m
+              [33mvalue[39m=[32m"原画布"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"inline-flex items-center gap-1.5 text-xs text-muted-foreground"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-check size-3.5"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 6 9 17l-5-5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m已保存[0m
+          [36m</span>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-save size-3.5"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M7 3v4a1 1 0 0 0 1 1h7"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m保存[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-1 border-l pl-2"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m撤销[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m重做[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m归档[0m
+          [36m</button>[39m
+        [36m</header>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap items-center gap-2 border-b bg-card/50 px-5 py-2 text-xs"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-layers size-4 text-primary"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"[39m
+            [36m/>[...
+ ❯ Proxy.waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/features/creative-canvas/canvas-editor.test.tsx:105:52
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  src/features/creative-canvas/canvas-editor.test.tsx > 有候选再次生成先确认，取消无新提交，确认只提交一次
+TestingLibraryElementError: Unable to find role="dialog" and name "重新生成图片？"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<main[39m
+      [33mclass[39m=[32m"flex h-full min-h-0 flex-col bg-background"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"flex flex-wrap items-center gap-x-4 gap-y-2 border-b bg-card/80 px-4 py-2.5"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-arrow-left size-4"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m12 19-7-7 7-7"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M19 12H5"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m画布库[0m
+        [36m</button>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-w-0 flex-1"[39m
+        [36m>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"sr-only"[39m
+            [33mfor[39m=[32m"canvas-title"[39m
+          [36m>[39m
+            [0m画布标题[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-label[39m=[32m"画布标题"[39m
+            [33mclass[39m=[32m"w-full min-w-40 max-w-sm rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold outline-none hover:border-border focus:border-primary"[39m
+            [33mid[39m=[32m"canvas-title"[39m
+            [33mvalue[39m=[32m"原画布"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"inline-flex items-center gap-1.5 text-xs text-muted-foreground"[39m
+          [33mrole[39m=[32m"status"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-check size-3.5"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M20 6 9 17l-5-5"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m已保存[0m
+        [36m</span>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-save size-3.5"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M7 3v4a1 1 0 0 0 1 1h7"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m保存[0m
+        [36m</button>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-1 border-l pl-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m撤销[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m重做[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0m归档[0m
+        [36m</button>[39m
+      [36m</header>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap items-center gap-2 border-b bg-card/50 px-5 py-2 text-xs"[39m
+      [36m>[39m
+        [36m<svg[39m
+          [33maria-hidden[39m=[32m"true"[39m
+          [33mclass[39m=[32m"lucide lucide-layers size-4 text-primary"[39m
+          [33mfill[39m=[32m"none"[39m
+          [33mheight[39m=[32m"24"[39m
+          [33mstroke[39m=[32m"currentColor"[39m
+          [33mstroke-linecap[39m=[32m"round"[39m
+          [33mstroke-linejoin[39m=[32m"round"[39m
+          [33mstroke-width[39m=[32m"2"[39m
+          [33mviewBox[39m=[32m"0 0 24 24"[39m
+          [33mwidth[39m=[32m"24"[39m
+          [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+        [36m>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"[39m
+          [36m/>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"[39m
+          [36m/>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"[39m
+          [36m/>[39m
+        ...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<main[39m
+      [33mclass[39m=[32m"flex h-full min-h-0 flex-col bg-background"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"flex flex-wrap items-center gap-x-4 gap-y-2 border-b bg-card/80 px-4 py-2.5"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-arrow-left size-4"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m12 19-7-7 7-7"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M19 12H5"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m画布库[0m
+        [36m</button>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-w-0 flex-1"[39m
+        [36m>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"sr-only"[39m
+            [33mfor[39m=[32m"canvas-title"[39m
+          [36m>[39m
+            [0m画布标题[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-label[39m=[32m"画布标题"[39m
+            [33mclass[39m=[32m"w-full min-w-40 max-w-sm rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold outline-none hover:border-border focus:border-primary"[39m
+            [33mid[39m=[32m"canvas-title"[39m
+            [33mvalue[39m=[32m"原画布"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"inline-flex items-center gap-1.5 text-xs text-muted-foreground"[39m
+          [33mrole[39m=[32m"status"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-check size-3.5"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M20 6 9 17l-5-5"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m已保存[0m
+        [36m</span>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-save size-3.5"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M7 3v4a1 1 0 0 0 1 1h7"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m保存[0m
+        [36m</button>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-1 border-l pl-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m撤销[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m重做[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0m归档[0m
+        [36m</button>[39m
+      [36m</header>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap items-center gap-2 border-b bg-card/50 px-5 py-2 text-xs"[39m
+      [36m>[39m
+        [36m<svg[39m
+          [33maria-hidden[39m=[32m"true"[39m
+          [33mclass[39m=[32m"lucide lucide-layers size-4 text-primary"[39m
+          [33mfill[39m=[32m"none"[39m
+          [33mheight[39m=[32m"24"[39m
+          [33mstroke[39m=[32m"currentColor"[39m
+          [33mstroke-linecap[39m=[32m"round"[39m
+          [33mstroke-linejoin[39m=[32m"round"[39m
+          [33mstroke-width[39m=[32m"2"[39m
+          [33mviewBox[39m=[32m"0 0 24 24"[39m
+          [33mwidth[39m=[32m"24"[39m
+          [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+        [36m>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"[39m
+          [36m/>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"[39m
+          [36m/>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"[39m
+          [36m/>[39m
+        ...
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/creative-canvas/canvas-editor.test.tsx:109:156
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  src/features/creative-canvas/canvas-editor.test.tsx > 已有连线读取上游候选精确文件填下游默认参考，保留手动参考
+AssertionError: expected "vi.fn()" to be called at least once
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<main[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col bg-background"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"flex flex-wrap items-center gap-x-4 gap-y-2 border-b bg-card/80 px-4 py-2.5"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-arrow-left size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m12 19-7-7 7-7"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M19 12H5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m画布库[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0 flex-1"[39m
+          [36m>[39m
+            [36m<label[39m
+              [33mclass[39m=[32m"sr-only"[39m
+              [33mfor[39m=[32m"canvas-title"[39m
+            [36m>[39m
+              [0m画布标题[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33maria-label[39m=[32m"画布标题"[39m
+              [33mclass[39m=[32m"w-full min-w-40 max-w-sm rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold outline-none hover:border-border focus:border-primary"[39m
+              [33mid[39m=[32m"canvas-title"[39m
+              [33mvalue[39m=[32m"原画布"[39m
+            [36m/>[39m
+          [36m</div>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"inline-flex items-center gap-1.5 text-xs text-muted-foreground"[39m
+            [33mrole[39m=[32m"status"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-check size-3.5"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 6 9 17l-5-5"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m已保存[0m
+          [36m</span>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-save size-3.5"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M7 3v4a1 1 0 0 0 1 1h7"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+            [0m保存[0m
+          [36m</button>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-1 border-l pl-2"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m撤销[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+              [33mdisabled[39m=[32m""[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m重做[0m
+            [36m</button>[39m
+          [36m</div>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m归档[0m
+          [36m</button>[39m
+        [36m</header>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-wrap items-center gap-2 border-b bg-card/50 px-5 py-2 text-xs"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-layers size-4 text-primary"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"[39m
+            [36m/>[...
+ ❯ src/features/creative-canvas/canvas-editor.test.tsx:113:559
+
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  src/features/creative-canvas/canvas-editor.test.tsx > 画布素材缩略图不显示名称和规格，保留可访问预览与选用
+AssertionError: expected <p …(2)></p> to be null
+
+- Expected:
+null
+
++ Received:
+<p
+  class="line-clamp-2 break-all text-sm font-medium leading-5"
+  title="很长的图片文件名.jpg"
+>
+  很长的图片文件名.jpg
+</p>
+
+ ❯ src/features/creative-canvas/canvas-editor.test.tsx:116:361
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  src/features/platform-account/account-group-manager.test.tsx > 能力读取失败保留合法登记路径并提供重读，不假报不可用
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "重试读取"
+
+Here are the accessible roles:
+
+  main:
+
+  Name "":
+  [36m<main[39m
+    [33mclass[39m=[32m"flex min-w-0 flex-col gap-section-gap"[39m
+    [33mdata-slot[39m=[32m"account-manager"[39m
+    [33mdata-testid[39m=[32m"account-manager"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  banner:
+
+  Name "":
+  [36m<header />[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "账号组与绑定账号":
+  [36m<h1[39m
+    [33mclass[39m=[32m"text-2xl font-semibold"[39m
+  [36m/>[39m
+
+  Name "手动登记平台账号":
+  [36m<h3[39m
+    [33mclass[39m=[32m"text-sm font-medium"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"mt-1 text-sm text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"break-words text-sm font-medium"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"mt-1 text-xs text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"mt-2 text-xs text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"my-2 text-xs text-muted-foreground"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  complementary:
+
+  Name "":
+  [36m<aside[39m
+    [33mclass[39m=[32m"flex min-w-0 flex-col gap-4"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  region:
+
+  Name "账号组":
+  [36m<div[39m
+    [33maria-labelledby[39m=[32m"section-card-账号组"[39m
+    [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+    [33mdata-size[39m=[32m"default"[39m
+    [33mdata-slot[39m=[32m"section-card"[39m
+    [33mrole[39m=[32m"region"[39m
+  [36m/>[39m
+
+  Name "创作者":
+  [36m<div[39m
+    [33maria-labelledby[39m=[32m"section-card-创作者"[39m
+    [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+    [33mdata-size[39m=[32m"default"[39m
+    [33mdata-slot[39m=[32m"section-card"[39m
+    [33mrole[39m=[32m"region"[39m
+  [36m/>[39m
+
+  Name "组内平台账号":
+  [36m<div[39m
+    [33maria-labelledby[39m=[32m"section-card-组内平台账号"[39m
+    [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+    [33mdata-size[39m=[32m"default"[39m
+    [33mdata-slot[39m=[32m"section-card"[39m
+    [33mrole[39m=[32m"region"[39m
+  [36m/>[39m
+
+  Name "平台能力":
+  [36m<div[39m
+    [33maria-labelledby[39m=[32m"section-card-平台能力"[39m
+    [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+    [33mdata-size[39m=[32m"default"[39m
+    [33mdata-slot[39m=[32m"section-card"[39m
+    [33mrole[39m=[32m"region"[39m
+  [36m/>[39m
+
+  Name "绑定与登记账号":
+  [36m<div[39m
+    [33maria-labelledby[39m=[32m"section-card-绑定与登记账号"[39m
+    [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+    [33mdata-size[39m=[32m"default"[39m
+    [33mdata-slot[39m=[32m"section-card"[39m
+    [33mrole[39m=[32m"region"[39m
+  [36m/>[39m
+
+  Name "共享资源":
+  [36m<div[39m
+    [33maria-labelledby[39m=[32m"section-card-共享资源"[39m
+    [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+    [33mdata-size[39m=[32m"default"[39m
+    [33mdata-slot[39m=[32m"section-card"[39m
+    [33mrole[39m=[32m"region"[39m
+  [36m/>[39m
+
+  Name "整理历史资料":
+  [36m<div[39m
+    [33maria-labelledby[39m=[32m"section-card-整理历史资料"[39m
+    [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+    [33mdata-size[39m=[32m"default"[39m
+    [33mdata-slot[39m=[32m"section-card"[39m
+    [33mrole[39m=[32m"region"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  checkbox:
+
+  Name "显示已归档组":
+  [36m<input[39m
+    [33mtype[39m=[32m"checkbox"[39m
+  [36m/>[39m
+
+  Name "确认这是我管理的账号":
+  [36m<input[39m
+    [33mtype[39m=[32m"checkbox"[39m
+  [36m/>[39m
+
+  Name "显示已撤销授权":
+  [36m<input[39m
+    [33mtype[39m=[32m"checkbox"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "":
+  [36m<ul[39m
+    [33mclass[39m=[32m"flex flex-col gap-2"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<ul[39m
+    [33mclass[39m=[32m"flex flex-col gap-3"[39m
+    [33mdata-testid[39m=[32m"account-list"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<ul[39m
+    [33mclass[39m=[32m"space-y-3"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  listitem:
+
+  Name "":
+  [36m<li />[39m
+
+  Name "":
+  [36m<li />[39m
+
+  Name "":
+  [36m<li[39m
+    [33mclass[39m=[32m"rounded-control border border-border p-3"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "创作者1 个平台账号 · 当前工作区":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"true"[39m
+    [33mclass[39m=[32m"w-full rounded-control border px-3 py-2 text-left border-brand bg-brand-soft text-brand"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "另一组0 个平台账号":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mclass[39m=[32m"w-full rounded-control border px-3 py-2 text-left border-border bg-surface"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "创建账号组":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+    [33mdisabled[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "保存名称":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+    [33mdisabled[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "归档账号组":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "添加平台账号":
+  [36m<button[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "转组":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "重新读取平台能力":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 mt-3"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "扫码绑定新抖音号":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2 self-start"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+    [33mdata-testid[39m=[32m"bind-douyin-scan"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "登记账号":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+    [33mdisabled[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "重新读取":
+  [36m<button[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "整理历史资料":
+  [36m<button[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2"[39m
+    [33mdata-slot[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "新账号组名称":
+  [36m<input[39m
+    [33mclass[39m=[32m"h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"[39m
+    [33mdata-slot[39m=[32m"input"[39m
+    [33mid[39m=[32m"new-group-name"[39m
+    [33mmaxlength[39m=[32m"120"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "账号组名称":
+  [36m<input[39m
+    [33mclass[39m=[32m"h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 min-w-0 flex-1"[39m
+    [33mdata-slot[39m=[32m"input"[39m
+    [33mid[39m=[32m"group-name"[39m
+    [33mmaxlength[39m=[32m"120"[39m
+    [33mvalue[39m=[32m"创作者"[39m
+  [36m/>[39m
+
+  Name "平台账号名称":
+  [36m<input[39m
+    [33mclass[39m=[32m"h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"[39m
+    [33mdata-slot[39m=[32m"input"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  group:
+
+  Name "":
+  [36m<details />[39m
+
+  Name "":
+  [36m<details[39m
+    [33mclass[39m=[32m"mt-2"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<details />[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "继续创作 →":
+  [36m<a[39m
+    [33mclass[39m=[32m"text-sm text-brand"[39m
+    [33mhref[39m=[32m"/projects"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  alert:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"mb-3 text-sm text-destructive"[39m
+    [33mrole[39m=[32m"alert"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-destructive"[39m
+    [33mrole[39m=[32m"alert"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  table:
+
+  Name "各平台能力":
+  [36m<table[39m
+    [33maria-label[39m=[32m"各平台能力"[39m
+    [33mclass[39m=[32m"w-full min-w-[42rem] text-left text-sm"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  rowgroup:
+
+  Name "":
+  [36m<thead />[39m
+
+  Name "":
+  [36m<tbody />[39m
+
+  --------------------------------------------------
+  row:
+
+  Name "平台 扫码绑定 自动采集 自动发布 平台草稿 手动登记":
+  [36m<tr />[39m
+
+  Name "抖音 未读取 未读取 未读取 未读取 未读取":
+  [36m<tr[39m
+    [33mclass[39m=[32m"border-t border-border"[39m
+  [36m/>[39m
+
+  Name "快手 未读取 未读取 未读取 未读取 未读取":
+  [36m<tr[39m
+    [33mclass[39m=[32m"border-t border-border"[39m
+  [36m/>[39m
+
+  Name "视频号 未读取 未读取 未读取 未读取 未读取":
+  [36m<tr[39m
+    [33mclass[39m=[32m"border-t border-border"[39m
+  [36m/>[39m
+
+  Name "公众号 未读取 未读取 未读取 未读取 未读取":
+  [36m<tr[39m
+    [33mclass[39m=[32m"border-t border-border"[39m
+  [36m/>[39m
+
+  Name "小红书 未读取 未读取 未读取 未读取 未读取":
+  [36m<tr[39m
+    [33mclass[39m=[32m"border-t border-border"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  columnheader:
+
+  Name "平台":
+  [36m<th[39m
+    [33mclass[39m=[32m"px-2 py-2 font-medium"[39m
+  [36m/>[39m
+
+  Name "扫码绑定":
+  [36m<th[39m
+    [33mclass[39m=[32m"px-2 py-2 font-medium"[39m
+  [36m/>[39m
+
+  Name "自动采集":
+  [36m<th[39m
+    [33mclass[39m=[32m"px-2 py-2 font-medium"[39m
+  [36m/>[39m
+
+  Name "自动发布":
+  [36m<th[39m
+    [33mclass[39m=[32m"px-2 py-2 font-medium"[39m
+  [36m/>[39m
+
+  Name "平台草稿":
+  [36m<th[39m
+    [33mclass[39m=[32m"px-2 py-2 font-medium"[39m
+  [36m/>[39m
+
+  Name "手动登记":
+  [36m<th[39m
+    [33mclass[39m=[32m"px-2 py-2 font-medium"[39m
+  [36m/>[39m
+
+  Name "抖音":
+  [36m<th[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top font-medium"[39m
+  [36m/>[39m
+
+  Name "快手":
+  [36m<th[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top font-medium"[39m
+  [36m/>[39m
+
+  Name "视频号":
+  [36m<th[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top font-medium"[39m
+  [36m/>[39m
+
+  Name "公众号":
+  [36m<th[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top font-medium"[39m
+  [36m/>[39m
+
+  Name "小红书":
+  [36m<th[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top font-medium"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  cell:
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  Name "未读取":
+  [36m<td[39m
+    [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "登记平台":
+  [36m<select[39m
+    [33maria-label[39m=[32m"登记平台"[39m
+    [33mclass[39m=[32m"w-full rounded-control border border-border bg-surface px-3 py-2 text-sm"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  option:
+
+  Name "抖音":
+  [36m<option[39m
+    [33mvalue[39m=[32m"douyin"[39m
+  [36m/>[39m
+
+  Name "快手":
+  [36m<option[39m
+    [33mvalue[39m=[32m"kuaishou"[39m
+  [36m/>[39m
+
+  Name "视频号":
+  [36m<option[39m
+    [33mvalue[39m=[32m"wechatVideo"[39m
+  [36m/>[39m
+
+  Name "公众号":
+  [36m<option[39m
+    [33mvalue[39m=[32m"wechatOfficial"[39m
+  [36m/>[39m
+
+  Name "小红书":
+  [36m<option[39m
+    [33mvalue[39m=[32m"xiaohongshu"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body[39m
+  [33mstyle[39m=[32m""[39m
+[36m>[39m
+  [36m<div>[39m
+    [36m<main[39m
+      [33mclass[39m=[32m"flex min-w-0 flex-col gap-section-gap"[39m
+      [33mdata-slot[39m=[32m"account-manager"[39m
+      [33mdata-testid[39m=[32m"account-manager"[39m
+    [36m>[39m
+      [36m<header>[39m
+        [36m<h1[39m
+          [33mclass[39m=[32m"text-2xl font-semibold"[39m
+        [36m>[39m
+          [0m账号组与绑定账号[0m
+        [36m</h1>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-sm text-muted-foreground"[39m
+        [36m>[39m
+          [0m同一创作者的内容在一个工作区管理，平台账号分别绑定与分发。[0m
+        [36m</p>[39m
+      [36m</header>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid min-w-0 gap-section-gap lg:grid-cols-[16rem_minmax(0,1fr)]"[39m
+      [36m>[39m
+        [36m<aside[39m
+          [33mclass[39m=[32m"flex min-w-0 flex-col gap-4"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33maria-labelledby[39m=[32m"section-card-账号组"[39m
+            [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+            [33mdata-size[39m=[32m"default"[39m
+            [33mdata-slot[39m=[32m"section-card"[39m
+            [33mrole[39m=[32m"region"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"group/card-header @container/card-header auto-rows-min gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing) flex flex-row items-start justify-between gap-card-gap"[39m
+              [33mdata-slot[39m=[32m"card-header"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex min-w-0 flex-col gap-0.5"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"font-heading group-data-[size=sm]/card:text-sm text-[15px] font-semibold"[39m
+                  [33mdata-slot[39m=[32m"card-title"[39m
+                  [33mid[39m=[32m"section-card-账号组"[39m
+                [36m>[39m
+                  [0m账号组[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"px-(--card-spacing) text-sm"[39m
+              [33mdata-slot[39m=[32m"card-content"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex flex-col gap-3"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"flex gap-2 text-sm"[39m
+                [36m>[39m
+                  [36m<input[39m
+                    [33mtype[39m=[32m"checkbox"[39m
+                  [36m/>[39m
+                  [0m显示已归档组[0m
+                [36m</label>[39m
+                [36m<ul[39m
+                  [33mclass[39m=[32m"flex flex-col gap-2"[39m
+                [36m>[39m
+                  [36m<li>[39m
+                    [36m<button[39m
+                      [33maria-pressed[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"w-full rounded-control border px-3 py-2 text-left border-brand bg-brand-soft text-brand"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"block break-words text-sm font-medium"[39m
+                      [36m>[39m
+                        [0m创作者[0m
+                      [36m</span>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+                      [36m>[39m
+                        [0m1 个平台账号[0m
+                        [0m · 当前工作区[0m
+                      [36m</span>[39m
+                    [36m</button>[39m
+                  [36m</li>[39m
+                  [36m<li>[39m
+                    [36m<button[39m
+                      [33maria-pressed[39m=[32m"false"[39m
+                      [33mclass[39m=[32m"w-full rounded-control border px-3 py-2 text-left border-border bg-surface"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"block break-words text-sm font-medium"[39m
+                      [36m>[39m
+                        [0m另一组[0m
+                      [36m</span>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+                      [36m>[39m
+                        [0m0 个平台账号[0m
+                      [36m</span>[39m
+                    [36m</button>[39m
+                  [36m</li>[39m
+                [36m</ul>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"text-sm"[39m
+                  [33mfor[39m=[32m"new-group-name"[39m
+                [36m>[39m
+                  [0m新账号组名称[0m
+                [36m</label>[39m
+                [36m<input[39m
+                  [33mclass[39m=[32m"h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"[39m
+                  [33mdata-slot[39m=[32m"input"[39m
+                  [33mid[39m=[32m"new-group-name"[39m
+                  [33mmaxlength[39m=[32m"120"[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+                [36m<button[39m
+                  [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:ar...
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/platform-account/account-group-manager.test.tsx:44:181
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  src/features/platform-account/account-group-manager.test.tsx > 三平台扫码入口在能力表内，删除常驻刷新及重复扫码框
+TestingLibraryElementError: Unable to find role="button" and name "扫码绑定快手账号"
+
+Ignored nodes: comments, script, style
+[36m<table[39m
+  [33maria-label[39m=[32m"各平台能力"[39m
+  [33mclass[39m=[32m"w-full min-w-[42rem] text-left text-sm"[39m
+[36m>[39m
+  [36m<thead>[39m
+    [36m<tr>[39m
+      [36m<th[39m
+        [33mclass[39m=[32m"px-2 py-2 font-medium"[39m
+      [36m>[39m
+        [0m平台[0m
+      [36m</th>[39m
+      [36m<th[39m
+        [33mclass[39m=[32m"px-2 py-2 font-medium"[39m
+      [36m>[39m
+        [0m扫码绑定[0m
+      [36m</th>[39m
+      [36m<th[39m
+        [33mclass[39m=[32m"px-2 py-2 font-medium"[39m
+      [36m>[39m
+        [0m自动采集[0m
+      [36m</th>[39m
+      [36m<th[39m
+        [33mclass[39m=[32m"px-2 py-2 font-medium"[39m
+      [36m>[39m
+        [0m自动发布[0m
+      [36m</th>[39m
+      [36m<th[39m
+        [33mclass[39m=[32m"px-2 py-2 font-medium"[39m
+      [36m>[39m
+        [0m平台草稿[0m
+      [36m</th>[39m
+      [36m<th[39m
+        [33mclass[39m=[32m"px-2 py-2 font-medium"[39m
+      [36m>[39m
+        [0m手动登记[0m
+      [36m</th>[39m
+    [36m</tr>[39m
+  [36m</thead>[39m
+  [36m<tbody>[39m
+    [36m<tr[39m
+      [33mclass[39m=[32m"border-t border-border"[39m
+    [36m>[39m
+      [36m<th[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top font-medium"[39m
+      [36m>[39m
+        [0m抖音[0m
+      [36m</th>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-success"[39m
+        [36m>[39m
+          [0m可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m已接入[0m
+        [36m</p>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-success"[39m
+        [36m>[39m
+          [0m可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m真实采集[0m
+        [36m</p>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m暂不可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m尚未接入[0m
+        [36m</p>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m暂不可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m尚未接入[0m
+        [36m</p>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-success"[39m
+        [36m>[39m
+          [0m可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m可登记[0m
+        [36m</p>[39m
+      [36m</td>[39m
+    [36m</tr>[39m
+    [36m<tr[39m
+      [33mclass[39m=[32m"border-t border-border"[39m
+    [36m>[39m
+      [36m<th[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top font-medium"[39m
+      [36m>[39m
+        [0m快手[0m
+      [36m</th>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-success"[39m
+        [36m>[39m
+          [0m可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m已接入[0m
+        [36m</p>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-success"[39m
+        [36m>[39m
+          [0m可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m真实采集[0m
+        [36m</p>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m暂不可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m尚未接入[0m
+        [36m</p>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m暂不可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m尚未接入[0m
+        [36m</p>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-success"[39m
+        [36m>[39m
+          [0m可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m可登记[0m
+        [36m</p>[39m
+      [36m</td>[39m
+    [36m</tr>[39m
+    [36m<tr[39m
+      [33mclass[39m=[32m"border-t border-border"[39m
+    [36m>[39m
+      [36m<th[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top font-medium"[39m
+      [36m>[39m
+        [0m视频号[0m
+      [36m</th>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m未读取[0m
+        [36m</span>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m未读取[0m
+        [36m</span>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m未读取[0m
+        [36m</span>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m未读取[0m
+        [36m</span>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m未读取[0m
+        [36m</span>[39m
+      [36m</td>[39m
+    [36m</tr>[39m
+    [36m<tr[39m
+      [33mclass[39m=[32m"border-t border-border"[39m
+    [36m>[39m
+      [36m<th[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top font-medium"[39m
+      [36m>[39m
+        [0m公众号[0m
+      [36m</th>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m未读取[0m
+        [36m</span>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m未读取[0m
+        [36m</span>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m未读取[0m
+        [36m</span>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m未读取[0m
+        [36m</span>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m未读取[0m
+        [36m</span>[39m
+      [36m</td>[39m
+    [36m</tr>[39m
+    [36m<tr[39m
+      [33mclass[39m=[32m"border-t border-border"[39m
+    [36m>[39m
+      [36m<th[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top font-medium"[39m
+      [36m>[39m
+        [0m小红书[0m
+      [36m</th>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-success"[39m
+        [36m>[39m
+          [0m可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m已接入[0m
+        [36m</p>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-success"[39m
+        [36m>[39m
+          [0m可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m真实采集[0m
+        [36m</p>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m暂不可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m尚未接入[0m
+        [36m</p>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-muted-foreground"[39m
+        [36m>[39m
+          [0m暂不可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m尚未接入[0m
+        [36m</p>[39m
+      [36m</td>[39m
+      [36m<td[39m
+        [33mclass[39m=[32m"px-2 py-3 align-top"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-success"[39m
+        [36m>[39m
+          [0m可用[0m
+        [36m</span>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-1 text-xs leading-relaxed text-muted-foreground"[39m
+        [36m>[39m
+          [0m可登记[0m
+        [36m</p>[39m
+      [36m</td>[39m
+    [36m</tr>[39m
+  [36m</tbody>[39m
+[36m</table>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body[39m
+    [33mstyle[39m=[32m""[39m
+  [36m>[39m
+    [36m<div>[39m
+      [36m<main[39m
+        [33mclass[39m=[32m"flex min-w-0 flex-col gap-section-gap"[39m
+        [33mdata-slot[39m=[32m"account-manager"[39m
+        [33mdata-testid[39m=[32m"account-manager"[39m
+      [36m>[39m
+        [36m<header>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"text-2xl font-semibold"[39m
+          [36m>[39m
+            [0m账号组与绑定账号[0m
+          [36m</h1>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-1 text-sm text-muted-foreground"[39m
+          [36m>[39m
+            [0m同一创作者的内容在一个工作区管理，平台账号分别绑定与分发。[0m
+          [36m</p>[39m
+        [36m</header>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"grid min-w-0 gap-section-gap lg:grid-cols-[16rem_minmax(0,1fr)]"[39m
+        [36m>[39m
+          [36m<aside[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-col gap-4"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33maria-labelledby[39m=[32m"section-card-账号组"[39m
+              [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+              [33mdata-size[39m=[32m"default"[39m
+              [33mdata-slot[39m=[32m"section-card"[39m
+              [33mrole[39m=[32m"region"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"group/card-header @container/card-header auto-rows-min gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing) flex flex-row items-start justify-between gap-card-gap"[39m
+                [33mdata-slot[39m=[32m"card-header"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex min-w-0 flex-col gap-0.5"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"font-heading group-data-[size=sm]/card:text-sm text-[15px] font-semibold"[39m
+                    [33mdata-slot[39m=[32m"card-title"[39m
+                    [33mid[39m=[32m"section-card-账号组"[39m
+                  [36m>[39m
+                    [0m账号组[0m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"px-(--card-spacing) text-sm"[39m
+                [33mdata-slot[39m=[32m"card-content"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex flex-col gap-3"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"flex gap-2 text-sm"[39m
+                  [36m>[39m
+                    [36m<input[39m
+                      [33mtype[39m=[32m"checkbox"[39m
+                    [36m/>[39m
+                    [0m显示已归档组[0m
+                  [36m</label>[39m
+                  [36m<ul[39m
+                    [33mclass[39m=[32m"flex flex-col gap-2"[39m
+                  [36m>[39m
+                    [36m<li>[39m
+                      [36m<button[39m
+                        [33maria-pressed[39m=[32m"true"[39m
+                        [33mclass[39m=[32m"w-full rounded-control border px-3 py-2 text-left border-brand bg-brand-soft text-brand"[39m
+                        [33mtype[39m=[32m"button"[39m
+                      [36m>[39m
+                        [36m<span[39m
+                          [33mclass[39m=[32m"block break-words text-sm font-medium"[39m
+                        [36m>[39m
+                          [0m创作者[0m
+                        [36m</span>[39m
+                        [36m<span[39m
+                          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+                        [36m>[39m
+                          [0m1 个平台账号[0m
+                          [0m · 当前工作区[0m
+                        [36m</span>[39m
+                      [36m</button>[39m
+                    [36m</li>[39m
+                    [36m<li>[39m
+                      [36m<button[39m
+                        [33maria-pressed[39m=[32m"false"[39m
+                        [33mclass[39m=[32m"w-full rounded-control border px-3 py-2 text-left border-border bg-surface"[39m
+                        [33mtype[39m=[32m"button"[39m
+                      [36m>[39m
+                        [36m<span[39m
+                          [33mclass[39m=[32m"block break-words text-sm font-medium"[39m
+                        [36m>[39m
+                          [0m另一组[0m
+                        [36m</span>[39m
+                        [36m<span[39m
+                          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+                        [36m>[39m
+                          [0m0 个平台账号[0m
+                        [36m</span>[39m
+                      [36m</button>[39m
+                    [36m</li>[39m
+                  [36m</ul>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"text-sm"[39m
+                    [33mfor[39m=[32m"new-group-name"[39m
+                  [36m>[39m
+                    [0m新账号组名称[0m
+                  [36m</label>[39m
+                  [36m<input[39m
+                    [33mclass[39m=[32m"h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"[39m
+                    [33mdata-slot[39m=[32m"input"[39m
+                    [33mid[39m=[32m"new-group-name"[39m
+                    [33mmaxlength[39m=[32m"120"[39m
+                    [33mvalue[39m=[32m""[39m
+                  [36m/>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all ou...
+ ❯ Proxy.waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/features/platform-account/account-group-manager.test.tsx:50:426
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  7 failed | 22 passed (29)
+   Start at  10:54:07
+   Duration  10.36s (transform 3.24s, setup 688ms, import 5.20s, tests 8.22s, environment 5.55s)
+

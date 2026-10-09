@@ -1,0 +1,166 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-2qc3RW
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 predev /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend
+[2m[WebServer] [22m> node ../ai-worker/scripts/build.mjs
+[2m[WebServer] [22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 dev /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend
+[2m[WebServer] [22m> next dev --hostname 127.0.0.1 --port 31411
+[2m[WebServer] [22m
+[2m[WebServer] [22m[1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
+[2m[WebServer] [22m- Local:         http://127.0.0.1:31411
+[2m[WebServer] [22m- Network:       http://127.0.0.1:31411
+[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 323ms
+[2m[WebServer] [22m[CreatorOS] SIDECAR_STARTUP_VERIFIED
+[2m[WebServer] [22m
+[2m[WebServer] [22m GET / [32m200[39m in 16.8s[2m (next.js: 647ms, proxy.ts: 278ms, application-code: 15.8s)[22m
+
+Running 2 tests using 1 worker
+
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-2qc3RW
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 973ms[2m (next.js: 938ms, proxy.ts: 10ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 1905µs, proxy.ts: 2ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 1372µs, proxy.ts: 1953µs, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 1380µs, proxy.ts: 2ms, application-code: 37ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1658µs, proxy.ts: 3ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1121µs, proxy.ts: 1708µs, application-code: 17ms)[22m
+[2m[WebServer] [22m PUT /api/v1/blob/groups/grp-ebaf7e49-5/inbox/uploads/objkey-ebaf7e49-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791519330585&token=44ac2c3c499f4c666a60ae40484a55374cc65993f2f91be153e9b35305c9a3e4&scope=eyJ1c2VySWQiOiJ1c2VyLWViYWY3ZTQ5LTEiLCJncm91cElkIjoiZ3JwLWViYWY3ZTQ5LTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 1762ms[2m (next.js: 1740ms, application-code: 22ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 87ms[2m (next.js: 1370µs, proxy.ts: 2ms, application-code: 83ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 2ms, proxy.ts: 1957µs, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1341µs, proxy.ts: 1617µs, application-code: 17ms)[22m
+[2m[WebServer] [22m GET /canvases/b28784fa-6c42-491d-ad0e-6582c307b31d [32m200[39m in 1526ms[2m (next.js: 1418ms, proxy.ts: 3ms, application-code: 105ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 1503µs, proxy.ts: 2ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 4ms, proxy.ts: 2ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 1697µs, proxy.ts: 12ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 36ms[2m (next.js: 13ms, proxy.ts: 12ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1202µs, proxy.ts: 1884µs, application-code: 12ms)[22m
+[2m[WebServer] [22m GET /canvases/b28784fa-6c42-491d-ad0e-6582c307b31d [32m200[39m in 85ms[2m (next.js: 4ms, proxy.ts: 3ms, application-code: 78ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 1662µs, proxy.ts: 3ms, application-code: 39ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 5ms, proxy.ts: 3ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 16ms, proxy.ts: 4ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 3ms, proxy.ts: 30ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 4ms, proxy.ts: 16ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 1445µs, proxy.ts: 2ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 1619µs, proxy.ts: 5ms, application-code: 18ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-ebaf7e49-5/inbox/uploads/objkey-ebaf7e49-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791519336220&token=505cc30b436e7348be3c1a209191ef15deae9ca0828b1825e070be0dc61b84dc&scope=eyJ1c2VySWQiOiJ1c2VyLWViYWY3ZTQ5LTEiLCJncm91cElkIjoiZ3JwLWViYWY3ZTQ5LTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 28ms[2m (next.js: 3ms, application-code: 25ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-ebaf7e49-5/inbox/uploads/objkey-ebaf7e49-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791519336242&token=9d98a83e01af4722d2b6cd7d4b650d250a560cc48a0ba26f155b559523dd1090&scope=eyJ1c2VySWQiOiJ1c2VyLWViYWY3ZTQ5LTEiLCJncm91cElkIjoiZ3JwLWViYWY3ZTQ5LTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 15ms[2m (next.js: 1335µs, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1401µs, proxy.ts: 1972µs, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1525µs, proxy.ts: 2ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1313µs, proxy.ts: 1965µs, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 1257µs, proxy.ts: 3ms, application-code: 21ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1351µs, proxy.ts: 2ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1884µs, proxy.ts: 4ms, application-code: 17ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-ebaf7e49-5/inbox/uploads/objkey-ebaf7e49-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791519339385&token=cab5e3ab125f45ade70d44f852535920058f07d8d00881d2ee168986d62a5679&scope=eyJ1c2VySWQiOiJ1c2VyLWViYWY3ZTQ5LTEiLCJncm91cElkIjoiZ3JwLWViYWY3ZTQ5LTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 15ms[2m (next.js: 3ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 76ms[2m (next.js: 12ms, proxy.ts: 32ms, application-code: 32ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-ebaf7e49-5/inbox/uploads/objkey-ebaf7e49-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791519340239&token=96d4cad5721cf97208f8bc7c7af58cc07cba3cfbd593237d6086a5014ca59782&scope=eyJ1c2VySWQiOiJ1c2VyLWViYWY3ZTQ5LTEiLCJncm91cElkIjoiZ3JwLWViYWY3ZTQ5LTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 26ms[2m (next.js: 3ms, application-code: 23ms)[22m
+  ✓  1 [e2e] › tests/e2e/creative-canvas.spec.ts:377:5 › T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟模型回执） (11.3s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1609µs, proxy.ts: 1750µs, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1247µs, proxy.ts: 1456µs, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1108µs, proxy.ts: 1574µs, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 1112µs, proxy.ts: 1750µs, application-code: 34ms)[22m
+[2m[WebServer] [22m GET /accounts [32m200[39m in 268ms[2m (next.js: 19ms, proxy.ts: 1791µs, application-code: 247ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 5ms, proxy.ts: 4ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 53ms[2m (next.js: 42ms, proxy.ts: 4ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 75ms[2m (next.js: 16ms, proxy.ts: 39ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 83ms[2m (next.js: 34ms, proxy.ts: 42ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1355µs, proxy.ts: 2ms, application-code: 7ms)[22m
+  ✓  2 [e2e] › tests/e2e/creative-canvas.spec.ts:415:5 › T-1101 三平台表格直接打开扫码弹窗，无重复刷新和下方扫码区 (2.5s)
+
+  2 passed (35.7s)
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexCli.ts:29:89:
+[2m[WebServer] [22m      29 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexJsonRpcConnection.ts:27:93:
+[2m[WebServer] [22m      27 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[2m[WebServer] [22m[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+[2m[WebServer] [22m[36m[browser][39m [describeUserError] [31mError: 请先进入此账号组，再查看共享资源。[39m
+[2m[WebServer] [22m[31m    at ResourceGrantsPanel.useCallback[check] (src/features/platform-account/resource-grants-panel.tsx:22:128)
+[2m[WebServer] [22m    at ResourceGrantsPanel.useCallback[load] (src/features/platform-account/resource-grants-panel.tsx:23:158)[39m
+[2m[WebServer] [22m  20 | ...
+[2m[WebServer] [22m  21 | ...
+[2m[WebServer] [22m> 22 | ...&writeEpoch.current!==epoch.current))throw Error("请先进入此账号组，再查看共享资源。");...
+[2m[WebServer] [22m     |                                               ^
+[2m[WebServer] [22m  23 | ...icket=epoch.current;reading.current=Promise.resolve().then(async()=>{try{check();setLoa...
+[2m[WebServer] [22m  24 | ...++;};const scopeChanged=()=>{if(current())return;expire();setRows([]);setPlan(null);set...
+[2m[WebServer] [22m  25 | ...rking.current=true;const ticket=epoch.current;writeEpoch.current=ticket;setBusy(true);s... [2m(src/lib/ai-error-humanize.ts:292:13)[22m

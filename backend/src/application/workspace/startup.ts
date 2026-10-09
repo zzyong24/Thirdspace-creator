@@ -8,7 +8,7 @@ export async function runAccountGroupStartup(ctx:RequestContext,ports:{
  hasCredentialEvidence(ctx:RequestContext,account:PlatformAccountResource):Promise<boolean>;
  seedGroup(ctx:RequestContext):Promise<void>;
  ensureSharedJobs(ctx:RequestContext):Promise<void>;
- ensurePrivateJobs(ctx:RequestContext):Promise<void>;
+ ensurePrivateJobs(ctx:RequestContext,account:PlatformAccountResource):Promise<void>;
  warn(stage:string,error:unknown,accountId?:string):void;
 }){
  const seeded=new Set<string>();const capabilities=await ports.capabilities(ctx);
@@ -22,8 +22,8 @@ export async function runAccountGroupStartup(ctx:RequestContext,ports:{
      seeded.add(group.id);const shared={...scoped,accountId:null,membershipVersion:undefined};
      for(const [stage,work] of [['知识预设',ports.seedGroup],['共享任务',ports.ensureSharedJobs]] as const){try{await work(shared);}catch(error){ports.warn(stage,error,account.id);}}
     }
-    // 目前四个默认私有collector只有抖音实现；平台capability不是账号已登录证据。
-    if(account.platform==='douyin'&&capabilities.some(row=>row.platform===account.platform&&row.collect.available)&&await ports.hasCredentialEvidence(scoped,account))await ports.ensurePrivateJobs(scoped);
+    // 平台真实能力与账号凭据分别验证；每个平台只补齐已实现的私有任务。
+    if(['douyin','kuaishou','xiaohongshu'].includes(account.platform)&&capabilities.some(row=>row.platform===account.platform&&row.collect.available)&&await ports.hasCredentialEvidence(scoped,account))await ports.ensurePrivateJobs(scoped,account);
    }catch(error){ports.warn('账号启动',error,account.id);}
   }
   if(offset+page.rows.length>=page.total||page.rows.length===0)break;

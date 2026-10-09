@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+ ❯ src/modules/platform-collection/platform-collection.integration.test.ts (23 tests | 1 failed | 22 skipped) 6815ms
+   × T1101取消或失败的真实原owner释放queued，暂停保留，伪造请求键不冒充owner 6814ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/platform-collection/platform-collection.integration.test.ts > T1101取消或失败的真实原owner释放queued，暂停保留，伪造请求键不冒充owner
+AssertionError: expected 'fiction' to be null
+
+- Expected:
+null
+
++ Received:
+"fiction"
+
+ ❯ src/modules/platform-collection/platform-collection.integration.test.ts:448:76
+    446|  const f=await fixture(),scope=ctx('user-a','acct-a');try{
+    447|  const manual=await f.svc.start(scope,{accountId:'acct-a',capability:'…
+    448|  expect(await f.svc.scheduledOwnerTaskId(scope,'acct-a',manual.attempt…
+       |                                                                            ^
+    449|  await f.svc.cancel(scope,'acct-a',manual.attemptId);
+    450|  f.ownerStates.set('original-task',{status:'paused'});
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 22 skipped (23)
+   Start at  11:31:01
+   Duration  9.16s (transform 1.26s, setup 0ms, import 2.13s, tests 6.81s, environment 0ms)
+

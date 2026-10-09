@@ -6,8 +6,9 @@ const RESUMABLE = new Set(["queued", "running", "partial"]);
 
 type Account = { id: string; platform: string; status: string };
 type Ports = {
+  recoveryOnly?:boolean;
   listAccounts(ctx: RequestContext, query: { limit: number; offset: number }): Promise<{ rows: Account[] }>;
-  latestRun(ctx: RequestContext, accountId: string, capability: "workCatalog"): Promise<CollectionRunResource | null>;
+  latestRun(ctx: RequestContext, accountId: string, capability: CollectionRunResource["capability"]): Promise<CollectionRunResource | null>;
   start(ctx: RequestContext, input: { accountId: string; capability: "workCatalog"; clientRequestId: string }): Promise<CollectionRunResource>;
   resume(ctx: RequestContext, run: CollectionRunResource): void;
   onError(accountId: string, error: unknown): void;
@@ -31,6 +32,11 @@ export function createPeriodicPlatformCollection(ports: Ports) {
           if ((retryAfter.get(account.id) ?? 0) > nowMs) continue;
           const scoped = { ...ctx, accountId: account.id };
           try {
+            if(ports.recoveryOnly){
+              const capabilities:CollectionRunResource['capability'][]=account.platform==='kuaishou'?['workCatalog','workMetrics','accountOverview']:['workCatalog','workMetrics'];
+              for(const capability of capabilities){const original=await ports.latestRun(scoped,account.id,capability);if(original&&RESUMABLE.has(original.status))ports.resume(scoped,original);}
+              continue;
+            }
             const latest = await ports.latestRun(scoped, account.id, "workCatalog");
             if (latest && RESUMABLE.has(latest.status)) {
               ports.resume(scoped, latest);

@@ -1,0 +1,11 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend
+
+(node:60316) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  11:17:32
+   Duration  4.37s (transform 1.15s, setup 165ms, import 1.89s, tests 1.57s, environment 549ms)
+

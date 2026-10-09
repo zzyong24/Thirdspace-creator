@@ -1,0 +1,155 @@
+
+> @creatoros/contract@0.4.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/contract
+> vitest run
+
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/contract
+
+ ❯ tests/registry.test.ts (4 tests | 1 failed) 97ms
+     × registers no routes outside SPEC §13 12ms
+ ❯ tests/endpoint-bootstrap.test.mjs (42 tests | 42 failed) 38176ms
+     × initializes index.ts before the public registry 3003ms
+     × initializes endpoints.ts before the public registry 2615ms
+     × initializes operations/account-groups.ts before the public registry 1356ms
+     × initializes operations/ai.ts before the public registry 770ms
+     × initializes operations/analytics.ts before the public registry 943ms
+     × initializes operations/articles.ts before the public registry 697ms
+     × initializes operations/artifacts.ts before the public registry 738ms
+     × initializes operations/assets.ts before the public registry 644ms
+     × initializes operations/auth.ts before the public registry 700ms
+     × initializes operations/benchmark.ts before the public registry 658ms
+     × initializes operations/calibration.ts before the public registry 711ms
+     × initializes operations/candidate.ts before the public registry 709ms
+     × initializes operations/content-calendar.ts before the public registry 754ms
+     × initializes operations/creative-canvas.ts before the public registry 672ms
+     × initializes operations/creative-results.ts before the public registry 706ms
+     × initializes operations/execution.ts before the public registry 746ms
+     × initializes operations/favorites-folder.ts before the public registry 659ms
+     × initializes operations/graphic-posts.ts before the public registry 642ms
+     × initializes operations/ingestion.ts before the public registry 641ms
+     × initializes operations/intelligence.ts before the public registry 620ms
+     × initializes operations/knowledge.ts before the public registry 648ms
+     × initializes operations/learnings.ts before the public registry 845ms
+     × initializes operations/material-links.ts before the public registry 621ms
+     × initializes operations/notifications.ts before the public registry 666ms
+     × initializes operations/pages.ts before the public registry 632ms
+     × initializes operations/platform-accounts.ts before the public registry 617ms
+     × initializes operations/platform-collection.ts before the public registry 569ms
+     × initializes operations/positioning.ts before the public registry 661ms
+     × initializes operations/production.ts before the public registry 674ms
+     × initializes operations/projects.ts before the public registry 1034ms
+     × initializes operations/publishing.ts before the public registry 943ms
+     × initializes operations/review-gate.ts before the public registry 1231ms
+     × initializes operations/reviews.ts before the public registry 1284ms
+     × initializes operations/scheduling.ts before the public registry 1023ms
+     × initializes operations/search.ts before the public registry 1222ms
+     × initializes operations/settings.ts before the public registry 1283ms
+     × initializes operations/taxonomy.ts before the public registry 842ms
+     × initializes operations/topic-attribution.ts before the public registry 845ms
+     × initializes operations/trend-source.ts before the public registry 740ms
+     × initializes operations/visual-templates.ts before the public registry 784ms
+     × initializes operations/work-compositions.ts before the public registry 906ms
+     × initializes operations/work-sources.ts before the public registry 1120ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 43 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes index.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes endpoints.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/account-groups.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/ai.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/analytics.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/articles.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/artifacts.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/assets.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/auth.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/benchmark.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/calibration.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/candidate.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/content-calendar.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/creative-canvas.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/creative-results.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/execution.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/favorites-folder.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/graphic-posts.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/ingestion.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/intelligence.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/knowledge.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/learnings.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/material-links.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/notifications.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/pages.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/platform-accounts.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/platform-collection.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/positioning.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/production.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/projects.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/publishing.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/review-gate.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/reviews.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/scheduling.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/search.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/settings.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/taxonomy.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/topic-attribution.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/trend-source.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/visual-templates.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/work-compositions.ts before the public registry
+ FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/work-sources.ts before the public registry
+AssertionError: file:///Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend/[eval1]:6
+      if (Object.keys(root.ENDPOINTS).length !== 404) throw new Error("registry surface changed");
+                                                            ^
+
+Error: registry surface changed
+    at file:///Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend/[eval1]:6:61
+
+Node.js v25.9.0
+: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ ../backend/[eval1]:6:61
+ ❯ tests/endpoint-bootstrap.test.mjs:72:42
+     70|     });
+     71|     expect(result.error, result.stderr).toBeUndefined();
+     72|     expect(result.status, result.stderr).toBe(0);
+       |                                          ^
+     73|     expect(result.stdout.trim()).toBe("CONTRACT_ENTRY_READY");
+     74|   }, 135_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/43]⎯
+
+ FAIL  tests/registry.test.ts > endpoint registry > registers no routes outside SPEC §13
+AssertionError: unexpected: POST /ai/assistant-actions/adopt, GET /ai/assistant-actions/receipt, POST /canvases/create/adopt, POST /canvases/:canvasId/nodes/:nodeId/confirm: expected [ …(4) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "POST /ai/assistant-actions/adopt",
++   "GET /ai/assistant-actions/receipt",
++   "POST /canvases/create/adopt",
++   "POST /canvases/:canvasId/nodes/:nodeId/confirm",
++ ]
+
+ ❯ tests/registry.test.ts:498:54
+    496|     const allowed = new Set(SPEC_13.map(([m, p]) => `${m} ${p}`));
+    497|     const extra = registered.filter((r) => !allowed.has(r));
+    498|     expect(extra, `unexpected: ${extra.join(", ")}`).toEqual([]);
+       |                                                      ^
+    499|   });
+    500|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/43]⎯
+
+
+ Test Files  2 failed | 69 passed (71)
+      Tests  43 failed | 397 passed (440)
+   Start at  11:22:42
+   Duration  41.96s (transform 19.53s, setup 0ms, import 61.36s, tests 43.75s, environment 9ms)
+
+ ELIFECYCLE  Test failed. See above for more details.

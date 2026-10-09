@@ -1,0 +1,22 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+ ❯ src/modules/creative-canvas/creative-canvas.service.test.ts (21 tests | 1 failed | 20 skipped) 4984ms
+   × 未知提交恢复冻结原输入；编辑后继续原预约，阻断新attempt，成功页不重进提交 42ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/creative-canvas/creative-canvas.service.test.ts > 未知提交恢复冻结原输入；编辑后继续原预约，阻断新attempt，成功页不重进提交
+ConflictError: 节点输入已编辑，请明确再创作而不是恢复旧提交
+ ❯ Object.generate src/modules/creative-canvas/creative-canvas.service.ts:443:614
+
+ ❯ src/modules/creative-canvas/creative-canvas.service.test.ts:171:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 20 skipped (21)
+   Start at  11:39:10
+   Duration  11.26s (transform 4.53s, setup 0ms, import 6.12s, tests 4.98s, environment 0ms)
+

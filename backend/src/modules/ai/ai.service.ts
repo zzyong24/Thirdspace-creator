@@ -14,7 +14,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { RequestContext } from "@creatoros/contract";
 import {aiPublicMessageBody,type AiPublicMessageBody,type AiPublicChatPrepareOptions} from '@creatoros/contract';
-import { and, eq, aiTasks, aiTaskResults, aiMessages, aiConversations, requireAccountId, type Db } from "@creatoros/backend";
+import { and, eq, aiTasks, executionTasks, aiTaskResults, aiMessages, aiConversations, requireAccountId, type Db } from "@creatoros/backend";
 import {
   createAiRepository,
   type AiRepository,
@@ -445,6 +445,8 @@ export interface AiService {
   // 只清 pending(已采纳 active 绝不误动);越权/不存在 → 静默 no-op(best-effort 语义)。
   discardGeneratedAsset(ctx: RequestContext, assetId: string): Promise<void>;
   getTask(ctx: RequestContext, taskId: string): Promise<AITaskResource>;
+  /** 内部恢复诊断：按同用户/真实账号读取原调度执行状态，不授权新的跨组读写。 */
+  readScheduledCollectionOwner(ctx:RequestContext,taskId:string,accountId:string):Promise<{status:string}|null>;
   getAssetResultProof(ctx:RequestContext,input:{taskId:string;resultId:string}):Promise<{task:AITaskResource;result:AITaskResultResource;executionCallId:string|null}>;
   /** 宿主恢复提交时回读首次输入；保持账号隔离，不暴露运行配置。 */
   findTaskByAttempt(ctx: RequestContext, taskType: string, attemptId: string): Promise<AITaskResource | null>;
@@ -1984,6 +1986,22 @@ export function createAiService(deps: ServiceDeps): AiService {
         "ai.getTaskRuntimeData",
       ).requireTask(taskId);
       return (task.runtimeData ?? {}) as Record<string, unknown>;
+    },
+
+    async readScheduledCollectionOwner(ctx,taskId,accountId) {
+      const [task]=await deps.db.select().from(aiTasks).where(and(eq(aiTasks.id,taskId),
+        eq(aiTasks.userId,ctx.userId),eq(aiTasks.accountId,accountId),eq(aiTasks.taskType,'scheduled.self.metrics')));
+      if(!task?.executionTaskId)return null;
+      const [execution]=await deps.db.select().from(executionTasks).where(and(eq(executionTasks.id,task.executionTaskId),
+        eq(executionTasks.userId,ctx.userId),eq(executionTasks.accountId,accountId),eq(executionTasks.kind,'ai_task'),
+        eq(executionTasks.ownerType,'ai_task'),eq(executionTasks.ownerId,task.id)));
+      if(!execution||execution.groupId!==task.groupId)return null;
+      const input=(execution.payload as Record<string,unknown>)?.modelInput as Record<string,unknown>|undefined;
+      const original=task.inputData as Record<string,unknown>;
+      // SEMANTIC_BOUNDARY_ALLOW: 精确验证宿主冻结的调度协议和原job绑定，不做语义判断。
+      if(input?.kind!=='scheduled.flywheel'||input.sourceKind!=='self.metrics'||typeof original.jobId!=='string'||
+        input.jobId!==original.jobId||typeof input.jobRunId!=='string'||!input.jobRunId)return null;
+      return {status:execution.status};
     },
 
     async getTaskExecutionRuntime(ctx,taskId) {

@@ -1,0 +1,32 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+(node:59907) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts (30 tests | 2 failed) 87155ms
+   × T1101真实PG kuaishou后台指标任务可建，用户关闭不被重启竞态打开，AI原job准入验证 2924ms
+   × T1101真实PG xiaohongshu后台指标任务可建，用户关闭不被重启竞态打开，AI原job准入验证 2176ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > T1101真实PG kuaishou后台指标任务可建，用户关闭不被重启竞态打开，AI原job准入验证
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > T1101真实PG xiaohongshu后台指标任务可建，用户关闭不被重启竞态打开，AI原job准入验证
+AssertionError: expected undefined to be 'acct-7' // Object.is equality
+
+- Expected:
+"acct-7"
+
++ Received:
+undefined
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:126:217
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 49 passed (51)
+   Start at  11:15:42
+   Duration  162.57s (transform 34.43s, setup 0ms, import 49.06s, tests 112.39s, environment 0ms)
+

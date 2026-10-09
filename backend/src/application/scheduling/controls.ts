@@ -2,7 +2,7 @@ import {PRIVATE_COLLECTION_SOURCE_KINDS} from '../../modules/scheduling';
 import type {RequestContext,Transport} from "@creatoros/contract";
 import {ENDPOINTS} from '@creatoros/contract';
 import {ConflictError,ValidationError} from '../../modules/publishing';
-import {triggerScheduledJob,runJobNow,bootstrapDouyinCollectionJobs,type TriggerDeps} from "../../modules/ai-runtime";
+import {triggerScheduledJob,runJobNow,collectionJobDefaultsForPlatform,bootstrapDouyinCollectionJobs,type TriggerDeps} from "../../modules/ai-runtime";
 /** 绑定初始化、立即运行与自动化共用同一触发协议。 */
 export function createSchedulingControls(ports:{aiService:Pick<ReturnType<typeof import("../../modules/ai").createAiService>,"createTask"|"getTask">;
 schedulingService:Pick<ReturnType<typeof import("../../modules/scheduling").createSchedulingService>,"getRunScheduledFor"|"getJob"|"createRun"|"listRunsByJob"|"updateRun"|"listJobs"|"createJob">;
@@ -80,18 +80,23 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
     //   「重新扫码」;初始采集按号也读 `<id>`(空)→ 采不到。**在触发采集前**(此刻 `<id>` 目录尚未被
     //   采集建成空壳)把 `_default` 登录态迁到 `<id>` 目录 → 登录态与不可变 id 锚点一致(单号现实;
     //   多号各自扫码 = T-136 §D)。同步 renameSync(同目录基址、原子);best-effort,失败不阻断建 job/采集。
-    await migrateProfile(ctx);
+    if(!ctx.accountId)throw new ValidationError('绑定初始化缺少真实账号');
+    const account=await platformAccountService.getAccount(ctx,ctx.accountId);
+    const defaults=collectionJobDefaultsForPlatform(account.platform);
+    if(!defaults.length)return;
+    if(account.platform==='douyin')await migrateProfile(ctx);
     // [T-332 S2] 新号绑定即补种该号的默认变现加权 rubric(rubrics 是 per-account 域,
     //   NOT NULL;不种则该号校准/编导评分无默认口径,要等下次启动)。幂等
     //   (onConflictDoNothing);fire-and-forget,失败不阻断绑定。
     //   注:ensureCanonicalRubricForAccount 在本工厂靠后定义 —— 绑定回调只在构造完成后
     //   触发,无 TDZ 风险(与 calibrationService lazy thunk 同款模式)。
-    if (ctx.accountId) {
+    if (ctx.accountId&&account.platform==='douyin') {
       void ensureCanonicalRubricForAccount(ctx.accountId).catch((err) =>
         console.warn("[seed] 绑定补种默认 rubric 失败(不阻断绑定):", err),
       );
     }
     await bootstrapDouyinCollectionJobs(ctx, {
+      defaults,
       listJobsBySourceKind: async (c, sourceKind) => {
         const privateCollector=PRIVATE_COLLECTION_SOURCE_KINDS.has(sourceKind);
         const scoped=privateCollector||!c.groupId?c:{...c,accountId:null,membershipVersion:undefined};
@@ -122,7 +127,8 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
       // 初始化触发复用 triggerScheduledJob(与 cron 到点 / 「立即运行」同一幂等双闸 + 触发点)。
       //   [T-433 S1] 透传 options(绑号 self.detail 带 skipHeavyBackfill,重活延后次日)。
       trigger: async (c, job, options) => {
-        await triggerScheduledJob(c, job, triggerDeps, options);
+        const actual=await schedulingService.getJob(c,job.id);
+        await triggerScheduledJob(c,{...job,groupId:actual.groupId,groupVersion:actual.groupVersion,membershipVersion:actual.membershipVersion},triggerDeps,options);
       },
       // [T-332 S2] claimOrphans / hasOtherActiveDouyinAccount(T-200/T-331)接线已全链退役
       //   (SPEC §4.4):strict + NOT NULL 世界不存在无号存量,绑定 = 只建号绑定 job + 初始化
@@ -130,7 +136,7 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
       // 空 target:采集器空 target 时自 ensureDouyinSource 兜底解析源(与手动建的 job 一致)。
       target: {},
     }).catch((err) =>
-      console.error("[persistence-client] 绑定抖音 bootstrap 建 job/初始化失败:", err),
+      console.error("[persistence-client] 平台绑定 bootstrap 建 job/初始化失败:", err),
     );
   };
 
@@ -190,7 +196,7 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
                 enabled: j.enabled,
                 sourceKind: j.sourceKind,
                 target,
-                accountId: j.accountId ?? null,
+                accountId: j.accountId ?? null,groupId:j.groupId,groupVersion:j.groupVersion,membershipVersion:j.membershipVersion,
               };
             },
           },
@@ -202,7 +208,7 @@ const {aiService,schedulingService,platformAccountService,dispatchScheduledColle
         //   (与既有 getJob ownership 错误传播同款:runNow 本就可抛。)
         if (result.skippedReason) {
           throw new Error(
-            `AccountHiddenError: ${result.skippedReason}。请先在账号管理恢复该抖音号后再运行。`,
+            `AccountHiddenError: ${result.skippedReason}。请先在账号管理恢复该平台账号后再运行。`,
           );
         }
         return {

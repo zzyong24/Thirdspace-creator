@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：T1101 SPEC在当前产品定位下边界明确，来源19个产品路径与13个测试路径可进入T1080受控合并；主线没有T1101 review事件，须重新record/start并实跑组合公共链。来源f97a80d的PASS、截图、事件与日志只归属来源树，不能拼接或重哈希为main验收。",
+  "findings": []
+}

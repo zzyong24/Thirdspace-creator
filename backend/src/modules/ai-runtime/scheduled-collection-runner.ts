@@ -132,7 +132,7 @@ export interface ScheduledCollectionTask {
 // 未登录/登录过期的人话引导(T-032b ②):明确指去「设置 → 账户」扫码登录,别留空/泛化。
 // 「登录抖音」按钮在自动化 needs_reconnect 行也在(D4),两处入口都提;主动初次绑定入口在设置。
 const NEEDS_RECONNECT_ERROR =
-  "抖音登录态未连接或已过期,请去「设置 → 账户」扫码登录(或点本行「登录抖音」)后再采集。";
+  "平台登录态未连接或已过期，请到「账号管理」对应平台重新扫码绑定后再采集。";
 
 /** 本地完成状态，不是供应商异常；诊断中的字段名不能再次决定失败类别。 */
 class CollectionIncompleteError extends Error {}

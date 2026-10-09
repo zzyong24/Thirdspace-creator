@@ -1,0 +1,25 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+ ❯ src/modules/ai/ai.service.test.ts (54 tests | 1 failed | 53 skipped) 7355ms
+   × T1101调度owner仅认同用户账号真实执行投影和原job绑定，不信任手填type或请求键 7354ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai/ai.service.test.ts > T1101调度owner仅认同用户账号真实执行投影和原job绑定，不信任手填type或请求键
+error: GROUP_RESOURCE_SCOPE_CONFLICT:引用账号组不存在
+ ❯ ye.Ve ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:432:10
+ ❯ ye.nt ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:210:15
+ ❯ ye.parse ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:102:24
+ ❯ pe.execProtocol ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/pglite.ts:631:25
+ ❯ pe.l ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:130:11
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:267:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 53 skipped (54)
+   Start at  11:32:02
+   Duration  13.83s (transform 4.70s, setup 0ms, import 6.29s, tests 7.35s, environment 0ms)
+

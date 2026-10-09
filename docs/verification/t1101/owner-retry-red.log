@@ -1,0 +1,30 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+ ❯ src/modules/platform-collection/platform-collection.integration.test.ts (23 tests | 1 failed | 22 skipped) 4115ms
+   × T1101取消或失败的真实原owner释放queued，暂停保留，伪造请求键不冒充owner 4114ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/platform-collection/platform-collection.integration.test.ts > T1101取消或失败的真实原owner释放queued，暂停保留，伪造请求键不冒充owner
+AssertionError: expected 'cancelled' to be 'partial' // Object.is equality
+
+Expected: "partial"
+Received: "cancelled"
+
+ ❯ src/modules/platform-collection/platform-collection.integration.test.ts:461:71
+    459|  const failed=await f.svc.start(scope,{accountId:'acct-a',capability:'…
+    460|  await f.svc.start(scope,{accountId:'acct-a',capability:'workCatalog',…
+    461|  expect((await f.svc.status(scope,'acct-a',failed.attemptId)).status).…
+       |                                                                       ^
+    462|  f.ownerStates.set('failed-task',{status:'queued'});
+    463|  const resumed=await f.svc.start(scope,{accountId:'acct-a',capability:…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 22 skipped (23)
+   Start at  11:37:14
+   Duration  5.62s (transform 761ms, setup 0ms, import 1.35s, tests 4.11s, environment 0ms)
+

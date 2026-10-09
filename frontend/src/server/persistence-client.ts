@@ -1,3 +1,5 @@
+import {createAccountCollectionQueue} from '@creatoros/backend/application/scheduling/account-collection-queue';
+import {createPlatformMetricsCollector,PlatformCollectionNeedsAuthError} from '@creatoros/backend/application/scheduling/platform-collector';
 import { executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import {runAccountGroupStartup} from '@creatoros/backend/application/workspace/startup';
 import {hasLegacyDouyinCredentialEvidence} from '@creatoros/backend/application/workspace/credential-evidence';
@@ -306,7 +308,7 @@ import { sweepStaleAiTasks } from "@creatoros/backend/modules/ai-runtime";
 // [T-189a] 绑定抖音 → 幂等建三个每天定时采集 job + 初始化跑一次(纯编排;组合根注入 listJobs/
 //   createJob/trigger 端口)。[T-227] ensureCollectionJobs:启动兜底,对存量账号幂等补齐缺失的
 //   DEFAULT_JOBS(只建不触发)。
-import { ensureCollectionJobs,DAILY_COLLECTION_JOB_DEFAULTS } from "@creatoros/backend/modules/ai-runtime";
+import { ensureCollectionJobs,collectionJobDefaultsForPlatform,DAILY_COLLECTION_JOB_DEFAULTS } from "@creatoros/backend/modules/ai-runtime";
 import {PRIVATE_COLLECTION_SOURCE_KINDS} from "@creatoros/backend/modules/scheduling";
 
 import { createPlatformDraftAdoptionPort } from "@creatoros/backend/modules/ai-runtime";
@@ -4625,6 +4627,7 @@ dispatchIntelligenceRun});
   }));
   const platformCollectionService = createPlatformCollectionService({
     db,
+    readScheduledOwner: (ctx, taskId, accountId) => aiService.readScheduledCollectionOwner(ctx, taskId, accountId),
     now: deps.now,
     nextId: deps.nextId,
     sourceAdapters: { xiaohongshu: xhsReady, kuaishou: kuaishouReady },
@@ -4673,8 +4676,9 @@ dispatchIntelligenceRun});
     },
   });
   const activeXhsCollections = new Map<string, Promise<void>>();
-  const accountCollectionQueue = new Map<string, Promise<void>>();
-  const executeKuaishouCollection = async (ctx: RequestContext, run: CollectionRunResource) => {
+  const enqueuePlatformCollection=createAccountCollectionQueue();
+  const executeKuaishouCollection = async (ctx: RequestContext, run: CollectionRunResource, signal?:AbortSignal) => {
+    signal?.throwIfAborted();
     const lease = await platformCollectionService.claim(run.attemptId, `kuaishou-local-${process.pid}`);
     const renewal = setInterval(() => {
       void platformCollectionService.renewLease(lease.attemptId, lease.generation, lease.leaseToken).catch(() => {});
@@ -4688,7 +4692,7 @@ dispatchIntelligenceRun});
         lease.expectedPlatformIdentity).permanent!;
       if (lease.capability === "accountOverview") {
         const authorized=await profileAuthority.authorizeBindingTarget(ctx,lease.accountId,(c,id)=>platformAccountService.getAccount(c,id));if(authorized.authDir!==(await resolveDouyinProfileIdentity(nodePath.dirname(directory),nodePath.basename(directory))).authDir)throw Error('采集目录与当前平台身份不符');const checkout=await hostProfileLifecycle.acquire(authorized.authDir);
-        const identity = await readKuaishouCreatorIdentity(directory, lease.expectedPlatformIdentity,{onStopped:checkout.onStopped});
+        const identity = await readKuaishouCreatorIdentity(directory, lease.expectedPlatformIdentity,{signal,onStopped:checkout.onStopped});
         const observedAt = new Date().toISOString();
         await platformCollectionService.commitPage({
           attemptId: lease.attemptId, accountId: lease.accountId, platform: "kuaishou",
@@ -4705,7 +4709,7 @@ dispatchIntelligenceRun});
         return;
       }
       const authorized=await profileAuthority.authorizeBindingTarget(ctx,lease.accountId,(c,id)=>platformAccountService.getAccount(c,id));if(authorized.authDir!==(await resolveDouyinProfileIdentity(nodePath.dirname(directory),nodePath.basename(directory))).authDir)throw Error('采集目录与当前平台身份不符');const checkout=await hostProfileLifecycle.acquire(authorized.authDir);
-      const { first, second } = await collectKuaishouCreatorCatalog(directory, lease.expectedPlatformIdentity,{onStopped:checkout.onStopped});
+      const { first, second } = await collectKuaishouCreatorCatalog(directory, lease.expectedPlatformIdentity,{signal,onStopped:checkout.onStopped});
       if (lease.capability === "workMetrics") {
         const observedAt = new Date().toISOString();
         const fields = [
@@ -4746,7 +4750,7 @@ dispatchIntelligenceRun});
           }
         }
         const completed = await platformCollectionService.status(ctx, lease.accountId, lease.attemptId);
-        if (completed.status !== "complete") return;
+        if (completed.status !== "complete"||signal) return;
         const metricsRun = await platformCollectionService.start(ctx, { accountId: lease.accountId,
           capability: "workMetrics", clientRequestId: `${run.attemptId}-metrics` });
         scheduleXhsCollection(ctx, metricsRun);
@@ -4758,13 +4762,14 @@ dispatchIntelligenceRun});
       const code = error && typeof error === "object" && "code" in error &&
         typeof error.code === "string" ? error.code : error instanceof Error ? error.message : "SOURCE_UNAVAILABLE";
       const state = code === "LOGIN_REQUIRED" || code === "IDENTITY_MISMATCH" ? "needsAuth" :
-        code === "INCOMPLETE_CATALOG" || code === "SOURCE_TIMEOUT" ? "partial" : "failed";
+        code === "INCOMPLETE_CATALOG" || code === "SOURCE_TIMEOUT" || code === "BROWSER_PROFILE_BUSY" || signal?.aborted ? "partial" : "failed";
       await platformCollectionService.failRun(lease.attemptId, lease.generation, lease.leaseToken,
         state, code.slice(0, 100)).catch(() => {});
       console.error("[platform-collection] 快手采集未完成", { attemptId: lease.attemptId, code, error });
     } finally { clearInterval(renewal); }
   };
-  const executeXhsCollection = async (ctx: RequestContext, run: CollectionRunResource) => {
+  const executeXhsCollection = async (ctx: RequestContext, run: CollectionRunResource, signal?:AbortSignal) => {
+    signal?.throwIfAborted();
     const lease = await platformCollectionService.claim(run.attemptId, `xhs-local-${process.pid}`);
     if (lease.platform !== "xiaohongshu" || !["workCatalog", "workMetrics"].includes(lease.capability)) {
       await platformCollectionService.failRun(lease.attemptId, lease.generation, lease.leaseToken,
@@ -4781,7 +4786,7 @@ dispatchIntelligenceRun});
       const directory = xhsProfilePaths(platformProfileRoot, ctx.userId, run.attemptId,
         lease.expectedPlatformIdentity).permanent!;
       const authorized=await profileAuthority.authorizeBindingTarget(ctx,lease.accountId,(c,id)=>platformAccountService.getAccount(c,id));if(authorized.authDir!==(await resolveDouyinProfileIdentity(nodePath.dirname(directory),nodePath.basename(directory))).authDir)throw Error('采集目录与当前平台身份不符');const checkout=await hostProfileLifecycle.acquire(authorized.authDir);
-      const [first, second] = await collectXhsCreatorCatalog(directory, lease.expectedPlatformIdentity,undefined,{onStopped:checkout.onStopped});
+      const [first, second] = await collectXhsCreatorCatalog(directory, lease.expectedPlatformIdentity,signal,{onStopped:checkout.onStopped});
       if (lease.capability === "workMetrics") {
         const mappings = ["view_count", "likes", "comments_count", "collected_count", "shared_count"] as const;
         const observedAt = new Date().toISOString();
@@ -4828,7 +4833,7 @@ dispatchIntelligenceRun});
       }
       if (lease.capability === "workCatalog") {
         const completed = await platformCollectionService.status(ctx, lease.accountId, lease.attemptId);
-        if (completed.status !== "complete") return;
+        if (completed.status !== "complete"||signal) return;
         const metricsRun = await platformCollectionService.start(ctx, { accountId: lease.accountId,
           capability: "workMetrics", clientRequestId: `${run.attemptId}-metrics` });
         scheduleXhsCollection(ctx, metricsRun);
@@ -4837,7 +4842,7 @@ dispatchIntelligenceRun});
       const code = error && typeof error === "object" && "code" in error &&
         typeof error.code === "string" ? error.code : "SOURCE_UNAVAILABLE";
       const state = code === "LOGIN_REQUIRED" || code === "IDENTITY_MISMATCH" ? "needsAuth" :
-        code === "INCOMPLETE_CATALOG" || code === "SOURCE_TIMEOUT" ? "partial" : "failed";
+        code === "INCOMPLETE_CATALOG" || code === "SOURCE_TIMEOUT" || code === "BROWSER_PROFILE_BUSY" || signal?.aborted ? "partial" : "failed";
       await platformCollectionService.failRun(lease.attemptId, lease.generation, lease.leaseToken,
         state, code).catch(() => {});
       console.error("[platform-collection] 小红书采集未完成", { attemptId: lease.attemptId, code, error });
@@ -4845,19 +4850,37 @@ dispatchIntelligenceRun});
       clearInterval(renewal);
     }
   };
-  const scheduleXhsCollection = (ctx: RequestContext, run: CollectionRunResource) => {
-    if (!["queued", "running", "partial"].includes(run.status) || activeXhsCollections.has(run.attemptId)) return;
-    const previous = accountCollectionQueue.get(run.accountId) ?? Promise.resolve();
-    const task = previous.catch(() => {}).then(async () => {
-      const account = await platformAccountService.getAccount(ctx, run.accountId);
-      return account.platform === "kuaishou" ? executeKuaishouCollection(ctx, run) : executeXhsCollection(ctx, run);
-    }).finally(() => {
+  const scheduleXhsCollection = (ctx: RequestContext, run: CollectionRunResource,signal?:AbortSignal):Promise<void> => {
+    const operation=(async()=>{
+    const scoped={...ctx,accountId:run.accountId};
+    // 无信号扫描只读调度归属，不进入去重/账号队列，不抢占原调度的真实执行。
+    if(!signal&&await platformCollectionService.scheduledOwnerTaskId(scoped,run.accountId,run.attemptId)){
+      await platformCollectionService.releaseTerminatedScheduledRuns(scoped,run.accountId);
+      return;
+    }
+    const active=activeXhsCollections.get(run.attemptId);if(active)return active;
+    if (!["queued", "running", "partial"].includes(run.status)) return Promise.resolve();
+    const task = enqueuePlatformCollection(scoped,async () => {
+      signal?.throwIfAborted();
+      const account = await platformAccountService.getAccount(scoped, run.accountId);
+      return account.platform === "kuaishou" ? executeKuaishouCollection(scoped, run,signal) : executeXhsCollection(scoped, run,signal);
+    },signal).finally(() => {
       activeXhsCollections.delete(run.attemptId);
-      if (accountCollectionQueue.get(run.accountId) === task) accountCollectionQueue.delete(run.accountId);
     });
     activeXhsCollections.set(run.attemptId, task);
-    accountCollectionQueue.set(run.accountId, task);
-    void task.catch((error) => console.error("[platform-collection] 任务启动失败", { attemptId: run.attemptId, error }));
+    return task;
+    })();
+    // 非等待式触发也接住完整operation的拒绝；调度await仍收到原失败。
+    void operation.catch((error) => console.error("[platform-collection] 任务启动失败", { attemptId: run.attemptId, error }));
+    return operation;
+  };
+  const initializeBoundCollection=async(ctx:RequestContext,accountId:string,bindId:string)=>{
+    try{
+      const member=await accountGroupService.forAccount(ctx,accountId).catch(()=>null);
+      if(member){await bootstrapDouyinOnBind({...ctx,accountId,groupId:member.groupId,membershipVersion:member.version,source:'ingestion'});return;}
+      // 旧显式绑定接口没有组：保留原一次性初始化，不新建周期producer、不自动归组。
+      const run=await platformCollectionService.start({...ctx,accountId},{accountId,capability:'workCatalog',clientRequestId:bindId+'-catalog'});void scheduleXhsCollection({...ctx,accountId},run);
+    }catch(error){console.warn('[platform-binding] 绑定已保存，初始化采集待恢复',error);}
   };
   const platformCollection = createPlatformCollectionTransport(() => platformCollectionService, {
     afterBindBegin: async (ctx, attempt) => {
@@ -4879,12 +4902,7 @@ dispatchIntelligenceRun});
             throw new Error("快手登录档案保存失败，请重试绑定");
           }
           if (bound.accountId) {
-            const boundContext = { ...ctx, accountId: bound.accountId };
-            const catalogRun = await platformCollectionService.start(boundContext, {
-              accountId: bound.accountId, capability: "workCatalog",
-              clientRequestId: `${attempt.bindAttemptId}-catalog`,
-            });
-            scheduleXhsCollection(boundContext, catalogRun);
+            await initializeBoundCollection(ctx,bound.accountId,attempt.bindAttemptId);
           }
           return bound;
         } catch (error) {
@@ -4907,10 +4925,7 @@ dispatchIntelligenceRun});
           throw new Error("小红书登录档案保存失败，请重试绑定");
         }
         if (bound.accountId) {
-          const boundContext = { ...ctx, accountId: bound.accountId };
-          const catalogRun = await platformCollectionService.start(boundContext, { accountId: bound.accountId,
-            capability: "workCatalog", clientRequestId: `${attempt.bindAttemptId}-catalog` });
-          scheduleXhsCollection(boundContext, catalogRun);
+            await initializeBoundCollection(ctx,bound.accountId,attempt.bindAttemptId);
         }
         return bound;
       } catch (error) {
@@ -4922,6 +4937,7 @@ dispatchIntelligenceRun});
     afterCollectionGet: scheduleXhsCollection,
   });
   const periodicPlatformCollection = createPeriodicPlatformCollection({
+    recoveryOnly:true,
     listAccounts: (ctx, query) => platformAccountService.listAccounts(ctx, query),
     latestRun: (ctx, accountId, capability) => platformCollectionService.latestRun(ctx, accountId, capability),
     start: (ctx, input) => platformCollectionService.start(ctx, input),
@@ -4943,8 +4959,7 @@ dispatchIntelligenceRun});
       if(!await accountGroupService.hasVerifiedBinding(c,accountId))throw new Error('绑定成功回执尚未完成，请保留原扫码任务');
       const member=await accountGroupService.forAccount(c,accountId);
       const account=await platformAccountService.getAccount(c,accountId),frozen={...c,accountId,groupId:member.groupId,membershipVersion:member.version,source:'ingestion' as const};
-      if(account.platform==='douyin'){await bootstrapDouyinOnBind(frozen);return;}
-      if(account.platform==='xiaohongshu'||account.platform==='kuaishou'){const run=await platformCollectionService.start(frozen,{accountId,capability:'workCatalog',clientRequestId:runId+'-catalog'});scheduleXhsCollection(frozen,run);}
+      if(['douyin','xiaohongshu','kuaishou'].includes(account.platform))await bootstrapDouyinOnBind(frozen);
     },
     onBoundError:()=>console.warn('[account-binding] 账号已绑定，默认采集计划补齐未完成，下次启动会按真实账号重试'),
   });
@@ -5241,7 +5256,7 @@ FAVORITES_PROMOTE_PER_RUN
   },deps.now);
   void reportingLocal.prune().catch(()=>{});
 
-  scheduledCollectors["self.metrics"]=createOperationsSyncCollector({
+  const douyinOperationsCollector=createOperationsSyncCollector({
     failures:(c,capabilities)=>publicationSyncService.failures(c,capabilities),
     metrics:(c,t,r,e)=>scheduledCollectors["self.detail"]!(c,t,r,e),
     comments:(c,t,r,e)=>scheduledCollectors.comments!(c,t,r,e),
@@ -5249,10 +5264,16 @@ FAVORITES_PROMOTE_PER_RUN
     checkSignal:checkScheduledSignal,isNotLoggedIn:error=>error instanceof DouyinNotLoggedInError,
   });
 
+  const platformMetricsCollector=createPlatformMetricsCollector({account:(c,id)=>platformAccountService.getAccount(c,id),start:(c,input)=>platformCollectionService.start(c,input),status:(c,id,attempt)=>platformCollectionService.status(c,id,attempt),schedule:scheduleXhsCollection,resumeAuthorization:(c,id,attempt,task)=>platformCollectionService.resumeScheduledAuthorization(c,id,attempt,task)});
+  scheduledCollectors['self.metrics']=async(c,t,r,e)=>{
+    const account=await platformAccountService.getAccount(c,c.accountId!);
+    return account.platform==='douyin'?douyinOperationsCollector(c,t,r,e):platformMetricsCollector(c,(()=>{if(!e?.taskId)throw Error('采集缺少原持久任务ID');return e.taskId;})(),scheduledSignals.getStore());
+  };
+
   // 后端统一协调同账号串行与跨账号入场；此处仅装配采集器和唤醒入口。
   // 请求网关继续独立限制每次网络请求的并发与节奏。
   const wakeScheduledFlywheel=()=>recoveryWake?.wake("flywheel");
-  const {collectFlywheel,dispatchScheduledCollection,recoverQueuedCollection}=createCollectionExecution({trafficQueue:{snapshot:c=>trafficService.pending(c,2147483647),fail:(c,rows,message)=>trafficService.failPending(c,rows,message)},scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,wakeScheduledFlywheel,prepareDailyTopic:async(ctx,id)=>{if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");const bound=await businessExecution.prepare(ctx,id);modelWorker.start();return bound;},runTaskWithEffectiveSkillSnapshot,afterSuccessfulMetricsCollection:async ctx=>{if(ctx.accountId)await reportingLocal.captureAccountMetrics(ctx,ctx.accountId);},afterSuccessfulCollection:async(ctx,id)=>{if(ctx.accountId)await reportingLocal.captureAccountState(ctx,ctx.accountId,"collection_succeeded",id,deps.now());},afterFailedCollection:async(ctx,id,status)=>{await reportingLocal.captureDiagnostic(ctx,"collection_failed",id,deps.now());if(ctx.accountId)await reportingLocal.captureAccountState(ctx,ctx.accountId,status==="waiting_user"?"needs_reconnect":"collection_failed",id,deps.now());},isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError});
+  const {collectFlywheel,dispatchScheduledCollection,recoverQueuedCollection}=createCollectionExecution({trafficQueue:{snapshot:c=>trafficService.pending(c,2147483647),fail:(c,rows,message)=>trafficService.failPending(c,rows,message)},scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywheel,schedulingService,aiService,deps,wakeScheduledFlywheel,prepareDailyTopic:async(ctx,id)=>{if(!modelWorker)throw new Error("生成服务未就绪，请修复或更新应用");const bound=await businessExecution.prepare(ctx,id);modelWorker.start();return bound;},runTaskWithEffectiveSkillSnapshot,afterSuccessfulMetricsCollection:async ctx=>{if(ctx.accountId)await reportingLocal.captureAccountMetrics(ctx,ctx.accountId);},afterSuccessfulCollection:async(ctx,id)=>{if(ctx.accountId)await reportingLocal.captureAccountState(ctx,ctx.accountId,"collection_succeeded",id,deps.now());},afterFailedCollection:async(ctx,id,status)=>{await reportingLocal.captureDiagnostic(ctx,"collection_failed",id,deps.now());if(ctx.accountId)await reportingLocal.captureAccountState(ctx,ctx.accountId,status==="waiting_user"?"needs_reconnect":"collection_failed",id,deps.now());},isNotLoggedInError:error=>error instanceof DouyinNotLoggedInError||error instanceof PlatformCollectionNeedsAuthError});
 
   // 调度器沿用身份服务已确认的本机真实主用户，不使用fixture默认身份。
   // source="ingestion":调度器本质是数据采集 pipeline 触发(与 L2816 采集 ctx 一致;
@@ -5602,9 +5623,9 @@ FAVORITES_PROMOTE_PER_RUN
   // T-1022：共享知识/选题/雷达按当前组幂等；私有采集只为真实具备绑定证据的账号回填。
   // 这里只建计划，不触发浏览器或外网；组归档不等价于隐藏活跃平台账号。
   const startupTaxonomy=createTaxonomyService(taxonomyRepo,taxonomyAccess);
-  const ensureStartupJobs=async(ctx:RequestContext,privateCollector:boolean)=>{
+  const ensureStartupJobs=async(ctx:RequestContext,privateCollector:boolean,platform='douyin')=>{
     await ensureCollectionJobs(ctx,{
-      defaults:DAILY_COLLECTION_JOB_DEFAULTS.filter(tpl=>PRIVATE_COLLECTION_SOURCE_KINDS.has(tpl.sourceKind)===privateCollector),
+      defaults:collectionJobDefaultsForPlatform(platform).filter(tpl=>PRIVATE_COLLECTION_SOURCE_KINDS.has(tpl.sourceKind)===privateCollector),
       listJobsBySourceKind:async(c,sourceKind)=>{
         const {rows}=await schedulingService.listJobs(c,{sourceKind,...(privateCollector?{accountId:c.accountId}:{}),limit:1,offset:0});
         return rows.map(row=>({id:row.id,accountId:row.accountId??null,enabled:row.enabled,target:row.target??{}}));
@@ -5623,12 +5644,13 @@ FAVORITES_PROMOTE_PER_RUN
       capabilities:c=>platformAccountService.getBindingCapabilities(c),
       hasCredentialEvidence:async(c,account)=>{
         if(await accountGroupService.hasVerifiedBinding(c,account.id))return true;
+        if((account.platform==='kuaishou'||account.platform==='xiaohongshu')&&await platformCollectionService.hasCredentialEvidence(c,account.id))return true;
         // 已授权实际账号目录的旧凭据证明；手动填外部ID不能替代它。
-        return hasLegacyDouyinCredentialEvidence(await douyinAuthDirFor(account.id,undefined,c.userId));
+        return account.platform==='douyin'&&await hasLegacyDouyinCredentialEvidence(await douyinAuthDirFor(account.id,undefined,c.userId));
       },
       seedGroup:async c=>{await seedWinVideoTutor(knowledgeService,c,{taxonomyService:startupTaxonomy});await fixupWinVideoTutorModuleTags(knowledgeService,startupTaxonomy,c);},
       ensureSharedJobs:c=>ensureStartupJobs(c,false),
-      ensurePrivateJobs:c=>ensureStartupJobs(c,true),
+      ensurePrivateJobs:(c,a)=>ensureStartupJobs(c,true,a.platform),
       warn:(stage,error,accountId)=>console.warn(`[startup] ${stage}未完成${accountId?`(账号 ${accountId})`:''}，其余工作区继续启动：`,error instanceof Error?error.message:error),
     });
     await repairSeedTitles(localUser.id,'win-video-tutor',WIN_VIDEO_TUTOR_LEGACY_TITLE_PREFIX);

@@ -1,0 +1,11 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+(node:77054) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+ Test Files  3 passed (3)
+      Tests  59 passed (59)
+   Start at  11:46:56
+   Duration  81.03s (transform 13.88s, setup 0ms, import 21.07s, tests 84.04s, environment 0ms)
+

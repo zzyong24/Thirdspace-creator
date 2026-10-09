@@ -1,0 +1,169 @@
+{
+  "mainBefore": "1889f349b256352b849964d461efde295c589247",
+  "source": "f97a80da002db91dcdeac464203828dd9268cbd3",
+  "sourcePaths": [
+    {
+      "path": "backend/src/application/platform-collection/periodic.test.ts",
+      "sourceSha256": "18c70e54c602f0e9b090008c5c5e0ec83fe1e1640cf2c954c3516071cb191c04",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/application/platform-collection/periodic.ts",
+      "sourceSha256": "6f919a977d03a3cd30c03e821d4cc5f597d0aa9eac7373668c7debee196f3b3c",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/application/scheduling/controls.ts",
+      "sourceSha256": "4f93ad2ef29cc06fe36a5940827fabef87814860fbf162fa9be83040331514ff",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/application/scheduling/platform-collector.test.ts",
+      "sourceSha256": "1e63318cd6011843f1c90f63ad45a9cd8704fd2422ae5233928909e4e67bb20f",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/application/scheduling/platform-collector.ts",
+      "sourceSha256": "4cedf71a425df74621034a076b9380fc1d850edffdfd96c9785aee8d8100c7b0",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/application/workspace/startup.test.ts",
+      "sourceSha256": "814be79a74d82de441fb4066f8d8d7cb837dc86be55abf62aaa289c78e6cefe0",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/application/workspace/startup.ts",
+      "sourceSha256": "85be4c9f8fbad0860ecdf10f33a783a234a6e12d494b81f7b9e13080602acf7b",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/integration/startup-group-collectors.postgres.integration.test.ts",
+      "sourceSha256": "dd37a45cae8d437a7e3b9eee1dcf1bfa989bc0eba6cec538fc5c469403eb4ffd",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/collection-bootstrap.test.ts",
+      "sourceSha256": "fe31927cf3c8cb45973bdb91ec20591eb708a2552b5d4b7c796a34aabac13da1",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/collection-bootstrap.ts",
+      "sourceSha256": "851163874acae1cad64d1da9a14f4a71bab70e5373d15663726e53b7f04d480a",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/scheduled-collection-runner.ts",
+      "sourceSha256": "b4596437091ac86f05d0569ce42bfb76a9c7668546a60e146d653e03670f8669",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.test.ts",
+      "sourceSha256": "74b3a5b65d5c3d8d7161b0f41ae2abf858f4b36486521716610d02057c966582",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/modules/ai/ai.service.ts",
+      "sourceSha256": "851067420f65aabd1b2c91778e41582984b09719579f0769d4a771559731583d",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+      "sourceSha256": "767ff86d90d12535924969b5247acc30242859a07c44a797f56760827ba08e06",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+      "sourceSha256": "b6afcef5ff51313da8c21da0bed002c86852170f4662e8b59bfd45d1ed0e6460",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/modules/platform-collection/platform-collection.integration.test.ts",
+      "sourceSha256": "e24fc90a32f19e8caccc9905323f7750ab74b19532bbbe1de73c3d2ee921918f",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/modules/platform-collection/platform-collection.service.ts",
+      "sourceSha256": "b12e60e78e8ddb0212a6d7c365c099a07f40bc3d85d76648973c659b7fc11317",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/modules/scheduling/index.ts",
+      "sourceSha256": "727816cf3ed749220cadc55c100f1076fdb690e865e3d4f55e8c5a12583c2385",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/modules/scheduling/private-collector-admission.service.ts",
+      "sourceSha256": "e8c532d2ca92f5c62aba5be18504e4b884b1fb6e12309fecb0fa27b0178540b9",
+      "mainEqualSource": true
+    },
+    {
+      "path": "backend/src/modules/scheduling/scheduling.repository.ts",
+      "sourceSha256": "ca92e7f1d43f4dc66c6b78cabf8b2b56b70f7bc789385c12746d136918442863",
+      "mainEqualSource": true
+    },
+    {
+      "path": "frontend/src/components/media/asset-picker.tsx",
+      "sourceSha256": "c250fa744dc0992c1555ea15572ef6c54e06714e046fb8d6e297deacd0fb476f",
+      "mainEqualSource": true
+    },
+    {
+      "path": "frontend/src/features/automations/automations-island.test.tsx",
+      "sourceSha256": "7f26c4237e875386ea7602b55d7e3a411d136e6934d93f1f8dce7240cd7e1693",
+      "mainEqualSource": true
+    },
+    {
+      "path": "frontend/src/features/automations/automations-island.tsx",
+      "sourceSha256": "4d24b839372ca4b66effe70aca07eceef4f10d83ee1a76d800d772bd44fb1187",
+      "mainEqualSource": true
+    },
+    {
+      "path": "frontend/src/features/creative-canvas/canvas-asset-picker.tsx",
+      "sourceSha256": "b279a045b82612181247402f1ca591fea0cf58f8fa386655448276c2c127f12d",
+      "mainEqualSource": true
+    },
+    {
+      "path": "frontend/src/features/creative-canvas/canvas-editor.test.tsx",
+      "sourceSha256": "091762b13c4999e147f4c548876493450d50c7774596ab6293f08ac7cb0437eb",
+      "mainEqualSource": true
+    },
+    {
+      "path": "frontend/src/features/creative-canvas/canvas-editor.tsx",
+      "sourceSha256": "8dbbd5b4786925214eed14fdfadff650d6d9d1597c2ecbd32d7b0a49edb52a01",
+      "mainEqualSource": true
+    },
+    {
+      "path": "frontend/src/features/creative-canvas/infinite-canvas-node.tsx",
+      "sourceSha256": "2f750f8a14d64eba8a08c1a5c5e4d07e073e78ec090681e3be4993f4b00e5b1e",
+      "mainEqualSource": true
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.test.tsx",
+      "sourceSha256": "f6c5b4528f1163c744b064e8238c27d6b438fa3dc7dbb10a5e26643c04ec25f0",
+      "mainEqualSource": true
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.tsx",
+      "sourceSha256": "124feb0a9ff8f04ee500eb4d44e360bc6f487c320dfaab857a9a634a09a9b4b2",
+      "mainEqualSource": true
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+      "sourceSha256": "5e3d9de136b99ede64a46b982f019f4f1faabda518f095022dc5630c87a07d75",
+      "mainEqualSource": true
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "sourceSha256": "9720dc8c79284ff28747537673951824fb46e35b7ba842694405320261c0c3a1",
+      "mainEqualSource": true
+    },
+    {
+      "path": "frontend/tests/e2e/creative-canvas.spec.ts",
+      "sourceSha256": "a766053fa2708a356aeec84ad7db92537bfba15fcfc7a20e3ae8ee6f0a8f5260",
+      "mainEqualSource": true
+    }
+  ],
+  "sourcePathsCount": 32,
+  "mainChainsSpliced": false,
+  "sourceTaskCompletionCopiedToMain": false
+}

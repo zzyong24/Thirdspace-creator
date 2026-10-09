@@ -65,3 +65,9 @@ describe("小红书与快手定期采集", () => {
     expect(onError).toHaveBeenCalledTimes(1);
   });
 });
+
+it('T1101旧周期入口只恢复原目录/指标/快手概览，不再新建任务',async()=>{
+ const start=vi.fn(async()=>run('new','queued')),resume=vi.fn();
+ await createPeriodicPlatformCollection({recoveryOnly:true,listAccounts:async()=>({rows:[{id:'ks',platform:'kuaishou',status:'active'},{id:'xhs',platform:'xiaohongshu',status:'active'}]}),latestRun:async(_c,id,capability)=>({...run(id,'partial'),capability}),start,resume,onError:vi.fn(),now:()=>time})(ctx);
+ expect(start).not.toHaveBeenCalled();expect(resume.mock.calls.map(([,r])=>r.capability)).toEqual(['workCatalog','workMetrics','accountOverview','workCatalog','workMetrics']);
+});

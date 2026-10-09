@@ -1,0 +1,13 @@
+{
+  "sourceHead": "f97a80da002db91dcdeac464203828dd9268cbd3",
+  "logSha256": "4a1887d9d5aafd9660ab6d6cb178296296b4c0a815e2217ed92419d962fc2eec",
+  "observedConsoleLines": [
+    "\u001b[2m[WebServer] \u001b[22m\u001b[36m[browser]\u001b[39m [describeUserError] \u001b[31mError: 请先进入此账号组，再查看共享资源。\u001b[39m",
+    "\u001b[2m[WebServer] \u001b[22m\u001b[31m    at ResourceGrantsPanel.useCallback[check] (src/features/platform-account/resource-grants-panel.tsx:22:128)",
+    "\u001b[2m[WebServer] \u001b[22m    at ResourceGrantsPanel.useCallback[load] (src/features/platform-account/resource-grants-panel.tsx:23:158)\u001b[39m",
+    "\u001b[2m[WebServer] \u001b[22m> 22 | ...&writeEpoch.current!==epoch.current))throw Error(\"请先进入此账号组，再查看共享资源。\");..."
+  ],
+  "mainReproduced": false,
+  "rootCauseConfirmed": false,
+  "productChanged": false
+}
