@@ -452,10 +452,10 @@ export const WORKSPACE_OPERATION_SCOPES = {
   "assets.visualTemplates.list": "group",
   "assets.visualTemplates.save": "group",
   "assets.visualTemplates.remove": "group",
-  // workbench — 既有公共入口及原任务/会话均按真实平台账号验证。
+  // workbench — 工具目录可按账号组读取，原任务/会话与文件操作仍验证真实平台账号。
   "workbench.tasks.inspect": "platform-account",
   "workbench.tasks.events": "platform-account",
-  "workbench.capabilities.list": "platform-account",
+  "workbench.capabilities.list": "group",
   "workbench.artifacts.list": "platform-account",
   "workbench.artifacts.read": "platform-account",
   "workbench.artifacts.render": "platform-account",

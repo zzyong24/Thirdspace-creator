@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1112 | 修复纯账号组读取 AI 工作台能力目录被要求平台账号 | 🔨 待办 | PASS[REV:7e93c8940e44] | 待验 | [SPEC](docs/features/t1112-group-workbench-capabilities.md) | 879646新安装版18项正式读取17PASS/1FAIL，workbench.capabilities.list返回428；已核操作归属声明及transport二次账号门。仅修目录纯组读取，真实组鉴权与其它七项账号门不变；先独评RED/GREEN及正式公共组合，再main无备份出包安装复验。不代签T1103候选。 |
 | T-1101 | 修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集 | 🔨 | PASS[REV:146ff2046c2c] | 待验 | [SPEC](docs/features/t1101-canvas-binding-collection.md) | 用户2026-10-09截图明确要求：素材只显示预览；生成中禁止重复提交、已有结果再生成需确认；图片连线传递默认参考；扫码入口放平台能力表，删除刷新和下方重复框；三平台独立采集错峰执行。来源f97a80da已完成；main重新初审和组合验收，原PASS不代签当前树。不发布、不改真实Cookie。 |
 | T-1101-global-gates | 核对独立main工作树全局对账失败及历史收据漂移 | 📋 待办 | — | — | [根因记录](docs/verification/t1101/global-gates.md) | 前置对账76项失败含未装依赖阶段环境、历史审核收据和教训检查；本轮安装依赖后重跑真实Gate。范围外旧类型/契约/短预算仍关联T-1018/T-1081；不得补拍历史PASS。 |
 | T-1108 | 核对画布连线引用保存回读及浏览器短观察窗口 | 🔨 | PASS[REV:7725159d945d] | 待验 | [实际缺陷](docs/features/t1108-canvas-public-observation.md) | main188c当前Chrome实际1PASS/1FAIL，连线referenceFileId回读undefined且默认poll5秒超时；此前main同产品旅程2PASS保留。先核trace/save/API及LED053真实消费者，规范观察至少120秒后仍失败则修产品；不删保存断言或伪造已有引用。 |

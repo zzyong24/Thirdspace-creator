@@ -1,0 +1,63 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "CHANGES_REQUIRED：缺口属于既有纯组共享创作和全面AI工具验收授权，且两处产品修复方向最小、不会开放其它七项。但任务模块缺verify_commands，且“归档读规则保持”没有对应真实公共组合用例；补齐后再recheck。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:26:75beda2b7538662a",
+        "quote": "产品仅 `contract/src/workspace-operation-scope.ts` 与 `backend/src/modules/execution/workbench-public.transport.ts`。"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:28:42e43d7ae7c8bea5",
+        "quote": "运行原 CLI gateway/dispatch、相关工作台回归、contract/backend 类型与 boundary/semantic/orphan；保存实际命令、退出码、时间与 SHA，独立实现复核。"
+      },
+      "where": "orchestrator/process/modules.config.json / modules.T-1112",
+      "failure_mode": "T-1112 模块已有精确读写集，但完全缺少 verify_commands。taskctl start 后无法由任务包强制执行 SPEC 指定的真实公共组合、七项拒绝边界、类型和三门卫，也无法约束至少120秒预算。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:374bee6c735dfcbc517dfb73db832c083987ff094427ed3260561e246b2bfe3a:orchestrator/process/modules.config.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:28:42e43d7ae7c8bea5",
+      "suggestion": "在实施前为T-1112增加implementation验证命令，精确覆盖scope contract测试、新PGlite公共组合、原CLI gateway/dispatch与workbench回归、contract/backend类型、boundary/semantic/orphan、diff/reconcile，并显式绑定retry=0、无文件并行和至少120秒test/hook预算。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:13:07ad3b391b01122a",
+        "quote": "CLI 原真实 user/group 归属验证、归档读规则与失败 envelope 保持；不造平台账号、不隐式切组。"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:26:75beda2b7538662a",
+        "quote": "新增 `backend/src/integration/group-workbench-capabilities.integration.test.ts`，隔离 PGlite、真实 CLI invocation service 与正式 workbench transport/原 response schema 组合，真实空组成功、旧账号成功、不同 user/错误组拒绝、缺工作区/缺认证拒绝、其余七项仍拒绝、回读原组/任务/稿件和 invocation 表证明零写入。"
+      },
+      "where": "docs/features/t1112-group-workbench-capabilities.md:26",
+      "failure_mode": "能力列表从platform-account改为group会实际进入CLI对group读取的allowArchived分支；SPEC要求归档读规则保持，但新增公共组合用例清单没有归档组读取。实现可能错误拒绝合法历史目录读取，或绕过真实归档归属，而现有验收仍全部通过。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "EVIDENCE-SHA256:0a3bf07dc3c798ba5e10609e5e984a667e918db88fbf9774a6ea367046354156:docs/features/t1112-group-workbench-capabilities.md",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:13:07ad3b391b01122a",
+      "suggestion": "在同一新增PGlite公共组合测试中增加真实归档组的已认证成员读取能力目录成功，并继续验证错误用户/非成员拒绝及零业务写；不增加产品路径或开放其它七项。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

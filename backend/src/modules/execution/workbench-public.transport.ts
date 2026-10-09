@@ -15,7 +15,7 @@ export function createWorkbenchPublicTransport(deps:{
   reconcileFile?:(ctx:RequestContext,taskId:string,operationId:string)=>Promise<unknown>;
 }):Transport{return {async request(endpoint,input,ctx){
   if(!ctx)throw new AuthenticationError();
-  if(!ctx.accountId)throw new OwnershipError("当前账号不存在");
+  if(!ctx.accountId&&!(endpoint.id==="workbench.capabilities.list"&&ctx.groupId))throw new OwnershipError("当前账号不存在");
   const i=(input??{}) as {params?:unknown;query?:unknown;body?:unknown};
   let data:unknown;
   switch(endpoint.id){

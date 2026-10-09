@@ -1,6 +1,11 @@
 import {describe,it,expect} from "vitest";
 import {ENDPOINTS,WORKSPACE_OPERATION_SCOPES as scopes} from "../src";
 describe("账号组操作归属契约",()=>{
+ it("工具目录允许纯组，其余工作台实体操作仍要求原平台账号",()=>{
+  expect(scopes["workbench.capabilities.list"]).toBe("group");
+  for(const id of ["workbench.tasks.inspect","workbench.tasks.events","workbench.artifacts.list","workbench.artifacts.read","workbench.artifacts.render","workbench.artifacts.reconcile","workbench.files.reconcile"] as const)
+   expect(scopes[id]).toBe("platform-account");
+ });
  it("逐条声明所有正式操作，没有按名字在运行时猜作用域",()=>{
   expect(Object.keys(scopes).sort()).toEqual(Object.values(ENDPOINTS).map(e=>e.id).sort());
  });

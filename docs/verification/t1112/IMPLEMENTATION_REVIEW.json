@@ -1,0 +1,80 @@
+{
+  "schema": "t1112-implementation-independent-review/v1",
+  "reviewedAt": "2026-10-09T06:50:37.324584+00:00",
+  "verdict": "PASS_LIMITED_T1112_IMPLEMENTATION",
+  "taskId": "T-1112",
+  "sourceHashes": {
+    "contract/src/workspace-operation-scope.ts": "f9d855e41bf49316efa431cce5cda515fa986866d69a79108ee33ca6b63d045f",
+    "backend/src/modules/execution/workbench-public.transport.ts": "507a488a3c367d5e36eed02c8c4d5a5410a5fff7fc295d167b31f3f5daf15365",
+    "contract/tests/workspace-operation-scope.test.ts": "4f2d2ac6cf5727c2f987cf58576a10b11d14585c34afc47ad1634284136b1f36",
+    "backend/src/integration/group-workbench-capabilities.integration.test.ts": "06c36103b7875bbfa405eca42f7418ae4862c79d95f1b6ac3dd114010e353b1c",
+    "orchestrator/process/modules.config.json": "820e263c64f935c0354a0befbc4ff6c316da5e0718009a4a05a9f90ff5a6e422",
+    "docs/features/t1112-group-workbench-capabilities.md": "9fa8157f52977cfe9710524fd72fd22294fd2759dde55a8eeb925ef846655c49"
+  },
+  "findings": [],
+  "resolvedHistory": [
+    {
+      "id": "SPEC-REV-001",
+      "resolution": "modules.config 已绑定精确验证命令；当前模块 SHA 如 sourceHashes。"
+    },
+    {
+      "id": "SPEC-REV-002",
+      "resolution": "真实组合测试覆盖 active 与 archived group，并覆盖异用户、错误组、非成员、无工作区和无认证拒绝。"
+    },
+    {
+      "id": "TEST-TYPE-001",
+      "resolution": "三次 backend typecheck 失败均保留：空输入与两轮联合端点推断均未证明产品缺陷；最终测试用逐端点泛型闭包绑定合法 EndpointInput，避免联合类型假拒绝，当前 typecheck exit 0。"
+    },
+    {
+      "id": "TEST-FIXTURE-001",
+      "resolution": "最初组合夹具遗漏 now 的失败完整保留，未当作产品 RED；随后有效夹具的 13 PASS/2 FAIL 才构成权限行为 RED。"
+    }
+  ],
+  "evidence": {
+    "contract_green": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1112/contract-green.json",
+      "sha256": "9afc5b386c6070a82ed9e9de63532885aa84cff9565d43ec7dc4717be1b91a30",
+      "result": "2 files, 12 passed, exit 0"
+    },
+    "backend_green_closed": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1112/backend-green-closed.json",
+      "sha256": "48bd5d9eb32a4e8cfbb3d68f0468a33e2b546b5baa30d4b3d6a5525c1993d0d2",
+      "log_sha256": "a0de32e31fb684d6067de9d88d7cab4060c06759f542169f3199de0401cb8ef8",
+      "result": "3 files, 26 passed, 0 skipped, exit 0"
+    },
+    "backend_typecheck_closed": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1112/backend-typecheck-closed.json",
+      "sha256": "3f1ffdeed61cce1064d0eff588a5c342bb32212adb6acdb01f91532b1f69272d",
+      "log_sha256": "931327292db1bbff62320abd8dd57032ae19ad39b9e012d04233dc49d716637b",
+      "result": "exit 0"
+    },
+    "dispatch_green": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1112/dispatch-green.json",
+      "sha256": "b1ccdfdda0b1b31e231fc088dfced80b608221d4d5ec6c352c52a4fa133f66c1",
+      "result": "1 file, 26 passed, exit 0"
+    },
+    "boundary": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1112/boundary.json",
+      "sha256": "2bf83d486ac1b1858e534c0270acc0f65c26731106a8715d7957f871ac2c9366",
+      "result": "exit 0"
+    },
+    "semantic": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1112/semantic.json",
+      "sha256": "5c0be408dbe9ba2d2342802f890d62bde725f6e7da4926c00ea60a0a8e9814b3",
+      "result": "exit 0"
+    },
+    "orphan": {
+      "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1112/orphan.json",
+      "sha256": "45ca403ee0a09de01f652052ed1e9f2800221558fe86f9f3282eb0e065e1fec9",
+      "result": "exit 0"
+    }
+  },
+  "conclusions": [
+    "仅 workbench.capabilities.list 从 platform-account 调整为 group；其余七个工作台操作仍要求账号。",
+    "transport 只在 endpoint 为能力目录且 ctx.groupId 存在时放行纯组；无工作区、无认证及七个账号操作仍拒绝。",
+    "组合测试通过真实 CLI gateway 验证组归属与审计，通过真实 transport 验证目录响应；合法读取会写原审计与加密结果，但项目、输出、任务等业务对象逐字不变。",
+    "测试的 installedCatalog 是确定性依赖替身，因此本结论不代表安装包目录可用性、全功能、T-1103、模型或用户环境验收。"
+  ],
+  "globalBoundary": "全仓新 baseline exit 1 / 41 errors 无新增；本报告不将其签绿，也不覆盖历史 42 项欠债。",
+  "administrativeScope": "modules.config 在正式 SPEC PASS 后仅纳入两条实际 SPEC_RECHECK 收据路径；产品写集和验证命令未扩张。"
+}
