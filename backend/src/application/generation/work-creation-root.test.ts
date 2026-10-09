@@ -1,5 +1,6 @@
 import {expect,it,vi} from 'vitest';
 import {createWorkCreationRoot} from './work-creation-root';
+import {ChatToolUserError} from '../../modules/ai-runtime/chat-tool-errors';
 
 const ctx={userId:'neutral-user',accountId:null,groupId:'neutral-group',requestId:'neutral-request',source:'user' as const};
 const ref={kind:'project_script' as const,id:'script-1',versionId:'script-version-1'};
@@ -35,4 +36,27 @@ it('目标摘要或共同脚本引用篡改不被修补成另一份稿',async()=
  const f=fixture(),read=await f.service.read(ctx,target);
  await expect(f.service.propose(ctx,target,{targetDigest:'0'.repeat(64),article,graphic})).rejects.toThrow();
  await expect(f.service.propose(ctx,target,{targetDigest:read.targetDigest,article:{...article,sections:[{...article.sections[0]!,sourceRefs:[]}]},graphic})).rejects.toThrow();
+});
+
+it.each(['title','summary','section','fact','graphic','card'])('T1099 %s 来源缺失或错误仍拒绝，但给明确安全字段说明',async field=>{
+ for(const refs of [[],[{...ref,versionId:'other-version'}]]){
+  const f=fixture(),read=await f.service.read(ctx,target);
+  const a={...structuredClone(article),factItems:[{id:'fact-1',text:'真实事实',reviewState:'confirmed' as const,sourceRefs:[ref]}]},g=structuredClone(graphic);
+  if(field==='title')a.titleSourceRefs=refs;
+  if(field==='summary')a.summarySourceRefs=refs;
+  if(field==='section')a.sections[0]!.sourceRefs=refs;
+  if(field==='fact')a.factItems[0]!.sourceRefs=refs;
+  if(field==='graphic')g.sourceRefs=refs;
+  if(field==='card')g.cardBriefs[0]!.sourceRefs=refs;
+  const caught=await f.service.propose(ctx,target,{targetDigest:read.targetDigest,article:a,graphic:g}).catch(error=>error);
+  expect(caught).toBeInstanceOf(ChatToolUserError);
+  for(const path of ['article.titleSourceRefs','article.summarySourceRefs','sections[*].sourceRefs','factItems[*].sourceRefs','graphic.sourceRefs','cardBriefs[*].sourceRefs','scriptSourceRef'])expect(caught.message).toContain(path);
+  expect(caught.message).not.toContain(ref.id);expect(caught.message).not.toContain('真实事实');
+ }
+});
+it('T1099 原目标和图片冲突不被错误归类为可纠正来源',async()=>{
+ const f=fixture(),read=await f.service.read(ctx,target);
+ for(const proposal of [{targetDigest:'0'.repeat(64),article,graphic},{targetDigest:read.targetDigest,article,graphic:{...graphic,imageUses:[{assetId:'fake',assetFileId:'fake-file',order:0,role:'cover' as const}]}}]){
+  const caught=await f.service.propose(ctx,target,proposal).catch(error=>error);expect(caught).toBeInstanceOf(Error);expect(caught).not.toBeInstanceOf(ChatToolUserError);
+ }
 });

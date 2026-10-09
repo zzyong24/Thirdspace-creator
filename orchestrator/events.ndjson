@@ -1254,3 +1254,7 @@
 {"ts":"2026-10-08T23:33:41.863Z","actor":"taskctl","action":"start","task":"T-1093","sha_before":"890d77d8a939","sha_after":"bce8d8a4be2a"}
 {"ts":"2026-10-09T00:10:09.453Z","actor":"taskctl","action":"start","task":"T-1094","sha_before":"d999c6c15ddc","sha_after":"879e3d2d71b9"}
 {"ts":"2026-10-09T01:26:15.310Z","actor":"taskctl","action":"start","task":"T-1095","sha_before":"7ae62bd7642d","sha_after":"82d8878ab2ab"}
+{"ts":"2026-10-09T02:13:54.551Z","actor":"taskctl","action":"block","task":"T-1095","reason":"真实Pi task222静态参数已纠正但领域来源拒绝被吞且末次失败假成功；已登记T1099并推进最小修复，原任务/稿件不重发或采纳","sha_before":"8cbdabaad56a","sha_after":"2ff3252d48f4"}
+{"ts":"2026-10-09T02:24:28.384Z","actor":"taskctl","action":"start","task":"T-1099","sha_before":"c126b4923861","sha_after":"4eb7782ba1dd"}
+{"ts":"2026-10-09T02:37:22.697Z","actor":"taskctl","action":"start","task":"T-1100","sha_before":"dfdcaec417e4","sha_after":"9a0b609b5d11"}
+{"ts":"2026-10-09T03:08:52.844Z","actor":"taskctl","action":"complete","task":"T-1100","evidence":"唯一测试源55c1ff0feaf5与实施独评一致；正式17文件291PASS含完整61例，backend类型exit0；原282PASS/2FAIL保留并显式旧冻结格式校准，原断言与预算不变；完整reconcile1297.015秒exit1/原42逐字一致无新增（5a7dc597bbef），本范围不代签全功能/安装/Pi。见docs/verification/t1100与本机实施复核f31972ffd5ef。","sha_before":"9a0b609b5d11","sha_after":"41eae735b426"}

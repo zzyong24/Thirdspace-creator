@@ -12,9 +12,10 @@ type Call = {
 type TerminalPlanIssue = { stepId: string; title: string; status: "failed" | "cancelled" | "skipped" };
 const object = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 /** 私有持久协议到既有聊天 parts 的投影；不执行模型、不采纳工具候选。 */
-export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWorkerInputSchema>, approvals:ReadonlyMap<string,ChatApprovalFact>=new Map(), terminalFailureTitles?:TerminalPlanIssue[],terminalToolFailures?:Array<{toolName:string;errorCode:string}>) {
+export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWorkerInputSchema>, approvals:ReadonlyMap<string,ChatApprovalFact>=new Map(), terminalFailureTitles?:TerminalPlanIssue[],terminalToolFailures?:Array<{toolName:string;errorCode:string}>,options:{toolFailureReceiptVersion?:1}={}) {
     const parts: Record<string, Json>[] = [], pending = new Map<string, Record<string, Json>>(), seen = new Set<string>(), invalidInputs = new Set<string>();
     let finishReason = "", hasOutput = false;
+    let lastToolOutcome:ReturnType<typeof agenticToolOutcomeSchema.parse>|undefined,hasDeliveredResult=false;
     for (const call of calls) {
         if (call.parentCallId) continue;
         if (call.kind === "model") {
@@ -77,6 +78,8 @@ export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWor
             if (!part || part.type !== `tool-${receipt.toolName}`)
                 throw new ConflictError("工具回执未关联模型调用");
             hasOutput = applyChatToolOutcome(part,call.id,receipt.output,invalidInputs.has(receipt.toolCallId),approvals.get(receipt.toolCallId),input.toolOutcomeProjectionVersion) || hasOutput;
+            lastToolOutcome=agenticToolOutcomeSchema.parse(receipt.output);
+            if(lastToolOutcome.status==="ok" && (lastToolOutcome.sideEffect==="proposal" || lastToolOutcome.sideEffect==="committed"))hasDeliveredResult=true;
             pending.delete(receipt.toolCallId);
         }
         else
@@ -84,7 +87,9 @@ export function projectChatReceipts(calls: Call[], input: z.infer<typeof chatWor
     }
     if (pending.size)
         throw new ConflictError("聊天仍有待授权或未完成工具");
-    const partialNotice=terminalFailureTitles?.length?`\n\n本次部分完成。${terminalFailureTitles.every(step=>step.status==="failed")?"失败步骤":"未成功步骤"}：${terminalFailureTitles.map(step=>step.title).join("、")}。`:terminalToolFailures?.length?`\n\n本次部分完成。工具 ${terminalToolFailures.map(failure=>failure.toolName).join("、")} 对相同参数连续返回不可重试错误（${terminalToolFailures.map(failure=>failure.errorCode).join("、")}），系统已停止重复调用。`:undefined;
+    // SEMANTIC_BOUNDARY_ALLOW: 只按可信根回执核对交付与末次失败，不判断用户意图或创作质量。
+    const tailFailed=options.toolFailureReceiptVersion===1 && finishReason==="stop" && calls.at(-1)?.kind==="model" && !hasDeliveredResult && lastToolOutcome?.sideEffect==="none" && (lastToolOutcome.status==="error" || lastToolOutcome.status==="blocked");
+    const partialNotice=terminalFailureTitles?.length?`\n\n本次部分完成。${terminalFailureTitles.every(step=>step.status==="failed")?"失败步骤":"未成功步骤"}：${terminalFailureTitles.map(step=>step.title).join("、")}。`:terminalToolFailures?.length?`\n\n本次部分完成。工具 ${terminalToolFailures.map(failure=>failure.toolName).join("、")} 对相同参数连续返回不可重试错误（${terminalToolFailures.map(failure=>failure.errorCode).join("、")}），系统已停止重复调用。`:tailFailed?"\n\n本次部分完成。最后一次工具操作未成功，尚未交付可采用候选或已提交结果。请查看上方真实错误与恢复说明。":undefined;
     if(partialNotice){parts.push({type:"text",text:partialNotice,state:"done"});hasOutput=true;}
     if (!hasOutput)
         throw new ConflictError("聊天没有可保存产物");

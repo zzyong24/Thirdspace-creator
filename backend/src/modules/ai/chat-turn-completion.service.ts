@@ -61,7 +61,7 @@ export function createChatTurnCompletionService(db: Db, deps: {
                 if (checkpoint.ledgerSequence !== calls.at(-1)?.sequence || JSON.stringify(checkpoint.messages) !== JSON.stringify(rootConfirmed.map(call => ({ role: call.kind === "model" ? "assistant" : "tool", callId: call.id }))))
                     throw new ConflictError("聊天检查点尚未确认全部调用");
                 const events=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(asc(executionStreamEvents.sequence));
-                const projected = projectChatReceipts(rootConfirmed, frozen,readChatApprovalFacts(events.map(event=>event.chunk)),terminalFailureTitles??undefined,terminalToolFailures??undefined), resultId = `chat:${business.id}`, messageId = `chat:${source.id}`;
+                const projected = projectChatReceipts(rootConfirmed, frozen,readChatApprovalFacts(events.map(event=>event.chunk)),terminalFailureTitles??undefined,terminalToolFailures??undefined,{...(payload.toolFailureReceiptVersion===1 && latestSettledStop?{toolFailureReceiptVersion:1 as const}:{})}), resultId = `chat:${business.id}`, messageId = `chat:${source.id}`;
                 const assertCards=()=>{
                 // 工具结算与补卡是不同事务；卡片未确认时保持原任务可恢复，不能先发布结束。
                 for(const part of projected.parts.filter(part=>typeof part.toolCallId==="string")){

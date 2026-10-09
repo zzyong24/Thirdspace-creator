@@ -6,18 +6,19 @@ import type { ChatBackendTool } from "../execution/execution-chat-tool-ports.ser
 import { prepareChatToolDefinitions } from "./chat-tool-definitions";
 import { CHAT_TOOL_ERROR_ENVELOPES, getChatToolApprovalDecider, getChatToolNativeExecutor } from "./chat-tool-gate";
 import { classifyLlmError } from "./llm/retry-policy";
+import { ChatToolUserError } from "./chat-tool-errors";
 
 // 白名单由已审计的调用方提供；副作用分类本身不能证明工具可留在宿主。
 
 export type ResolveChatHostTools = (context: RequestContext, execution: ExecutionRef, signal?: AbortSignal) => Promise<ToolSet>;
-const outcome = (status: "error" | "blocked", code: "transient" | "no_evidence" | "permission" | "cancelled", retryable: boolean, summary: string) => agenticToolOutcomeSchema.parse({status, summary, evidence: [], error: {code, retryable, recovery: summary}, continuation: null, sideEffect: "none"});
+const outcome = (status: "error" | "blocked", code: "invalid_input" | "transient" | "no_evidence" | "permission" | "cancelled", retryable: boolean, summary: string) => agenticToolOutcomeSchema.parse({status, summary, evidence: [], error: {code, retryable, recovery: summary}, continuation: null, sideEffect: "none"});
 
 /**
  * 原型只提供参数与版本；每次执行重新按宿主ctx和任务加载工具，不使用原型的账号闭包。
  * resolve必须读取该任务已冻结的可信上下文和当前领域权限；不能接受模型自报ctx。
  * 本适配器不领取任务或自行重试，须装入 createExecutionChatToolPorts 使用其执行权/账本。
  */
-export async function createChatHostToolAdapter(prototypes: ToolSet, resolve: ResolveChatHostTools, allowedEffects: Readonly<Record<string,"none"|"proposal">>): Promise<Record<string, ChatBackendTool>> {
+export async function createChatHostToolAdapter(prototypes: ToolSet, resolve: ResolveChatHostTools, allowedEffects: Readonly<Record<string,"none"|"proposal">>, options:{toolFailureReceiptVersion?:1}={}): Promise<Record<string, ChatBackendTool>> {
   const prepared = await prepareChatToolDefinitions(prototypes);
   for (const definition of prepared.definitions) if (!Object.hasOwn(allowedEffects,definition.name) || definition.effect !== allowedEffects[definition.name]) throw new Error(`工具不是已审计的宿主短操作：${definition.name}`);
   return Object.fromEntries(prepared.definitions.map(definition => {
@@ -65,6 +66,8 @@ export async function createChatHostToolAdapter(prototypes: ToolSet, resolve: Re
           return agenticToolOutcomeSchema.parse({ status: failed ? "error" : "ok", summary: failed ? "读取未完成，请查看工具结果" : definition.effect === "proposal" ? "已生成候选，等待用户采纳" : "已读取当前工具结果", evidence: [], data, error: failed ? {code:"no_evidence",retryable:false,recovery:"检查工具结果后继续"} : null, continuation: null, sideEffect: failed ? "none" : definition.effect });
         } catch (error) {
           if (scope.signal.aborted) return failure("error", "cancelled", false, "读取已停止");
+          // 仅当前任务冻结的新格式公开已审核输入错误；未知异常和旧任务继续原回执。
+          if (options.toolFailureReceiptVersion===1 && error instanceof ChatToolUserError) return failure("error", "invalid_input", false, error.message);
           const classified = classifyLlmError(error);
           if (classified.reason === "auth_401" || classified.reason === "auth_403") return failure("blocked", "permission", false, "当前读取权限不可用");
           return failure("error", classified.retryable ? "transient" : "no_evidence", classified.retryable, "读取未完成，可检查权限与目标状态后继续");

@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001 已销账：正式 Gate 现已绑定本轮7文件、原 completion/projection、T1095共享机制与公共Worker、agentic ports/host/plan、creation host/assembly/public partial，以及实际 plan Worker protocol/history/runtime 和 frontend partial消费者回归；原预算、retry、类型、静态门、timeout与reconcile均保留。SPEC正文和产品/测试写集不变，未发现增量问题。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:34:bbe201a9d3bb5e37",
+        "quote": "原plan failure与重复同参不可重试failure说明优先，只有一份notice；已有可信proposal/committed交付保原投影；其余满足上述末次失败条件记录partial。"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:71:45647a7e74a81d1e",
+        "quote": "原root、host、submission/context、completion/projection、T1095完整121及plan Worker、提示/assembly、公开partial服务/消费者相关回归。"
+      },
+      "where": "orchestrator/process/modules.config.json 的 T-1099.verify_commands.implementation",
+      "failure_mode": "正式命令只运行本轮7个测试文件，未运行原chat-turn-completion、chat-receipt-projection、T1095 required-behavior共享机制回归及plan Worker protocol；实现可破坏旧终态引用、stream/replay、plan/repeated优先级或T1095参数纠错，同时通过当前配置的全部测试命令。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:540a92359076a99391ac1e98efb8426a923fbf2670deb0c8052a11c57a75ea7e:orchestrator/process/modules.config.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "不扩大产品或测试写集；在T1099正式验证命令中加入精确既有completion/projection、T1095共享ports/host/completion/plan集合及实际plan Worker protocol回归，保留当前7文件、原断言、retry=0、既有长预算、类型/静态门/timeout/reconcile。",
+      "resolution_evidence": "当前 orchestrator/process/modules.config.json SHA256 f69135b28d27aca3ceffcca5c74459b3f1277d54e49abc485d48223ea39f41a4：保留原7个测试文件，并在同一backend命令加入原chat-turn-completion、chat-receipt-projection、T1095 helper/公共Worker/agentic ports/host/plan、creation host、assembly与public partial回归；另加入ai-worker chat-pi-loop protocol、plan-history replay、worker-runtime及frontend partial-task-consumers。所有新增测试命令均retry=0、no-file-parallelism、testTimeout/hookTimeout=180000；原build/type/static/timeout/reconcile保持。SPEC SHA仍为c4e4e14c962c5fdc96578f13153d0d286b2eb04b419a1a3e1c991e15a4662090，8产品+7测试写集未扩大。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

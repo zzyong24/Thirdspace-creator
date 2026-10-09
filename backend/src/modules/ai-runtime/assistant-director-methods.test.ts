@@ -12,6 +12,12 @@ import { buildAssistantFunctionalPrompt } from './assistant-functional-prompt';
 const editorTools = ['work.editor.read', 'work.editor.propose'];
 const creationTools = ['work.creation.read', 'work.creation.propose'];
 
+it('T1099 六处共同脚本来源逐字复制，规则快照保实际对象或null',()=>{
+ const prompt=buildAssistantFunctionalPrompt(creationTools);
+ for(const path of ['article.titleSourceRefs','article.summarySourceRefs','sections[*].sourceRefs','factItems[*].sourceRefs','graphic.sourceRefs','cardBriefs[*].sourceRefs','kind/id/versionId','graphic.ruleSnapshotRef','字面null','default','旧稿来源为空'])expect(prompt).toContain(path);
+ expect(buildAssistantFunctionalPrompt(['work.creation.read'])).not.toContain('article.titleSourceRefs');
+});
+
 describe('T1093 已绑定编导方法', () => {
   it('给模型的原生时间示例是严格合同可接受的数字，字符串仍被原合同拒绝', () => {
     const prompt = buildAssistantFunctionalPrompt(editorTools);

@@ -25,6 +25,7 @@ async function fixture(options: {
     checkpoint?: boolean;
     unknownUsage?: boolean;
     displayLegacy?:boolean;
+    legacyToolFailureReceipt?:boolean;
     supersededPrefix?: boolean;
     budget?: typeof budget;
 
@@ -34,6 +35,12 @@ async function fixture(options: {
     const conversation = await repo.createConversation({ title: "会话", projectId: null, scope: "global" });
     const source = await repo.createMessage(conversation.id, { role: "user", content: "问题", attachments: [], modelMetadata: {} });
     const submit = await createChatTurnSubmissionService(db, { now, assemble: async () => ({ capability: "copilot.assist", system: "策略", messages: [{ role: "user", content: "问题" }], maxSteps: 6, maxOutputTokens: 128, tools: options.tools ?? [] }) }).submit(ctx, { conversationId: conversation.id, sourceMessageId: source.id });
+    if(options.legacyToolFailureReceipt){
+      // T1100: 明确构造旧兼容格式，只改变隔离夹具的外层标记，不改冻结输入或旧断言。
+      const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submit.executionTaskId));
+      const payload={...task!.payload as Record<string,unknown>};delete payload.toolFailureReceiptVersion;
+      await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,submit.executionTaskId));
+    }
     if(options.displayLegacy){
       // 合成升级前持久输入的形状，仅核兼容；不是安装版历史证据。
       const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submit.executionTaskId));
@@ -402,7 +409,7 @@ it.each(["single-corrected", "different-tool", "different-code"] as const)("无�
  const firstInput = mode === "single-corrected" ? {value: 1} : {value: "相同参数"};
  const secondName = mode === "different-tool" ? "fixture_other" : "fixture_read";
  const text = mode === "single-corrected" ? "已纠正参数，完成读取。" : "已说明本次读取结果。";
- const f = await fixture({budget: terminalMatrixBudget, checkpoint: false, finishReason: "tool-calls",
+ const f = await fixture({legacyToolFailureReceipt:true,budget: terminalMatrixBudget, checkpoint: false, finishReason: "tool-calls",
   tools: Object.keys(tools).map(name => ({name, version: "1", description: "只读纠错夹具", parameters: {type: "object", properties: {value: {type: "string"}}, required: ["value"], additionalProperties: false}, effect: "none"})),
   content: [{type: "tool-call", toolCallId: "correction-invalid", toolName: "fixture_read", input: JSON.stringify(firstInput)}],
  });
@@ -497,4 +504,29 @@ it.each([{label:"tools",extra:{tools:{"plan.update":{version:"forged"}}}},{label
  expect(committed.outcome).toBe('partial');
  expect(await f.service.commitResult(f.ref,f.request,f.trustedResolver)).toEqual(committed);
  const rows=await f.rows();expect(rows.results).toHaveLength(1);expect(rows.messages).toHaveLength(2);
+});
+
+it('T1100 新格式单次明确失败经原completion保存partial、真实卡片与一次说明，回放逐字一致',async()=>{
+ const localBudget={maxCalls:8,maxTokens:10000,deadlineMs:120000};
+ const tools={'fixture.read':{version:'1',parameters:z.object({}).strict(),effect:'none' as const}};
+ const f=await fixture({budget:localBudget,checkpoint:false,finishReason:'tool-calls',tools:[{name:'fixture.read',version:'1',description:'隔离来源校验',parameters:{type:'object',properties:{},additionalProperties:false},effect:'none'}],content:[{type:'tool-call',toolCallId:'source-refused',toolName:'fixture_read',input:'{}'}]});
+ expect(f.task.payload).toMatchObject({toolFailureReceiptVersion:1});
+ const ports=createExecutionAgenticToolPorts(db,{now,budget:localBudget,tools}),tool=await ports.reserve(f.ref,{modelCallId:f.call.callId,toolCallId:'source-refused'});
+ expect(tool.validationOutcome).toBeUndefined();await ports.start(f.ref,{callId:tool.callId});
+ await ports.settle(f.ref,{callId:tool.callId,status:'settled',output:{status:'error',summary:'请保留本次确认脚本的来源',evidence:[],data:{kind:'fixture.read',error:'来源缺失'},error:{code:'invalid_input',retryable:false,recovery:'复制实际scriptSourceRef'},continuation:null,sideEffect:'none'}});
+ await createChatToolStreamProjection(db,{now,tools})(f.ref,tool.callId);
+ const last=await f.generation.reserveGenerationCall(f.ref,{operationKey:`${f.frozen.operationKey}/model/2`,request:{maxOutputTokens:128}});await f.ledger.start(f.ref,last.callId);
+ await f.generation.settleGenerationCall(f.ref,{callId:last.callId,status:'settled',usage:{inputTokens:1,outputTokens:1},providerResult:{content:[{type:'text',text:'完整原文：尚未生成候选。'}],finishReason:{unified:'stop'},usage:{inputTokens:{total:1},outputTokens:{total:1}},warnings:[]}});
+ await createExecutionCheckpointService(db,{now}).save(f.ref,{expectedRevision:0,expectedLedgerSequence:3,messages:[{role:'assistant',callId:f.call.callId},{role:'tool',callId:tool.callId},{role:'assistant',callId:last.callId}]});
+ const request={lastModelCallId:last.callId,toolCallIds:[tool.callId]},first=await f.service.commitResult(f.ref,request),rows=await f.rows();
+ expect(first.outcome).toBe('partial');expect(rows.business.status).toBe('partial');expect(rows.task.status).toBe('partial');
+ expect(rows.messages[1]!.content).toContain('完整原文：尚未生成候选。');expect(rows.messages[1]!.content).toContain('最后一次工具操作未成功');expect(rows.messages[1]!.content).not.toContain('相同参数连续');
+ expect(rows.messages[1]!.modelMetadata).toMatchObject({completeness:'partial',stopReason:'stop'});
+ const part=(rows.messages[1]!.parts as Array<Record<string,unknown>>).find(part=>part.toolCallId==='source-refused')!;expect(part.output).toMatchObject({__creatorosOutcome:{status:'error',sideEffect:'none',error:{code:'invalid_input'}}});
+ const events=await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.task.id)).orderBy(executionStreamEvents.sequence);
+ expect(events.filter(event=>event.chunk.type==='text-delta'&&event.chunk.id===`${last.callId}:terminal-partial`)).toHaveLength(1);
+ expect(events.at(-1)!.chunk).toMatchObject({type:'finish',messageMetadata:{completeness:'partial'}});
+ const before=JSON.stringify({rows,events,calls:await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,f.task.id)).orderBy(executionCalls.sequence)});
+ expect(await f.service.commitResult(f.ref,request)).toEqual(first);
+ expect(JSON.stringify({rows:await f.rows(),events:await db.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,f.task.id)).orderBy(executionStreamEvents.sequence),calls:await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,f.task.id)).orderBy(executionCalls.sequence)})).toBe(before);
 });

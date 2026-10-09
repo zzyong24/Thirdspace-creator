@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：T1100 将原三场 completion 兼容测试显式标为旧 payload，仅在隔离夹具删除顶层 toolFailureReceiptVersion；新格式仍以独立用例验证无交付末次失败为 partial。产品源码、旧摘要/账本/权限/预算和 T1099 公共 Worker Gate 不变，未发现阻断项。",
+  "findings": []
+}

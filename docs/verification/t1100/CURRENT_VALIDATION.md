@@ -1,0 +1,9 @@
+# T1100 原completion夹具校准
+
+正式规格与唯一测试文件实施独立复核均PASS。只给原三个旧兼容场景启用legacyToolFailureReceipt，默认false，仅在隔离库删除外层标记；原60断言与1200000ms预算保留。第61例经过原模型/工具账本、stream、checkpoint和completion，验证新格式partial、完整正文/失败卡、唯一准确说明和逐字回放。
+
+原core 282PASS/2FAIL现场保留，正式17文件291PASS涵盖完整61例；backend类型exit0。完整reconcile仍待完成，未代签安装、真实供应商AI或全功能。
+
+本轮完整reconcile实际1297.015秒exit1、42错误/0告警，与T1095原日志逐字一致，无新增失败；日志SHA256为5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a。当前测试文件仍与独评哈希55c1ff0feaf56950bf95ed41ef4e8b0d2c4fc3fe45813a9cde4e1f230f818d9a相同，最终完整61例含在291PASS中。只完成本夹具范围，原全局失败及真实Pi/安装边界保留。
+
+2026-10-09T03:08:52Z，taskctl complete实际exit0，已审计完成T1100夹具范围；原全局42/timeout27及T1099真实Pi等待保持。

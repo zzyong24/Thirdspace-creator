@@ -1,6 +1,6 @@
 import { it, expect, beforeAll, afterAll } from 'vitest';
 import { z } from 'zod';
-import { createDb, executionCalls, eq, type Db } from '@creatoros/backend';
+import { createDb, executionCalls, executionTasks, eq, type Db } from '@creatoros/backend';
 import { createAiRepository } from './ai.repository';
 import { createChatTurnSubmissionService } from './chat-turn-submission.service';
 import { createPersistentTaskService } from '../execution/persistent-task.service';
@@ -41,4 +41,22 @@ it('外部原identity/outcome账本超过60k真实翻窗重拼，unknown、旧fe
     await expect(reader.readToolResult(ref, { toolCallId: 'long-result' })).rejects.toThrow();
     await db.update(executionCalls).set({ parentCallId: turn.callId, status: 'unknown' }).where(eq(executionCalls.id, result.callId));
     await expect(reader.readToolResult(ref, { toolCallId: 'long-result' })).rejects.toThrow();
+});
+
+it('T1099 host reader在原来源校验后返回任务冻结版本，旧缺标记不增加属性',async()=>{
+ const ctx={userId:'failure-format-user',accountId:'failure-format-account',source:'user' as const,requestId:'test'};
+ const repo=createAiRepository(db,{userId:ctx.userId,accountId:ctx.accountId,now,nextId});
+ const conversation=await repo.createConversation({title:'来源冻结',projectId:null,scope:'global'}),source=await repo.createMessage(conversation.id,{role:'user',content:'只读测试',attachments:[],modelMetadata:{}});
+ const hostContext={schemaVersion:1 as const,chatContext:{surface:'topics'},mediaRoute:null,positioningScratch:false,trustedScriptSources:[],skillSnapshot:{snapshotVersion:1 as const,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:'fixed',platformPolicyVersion:'1',platformPolicy:'候选',skills:[{skillId:'chatbox.topic',baseVersion:'1',overlayRevision:null,overlayVersion:null,effective:{methodSystem:'固定策略',template:'模板',tools:[],requiredFacets:[],contextRequirements:[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null}}]}};
+ const submit=createChatTurnSubmissionService(db,{now,nextId,assemble:async()=>({capability:'copilot.assist',system:'冻结',messages:[{role:'user' as const,content:source.content}],maxSteps:4,maxOutputTokens:128,tools:[],hostContext})});
+ const submitted=await submit.submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+ const claim=(await createPersistentTaskService(db,{now,nextId}).claimTask({taskId:submitted.executionTaskId,workerId:'failure-format-worker'}))!,ref={executionTaskId:submitted.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+ const reader=createChatHostContextReader(db,{now});
+ expect(await reader.read(ref)).toMatchObject({toolFailureReceiptVersion:1,context:{userId:ctx.userId,accountId:ctx.accountId,source:'ai',requestId:`execution:${ref.executionTaskId}:1`},hostContext});
+ const [before]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId)),legacy={...before!.payload as Record<string,unknown>};delete legacy.toolFailureReceiptVersion;
+ await db.update(executionTasks).set({payload:legacy}).where(eq(executionTasks.id,submitted.executionTaskId));
+ expect(await reader.read(ref)).not.toHaveProperty('toolFailureReceiptVersion');
+ const corrupted={...legacy,toolFailureReceiptVersion:1,hostContext:{...hostContext,positioningScratch:true}};
+ await db.update(executionTasks).set({payload:corrupted}).where(eq(executionTasks.id,submitted.executionTaskId));
+ await expect(reader.read(ref)).rejects.toThrow('摘要不符');
 });

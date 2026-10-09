@@ -22,7 +22,7 @@ export function createChatWorkCreationToolHost(reader:Pick<ReturnType<typeof cre
   const actual=workspaceKey(frozen.context),requested=workspaceKey(ctx);
   if(frozen.context.userId!==ctx.userId||(frozen.context.accountId??null)!==(ctx.accountId??null)||(frozen.context.groupId??null)!==(ctx.groupId??null)||actual.kind!==requested.kind||actual.id!==requested.id)throw new Error('联合创作与当前任务的账号组不符。');
   const definitions=frozen.modelInput.tools.filter(tool=>Object.hasOwn(effects,tool.name));
-  if(!definitions.length)return {};
+  if(!definitions.length)return {tools:{},toolFailureReceiptVersion:frozen.toolFailureReceiptVersion};
   const context=frozen.hostContext.chatContext as unknown as Record<string,unknown>;
   const target=workCreationTarget.parse(context.creationTarget);
   if(context.surface!=='project'||context.projectId!==target.projectId)throw new Error('联合创作未绑定当前确认脚本与作品组合。');
@@ -38,10 +38,10 @@ export function createChatWorkCreationToolHost(reader:Pick<ReturnType<typeof cre
   } as unknown as ChatToolDeps);
   const current=(await prepareChatToolDefinitions(tools)).definitions;
   if(canonicalJson(current)!==canonicalJson(definitions))throw new Error('联合创作工具定义已变化，不能沿用旧任务执行。');
-  signal?.throwIfAborted();return tools;
+  signal?.throwIfAborted();return {tools,toolFailureReceiptVersion:frozen.toolFailureReceiptVersion};
  }
  return async(ctx,_input,execution,signal)=>{
-  const prototypes=await resolve(ctx,execution,signal);
-  return Object.keys(prototypes).length?createChatHostToolAdapter(prototypes,resolve,effects):{};
+  const frozen=await resolve(ctx,execution,signal);
+  return Object.keys(frozen.tools).length?createChatHostToolAdapter(frozen.tools,async(context,currentExecution,currentSignal)=>(await resolve(context,currentExecution,currentSignal)).tools,effects,{toolFailureReceiptVersion:frozen.toolFailureReceiptVersion}):{};
  };
 }

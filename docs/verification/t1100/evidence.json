@@ -1,0 +1,86 @@
+{
+  "task": "T-1100",
+  "reviewReceipt": "5ee066dd22cf",
+  "taskComplete": true,
+  "sourceFile": "backend/src/modules/ai/chat-turn-completion.service.test.ts",
+  "sourceSha256": "55c1ff0feaf56950bf95ed41ef4e8b0d2c4fc3fe45813a9cde4e1f230f818d9a",
+  "redCoreRegression": {
+    "argv": [
+      "python3",
+      "-c",
+      "import json,subprocess,sys;v=json.load(open(\"orchestrator/process/modules.config.json\"));c=v[\"modules\"][\"T-1099\"][\"verify_commands\"][\"implementation\"][2].split();c.remove(\"src/integration/chat-creation-source-recovery.integration.test.ts\");sys.exit(subprocess.run(c).returncode)"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T02:33:16.654741+00:00",
+    "finishedAt": "2026-10-09T02:34:34.443470+00:00",
+    "exitCode": 1,
+    "elapsedSeconds": 77.78748120801174,
+    "logSha256": "d43604176fe0e9f514f6af4df1ea36524f468e28f07d03dff1ebb3d54a2f24d3"
+  },
+  "completeFileIncludedInFormalBackend": {
+    "argv": [
+      "python3",
+      "-c",
+      "import json,subprocess,sys;v=json.load(open(\"orchestrator/process/modules.config.json\"));c=v[\"modules\"][\"T-1099\"][\"verify_commands\"][\"implementation\"][2].split();sys.exit(subprocess.run(c).returncode)"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T02:38:04.184310+00:00",
+    "finishedAt": "2026-10-09T02:39:41.014413+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 96.82931079200353,
+    "logSha256": "bd9500ee35b6f60664e27874e99cdc92dc79f5789ebe2154b042eba13ecc3c72"
+  },
+  "testCount": 61,
+  "implementationReviewSha256": "f31972ffd5ef71a8de57dcfabee71fcfbbd522e6ac0f6b14923cc4dc97fee60c",
+  "fullReconcile": {
+    "oldErrors": 42,
+    "currentErrors": 42,
+    "currentWarnings": 0,
+    "addedErrors": [],
+    "removedErrors": [],
+    "oldLogSha256": "5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a",
+    "newLogSha256": "5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a",
+    "logsByteIdentical": true,
+    "currentRun": {
+      "argv": [
+        "node",
+        "orchestrator/process/reconcile.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T02:45:33.096798+00:00",
+      "finishedAt": "2026-10-09T03:07:10.121558+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 1297.0148049580166,
+      "logSha256": "5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a"
+    }
+  },
+  "finalFormalBackend": {
+    "argv": [
+      "python3",
+      "-c",
+      "import json,subprocess,sys;v=json.load(open(\"orchestrator/process/modules.config.json\"));c=v[\"modules\"][\"T-1099\"][\"verify_commands\"][\"implementation\"][2].split();sys.exit(subprocess.run(c).returncode)"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T02:44:09.494482+00:00",
+    "finishedAt": "2026-10-09T02:46:06.219287+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 116.72386387499864,
+    "logSha256": "10953ac0994a52a9f866694023e4a06315398bd714160564d354071480ce8434"
+  },
+  "completion": {
+    "argv": [
+      "node",
+      "orchestrator/process/taskctl.mjs",
+      "complete",
+      "T-1100",
+      "--evidence",
+      "唯一测试源55c1ff0feaf5与实施独评一致；正式17文件291PASS含完整61例，backend类型exit0；原282PASS/2FAIL保留并显式旧冻结格式校准，原断言与预算不变；完整reconcile1297.015秒exit1/原42逐字一致无新增（5a7dc597bbef），本范围不代签全功能/安装/Pi。见docs/verification/t1100与本机实施复核f31972ffd5ef。"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T03:08:52.709107+00:00",
+    "finishedAt": "2026-10-09T03:08:52.852981+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.14372279198141769,
+    "logSha256": "31935466a288e227027677e927f822602502d7ff83cc873ca13f9146b8271fcf"
+  }
+}

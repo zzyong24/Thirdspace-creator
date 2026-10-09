@@ -59,6 +59,16 @@ it("新提交冻结具体纠错格式；旧绑定回放不补标记或改变任�
   expect(f.assemble).toHaveBeenCalledTimes(count);
   expect(JSON.stringify(await f.rows())).toBe(before);
 });
+it('T1099 安全业务错误格式只冻入新执行外层，已有缺标记绑定逐字回放',async()=>{
+ const f=await fixture(),created=await f.service.submit(f.ctx,f.request),first=(await f.rows()).executions[0]!;
+ expect(first.payload).toMatchObject({toolFailureReceiptVersion:1});
+ expect((first.payload as Record<string,unknown>).modelInput).not.toHaveProperty('toolFailureReceiptVersion');
+ const legacy={...(first.payload as Record<string,unknown>)};delete legacy.toolFailureReceiptVersion;
+ await db.update(executionTasks).set({payload:legacy}).where(eq(executionTasks.id,created.executionTaskId));
+ const before=JSON.stringify(await f.rows()),count=f.assemble.mock.calls.length;
+ expect(await f.service.submit(f.ctx,f.request)).toEqual({...created,replayed:true});
+ expect(f.assemble).toHaveBeenCalledTimes(count);expect(JSON.stringify(await f.rows())).toBe(before);
+});
 it("跨账号、别的会话消息和非用户源消息在装配前拒绝",async()=>{
   const f=await fixture(),other=await fixture();
   await expect(f.service.submit({...f.ctx,accountId:other.ctx.accountId},f.request)).rejects.toThrow();

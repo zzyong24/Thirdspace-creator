@@ -57,6 +57,6 @@ export function createChatHostContextReader(db:Db,deps:{now?:()=>string}={}) {
     if(business.projectId!==snapshot.conversation.projectId || object(snapshot.sourceMessage.modelMetadata).chatTaskId!==business.id || input.historyDigest!==chatHistoryDigest(snapshot) || JSON.stringify(input.historyMessageIds)!==JSON.stringify(snapshot.messages.map(message=>message.id)))throw new ConflictError("聊天宿主历史映射已变化");
     const hostContext=readChatHostContextPair(payload.hostContext,input.hostContextDigest,{userId:context.userId,accountId:context.accountId??null,groupId:context.groupId,projectId:snapshot.conversation.projectId});
     if(!hostContext)throw new ConflictError("旧聊天任务缺少宿主上下文，不能按当前配置重建");
-    return {context,aiTaskId:business.id,hostContext,modelInput,snapshot};
+    return {context,aiTaskId:business.id,hostContext,modelInput,snapshot,...(payload.toolFailureReceiptVersion===1?{toolFailureReceiptVersion:1 as const}:{})};
   })};
 }

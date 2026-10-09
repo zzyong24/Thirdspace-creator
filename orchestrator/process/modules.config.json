@@ -6475,6 +6475,130 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1099": {
+      "task_id": "T-1099",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1099-tool-domain-recovery.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/application/generation/**",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/execution/**",
+        "backend/src/integration/**",
+        "ai-worker/src/**",
+        "contract/src/**",
+        "docs/verification/t1095/**"
+      ],
+      "write_set": [
+        "backend/src/application/generation/work-creation-root.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.ts",
+        "backend/src/modules/ai/chat-host-context.service.ts",
+        "backend/src/modules/ai-runtime/chat-work-creation-tool-host.ts",
+        "backend/src/modules/ai-runtime/chat-host-tool-adapter.ts",
+        "backend/src/modules/ai/chat-turn-completion.service.ts",
+        "backend/src/modules/ai/chat-receipt-projection.ts",
+        "backend/src/modules/ai-runtime/assistant-functional-prompt.ts",
+        "backend/src/application/generation/work-creation-root.test.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.test.ts",
+        "backend/src/modules/ai/chat-host-context.service.test.ts",
+        "backend/src/modules/ai-runtime/assistant-director-methods.test.ts",
+        "backend/src/modules/ai-runtime/chat-host-input-error-recovery.test.ts",
+        "backend/src/modules/ai/chat-tool-tail-failure-projection.test.ts",
+        "backend/src/integration/chat-creation-source-recovery.integration.test.ts",
+        "docs/features/t1099-tool-domain-recovery.md",
+        "docs/features/t1099-tool-domain-recovery.review.md",
+        "docs/features/t1099-tool-domain-recovery.review-input.json",
+        "docs/features/t1099-tool-domain-recovery.independent-review.md",
+        "docs/verification/t1099/**",
+        "docs/verification/t1095/**",
+        "docs/verification/t1093/**",
+        "docs/verification/t1094/**",
+        "docs/verification/t1062/assistant-fixes-20261009.md",
+        "docs/features/t1098-installed-scheduled-failure-diagnosis.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/.lessons-stats.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm -C ai-worker build",
+          "pnpm -C backend exec vitest run src/application/generation/work-creation-root.test.ts src/modules/ai/chat-turn-submission.service.test.ts src/modules/ai/chat-host-context.service.test.ts src/modules/ai-runtime/assistant-director-methods.test.ts src/modules/ai-runtime/chat-host-input-error-recovery.test.ts src/modules/ai/chat-tool-tail-failure-projection.test.ts src/integration/chat-creation-source-recovery.integration.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/ai/chat-receipt-projection.test.ts src/modules/execution/tool-parameter-recovery.test.ts src/integration/tool-parameter-recovery.integration.test.ts src/modules/execution/execution-agentic-tool-ports.service.test.ts src/modules/execution/execution-agentic-tool-host.test.ts src/integration/chat-workbench-plan.integration.test.ts src/modules/ai-runtime/chat-work-creation-tool-host.test.ts src/modules/ai-runtime/chat-assembly.test.ts src/modules/ai/public-partial-task.integration.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts src/execution/chat-plan-history-replay.test.ts src/execution/worker-runtime.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C frontend exec vitest run src/components/ai/partial-task-consumers.test.tsx --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C backend typecheck",
+          "pnpm -C ai-worker typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
+    },
+    "T-1100": {
+      "task_id": "T-1100",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1100-completion-legacy-fixture.md",
+        "docs/features/t1099-tool-domain-recovery.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/ai/chat-turn-completion.service.test.ts",
+        "backend/src/modules/ai/chat-turn-completion.service.ts",
+        "backend/src/modules/ai/chat-receipt-projection.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.ts",
+        "backend/src/modules/execution/**",
+        "docs/verification/t1099/**"
+      ],
+      "write_set": [
+        "backend/src/modules/ai/chat-turn-completion.service.test.ts",
+        "docs/features/t1100-completion-legacy-fixture.md",
+        "docs/features/t1100-completion-legacy-fixture.review.md",
+        "docs/features/t1100-completion-legacy-fixture.review-input.json",
+        "docs/features/t1100-completion-legacy-fixture.independent-review.md",
+        "docs/verification/t1100/**",
+        "docs/verification/t1099/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/.lessons-stats.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm -C backend exec vitest run src/modules/ai/chat-turn-completion.service.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C backend typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

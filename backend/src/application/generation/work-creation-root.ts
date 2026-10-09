@@ -5,6 +5,7 @@ import type {ArticlesService} from '../../modules/articles';
 import type {GraphicPostsService} from '../../modules/graphic-posts';
 import type {createProjectScriptSource} from '../project-script-source';
 import {canonicalJson} from '../../modules/ai/canonical-json';
+import {ChatToolUserError} from '../../modules/ai-runtime/chat-tool-errors';
 
 export interface WorkCreationPorts {
  compositions:Pick<WorkCompositionsService,'get'>;
@@ -50,7 +51,7 @@ export function createWorkCreationRoot(ports:WorkCreationPorts){
   if(proposal.targetDigest!==current.targetDigest)conflict('候选对应的确认脚本或成员不符。');
   const sameSource=(refs:ReadonlyArray<unknown>|undefined)=>refs?.some(ref=>canonicalJson(ref)===canonicalJson(current.scriptSourceRef))===true;
   // SEMANTIC_BOUNDARY_ALLOW: 核同一个不可变来源及真实文件ID，不决定文章/图卡内容。
-  if(!sameSource(proposal.article.titleSourceRefs)||!sameSource(proposal.article.summarySourceRefs)||proposal.article.sections.some(section=>!sameSource(section.sourceRefs))||proposal.article.factItems.some(fact=>!sameSource(fact.sourceRefs))||!sameSource(proposal.graphic.sourceRefs)||!proposal.graphic.cardBriefs?.length||proposal.graphic.cardBriefs.some(card=>!sameSource(card.sourceRefs)))conflict('两份稿件必须保留同一确认脚本的来源。');
+  if(!sameSource(proposal.article.titleSourceRefs)||!sameSource(proposal.article.summarySourceRefs)||proposal.article.sections.some(section=>!sameSource(section.sourceRefs))||proposal.article.factItems.some(fact=>!sameSource(fact.sourceRefs))||!sameSource(proposal.graphic.sourceRefs)||!proposal.graphic.cardBriefs?.length||proposal.graphic.cardBriefs.some(card=>!sameSource(card.sourceRefs)))throw new ChatToolUserError('两份稿件必须保留同一确认脚本的来源。article.titleSourceRefs、article.summarySourceRefs、article.sections[*].sourceRefs、存在的article.factItems[*].sourceRefs、graphic.sourceRefs和每个graphic.cardBriefs[*].sourceRefs都必须包含本次work.creation.read返回的同一个scriptSourceRef，逐字复制kind/id/versionId；graphic.cardBriefs至少保留一张图卡。在同一任务修正这些字段后重新提出候选，不猜来源或重发原参数。');
   if(new Set(proposal.article.sections.map(section=>section.sectionId)).size!==proposal.article.sections.length)conflict('文章段落ID重复。');
   const files=[...proposal.article.imageUses,...(proposal.article.coverImageUse?[proposal.article.coverImageUse]:[]),...proposal.graphic.imageUses,...(proposal.graphic.seriesProfile?.referenceImage?[proposal.graphic.seriesProfile.referenceImage]:[])];
   for(const file of files)if(!current.images.some(image=>image.assetId===file.assetId&&image.assetFileId===file.assetFileId))conflict('候选包含未在当前素材目录核验的图片文件。');
