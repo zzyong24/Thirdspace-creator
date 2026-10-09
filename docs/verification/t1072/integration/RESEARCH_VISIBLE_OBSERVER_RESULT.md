@@ -11,3 +11,6 @@
 首次相关完整重跑误选了local-name-search17而非原local-read-host9，实际54旧+18新=72，64P3F5未执行（Redfox30秒beforeAll超时），179.98秒exit1。清单错误及hook失败原log保，不称其为原46或跳过PASS。随后准确原6文件46旧+18新按maxWorkers2/retry0重跑：58P6F、0skip，149.80秒exit1。新增18全通过；原46为40P6F，其中研究原3相同后续业务差异、Redfox3超过原5/15秒期限（另2有配置Worker通过）。初始化此轮成功，没有改hook或业务timeout。此实际6FAIL不归类既有放行；主控同意在受控并行资源下继续验证，CPU冷构建干扰只是需要进一步对照的推断，不证明所有失败仅由负载导致。
 
 所有首失败/类型/控制/完整日志及源码、补丁SHA256绑定research-visible-observer-result.json。本轮不耗T1072/T915末审核轮，不把来源历史批准称为本轮正式PASS，不声称完整46、安装版或产品全部验收通过。
+
+
+后续资源对照：同eae717e97cf308f9b01db8839cf819e574df1314源码，Redfox原5场景单独maxWorkers1/retry0实际5P0F，80.57秒（import51.78秒、tests27.97秒）、exit0，backend-redfox-original5-serial-resource-control.log。原beforeAll30秒与每场景5/15/20秒预算不变，无源码改动。它支持并行资源与前述timeout有关，但不能据分项绿色改写完整64那次58P6F，研究原3仍待装配裁决；整套尚未重新通过。

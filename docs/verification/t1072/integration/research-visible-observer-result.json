@@ -61,7 +61,19 @@
     "backend-research-visible-observer-typecheck-first.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "backend-research-visible-observer-related-final.log": "b9a96307e8e27a73d569906ee9fc13ed2249c719daa241738c449ee25629ea0b",
     "backend-research-visible-observer-typecheck-final.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "backend-research-visible-observer-original46-bounded.log": "87ac7ad2a6c3fc8a8cfde1219048d79d6c493a787df123759a170ec0766fda8c"
+    "backend-research-visible-observer-original46-bounded.log": "87ac7ad2a6c3fc8a8cfde1219048d79d6c493a787df123759a170ec0766fda8c",
+    "backend-redfox-original5-serial-resource-control.log": "945ce6cd71ab6997e0c758540d263d548dbef99f3c8c59ea3239173faa0da47d"
   },
-  "patchSha256": "8a06337f0aa72d80305704cd893c5016eb763afc54f74fcaa676999276da0041"
+  "patchSha256": "8a06337f0aa72d80305704cd893c5016eb763afc54f74fcaa676999276da0041",
+  "redfoxSerialResourceControl": {
+    "sourceHead": "eae717e97cf308f9b01db8839cf819e574df1314",
+    "passed": 5,
+    "failed": 0,
+    "maxWorkers": 1,
+    "retry": 0,
+    "durationSeconds": 80.57,
+    "testsDurationSeconds": 27.97,
+    "exit": 0,
+    "timeoutsChanged": false
+  }
 }
