@@ -90,7 +90,12 @@ fn user_code(raw: &str) -> Option<String> {
 }
 fn verification_url(raw: &str, code: &str) -> Result<String, String> {
     let url = url::Url::parse(raw).map_err(|_| error("官方确认地址无效，请重新连接"))?;
-    if url.origin().ascii_serialization() != GROWTH
+    let origin_allowed = url.origin().ascii_serialization() == GROWTH;
+    #[cfg(debug_assertions)]
+    let origin_allowed = origin_allowed ||
+        (std::env::var("CREATOROS_OWNED_DEVICES_HTTP_LAB").as_deref() == Ok("1")
+        && http_client_and_origin(GROWTH)?.1 == url.origin().ascii_serialization());
+    if !origin_allowed
         || url.path() != "/products/connect"
         || !url.username().is_empty()
         || url.password().is_some()
@@ -283,6 +288,64 @@ impl Drop for Flight {
     }
 }
 struct Http;
+// 只在开发/测试编译中存在。普通运行不读Lab文件，正式编译不包含该入口。
+#[cfg(debug_assertions)]
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct LocalHttpLab {
+    schema: String,
+    growth_origin: String,
+    activity_origin: String,
+    ca_pem_path: Option<String>,
+}
+#[cfg(debug_assertions)]
+fn loopback_origin(raw: &str) -> Result<url::Url, String> {
+    let u = url::Url::parse(raw).map_err(|_| error("本地测试origin无效"))?;
+    if !matches!(u.scheme(), "http" | "https")
+        || !matches!(u.host_str(), Some("127.0.0.1" | "localhost" | "[::1]"))
+        || u.port().is_none_or(|p| p < 1024)
+        || !u.username().is_empty() || u.password().is_some()
+        || u.path() != "/" || u.query().is_some() || u.fragment().is_some()
+    { return Err(error("本地测试只允许显式loopback origin")); }
+    Ok(u)
+}
+fn http_client_and_origin(origin: &str) -> Result<(reqwest::blocking::Client, String), String> {
+    let builder = reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(120))
+        .redirect(reqwest::redirect::Policy::none());
+    #[cfg(debug_assertions)]
+    if std::env::var("CREATOROS_OWNED_DEVICES_HTTP_LAB").as_deref() == Ok("1") {
+        let path = std::env::var("CREATOROS_OWNED_DEVICES_HTTP_LAB_CONFIG")
+            .map_err(|_| error("本地HTTP测试缺少显式配置"))?;
+        let bytes = std::fs::read(path).map_err(|_| error("本地HTTP测试配置无法读取"))?;
+        if bytes.len() as u64 > MAX_BODY { return Err(error("本地HTTP测试配置过大")); }
+        let lab: LocalHttpLab = serde_json::from_slice(&bytes)
+            .map_err(|_| error("本地HTTP测试配置无效"))?;
+        if lab.schema != "creator-owned-devices-http-lab/v1" {
+            return Err(error("本地HTTP测试配置版本无效"));
+        }
+        let growth = loopback_origin(&lab.growth_origin)?;
+        let activity = loopback_origin(&lab.activity_origin)?;
+        let target = match origin { GROWTH => growth, ACTIVITY => activity,
+            _ => return Err(error("本地HTTP测试不能扩展生产origin白名单")) };
+        let mut builder = builder.no_proxy();
+        if target.scheme() == "https" {
+            let pem = std::fs::read(lab.ca_pem_path.ok_or_else(|| error("本地HTTPS测试缺少专属CA"))?)
+                .map_err(|_| error("本地HTTPS测试CA无法读取"))?;
+            if pem.len() as u64 > MAX_BODY { return Err(error("本地HTTPS测试CA过大")); }
+            let cert = reqwest::Certificate::from_pem(&pem)
+                .map_err(|_| error("本地HTTPS测试CA无效"))?;
+            builder = builder.add_root_certificate(cert);
+        }
+        if target.host_str() == Some("localhost") {
+            let addr = std::net::SocketAddr::from(([127,0,0,1], target.port().unwrap()));
+            builder = builder.resolve("localhost", addr);
+        }
+        let client = builder.build().map_err(|_| error("本地HTTP测试client无法建立"))?;
+        return Ok((client, target.origin().ascii_serialization()));
+    }
+    Ok((builder.build().map_err(|_| error("无法建立安全网络连接"))?, origin.to_string()))
+}
 struct Response {
     signed: LicenseHttpResponse,
     retry_after: Option<u64>,
@@ -317,16 +380,17 @@ impl Transport for Http {
         {
             return Err(error("连接服务地址未通过安全核对"));
         }
-        let client = reqwest::blocking::Client::builder()
-            .timeout(Duration::from_secs(120))
-            .redirect(reqwest::redirect::Policy::none())
-            .build()
-            .map_err(|_| error("无法建立安全网络连接"))?;
+        let (client, target_origin) = http_client_and_origin(origin)?;
         let mut request = client
-            .post(format!("{origin}{path}"))
+            .post(format!("{target_origin}{path}"))
             .header("content-type", "application/json")
             .header("accept", "application/json")
             .body(body.to_string());
+        #[cfg(debug_assertions)]
+        if target_origin != origin {
+            let host = url::Url::parse(origin).map_err(|_| error("官方origin无效"))?;
+            request = request.header("host", host.host_str().unwrap_or_default());
+        }
         if let Some(token) = bearer {
             request = request.bearer_auth(token);
         }
@@ -1555,3 +1619,7 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "owned_devices_http_lab.rs"]
+mod http_lab;

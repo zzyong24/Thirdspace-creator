@@ -47,3 +47,9 @@ backups/
 # Codex 本机审查证据与临时授权截图，只保留在当前机器。
 .codex-tmp/
 /outputs/T831/
+
+# T-1072：隔离原生HTTP驱动的测试密钥与加密胶囊，永不提交。
+/docs/verification/t1072/integration/private-native-lab/
+
+# T-1072：同依赖版本的冻结6b1322af故障对照，不进入候选源码。
+/.t1072-baseline-diagnostic/
