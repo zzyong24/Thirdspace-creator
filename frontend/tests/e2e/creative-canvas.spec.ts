@@ -2,11 +2,12 @@ import type {Page} from "@playwright/test";
 import {readFileSync,writeFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {createHash} from "node:crypto";
+import {execFileSync} from "node:child_process";
 import {expect,test} from "../helpers/test-environment";
 
 type Scope={groupId?:string;accountId?:string};
 async function dispatch<T={id:string}>(page:Page,id:string,input:unknown,scope:Scope={}):Promise<T>{
- const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json",...(scope.groupId?{"x-group-id":scope.groupId}:{}),...(scope.accountId?{"x-account-id":scope.accountId}:{})},data:{id,input}});
+ const response=await page.request.post("/api/v1/dispatch",{timeout:120_000,headers:{"content-type":"application/json",...(scope.groupId?{"x-group-id":scope.groupId}:{}),...(scope.accountId?{"x-account-id":scope.accountId}:{})},data:{id,input}});
  expect(response.ok(),`${id} 返回 ${response.status()}`).toBe(true);
  return (await response.json() as {data:T}).data;
 }
@@ -26,12 +27,12 @@ async function enterGroup(page:Page,context:import('@playwright/test').BrowserCo
 async function uploadMedia(page:Page,scope:Scope,path:string,assetType:"image"|"video",mimeType:string,name:string){
  const bytes=readFileSync(path);
  const headers={"content-type":"application/json",...(scope.groupId?{"x-group-id":scope.groupId}:{}),...(scope.accountId?{"x-account-id":scope.accountId}:{})};
- const started=await page.request.post("/api/v1/dispatch",{headers,data:{id:"assets.uploads.create",input:{params:undefined,query:undefined,body:{assetType,mimeType,fileSize:bytes.length,fileName:name}}}});
+ const started=await page.request.post("/api/v1/dispatch",{timeout:120_000,headers,data:{id:"assets.uploads.create",input:{params:undefined,query:undefined,body:{assetType,mimeType,fileSize:bytes.length,fileName:name}}}});
  expect(started.ok(),await started.text()).toBe(true);
  const upload=(await started.json() as {data:{uploadId:string;uploadUrl:string}}).data;
- const put=await page.request.put(upload.uploadUrl,{headers:{"content-type":mimeType},data:bytes});
+ const put=await page.request.put(upload.uploadUrl,{timeout:120_000,headers:{"content-type":mimeType},data:bytes});
  expect(put.ok(),await put.text()).toBe(true);
- const completed=await page.request.post("/api/v1/dispatch",{headers,data:{id:"assets.uploads.complete",input:{params:{uploadId:upload.uploadId},query:undefined,body:{name}}}});
+ const completed=await page.request.post("/api/v1/dispatch",{timeout:120_000,headers,data:{id:"assets.uploads.complete",input:{params:{uploadId:upload.uploadId},query:undefined,body:{name}}}});
  expect(completed.ok(),await completed.text()).toBe(true);
  return (await completed.json() as {data:{id:string}}).data.id;
 }
@@ -375,16 +376,17 @@ test("T-1021 资产独立上传，选用追加原画布并冻结真实文件",as
 
 // T1101：公开真实canvas/asset/save；模型运行回执和能力为合成fixture，不访问用户profile。
 test('T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟模型回执）',async({page,context,baseURL},testInfo)=>{
- test.setTimeout(600_000);
+ test.setTimeout(7_200_000);const observe=expect.configure({timeout:120_000});page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
  const account=await groupedAccount(page,'douyin','创作验收账号','创作验收组');const scope={groupId:account.groupId};
  const canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope);
  const assetId=await uploadMedia(page,scope,resolve(process.cwd(),'../docs/verification/t1101/user-baseline.png'),'image','image/png','不应展示的很长素材文件名称.png');
  const file=await dispatch<{currentFileId:string}>(page,'assets.get',{params:{assetId}},scope);
  await dispatch(page,'canvas.save',{params:{canvasId:canvas.id},body:{expectedRevision:1,document:{...canvas.document,nodes:[{id:'upstream',type:'image_generation',label:'上游生成',position:{x:20,y:20},size:{width:350,height:650},prompt:'验收生成图片',mode:'text_to_image'},{id:'downstream',type:'video_generation',label:'下游视频',position:{x:440,y:20},size:{width:350,height:650},prompt:'镜头缓慢推进',mode:'text_to_video'}],edges:[{id:'exact-edge',source:'upstream',target:'downstream'}]}}},scope);
- let status='running',submissions=0,confirmations=0;const stamp=new Date().toISOString(),taskId='fixture-task-t1101';
+ let status='running',submissions=0,confirmations=0,interruptedSave=0;const stamp=new Date().toISOString(),taskId='fixture-task-t1101';
  const link={id:'fixture-link',canvasId:canvas.id,nodeId:'upstream',attemptId:'fixture-attempt-t1101',taskId,mediaKind:'image',inputRevision:2,inputDigest:'a'.repeat(64),referenceFileId:null,referenceChecksum:null,resultAssetId:assetId,createdAt:stamp,updatedAt:stamp};
  await page.route('**/api/v1/dispatch',async route=>{
   const req=route.request().postDataJSON();let data:unknown;
+  if(req.id==='canvas.save'&&req.input?.params?.canvasId===canvas.id&&req.input?.body?.document?.nodes?.some((n:{id:string;referenceFileId?:string})=>n.id==='downstream'&&n.referenceFileId===file.currentFileId)&&interruptedSave===0){interruptedSave++;await route.abort('failed');return;}
   if(req.id==='canvas.node.tasks'&&req.input?.params?.canvasId===canvas.id)data=[link];
   else if(req.id==='canvas.capabilities')data={modes:['text_to_image','image_to_image','text_to_video','image_to_video'].map(mode=>({mode,available:true,model:'image-01',reason:null}))};
   else if(req.id==='ai.tasks.get'&&req.input?.params?.taskId===taskId)data={id:taskId,userId:canvas.userId,projectId:null,contentOutputId:null,taskType:'asset.generate',status,inputData:{prompt:'验收生成图片',mode:'text_to_image'},modelKey:'fixture/image',idempotencyKey:'fixture-key',attemptId:link.attemptId,requestFingerprint:'sha256:'+link.inputDigest,retryOfTaskId:null,requestedAt:stamp,startedAt:stamp,completedAt:status==='running'?null:stamp,errorMessage:null};
@@ -395,33 +397,48 @@ test('T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟�
  });
  await enterGroup(page,context,baseURL!,account.groupId);await page.setViewportSize({width:1366,height:900});await page.goto('/canvases/'+canvas.id);
  const up=page.getByTestId('canvas-node').filter({hasText:'上游生成'}),down=page.getByTestId('canvas-node').filter({hasText:'下游视频'});
- await expect(up.getByRole('button',{name:'生成中…'})).toBeDisabled();expect(submissions).toBe(0);
+ await observe(up.getByRole('button',{name:'生成中…'})).toBeDisabled();expect(submissions).toBe(0);
  await page.screenshot({path:testInfo.outputPath('t1101-running.png')});
- status='awaiting_confirmation';await page.reload();await expect(up.getByText('最近结果',{exact:false})).toBeVisible();
- await expect.poll(async()=>{const saved=await dispatch<{document:{nodes:Array<{id:string;referenceFileId?:string}>}}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);return saved.document.nodes.find(n=>n.id==='downstream')?.referenceFileId;}).toBe(file.currentFileId);
- expect(confirmations).toBe(0);await expect(down.getByText('选择素材',{exact:true})).toHaveCount(0);
- await up.getByRole('button',{name:'生成',exact:true}).click();await expect(page.getByRole('dialog',{name:'重新生成图片？'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-regenerate.png')});
+ status='awaiting_confirmation';await page.reload();await observe(up.getByText('最近结果',{exact:false})).toBeVisible();
+ await observe.poll(()=>interruptedSave,{timeout:120_000}).toBe(1);await observe(page.getByText('保存失败',{exact:true})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1108-interrupted-save.png')});await page.reload();await observe(up.getByText('最近结果',{exact:false})).toBeVisible();
+ await observe.poll(async()=>{const saved=await dispatch<{document:{nodes:Array<{id:string;referenceFileId?:string}>}}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);return saved.document.nodes.find(n=>n.id==='downstream')?.referenceFileId;},{timeout:120_000}).toBe(file.currentFileId);
+ expect(confirmations).toBe(0);await observe(down.getByText('选择素材',{exact:true})).toHaveCount(0);
+ await observe(page.getByText('已保存',{exact:true})).toBeVisible();await page.reload();
+ const persisted=await dispatch<{revision:number;document:import('@creatoros/contract').CanvasDocument}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);expect(persisted.document.nodes.find(n=>n.id==='downstream')).toMatchObject({referenceAssetId:assetId,referenceFileId:file.currentFileId});
+ // 显式合成旧flat标记和已保存空引用；不猜旧清空意图、不接用户数据。
+ const legacyDocument={...persisted.document,nodes:persisted.document.nodes.map(node=>node.id==='downstream'?{...node,mode:'text_to_video' as const,referenceAssetId:undefined,referenceFileId:undefined}:node)};
+ await dispatch(page,'canvas.save',{params:{canvasId:canvas.id},body:{expectedRevision:persisted.revision,document:legacyDocument}},scope);
+ await page.evaluate(key=>localStorage.setItem(key,JSON.stringify(['exact-edge'])),`creatoros-canvas-references:group:${account.groupId}:${canvas.id}`);await page.reload();await observe(up.getByText('最近结果',{exact:false})).toBeVisible();
+ await page.getByRole('button',{name:/^编导与详情/}).click();const legacyButton=page.getByRole('button',{name:'使用连线参考',exact:true});await observe(legacyButton).toBeEnabled();
+ const beforeExplicit=await dispatch<{document:import('@creatoros/contract').CanvasDocument}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);expect(beforeExplicit.document.nodes.find(n=>n.id==='downstream')).toMatchObject({mode:'text_to_video'});expect((beforeExplicit.document.nodes.find(n=>n.id==='downstream') as {referenceFileId?:string}).referenceFileId).toBeUndefined();expect(confirmations).toBe(0);expect(submissions).toBe(0);
+ await page.screenshot({path:testInfo.outputPath('t1108-legacy-normal.png')});const legacyCaptures=[{checkpoint:'legacy-normal',check_ids:['AC-PERSIST','AC-LEGACY'],viewport:{width:1366,height:900},text:await page.locator('body').innerText()}];
+ await page.setViewportSize({width:900,height:900});await observe(legacyButton).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1108-legacy-narrow.png')});legacyCaptures.push({checkpoint:'legacy-narrow',check_ids:['AC-PERSIST','AC-LEGACY'],viewport:{width:900,height:900},text:await page.locator('body').innerText()});await legacyButton.focus();await page.keyboard.press('Enter');
+ await observe.poll(async()=>{const saved=await dispatch<{document:import('@creatoros/contract').CanvasDocument}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);return (saved.document.nodes.find(n=>n.id==='downstream') as {referenceFileId?:string}).referenceFileId;},{timeout:120_000}).toBe(file.currentFileId);expect(confirmations).toBe(0);expect(submissions).toBe(0);await observe(page.getByText('已保存',{exact:true})).toBeVisible();
+ await page.setViewportSize({width:1366,height:900});await page.getByRole('button',{name:/^编导与详情/}).click();
+ writeFileSync(resolve(process.cwd(),'../docs/verification/t1108/visible-copy.json'),JSON.stringify({schema:'frontend-visible-copy/v1',task_id:'T-1108',commit_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),captures:legacyCaptures},null,2)+'\n');
+
+ await up.getByRole('button',{name:'生成',exact:true}).click();await observe(page.getByRole('dialog',{name:'重新生成图片？'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-regenerate.png')});
  await page.getByRole('button',{name:'取消',exact:true}).click();expect(submissions).toBe(0);
- await up.getByRole('button',{name:'生成',exact:true}).click();await page.getByRole('button',{name:'确认重新生成'}).click();await expect.poll(()=>submissions).toBe(1);await expect(up.getByRole('button',{name:'生成中…'})).toBeDisabled();
- await page.getByRole('button',{name:'素材库',exact:true}).click();const gallery=page.getByRole('complementary',{name:'当前账号素材'});await expect(gallery.getByRole('button',{name:'放到画布'}).first()).toBeVisible();await expect(gallery.getByText('不应展示的很长素材文件名称.png',{exact:true})).toHaveCount(0);await expect(gallery.getByRole('img').first()).toBeVisible();await expect.poll(()=>gallery.getByRole('img').first().evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);await page.screenshot({path:testInfo.outputPath('t1101-gallery.png')});
- await expect(page.getByText('已保存',{exact:true})).toBeVisible();
+ await up.getByRole('button',{name:'生成',exact:true}).click();await page.getByRole('button',{name:'确认重新生成'}).click();await observe.poll(()=>submissions,{timeout:120_000}).toBe(1);await observe(up.getByRole('button',{name:'生成中…'})).toBeDisabled();
+ await page.getByRole('button',{name:'素材库',exact:true}).click();const gallery=page.getByRole('complementary',{name:'当前账号素材'});await observe(gallery.getByRole('button',{name:'放到画布'}).first()).toBeVisible();await observe(gallery.getByText('不应展示的很长素材文件名称.png',{exact:true})).toHaveCount(0);await observe(gallery.getByRole('img').first()).toBeVisible();await observe.poll(()=>gallery.getByRole('img').first().evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);await page.screenshot({path:testInfo.outputPath('t1101-gallery.png')});
+ await observe(page.getByText('已保存',{exact:true})).toBeVisible();
  const captures=[{checkpoint:'canvas-normal',check_ids:['AC-GALLERY','AC-GENERATION','AC-EDGE'],viewport:{width:1366,height:900},text:await page.locator('body').innerText()}];
- await page.getByRole('button',{name:'关闭素材库'}).click();await page.setViewportSize({width:900,height:900});await page.getByRole('button',{name:'缩小',exact:true}).click();await expect(page.getByText('83%',{exact:true})).toBeVisible();await expect(up.getByRole('button',{name:'生成中…'})).toBeDisabled();await page.getByRole('button',{name:'素材库',exact:true}).click();await expect(gallery.getByRole('button',{name:'放到画布'}).first()).toBeVisible();await expect(gallery.getByRole('img').first()).toBeVisible();await expect.poll(()=>gallery.getByRole('img').first().evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);await page.screenshot({path:testInfo.outputPath('t1101-canvas-narrow.png')});
- await expect(page.getByText('已保存',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'关闭素材库'}).click();await page.setViewportSize({width:900,height:900});await page.getByRole('button',{name:'缩小',exact:true}).click();await observe(page.getByText('83%',{exact:true})).toBeVisible();await observe(up.getByRole('button',{name:'生成中…'})).toBeDisabled();await page.getByRole('button',{name:'素材库',exact:true}).click();await observe(gallery.getByRole('button',{name:'放到画布'}).first()).toBeVisible();await observe(gallery.getByRole('img').first()).toBeVisible();await observe.poll(()=>gallery.getByRole('img').first().evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);await page.screenshot({path:testInfo.outputPath('t1101-canvas-narrow.png')});
+ await observe(page.getByText('已保存',{exact:true})).toBeVisible();
  captures.push({checkpoint:'canvas-narrow',check_ids:['AC-GALLERY','AC-GENERATION','AC-EDGE'],viewport:{width:900,height:900},text:await page.locator('body').innerText()});
  writeFileSync(resolve(process.cwd(),'../docs/verification/t1101/canvas-copy.json'),JSON.stringify(captures));
 });
 
 test('T-1101 三平台表格直接打开扫码弹窗，无重复刷新和下方扫码区',async({page,context,baseURL},testInfo)=>{
- test.setTimeout(600_000);const account=await groupedAccount(page,'douyin','创作验收账号','创作验收组');await enterGroup(page,context,baseURL!,account.groupId);
+ test.setTimeout(7_200_000);const observe=expect.configure({timeout:120_000});page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);const account=await groupedAccount(page,'douyin','创作验收账号','创作验收组');await enterGroup(page,context,baseURL!,account.groupId);
  await page.setViewportSize({width:1366,height:900});await page.goto('/accounts');
- const table=page.getByRole('table',{name:'各平台能力'});await expect(table).toBeVisible();
- for(const name of ['抖音','快手','小红书'])await expect(table.getByRole('button',{name:'扫码绑定'+name+'账号'})).toBeEnabled();
- await expect(page.getByRole('button',{name:'重新读取平台能力'})).toHaveCount(0);await expect(page.getByText('兼容扫码入口',{exact:true})).toHaveCount(0);
+ const table=page.getByRole('table',{name:'各平台能力'});await observe(table).toBeVisible();
+ for(const name of ['抖音','快手','小红书'])await observe(table.getByRole('button',{name:'扫码绑定'+name+'账号'})).toBeEnabled();
+ await observe(page.getByRole('button',{name:'重新读取平台能力'})).toHaveCount(0);await observe(page.getByText('兼容扫码入口',{exact:true})).toHaveCount(0);
  await page.screenshot({path:testInfo.outputPath('t1101-platform-table.png'),fullPage:true});
- await table.getByRole('button',{name:'扫码绑定小红书账号'}).click();await expect(page.getByRole('dialog',{name:'扫码绑定小红书账号'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-qr-dialog.png')});
- await expect(page.getByRole('dialog').getByRole('button',{name:'扫码绑定小红书账号',exact:true})).toBeEnabled();
+ await table.getByRole('button',{name:'扫码绑定小红书账号'}).click();await observe(page.getByRole('dialog',{name:'扫码绑定小红书账号'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-qr-dialog.png')});
+ await observe(page.getByRole('dialog').getByRole('button',{name:'扫码绑定小红书账号',exact:true})).toBeEnabled();
  const captures=[{checkpoint:'binding-normal',check_ids:['AC-BINDING'],viewport:{width:1366,height:900},text:await page.locator('body').innerText()}];
- await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);await page.setViewportSize({width:900,height:900});await expect(table.getByRole('button',{name:'扫码绑定抖音账号'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-platform-narrow.png'),fullPage:true});
+ await page.keyboard.press('Escape');await observe(page.getByRole('dialog')).toHaveCount(0);await page.setViewportSize({width:900,height:900});await observe(table.getByRole('button',{name:'扫码绑定抖音账号'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-platform-narrow.png'),fullPage:true});
  captures.push({checkpoint:'binding-narrow',check_ids:['AC-BINDING'],viewport:{width:900,height:900},text:await page.locator('body').innerText()});writeFileSync(resolve(process.cwd(),'../docs/verification/t1101/binding-copy.json'),JSON.stringify(captures));
 });

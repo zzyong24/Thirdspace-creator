@@ -6752,6 +6752,102 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1108": {
+      "task_id": "T-1108",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1108-canvas-public-observation.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/src/features/creative-canvas/canvas-editor.tsx",
+        "frontend/src/features/creative-canvas/canvas-editor.test.tsx",
+        "frontend/tests/e2e/creative-canvas.spec.ts"
+      ],
+      "write_set": [
+        "frontend/src/features/creative-canvas/canvas-editor.tsx",
+        "frontend/src/features/creative-canvas/canvas-editor.test.tsx",
+        "frontend/tests/e2e/creative-canvas.spec.ts",
+        "docs/features/t1108-canvas-public-observation.md",
+        "docs/features/t1108-canvas-public-observation.review-input.json",
+        "docs/features/t1108-canvas-public-observation.review.md",
+        "docs/features/t1108-canvas-public-observation.independent-review.md",
+        "docs/verification/t1108/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/.lessons-stats.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm --dir frontend exec vitest run src/features/creative-canvas/canvas-editor.test.tsx --retry=0 --testTimeout=360000 --hookTimeout=120000",
+          "pnpm --dir frontend typecheck",
+          "node docs/verification/t1101/run-journey.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
+    },
+    "T-1109": {
+      "task_id": "T-1109",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1109-timeout-verification-default-budget.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "tools/timeout-policy/verify.mjs",
+        "backend/src/modules/execution/execution-call-ledger.service.test.ts"
+      ],
+      "write_set": [
+        "tools/timeout-policy/verify.mjs",
+        "docs/features/t1109-timeout-verification-default-budget.md",
+        "docs/features/t1109-timeout-verification-default-budget.review-input.json",
+        "docs/features/t1109-timeout-verification-default-budget.review.md",
+        "docs/features/t1109-timeout-verification-default-budget.independent-review.md",
+        "docs/verification/t1109/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/.lessons-stats.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm --dir backend exec vitest run src/modules/execution/new-execution-budget.test.ts src/modules/execution/run-execution-task.test.ts src/modules/execution/execution-call-ledger.service.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

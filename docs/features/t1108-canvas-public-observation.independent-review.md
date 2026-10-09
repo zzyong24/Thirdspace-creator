@@ -1,0 +1,17 @@
+# T1108 独立 SPEC 初审
+
+**PASS，0 findings。** 审核当前正式SPEC/DEC-T1108/精确模块，不预定实现通过。SPEC SHA256 `f01abc0ccaf07dda7ab8576c4d1913c11f3f6d1a18c8acfaa383aab038c522e1`；宪法 `docs/产品定位.md` SHA256 `86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800`。产品流程skill/stamp均3.29.0，oil-ui-pro0.10.0与原UI_RULES适用。
+
+方案以已观察保存未确认与确定的本地标记先行缺陷为依据。只允许成功save归属与epoch核对后持久化，snapshot和已处理edge集合在await前冻结，指纹由已保存edge和目标类型/模式/精确asset/file构成；载入与正式document匹配，不给本地缓存权限或数据真相地位。原expectedRevision/CAS、scope、手选、候选确认、生成锁、原任务恢复及服务边界均保留。
+
+旧flat数组确实无法证明是自动填入还是用户清空。规格明确保留当前仍存在edge的legacy，保存新格式也不丢它；用户手改后才转新指纹。历史空引用生成节点仅在原右侧连线区提供次要“使用连线参考”，由明确点击恢复原连线的精确文件，原图不可用时就地反馈并保持设置。这个按钮有实际行为，不触发生成/采纳，不增加AI语义判定或第二执行器；既有Button/tokens/布局和900窄窗键盘旅程一致，无需新视觉方向探索。
+
+模块产品写集精确为canvas-editor.tsx，测试为原canvas-editor.test.tsx和creative-canvas.spec.ts；控制/证据写集与规格相符。公共T1101第一例可在route中仅abort第一次含精确referenceFileId的autosave，保留正式create/upload/get/save和真实scope，重载后用正式get回读旧rev，再正常save/get及第二次重开证明修复。它是明确故障注入，不能称真实供应商或用户现场断网；原模型回执仍合成。严格保留原referenceFileId/confirm0/生成锁/手选/图库/扫码断言，追加legacy保持→键盘明确恢复及窄窗截图。
+
+前置必须真实追加RED后再改产品；指纹不匹配、成功保存手动空值、失败/中断重开、旧抑制显式恢复、无图反馈、迟到/跨scope回执均有规格覆盖。正观察至少120秒且完整串行外层余量保留；1200ms防抖/5000ms轮询间隔不是执行上限。原5秒poll失败不能被删除或只延长后冒称修复。
+
+实施复核特别检查：每个save循环都冻结集合并据该snapshot记标记，不能await后读取新docRef；新marker不能在正式get之前盲目填Set；无原图时不能先解除legacy导致后来无再次点击自动改变；晚到scope回执不写storage。以上均是正式规格已有边界的落实点，未增加权限或写集。
+
+当前源码 `8dbbd5b4786925214eed14fdfadff650d6d9d1597c2ecbd32d7b0a49edb52a01`；原组件测试 `091762b13c4999e147f4c548876493450d50c7774596ab6293f08ac7cb0437eb`；公共测试 `a766053fa2708a356aeec84ad7db92537bfba15fcfc7a20e3ae8ee6f0a8f5260`；模块配置 `1af7890274b25a7213021d154b5bf2411387bd0787ee0a800ccb2244ff66d11a`；DEC文件 `97ea3ad6afe498f1acfa49bdd8bdcb9c45e5eaba1c3f74f9d627694ae412f159`。原日志SHA `cac68610ee3386b5fe80df2a30f85f96292462cf5282fc9c57424c55c1f15b6f` 已核回执一致；完整绑定见DIAGNOSIS_REVIEW.json。具体首save中断原因和捕获后的服务状态仍UNKNOWN，不能把机制修复当首次事故根因完全关闭。
+
+本次只读，未执行新测试、模型、API、App、数据库或构建；未写仓库。视觉/操作/new RED/GREEN/全局Gate/安装须按规格后续真实取得。packet为spec-review-round/v2 initial，findings=[]，由根会话record/start。
