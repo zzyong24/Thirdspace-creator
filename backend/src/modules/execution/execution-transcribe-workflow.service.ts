@@ -20,10 +20,17 @@ export function createExecutionTranscribeWorkflowService(db:Db,deps:TranscribeWo
  const access=<T>(ref:ExecutionRef,awemeId:string,fn:(scope:TranscribeExecutionScope,state:Awaited<ReturnType<typeof bindTranscribeExecution>>)=>Promise<T>)=>leases.withLease(ref,'admission',async scope=>fn(scope,await bindTranscribeExecution(scope,awemeId)));
  const entries=(payload:Record<string,unknown>)=>z.record(z.string(),transcribeItemReceiptSchema).parse(payload.transcribeItems??{});
  const sources=(payload:Record<string,unknown>)=>z.record(z.string(),transcribeSourceSchema).parse(payload.transcribeSources??{});
+ // 仅供已经完成原lease/bind的锁内调用；相同稳定ID保留原历史字段。
+ async function appendStep(scope:TranscribeExecutionScope,aiTaskId:string,step:{id:string;kind:'error'|'transcribe';text:string;createdAt:string}){
+  const [existing]=await scope.tx.select({aiTaskId:aiTaskSteps.aiTaskId}).from(aiTaskSteps).where(eq(aiTaskSteps.id,step.id)).limit(1);
+  if(existing){if(existing.aiTaskId!==aiTaskId)throw new ConflictError('转写步骤与原任务归属不符');return;}
+  const [last]=await scope.tx.select({stepNo:aiTaskSteps.stepNo}).from(aiTaskSteps).where(eq(aiTaskSteps.aiTaskId,aiTaskId)).orderBy(desc(aiTaskSteps.stepNo)).limit(1);
+  await scope.tx.insert(aiTaskSteps).values({...step,aiTaskId,stepNo:(last?.stepNo??0)+1,toolCalls:[]}).onConflictDoNothing({target:aiTaskSteps.id});
+ }
  async function store(scope:TranscribeExecutionScope,state:Awaited<ReturnType<typeof bindTranscribeExecution>>,receipt:Receipt,postprocess?:TranscribePostprocessResult){
   const note=receipt.status==='saved'&&postprocess?(postprocess.applied?'纠错+断句完成':`后处理未执行:${postprocess.reason}`):null;
   await scope.tx.update(executionTasks).set({payload:{...state.payload,transcribeItems:{...entries(state.payload),[receipt.awemeId]:receipt}}}).where(eq(executionTasks.id,scope.task.id));
-  await scope.tx.insert(aiTaskSteps).values({id:`transcribe:${scope.task.id}:${receipt.awemeId}:${receipt.status}`,aiTaskId:state.business.id,stepNo:state.input.awemeIds.indexOf(receipt.awemeId)+1,kind:receipt.status==='failed'?'error':'transcribe',text:`作品 ${receipt.awemeId}：${receipt.error??({existing:'已有逐字稿，已跳过重复识别',saved:'逐字稿已保存','image-album':'图集作品，无口播音频','no-project':'未找到对应作品，未保存',failed:'转写失败'}[receipt.status])}${note?`，${note}`:''}`,toolCalls:[],createdAt:deps.now()}).onConflictDoNothing();
+  await appendStep(scope,state.business.id,{id:`transcribe:${scope.task.id}:${receipt.awemeId}:${receipt.status}`,kind:receipt.status==='failed'?'error':'transcribe',text:`作品 ${receipt.awemeId}：${receipt.error??({existing:'已有逐字稿，已跳过重复识别',saved:'逐字稿已保存','image-album':'图集作品，无口播音频','no-project':'未找到对应作品，未保存',failed:'转写失败'}[receipt.status])}${note?`，${note}`:''}`,createdAt:deps.now()});
   return receipt;
  }
  const service={
@@ -82,9 +89,7 @@ export function createExecutionTranscribeWorkflowService(db:Db,deps:TranscribeWo
    const receipts=state.input.awemeIds.map(id=>saved[id]!);
    const count=(kind:Receipt['status'])=>receipts.filter(receipt=>receipt.status===kind).length;
    const summaryId=`transcribe:${scope.task.id}:summary${scope.task.attempt>1?`:attempt:${scope.task.attempt}`:''}`;
-   const [lastStep]=await scope.tx.select({stepNo:aiTaskSteps.stepNo}).from(aiTaskSteps).where(eq(aiTaskSteps.aiTaskId,state.business.id)).orderBy(desc(aiTaskSteps.stepNo)).limit(1);
-   const summaryStepNo=Math.max(state.input.awemeIds.length,lastStep?.stepNo??0)+1;
-   await scope.tx.insert(aiTaskSteps).values({id:summaryId,aiTaskId:state.business.id,stepNo:summaryStepNo,kind:'transcribe',text:`转写完成 ${count('saved')} 条，已有逐字稿跳过 ${count('existing')} 条，图集跳过 ${count('image-album')} 条，转写失败 ${count('failed')} 条，未找到对应作品 ${count('no-project')} 条`,toolCalls:[],createdAt:stamp}).onConflictDoNothing();
+   await appendStep(scope,state.business.id,{id:summaryId,kind:'transcribe',text:`转写完成 ${count('saved')} 条，已有逐字稿跳过 ${count('existing')} 条，图集跳过 ${count('image-album')} 条，转写失败 ${count('failed')} 条，未找到对应作品 ${count('no-project')} 条`,createdAt:stamp});
    await scope.tx.update(aiTasks).set({status,completedAt:stamp,errorMessage:message,leaseOwner:null,leaseToken:null,leaseExpiresAt:null}).where(eq(aiTasks.id,state.business.id));
    await scope.tx.update(executionTasks).set({status,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,retryAt:null,retryOfCallId:null,lastErrorCode:failed?'TRANSCRIBE_ITEMS_FAILED':null,lastErrorMessage:message,updatedAt:stamp}).where(eq(executionTasks.id,scope.task.id));return {status};
   });},
