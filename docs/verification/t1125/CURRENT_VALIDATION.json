@@ -1,0 +1,144 @@
+{
+  "originalFailure": {
+    "argv": [
+      "python3",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source.py"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T11:58:43.373805+00:00",
+    "finishedAt": "2026-10-09T12:04:04.636041+00:00",
+    "exitCode": 1,
+    "elapsedSeconds": 321.25945325003704,
+    "logSha256": "53cfc6683221e75f7893ecf016ec4c48e2abe4c12ac384258786aa9e55ff3825"
+  },
+  "selfTest": {
+    "argv": [
+      "python3",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source-v2.py",
+      "--self-test"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T12:10:22.449273+00:00",
+    "finishedAt": "2026-10-09T12:10:25.675077+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 3.225521292013582,
+    "logSha256": "28af00ff637927fa3027808cf47ed767d7a702a026cbf5c5d10ae0b17f6f8a6b"
+  },
+  "scanOnly": {
+    "argv": [
+      "python3",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source-v2.py",
+      "--scan-only"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T12:10:31.216007+00:00",
+    "finishedAt": "2026-10-09T12:10:42.401953+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 11.18557937501464,
+    "logSha256": "ef9773f52194b3371c8a004a4231fca3c96146372637d01faff9df6e02f05ea5"
+  },
+  "scanHead": "ec5fa6a851b4a660eabb10d064b968e66baa026d",
+  "clean": false,
+  "buildFreezeAuthorization": false,
+  "changedFiles": 7172,
+  "trackedSourceCount": 13088,
+  "classifiedFixtures": [
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine/src/debug_capture.rs",
+      "sourceSha256": "f18c8abc124b461da4202fb16d8ef35746d96dba53936cab484790212b16c2da",
+      "matches": [
+        {
+          "rule": 3,
+          "line": 1844,
+          "length": 43,
+          "matchSha256": "df8c313ae30b25428db8112999ce0b17815698380b716160fb7724e9a8a450d9"
+        },
+        {
+          "rule": 3,
+          "line": 1851,
+          "length": 43,
+          "matchSha256": "df8c313ae30b25428db8112999ce0b17815698380b716160fb7724e9a8a450d9"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine/src/redact.rs",
+      "sourceSha256": "fd0a8513d5bd3f85e5338930aa1a7e56d80792d33193182d8b8203372945ca3e",
+      "matches": [
+        {
+          "rule": 3,
+          "line": 207,
+          "length": 43,
+          "matchSha256": "df8c313ae30b25428db8112999ce0b17815698380b716160fb7724e9a8a450d9"
+        }
+      ]
+    },
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs",
+      "sourceSha256": "47b4fc408f4f1013c0ee25a795165833ad5c55ab21088be471136b7440999eab",
+      "matches": [
+        {
+          "rule": 0,
+          "line": 112,
+          "length": 31,
+          "matchSha256": "8bcac7908eb950419537b91e19adc83ce2c9cbfdacf4f81157fdadfec11f7017"
+        },
+        {
+          "rule": 4,
+          "line": 80,
+          "length": 20,
+          "matchSha256": "1a5d44a2dca19669d72edf4c4f1c27c4c1ca4b4408fbb17f6ce4ad452d78ddb3"
+        },
+        {
+          "rule": 4,
+          "line": 82,
+          "length": 20,
+          "matchSha256": "1a5d44a2dca19669d72edf4c4f1c27c4c1ca4b4408fbb17f6ce4ad452d78ddb3"
+        }
+      ]
+    }
+  ],
+  "fixtureBindings": [
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine/src/debug_capture.rs",
+      "reviewedSourceHead": "ec5fa6a851b4a660eabb10d064b968e66baa026d",
+      "frozenHead": "ec5fa6a851b4a660eabb10d064b968e66baa026d",
+      "oid": "0b263ac60d6e32dcb3f26eab23b5eea61007ebc5",
+      "reviewedOid": "0b263ac60d6e32dcb3f26eab23b5eea61007ebc5",
+      "sourceSha256": "f18c8abc124b461da4202fb16d8ef35746d96dba53936cab484790212b16c2da"
+    },
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine/src/redact.rs",
+      "reviewedSourceHead": "ec5fa6a851b4a660eabb10d064b968e66baa026d",
+      "frozenHead": "ec5fa6a851b4a660eabb10d064b968e66baa026d",
+      "oid": "35df881277612177df692a530474b9470a55cdce",
+      "reviewedOid": "35df881277612177df692a530474b9470a55cdce",
+      "sourceSha256": "fd0a8513d5bd3f85e5338930aa1a7e56d80792d33193182d8b8203372945ca3e"
+    },
+    {
+      "path": "frontend/src-tauri/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs",
+      "reviewedSourceHead": "ec5fa6a851b4a660eabb10d064b968e66baa026d",
+      "frozenHead": "ec5fa6a851b4a660eabb10d064b968e66baa026d",
+      "oid": "11d02816c9d92d4e8180bab16f56ee4b87b4aa12",
+      "reviewedOid": "11d02816c9d92d4e8180bab16f56ee4b87b4aa12",
+      "sourceSha256": "47b4fc408f4f1013c0ee25a795165833ad5c55ab21088be471136b7440999eab"
+    }
+  ],
+  "reviewedSourceUnchanged": true,
+  "productDiffAfterReview": [],
+  "originalPreTaskCommandFailure": {
+    "argv": [
+      "node",
+      "orchestrator/process/taskctl.mjs",
+      "start",
+      "T-1125"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T12:05:30.074121+00:00",
+    "finishedAt": "2026-10-09T12:05:30.212972+00:00",
+    "exitCode": 1,
+    "elapsedSeconds": 0.13858141703531146,
+    "logSha256": "a60b68d9ac504da49d7671b07127e8d6fe154095c85ac59a696b828ecdd8aef8"
+  },
+  "boundary": "原注册脚本先错误命中debug_capture前面的cfg(test)方法而中断，task未写入；先保失败，再准确匹配cfg(test) mod tests创建task并正式审核/start。此处只签私有helper分类修复，不签最终clean freeze、新包/原生界面或全功能。"
+}

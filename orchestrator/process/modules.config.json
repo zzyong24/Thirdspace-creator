@@ -7284,6 +7284,43 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1125": {
+      "task_id": "T-1125",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1125-package-private-preflight-fixture.md",
+        "docs/verification/t1125/actual-fixture-diagnosis.json",
+        "BACKLOG.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source.py"
+      ],
+      "write_set": [
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source-v2.py",
+        "docs/features/t1125-package-private-preflight-fixture.md",
+        "docs/features/t1125-package-private-preflight-fixture.review.md",
+        "docs/features/t1125-package-private-preflight-fixture.review-input.json",
+        "docs/verification/t1125/**",
+        "docs/verification/t1124/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "python3 /Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source-v2.py --self-test",
+          "python3 /Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source-v2.py --scan-only",
+          "git diff --check"
+        ]
+      }
     }
   }
 }

@@ -1,0 +1,89 @@
+{
+  "schema": "creatoros-private-preflight-spec-review/v1",
+  "task": "T1125",
+  "reviewedAt": "2026-10-09T12:08:11Z",
+  "verdict": "PASS_WITH_EXACT_FIXTURE_AND_BATCH_GUARDS",
+  "findings": [],
+  "inputs": {
+    "spec": {
+      "path": "docs/features/t1125-package-private-preflight-fixture.md",
+      "sha256": "024dd35b33c6a3e52be6d68f2f0f1c6a668aad6725b08864720118d8845b0768"
+    },
+    "diagnosis": {
+      "path": "docs/verification/t1125/actual-fixture-diagnosis.json",
+      "sha256": "2629e31d5728220171b3941b58c102418dba7e54bf18a34c9a209bf219c87c3d"
+    },
+    "candidateEvidence": {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1125-fixture-candidate.json",
+      "sha256": "2629e31d5728220171b3941b58c102418dba7e54bf18a34c9a209bf219c87c3d"
+    },
+    "privateHelperBefore": {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source.py",
+      "sha256": "d572f94f93de24959e47fc2988942dfd8e2e7a2e22a80326e05d71c37aa93826"
+    },
+    "head": "ec5fa6a851b4a660eabb10d064b968e66baa026d"
+  },
+  "verifiedFacts": [
+    "三文件HEAD blob完整SHA与诊断逐一相同；其密钥形状命中集合按rule/line/length/matchSHA逐项完全相同，数量分别2、1、3。",
+    "三文件记录的testModuleLine实际均为#[cfg(test)]；诊断和候选证据没有记录匹配原值。",
+    "原失败receipt为321.259秒exit1且保留；当前helper仍为逐文件git show，尚未实施白名单或batch优化。"
+  ],
+  "requiredImplementationConstraints": [
+    "例外判定必须同时要求冻结HEAD、精确相对path、完整blob SHA256以及该文件全部密钥形状命中集合的rule/line/length/matchSHA完全相等；缺项、额外命中、顺序或位置变化均拒绝。",
+    "例外只抑制这六条已证明合成fixture命中；敏感文件名检查、其它文件、其它规则和20MB/text门保持原逻辑。不得按tests、vendor、Rust或cfg(test)目录整体放行。",
+    "git cat-file --batch必须以HEAD树枚举的每个ACM路径读取对应blob；验证对象类型blob、期望OID、声明大小、实际字节长度和批处理进程退出码。missing、非blob、短读、额外字节、解析失败均fail closed。",
+    "批量读取不能改变changed集合、symlink/文件名扫描、tracked源码哈希、复核source8、clean/diff/version检查或输出receipt的边界。",
+    "实际GREEN必须另证只有三文件六命中被classified，另造同形状但任一路径/SHA/line/match不符仍阻断；不得以本SPEC评审代替该运行结果。"
+  ],
+  "scopeDecision": {
+    "isMinimal": true,
+    "reason": "仅修改本机私有冻结helper；不改repo扫描器、vendor、构建、测试或产品。精确六命中白名单比目录/模式豁免更窄，且源字节变化自动失效。",
+    "batchOptimizationAllowed": true
+  },
+  "nonClaims": [
+    "未执行修订helper或打包",
+    "未签全功能、构建、安装或密钥扫描GREEN",
+    "未读取或记录任何真实密钥值",
+    "未修改仓库或私有helper"
+  ],
+  "correction": {
+    "supersedesForTimestampOnly": "T1125_SPEC_REVIEW.json",
+    "originalPreserved": true,
+    "reason": "原reviewedAt晚于实际系统时钟；本文件使用实际date输出。",
+    "clockEvidence": {
+      "utc": "2026-10-09T12:08:11Z",
+      "local": "2026-10-09T20:08:11+0800"
+    }
+  },
+  "sourceHeadPolicy": {
+    "reviewedSourceHead": "ec5fa6a851b4a660eabb10d064b968e66baa026d",
+    "fixtureBlobs": {
+      "frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine/src/debug_capture.rs": {
+        "oid": "0b263ac60d6e32dcb3f26eab23b5eea61007ebc5",
+        "sha256": "f18c8abc124b461da4202fb16d8ef35746d96dba53936cab484790212b16c2da"
+      },
+      "frontend/src-tauri/vendor/nomifun/crates/agent/nomi-browser-engine/src/redact.rs": {
+        "oid": "35df881277612177df692a530474b9470a55cdce",
+        "sha256": "fd0a8513d5bd3f85e5338930aa1a7e56d80792d33193182d8b8203372945ca3e"
+      },
+      "frontend/src-tauri/vendor/nomifun/crates/shared/nomi-redact/src/lib.rs": {
+        "oid": "11d02816c9d92d4e8180bab16f56ee4b87b4aa12",
+        "sha256": "47b4fc408f4f1013c0ee25a795165833ad5c55ab21088be471136b7440999eab"
+      }
+    },
+    "finalHeadInheritance": {
+      "allowed": true,
+      "allRequired": [
+        "每个fixture路径在final HEAD的blob OID和完整SHA与reviewedSourceHead逐项相同",
+        "git diff reviewedSourceHead..finalHead在frontend/backend/contract/ai-worker/tools下为空",
+        "final helper receipt记录reviewedSourceHead、finalHead、三路径OID/SHA以及源码范围diff为空",
+        "最终HEAD仍须通过原clean、diff、version、tracked hashes和全部扫描"
+      ],
+      "invalidatedBy": "frontend/backend/contract/ai-worker/tools任一源码变化，或三fixture任一路径/OID/SHA/命中集合变化；必须重新独立复核，不得继承例外。"
+    },
+    "currentCheck": {
+      "head": "ec5fa6a851b4a660eabb10d064b968e66baa026d",
+      "sourceDiffEmpty": true
+    }
+  }
+}

@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1125 | 修正本机出包冻结辅助检查把脱敏测试夹具误报为真实密钥 | ✅ 待办 | PASS[REV:d9e25d4f31e7] | — | [SPEC](docs/features/t1125-package-private-preflight-fixture.md) | ec5冻结全扫描321秒exit1，三Rust测试模块4类命中皆脱敏合成夹具；保原RED并先独评仅准确path/sourceSHA/逐值SHA分类，未知仍拒，原规则全扫描不删。只改私有helper，不改vendor/build；当前45基本PASS不代签出包。 |
 | T-1124 | 核对本轮新增来源分支未合入main的源码并闭合整合 | 🔨 待办 | — | — | [实际诊断](docs/features/t1124-current-worktree-source-gap.md) | T1080删除前只读再盘点：canvas来源17条源码/测试路径main缺失，chart来源1条缺失，其它58条不同不能直接算遗漏；保留来源与活跃树，逐项核main替代及新增SPEC/独评，禁止ours丢源码或代签全合并。先交付当前已复核包继续验收，本轮新增功能不冒称已入包。 |
 | T-1117 | 修复画布保存英文反馈与参考选择器名称展示遗漏 | ✅ 待办 | PASS[REV:161a32c6331a] | PASS:6a950246d095 | [SPEC](docs/features/t1117-canvas-error-reference-preview.md) | 当前main两条Chrome流程通过，但实际截图保存错误裸英文，参考已选卡仍长文件名；复用原中文反馈并闭合showIdentity=false全选择流程，精确file/保存/owner不变。独評、实际RED/GREEN及浏览器证据后修复；不代签模型或旧失败。 |
 | T-1122 | 补齐参考素材选择窄屏缩略图加载后的视觉验收 | ✅ 待办 | PASS[REV:65d15e7b733e] | — | [SPEC](docs/features/t1122-reference-thumbnail-visual-readiness.md) | 原旅程真实2PASS，但根看900截图左选中卡空白、右图已加载；只等右预览采证不足。先独评后各视口新增真实左img加载断言，原断言/来源/预算/0retry不变；持续失败再审产品修复，不凭空白图签视觉PASS。 |

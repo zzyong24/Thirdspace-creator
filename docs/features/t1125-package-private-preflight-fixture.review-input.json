@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：独立会话已核3个cfg(test)文件六条匹配均为脱敏合成夹具。只允许exact path/blob SHA与全部rule/line/length/matchSHA集合分类；未知仍拒，原扫描规则与source8/clean/版本门保留。逐HEAD blob批量读取须核OID/type/size/长度及exit。仅doc/control后继HEAD允许继承，必须ec5至final产品五根目录diff为空且3fixture OID/SHA不变。准确评审与系统真实时间见docs/verification/t1125/T1125_SPEC_REVIEW_CORRECTED.json，SHA95f82d647346a68e48079342197faab20e8472ee3ae5c1628efb3048e107605f。本PASS仅允许私有helper修复，不签出包或全功能。",
+  "findings": []
+}

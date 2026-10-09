@@ -1,0 +1,54 @@
+{
+  "schema": "creatoros-private-helper-implementation-review/v1",
+  "task": "T1125",
+  "reviewedAt": "2026-10-09T12:11:09Z",
+  "verdict": "PASS_LIMITED_T1125_PRIVATE_HELPER_SCAN_ONLY",
+  "findings": [],
+  "sourceHashes": {
+    "helperBefore": "d572f94f93de24959e47fc2988942dfd8e2e7a2e22a80326e05d71c37aa93826",
+    "helperV2": "8a4b5ff9bf99b9e7bdb9c1fd63098e6e1daa6e839374a565c08a8b425308545b",
+    "selfTestResult": "4c83f15c6d1d8148c86df306fd9e9c1ecda0a1692a0023f73b107d5548d5d355",
+    "selfTestLog": "28af00ff637927fa3027808cf47ed767d7a702a026cbf5c5d10ae0b17f6f8a6b",
+    "fullScanResult": "08b4419bc5adf20270f2799f8ab1390965db1fb7a6f1cd37451191156a2e5297",
+    "fullScanLog": "ef9773f52194b3371c8a004a4231fca3c96146372637d01faff9df6e02f05ea5",
+    "scanReceipt": "1e83ebe4b54a4db0483f3e5a333df40caa23f544ecb565698d64579fcb16819c",
+    "fixtureEvidence": "2629e31d5728220171b3941b58c102418dba7e54bf18a34c9a209bf219c87c3d"
+  },
+  "actualResults": {
+    "selfTest": {
+      "exitCode": 0,
+      "elapsedSeconds": 3.225521292013582,
+      "acceptedFiles": 3,
+      "acceptedMatches": 6,
+      "rejectedMutations": 18
+    },
+    "scanOnly": {
+      "exitCode": 0,
+      "elapsedSeconds": 11.18557937501464,
+      "head": "ec5fa6a851b4a660eabb10d064b968e66baa026d",
+      "reviewedSourceHead": "ec5fa6a851b4a660eabb10d064b968e66baa026d",
+      "changedBlobs": 7172,
+      "batchScannedBlobs": 7172,
+      "uniquePaths": 7172,
+      "trackedSources": 13088,
+      "fixtureFiles": 3,
+      "fixtureMatches": 6,
+      "secretShapeFindings": 0,
+      "clean": false,
+      "buildFreezeAuthorization": false,
+      "productDiffAfterReview": []
+    }
+  },
+  "codeReview": [
+    "原helper d572f9保持未改；v2仅位于私有验收目录。",
+    "夹具判定同时核exact path、whole source SHA和完整matches数组；三路径另核reviewed/current OID一致。self-test覆盖每文件未知路径、字节追加、行偏移、缺match、额外重复match、额外未知形状，共18拒绝。",
+    "final/source HEAD继承先核merge-base ancestor并要求ec5..head在frontend/backend/contract/ai-worker/tools为空；当前为空。",
+    "批读取从HEAD ls-tree建立path→mode/type/OID，按changed ACM逐OID读取，校验header OID、type blob、declared size、read length、对象内容OID、总数、唯一path、进程exit及扫描中HEAD未变。",
+    "原五规则、敏感文件名、20MB/NUL文本边界、四版本、source8、clean/diff、全部tracked source hashes均保留。scan-only允许控制面dirty但明确buildFreezeAuthorization=false。"
+  ],
+  "limitations": [
+    "这是scan-only有限通过；当前clean=false，不能授权构建或代替最终package-source-freeze-v2.json。",
+    "未签打包、DMG、安装、全功能或任何产品行为。",
+    "最终clean冻结仍须在无产品/工具源码漂移的最终HEAD重新执行非scan-only模式。"
+  ]
+}
