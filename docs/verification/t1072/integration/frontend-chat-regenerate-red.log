@@ -1,0 +1,47 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:16044) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/app/api/chat/route.test.ts (50 tests | 1 failed | 49 skipped) 1805ms
+     × trigger='regenerate-message'(useChat regenerate 重发同一条 user)→ 不重复 insert,流式照跑 150ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/app/api/chat/route.test.ts > [T-239f] POST /api/chat — user 消息去重 > trigger='regenerate-message'(useChat regenerate 重发同一条 user)→ 不重复 insert,流式照跑
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "accountId": "acct-1",
+        "userId": "u-1",
+      },
+      "conv-existing",
+      Object {
+        "content": "hi",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/app/api/chat/route.test.ts:854:31
+    852|     );
+    853|     expect(res.status).toBe(200);
+    854|     expect(createMessage).not.toHaveBeenCalled();
+       |                               ^
+    855|     expect(prepareChatReplySpy).toHaveBeenCalledTimes(1);
+    856|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 49 skipped (50)
+   Start at  14:29:00
+   Duration  9.38s (transform 3.61s, setup 449ms, import 4.93s, tests 1.81s, environment 1.69s)
+

@@ -483,6 +483,20 @@ export async function POST(req: Request): Promise<Response> {
       //     不重插。查失败(best-effort)→ 照常 insert(宁多勿丢)。
       const approvalContinuation=messages.at(-1)?.role==="assistant" && messages.at(-1)!.parts.some(part=>typeof part==="object" && part!==null && "state" in part && part.state==="approval-responded");
       let skipInsert = approvalContinuation;
+      if (!skipInsert && isExistingConversation && body.trigger === "regenerate-message") {
+        // S6：这是已保存原输入的恢复，不把客户端消息ID或同文本新行当作新执行意图。
+        const history = await runtime.ai.listMessages(ctx, conversationId);
+        const source = [...history].reverse().find(message => message.role === "user");
+        const sourceAttachments = Array.isArray(source?.attachments) ? source.attachments : [];
+        if (!source || source.content !== userText || JSON.stringify(sourceAttachments) !== JSON.stringify(attachmentIds)) {
+          return NextResponse.json(
+            { error: "原消息已变化或无法找到，请重新打开当前对话后再继续。", code: "CHAT_RETRY_SOURCE_MISMATCH" },
+            { status: 409 },
+          );
+        }
+        persistedUserMessageId = source.id;
+        skipInsert = true;
+      }
       if (!skipInsert && isExistingConversation && body.trigger!=="regenerate-message") {
         try {
           const history = await runtime.ai.listMessages(ctx, conversationId);
@@ -508,7 +522,7 @@ export async function POST(req: Request): Promise<Response> {
           ...(attachmentIds.length > 0 ? { attachments: attachmentIds } : {}),
         });
         persistedUserMessageId = persisted.id;
-      } else {
+      } else if (!persistedUserMessageId) {
         const history = await runtime.ai.listMessages(ctx, conversationId);
         const last = [...history].reverse().find(message=>message.role==="user");
         if (last?.role === "user" && last.content === userText) {
