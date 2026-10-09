@@ -1,0 +1,256 @@
+{
+  "schema": "t1104-implementation-independent-review/v1",
+  "task": "T-1104",
+  "reviewedAt": "2026-10-09T04:09:06.425158+00:00",
+  "verdict": "PASS_LIMITED_IMPLEMENTATION",
+  "findings": [],
+  "summary": "唯一lib.rs符合已PASS规格，诊断链/真实清理Result/三分支一次清理及原主错误保留成立；原业务/安全/成功切换/预算不变。完整reconcile仍pending，不签整体Gate/完成/包/安装/Pi或首次具体根因。",
+  "specReviewReceipt": "055e0175f519",
+  "specSHA256": "4816c4dc9909837419b73061a0a6e5ff6687aef142c5caf8cbdfcc4c366830f9",
+  "sourceCommitBaseline": "070287024a99fdf810a03d0ff39a9c944a9775e7",
+  "originalSourceSHA256": "b85d52ffce43dd10f3e6e82c242b9987ee0820ee5100abdc17f02e0d81f335eb",
+  "sourceHashes": {
+    "docs/features/t1104-runtime-extraction-error-chain.md": "4816c4dc9909837419b73061a0a6e5ff6687aef142c5caf8cbdfcc4c366830f9",
+    "docs/features/t1104-runtime-extraction-error-chain.review.md": "f17fc706939c7f355019da605da9d175c72a7b9260090d211c06d7d08553a077",
+    "frontend/src-tauri/src/lib.rs": "508a50632893f27970eb1fab0fef04d53c87255891b5b0bc1af4b60ab2ad2e29",
+    "frontend/src-tauri/Cargo.toml": "6fc6b92e179df84c1e597dd18b4829d921c005a292c14831b86fb15f6ebc766f",
+    "frontend/src-tauri/Cargo.lock": "1f28d0b8440de395647f3852516a8a4acb913db7a290645a1fa84e8d8a1dcd6f",
+    "orchestrator/process/modules.config.json": "00f64db5c8b56de2eac287681b33b452d48d7c943beae0f5a11090f1c6d3d9d6",
+    "orchestrator/process/reconcile.config.json": "a2c053a86a919f401ff6f73c74598cff9e5df37be9316e864897b8e3855800af"
+  },
+  "scope": {
+    "productPaths": [
+      "frontend/src-tauri/src/lib.rs"
+    ],
+    "testPaths": [
+      "frontend/src-tauri/src/lib.rs"
+    ],
+    "newTestCount": 7,
+    "newTestNames": [
+      "展开诊断保留嵌套真实io码而不推断首次原因",
+      "展开诊断按unicode截断单层并限制循环错误链",
+      "失败展开的临时清理成功只删除本例目录",
+      "失败展开的真实非目录清理拒绝不冒称成功",
+      "实际tar越界条目拒绝且保留旧运行时与外部文件",
+      "中途展开真实条目冲突保留底层错误与旧运行时",
+      "坏gzip读取保留真实诊断且不覆盖旧运行时"
+    ]
+  },
+  "independentMechanicalProof": {
+    "method": "仅在内存移除两个新增helper和7新增tests，逐一逆向原7处错误/清理替换，然后与070287原Git blob全字节比较；无源码或Git写入。",
+    "restoredSHA256": "b85d52ffce43dd10f3e6e82c242b9987ee0820ee5100abdc17f02e0d81f335eb",
+    "matchesOriginalBlob": true,
+    "originalTestsByteExact": true,
+    "outsideAllowedRegionByteExact": true,
+    "helperDeleteStatements": 1,
+    "threeOriginalFailureBranchCalls": 3
+  },
+  "checks": [
+    {
+      "id": "CHAIN",
+      "verdict": "PASS",
+      "evidence": "在io::Error转String前逐层get_ref/source；保每io kind/raw_os_error；最多8层、单条原消息1024Unicode并标截断；循环有限。"
+    },
+    {
+      "id": "CLEANUP",
+      "verdict": "PASS",
+      "evidence": "helper只有一次remove_dir_all(temp)；原unpack/缺入口/write stamp三互斥失败点各一次调用，实际Err说明与原主错误同存，未新增删除对象或重试。"
+    },
+    {
+      "id": "BOUNDARY",
+      "verdict": "PASS",
+      "evidence": "内存逆变换全字节等于原070287；原安全路径、stamp/old dest/同盘temp、promote/rollback/Windows fallback/完整性及预算源不变。"
+    },
+    {
+      "id": "TESTS",
+      "verdict": "PASS",
+      "evidence": "7新增均隔离temp+std/tar/gzip；真实碰撞和坏gzip RED，两例未删除原断言；真实清理拒绝与路径拒绝、Unicode/循环/errno覆盖；不读用户库/媒体/凭据，不发网络/模型。"
+    },
+    {
+      "id": "FULL_RECONCILE",
+      "verdict": "PENDING",
+      "evidence": "本次读取无full-reconcile.json终态；不绑定运行中log为已完成证据。"
+    }
+  ],
+  "actualGateEvidence": [
+    {
+      "name": "runtime-baseline",
+      "argv": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "frontend/src-tauri/Cargo.toml",
+        "--lib",
+        "runtime_cleanup_tests",
+        "--",
+        "--test-threads=1"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "exitCode": 0,
+      "elapsedSeconds": 70.32315620800364,
+      "startedAt": "2026-10-09T03:55:56.965384+00:00",
+      "finishedAt": "2026-10-09T03:57:07.289142+00:00",
+      "receiptSha256": "040d11d8b029607bfde1156117cdbafbc3d08087939967eed7226c4d3f34a55f",
+      "logSha256": "049a48238a7b0022a57ea379dfe92ab48381e13a76358b0757d5655c5afabd57"
+    },
+    {
+      "name": "runtime-red",
+      "argv": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "frontend/src-tauri/Cargo.toml",
+        "--lib",
+        "runtime_cleanup_tests",
+        "--",
+        "--test-threads=1"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "exitCode": 101,
+      "elapsedSeconds": 8.948387124983128,
+      "startedAt": "2026-10-09T03:58:14.444205+00:00",
+      "finishedAt": "2026-10-09T03:58:23.392780+00:00",
+      "receiptSha256": "1c25de55f46302de110f4c4b9517b0cfee8e9acbb881e0ef5b182950bf2020bc",
+      "logSha256": "401a0312f908575130fa3b273efd7f2d65df3702870d4dde519e1e9317b22780"
+    },
+    {
+      "name": "runtime-green",
+      "argv": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "frontend/src-tauri/Cargo.toml",
+        "--lib",
+        "runtime_cleanup_tests",
+        "--",
+        "--test-threads=1"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "exitCode": 0,
+      "elapsedSeconds": 10.77766566700302,
+      "startedAt": "2026-10-09T04:00:56.972893+00:00",
+      "finishedAt": "2026-10-09T04:01:07.750744+00:00",
+      "receiptSha256": "50fc5a591e9160ad2201c938f1f91a3a2622a6366bb3e84eee302435942e77ad",
+      "logSha256": "be8c56a9f98385b47d8706c29f4c9a96b094fbf4dce00e5f4861154237a9b8c0"
+    },
+    {
+      "name": "lib-regression",
+      "argv": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "frontend/src-tauri/Cargo.toml",
+        "--lib",
+        "--",
+        "--test-threads=1"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "exitCode": 0,
+      "elapsedSeconds": 138.0054129579803,
+      "startedAt": "2026-10-09T04:01:47.278308+00:00",
+      "finishedAt": "2026-10-09T04:04:05.284812+00:00",
+      "receiptSha256": "c1e0c2ebdd3f54cbd0bad7ae85ca2a3351fe5c6b588064e2cdd43e82864045a9",
+      "logSha256": "20e2949d559cade555ce9ef6454e509ab861b0bfefa9ccc31b62c43bc567cc70"
+    },
+    {
+      "name": "boundary",
+      "argv": [
+        "node",
+        "orchestrator/process/boundary-scan.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "exitCode": 0,
+      "elapsedSeconds": 0.5358469579950906,
+      "startedAt": "2026-10-09T04:01:48.486383+00:00",
+      "finishedAt": "2026-10-09T04:01:49.022336+00:00",
+      "receiptSha256": "ee85ef1b224320b732f27f7b98623d0738e85f990e4a7dd775a8d5d4424b4153",
+      "logSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24"
+    },
+    {
+      "name": "semantic",
+      "argv": [
+        "node",
+        "orchestrator/process/semantic-boundary-scan.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "exitCode": 0,
+      "elapsedSeconds": 0.3671507079852745,
+      "startedAt": "2026-10-09T04:01:48.480618+00:00",
+      "finishedAt": "2026-10-09T04:01:48.847996+00:00",
+      "receiptSha256": "7784fdc40b18207083b29dc1a719d20d028f471435aa5066456fa94b8d891fd8",
+      "logSha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923"
+    },
+    {
+      "name": "orphan",
+      "argv": [
+        "node",
+        "orchestrator/process/orphan-scan.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "exitCode": 0,
+      "elapsedSeconds": 0.12262224999722093,
+      "startedAt": "2026-10-09T04:01:48.491460+00:00",
+      "finishedAt": "2026-10-09T04:01:48.614172+00:00",
+      "receiptSha256": "d3aaa3bc7fdcaef383667cd5f613f04a8bf10056f7c34fde631a963b85b533ce",
+      "logSha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    {
+      "name": "diff",
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "exitCode": 0,
+      "elapsedSeconds": 0.0752288329822477,
+      "startedAt": "2026-10-09T04:01:48.480385+00:00",
+      "finishedAt": "2026-10-09T04:01:48.555748+00:00",
+      "receiptSha256": "d605ab3b56b301ef68e29c3d8b23b46ac166336f7adb9e9d7536d31e6f29fce2",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "evidenceHashes": {
+    "runtime-baseline.json": "040d11d8b029607bfde1156117cdbafbc3d08087939967eed7226c4d3f34a55f",
+    "runtime-baseline.log": "049a48238a7b0022a57ea379dfe92ab48381e13a76358b0757d5655c5afabd57",
+    "runtime-red.json": "1c25de55f46302de110f4c4b9517b0cfee8e9acbb881e0ef5b182950bf2020bc",
+    "runtime-red.log": "401a0312f908575130fa3b273efd7f2d65df3702870d4dde519e1e9317b22780",
+    "runtime-green.json": "50fc5a591e9160ad2201c938f1f91a3a2622a6366bb3e84eee302435942e77ad",
+    "runtime-green.log": "be8c56a9f98385b47d8706c29f4c9a96b094fbf4dce00e5f4861154237a9b8c0",
+    "lib-regression.json": "c1e0c2ebdd3f54cbd0bad7ae85ca2a3351fe5c6b588064e2cdd43e82864045a9",
+    "lib-regression.log": "20e2949d559cade555ce9ef6454e509ab861b0bfefa9ccc31b62c43bc567cc70",
+    "boundary.json": "ee85ef1b224320b732f27f7b98623d0738e85f990e4a7dd775a8d5d4424b4153",
+    "boundary.log": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+    "semantic.json": "7784fdc40b18207083b29dc1a719d20d028f471435aa5066456fa94b8d891fd8",
+    "semantic.log": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+    "orphan.json": "d3aaa3bc7fdcaef383667cd5f613f04a8bf10056f7c34fde631a963b85b533ce",
+    "orphan.log": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+    "diff.json": "d605ab3b56b301ef68e29c3d8b23b46ac166336f7adb9e9d7536d31e6f29fce2",
+    "diff.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "final-source-binding.json": "179048f475ea4faea75958b05a31d10779ac06a59576343e430de62bfe80a69e",
+    "red-source-binding.json": "6deca70d36f7424f59d6d79d36f8360b2cbab709f2bf96f009bef74d1cc1ea82",
+    "baseline-wrapper-preparation-failure.json": "cde7fe80306a3b54f1935d9d27f364ce7c219589b0a82488c1a708078576780d"
+  },
+  "limits": [
+    "当前App仍070287，不含本源码修复；新包装入与安装生效未验。",
+    "T1102首次具体I/O原因仍UNKNOWN；合成errno28并非首次ENOSPC证明。",
+    "Pi task272原partial不改变，不重发或代签候选成功；父任务不代签。",
+    "本机全lib264PASS/12原ignored；Windows cfg真实锁测试未由本机目标签通过。",
+    "reconcile尚pending；不将本实施PASS写为全Gate或task complete。"
+  ],
+  "actionsByReviewer": {
+    "repoWrites": 0,
+    "testRuns": 0,
+    "appActions": 0,
+    "processActions": 0,
+    "dbActions": 0,
+    "businessCalls": 0,
+    "modelCalls": 0,
+    "network": 0,
+    "builds": 0,
+    "allowedExternalWrites": [
+      "IMPLEMENTATION_REVIEW.json",
+      "IMPLEMENTATION_REVIEW.md"
+    ]
+  }
+}

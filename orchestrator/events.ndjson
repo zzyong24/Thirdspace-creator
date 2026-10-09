@@ -1258,3 +1258,7 @@
 {"ts":"2026-10-09T02:24:28.384Z","actor":"taskctl","action":"start","task":"T-1099","sha_before":"c126b4923861","sha_after":"4eb7782ba1dd"}
 {"ts":"2026-10-09T02:37:22.697Z","actor":"taskctl","action":"start","task":"T-1100","sha_before":"dfdcaec417e4","sha_after":"9a0b609b5d11"}
 {"ts":"2026-10-09T03:08:52.844Z","actor":"taskctl","action":"complete","task":"T-1100","evidence":"唯一测试源55c1ff0feaf5与实施独评一致；正式17文件291PASS含完整61例，backend类型exit0；原282PASS/2FAIL保留并显式旧冻结格式校准，原断言与预算不变；完整reconcile1297.015秒exit1/原42逐字一致无新增（5a7dc597bbef），本范围不代签全功能/安装/Pi。见docs/verification/t1100与本机实施复核f31972ffd5ef。","sha_before":"9a0b609b5d11","sha_after":"41eae735b426"}
+{"ts":"2026-10-09T03:27:12.375Z","actor":"taskctl","action":"start","task":"T-1102","sha_before":"5de6b5dc42e6","sha_after":"37f7f0f55f75"}
+{"ts":"2026-10-09T03:34:26.873Z","actor":"taskctl","action":"start","task":"T-1103","sha_before":"cfea7cacdf17","sha_after":"a077a30f9465"}
+{"ts":"2026-10-09T03:36:47.471Z","actor":"taskctl","action":"block","task":"T-1099","reason":"070287新包实际Pi task272 partial、零候选；完整graphic参数反复缺失，登记T1103研究机制。保原task/source/DTO和已过291回归，依赖未闭合，不complete或盲重发；首次展开另T1102已恢复首页但根因待核。","sha_before":"a077a30f9465","sha_after":"11e9e0353649"}
+{"ts":"2026-10-09T03:57:47.475Z","actor":"taskctl","action":"start","task":"T-1104","sha_before":"7a69bc01e3a1","sha_after":"91e32410beb8"}

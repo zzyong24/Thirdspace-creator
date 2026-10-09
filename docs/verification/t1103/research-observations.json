@@ -1,0 +1,317 @@
+{
+  "sourceCommit": "070287024a99fdf810a03d0ff39a9c944a9775e7",
+  "boundary": "两次隔离实验；不是task272原HTTP字节或供应商验收",
+  "experiments": [
+    {
+      "ordinal": 1,
+      "name": "完整参数分段公共Worker链",
+      "result": "3 PASS，原3case断言/预算/回放保留",
+      "receipt": {
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "exec",
+          "vitest",
+          "run",
+          "--config",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1103/vitest.config.mjs",
+          "--retry=0",
+          "--no-file-parallelism",
+          "--testTimeout=180000",
+          "--hookTimeout=180000"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T03:42:47.035187+00:00",
+        "finishedAt": "2026-10-09T03:43:18.745593+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 31.71012195799267,
+        "logSha256": "b6ca92ae16b73758a038b8a88130aa7c34f995c6a630f08dc02e1f1d511e15ea"
+      }
+    },
+    {
+      "ordinal": 2,
+      "name": "截断参数保真",
+      "result": "3 PASS / 2 FAIL；原非法JSON被修补为缺graphic的合法对象",
+      "receipt": {
+        "argv": [
+          "pnpm",
+          "-C",
+          "backend",
+          "exec",
+          "vitest",
+          "run",
+          "--config",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1103/vitest.incomplete.config.mjs",
+          "--retry=0",
+          "--no-file-parallelism",
+          "--testTimeout=180000",
+          "--hookTimeout=180000"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T03:44:40.203919+00:00",
+        "finishedAt": "2026-10-09T03:44:41.575874+00:00",
+        "exitCode": 1,
+        "elapsedSeconds": 1.371677708986681,
+        "logSha256": "b4ec4c62f37a72a66addacde04fc4a5a8768971ab7f337058194015d2f6113dd"
+      }
+    }
+  ],
+  "fragmented": {
+    "repair": {
+      "mode": "repair",
+      "originalSourceSha256": "c0d561afc87ee4b97805472a4f57154e35e5191b3310dd97ee132462679640d6",
+      "schemaFacts": [
+        {
+          "ordinal": 1,
+          "required": [
+            "targetDigest",
+            "article",
+            "graphic"
+          ],
+          "properties": [
+            "article",
+            "graphic",
+            "targetDigest"
+          ],
+          "sha256": "7f8ae13eec2ef42dd4615cd131ec94ff5c04ea8496550e9f3f31f4ef9c3a4d62"
+        },
+        {
+          "ordinal": 2,
+          "required": [
+            "targetDigest",
+            "article",
+            "graphic"
+          ],
+          "properties": [
+            "article",
+            "graphic",
+            "targetDigest"
+          ],
+          "sha256": "7f8ae13eec2ef42dd4615cd131ec94ff5c04ea8496550e9f3f31f4ef9c3a4d62"
+        },
+        {
+          "ordinal": 3,
+          "required": [
+            "targetDigest",
+            "article",
+            "graphic"
+          ],
+          "properties": [
+            "article",
+            "graphic",
+            "targetDigest"
+          ],
+          "sha256": "7f8ae13eec2ef42dd4615cd131ec94ff5c04ea8496550e9f3f31f4ef9c3a4d62"
+        },
+        {
+          "ordinal": 4,
+          "required": [
+            "targetDigest",
+            "article",
+            "graphic"
+          ],
+          "properties": [
+            "article",
+            "graphic",
+            "targetDigest"
+          ],
+          "sha256": "7f8ae13eec2ef42dd4615cd131ec94ff5c04ea8496550e9f3f31f4ef9c3a4d62"
+        }
+      ],
+      "toolArgumentIds": [
+        "read-original",
+        "proposal-2",
+        "proposal-3"
+      ],
+      "allWireArgumentsByteExact": true,
+      "fullGraphicDelivered": true,
+      "boundary": "隔离实际Worker/host/root；模型是HTTP夹具，不代供应商或task272原线"
+    },
+    "failure": {
+      "mode": "failure",
+      "originalSourceSha256": "c0d561afc87ee4b97805472a4f57154e35e5191b3310dd97ee132462679640d6",
+      "schemaFacts": [
+        {
+          "ordinal": 1,
+          "required": [
+            "targetDigest",
+            "article",
+            "graphic"
+          ],
+          "properties": [
+            "article",
+            "graphic",
+            "targetDigest"
+          ],
+          "sha256": "7f8ae13eec2ef42dd4615cd131ec94ff5c04ea8496550e9f3f31f4ef9c3a4d62"
+        },
+        {
+          "ordinal": 2,
+          "required": [
+            "targetDigest",
+            "article",
+            "graphic"
+          ],
+          "properties": [
+            "article",
+            "graphic",
+            "targetDigest"
+          ],
+          "sha256": "7f8ae13eec2ef42dd4615cd131ec94ff5c04ea8496550e9f3f31f4ef9c3a4d62"
+        },
+        {
+          "ordinal": 3,
+          "required": [
+            "targetDigest",
+            "article",
+            "graphic"
+          ],
+          "properties": [
+            "article",
+            "graphic",
+            "targetDigest"
+          ],
+          "sha256": "7f8ae13eec2ef42dd4615cd131ec94ff5c04ea8496550e9f3f31f4ef9c3a4d62"
+        }
+      ],
+      "toolArgumentIds": [
+        "read-original",
+        "proposal-2"
+      ],
+      "allWireArgumentsByteExact": true,
+      "fullGraphicDelivered": false,
+      "boundary": "隔离实际Worker/host/root；模型是HTTP夹具，不代供应商或task272原线"
+    },
+    "legacy": {
+      "mode": "legacy",
+      "originalSourceSha256": "c0d561afc87ee4b97805472a4f57154e35e5191b3310dd97ee132462679640d6",
+      "schemaFacts": [
+        {
+          "ordinal": 1,
+          "required": [
+            "targetDigest",
+            "article",
+            "graphic"
+          ],
+          "properties": [
+            "article",
+            "graphic",
+            "targetDigest"
+          ],
+          "sha256": "7f8ae13eec2ef42dd4615cd131ec94ff5c04ea8496550e9f3f31f4ef9c3a4d62"
+        },
+        {
+          "ordinal": 2,
+          "required": [
+            "targetDigest",
+            "article",
+            "graphic"
+          ],
+          "properties": [
+            "article",
+            "graphic",
+            "targetDigest"
+          ],
+          "sha256": "7f8ae13eec2ef42dd4615cd131ec94ff5c04ea8496550e9f3f31f4ef9c3a4d62"
+        },
+        {
+          "ordinal": 3,
+          "required": [
+            "targetDigest",
+            "article",
+            "graphic"
+          ],
+          "properties": [
+            "article",
+            "graphic",
+            "targetDigest"
+          ],
+          "sha256": "7f8ae13eec2ef42dd4615cd131ec94ff5c04ea8496550e9f3f31f4ef9c3a4d62"
+        }
+      ],
+      "toolArgumentIds": [
+        "read-original",
+        "proposal-2"
+      ],
+      "allWireArgumentsByteExact": true,
+      "fullGraphicDelivered": false,
+      "boundary": "隔离实际Worker/host/root；模型是HTTP夹具，不代供应商或task272原线"
+    }
+  },
+  "incomplete": {
+    "boundary": "固定部署同版本Pi SDK/当前provider，隔离HTTP；不证明task272原wire",
+    "observations": [
+      {
+        "name": "complete-tool-calls",
+        "wireArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"},\"graphic\":{\"schemaVersion\":1,\"title\":\"中性图文\",\"ruleSnapshotRef\":null}}",
+        "wireJsonValid": true,
+        "adaptedArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"},\"graphic\":{\"schemaVersion\":1,\"title\":\"中性图文\",\"ruleSnapshotRef\":null}}",
+        "adaptedJsonValid": true,
+        "argumentsByteExact": true,
+        "finish": {
+          "unified": "tool-calls",
+          "raw": "toolUse"
+        },
+        "provisionalRawArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"},\"graphic\":{\"schemaVersion\":1,\"title\":\"中性图文\",\"ruleSnapshotRef\":null}}",
+        "requestCount": 1
+      },
+      {
+        "name": "complete-length",
+        "wireArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"},\"graphic\":{\"schemaVersion\":1,\"title\":\"中性图文\",\"ruleSnapshotRef\":null}}",
+        "wireJsonValid": true,
+        "adaptedArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"},\"graphic\":{\"schemaVersion\":1,\"title\":\"中性图文\",\"ruleSnapshotRef\":null}}",
+        "adaptedJsonValid": true,
+        "argumentsByteExact": true,
+        "finish": {
+          "unified": "length",
+          "raw": "length"
+        },
+        "provisionalRawArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"},\"graphic\":{\"schemaVersion\":1,\"title\":\"中性图文\",\"ruleSnapshotRef\":null}}",
+        "requestCount": 1
+      },
+      {
+        "name": "valid-missing-graphic",
+        "wireArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"}}",
+        "wireJsonValid": true,
+        "adaptedArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"}}",
+        "adaptedJsonValid": true,
+        "argumentsByteExact": true,
+        "finish": {
+          "unified": "tool-calls",
+          "raw": "toolUse"
+        },
+        "provisionalRawArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"}}",
+        "requestCount": 1
+      },
+      {
+        "name": "truncated-tool-calls",
+        "wireArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"}",
+        "wireJsonValid": false,
+        "adaptedArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"}}",
+        "adaptedJsonValid": true,
+        "argumentsByteExact": false,
+        "finish": {
+          "unified": "tool-calls",
+          "raw": "toolUse"
+        },
+        "provisionalRawArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"}",
+        "requestCount": 1
+      },
+      {
+        "name": "truncated-length",
+        "wireArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"}",
+        "wireJsonValid": false,
+        "adaptedArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"}}",
+        "adaptedJsonValid": true,
+        "argumentsByteExact": false,
+        "finish": {
+          "unified": "length",
+          "raw": "length"
+        },
+        "provisionalRawArguments": "{\"targetDigest\":\"synthetic-digest\",\"article\":{\"schemaVersion\":1,\"title\":\"中性文章\"}",
+        "requestCount": 1
+      }
+    ]
+  }
+}

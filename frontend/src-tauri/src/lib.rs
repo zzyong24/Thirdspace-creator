@@ -1741,6 +1741,47 @@ where
     candidates.pop()
 }
 
+fn format_sidecar_io_error(stage: &str, error: &std::io::Error) -> String {
+    // tar 的 Display 只有外层路径；根 I/O 原因保存在 get_ref/source 中。
+    // 这里只保留有限机械诊断，不按文字猜原因或决定是否重试。
+    let mut causes = Vec::new();
+    let mut next: Option<&(dyn std::error::Error + 'static)> = Some(error);
+    for _ in 0..8 {
+        let Some(cause) = next else { break };
+        let message = cause.to_string();
+        let mut chars = message.chars();
+        let mut limited: String = chars.by_ref().take(1024).collect();
+        if chars.next().is_some() {
+            limited.push_str("…[消息已截断]");
+        }
+        if let Some(io) = cause.downcast_ref::<std::io::Error>() {
+            limited.push_str(&format!(
+                " [I/O kind={:?}, raw_os_error={:?}]",
+                io.kind(),
+                io.raw_os_error()
+            ));
+            next = io
+                .get_ref()
+                .map(|inner| inner as &(dyn std::error::Error + 'static))
+                .or_else(|| cause.source());
+        } else {
+            next = cause.source();
+        }
+        causes.push(limited);
+    }
+    if next.is_some() {
+        causes.push("[错误链超过8层，已截断]".to_string());
+    }
+    format!("{stage}: {}", causes.join("；原因: "))
+}
+
+fn cleanup_failed_sidecar_extraction(temp: &std::path::Path) -> String {
+    match std::fs::remove_dir_all(temp) {
+        Ok(()) => "已清理临时目录".to_string(),
+        Err(error) => format_sidecar_io_error("临时目录清理失败", &error),
+    }
+}
+
 fn extract_sidecar_tarball(
     tarball: &std::path::Path,
     dest: &std::path::Path,
@@ -1791,21 +1832,26 @@ fn extract_sidecar_tarball(
     // [T-485] 不调用系统 `tar`：用户机可能没有、GUI PATH 也可能找不到。Rust tar::Archive
     // 自带路径穿越防护(unpack 内部拒绝 `..`/绝对路径)，同样保留 pnpm 相对 symlink。
     let unpack_result = (|| -> Result<(), String> {
-        let file = std::fs::File::open(tarball)
-            .map_err(|e| format!("打开 sidecar.tar.gz 失败 {}: {e}", tarball.display()))?;
+        let file = std::fs::File::open(tarball).map_err(|e| {
+            format_sidecar_io_error(
+                &format!("打开 sidecar.tar.gz 失败 {}", tarball.display()),
+                &e,
+            )
+        })?;
         let decoder = flate2::read::GzDecoder::new(file);
         let mut archive = tar::Archive::new(decoder);
         let entries = archive
             .entries()
-            .map_err(|e| format!("读取 sidecar.tar.gz 条目失败: {e}"))?;
+            .map_err(|e| format_sidecar_io_error("读取 sidecar.tar.gz 条目失败", &e))?;
         let mut files = 0_u64;
         let mut bytes = 0_u64;
         for entry in entries {
-            let mut entry = entry.map_err(|e| format!("读取 sidecar tar 条目失败: {e}"))?;
+            let mut entry =
+                entry.map_err(|e| format_sidecar_io_error("读取 sidecar tar 条目失败", &e))?;
             bytes = bytes.saturating_add(entry.header().size().unwrap_or(0));
             let unpacked = entry
                 .unpack_in(&temp)
-                .map_err(|e| format!("展开 sidecar tar 条目失败: {e}"))?;
+                .map_err(|e| format_sidecar_io_error("展开 sidecar tar 条目失败", &e))?;
             if !unpacked {
                 return Err("sidecar tar 含越界路径，已拒绝展开".to_string());
             }
@@ -1826,19 +1872,19 @@ fn extract_sidecar_tarball(
         Ok(())
     })();
     if let Err(e) = unpack_result {
-        let _ = std::fs::remove_dir_all(&temp);
+        let cleanup = cleanup_failed_sidecar_extraction(&temp);
         return Err(format!(
-            "sidecar 解压失败({e})，已清理临时目录；tarball={}",
+            "sidecar 解压失败({e})，{cleanup}；tarball={}",
             tarball.display(),
         ));
     }
     if !temp.join("frontend").join("server.js").is_file() {
-        let _ = std::fs::remove_dir_all(&temp);
-        return Err("sidecar 解压结果缺 frontend/server.js，已清理临时目录".to_string());
+        let cleanup = cleanup_failed_sidecar_extraction(&temp);
+        return Err(format!("sidecar 解压结果缺 frontend/server.js，{cleanup}"));
     }
     if let Err(e) = std::fs::write(temp.join(".tarball-stamp"), stamp_value) {
-        let _ = std::fs::remove_dir_all(&temp);
-        return Err(format!("写 sidecar 完成标记失败，已清理临时目录: {e}"));
+        let cleanup = cleanup_failed_sidecar_extraction(&temp);
+        return Err(format!("写 sidecar 完成标记失败: {e}，{cleanup}"));
     }
 
     match promote_extracted_sidecar_with(
@@ -3940,6 +3986,220 @@ mod runtime_cleanup_tests {
 
         assert!(!install_dir.join("runtime-images").exists());
         let _ = std::fs::remove_dir_all(&install_dir);
+    }
+
+    #[test]
+    fn 展开诊断保留嵌套真实io码而不推断首次原因() {
+        // 合成码只验证序列化；不是用户首次启动 ENOSPC 的证明。
+        let native = std::io::Error::from_raw_os_error(28);
+        let kind = native.kind();
+        let wrapped = std::io::Error::new(kind, std::io::Error::new(kind, native));
+        let diagnostic = super::format_sidecar_io_error("合成诊断", &wrapped);
+        assert!(diagnostic.contains("raw_os_error=None"), "{diagnostic}");
+        assert!(diagnostic.contains("raw_os_error=Some(28)"), "{diagnostic}");
+        assert!(
+            diagnostic.contains(&format!("I/O kind={kind:?}")),
+            "{diagnostic}"
+        );
+    }
+
+    #[test]
+    fn 展开诊断按unicode截断单层并限制循环错误链() {
+        let long_error = std::io::Error::other("字".repeat(2048));
+        let diagnostic = super::format_sidecar_io_error("有界诊断", &long_error);
+        assert!(diagnostic.contains(&"字".repeat(1024)));
+        assert!(!diagnostic.contains(&"字".repeat(1025)));
+        assert!(diagnostic.contains("[消息已截断]"));
+
+        #[derive(Debug)]
+        struct RepeatedCause;
+        impl std::fmt::Display for RepeatedCause {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str("循环错误")
+            }
+        }
+        impl std::error::Error for RepeatedCause {
+            fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+                Some(self)
+            }
+        }
+        let repeated = std::io::Error::other(RepeatedCause);
+        let diagnostic = super::format_sidecar_io_error("有界诊断", &repeated);
+        assert_eq!(diagnostic.matches("循环错误").count(), 8);
+        assert!(diagnostic.contains("[错误链超过8层，已截断]"));
+    }
+
+    #[test]
+    fn 失败展开的临时清理成功只删除本例目录() {
+        let root = temp_runtime_root("extract-cleanup-success-diagnostic");
+        let temp = root.join("sidecar.extracting-owned");
+        std::fs::create_dir(&temp).unwrap();
+        std::fs::write(temp.join("partial-file"), "partial").unwrap();
+        std::fs::write(root.join("keep"), "keep").unwrap();
+        assert_eq!(
+            super::cleanup_failed_sidecar_extraction(&temp),
+            "已清理临时目录"
+        );
+        assert!(!temp.exists());
+        assert_eq!(std::fs::read_to_string(root.join("keep")).unwrap(), "keep");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn 失败展开的真实非目录清理拒绝不冒称成功() {
+        let root = temp_runtime_root("extract-cleanup-failure-diagnostic");
+        let temp = root.join("file-instead-of-directory");
+        std::fs::write(&temp, "keep").unwrap();
+        let expected = std::fs::remove_dir_all(&temp).unwrap_err();
+        let diagnostic = super::cleanup_failed_sidecar_extraction(&temp);
+        assert!(diagnostic.starts_with("临时目录清理失败:"), "{diagnostic}");
+        assert!(!diagnostic.contains("已清理临时目录"), "{diagnostic}");
+        assert!(
+            diagnostic.contains(&format!("raw_os_error={:?}", expected.raw_os_error())),
+            "{diagnostic}"
+        );
+        assert_eq!(std::fs::read_to_string(&temp).unwrap(), "keep");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn 实际tar越界条目拒绝且保留旧运行时与外部文件() {
+        let root = temp_runtime_root("extract-path-rejection-diagnostic");
+        let dest = root.join("runtime").join("sidecar");
+        std::fs::create_dir_all(dest.join("frontend")).unwrap();
+        std::fs::write(dest.join("frontend/server.js"), "old-runtime").unwrap();
+        std::fs::write(dest.join(".tarball-stamp"), "sha256:old").unwrap();
+        let outside = dest.parent().unwrap().join("out-of-scope.txt");
+        std::fs::write(&outside, "keep").unwrap();
+        let tarball = root.join("sidecar.tar.gz");
+        let encoder = flate2::write::GzEncoder::new(
+            std::fs::File::create(&tarball).unwrap(),
+            flate2::Compression::default(),
+        );
+        let mut builder = tar::Builder::new(encoder);
+        let mut header = tar::Header::new_gnu();
+        header.set_mode(0o644);
+        header.set_size(3);
+        header.set_entry_type(tar::EntryType::Regular);
+        // 只在合成归档中构造 unsafe header，实际 unpack_in 必须拒绝它。
+        let path = b"../out-of-scope.txt";
+        header.as_mut_bytes()[..path.len()].copy_from_slice(path);
+        header.set_cksum();
+        builder.append(&header, b"bad".as_slice()).unwrap();
+        builder.into_inner().unwrap().finish().unwrap();
+        let error = super::extract_sidecar_tarball(&tarball, &dest, "sha256:new", false, |_| false)
+            .unwrap_err();
+        assert!(error.contains("含越界路径，已拒绝展开"), "{error}");
+        assert_eq!(std::fs::read_to_string(&outside).unwrap(), "keep");
+        assert_eq!(
+            std::fs::read_to_string(dest.join("frontend/server.js")).unwrap(),
+            "old-runtime"
+        );
+        assert_eq!(
+            std::fs::read_to_string(dest.join(".tarball-stamp")).unwrap(),
+            "sha256:old"
+        );
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn 中途展开真实条目冲突保留底层错误与旧运行时() {
+        let root = temp_runtime_root("extract-collision-diagnostic");
+        let dest = root.join("runtime").join("sidecar");
+        std::fs::create_dir_all(dest.join("frontend")).unwrap();
+        std::fs::write(dest.join("frontend/server.js"), "old-runtime").unwrap();
+        std::fs::write(dest.join(".tarball-stamp"), "sha256:old").unwrap();
+
+        let tarball = root.join("sidecar.tar.gz");
+        let encoder = flate2::write::GzEncoder::new(
+            std::fs::File::create(&tarball).unwrap(),
+            flate2::Compression::default(),
+        );
+        let mut builder = tar::Builder::new(encoder);
+        for (path, entry_type, data) in [
+            (
+                "frontend/server.js",
+                tar::EntryType::Regular,
+                b"new-runtime".as_slice(),
+            ),
+            (
+                "fixture/collision",
+                tar::EntryType::Directory,
+                b"".as_slice(),
+            ),
+            (
+                "fixture/collision",
+                tar::EntryType::Regular,
+                b"x".as_slice(),
+            ),
+        ] {
+            let mut header = tar::Header::new_gnu();
+            header.set_mode(0o755);
+            header.set_entry_type(entry_type);
+            header.set_size(data.len() as u64);
+            header.set_cksum();
+            builder.append_data(&mut header, path, data).unwrap();
+        }
+        builder.into_inner().unwrap().finish().unwrap();
+
+        // 与 tar 的同名普通文件替换步骤一致，取得本平台真实码，不写死 macOS errno。
+        let probe_dir = root.join("probe-directory");
+        std::fs::create_dir(&probe_dir).unwrap();
+        let expected_code = std::fs::remove_file(&probe_dir)
+            .unwrap_err()
+            .raw_os_error()
+            .unwrap();
+        let error = super::extract_sidecar_tarball(&tarball, &dest, "sha256:new", false, |_| false)
+            .unwrap_err();
+        assert_eq!(
+            std::fs::read_to_string(dest.join("frontend/server.js")).unwrap(),
+            "old-runtime"
+        );
+        assert_eq!(
+            std::fs::read_to_string(dest.join(".tarball-stamp")).unwrap(),
+            "sha256:old"
+        );
+        assert!(!dest
+            .parent()
+            .unwrap()
+            .join(format!("sidecar.extracting-{}", std::process::id()))
+            .exists());
+        assert!(error.contains("展开 sidecar tar 条目失败"), "{error}");
+        assert!(
+            error.contains(&format!("raw_os_error=Some({expected_code})")),
+            "{error}"
+        );
+        assert!(error.contains("已清理临时目录"), "{error}");
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn 坏gzip读取保留真实诊断且不覆盖旧运行时() {
+        let root = temp_runtime_root("extract-invalid-gzip-diagnostic");
+        let dest = root.join("runtime").join("sidecar");
+        std::fs::create_dir_all(dest.join("frontend")).unwrap();
+        std::fs::write(dest.join("frontend/server.js"), "old-runtime").unwrap();
+        std::fs::write(dest.join(".tarball-stamp"), "sha256:old").unwrap();
+        let tarball = root.join("sidecar.tar.gz");
+        std::fs::write(&tarball, b"not a gzip stream").unwrap();
+        let error = super::extract_sidecar_tarball(&tarball, &dest, "sha256:new", false, |_| false)
+            .unwrap_err();
+        assert_eq!(
+            std::fs::read_to_string(dest.join("frontend/server.js")).unwrap(),
+            "old-runtime"
+        );
+        assert_eq!(
+            std::fs::read_to_string(dest.join(".tarball-stamp")).unwrap(),
+            "sha256:old"
+        );
+        assert!(!dest
+            .parent()
+            .unwrap()
+            .join(format!("sidecar.extracting-{}", std::process::id()))
+            .exists());
+        assert!(error.contains("读取 sidecar tar 条目失败"), "{error}");
+        assert!(error.contains("I/O kind="), "{error}");
+        std::fs::remove_dir_all(&root).unwrap();
     }
 
     #[test]
