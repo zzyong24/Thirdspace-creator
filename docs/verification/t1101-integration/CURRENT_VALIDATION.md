@@ -4,4 +4,6 @@
 
 独立来源及规格复核先于合并，报告和initial packet保留。正式reviewctl第一次拒绝覆盖来源legacy review，第二次拒绝不合命名；原命令失败保留，不改写历史。taskctl start实际发生在主线正式record之前，但已有独立规格PASS报告；第三次沿受支持的task-specific review路径实际记录PASS[REV:146ff2046c2c]。不补造更早正式事件。
 
-当前是组合验收候选，后端/前端/隔离PG/UI/全局检查尚待当场结果；未构建或替换安装此来源，不声称真实平台扫码/供应商生成通过。当前App仍源码070287。
+当前main实际组合：backend7文件134PASS、frontend4文件82PASS、隔离PG正式公共30PASS、联合回归3文件16PASS及双端类型PASS。较早平台公共22PASS/2FAIL和画布公共1PASS/1FAIL分别登记T1107/T1108，不洗历史；T1107真实补验24PASS、发布4原文件由两次实际执行并集71PASS。T1108最终23组件PASS、两条Chrome旅程2PASS/87.681秒，真实保存中断恢复、精确引用、返回画布库重开、生成确认/防重、图库和三平台弹窗入口；T1105最终12组件与当前70.806秒公共旅程PASS。各自原始命令/时间/exit/SHA及明确模型/故障替身边界见对应任务当前证据。
+
+原来源前端报告归档在source-f97a80da，不再代签当前main。三份当前前端报告本次结构/文案/合同核对退出0，未带--execute、不充作taskctl重新执行或完成。LED047174PASS、boundary/semantic/orphan退出0（原5边界/100warning保留）。T1109完整实际退出1只剩逐行相同原静态27，旧全局42对账错误保留，当前完整reconcile仍待。T1110资源网络变化原失败及根因UNKNOWN保留。当前App仍源码070287，本轮来源尚未构建/替换；不声称本人真实扫码、供应商生成或新安装通过。

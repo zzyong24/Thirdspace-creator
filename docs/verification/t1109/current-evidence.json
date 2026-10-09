@@ -1,0 +1,39 @@
+{
+  "backend-green": {
+    "argv": [
+      "pnpm",
+      "--dir",
+      "backend",
+      "exec",
+      "vitest",
+      "run",
+      "src/modules/execution/new-execution-budget.test.ts",
+      "src/modules/execution/run-execution-task.test.ts",
+      "src/modules/execution/execution-call-ledger.service.test.ts",
+      "--retry=0",
+      "--testTimeout=120000",
+      "--hookTimeout=120000"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T05:25:33.263871+00:00",
+    "finishedAt": "2026-10-09T05:26:00.803088+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 27.5389178750047,
+    "logSha256": "95e15a2aec6d6ad0d9eeaabd6d04fddad9f11f98d5846b9431f7006c596062ce"
+  },
+  "full-verify": {
+    "argv": [
+      "node",
+      "tools/timeout-policy/verify.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T05:26:24.729951+00:00",
+    "finishedAt": "2026-10-09T05:28:01.196465+00:00",
+    "exitCode": 1,
+    "elapsedSeconds": 96.46546408400172,
+    "logSha256": "ca2e821165827c5aa0e131dd2d7406dc630ad1673d9c8ac7091b55d276ef73db"
+  },
+  "sourceOnly": true,
+  "taskComplete": false,
+  "installed": false
+}

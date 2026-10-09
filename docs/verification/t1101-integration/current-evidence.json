@@ -1,0 +1,115 @@
+{
+  "backend-focus": {
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "pnpm",
+      "--dir",
+      "backend",
+      "exec",
+      "vitest",
+      "run",
+      "src/application/platform-collection/periodic.test.ts",
+      "src/application/scheduling/platform-collector.test.ts",
+      "src/application/workspace/startup.test.ts",
+      "src/modules/ai-runtime/collection-bootstrap.test.ts",
+      "src/modules/ai/ai.service.test.ts",
+      "src/modules/creative-canvas/creative-canvas.service.test.ts",
+      "src/modules/platform-collection/platform-collection.integration.test.ts"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T04:24:54.703176+00:00",
+    "finishedAt": "2026-10-09T04:29:00.611744+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 245.90757687500445,
+    "logSha256": "db3bd102b4350ce1e0d5cc0e6d0bfe47e6d7d58cba185fbe5b1fd96715897a97"
+  },
+  "frontend-focus": {
+    "argv": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "vitest",
+      "run",
+      "src/features/automations/automations-island.test.tsx",
+      "src/features/creative-canvas/canvas-editor.test.tsx",
+      "src/features/platform-account/account-group-manager.test.tsx",
+      "src/server/__module_integration__/local-platform-binding.persistence-client.test.ts"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T04:24:54.703170+00:00",
+    "finishedAt": "2026-10-09T04:26:04.680971+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 69.97723579101148,
+    "logSha256": "7d9489e1738e093c99ce3e9ab0e0de2c63746371d8d809cb60bcfff7dc543ac8"
+  },
+  "frontend-typecheck": {
+    "argv": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "typecheck"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T04:24:54.715850+00:00",
+    "finishedAt": "2026-10-09T04:26:40.438950+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 105.7223967500031,
+    "logSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035"
+  },
+  "backend-typecheck": {
+    "argv": [
+      "pnpm",
+      "--dir",
+      "backend",
+      "typecheck"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T04:24:54.716866+00:00",
+    "finishedAt": "2026-10-09T04:26:29.188909+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 94.47137254200061,
+    "logSha256": "931327292db1bbff62320abd8dd57032ae19ad39b9e012d04233dc49d716637b"
+  },
+  "postgres-public": {
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "pnpm",
+      "--dir",
+      "backend",
+      "exec",
+      "vitest",
+      "run",
+      "src/integration/startup-group-collectors.postgres.integration.test.ts"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T04:25:15.281780+00:00",
+    "finishedAt": "2026-10-09T04:27:19.842729+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 124.55941345798783,
+    "logSha256": "651ffe8507b84de999a5ee4e6cc7436f5011b01f630a6d2f3dd8419f80c8c923"
+  },
+  "joint-regression": {
+    "argv": [
+      "pnpm",
+      "--dir",
+      "backend",
+      "exec",
+      "vitest",
+      "run",
+      "src/integration/chat-creation-source-recovery.integration.test.ts",
+      "src/modules/ai-runtime/chat-host-input-error-recovery.test.ts",
+      "src/modules/ai/chat-tool-tail-failure-projection.test.ts"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T04:36:13.491621+00:00",
+    "finishedAt": "2026-10-09T04:36:52.952341+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 39.460185290983645,
+    "logSha256": "514d3f3b5e899c921822861310ce4ccc63b5d39caddf41d19a0642e296a15936"
+  },
+  "taskComplete": false,
+  "installed": false
+}

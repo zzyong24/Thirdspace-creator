@@ -1,7 +1,7 @@
 {
   "schema": "frontend-visible-copy/v1",
   "task_id": "T-1105",
-  "commit_sha": "d35f7d57ff952d306071eb40d34127956b067906",
+  "commit_sha": "0e1c0ffc98bfeccf8c89bdb6bfe9e353047f7648",
   "captures": [
     {
       "checkpoint": "resource-normal",

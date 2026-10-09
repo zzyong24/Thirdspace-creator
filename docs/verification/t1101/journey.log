@@ -1,4 +1,4 @@
-[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-3DpH6k
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-9JdJ7h
 [playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
 [2m[WebServer] [22m
 [2m[WebServer] [22m> creatoros-frontend@1.2.0 predev /Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend
@@ -11,70 +11,139 @@
 [2m[WebServer] [22m[1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
 [2m[WebServer] [22m- Local:         http://127.0.0.1:31411
 [2m[WebServer] [22m- Network:       http://127.0.0.1:31411
-[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 425ms
+[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 606ms
 [2m[WebServer] [22m[CreatorOS] SIDECAR_STARTUP_VERIFIED
 [2m[WebServer] [22m
-[2m[WebServer] [22m[37m[1m○[22m[39m Compiling / ...
-[2m[WebServer] [22m GET / [32m200[39m in 37.2s[2m (next.js: 16.3s, proxy.ts: 140ms, application-code: 20.8s)[22m
+[2m[WebServer] [22m[page-read] operation=accounts.list durationMs=298
+[2m[WebServer] [22m[page-read] operation=notifications.list durationMs=300
+[2m[WebServer] [22m GET / [32m200[39m in 31.0s[2m (next.js: 3.8s, proxy.ts: 246ms, application-code: 27.0s)[22m
 
 Running 2 tests using 1 worker
 
-[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-3DpH6k
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-9JdJ7h
 [playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
-[2m[WebServer] [22m[37m[1m○[22m[39m Compiling /api/v1/dispatch ...
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10.5s[2m (next.js: 10.4s, proxy.ts: 27ms, application-code: 49ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 16ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 1712µs, proxy.ts: 2ms, application-code: 28ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 1712µs, proxy.ts: 2ms, application-code: 40ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 1637µs, proxy.ts: 3ms, application-code: 25ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 1284µs, proxy.ts: 2ms, application-code: 24ms)[22m
-[2m[WebServer] [22m PUT /api/v1/blob/groups/grp-2d00c347-5/inbox/uploads/objkey-2d00c347-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791520996761&token=40b35acc8d3b7290ddc498d598db3611916281bf6b6e29236575d4a2e90ea37d&scope=eyJ1c2VySWQiOiJ1c2VyLTJkMDBjMzQ3LTEiLCJncm91cElkIjoiZ3JwLTJkMDBjMzQ3LTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 6.9s[2m (next.js: 6.8s, application-code: 69ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 218ms[2m (next.js: 4ms, proxy.ts: 4ms, application-code: 210ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 5ms, proxy.ts: 7ms, application-code: 23ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 39ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 33ms)[22m
-[2m[WebServer] [22m GET /canvases/b18f954d-770e-41fb-a274-39685480bc53 [32m200[39m in 6.7s[2m (next.js: 6.0s, proxy.ts: 10ms, application-code: 700ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 220ms[2m (next.js: 27ms, proxy.ts: 69ms, application-code: 124ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 81ms[2m (next.js: 26ms, proxy.ts: 16ms, application-code: 39ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 203ms[2m (next.js: 67ms, proxy.ts: 13ms, application-code: 123ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 858ms[2m (next.js: 724ms, proxy.ts: 27ms, application-code: 107ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 73ms[2m (next.js: 10ms, proxy.ts: 8ms, application-code: 55ms)[22m
-[2m[WebServer] [22m GET /canvases/b18f954d-770e-41fb-a274-39685480bc53 [32m200[39m in 192ms[2m (next.js: 9ms, proxy.ts: 3ms, application-code: 179ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 12ms, proxy.ts: 12ms, application-code: 22ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 7ms, proxy.ts: 17ms, application-code: 22ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 145ms[2m (next.js: 46ms, proxy.ts: 17ms, application-code: 83ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 213ms[2m (next.js: 154ms, proxy.ts: 12ms, application-code: 47ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 175ms[2m (next.js: 12ms, proxy.ts: 138ms, application-code: 26ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 79ms[2m (next.js: 11ms, proxy.ts: 45ms, application-code: 22ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 195ms[2m (next.js: 33ms, proxy.ts: 9ms, application-code: 152ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 196ms[2m (next.js: 153ms, proxy.ts: 11ms, application-code: 31ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 3ms, proxy.ts: 15ms, application-code: 11ms)[22m
-[2m[WebServer] [22m GET /api/v1/blob/groups/grp-2d00c347-5/inbox/uploads/objkey-2d00c347-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791521016818&token=3639915dce4f3eb15c58a5dd79c1ae4ae9c4e125b0c69c1141680a29cd44a9e5&scope=eyJ1c2VySWQiOiJ1c2VyLTJkMDBjMzQ3LTEiLCJncm91cElkIjoiZ3JwLTJkMDBjMzQ3LTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 99ms[2m (next.js: 6ms, application-code: 93ms)[22m
-[2m[WebServer] [22m GET /api/v1/blob/groups/grp-2d00c347-5/inbox/uploads/objkey-2d00c347-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791521016812&token=db59edd685aee12e8176c60e32d9967d4606e362774197cf9a4a72e9ca74cdcd&scope=eyJ1c2VySWQiOiJ1c2VyLTJkMDBjMzQ3LTEiLCJncm91cElkIjoiZ3JwLTJkMDBjMzQ3LTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 102ms[2m (next.js: 22ms, application-code: 80ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1467µs, proxy.ts: 3ms, application-code: 11ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 12ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 30ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 12ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 4ms, proxy.ts: 3ms, application-code: 20ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 64ms[2m (next.js: 7ms, proxy.ts: 8ms, application-code: 50ms)[22m
-[2m[WebServer] [22m GET /api/v1/blob/groups/grp-2d00c347-5/inbox/uploads/objkey-2d00c347-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791521020219&token=dd9db6c60fcc7c1d4e3b9849b9a0353d8d4c82259c0f191b7c4992602eba8ac1&scope=eyJ1c2VySWQiOiJ1c2VyLTJkMDBjMzQ3LTEiLCJncm91cElkIjoiZ3JwLTJkMDBjMzQ3LTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 50ms[2m (next.js: 5ms, application-code: 45ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 1690µs, proxy.ts: 3ms, application-code: 24ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 31ms[2m (next.js: 1586µs, proxy.ts: 2ms, application-code: 27ms)[22m
-[2m[WebServer] [22m GET /api/v1/blob/groups/grp-2d00c347-5/inbox/uploads/objkey-2d00c347-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791521021243&token=29831ec21e6b35d933aa93347a7a1306feb7e1a787ab006ba2d3c61b441973d7&scope=eyJ1c2VySWQiOiJ1c2VyLTJkMDBjMzQ3LTEiLCJncm91cElkIjoiZ3JwLTJkMDBjMzQ3LTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 25ms[2m (next.js: 3ms, application-code: 22ms)[22m
-  ✓  1 [e2e] › tests/e2e/creative-canvas.spec.ts:377:5 › T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟模型回执） (35.9s)
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 3ms, proxy.ts: 8ms, application-code: 35ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 4ms, proxy.ts: 2ms, application-code: 26ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 1488µs, proxy.ts: 2ms, application-code: 28ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 57ms[2m (next.js: 1926µs, proxy.ts: 2ms, application-code: 53ms)[22m
-[2m[WebServer] [22m[37m[1m○[22m[39m Compiling /accounts ...
-[2m[WebServer] [22m GET /accounts [32m200[39m in 4.0s[2m (next.js: 3.5s, proxy.ts: 2ms, application-code: 440ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 6ms, proxy.ts: 4ms, application-code: 27ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 59ms[2m (next.js: 6ms, proxy.ts: 44ms, application-code: 9ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 47ms[2m (next.js: 14ms, proxy.ts: 7ms, application-code: 26ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 64ms[2m (next.js: 50ms, proxy.ts: 8ms, application-code: 7ms)[22m
-[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 30ms[2m (next.js: 1783µs, proxy.ts: 17ms, application-code: 12ms)[22m
-  ✓  2 [e2e] › tests/e2e/creative-canvas.spec.ts:415:5 › T-1101 三平台表格直接打开扫码弹窗，无重复刷新和下方扫码区 (6.8s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 1811ms[2m (next.js: 1736ms, proxy.ts: 25ms, application-code: 50ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 43ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 36ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 1531µs, proxy.ts: 3ms, application-code: 33ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 113ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 107ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 64ms[2m (next.js: 1652µs, proxy.ts: 3ms, application-code: 59ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 1661µs, proxy.ts: 3ms, application-code: 28ms)[22m
+[2m[WebServer] [22m PUT /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525854477&token=9099ff3a3f0f559f718dfb8cff7ff30f05ca0a2b75a98dfb1dfab9fdfeabc986&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 3.3s[2m (next.js: 3.3s, application-code: 50ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 338ms[2m (next.js: 4ms, proxy.ts: 4ms, application-code: 330ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 2ms, proxy.ts: 1726µs, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 1620µs, proxy.ts: 3ms, application-code: 23ms)[22m
+[2m[WebServer] [22m GET /canvases/727c7b7c-65a4-4935-81cc-704fe4386a1a [32m200[39m in 2.4s[2m (next.js: 2.3s, proxy.ts: 5ms, application-code: 143ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 36ms[2m (next.js: 7ms, proxy.ts: 4ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 4ms, proxy.ts: 6ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 14ms, proxy.ts: 5ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 29ms, proxy.ts: 4ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1782µs, proxy.ts: 1789µs, application-code: 11ms)[22m
+[2m[WebServer] [22m GET /canvases/727c7b7c-65a4-4935-81cc-704fe4386a1a [32m200[39m in 120ms[2m (next.js: 5ms, proxy.ts: 1912µs, application-code: 113ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 5ms, proxy.ts: 7ms, application-code: 22ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 8ms, proxy.ts: 7ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 51ms[2m (next.js: 27ms, proxy.ts: 7ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 109ms[2m (next.js: 82ms, proxy.ts: 8ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 49ms[2m (next.js: 9ms, proxy.ts: 12ms, application-code: 27ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 61ms[2m (next.js: 5ms, proxy.ts: 4ms, application-code: 53ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 50ms[2m (next.js: 4ms, proxy.ts: 10ms, application-code: 36ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525863778&token=12c4dbd9f8162c692924365cb89fd151d85788ee93ce004172caff804373242a&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 40ms[2m (next.js: 5ms, application-code: 34ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525863824&token=6f1a4e90240a41fe7361ba2e57ac8fda5b2dd96cad5b0a9cb4deef3fcc8b6d9a&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 24ms[2m (next.js: 2ms, application-code: 22ms)[22m
+[2m[WebServer] [22m GET /canvases/727c7b7c-65a4-4935-81cc-704fe4386a1a [32m200[39m in 133ms[2m (next.js: 10ms, proxy.ts: 3ms, application-code: 120ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 1792µs, proxy.ts: 2ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 5ms, proxy.ts: 4ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 4ms, proxy.ts: 17ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 56ms[2m (next.js: 14ms, proxy.ts: 18ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 6ms, proxy.ts: 6ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 48ms[2m (next.js: 7ms, proxy.ts: 12ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 31ms[2m (next.js: 3ms, proxy.ts: 6ms, application-code: 22ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 36ms[2m (next.js: 3ms, proxy.ts: 22ms, application-code: 10ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525867636&token=a9ffad4995f483455cc64fe56210b343ffb78e27efa5cd36c7dc9c7471656c07&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 55ms[2m (next.js: 4ms, application-code: 51ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525867664&token=5e0c4d13504e40cb0bd36fa5c749714fc9f2be8e20524ad0209b73b59c1861cf&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 20ms[2m (next.js: 4ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 12ms, proxy.ts: 2ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1229µs, proxy.ts: 2ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 4ms, proxy.ts: 4ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 31ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 1349µs, proxy.ts: 1662µs, application-code: 13ms)[22m
+[2m[WebServer] [22m GET /canvases/727c7b7c-65a4-4935-81cc-704fe4386a1a [32m200[39m in 113ms[2m (next.js: 4ms, proxy.ts: 2ms, application-code: 107ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 43ms[2m (next.js: 12ms, proxy.ts: 7ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 72ms[2m (next.js: 38ms, proxy.ts: 8ms, application-code: 26ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 4ms, proxy.ts: 6ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 67ms[2m (next.js: 15ms, proxy.ts: 6ms, application-code: 46ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 122ms[2m (next.js: 15ms, proxy.ts: 92ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 6ms, proxy.ts: 23ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 97ms[2m (next.js: 4ms, proxy.ts: 7ms, application-code: 86ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 103ms[2m (next.js: 31ms, proxy.ts: 5ms, application-code: 66ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525871384&token=8b6eee3fe842132d3081679003f4fc1d1363703d1309c7fb2f51c37619a62fbc&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 72ms[2m (next.js: 8ms, application-code: 64ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525871387&token=8e0c1a2586c5c152dd3267ecbd11f2ad7db206d4a7e4faafa91fadaf9644b53c&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 37ms[2m (next.js: 2ms, application-code: 35ms)[22m
+[2m[WebServer] [22m[37m[1m○[22m[39m Compiling /canvases ...
+[2m[WebServer] [22m GET /canvases?tab=canvases [32m200[39m in 4.0s[2m (next.js: 4.0s, proxy.ts: 6ms, application-code: 40ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 4ms, proxy.ts: 6ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 7ms, proxy.ts: 8ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 40ms[2m (next.js: 17ms, proxy.ts: 8ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 64ms[2m (next.js: 33ms, proxy.ts: 8ms, application-code: 23ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 75ms[2m (next.js: 57ms, proxy.ts: 8ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 85ms[2m (next.js: 69ms, proxy.ts: 8ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 125ms[2m (next.js: 105ms, proxy.ts: 7ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 2ms, proxy.ts: 17ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 13ms, proxy.ts: 4ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1820µs, proxy.ts: 1745µs, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 73ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 66ms)[22m
+[2m[WebServer] [22m GET /canvases/727c7b7c-65a4-4935-81cc-704fe4386a1a [32m200[39m in 453ms[2m (next.js: 10ms, proxy.ts: 6ms, application-code: 437ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 6ms, proxy.ts: 9ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 95ms[2m (next.js: 69ms, proxy.ts: 7ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 136ms[2m (next.js: 89ms, proxy.ts: 8ms, application-code: 38ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 155ms[2m (next.js: 50ms, proxy.ts: 81ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 212ms[2m (next.js: 74ms, proxy.ts: 81ms, application-code: 57ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525877135&token=1206acc79836143f4b798b923f4277bc4653987ca876dd26b7309d220f8488dd&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 55ms[2m (next.js: 7ms, application-code: 48ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 98ms[2m (next.js: 10ms, proxy.ts: 5ms, application-code: 84ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 42ms[2m (next.js: 6ms, proxy.ts: 22ms, application-code: 15ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525877369&token=0be71a9dc9eda67a5241aa5d4d5d0156d780a4034354dc967d181ab584e7e6a8&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 66ms[2m (next.js: 1989µs, application-code: 64ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 40ms[2m (next.js: 3ms, proxy.ts: 8ms, application-code: 30ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 50ms[2m (next.js: 5ms, proxy.ts: 14ms, application-code: 31ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 7ms, proxy.ts: 10ms, application-code: 27ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 40ms[2m (next.js: 3ms, proxy.ts: 6ms, application-code: 31ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 4ms, proxy.ts: 3ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 58ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 52ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525879562&token=caed23052a18c4cab354201e0eba67bfa418539b33d73926b5b52011412393fe&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 36ms[2m (next.js: 5ms, application-code: 31ms)[22m
+[2m[WebServer] [22m GET /canvases?tab=canvases [32m200[39m in 39ms[2m (next.js: 6ms, proxy.ts: 5ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 53ms[2m (next.js: 7ms, proxy.ts: 18ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 87ms[2m (next.js: 39ms, proxy.ts: 17ms, application-code: 32ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 117ms[2m (next.js: 73ms, proxy.ts: 16ms, application-code: 28ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 154ms[2m (next.js: 105ms, proxy.ts: 15ms, application-code: 34ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 188ms[2m (next.js: 148ms, proxy.ts: 14ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 220ms[2m (next.js: 177ms, proxy.ts: 13ms, application-code: 30ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 54ms[2m (next.js: 23ms, proxy.ts: 3ms, application-code: 28ms)[22m
+[2m[WebServer] [22m GET /canvases/727c7b7c-65a4-4935-81cc-704fe4386a1a [32m200[39m in 46ms[2m (next.js: 6ms, proxy.ts: 6ms, application-code: 33ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 3ms, proxy.ts: 8ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 72ms[2m (next.js: 28ms, proxy.ts: 9ms, application-code: 35ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 111ms[2m (next.js: 67ms, proxy.ts: 7ms, application-code: 37ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 30ms[2m (next.js: 5ms, proxy.ts: 4ms, application-code: 21ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 194ms[2m (next.js: 63ms, proxy.ts: 4ms, application-code: 127ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 40ms[2m (next.js: 22ms, proxy.ts: 7ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 59ms[2m (next.js: 4ms, proxy.ts: 20ms, application-code: 36ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525880696&token=dd31ade2910298457c235345921d713f7b1e508daab71e05191b4931a6baf62d&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 24ms[2m (next.js: 3ms, application-code: 21ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525880737&token=cef2cf33f519abf22687339dece67e9391963db287b2110e339e23d8f39ca34e&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 49ms[2m (next.js: 11ms, application-code: 37ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1426µs, proxy.ts: 1806µs, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1436µs, proxy.ts: 1793µs, application-code: 19ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525881874&token=8c7697be2bd62e55ce292f90126636ff97ed57d50e2b8088cde0aa977f0ee328&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 17ms[2m (next.js: 4ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 107ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 102ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-61861c10-5/inbox/uploads/objkey-61861c10-14-%E4%B8%8D%E5%BA%94%E5%B1%95%E7%A4%BA%E7%9A%84%E5%BE%88%E9%95%BF%E7%B4%A0%E6%9D%90%E6%96%87%E4%BB%B6%E5%90%8D%E7%A7%B0.png?exp=1791525882689&token=f657a7ccbeff15291f49601aa1b716560eed52786c7a0f2c2c107ab487cf86c0&scope=eyJ1c2VySWQiOiJ1c2VyLTYxODYxYzEwLTEiLCJncm91cElkIjoiZ3JwLTYxODYxYzEwLTUiLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 18ms[2m (next.js: 1342µs, application-code: 17ms)[22m
+  ✓  1 [e2e] › tests/e2e/creative-canvas.spec.ts:378:5 › T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟模型回执） (31.4s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 1890µs, proxy.ts: 3ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 31ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 3ms, proxy.ts: 2ms, application-code: 33ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 48ms[2m (next.js: 1797µs, proxy.ts: 4ms, application-code: 42ms)[22m
+[2m[WebServer] [22m GET /accounts [32m200[39m in 449ms[2m (next.js: 50ms, proxy.ts: 5ms, application-code: 395ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 42ms[2m (next.js: 7ms, proxy.ts: 5ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 78ms[2m (next.js: 34ms, proxy.ts: 37ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 105ms[2m (next.js: 35ms, proxy.ts: 44ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 112ms[2m (next.js: 54ms, proxy.ts: 52ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 3ms, proxy.ts: 2ms, application-code: 12ms)[22m
+  ✓  2 [e2e] › tests/e2e/creative-canvas.spec.ts:438:5 › T-1101 三平台表格直接打开扫码弹窗，无重复刷新和下方扫码区 (3.3s)
 
-  2 passed (1.5m)
+  2 passed (1.4m)
 [2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
 [2m[WebServer] [22m
 [2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
@@ -93,17 +162,17 @@ Running 2 tests using 1 worker
 [2m[WebServer] [22m
 [2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
 [2m[WebServer] [22m
-[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
-[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
-[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
 [2m[WebServer] [22m
 [2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
 [2m[WebServer] [22m
 [2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
 [2m[WebServer] [22m
-[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
-[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
-[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
 [2m[WebServer] [22m
 [2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
 [2m[WebServer] [22m
@@ -159,11 +228,11 @@ Running 2 tests using 1 worker
 [2m[WebServer] [22m[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
 [2m[WebServer] [22m[36m[browser][39m [describeUserError] [31mError: 请先进入此账号组，再查看共享资源。[39m
 [2m[WebServer] [22m[31m    at ResourceGrantsPanel.useCallback[check] (src/features/platform-account/resource-grants-panel.tsx:22:128)
-[2m[WebServer] [22m    at ResourceGrantsPanel.useCallback[load] (src/features/platform-account/resource-grants-panel.tsx:23:158)[39m
+[2m[WebServer] [22m    at ResourceGrantsPanel.useCallback[load] (src/features/platform-account/resource-grants-panel.tsx:34:5)[39m
 [2m[WebServer] [22m  20 | ...
 [2m[WebServer] [22m  21 | ...
 [2m[WebServer] [22m> 22 | ...&writeEpoch.current!==epoch.current))throw Error("请先进入此账号组，再查看共享资源。");...
 [2m[WebServer] [22m     |                                               ^
-[2m[WebServer] [22m  23 | ...icket=epoch.current;reading.current=Promise.resolve().then(async()=>{try{check();setLoa...
-[2m[WebServer] [22m  24 | ...++;};const scopeChanged=()=>{if(current())return;expire();setRows([]);setPlan(null);set...
-[2m[WebServer] [22m  25 | ...rking.current=true;const ticket=epoch.current;writeEpoch.current=ticket;setBusy(true);s... [2m(src/lib/ai-error-humanize.ts:292:13)[22m
+[2m[WebServer] [22m  23 | ...
+[2m[WebServer] [22m  24 | ...
+[2m[WebServer] [22m  25 | ... [2m(src/lib/ai-error-humanize.ts:292:13)[22m

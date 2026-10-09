@@ -21,3 +21,7 @@ flowchart LR
  A --> D[核开发资源加载]
  D --> E[确认根因后独立修复]
 ```
+
+## 当场只读核对
+
+独立读取第二旅程trace：60个Next静态请求HTTP200，10个失败为status=-1、net::ERR_NETWORK_CHANGED，首个node_modules分块失败后产生ChunkLoadError。没有HTTP错误响应；当前证据不支持404、哈希失配或跨worktree缓存覆盖。OS网络事件/Chromium netlog未收集，底层触发仍UNKNOWN。没有删缓存或改网络配置；072ad源码修正画布准备顺序后，本次同两条旅程实际2PASS/87.681秒，证明本轮恢复，不证明底层触发已修。有限原始核对见docs/verification/t1110/READ_ONLY_DIAGNOSIS.md。

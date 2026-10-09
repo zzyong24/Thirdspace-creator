@@ -1,0 +1,47 @@
+{
+  "reviewedAt": "2026-10-09T05:48:42.338115+00:00",
+  "verdict": "PROXIMATE_CAUSE_CONFIRMED_ROOT_TRIGGER_UNKNOWN",
+  "head": "fa09f0ff",
+  "evidence": {
+    "journeyLogSha256": "d624f380b8f7a4aa0f84eb7be4fc74aeeba4a70707e8e03375755101fbdb2946",
+    "traceSha256": "ff55d2ede190d1bcb08fa876106da176240566fde52c41f7b4d10e098b04b53e",
+    "failedStaticRequests": 10,
+    "failedStatus": -1,
+    "failureText": "net::ERR_NETWORK_CHANGED",
+    "failedWindowStart": "2026-10-09T05:41:57.472Z",
+    "failedUrlsInclude": [
+      "/_next/static/chunks/node_modules__pnpm_1aoue7m._.js",
+      "/_next/static/chunks/frontend_src_app_(creator)_layout_tsx_1ufskdi._.js",
+      "/_next/static/chunks/frontend_src_app_(creator)_accounts_page_tsx_0o7t_a2._.js",
+      "/_next/static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_1mojsay._.js"
+    ],
+    "successfulStaticResponses": 60,
+    "successfulStatus": 200
+  },
+  "conclusions": [
+    {
+      "status": "confirmed",
+      "text": "页面失败的直接原因是浏览器对10个Next开发静态chunk请求返回net::ERR_NETWORK_CHANGED；首个node_modules chunk失败后产生ChunkLoadError，布局、错误页、accounts页和HMR chunks也同因失败。"
+    },
+    {
+      "status": "excluded_by_current_evidence",
+      "text": "trace没有这些失败请求的HTTP响应（status=-1），所以当前证据不支持资源404、服务器返回错误、chunk内容哈希不匹配或多个worktree覆盖缓存的定因。"
+    },
+    {
+      "status": "unknown",
+      "text": "触发Chromium网络变化判断的底层原因未知；归档未包含OS网络变更、Chromium netlog或请求链路层事件，不能进一步归因到接口切换、代理、浏览器上下文或Next开发服务器。"
+    },
+    {
+      "status": "boundary",
+      "text": "这是开发E2E资源加载失败证据，不证明安装包同样损坏，也不证明产品源码修复已发生。"
+    }
+  ],
+  "suggestedNextEvidence": [
+    "仅在当前隔离服务复测时同时捕获Chromium netlog/Playwright requestfailed failure文本和Next访问日志时间线；若不复现，记录恢复但保持根因UNKNOWN。",
+    "若再次复现，先用同一时刻静态资源请求的status/-failureText判断传输失败与HTTP 404/内容漂移，避免删除缓存或修改产品作为诊断手段。"
+  ],
+  "operations": [
+    "只读trace.zip、journey.log、SPEC",
+    "未启动服务/测试、未删除cache、未修改仓库"
+  ]
+}

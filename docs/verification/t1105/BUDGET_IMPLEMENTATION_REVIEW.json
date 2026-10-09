@@ -1,0 +1,45 @@
+{
+  "reviewedAt": "2026-10-09T05:54:55.258761+00:00",
+  "head": "0e1c0ffc98bfeccf8c89bdb6bfe9e353047f7648",
+  "verdict": "PASS_LIMITED_BUDGET_CALIBRATION",
+  "sourceHashes": {
+    "docs/features/t1105-shared-resource-loading.md": "4a49467fc9eb340708f845f3f14634bec4a9e8cfbb531c7f76aba2ebbe71d072",
+    "frontend/src/features/platform-account/resource-grants-panel.tsx": "92705c667ef8efa7dcbf7b918f7a2beb171c6699151d88feb9292d863b3539be",
+    "frontend/src/features/platform-account/resource-grants-panel.test.tsx": "e31131d31b9eadeb1076f6cbf22c22ad93fc454353aeea38520860b684aa675a",
+    "frontend/tests/e2e/shared-resource-lifecycle.spec.ts": "2b3e7f7068822a3e0614d168ec5cf4003f584aa9dc2e29ba2e7627f7728f27ea",
+    "docs/verification/t1105/run-journey.mjs": "8880616240beef9d117b21ae5bb03d427be578b068f72cd019a3f038ab85cafe",
+    "frontend/tests/helpers/test-environment.ts": "896135fec54b145446ba9de011568a3c518dd52e5aa81e2a97eeaf37081aed85",
+    "frontend/tests/helpers/network-policy.ts": "6f1595adf64ec933b0f39ec52449c57f4764694d5aec69a99b57bb865f213b2b",
+    "frontend/playwright.config.ts": "b6f65e248dcd83f3181288563e3a104d8847363c2c65269ecf519507fa3bd39c"
+  },
+  "findings": [],
+  "delta": {
+    "path": "frontend/tests/e2e/shared-resource-lifecycle.spec.ts",
+    "beforeSha256": "6b02091c6facb108242a08af65f9dff12a97ef66465f6a2e29d0ba84e11413fc",
+    "afterSha256": "2b3e7f7068822a3e0614d168ec5cf4003f584aa9dc2e29ba2e7627f7728f27ea",
+    "changes": [
+      "test outer timeout 900000 -> 7200000",
+      "page navigation timeout 120000",
+      "accountGroups.create APIRequest timeout 120000"
+    ]
+  },
+  "evidence": {
+    "preCalibrationCurrentSource": {
+      "jsonSha256": "b0db155ff56a6a2e60455bc2f06e64b804c65b7df4e00ae3c9026c4e32c13c2d",
+      "logSha256": "3960f447dd9eb87dec270af923086b1af4adb28f36e2c3e39425a54d3b002403",
+      "exitCode": 0,
+      "elapsedSeconds": 127.38269383300212
+    },
+    "finalBudgetSource": {
+      "jsonSha256": "9d36b5ca3ebecf9d399572db98ed5b389e8d20f1b1d3e6a93c939da303d405d8",
+      "logSha256": "3960f447dd9eb87dec270af923086b1af4adb28f36e2c3e39425a54d3b002403",
+      "exitCode": 0,
+      "elapsedSeconds": 70.80604612498428
+    }
+  },
+  "boundaries": [
+    "产品组件与组件测试字节不变",
+    "旅程断言、route和生产调用不变",
+    "未签全局、安装或其他任务"
+  ]
+}

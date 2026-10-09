@@ -1,0 +1,49 @@
+{
+  "reviewedAt": "2026-10-09T05:28:41.753025+00:00",
+  "verdict": "PASS_LIMITED_IMPLEMENTATION",
+  "sourceHashes": {
+    "tools/timeout-policy/verify.mjs": {
+      "before": "be3ac0cba4c3c0b8300e8abaca9806058a9cedb655cde75b65f34ad0e725c85c",
+      "current": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae"
+    }
+  },
+  "findings": [],
+  "evidence": {
+    "backendFocused": {
+      "jsonSha256": "c0bce1478496697c7df44cb8af7f3efd134ccfc4f104a767b4f9cb83de6d70c8",
+      "logSha256": "95e15a2aec6d6ad0d9eeaabd6d04fddad9f11f98d5846b9431f7006c596062ce",
+      "files": 3,
+      "tests": 35,
+      "skipped": 0,
+      "exitCode": 0,
+      "retry": 0,
+      "testTimeoutMs": 120000,
+      "hookTimeoutMs": 120000
+    },
+    "fullVerify": {
+      "jsonSha256": "c305dd9cb2602b70148d0dec724d24c09ce939c71df7bf5ae2fa8bcd109b2387",
+      "logSha256": "ca2e821165827c5aa0e131dd2d7406dc630ad1673d9c8ac7091b55d276ef73db",
+      "exitCode": 1,
+      "elapsedSeconds": 96.46546408400172,
+      "consumerResults": {
+        "contract": "1 file/5 pass",
+        "ai-worker": "2 files/20 pass",
+        "backend": "3 files/35 pass",
+        "frontend": "6 files/68 pass",
+        "mcp-server": "1 file/27 pass",
+        "nodeProbes": "5 pass/0 skip"
+      },
+      "failureBoundary": "原静态timeout-policy检查仍exit1；未被实现洗绿"
+    }
+  },
+  "scopeChecks": [
+    "五个Vitest消费者均收到testTimeout/hookTimeout=120000",
+    "mcp-server pnpm test实际日志显示两参数透传并27PASS",
+    "两项Node原生检查argv及串行failed/exit逻辑未改",
+    "无测试源、产品运行时、任务期限或外层cap变化"
+  ],
+  "limitations": [
+    "完整verify整体仍exit1，不能称全绿",
+    "未代签全局reconcile、安装或产品功能"
+  ]
+}

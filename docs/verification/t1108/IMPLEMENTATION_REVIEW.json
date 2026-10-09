@@ -1,0 +1,322 @@
+{
+  "schema": "implementation-independent-review/v1",
+  "taskId": "T-1108",
+  "reviewer": "assistant_core_implementation_review",
+  "reviewedAt": "2026-10-09T05:57:19.995116+00:00",
+  "verdict": "PASS_LIMITED",
+  "findings": [],
+  "summary": "本轮唯一画布产品修复、原组件23例及最终公共Chrome旅程限定复核通过，无必修finding；不签安装、真实供应商生成、全仓Gate或父任务完成。",
+  "gitBoundary": {
+    "journeyHead": "072ad4d6927a2133c444068db1d61940c799f494",
+    "observedHead": "0e1c0ffc98bfeccf8c89bdb6bfe9e353047f7648",
+    "originalProductBaseline": "188c52c08a2a03ef0de926a2c8a496c54957ee11",
+    "threeSourcesUnchangedBetweenJourneyAndObservedHead": true,
+    "note": "旅程来源072ad；后续HEAD前进不影响这三源。本报告不宣称全仓clean或冻结。"
+  },
+  "specPath": "docs/features/t1108-canvas-public-observation.md",
+  "specSha256": "eb800589add497ec7e7815a4dc9e38a63e4fe79ecc3245da84ac36cf4e83e6b7",
+  "sourceHashes": {
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "716551060482e62c578596870778d4eb57465b2a04ce0f86ec652d8631dbe4e7",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "1fd99888d634aea9b43162bffc0004c39021c406f64df9716d8d76ffe2397daa",
+    "frontend/tests/e2e/creative-canvas.spec.ts": "e8cebd5a95a8e502b2d77022154226cabaee67790b9ec726e24b098b0ba22f10"
+  },
+  "reviewScope": [
+    "产品仅canvas-editor.tsx，原owner/CAS公共接口不改。",
+    "原17个组件用例逐字保留，追加6例。",
+    "同文件T1101两公共旅程/共享HTTP helper；真实中断、退出/重开、精确读回与零confirm/submissions。",
+    "最终三图实际查看、1366×900和900×900及键盘Enter操作。"
+  ],
+  "mechanismChecks": [
+    {
+      "status": "PASS",
+      "check": "持久标记只在save成功且epoch/归属通过后写入；save循环冻结document/resolved/legacy快照，失败/跨scope迟到回执不写marker。"
+    },
+    {
+      "status": "PASS",
+      "check": "owned canvas.get后按edge id/source/target及target type/mode/exact asset/file指纹核对；不匹配新marker不抑制默认引用，手选和已保存清空保留。"
+    },
+    {
+      "status": "PASS",
+      "check": "旧flat标记保守保留legacy；明确按钮只解除该edge抑制并复用原exact来源effect；无原图保留设置并反馈，不采纳、不生成、不下载。"
+    },
+    {
+      "status": "PASS",
+      "check": "原owner/expectedRevision/current scope/生成锁/未知结果逻辑保留；指纹仅机械边界核对，不增加语义匹配、执行器或新业务写端口。"
+    },
+    {
+      "status": "PASS",
+      "check": "最终E2E先真实leaveCanvas完成保存并离开，等待实际Link→h2画布卡片，再GET当前revision准备legacy；恢复后再次返回卡片重开，GET exact asset/file，confirm/submissions仍0。旧夹具并发写竞态消除，强断言未删。"
+    },
+    {
+      "status": "PASS",
+      "check": "两个HTTP GET poll=360000ms，单请求120000ms；普通正观察120000ms、T1101每例外层7200000ms；共享upload start/PUT/complete均120000ms，生产预算及其它旧case直接请求未改。"
+    }
+  ],
+  "originalTests": {
+    "preservedCount": 17,
+    "fullBodyBytesEqual": true,
+    "baselineSha256": "091762b13c4999e147f4c548876493450d50c7774596ab6293f08ac7cb0437eb",
+    "newCount": 6,
+    "greenCount": 23
+  },
+  "evidence": {
+    "unit-red": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/creative-canvas/canvas-editor.test.tsx",
+        "--retry=0",
+        "--testTimeout=360000",
+        "--hookTimeout=120000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T05:14:56.118445+00:00",
+      "finishedAt": "2026-10-09T05:15:05.973630+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 9.854987667000387,
+      "receiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/unit-red.json",
+      "receiptSha256": "b2b068eca59679c59c053c540484e3963a09956c56043d4923cc02c233a6c479",
+      "logPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/unit-red.log",
+      "logSha256": "f5f29b656fcf30e576fb87c5ee2e1a8b7c04e285cedbc45a3ca192ac783daad9",
+      "actualResult": "19 PASS / 4 FAIL；原17例及新增2例通过，4条新行为断言失败。"
+    },
+    "unit-green": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/creative-canvas/canvas-editor.test.tsx",
+        "--retry=0",
+        "--testTimeout=360000",
+        "--hookTimeout=120000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T05:15:44.296829+00:00",
+      "finishedAt": "2026-10-09T05:15:56.006113+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 11.709043957991526,
+      "receiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/unit-green.json",
+      "receiptSha256": "aa19dbc7c1a74d1d50a7a95f75dc2d95c87d471b14fd8cfbf99b566ba44b12e2",
+      "logPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/unit-green.log",
+      "logSha256": "ced2b7dca0408377a955e767615bc58368776d5c70b6133ac3c5ccab000c7b23",
+      "actualResult": "23 PASS / 0 FAIL；同argv，retry=0。"
+    },
+    "browser-back-final": {
+      "argv": [
+        "node",
+        "docs/verification/t1101/run-journey.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T05:48:31.354231+00:00",
+      "finishedAt": "2026-10-09T05:49:59.035816+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 87.68077691597864,
+      "receiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/browser-back-final.json",
+      "receiptSha256": "a1e02c64089e0f23415b35764bd9465266e49c18aba1a14d221140d914088945",
+      "logPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/browser-back-final.log",
+      "logSha256": "404cd16a076ee0f9b139351e21a74f161103e792f8a1b07a5f715e4d829de05d",
+      "actualResult": "真实Chrome 2 PASS / 0 FAIL / 0 SKIP；原canvas owner/save/get/upload公共HTTP与隔离测试数据，生成状态/回执明确替身。",
+      "rawJourneyPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1101/journey.log",
+      "rawJourneySha256": "c98e08c936dc24e001d6f363130ebc120e13fda2b03880ecf138ac298eb5517c",
+      "archivedRawJourneyPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/browser-back-final-artifacts/journey.log",
+      "lastRunPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/browser-back-final-artifacts/test-results/.last-run.json",
+      "lastRunSha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    "browser-stable-copy": {
+      "argv": [
+        "node",
+        "docs/verification/t1101/run-journey.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T05:33:52.542601+00:00",
+      "finishedAt": "2026-10-09T05:44:54.079373+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 661.5326395419834,
+      "receiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/browser-stable-copy.json",
+      "receiptSha256": "90409bcbd4d18867b66cf5598f593ca15ea303f6e6f83a2d5698bb4040926370",
+      "logPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/browser-stable-copy.log",
+      "logSha256": "d624f380b8f7a4aa0f84eb7be4fc74aeeba4a70707e8e03375755101fbdb2946",
+      "actualResult": "0 PASS / 2 FAIL，661.533秒，保留旧夹具并发写失败及开发chunk加载失败。"
+    },
+    "current-types": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "typecheck"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T05:27:46.376566+00:00",
+      "finishedAt": "2026-10-09T05:28:22.583277+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 36.201234375010245,
+      "receiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/current-types.json",
+      "receiptSha256": "e88eb9db2c9e0118fbef30f920188d3cf1c025cdcafd83e7e06a5bc87c45b9be",
+      "logPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/current-types.log",
+      "logSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035",
+      "actualResult": "next typegen && tsc --noEmit exit0，05:27运行，早于最终E2E退出/重开夹具补充。"
+    },
+    "led047": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/copilot/ai-copilot-interactions.test.tsx",
+        "src/features/knowledge/knowledge-dump-zone.test.tsx",
+        "src/features/topics/topics-interactions.test.tsx",
+        "src/components/overlays/overlay-routing.test.tsx",
+        "src/lib/copilot-navigation.test.ts",
+        "src/features/copilot/chat-tool-trace.test.tsx",
+        "src/features/automations/run-controls.test.tsx",
+        "src/features/automations/cadence.test.ts",
+        "--retry=0",
+        "--testTimeout=120000",
+        "--hookTimeout=120000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T05:18:57.524316+00:00",
+      "finishedAt": "2026-10-09T05:20:02.217323+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 64.6903706669982,
+      "receiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/led047.json",
+      "receiptSha256": "ed9fbc9c57405759aa9c5f9921285f672cf24bd3cf3009cd1b0e7c99d70314f3",
+      "logPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/led047.log",
+      "logSha256": "54043041e8b91f027f0ed6d6faa23eff95bf7cf98bd8440d2a4d152945019c8f",
+      "actualResult": "8文件174 PASS。"
+    },
+    "boundary": {
+      "argv": [
+        "node",
+        "orchestrator/process/boundary-scan.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T05:20:30.404924+00:00",
+      "finishedAt": "2026-10-09T05:20:33.317563+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 2.913363208004739,
+      "receiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/boundary.json",
+      "receiptSha256": "4bf19738647c87083f4523fb94401a2f7e4cd5dcee62749570f5f3c08bbaba02",
+      "logPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/boundary.log",
+      "logSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "actualResult": "exit0，无新增；原5条基线保留。"
+    },
+    "semantic": {
+      "argv": [
+        "node",
+        "orchestrator/process/semantic-boundary-scan.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T05:25:02.082668+00:00",
+      "finishedAt": "2026-10-09T05:25:06.147103+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 4.063862000009976,
+      "receiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/semantic.json",
+      "receiptSha256": "32428d8029404da781414c4b4700b941f760c29cc4681cc490629a6e19b40681",
+      "logPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/semantic.log",
+      "logSha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+      "actualResult": "exit0。"
+    },
+    "orphan": {
+      "argv": [
+        "node",
+        "orchestrator/process/orphan-scan.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T05:25:02.085272+00:00",
+      "finishedAt": "2026-10-09T05:25:02.417342+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.33157262500026263,
+      "receiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/orphan.json",
+      "receiptSha256": "ad295285eae7d505d15f0915de75166e3d5ca3e13bfb18b08e44bc43c4a2ba4a",
+      "logPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/orphan.log",
+      "logSha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "actualResult": "exit0，0 errors / 100 warnings。"
+    },
+    "timeout-policy": {
+      "argv": [
+        "node",
+        "tools/timeout-policy/verify.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T05:18:38.236732+00:00",
+      "finishedAt": "2026-10-09T05:20:41.937724+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 123.69954370800406,
+      "receiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/timeout-policy.json",
+      "receiptSha256": "acdc0e5e29e07cc51ddb3213a593a4fef9d96cd256408805e2710d6e3043f3ed",
+      "logPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/timeout-policy.log",
+      "logSha256": "39cdd8bb6bfca9a64ccc64f79b6d31448bf4fe5e10507496ab4634c7f8d4850f",
+      "actualResult": "exit1，保留静态债和实际动态测试结果，不签全绿。"
+    }
+  },
+  "screenshots": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1108/screenshots/t1108-interrupted-save.png",
+      "sha256": "da3b4146781ca12a237185d2314619850eb8265d5d772418d450ad0d332aa54e",
+      "archivedPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/browser-back-final-artifacts/test-results/e2e-creative-canvas-T-1101-缩略素材、精确连线、运行锁与重生成确认（模拟模型回执）-e2e/t1108-interrupted-save.png",
+      "archivedSha256": "da3b4146781ca12a237185d2314619850eb8265d5d772418d450ad0d332aa54e",
+      "actualViewed": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1108/screenshots/t1108-legacy-normal.png",
+      "sha256": "94cdbe9d9548fa8c55e43d3ad2f27c23b677b9c5b67b23c4cb0dc6a61c026490",
+      "archivedPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/browser-back-final-artifacts/test-results/e2e-creative-canvas-T-1101-缩略素材、精确连线、运行锁与重生成确认（模拟模型回执）-e2e/t1108-legacy-normal.png",
+      "archivedSha256": "94cdbe9d9548fa8c55e43d3ad2f27c23b677b9c5b67b23c4cb0dc6a61c026490",
+      "actualViewed": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1108/screenshots/t1108-legacy-narrow.png",
+      "sha256": "0c425449460a2f6db835a9934f388f07b66b1817cebeaff79325077bf876dae6",
+      "archivedPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/browser-back-final-artifacts/test-results/e2e-creative-canvas-T-1101-缩略素材、精确连线、运行锁与重生成确认（模拟模型回执）-e2e/t1108-legacy-narrow.png",
+      "archivedSha256": "0c425449460a2f6db835a9934f388f07b66b1817cebeaff79325077bf876dae6",
+      "actualViewed": true
+    }
+  ],
+  "additionalEvidenceHashes": {
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1108-canvas-public-observation.md": "eb800589add497ec7e7815a4dc9e38a63e4fe79ecc3245da84ac36cf4e83e6b7",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1108/visible-copy.json": "c951b221817ae6b6af88734870e1f4070bb6a290f9adf7a2d10181bb9f140213",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1101/run-journey.mjs": "13c1605c0e5d40a649d36630c22b411e275d9d152b5d59173fc088182a0ffc7e",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/creative-canvas/canvas-library.tsx": "477da457643df1a57ba3cb2819de42e4d6742bcc0981b11be7646364334f07e4",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/SPEC_RECHECK.md": "9f77793e177864d23c43e83d273e6a465cca19187c6d43d471f2f3c6525ac9dc",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/SPEC_RECHECK_PACKET.json": "7e14a669d2aa72fc06e3d5700fcac53cb73ac72c319c553fdc7580257d728e2d",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/DIAGNOSIS_REVIEW.json": "526e213a1d2ee6e7558e00faf31d7c5443f6759c86e9e211c428affa9271320e",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/chunk-failure/READ_ONLY_DIAGNOSIS.json": "6d2cabf261b03c8434258af8b5fab9325922b34b75315632f6294fc17831639f",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/chunk-failure/archive.json": "41debfec0438d769ec3f00751c35a90800f3e60d1030538bd8c3561574067d96",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/chunk-failure/journey.log": "d624f380b8f7a4aa0f84eb7be4fc74aeeba4a70707e8e03375755101fbdb2946",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/browser-current-head.json": "c9cb7a121792f4dea6329c6ce5dd344a775bf910cf1c03947892bd6de70c0ad6",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/browser-locator-failure.json": "27b7b991440d3bc7b67b16ff5af978876ca8a2a1d28a84f64d1bcf178740ba44",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/browser-corrected.json": "f50afc660f548fa3c199fa33bb854c2673dc5298f401e6196583b9ef99e2fc4c",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/browser-final.json": "9a0a20d428804a1ec2aa03a6e430daff80e54dbd9ad53b7eb4e091d78dc6cda5",
+    "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1108/body-copy-original.json": "dc00ef5278c85d5084458d9e236355c237b9b131bc0a4dadf20b250c80000845"
+  },
+  "visualReview": {
+    "status": "PASS_LIMITED",
+    "normal": "原紫色和连线详情区保留，outline次要按钮与说明清楚，无新增视觉方向。",
+    "narrow": "900px下同说明和按钮可见，不截断，继承原响应布局。",
+    "keyboard": "真实focus+Enter后公共save/get精确读回通过。",
+    "interrupted": "截图显示保存失败，不当落库成功证据；成功以随后GET及再次重开为准。"
+  },
+  "preservedFailures": [
+    "原默认5秒观察失败、两次动态locator夹具失败及历次browser-final/stable-copy记录保留，最新PASS不回写历史。",
+    "fa09稳定采样0PASS/2FAIL，一项为live页面autosave与外部legacy fixture写竞态；修正只在测试退出/当前revision准备顺序。",
+    "另一旧失败直接ERR_NETWORK_CHANGED继发ChunkLoadError；T1110底层触发UNKNOWN，不能说cache或安装包损坏已定因或已修。最新运行无该错误仅证明本次旅程完成。",
+    "timeout-policy实际exit1、boundary原5基线和orphan100warnings保留。"
+  ],
+  "limits": [
+    "评审者只读源码、真实已发生receipt/log/归档并实际查看图片；未运行测试、业务请求/CLI、模型、DB、App或进程操作。",
+    "公共旅程使用隔离数据及明确生成回执替身，不等同真实Pi/Codex/付费生成或安装版。",
+    "当前T1105组合及最终完整reconcile由root执行，未在本报告签PASS；类型/LED/门卫按各自实际时间记录，不冒称最终全仓全绿。",
+    "不代task complete、父T1062/T1080、安装、发布或T1110根因关闭；三源/最终旅程工件变化需重绑对应范围。"
+  ]
+}
