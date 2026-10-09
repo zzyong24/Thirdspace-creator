@@ -36,3 +36,11 @@ flowchart LR
 ## 两次隔离实验已完成
 
 机制研究卡及当场脱敏结果：`docs/research/t1103-pi-joint-arguments.md`、`docs/verification/t1103/research-observations.json`。完整参数分3段且graphic末段的真实Worker链3 PASS，原业务/回放断言和预算保留；截断参数5族3 PASS/2 FAIL，两个非法原串被SDK修补成合法前缀。finish事实仍保留，没有task272原wire，所以其具体原因仍未知。两次实验已用尽，原RED留存，研究卡仅candidate；不新增第三实验，不盲换strict parser或放宽schema，先收敛兼容修复。T1099已真实taskctl block，不complete。
+
+## 新安装版读取原任务的实际摘要
+
+T1114产品提交54af33d0已实际出包并无备份安装；通过新增的有归属校验的公开只读入口读取原task272、execution273，没有新模型调用或采纳。脱敏结果与当场收据见 [installed-saved-summary.json](../verification/t1103/installed-saved-summary.json)。
+
+五个已结算顶层模型回执均有效。sequence1的工具分片与最终参数均为2字节、严格对象且一致；sequence3的分片82字节/最终83字节，sequence5和7各分片1535字节/最终1536字节，这三次分片不是严格JSON对象，最终参数为严格对象。sequence9没有工具。前四个finish为tool-calls、最后为stop，无length。这个入口不返回工具名、字段名或正文，不能据此把某个sequence自动认定成特定图文调用。
+
+已证明的是保存的分片与最终参数存在解析差异；供应商原wire仍UNKNOWN，尚不能定位缺图文发生在模型生成、SDK修补或其它位置，也不能证明替换parser能恢复候选。原稿、原任务和回执保留；两次研究实验上限不变，仍须兼容设计和独立复核后再改产品。

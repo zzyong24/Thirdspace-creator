@@ -22,4 +22,20 @@ flowchart LR
 
 contract/backend类型检查实际退出0；新增空结果测试后的backend复查独立保存，不以前次代签。boundary、semantic、orphan退出0；既有5条物理边界基线与100条orphan warning保留。独立实现复核 `PASS_LIMITED_T1114_IMPLEMENTATION`，findings为空，绑定六产品、四测试和SPEC/modules当前SHA；原补充前报告逐字保留。
 
-具体命令、时间、退出码与日志SHA见 [current-evidence.json](current-evidence.json)。本文当前不声称安装版新入口、原生UI或完整reconcile已通过；安装与全局结果在实际结束后补记。T1103/T1099/T1095仍保留原真实失败，不将本诊断入口视为候选成功。
+具体命令、时间、退出码与日志SHA见 [current-evidence.json](current-evidence.json)。源码阶段没有提前签安装或全局结果；以下记录后来实际结束的验证。T1103/T1099/T1095仍保留原真实失败，不将本诊断入口视为候选成功。
+
+## 实际出包、安装与只读复验
+
+冻结本地main产品提交 `54af33d0a8fef8679eebf6a503b1b280050fd5e5` 后，基础预检45PASS，固定入口构建576.725697秒、退出0。DMG为838278938字节，SHA256 `c580bfa47366299abb0082957ceb4b5a34739141451b65a292f5dfa61cb8aa8b`。实际只读挂载、严格深度签名和四个安装成员比对通过；本地ad-hoc签名，没有公证或发布。
+
+受控安装4.003846秒、退出0，原App正常退出后替换并启动，无强杀、备份或数据库重置。新PID95601、HTTP55284，侧车启动核验及首页加载完成日志、公开CLI均正常。外部启动观察49.192153秒不是精确冷启动耗时，也不构成原生窗口视觉操作证据。
+
+安装版18项公开读取全通过；原12任务、4业务DTO、3会话及消息结果对照不变。原task272的新摘要入口返回5个有效结算回执，其中3个已保存参数分片不能严格解析为对象，而最终参数可解析；四个工具回合finish为tool-calls，末回合为stop。没有供应商原HTTP字节，所以尚不能证明原wire、图文遗漏的具体位置或解析修复。没有重发模型、采用候选或改稿。
+
+独立安装范围复核 `T1114_SCOPE_COMPLETE_WITH_TRACKED_GLOBAL_FAILURES`，本任务范围内findings为空；只允许T1114按范围完成，以下全局失败及T1103原缺陷继续保留。
+
+## 完整对账失败与新任务
+
+本轮完整reconcile1650.020671秒、退出1，43项error，日志SHA256 `1e61e1761593475e5fbf3f867a4390ce15a59c8a344751731196fce48c6a5a71`。与T1112原41项逐条比较，原41项保留，LED052与LED027新增相对失败；不能称逐字相同或全绿。实际生成的教训审计保留。
+
+T1115原归档入口独立复现退出1：55PASS/4SKIP，lease的beforeAll触发默认10000ms hook超时，四个该文件用例未执行。预算修复仍须先SPEC独评再原入口复验。T1116原CAS测试独立backend44PASS、frontend5PASS；完整对账的内层原因尚UNKNOWN，独立重跑通过不算修复。两项均已建task，既有全局欠债也继续保留。本任务没有全功能、原生UI或联合候选PASS。

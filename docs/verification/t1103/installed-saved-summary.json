@@ -1,0 +1,108 @@
+{
+  "sourceSha": "54af33d0a8fef8679eebf6a503b1b280050fd5e5",
+  "aiTaskId": "ai-task-c4504fa1-272",
+  "executionTaskId": "execution-task-c4504fa1-273",
+  "calls": 5,
+  "observations": [
+    {
+      "callId": "call_c8d1f898-788e-41e8-91b9-23b8e757a0fa",
+      "sequence": 1,
+      "index": 0,
+      "toolCallId": "call_01a11eb66a5b785085bdbe7d",
+      "streamPartCount": 3,
+      "streamUtf8Bytes": 2,
+      "finalUtf8Bytes": 2,
+      "streamStrictObject": true,
+      "finalStrictObject": true,
+      "observedConsistency": "equal",
+      "reason": "matched"
+    },
+    {
+      "callId": "call_c4212feb-97c0-4c17-8ff2-6ed809b53062",
+      "sequence": 3,
+      "index": 0,
+      "toolCallId": "call_01a11eb69a8f7f338aa7788d",
+      "streamPartCount": 3,
+      "streamUtf8Bytes": 82,
+      "finalUtf8Bytes": 83,
+      "streamStrictObject": false,
+      "finalStrictObject": true,
+      "observedConsistency": "unavailable",
+      "reason": "stream_not_object"
+    },
+    {
+      "callId": "call_07983e3c-c298-4804-b50c-b85ff8bcce96",
+      "sequence": 5,
+      "index": 0,
+      "toolCallId": "call_01a11eb709767cb1bd811cc1",
+      "streamPartCount": 9,
+      "streamUtf8Bytes": 1535,
+      "finalUtf8Bytes": 1536,
+      "streamStrictObject": false,
+      "finalStrictObject": true,
+      "observedConsistency": "unavailable",
+      "reason": "stream_not_object"
+    },
+    {
+      "callId": "call_617cc4df-ed2e-4425-a11e-a5b54c8ace0b",
+      "sequence": 7,
+      "index": 0,
+      "toolCallId": "call_01a11eb7654c7fb2851c15a8",
+      "streamPartCount": 9,
+      "streamUtf8Bytes": 1535,
+      "finalUtf8Bytes": 1536,
+      "streamStrictObject": false,
+      "finalStrictObject": true,
+      "observedConsistency": "unavailable",
+      "reason": "stream_not_object"
+    }
+  ],
+  "modelFinishes": [
+    {
+      "sequence": 1,
+      "finishReason": "tool-calls",
+      "receiptState": "valid",
+      "toolCount": 1
+    },
+    {
+      "sequence": 3,
+      "finishReason": "tool-calls",
+      "receiptState": "valid",
+      "toolCount": 1
+    },
+    {
+      "sequence": 5,
+      "finishReason": "tool-calls",
+      "receiptState": "valid",
+      "toolCount": 1
+    },
+    {
+      "sequence": 7,
+      "finishReason": "tool-calls",
+      "receiptState": "valid",
+      "toolCount": 1
+    },
+    {
+      "sequence": 9,
+      "finishReason": "stop",
+      "receiptState": "valid",
+      "toolCount": 0
+    }
+  ],
+  "rawWireVerified": false,
+  "newModelTaskSubmitted": false,
+  "adopted": false,
+  "receipt": {
+    "privateReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/owned-summary-read.json",
+    "argv": [
+      "python3",
+      "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/verify-owned-summary.py"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T08:13:29.438558+00:00",
+    "finishedAt": "2026-10-09T08:13:34.365974+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 4.927209791960195,
+    "logSha256": "863d6838ab80dc5de574f8e539f51e13a35483ad6a84d8de4c07d8438e2ae881"
+  }
+}

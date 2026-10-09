@@ -336,7 +336,371 @@
     "uniqueRelatedIncludingDispatch": 96,
     "backendSupplementTypecheck": 0
   },
-  "installation": "尚未执行当前T1114新包",
+  "installation": {
+    "sourceSha": "54af33d0a8fef8679eebf6a503b1b280050fd5e5",
+    "dmg": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+    "dmgSha256": "c580bfa47366299abb0082957ceb4b5a34739141451b65a292f5dfa61cb8aa8b",
+    "dmgBytes": 838278938,
+    "nativePid": 95601,
+    "nativeOrigin": "http://127.0.0.1:55284/",
+    "mainHttpPageLoaded": true,
+    "nativeWindowVisuallyObserved": false,
+    "startupProbeMsBoundary": "从外部观察开始的里程碑时间，不等于精确冷启动耗时；安装启动actual步骤另存",
+    "startupObservationDurationSeconds": 49.19215299998177,
+    "appBackupCreated": false,
+    "databaseReset": false,
+    "forcedKill": false,
+    "baseline": {
+      "taskCount": 12,
+      "objectCount": 4,
+      "conversationCount": 3,
+      "unchanged": true
+    },
+    "matrix": {
+      "passCount": 18,
+      "failCount": 0,
+      "scopeBoundary": "实际安装版公共读取，纯组为空不代表真实平台数据或扫码生成验收"
+    },
+    "ownedSummary": {
+      "aiTaskId": "ai-task-c4504fa1-272",
+      "executionTaskId": "execution-task-c4504fa1-273",
+      "callCount": 5,
+      "validReceiptCount": 5,
+      "invalidReceiptCount": 0,
+      "toolsTruncatedCallCount": 0,
+      "observations": [
+        {
+          "callId": "call_c8d1f898-788e-41e8-91b9-23b8e757a0fa",
+          "sequence": 1,
+          "index": 0,
+          "toolCallId": "call_01a11eb66a5b785085bdbe7d",
+          "streamPartCount": 3,
+          "streamUtf8Bytes": 2,
+          "finalUtf8Bytes": 2,
+          "streamStrictObject": true,
+          "finalStrictObject": true,
+          "observedConsistency": "equal",
+          "reason": "matched"
+        },
+        {
+          "callId": "call_c4212feb-97c0-4c17-8ff2-6ed809b53062",
+          "sequence": 3,
+          "index": 0,
+          "toolCallId": "call_01a11eb69a8f7f338aa7788d",
+          "streamPartCount": 3,
+          "streamUtf8Bytes": 82,
+          "finalUtf8Bytes": 83,
+          "streamStrictObject": false,
+          "finalStrictObject": true,
+          "observedConsistency": "unavailable",
+          "reason": "stream_not_object"
+        },
+        {
+          "callId": "call_07983e3c-c298-4804-b50c-b85ff8bcce96",
+          "sequence": 5,
+          "index": 0,
+          "toolCallId": "call_01a11eb709767cb1bd811cc1",
+          "streamPartCount": 9,
+          "streamUtf8Bytes": 1535,
+          "finalUtf8Bytes": 1536,
+          "streamStrictObject": false,
+          "finalStrictObject": true,
+          "observedConsistency": "unavailable",
+          "reason": "stream_not_object"
+        },
+        {
+          "callId": "call_617cc4df-ed2e-4425-a11e-a5b54c8ace0b",
+          "sequence": 7,
+          "index": 0,
+          "toolCallId": "call_01a11eb7654c7fb2851c15a8",
+          "streamPartCount": 9,
+          "streamUtf8Bytes": 1535,
+          "finalUtf8Bytes": 1536,
+          "streamStrictObject": false,
+          "finalStrictObject": true,
+          "observedConsistency": "unavailable",
+          "reason": "stream_not_object"
+        }
+      ],
+      "modelFinishes": [
+        {
+          "sequence": 1,
+          "finishReason": "tool-calls",
+          "receiptState": "valid",
+          "toolCount": 1
+        },
+        {
+          "sequence": 3,
+          "finishReason": "tool-calls",
+          "receiptState": "valid",
+          "toolCount": 1
+        },
+        {
+          "sequence": 5,
+          "finishReason": "tool-calls",
+          "receiptState": "valid",
+          "toolCount": 1
+        },
+        {
+          "sequence": 7,
+          "finishReason": "tool-calls",
+          "receiptState": "valid",
+          "toolCount": 1
+        },
+        {
+          "sequence": 9,
+          "finishReason": "stop",
+          "receiptState": "valid",
+          "toolCount": 0
+        }
+      ],
+      "rawWireVerified": false,
+      "newModelTaskSubmitted": false,
+      "adopted": false
+    },
+    "actualCommands": {
+      "freeze-precheck": {
+        "privateReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/freeze-precheck.json",
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/freeze-source.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T08:00:09.426886+00:00",
+        "finishedAt": "2026-10-09T08:00:11.529078+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 2.102057000010973,
+        "logSha256": "83eba79aeb7424b7ffbb17b176421652f6e9a6a8af477fc240a54c3ee09f69b8"
+      },
+      "basic-preflight": {
+        "privateReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/basic-preflight.json",
+        "argv": [
+          "pnpm",
+          "-C",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "scripts/desktop/package-local.test.mjs",
+          "scripts/desktop/desktop-release-workflow.test.mjs",
+          "scripts/desktop/notarize.test.mjs",
+          "scripts/desktop/tauri-signing-config.test.mjs",
+          "--retry=0",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T08:00:10.602457+00:00",
+        "finishedAt": "2026-10-09T08:00:14.393233+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 3.7906751250266097,
+        "logSha256": "2a8dfd7328b75e8a252d91b55493b98673852c36103c67ec87240121b6ddb9e3"
+      },
+      "package-local": {
+        "privateReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/package-local.json",
+        "argv": [
+          "env",
+          "CREATOROS_LOCAL_SKIP_INSTALL=1",
+          "pnpm",
+          "-C",
+          "frontend",
+          "desktop:package-local"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T08:00:33.761924+00:00",
+        "finishedAt": "2026-10-09T08:10:10.492356+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 576.7256972080213,
+        "logSha256": "9327018b5e2d1208208e52d83cd667f2f9c4c7bb099140bf36d8dc999cb62b2f"
+      },
+      "package-verification": {
+        "privateReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/package-verification.json",
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/verify-package.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T08:10:33.875578+00:00",
+        "finishedAt": "2026-10-09T08:10:52.758526+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 18.88249533297494,
+        "logSha256": "1f5393f2a2e2fc467b8a83954814fcf847e6669903a8f7f5dcdbe410c0697b2b"
+      },
+      "app-installation": {
+        "privateReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/app-installation.json",
+        "argv": [
+          "node",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/install-verified-app.mjs"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T08:11:14.455509+00:00",
+        "finishedAt": "2026-10-09T08:11:18.459479+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 4.003845541970804,
+        "logSha256": "77a751258953eb0aa6e699b807a05eddea7e5eda56c6d3b442e0581a1865a361"
+      },
+      "startup-observation": {
+        "privateReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/startup-observation.json",
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/observe-installed-startup.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T08:11:47.166880+00:00",
+        "finishedAt": "2026-10-09T08:12:36.359667+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 49.19215299998177,
+        "logSha256": "710437fa683c617c52a73f559b6cec0d5295322b43991fe4818b3283eb023363"
+      },
+      "before-installed-baseline": {
+        "privateReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/before-installed-baseline.json",
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/verify-installed-baseline.py",
+          "before"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T07:56:47.982973+00:00",
+        "finishedAt": "2026-10-09T07:57:17.092277+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 29.108852875011507,
+        "logSha256": "8b75e0c67a7ab0b68912c71d9bd0cee59ffe4ddc61925278733e3ae406c6b285"
+      },
+      "owned-summary-read": {
+        "privateReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/owned-summary-read.json",
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/verify-owned-summary.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T08:13:29.438558+00:00",
+        "finishedAt": "2026-10-09T08:13:34.365974+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 4.927209791960195,
+        "logSha256": "863d6838ab80dc5de574f8e539f51e13a35483ad6a84d8de4c07d8438e2ae881"
+      },
+      "after-installed-baseline": {
+        "privateReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/after-installed-baseline.json",
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/verify-installed-baseline.py",
+          "after"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T08:13:29.439281+00:00",
+        "finishedAt": "2026-10-09T08:13:57.972639+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 28.532825875037815,
+        "logSha256": "8cbbf08815683e629e82b93fcaa96283ad4c278151306d384e634dc45f0821e0"
+      },
+      "read-matrix": {
+        "privateReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/read-matrix.json",
+        "argv": [
+          "python3",
+          "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114-package/public-read-matrix.py"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T08:13:29.434848+00:00",
+        "finishedAt": "2026-10-09T08:13:55.072109+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 25.63688791601453,
+        "logSha256": "3057fbbf6311afde599f5d2af6cd78f0d63365a99b0f3d16c72dabb709372f76"
+      }
+    }
+  },
   "parserBoundary": "诊断仅比较已保存证据，不证明原HTTP/SSE；不修改解析或重发原task272",
-  "globalReconcile": "当前T1114尚未执行；上一T1112完整41失败明确保留"
+  "globalReconcile": {
+    "privateReceiptPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114/full-reconcile.json",
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "node",
+      "orchestrator/process/reconcile.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T08:00:12.224273+00:00",
+    "finishedAt": "2026-10-09T08:27:42.259243+00:00",
+    "exitCode": 1,
+    "elapsedSeconds": 1650.0206714580127,
+    "logSha256": "1e61e1761593475e5fbf3f867a4390ce15a59c8a344751731196fce48c6a5a71",
+    "errorCount": 43,
+    "priorErrorCount": 41,
+    "comparison": {
+      "priorLogSha256": "bf20c0f903ee7449fb654033fa8b134ff44198027843196f783923b21a9f01bd",
+      "currentLogSha256": "1e61e1761593475e5fbf3f867a4390ce15a59c8a344751731196fce48c6a5a71",
+      "byteIdentical": false,
+      "actualDiff": [
+        "--- t1112-actual",
+        "+++ t1114-actual",
+        "@@ -26,12 +26,14 @@",
+        " ✗ [ERROR] review receipt: T-635: BACKLOG review receipt b8add273a494 与 snapshot 84661017fde5 不一致",
+        " ✗ [ERROR] frontend receipt: T-1023-agent-recovery: PASS 验收缺 taskctl completion event",
+        " ✗ [ERROR] frontend receipt: T-1022-agent-recovery: PASS 验收缺 taskctl completion event",
+        "+✗ [ERROR] lesson LED-052 RECURRED — 归档执行门失败：普通AI/source_sync claim与新动作必须拒绝；四类实际collector按真实job/member/owner/version验证；已存在同键调用settlement必须保留幂等。缺隔离PG配置不能skip。",
+        " ✗ [ERROR] lesson LED-006 RECURRED — 桌面启动门回归：必须保留静态 splash、显式 sidecar cwd、runtime 失败可见且落日志，并在 Windows 安装后真启动 GUI 等待 MAIN_PAGE_LOAD_FINISHED。",
+        " ✗ [ERROR] lesson LED-014 RECURRED — 局部改稿门回归：脚本写入必须持久化稳定段落 ID，存量无 ID 版本须用稿面同一兼容锚点并在新版本自愈；技术锚点必须由稿面点击时可信绑定；模型只产新段落正文；未保存稿先自动保存；采纳只替换目标段；冲突不得静默覆盖，也不得让失效锚点污染后续普通对话。",
+        " ✗ [ERROR] lesson LED-017 RECURRED — 逐字保真门回归：必须从本轮受信 sourceRef 恢复精确原文、校验长度和 SHA-256，并由确定性 runner 生成待采纳候选；恢复失败不得退回 extraBrief 摘要或模型生成。",
+        " ✗ [ERROR] lesson LED-018 RECURRED — 桌面浏览器交付门回归：壳层注入目录必须覆盖宿主机残留环境；入口先系统 Chrome、再随包 Chromium；正式桌面态不得依赖 CLI/npm/联网下载；安装校验必须看到真实 chrome.exe。",
+        " ✗ [ERROR] lesson LED-020 RECURRED — 封面工具链回归：生成封面入口必须绑定 cover.generate；发布参考候选只含真实已发布且有封面的作品；模型按相关性优先、时间次序选择后必须传真实 coverAssetId；组合回合禁止 local.tools 且不得静默纯文降级。",
+        " ✗ [ERROR] lesson LED-022 RECURRED — 跨平台文件定位门回归：win32/darwin/linux 必须各有 command/API、shell-free argv/path、completion 和中性 user copy；route 必须消费 plan + launcher，禁止直接执行单平台命令。",
+        "+✗ [ERROR] lesson LED-027 RECURRED — 稿件并发门回归：带 expected version 的版本追加与指针移动必须共享数据库事务和条件更新，竞争失败回滚新增行；撤销同样 CAS，previousVersionId 只能由成功服务事务返回。",
+        " ✗ [ERROR] lesson LED-032 RECURRED — 竖屏编导落地门回归：人物 beat 保持全画布，card/B-roll 辅助窗保持固定左下人脸常驻；direction 的 B-roll ref 必须随沙箱物化文件同步改名；字幕强调只执行 AI 给出的 Unicode 范围与时间窗，禁止代码猜重点。",
+        " ✗ [ERROR] lesson LED-040 RECURRED — B-roll 删除版本门回归：删除必须先写新 editing-plan revision 并清 decisions/render props/inventory/direction；runner 失败回退只保留当前 inventory；旧 sourceRenderTaskId 解绑，晚到旧任务不得覆盖当前成片。",
+        " ✗ [ERROR] lesson LED-042 RECURRED — 分页真相门回归：可见总数必须消费同一服务端查询的 meta.total；items.length 只表示已显示；超过首批必须能继续加载并保持筛选、排序、账号上下文一致。",
+        "@@ -62,7 +64,6 @@",
+        " ✓ [OK] probe 4-build ↔ ai-worker: consistent (status draft, present true)",
+        " ✓ [OK] probe 4-build ↔ frontend/src/app/api/v1/dispatch: consistent (status draft, present true)",
+        " ✓ [OK] updated_at (2026-09-21) is >= newest decision (2026-09-21).",
+        "-✓ [OK] lesson LED-052: guard holds (归档组的执行豁免被账号ID存在条件扩大到普通生成和同步任务)",
+        " ✓ [OK] lesson LED-045: guard holds (官方受管生图提交瞬时断连再次被立即取消，或未知中转站/视频被盲目重放)",
+        " ✓ [OK] lesson LED-044: guard holds (竖屏有真实口播源时再次被卡片、素材或历史 hidden 连续覆盖，导致整片无人)",
+        " ✓ [OK] lesson LED-043: guard holds (新增审美、布局或质量门把上一版可完成的合法关键链路改成整单失败)",
+        "@@ -80,7 +81,6 @@",
+        " ✓ [OK] lesson LED-023: guard holds (结构化 AI 任务再次被统一超时误杀、纯文本 AI 节点再次无界挂起，协议不兼容被当成致命错误，或搜索页等 networkidle/重复撞登录墙)",
+        " ✓ [OK] lesson LED-024: guard holds (信息卡再次只产单字符串与通用进场，不同内容关系退化为同一张圆角卡和文字冒出)",
+        " ✓ [OK] lesson LED-025: guard holds (高信息架构图/流程图再次被缩成 overlay 并藏在大卡后，或信息卡不绑定真实 SRT 行而跨段滞留)",
+        "-✓ [OK] lesson LED-027: guard holds (局部改稿采纳或撤销退回先检查版本、后无条件移动当前指针，或响应上一版由 transport 提前读取)",
+        " ✓ [OK] lesson LED-028: guard holds (MiniMax H3 对完整提交接口或版本根再次追加 v2 路径，或在 404 后盲试多个可能计费的 POST)",
+        " ✓ [OK] lesson LED-029: guard holds (基础兜底卡再次冒充内容动效成功，或横屏主素材前后与 large_stage 尾部重新露出纯黑舞台)",
+        " ✓ [OK] lesson LED-031: guard holds (Windows 分层 runtime 的打包 RAT 加载了解析器，但生产 HyperFrames 子进程再次遗漏同一 module hook)",
+        "@@ -101,5 +101,5 @@",
+        " ✓ [OK] lesson LED-061: guard holds (线程/回执/响应流/闲置会话泄漏，慢轮询与后台调度叠加，等待或显式停止会话归属错误)",
+        " ✓ [OK] lesson LED-060: guard holds (完整JSON被流式误判未知或转录共享schema缺validator阻断真实保存链)",
+        " ───────────────────────────────────────────────────────",
+        "-41 error(s), 0 warning(s).",
+        "+43 error(s), 0 warning(s).",
+        " ✗ DRIFT: manifest does not reconcile with reality."
+      ]
+    },
+    "newRelativeFailures": [
+      "LED-052",
+      "LED-027"
+    ],
+    "trackedTasks": [
+      "T-1101-global-gates",
+      "T-1081",
+      "T-1082",
+      "T-1025",
+      "T-1018",
+      "T-1115",
+      "T-1116"
+    ],
+    "fullGatePassed": false
+  },
+  "installedScopeReview": {
+    "verdict": "T1114_SCOPE_COMPLETE_WITH_TRACKED_GLOBAL_FAILURES",
+    "privateMarkdown": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114/INSTALLED_SCOPE_DIAGNOSIS.md",
+    "markdownSha256": "c7dd0538f28720584ced538462e0d1d1362fbd8df7e84b2a1dc3d5587c0dfd0d",
+    "privateJson": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1114/INSTALLED_SCOPE_DIAGNOSIS.json",
+    "jsonSha256": "ecaeaf131983a2861243b24b4123473d4c92d7606778389221ba035a3a99940b",
+    "scopeCompleteDoesNotClose": [
+      "T-1103",
+      "T-1099",
+      "T-1095",
+      "T-1115",
+      "T-1116"
+    ]
+  },
+  "globalReconcileNote": "原41失败保留，另2项相对失败已登记；LED052原命令55PASS4skip，10秒beforeAll初始化超时已复现；LED027原两段44+5PASS但原全局内因未知。只读摘要任务与全局写入/执行门分别验收。"
 }
