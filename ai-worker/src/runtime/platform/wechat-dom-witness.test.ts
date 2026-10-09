@@ -203,3 +203,60 @@ describe('T1110 SECTION_MISSING一次受限失败观察候选',()=>{
   const f=missingSectionFixture();vi.mocked(f.tab.count).mockResolvedValue(2);await expect(f.witnesses.reportWitness.prepare(f.page,'wechatVideo','channelsDaily',controls)).rejects.toMatchObject({code:'REPORT_SECTION_AMBIGUOUS'});expect(f.evaluate).not.toHaveBeenCalled();expect(f.frame.frameElement).not.toHaveBeenCalled();expect(f.tab.click).not.toHaveBeenCalled();expect(f.frame.locator).not.toHaveBeenCalled();
  });
 });
+
+// 真实public source + 内置identity reader；仅浏览器DOM/导航/时间为合成fixture。
+function officialIdentitySourceFixture(mode:'ready'|'entryMissing'|'fieldsMissing'='ready',options:{onEntryRead?:()=>void;onSettingsNavigation?:()=>void}={}){
+ let current=surface(visible,oa+'/'),fieldReads=0;
+ const href='/cgi-bin/settingpage?action=index&token=fixture-private-token';
+ const onStopped=vi.fn(async()=>{}),onDiagnostic=vi.fn(),page={
+  url:()=>current.page.url(),
+  goto:vi.fn(async(url:string)=>{
+   current.dom.window.close();
+   if(new URL(url).pathname==='/cgi-bin/settingpage'){
+    options.onSettingsNavigation?.();current=surface(mode==='fieldsMissing'?visible:settings(),url);
+   }else current=surface(mode==='entryMissing'?visible:visible+`<a hidden href="${href}">账号设置</a>`,url);
+  }),
+  locator:()=>({evaluateAll:async(fn:Function)=>{
+   options.onEntryRead?.();
+   const result=(current.dom.window.eval('('+fn.toString()+')') as Function)([...current.dom.window.document.querySelectorAll('a[href]')]);
+   if(mode==='entryMissing')vi.setSystemTime(Date.now()+480000);return result;
+  }}),
+  evaluate:async(fn:Function,arg:unknown)=>{
+   if(current.page.url().includes('/cgi-bin/settingpage')){fieldReads++;if(mode==='fieldsMissing')vi.setSystemTime(Date.now()+480000);}
+   return current.page.evaluate(fn as never,arg as never);
+  },
+ } as unknown as Page;
+ let closed=false;const context={pages:()=>[page],newPage:async()=>page,close:vi.fn(async()=>{if(!closed){closed=true;await onStopped();}})} as unknown as BrowserContext;
+ const witnesses=createVerifiedWechatDomWitnesses(),identityTimeoutRequests:(number|undefined)[]=[];
+ const source=createWechatBrowserSource({...witnesses,identityWitness:{...witnesses.identityWitness,read:(page,platform,op)=>witnesses.identityWitness.read(page,platform,{signal:op.signal,timeoutMs:(requested)=>{identityTimeoutRequests.push(requested);return op.timeoutMs(requested);}})},openProfile:async()=>context});
+ return {source,page,context,onStopped,onDiagnostic,identityTimeoutRequests,dispose:()=>current.dom.window.close(),getFieldReads:()=>fieldReads};
+}
+describe('T1110 公众号两段身份读取真实source合成链',()=>{
+ it('隐藏同源设置入口可导航，两个真实goto后读AppID，不把分析页fields0当失效',async()=>{
+  const f=officialIdentitySourceFixture();try{
+   await expect(f.source.login('wechatOfficial','/synthetic-only-profile',{onStopped:f.onStopped,onDiagnostic:f.onDiagnostic})).resolves.toEqual({platformIdentity:'wxsynthetic000001',displayName:'相同昵称',source:'wechatOfficial:/cgi-bin/settingpage'});
+   expect(vi.mocked(f.page.goto).mock.calls.map(([url])=>new URL(url).pathname)).toEqual(['/','/cgi-bin/settingpage']);
+   expect(vi.mocked(f.page.goto).mock.calls.every(([,options])=>options?.timeout===120000)).toBe(true);
+   expect(f.identityTimeoutRequests).toEqual([480000,undefined,480000]);expect(f.getFieldReads()).toBe(1);expect(f.onDiagnostic).not.toHaveBeenCalled();expect(f.onStopped).toHaveBeenCalledOnce();
+  }finally{f.dispose();}
+ });
+ it.each([['entryMissing','ENTRY_NOT_READY',1,0],['fieldsMissing','FIELDS_NOT_READY',2,1]] as const)('%s只回本段固定code，原中文不变且非auth，不泄漏入口query',async(mode,code,gotos,fieldReads)=>{
+  vi.useFakeTimers();vi.setSystemTime(Date.parse('2026-10-09T04:00:00Z'));const f=officialIdentitySourceFixture(mode);
+  try{
+   await expect(f.source.login('wechatOfficial','/synthetic-only-profile',{onStopped:f.onStopped,onDiagnostic:f.onDiagnostic})).rejects.toMatchObject({code,message:'微信后台数据尚未就绪，请查看原任务'});
+   expect(f.onDiagnostic).toHaveBeenCalledWith({platform:'wechatOfficial',stage:'readIdentity',code,exceptionName:'WechatBrowserSourceError'});
+   expect(f.page.goto).toHaveBeenCalledTimes(gotos);expect(f.getFieldReads()).toBe(fieldReads);expect(f.onStopped).toHaveBeenCalledOnce();
+   expect(JSON.stringify(f.onDiagnostic.mock.calls)).not.toContain('fixture-private-token');
+  }finally{f.dispose();vi.useRealTimers();}
+ });
+ it.each(['cancel','deadline'] as const)('原%s优先：身份入口中断不导航设置页、不晚读字段、不重发',async mode=>{
+  vi.useFakeTimers();vi.setSystemTime(Date.parse('2026-10-09T04:00:00Z'));
+  const controller=new AbortController(),reason=Error('fixture original user cancellation'),start=Date.now();
+  const f=officialIdentitySourceFixture('entryMissing',{onEntryRead:()=>{if(mode==='cancel')controller.abort(reason);else vi.setSystemTime(start+10001);}});
+  try{
+   const run=f.source.login('wechatOfficial','/synthetic-only-profile',{signal:controller.signal,deadlineAt:new Date(start+10000).toISOString(),onStopped:f.onStopped,onDiagnostic:f.onDiagnostic});
+   if(mode==='cancel')await expect(run).rejects.toBe(reason);else await expect(run).rejects.toMatchObject({code:'EXECUTION_DEADLINE_EXCEEDED'});
+   expect(f.page.goto).toHaveBeenCalledOnce();expect(f.getFieldReads()).toBe(0);expect(f.onDiagnostic).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
+  }finally{f.dispose();vi.useRealTimers();}
+ });
+});

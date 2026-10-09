@@ -220,7 +220,7 @@ describe('T1110 五字段内部快照与default-open预算候选',()=>{
  it('managed原end明确冻结，默认串行启动余量和显式较早预算不续期',async()=>{
   vi.useFakeTimers();vi.setSystemTime(Date.parse('2026-10-09T04:00:00Z'));try{
    const f=fixture(),start=Date.now();await f.source.login('wechatVideo','/fixture-profile',f.controls);
-   const first=f.openProfile.mock.calls[0]?.[2] as {deadlineAt?:string};expect(Date.parse(first.deadlineAt!)-start).toBe(1850000);
+   const first=f.openProfile.mock.calls[0]?.[2] as {deadlineAt?:string};expect(Date.parse(first.deadlineAt!)-start).toBe(1970000);
    f.openProfile.mockClear();await f.source.login('wechatVideo','/fixture-profile',{...f.controls,timeoutMs:120000});const next=f.openProfile.mock.calls[0]?.[2] as {deadlineAt?:string};expect(Date.parse(next.deadlineAt!)-start).toBe(120000);
   }finally{vi.useRealTimers();}
  });
@@ -231,5 +231,33 @@ describe('T1110 五字段内部快照与default-open预算候选',()=>{
   const logging=vi.spyOn(console,'error').mockImplementation(()=>{}),sdk=vi.spyOn(chromium,'launchPersistentContext').mockImplementationOnce(async()=>{controller.abort(reason);throw Error('fixture first launch interrupted');}).mockResolvedValue(f.context);
   try{const source=createWechatBrowserSource({identityWitness:f.identityWitness,reportWitness:f.reportWitness});await expect(source.login('wechatVideo','/tmp/t1110-candidate-sdk-profile',{...f.controls,signal:controller.signal})).rejects.toBe(reason);expect(sdk).toHaveBeenCalledOnce();expect(f.identityWitness.read).not.toHaveBeenCalled();expect(f.onStopped).toHaveBeenCalledOnce();}
   finally{sdk.mockRestore();logging.mockRestore();fallback.mockRestore();guard.mockRestore();}
+ });
+});
+
+// 身份reader预算必须按真实导航/两段观察列入；不借启动余量覆盖另一个消费者。
+describe('T1110 固定内部身份诊断与默认身份串行预算候选',()=>{
+ it.each(['ENTRY_NOT_READY','FIELDS_NOT_READY'])('固定内部身份code %s不输出原message，保原中文普通失败与实停',async code=>{
+  const f=fixture('wechatOfficial'),message='微信后台数据尚未就绪，请查看原任务',error=new WechatBrowserSourceError(code,message),onDiagnostic=vi.fn();
+  vi.mocked(f.identityWitness.read).mockRejectedValueOnce(error);
+  await expect(f.source.login('wechatOfficial','/fixture-profile',{...f.controls,onDiagnostic})).rejects.toBe(error);
+  expect(error.message).toBe(message);expect(onDiagnostic).toHaveBeenCalledWith({platform:'wechatOfficial',stage:'readIdentity',code,exceptionName:'WechatBrowserSourceError'});
+  expect(f.identityWitness.isLoggedOut).not.toHaveBeenCalled();expect(f.onStopped).toHaveBeenCalledOnce();
+ });
+ it.each([
+  ['wechatOfficial','login',2450000],['wechatOfficial','readIdentity',2450000],['wechatOfficial','collectNativeReports',4850000],
+  ['wechatVideo','login',1970000],['wechatVideo','readIdentity',1970000],['wechatVideo','collectNativeReports',5570000],
+ ] as const)('%s %s默认逐项计入身份串行预算（原end冻结）',async(platform,method,budget)=>{
+  vi.useFakeTimers();vi.setSystemTime(Date.parse('2026-10-09T04:00:00Z'));
+  try{
+   const f=fixture(platform),start=Date.now();
+   if(method==='login')await f.source.login(platform,'/fixture-profile',f.controls);
+   else if(method==='readIdentity')await f.source.readIdentity(platform,'/fixture-profile','fixture-platform-id',f.controls);
+   else await f.source.collectNativeReports(platform,'/fixture-profile','fixture-platform-id',f.controls);
+   const managed=f.openProfile.mock.calls[0]?.[2] as {deadlineAt?:string};expect(Date.parse(managed.deadlineAt!)-start).toBe(budget);
+   expect(f.onStopped).toHaveBeenCalledOnce();
+   f.openProfile.mockClear();const inherited=new Date(start+90000).toISOString();
+   await f.source.login(platform,'/fixture-profile',{...f.controls,timeoutMs:120000,deadlineAt:inherited});
+   expect((f.openProfile.mock.calls[0]?.[2] as {deadlineAt?:string}).deadlineAt).toBe(inherited);
+  }finally{vi.useRealTimers();}
  });
 });

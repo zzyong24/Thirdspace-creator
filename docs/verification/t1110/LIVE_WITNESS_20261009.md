@@ -98,3 +98,15 @@ root在正式树先仅加入测试，新增靶向实际7FAIL/60SKIP（67例、re
 HEAD`72e207b2`的隔离页面也实际启动HTTP200，下一次旅程在进入页面前被Ego不支持Browser.getVersion阻断。失败另存，改为读取实际页navigator.userAgent并明确证据来源；真实Emulation/Network/Runtime API在空白Agent p5已调用成功，页尺寸1366×900，UA声明Chrome/152.0.0.0。该API烟测没有页面/扫码/报表PASS，原临时服务实际按归属PID停止，下一次仍从冻结代码准备。
 
 新增timeout-policy完整命令实际exit1：原27静态短预算保留，本次账本组beforeAll另被既有10000ms hook上限拒绝，25例未执行、另10例通过。准备使用180000ms hook/test预算和单worker针对同组复验，原失败不改写，不以无断言运行称通过。
+
+## 公众号分段诊断与首次进入页面的验收失败
+
+root在HEAD ee79dfc45e417157275bb2c51359de54d476ae26先应用tests-only，完整三文件实际11FAIL/69PASS（80例），再应用生产后80PASS、整worker包类型实际exit0。首轮误写parser路径只执行71例另存，不代签完整RED。独评核公众号设置入口480秒→设置页导航120秒→字段480秒和视频号导航120秒→字段480秒真实串行预算，两新code只用于内部诊断；原父任务截止与普通失败/auth分类不变。共享guard预检既有边界仍未通过真人Gate。
+
+同一Ego20研究p1经当前唯一实际设置href普通导航后，AppID唯一且固定wx格式成立，名称唯一非空，readyState complete；只记录机械布尔/数量，不复制身份或登录到产品。该观察说明研究页selector成立，不解释产品原IDENTITY_MISSING，更不作为产品绑定证据。
+
+JYZ8N7影子Next@ee79已实际进入accounts1366并取得截图，但页面仍未完成客户端加载、没有报表fixture调用；原旅程actual exit1，扫码按钮120秒查找0。Next真实日志明确拒绝[::1]开发资源，故这轮不能验收交互或扫码入口。独立检查Next原blocking函数与正式loopback guard，准备把隔离QA hostname改为localhost，与root真人127.0.0.1仍分开；不修改产品安全配置。原失败与19条origin=null网络事件保留（协议未记录，不能断言外联），下一轮明确记录协议并排除开始前残留事件。原影子PID27550已按归属核对停止，p5才清为空白；未关闭研究/用户页面。
+
+context-plan恢复实际exit2（progress缺T1110唯一pending/claimed step），已有欠债原样保留；不改变已审SPEC、BUILD阶段与看板进行中状态。
+
+本次身份预算修改后再次完整timeout-policy actual exit1，唯一非零检查为原27个静态短预算，无新增微信文件；动态各组实际通过，包含账本执行35例。本次结果没有覆盖/改写此前10秒hook失败。索引保存独立日志SHA与本轮真实exit1。

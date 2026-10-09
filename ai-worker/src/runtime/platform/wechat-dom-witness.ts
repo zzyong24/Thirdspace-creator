@@ -155,10 +155,10 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
      const hrefs=await page.locator('a[href]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')).filter((v):v is string=>!!v));
      const valid=hrefs.flatMap(href=>{try{const url=nativeUrl(href,page.url(),platform);return url.pathname==='/cgi-bin/settingpage'?[url.href]:[];}catch{return [];}});
      return [...new Set(valid)].length===1?valid[0]!:null;
-    },'IDENTITY_MISSING',480000);
+    },'ENTRY_NOT_READY',480000);
     await page.goto(href,{waitUntil:'domcontentloaded',timeout:controls.timeoutMs()});
    }
-   return observe(controls,()=>readWechatIdentityDom(page,platform),'IDENTITY_MISSING',480000);
+   return observe(controls,()=>readWechatIdentityDom(page,platform),platform==='wechatOfficial'?'FIELDS_NOT_READY':'IDENTITY_MISSING',480000);
   },
  };
  const reportWitness:WechatReportWitness={async prepare(page,platform,kind,controls){

@@ -85,7 +85,7 @@
   ],
   "allReportsSaved": false,
   "officialProductBinding": "not-yet-succeeded",
-  "browserJourney": "two-runner-prepage-failures-retained-version-witness-changed-to-actual-UA",
+  "browserJourney": "actual-accounts1366-rendered-then-failed-devresource-origin-blocked-no-interaction-pass",
   "officialAttempts": [
     {
       "runId": "execution-task-34ba48c1-61",
@@ -111,5 +111,9 @@
         "code": "IDENTITY_MISSING"
       }
     }
-  ]
+  ],
+  "identityPhaseTests": {
+    "passed": 80,
+    "browserProof": false
+  }
 }
