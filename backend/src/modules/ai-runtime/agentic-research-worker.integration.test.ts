@@ -9,6 +9,7 @@ import {agenticToolOutcomeSchema} from "@creatoros/contract/execution-worker";
 import {createDb,aiTasks,aiTaskResults,executionTasks,executionCalls,knowledgeItems,knowledgeRevisions,knowledgeAdoptions,executionEvidence,eq} from "@creatoros/backend";
 import {createKnowledgeProposalAdoptionService,createKnowledgeService,createKnowledgeRepository} from "../knowledge";
 import {createBrowserSessionsService} from "../browser-sessions";
+import {createPlatformAccountService} from "../platform-account";
 import {createAgenticProposalStagingService} from "../ai/agentic-proposal-staging.service";
 import {createAgenticProposalAdoptionService} from "../ai/agentic-proposal-adoption.service";
 import {createAiService} from "../ai/ai.service";
@@ -156,7 +157,9 @@ it.each([{maxCalls:20,expectedRequests:6,expectedStatus:"succeeded",repair:true}
  const sourceUrl="https://research.example.com/article";
  execFileSync(process.execPath,["--input-type=module","-e",`import{build}from'esbuild';await build({entryPoints:[process.argv[1]],outfile:process.argv[2],bundle:true,platform:'node',target:'node24',format:'cjs',external:['@playwright/test','jsdom','@mozilla/readability']});`,resolve("src/modules/ai-runtime/agentic-research-worker.fixture.ts"),entryPath],{cwd:resolve("../ai-worker"),stdio:"pipe"});
  const f=await createDb(),now=()=>new Date().toISOString(),nextId=(prefix:string)=>`${prefix}-${randomUUID()}`;
- const ctx={userId:"research-worker",accountId:"research-account",requestId:"test",source:"user" as const};
+ const owner={userId:"research-worker",requestId:"test",source:"user" as const};
+ const account=await createPlatformAccountService({db:f.db,now,nextId}).createAccount(owner,{platform:"douyin",accountHandle:"受控研究账号",idempotencyKey:"research-account"});
+ const ctx={...owner,accountId:account.id};
  const noExternal=async():Promise<never>=>{throw new Error("未授权外部能力");};
  const knowledge=createKnowledgeProposalAdoptionService(f.db,now);
  const adoption=createAgenticProposalAdoptionService(f.db,{knowledge:(context,proposal,tx)=>knowledge.adopt(context,proposal,tx),assetTagsBatch:noExternal},now);
@@ -192,8 +195,8 @@ it.each([{maxCalls:20,expectedRequests:6,expectedStatus:"succeeded",repair:true}
   expect(context).toMatchObject({userId:ctx.userId,accountId:ctx.accountId});return {apiFormat:"openai_chat",authStyle:"bearer",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"test",token:"local-model-fixture"};
  }});
  try{
-  await f.db.insert(aiTasks).values({id:"research-task",userId:ctx.userId,accountId:ctx.accountId,taskType:"exec.agentic.research",status:"queued",idempotencyKey:"research-task",requestedAt:now(),inputData:{spec:{taskType:"agentic.research",goal:"研究网页并生成知识候选",inputs:[],params:{},constraints:{timeoutSec:60,network:"deny",maxOutputMB:512}}}});
-  const mapped=await preparation.prepare(ctx,"research-task");expect(await dispatcher.drainOnce()).toBe(1);if(serverError)throw serverError;
+  await f.db.insert(aiTasks).values({id:"research-task",userId:ctx.userId,accountId:ctx.accountId,taskType:"exec.agentic.research",status:"queued",idempotencyKey:"research-task",requestedAt:now(),inputData:{spec:{taskType:"agentic.research",goal:"研究网页并生成知识候选",inputs:[],params:{maxSteps:maxCalls,maxTokens:budget.maxTokens},constraints:{timeoutSec:60,network:"deny",maxOutputMB:512}}}});
+  const mapped=await preparation.prepare(ctx,"research-task");const [frozen]=await f.db.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId!));expect(frozen?.executionBudget).toEqual({policy:"continuous",maxCalls,maxTokens:budget.maxTokens,deadlineMs:60000});expect(await dispatcher.drainOnce()).toBe(1);if(serverError)throw serverError;
   const trace=(await readFile(join(directory,"trace.ndjson"),"utf8")).trim().split("\n").map(line=>JSON.parse(line) as {pid:number;type:string;port?:string;url?:string;hasFixtureCookie?:boolean});
   const [execution]=await f.db.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId!));expect(execution?.status,JSON.stringify({errors,execution,trace})).toBe(expectedStatus);
   expect((execution?.checkpoint as {messages:unknown[]}).messages).toHaveLength(expectedRequests+(repair?5:4));expect(trace.filter(row=>row.type==="context-close")).toHaveLength(trace.filter(row=>row.type==="context").length);

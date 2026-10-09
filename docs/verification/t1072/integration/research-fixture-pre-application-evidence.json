@@ -1,0 +1,20 @@
+{
+  "unmodifiedSourceHead": "00a5be6ea720648e1e981c9d42c486a2c2a1d325",
+  "codeSha256": "ebdb6ef798bf893542485e902cf86a45402903eaa8af761cbee9c5f83b3b96d0",
+  "oldOriginal46Plus18SerialFull": {
+    "passed": 61,
+    "failed": 3,
+    "total": 64,
+    "exit": 1,
+    "durationSeconds": 32.82,
+    "maxWorkers": 1,
+    "retry": 0
+  },
+  "oldSerialFullLogSha256": "ca1bab0f1763c084a780225d0c7c055bfe1ed1b4c37574d8d22a6b828bb036c1",
+  "patchSha256": "f1823b57224d119f06de2623e5692bcdadd637e617865cf776c128781969b908",
+  "independentReports": {
+    "creator-research-current-fixture-recovery-independent-review.md": "5627b7fae23152f7440d491cd9f3af163131333a45988fe8e1847b4aeed30266",
+    "creator-research-visible-observer-independent-review.md": "fe236a12b4bf5f1660b7da691374a850d2dcc6eafc024db74438ae8f523a9b90"
+  },
+  "authority": "主控完整读两独立报告与准确未应用patch后授权现唯一test2处装配+冻结预算断言；T1022/T923既有契约，不改production/终态/期限/场景数量"
+}
