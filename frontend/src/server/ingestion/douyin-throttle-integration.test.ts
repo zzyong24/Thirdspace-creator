@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   fetchDouyinVideoUrl,
   fetchDouyinComments,
@@ -14,6 +14,8 @@ import {
   type DouyinOutcome,
   type DouyinChannelGate,
 } from "./douyin-request-gateway";
+
+afterEach(()=>vi.useRealTimers());
 
 // T-038b 限流网关集成冒烟测(确定性,注入 spy/instant gateway,不真抓、不起 Chromium)。
 // 覆盖 [gate-F7] 5 个插装点各调 acquire(正确 channel) + 结束 report + 错误→classify 映射。
@@ -542,23 +544,28 @@ describe("[gate-F7 插装点⑤] fetchDouyinWorkListExport 过 creator-center", 
   });
 
   it("[gate-F6 错误映射] download 超时 + 有「暂无数据」toast → report('content-error')(图集不退避)", async () => {
+    vi.useFakeTimers();
     const spy = makeSpyGateway();
     const { openContext, readFile } = makeFakeExportContext({
       present: new Set([CODE_TAB_POSTS, CODE_SUBTAB_LIST, CODE_BTN_EXPORT]),
       noDataToast: true, // 图集/无数据:导出永不下载 → 超时,但 no-data toast 可见
     });
-    await expect(
+    const checked=expect(
       fetchDouyinWorkListExport(
         { authDir: "/fake/.auth" },
         { openContext, readFile, downloadTimeoutMs: 60, gateway: spy.gateway },
       ),
     ).rejects.toThrow(); // 仍抛原超时错(不吞)
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.runAllTimersAsync();
+    await checked;
     expect(spy.acquireCount("creator-center")).toBe(1);
     // [gate-F6] 有 toast → content-error(不退避),而非 throttled。
     expect(spy.reports("creator-center")).toEqual(["content-error"]);
   });
 
   it("[T-176 错误映射] download 超时 + 无 toast → report('content-error')(导出 DOM 脆弱,不再退避)", async () => {
+    vi.useFakeTimers();
     const spy = makeSpyGateway();
     // present 缺 CODE_BTN_EXPORT → 点不到导出 → 抛 DouyinExportError(非 download 超时路径),
     // 归 content-error。为测"无 toast + download 超时 → throttled",让导出可点但 download 永不来:
@@ -578,7 +585,7 @@ describe("[gate-F7 插装点⑤] fetchDouyinWorkListExport 过 creator-center", 
     void readFile;
     // —— 用一个专造 context:导出可点、永不下载、toast 不可见。
     const noFire = makeExportNeverDownloadNoToast();
-    await expect(
+    const checked=expect(
       fetchDouyinWorkListExport(
         { authDir: "/fake/.auth" },
         {
@@ -589,6 +596,9 @@ describe("[gate-F7 插装点⑤] fetchDouyinWorkListExport 过 creator-center", 
         },
       ),
     ).rejects.toThrow();
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.runAllTimersAsync();
+    await checked;
     expect(spy.acquireCount("creator-center")).toBe(1);
     // [T-176] 无 toast + download 超时 = 导出面板 DOM 脆弱(非平台风控)→ content-error(不退避),
     //   不再顶 creator-center 账号级 cooldown → 不污染评论采集 → 打破退避死循环。

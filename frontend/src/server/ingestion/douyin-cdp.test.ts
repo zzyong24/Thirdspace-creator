@@ -2357,7 +2357,7 @@ describe("[T-202] gotoWithRetry 导航退避重试", () => {
     // 透传 waitUntil/timeout 到底层 goto(默认 domcontentloaded / 60000)。
     expect(gotoCalls[0]!.opts).toMatchObject({
       waitUntil: "domcontentloaded",
-      timeout: 60000,
+      timeout: 120000,
     });
   });
 
