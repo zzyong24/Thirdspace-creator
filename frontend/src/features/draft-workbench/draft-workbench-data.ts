@@ -1,3 +1,4 @@
+import { readPagedRows } from "@/features/knowledge/knowledge-library-data";
 import "server-only";
 
 import { client as defaultClient } from "@/lib/contract-client.server";
@@ -205,11 +206,7 @@ export interface DraftWorkbenchClient extends ScriptDataClient {
 // ---------------------------------------------------------------------------
 
 export type ProjectTranscriptState =
-  | "idle"
-  | "queued"
-  | "running"
-  | "done"
-  | "failed";
+  "idle" | "queued" | "running" | "done" | "failed";
 
 export interface DraftWorkbenchVm {
   readonly project: {
@@ -282,6 +279,7 @@ export interface DraftWorkbenchVm {
     /** true = 预测早于当前脚本版本，只作为历史结果，不锁当前稿。 */
     readonly stale: boolean;
   } | null;
+  readonly ammoReadError?: string | null;
   readonly ammo: ReadonlyArray<{
     /**
      * [T-109] material_link 行自身 id —— 稿面「移除」解绑(deleteMaterialLink)的目标。
@@ -331,7 +329,9 @@ async function readPublishPack(
       query: undefined,
       body: undefined,
     });
-    const outputs = (Array.isArray(outputsRaw) ? outputsRaw : []) as OutputDto[];
+    const outputs = (
+      Array.isArray(outputsRaw) ? outputsRaw : []
+    ) as OutputDto[];
     // [T-055h③] outputId 单独浮出:没有发布行时登记表单也要知道挂点在哪。
     const outputId = outputs[0]?.id ?? null;
     if (!outputId) return { outputId: null, publishPack: null };
@@ -370,7 +370,9 @@ async function readPublishPack(
         return description.length > 0 || tags.length > 0;
       }) ?? packages[0]!;
     const { pub, revision } = selected;
-    const published = pubs.find((candidate) => candidate.status === "published");
+    const published = pubs.find(
+      (candidate) => candidate.status === "published",
+    );
     return {
       outputId,
       publishPack: {
@@ -432,81 +434,94 @@ async function readBlindPrediction(
   }
 }
 
-async function readAmmo(
+export async function readAmmo(
   client: DraftWorkbenchClient,
   projectId: string,
+  onReadError?: (message: string) => void,
 ): Promise<DraftWorkbenchVm["ammo"]> {
   try {
-    const linksRaw = await client.listMaterialLinks({
-      params: undefined,
-      query: { projectId, page: 1, pageSize: 30 },
-      body: undefined,
-    });
-    const links = (Array.isArray(linksRaw) ? linksRaw : []) as MaterialLinkDto[];
-    const resolved = await Promise.all(
-      links.slice(0, 12).map(async (link) => {
-        try {
-          if (link.entityType === "knowledge") {
-            const k = (await client.getKnowledge({
-              params: { knowledgeId: link.entityId },
-              query: undefined,
-              body: undefined,
-            })) as KnowledgeDto;
-            return {
-              // [T-109] linkId = material_link 行 id(解绑目标),与 entity id 区分开。
-              linkId: link.id,
-              id: k.id,
-              kind: "knowledge" as const,
-              role: link.role,
-              title: k.title,
-              // [T-055g] 来源链:sourceMetadata 作品指向 > sourceUrl > 手记 > 未记录。
-              sourceLabel: knowledgeSourceLabel(k),
-              previewUrl: null,
-            };
-          }
-          const a = (await client.getAsset({
-            params: { assetId: link.entityId },
-            query: undefined,
-            body: undefined,
-          })) as AssetDto;
-          // [T-058④] 图片素材带签名预览 URL(用户反馈:上传的素材要能看到)。
-          let previewUrl: string | null = null;
-          if (a.assetType === "image") {
-            try {
-              const dl = (await client.getDownloadUrl({
-                params: { assetId: a.id },
-                query: undefined,
-                body: undefined,
-              })) as { url?: string };
-              previewUrl = dl.url ?? null;
-            } catch {
-              previewUrl = null; // 文件缺失/存储不可用 → 退回类型徽标,不摆坏图。
-            }
-          }
-          return {
-            // [T-109] linkId = material_link 行 id(解绑目标),与 asset id 区分开。
-            linkId: link.id,
-            id: a.id,
-            kind: "asset" as const,
-            role: link.role,
-            title: a.name,
-            sourceLabel: `素材 · ${a.assetType}`,
-            previewUrl,
-            // [T-146] 双击预览投影:类型 + 文档抽取(资料要点/全文)。
-            assetType: a.assetType,
-            extractStatus: a.extractStatus ?? null,
-            materialSummary: a.materialSummary ?? null,
-            extractedText: a.extractedText ?? null,
-            sourceUrl: a.sourceUrl ?? null,
-          };
-        } catch {
-          return null;
-        }
+    const links = await readPagedRows<MaterialLinkDto>((page) =>
+      client.listMaterialLinks({
+        params: undefined,
+        query: { projectId, page, pageSize: 100 },
+        body: undefined,
       }),
     );
+    let failedEntities = 0;
+    async function resolveAmmo(link: MaterialLinkDto) {
+      try {
+        if (link.entityType === "knowledge") {
+          const k = (await client.getKnowledge({
+            params: { knowledgeId: link.entityId },
+            query: undefined,
+            body: undefined,
+          })) as KnowledgeDto;
+          return {
+            // [T-109] linkId = material_link 行 id(解绑目标),与 entity id 区分开。
+            linkId: link.id,
+            id: k.id,
+            kind: "knowledge" as const,
+            role: link.role,
+            title: k.title,
+            // [T-055g] 来源链:sourceMetadata 作品指向 > sourceUrl > 手记 > 未记录。
+            sourceLabel: knowledgeSourceLabel(k),
+            previewUrl: null,
+          };
+        }
+        const a = (await client.getAsset({
+          params: { assetId: link.entityId },
+          query: undefined,
+          body: undefined,
+        })) as AssetDto;
+        // [T-058④] 图片素材带签名预览 URL(用户反馈:上传的素材要能看到)。
+        let previewUrl: string | null = null;
+        if (a.assetType === "image") {
+          try {
+            const dl = (await client.getDownloadUrl({
+              params: { assetId: a.id },
+              query: undefined,
+              body: undefined,
+            })) as { url?: string };
+            previewUrl = dl.url ?? null;
+          } catch {
+            previewUrl = null; // 文件缺失/存储不可用 → 退回类型徽标,不摆坏图。
+          }
+        }
+        return {
+          // [T-109] linkId = material_link 行 id(解绑目标),与 asset id 区分开。
+          linkId: link.id,
+          id: a.id,
+          kind: "asset" as const,
+          role: link.role,
+          title: a.name,
+          sourceLabel: `素材 · ${a.assetType}`,
+          previewUrl,
+          // [T-146] 双击预览投影:类型 + 文档抽取(资料要点/全文)。
+          assetType: a.assetType,
+          extractStatus: a.extractStatus ?? null,
+          materialSummary: a.materialSummary ?? null,
+          extractedText: a.extractedText ?? null,
+          sourceUrl: a.sourceUrl ?? null,
+        };
+      } catch {
+        failedEntities++;
+        return null;
+      }
+    }
+    const resolved: Array<Awaited<ReturnType<typeof resolveAmmo>>> = [];
+    for (let start = 0; start < links.length; start += 8) {
+      resolved.push(
+        ...(await Promise.all(links.slice(start, start + 8).map(resolveAmmo))),
+      );
+    }
+
+    if (failedEntities > 0)
+      onReadError?.(
+        `${failedEntities}份项目资料暂时无法读取；可继续使用已读到的资料，或重新读取。`,
+      );
     return resolved.filter((x): x is NonNullable<typeof x> => x !== null);
   } catch {
-    return [];
+    throw new Error("项目资料读取失败，请重新读取。");
   }
 }
 
@@ -524,11 +539,12 @@ async function readLinkedProjectCoverAssetId(
       query: { projectId, page: 1, pageSize: 100 },
       body: undefined,
     });
-    const links = (Array.isArray(linksRaw) ? linksRaw : []) as MaterialLinkDto[];
+    const links = (
+      Array.isArray(linksRaw) ? linksRaw : []
+    ) as MaterialLinkDto[];
     return (
-      links.find(
-        (link) => link.entityType === "asset" && link.role === "cover",
-      )?.entityId ?? null
+      links.find((link) => link.entityType === "asset" && link.role === "cover")
+        ?.entityId ?? null
     );
   } catch {
     return null;
@@ -584,15 +600,20 @@ export async function buildDraftWorkbenchVm(
     }
   }
 
+  let ammoReadError: string | null = null;
   const [
     { outputId, publishPack },
     ammo,
     linkedProjectCoverAssetId,
     transcriptState,
-  ] =
-    await Promise.all([
+  ] = await Promise.all([
     readPublishPack(client, project.id),
-    readAmmo(client, project.id),
+    readAmmo(client, project.id, (message) => {
+      ammoReadError = message;
+    }).catch(() => {
+      ammoReadError = "项目资料读取失败，请重新读取。";
+      return [];
+    }),
     readLinkedProjectCoverAssetId(client, project.id),
     readProjectTranscriptState(client, project.id, douyinExternalId),
   ]);
@@ -665,6 +686,7 @@ export async function buildDraftWorkbenchVm(
       (scriptData?.versions.length ?? 0) > 0 || Boolean(radarDraftSeed),
     blindPrediction: currentBlindPrediction,
     ammo,
+    ammoReadError,
     scriptReview,
   };
 }
@@ -700,7 +722,9 @@ export async function readProjectTranscriptState(
               query: { page: 1, pageSize: 200 },
               body: undefined,
             });
-            return (Array.isArray(listed) ? listed : []) as TranscriptArtifactSummary[];
+            return (
+              Array.isArray(listed) ? listed : []
+            ) as TranscriptArtifactSummary[];
           },
           async listArtifactVersions(artifactId) {
             const listed = await client.listArtifactVersions({
@@ -708,7 +732,9 @@ export async function readProjectTranscriptState(
               query: { page: 1, pageSize: 200 },
               body: undefined,
             });
-            return (Array.isArray(listed) ? listed : []) as TranscriptArtifactVersion[];
+            return (
+              Array.isArray(listed) ? listed : []
+            ) as TranscriptArtifactVersion[];
           },
         },
         projectId,

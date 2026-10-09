@@ -1,6 +1,9 @@
+import {accountGroups} from "../../schema/account-groups";
+import {createAssetRepository,createAssetsService,createMockObjectStorage} from "../assets";
 import { describe, it, expect, beforeEach } from "vitest";
 import {
   createDb,
+  platformAccounts,
   type Db,
   UnsupportedOperationError,
 } from "@creatoros/backend";
@@ -51,11 +54,20 @@ function deterministicDeps() {
 
 let db: Db;
 let transport: Transport;
+let importedAssetId:string;
 
 beforeEach(async () => {
   ({ db } = await createDb());
-  const repo = createKnowledgeRepository(db, deterministicDeps());
-  const service = createKnowledgeService(repo);
+  const deps=deterministicDeps();
+  await db.insert(platformAccounts).values({id:ctx.accountId!,userId:ctx.userId,platform:"douyin",accountHandle:"test",createdAt:NOW,updatedAt:NOW});
+  await db.insert(accountGroups).values({id:`grp_legacy_${ctx.accountId}`,userId:ctx.userId,name:"契约测试",createdAt:NOW,updatedAt:NOW});
+  const storage=createMockObjectStorage({nextKey:()=>"contract-file"});
+  const assets=createAssetsService(createAssetRepository(db,deps),async()=>storage,deps);
+  const upload=await assets.createUpload(ctx,{fileName:"讲义.pdf",assetType:"document",mimeType:"application/pdf",fileSize:1});
+  const asset=await assets.completeUpload(ctx,upload.uploadId,{name:"讲义.pdf"});
+  importedAssetId=asset.id;
+  const repo = createKnowledgeRepository(db, deps);
+  const service = createKnowledgeService(repo,{assertAssetReadable:(context,id)=>assets.getAsset(context,id)});
   transport = createKnowledgeTransport(() => service);
 });
 
@@ -284,7 +296,7 @@ describe("knowledge.transport — file workspace", () => {
         title: "讲义.pdf",
         knowledgeType: "reference",
         sourceType: "import",
-        assetId: "asset-stable-1",
+        assetId: importedAssetId,
         folderId: null,
       },
     });
@@ -295,6 +307,6 @@ describe("knowledge.transport — file workspace", () => {
     });
     const parsedMoved = successEnvelope(knowledgeItemResource).parse(moved);
     expect(parsedMoved.data.folderId).toBe(parsedChild.data.id);
-    expect(parsedMoved.data.assetId).toBe("asset-stable-1");
+    expect(parsedMoved.data.assetId).toBe(importedAssetId);
   });
 });

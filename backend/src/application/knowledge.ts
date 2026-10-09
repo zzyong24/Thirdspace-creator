@@ -7,6 +7,7 @@ import {createSearchRepository,createSearchService,createSearchTransport,createK
 
 /** 知识写入与派生搜索索引的应用边界；宿主仅提供向量 IO 和配置解析。 */
 export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof createKnowledgeRepository>[1]&Parameters<typeof createSearchService>[1],ports:{
+ assertAssetReadable?: (ctx:RequestContext,assetId:string)=>Promise<unknown>;
  resolveEmbedSpec:(ctx:RequestContext)=>Promise<Spec|null>;
  embedTexts:(ctx:RequestContext,spec:Spec,texts:string[],signal?:AbortSignal)=>Promise<number[][]>;
 }){
@@ -35,7 +36,7 @@ export function createKnowledgeApplication<Spec>(db:Db,deps:Parameters<typeof cr
   // the deterministic `deps` (createSeq keeps knowledge/revision/relation ids
   // collision-free across requests).
   const knowledgeRepo = createKnowledgeRepository(db, deps);
-  const knowledgeService = createKnowledgeService(knowledgeRepo);
+  const knowledgeService = createKnowledgeService(knowledgeRepo, {assertAssetReadable:ports.assertAssetReadable});
   const knowledgeBaseTransport = createKnowledgeTransport(() => knowledgeService);
   const knowledgeSearchRuntime=createKnowledgeSearchRuntime({
     knowledge:knowledgeService,search:searchService,

@@ -15,7 +15,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { describeUserError } from "@/lib/ai-error-humanize";
-import { client } from "@/lib/contract-client";
+import { Button } from "@/components/ui/button";
+import { client as defaultClient } from "@/lib/contract-client";
 import {
   parseLessonPoints,
   type LessonPoint,
@@ -47,14 +48,20 @@ const INITIAL: PreviewState = { phase: "loading", item: null, content: "", error
 export function KnowledgeDetailPreview({
   knowledgeId,
   onContentLoaded,
+  reader = false,
+  contractClient = defaultClient,
 }: {
   knowledgeId: string;
+  reader?: boolean;
+  contractClient?: typeof defaultClient;
   /**
    * [T-260c] 最新修订正文读回回调 —— 交互岛用它给「编辑」预填全文(全文就地编辑,
    * 保存为新版本)。用 ref 镜像,避免进 effect 依赖导致重复拉取。
    */
   onContentLoaded?: (content: string) => void;
 }) {
+  const client = contractClient;
+  const [retry, setRetry] = React.useState(0);
   const [state, setState] = React.useState<PreviewState>(INITIAL);
   const onContentLoadedRef = React.useRef(onContentLoaded);
   // eslint-disable-next-line react-hooks/refs -- latest-callback ref 不参与渲染，避免回调身份变化触发重复拉取
@@ -86,6 +93,7 @@ export function KnowledgeDetailPreview({
         const current =
           list.find((rev) => rev.id === item.currentRevisionId) ??
           list.slice().sort((a, b) => b.revisionNumber - a.revisionNumber)[0];
+        if(reader && (!current || current.id !== item.currentRevisionId)) throw new Error("正文版本暂时未读到，请重试。");
         const content = current?.content ?? "";
         setState({
           phase: "ready",
@@ -108,25 +116,25 @@ export function KnowledgeDetailPreview({
     return () => {
       cancelled = true;
     };
-  }, [knowledgeId]);
+  }, [knowledgeId, retry, reader, client]);
 
   return (
     <div
       data-slot="knowledge-detail-preview"
       data-phase={state.phase}
-      className="flex flex-col gap-1.5 rounded-md border border-border bg-surface p-2.5"
+      className={reader ? "flex flex-col gap-4 text-base [&_[data-slot=knowledge-detail-content]]:text-base [&_p]:text-base [&_li]:text-base" : "flex flex-col gap-1.5 rounded-md border border-border bg-surface p-2.5"}
     >
-      <p className="text-[11px] font-medium text-muted-foreground">内容预览</p>
+      {!reader && <p className="text-[11px] font-medium text-muted-foreground">内容预览</p>}
       {state.phase === "loading" ? (
         <p className="text-[12px] text-muted-foreground">正在加载内容…</p>
       ) : state.phase === "error" ? (
-        <p
+        <div><p
           data-slot="knowledge-detail-error"
           role="alert"
           className="text-[12px] text-destructive"
         >
           {state.error}
-        </p>
+        </p><Button variant="outline" className="mt-3" onClick={()=>setRetry(n=>n+1)}>重新读取正文</Button></div>
       ) : (
         <>
           {/* source=web 型显示来源链接(诚实溯源;manual/import/ai 无链接不显)。 */}

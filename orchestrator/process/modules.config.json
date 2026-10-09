@@ -2400,6 +2400,52 @@
       "depends_on": [
         "T-1073:spec-review"
       ]
+    },
+    "T-1075": {
+      "task_id": "T-1075",
+      "archetype": [
+        "user-authored",
+        "externally-ingested"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "read_set": [
+        "docs/features/t1075-knowledge-redesign.md",
+        "docs/features/t1075-knowledge-redesign/**",
+        "frontend/src/features/knowledge/**",
+        "frontend/src/features/draft-workbench/**",
+        "frontend/src/lib/**",
+        "frontend/src/components/ui/**",
+        "frontend/src/app/(creator)/knowledge/**",
+        "backend/src/modules/knowledge/**",
+        "backend/src/modules/material-links/**",
+        "contract/src/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "docs/features/t1075-knowledge-redesign.md",
+        "docs/features/t1075-knowledge-redesign.review.md",
+        "docs/features/t1075-knowledge-redesign/**",
+        "docs/verification/t1075/**",
+        "frontend/src/features/knowledge/**",
+        "frontend/src/app/(creator)/knowledge/**",
+        "frontend/src/features/draft-workbench/draft-workbench-data.ts",
+        "frontend/src/features/draft-workbench/draft-workbench-data.test.ts",
+        "frontend/src/features/draft-workbench/ammo-card-list.tsx",
+        "frontend/src/features/draft-workbench/ammo-card-list.test.tsx",
+        "frontend/tests/e2e/knowledge-library.spec.ts",
+        "orchestrator/DECISION_LOG.md",
+        "backend/src/modules/knowledge/**",
+        "backend/src/application/knowledge.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+        "orchestrator/process/reconcile.config.json"
+      ],
+      "verify_commands": {
+        "implementation": "pnpm --dir frontend exec tsc --noEmit && node tools/timeout-policy/verify.mjs"
+      },
+      "depends_on": []
     }
   }
 }

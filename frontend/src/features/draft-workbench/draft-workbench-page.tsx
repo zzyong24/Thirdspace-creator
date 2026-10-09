@@ -126,7 +126,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
           <CreationFlowCtas projectId={project.id} />
 
           {/* [T-146/T-726] 弹药上移:用户先看到手里有哪些素材/资料，再直接写稿。 */}
-          <AmmoDrawer ammo={ammo} projectId={project.id} />
+          <AmmoDrawer ammo={ammo} projectId={project.id} readError={vm.ammoReadError} />
 
           <ThesisSkeletonPanel
             thesis={thesis}
@@ -434,9 +434,11 @@ function MissingMaterialsNote({
 function AmmoDrawer({
   ammo,
   projectId,
+  readError,
 }: {
   ammo: DraftWorkbenchVm["ammo"];
   projectId: string;
+  readError?:string|null;
 }) {
   return (
     <section
@@ -465,7 +467,7 @@ function AmmoDrawer({
         <AmmoDumpZone projectId={projectId} />
       </div>
       {/* [T-146] 已上传素材/知识列表 + 双击预览(client 组件);空态时不渲染。 */}
-      {ammo.length > 0 ? <AmmoCardList ammo={ammo} /> : null}
+      {ammo.length > 0 || readError ? <AmmoCardList ammo={ammo} readError={readError}/> : null}
     </section>
   );
 }
