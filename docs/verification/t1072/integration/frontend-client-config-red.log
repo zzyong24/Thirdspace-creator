@@ -1,0 +1,200 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:28222) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 拿既有 ticket、验签 closed bundle，并只返回脱敏 authority 投影
+[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > T-706 正式包未显式注入授权 origin 时复用官方授权服务默认值
+[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest
+[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 低版本与同版本不同 digest 隔离，历史密文保留但不激活
+[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 明确无 extension 时保留历史渠道密文但切到本地
+[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_NETWORK_UNAVAILABLE","retryable":true}
+
+ ❯ src/server/activation/client-config.server.test.ts (22 tests | 7 failed) 80ms
+     × 拿既有 ticket、验签 closed bundle，并只返回脱敏 authority 投影 29ms
+     × T-706 正式包未显式注入授权 origin 时复用官方授权服务默认值 3ms
+     × 逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest 2ms
+     × 坏签名、额外 envelope 字段和未知产品协议均 fail-closed 2ms
+     × 低版本与同版本不同 digest 隔离，历史密文保留但不激活 2ms
+     × 明确无 extension 时保留历史渠道密文但切到本地 1ms
+     × 独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 拿既有 ticket、验签 closed bundle，并只返回脱敏 authority 投影
+AssertionError: expected { authority: 'local', …(3) } to deeply equal { authority: 'channel', …(3) }
+
+- Expected
++ Received
+
+  {
+-   "action": "渠道模型正在使用",
+-   "authority": "channel",
+-   "outcome": "configured",
+-   "retryable": false,
++   "action": "本地模型正在使用 · 暂时无法取得渠道配置",
++   "authority": "local",
++   "outcome": "unreachable",
++   "retryable": true,
+  }
+
+ ❯ src/server/activation/client-config.server.test.ts:309:20
+    307|     });
+    308|
+    309|     expect(result).toEqual({
+       |                    ^
+    310|       authority: "channel",
+    311|       outcome: "configured",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > T-706 正式包未显式注入授权 origin 时复用官方授权服务默认值
+AssertionError: expected { authority: 'local', …(3) } to match object { authority: 'channel', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "authority": "channel",
+-   "outcome": "configured",
++   "authority": "local",
++   "outcome": "unreachable",
+  }
+
+ ❯ src/server/activation/client-config.server.test.ts:341:5
+    339|         store,
+    340|       }),
+    341|     ).resolves.toMatchObject({
+       |     ^
+    342|       authority: "channel",
+    343|       outcome: "configured",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest
+AssertionError: expected 'local' to be 'channel' // Object.is equality
+
+Expected: "channel"
+Received: "local"
+
+ ❯ src/server/activation/client-config.server.test.ts:599:30
+    597|       store,
+    598|     });
+    599|     expect(result.authority).toBe("channel");
+       |                              ^
+    600|     expect(result.outcome).toBe("configured");
+    601|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 坏签名、额外 envelope 字段和未知产品协议均 fail-closed
+AssertionError: expected { authority: 'local', …(3) } to match object { authority: 'local', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "authority": "local",
+-   "outcome": "security_error",
++   "outcome": "unreachable",
+  }
+
+ ❯ src/server/activation/client-config.server.test.ts:623:5
+    621|         store,
+    622|       }),
+    623|     ).resolves.toMatchObject({
+       |     ^
+    624|       authority: "local",
+    625|       outcome: "security_error",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 低版本与同版本不同 digest 隔离，历史密文保留但不激活
+AssertionError: expected { authority: 'local', …(3) } to match object { authority: 'local', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "authority": "local",
+-   "outcome": "security_error",
++   "outcome": "unreachable",
+  }
+
+ ❯ src/server/activation/client-config.server.test.ts:754:5
+    752|         store,
+    753|       }),
+    754|     ).resolves.toMatchObject({
+       |     ^
+    755|       authority: "local",
+    756|       outcome: "security_error",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 明确无 extension 时保留历史渠道密文但切到本地
+AssertionError: expected { authority: 'local', …(3) } to match object { authority: 'local', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "authority": "local",
+-   "outcome": "not_configured",
++   "outcome": "unreachable",
+  }
+
+ ❯ src/server/activation/client-config.server.test.ts:911:20
+    909|       store,
+    910|     });
+    911|     expect(result).toMatchObject({
+       |                    ^
+    912|       authority: "local",
+    913|       outcome: "not_configured",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > 独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界
+AssertionError: expected { authority: 'local', …(3) } to match object { authority: 'channel', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "authority": "channel",
+-   "outcome": "configured",
++   "authority": "local",
++   "outcome": "unreachable",
+  }
+
+ ❯ src/server/activation/client-config.server.test.ts:1153:5
+    1151|         store,
+    1152|       }),
+    1153|     ).resolves.toMatchObject({ authority: "channel", outcome: "configu…
+       |     ^
+    1154|     expect(fetchB1.mock.calls[1]?.[1]?.headers).not.toMatchObject({
+    1155|       "If-None-Match": expect.anything(),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 15 passed (22)
+   Start at  14:45:17
+   Duration  2.21s (transform 684ms, setup 150ms, import 1.20s, tests 80ms, environment 531ms)
+

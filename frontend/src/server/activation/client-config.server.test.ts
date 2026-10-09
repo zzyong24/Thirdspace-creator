@@ -19,6 +19,7 @@ import { join } from "node:path";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import packageJson from "../../../package.json";
 import { DEFAULT_LICENSE_BASE_URL } from "./activation-config";
 import {
   ClientConfigPullError,
@@ -275,7 +276,7 @@ describe("T-575 config.pull Creator consumer", () => {
         );
       }
       expect(url).toBe(
-        `${GROWTH_ORIGIN}/api/client-config/bundles/current?clientVersion=1.1.0&accept=creatoros.model-config%40creatoros-model-config-v1`,
+        `${GROWTH_ORIGIN}/api/client-config/bundles/current?clientVersion=${encodeURIComponent(packageJson.version)}&accept=creatoros.model-config%40creatoros-model-config-v1`,
       );
       expect(init?.headers).toMatchObject({
         Authorization: "Bearer header.payload.signature",
