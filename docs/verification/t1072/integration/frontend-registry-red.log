@@ -1,0 +1,93 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:23330) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/__module_integration__/query-services.contract.test.ts > query-services ops registered in the composite transport > the 3 page-read op ids are persistence-backed (reject without ctx)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/__module_integration__/query-services.contract.test.ts (12 tests | 1 failed) 13936ms
+     × the 3 page-read op ids are persistence-backed (reject without ctx) 1325ms
+(node:23603) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/__module_integration__/platform-account.persistence-client.test.ts > platform-account ops registered in the composite transport > the 5 account op ids are persistence-backed (not the mock)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/__module_integration__/platform-account.persistence-client.test.ts (4 tests | 1 failed) 4656ms
+     × the 5 account op ids are persistence-backed (not the mock) 1475ms
+(node:23710) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/__module_integration__/content-calendar.persistence-client.test.ts > content-calendar ops registered in the composite transport > the 8 calendar op ids are persistence-backed (not the mock)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/__module_integration__/content-calendar.persistence-client.test.ts (3 tests | 1 failed) 3434ms
+     × the 8 calendar op ids are persistence-backed (not the mock) 1418ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/__module_integration__/content-calendar.persistence-client.test.ts > content-calendar ops registered in the composite transport > the 8 calendar op ids are persistence-backed (not the mock)
+AssertionError: expected [ 'group.calendar.list', …(13) ] to have a length of 8 but got 14
+
+- Expected
++ Received
+
+- 8
++ 14
+
+ ❯ src/server/__module_integration__/content-calendar.persistence-client.test.ts:68:37
+     66|       ).rejects.toThrow();
+     67|     }
+     68|     expect(CONTENT_CALENDAR_OP_IDS).toHaveLength(8);
+       |                                     ^
+     69|   });
+     70|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/server/__module_integration__/platform-account.persistence-client.test.ts > platform-account ops registered in the composite transport > the 5 account op ids are persistence-backed (not the mock)
+AssertionError: expected [ 'accounts.list', …(5) ] to have a length of 5 but got 6
+
+- Expected
++ Received
+
+- 5
++ 6
+
+ ❯ src/server/__module_integration__/platform-account.persistence-client.test.ts:59:37
+     57|       ).rejects.toThrow();
+     58|     }
+     59|     expect(PLATFORM_ACCOUNT_OP_IDS).toHaveLength(5);
+       |                                     ^
+     60|   });
+     61|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/server/__module_integration__/query-services.contract.test.ts > query-services ops registered in the composite transport > the 3 page-read op ids are persistence-backed (reject without ctx)
+AssertionError: expected [ 'pages.dashboard.get', …(4) ] to have a length of 3 but got 5
+
+- Expected
++ Received
+
+- 3
++ 5
+
+ ❯ src/server/__module_integration__/query-services.contract.test.ts:89:35
+     87|       ).rejects.toThrow();
+     88|     }
+     89|     expect(QUERY_SERVICES_OP_IDS).toHaveLength(3);
+       |                                   ^
+     90|   });
+     91|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  3 failed | 16 passed (19)
+   Start at  14:39:51
+   Duration  33.02s (transform 3.71s, setup 563ms, import 7.98s, tests 22.03s, environment 1.81s)
+

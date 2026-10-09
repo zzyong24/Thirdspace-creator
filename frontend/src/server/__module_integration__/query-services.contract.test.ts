@@ -25,7 +25,7 @@ import {
   type DraftWorkbenchClient,
 } from "@/features/draft-workbench/draft-workbench-data";
 
-// Task 4/6 — the 3 page-read ops are registered into the composite (PERSISTED_OPS)
+// Task 4/6 — the 5 page-read ops are registered into the composite (PERSISTED_OPS)
 // and resolve through compositeTransport against the seeded pglite store. Proves
 // the composition module is wired into the SAME store the server reads + the
 // /api/v1 route share (foundation §1 registry). Each op output validates against
@@ -80,13 +80,14 @@ beforeEach(async () => {
 });
 
 describe("query-services ops registered in the composite transport", () => {
-  it("the 3 page-read op ids are persistence-backed (reject without ctx)", async () => {
+  it("the 5 page-read op ids are persistence-backed (reject without ctx)", async () => {
     for (const id of QUERY_SERVICES_OP_IDS) {
       await expect(
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(QUERY_SERVICES_OP_IDS).toHaveLength(3);
+    // 核对当前正式 contract 的完整公共入口，缺项/多项都失败。
+    expect(QUERY_SERVICES_OP_IDS).toEqual(["pages.dashboard.get", "pages.groupOverview.get", "pages.dailyReport.get", "pages.projectOverview.get", "pages.search.get"]);
   });
 
   it("pages.dashboard.get → valid dashboardPage, kind=dashboard", async () => {

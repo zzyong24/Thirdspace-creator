@@ -7,7 +7,7 @@ import {
 import { canonicalDataset } from "@/fixtures/canonical";
 import { CONTENT_CALENDAR_OP_IDS } from "@creatoros/backend/modules/content-calendar";
 
-// Step 4/6 — the 8 calendar ops are registered into the composite (PERSISTED_OPS) and a
+// Step 4/6 — the 14 calendar ops are registered into the composite (PERSISTED_OPS) and a
 // create→list round-trips through compositeTransport against the seeded pglite store.
 // Proves the module is wired into the SAME store server reads + the /api/v1 route share
 // (foundation §1 registry), the account-ownership gate routes through the real
@@ -57,7 +57,7 @@ beforeEach(() => {
 });
 
 describe("content-calendar ops registered in the composite transport", () => {
-  it("the 8 calendar op ids are persistence-backed (not the mock)", async () => {
+  it("the 14 calendar op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op would
     // resolve. Use that to assert each id routes to the real user-scoped transport.
     for (const id of CONTENT_CALENDAR_OP_IDS) {
@@ -65,7 +65,8 @@ describe("content-calendar ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(CONTENT_CALENDAR_OP_IDS).toHaveLength(8);
+    // 核对当前正式 contract 的完整公共入口，缺项/多项都失败。
+    expect(CONTENT_CALENDAR_OP_IDS).toEqual(["group.calendar.list", "group.calendar.entries.create", "calendar.entries.target", "group.cadence.get", "group.cadence.upsert", "group.cadence.attainment", "accounts.calendar.list", "accounts.calendar.entries.create", "calendar.entries.update", "calendar.entries.transition", "calendar.entries.delete", "accounts.cadence.get", "accounts.cadence.upsert", "accounts.cadence.attainment"]);
   });
 
   it("entries.create round-trips: the new entry is then listable in window", async () => {

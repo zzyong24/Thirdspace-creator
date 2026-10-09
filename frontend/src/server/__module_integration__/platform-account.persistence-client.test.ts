@@ -7,7 +7,7 @@ import {
 import { canonicalDataset } from "@/fixtures/canonical";
 import { PLATFORM_ACCOUNT_OP_IDS } from "@creatoros/backend/modules/platform-account";
 
-// Step 4/6 — the 5 account ops are registered into the composite (PERSISTED_OPS) and an
+// Step 4/6 — the 6 account ops are registered into the composite (PERSISTED_OPS) and an
 // accounts.create round-trips through compositeTransport against the seeded pglite store.
 // Proves the module is wired into the SAME store server reads + the /api/v1 route share
 // (foundation §1 registry), and that the multi-tenant boundary holds end-to-end.
@@ -48,7 +48,7 @@ beforeEach(() => {
 });
 
 describe("platform-account ops registered in the composite transport", () => {
-  it("the 5 account op ids are persistence-backed (not the mock)", async () => {
+  it("the 6 account op ids are persistence-backed (not the mock)", async () => {
     // A persisted op called with NO ctx throws AuthenticationError; a mock op would
     // resolve. Use that to assert each id routes to the real user-scoped transport.
     for (const id of PLATFORM_ACCOUNT_OP_IDS) {
@@ -56,7 +56,8 @@ describe("platform-account ops registered in the composite transport", () => {
         compositeTransport.request(ep(id), {} as never),
       ).rejects.toThrow();
     }
-    expect(PLATFORM_ACCOUNT_OP_IDS).toHaveLength(5);
+    // 核对当前正式 contract 的完整公共入口，缺项/多项都失败。
+    expect(PLATFORM_ACCOUNT_OP_IDS).toEqual(["accounts.list", "accounts.bindingCapabilities", "accounts.create", "accounts.get", "accounts.update", "accounts.archive"]);
   });
 
   it("[T-135] 开箱空:owner 的 accounts.list 初始为空,建一条后可列出(全部本人)", async () => {
