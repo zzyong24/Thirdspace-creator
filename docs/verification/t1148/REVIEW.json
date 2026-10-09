@@ -1,0 +1,60 @@
+{
+  "schema": "creatoros-receipt-drift-review/v1",
+  "reviewedAt": "2026-10-10T02:10:01+08:00",
+  "head": "efe9f1ce8a9695354724aad2815cb96304108367",
+  "verdict": "PROCESS_PATH_VALID_WITH_DEFERRED_REVALIDATION",
+  "consumerHashes": {
+    "frontendValidation": "47c79d66e687b913d3d9a848dda50429f551bae071646d5efbed9263e1c38727",
+    "taskctl": "f5d9660c87023b1320ba3703bd3b7ef6df9044356b271f6751d0343ea366e65d"
+  },
+  "contractHashes": {
+    "T-1108": "eb800589add497ec7e7815a4dc9e38a63e4fe79ecc3245da84ac36cf4e83e6b7",
+    "T-1117": "3c7720477c882202f0971383405cd82e81c3bba3a0c782043e041dd62b90dc08",
+    "T-1136": "4e772799e2fb3ac36d7b06c534c38f787f5f3e858da02f5bdc86ac4dd624a423"
+  },
+  "requiredRevalidation": {
+    "T-1108": {
+      "verifyKey": "canvas-binding-collection:e2e",
+      "command": "node docs/verification/t1101/run-journey.mjs",
+      "cannotBeReplacedByT1140": true
+    },
+    "T-1117": {
+      "verifyKey": "canvas-binding-collection:e2e",
+      "command": "node docs/verification/t1101/run-journey.mjs",
+      "separateTaskctlExecutionRequired": true,
+      "cannotBeReplacedByT1140": true
+    },
+    "T-1136": {
+      "verifyKey": "calendar-dialog-layout:e2e",
+      "command": "node docs/verification/t1136/run-layout-journey.mjs",
+      "cannotBeReplacedByT1140": true
+    }
+  },
+  "legalSequence": [
+    "taskctl block each completed task",
+    "wait for final shared-source HEAD",
+    "taskctl resume each task",
+    "write new report and visible-copy without overwriting history",
+    "taskctl complete each task and execute its allowlisted command"
+  ],
+  "globalBoundary": {
+    "canonicalExitCode": 1,
+    "errors": 42,
+    "mayRemainDuringRevalidation": true,
+    "mayClaimGlobalPass": false
+  },
+  "findings": [
+    {
+      "id": "PROC-001",
+      "status": "constraint",
+      "summary": "Final receipts must wait until all relevant shared-source integration is complete."
+    },
+    {
+      "id": "PROC-002",
+      "status": "constraint",
+      "summary": "Each task requires its own block/resume/complete and allowlisted execution; T1140 cannot substitute."
+    }
+  ],
+  "testsRun": false,
+  "repositoryModified": false
+}

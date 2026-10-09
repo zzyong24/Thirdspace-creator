@@ -1,0 +1,48 @@
+{
+  "schema": "creatoros-current-canonical-comparison/v1",
+  "task": "T-1140",
+  "head": "efe9f1ce8a9695354724aad2815cb96304108367",
+  "actualReceipt": {
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "node",
+      "orchestrator/process/reconcile.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T17:48:21.780371+00:00",
+    "finishedAt": "2026-10-09T18:06:35.711720+00:00",
+    "exitCode": 1,
+    "elapsedSeconds": 1093.9153932500049,
+    "logSha256": "80f8c54bcbcd12d41e43b0dc5c87371c1046260dd79da03855ba0970014a81c6"
+  },
+  "priorCount": 39,
+  "currentCount": 42,
+  "added": [
+    "✗ [ERROR] frontend receipt: T-1136: receipt commit 之后 watched_paths 代码已变化，receipt 失效:",
+    "✗ [ERROR] frontend receipt: T-1117: receipt commit 之后 watched_paths 代码已变化，receipt 失效:",
+    "✗ [ERROR] frontend receipt: T-1108: receipt commit 之后 watched_paths 代码已变化，receipt 失效:"
+  ],
+  "removed": [],
+  "sameList": false,
+  "warnings": [],
+  "watchedProductAndTestUnchanged": true,
+  "watchedSha256": {
+    "frontend/src/components/media/asset-picker.tsx": "236d01545bcddac731f2cccc2cf2ce454ac653aed682b7df390e92cacdc5f14e",
+    "frontend/src/components/media/asset-media-preview.tsx": "7ca28b2d737331713413d1b2d2ae7b22d2e43db1fc47cc084581aa6eedd2489d",
+    "frontend/src/components/media/use-asset-picker-source.ts": "a9339c94712d97b477b91015dbde2e9bc30a81e1eb16fc97eac3dc106bc28f07",
+    "frontend/src/features/creative-canvas/canvas-asset-picker.tsx": "8780dbace3bcfed9c3bdfc0dacd63e6414ec2ec8d97ecd585f133bc2f3e6ad55",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "aa3fd8ec1dfa523e1ca6688c5074c669df18436d93e9a5a9ed7a7be0f4e32da6",
+    "frontend/tests/e2e/t1140-picker-low-height.spec.ts": "7e83385dce28ed66077b8632833ab927c2cf03a424d637b434b51f60a855212d",
+    "docs/verification/t1140/run-picker-journey.mjs": "e1ab3359fc4e32a085eeacd40bfe626c75cf1287eebd587627d2317972989470",
+    "backend/src/modules/creative-canvas/creative-canvas.service.ts": "eb04ec3e219b5ec07aae15fb2fd7c416bf521b3495b38916a2e860da582ecebd",
+    "backend/src/modules/creative-canvas/creative-canvas.service.test.ts": "1690eb7a6dc6ff4adb20444dccd3dda3d4b3a8c31e0115d28f5ffa8cb11a8553",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "eb7d14e0e87b53e5444f4d67b6934693c725f7f522e7a895d8e414ea9518b819",
+    "docs/verification/t1141/run-public-ratio.mts": "65fc787035ae131295e6c967794112d679c09cfafdc777613f58b8edb247684b"
+  },
+  "sourceCommitUnchanged": true,
+  "fullGatePass": false,
+  "nativeApp": false,
+  "allFunctionsPass": false
+}

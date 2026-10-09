@@ -2,12 +2,12 @@
   "surface": "browser",
   "mode": "non-fixture",
   "witnesses": {
-    "groupId": "grp-1ac613e9-173",
-    "canvasId": "1f3a4821-31dd-465d-b59c-9d1c3db5ad20",
+    "groupId": "grp-ff1d77a1-160",
+    "canvasId": "197bf7d4-a94a-4a32-b350-e73ca5140ac3",
     "selected": {
-      "id": "asset-1ac613e9-183",
-      "userId": "user-1ac613e9-1",
-      "currentFileId": "afile-1ac613e9-187",
+      "id": "asset-ff1d77a1-170",
+      "userId": "user-ff1d77a1-1",
+      "currentFileId": "afile-ff1d77a1-174",
       "assetType": "image",
       "name": "素材预览横图.png",
       "description": "",
@@ -23,15 +23,15 @@
       "extractedText": null,
       "sourceUrl": null,
       "deletedAt": null,
-      "createdAt": "2026-10-09T17:43:01.528Z",
-      "updatedAt": "2026-10-09T17:43:01.528Z"
+      "createdAt": "2026-10-09T18:12:44.487Z",
+      "updatedAt": "2026-10-09T18:12:44.487Z"
     },
-    "nodeId": "9e492b3d-16ab-4013-99c4-7c7e3125a13e"
+    "nodeId": "2860e20f-e6d8-4bdb-8ba5-467111fbc846"
   },
   "beforeRevision": 2,
   "savedRevision": 3,
   "exactReference": {
-    "id": "9e492b3d-16ab-4013-99c4-7c7e3125a13e",
+    "id": "2860e20f-e6d8-4bdb-8ba5-467111fbc846",
     "position": {
       "x": 281,
       "y": 48
@@ -44,8 +44,8 @@
     "type": "image_generation",
     "prompt": "",
     "mode": "image_to_image",
-    "referenceAssetId": "asset-1ac613e9-183",
-    "referenceFileId": "afile-1ac613e9-187"
+    "referenceAssetId": "asset-ff1d77a1-170",
+    "referenceFileId": "afile-ff1d77a1-174"
   },
   "refresh": true,
   "back": true,
@@ -62,7 +62,7 @@
   "captures": [
     {
       "name": "exact-before-confirm",
-      "url": "http://127.0.0.1:31440/canvases/1f3a4821-31dd-465d-b59c-9d1c3db5ad20",
+      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
       "viewport": {
         "width": 1024,
         "height": 680
@@ -107,7 +107,7 @@
     },
     {
       "name": "gallery-preview-1366x900",
-      "url": "http://127.0.0.1:31440/canvases/1f3a4821-31dd-465d-b59c-9d1c3db5ad20",
+      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
       "viewport": {
         "width": 1366,
         "height": 900
@@ -567,7 +567,7 @@
     },
     {
       "name": "gallery-preview-1024x680",
-      "url": "http://127.0.0.1:31440/canvases/1f3a4821-31dd-465d-b59c-9d1c3db5ad20",
+      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
       "viewport": {
         "width": 1024,
         "height": 680
@@ -1027,7 +1027,7 @@
     },
     {
       "name": "gallery-preview-683x450",
-      "url": "http://127.0.0.1:31440/canvases/1f3a4821-31dd-465d-b59c-9d1c3db5ad20",
+      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
       "viewport": {
         "width": 683,
         "height": 450
@@ -1487,7 +1487,7 @@
     },
     {
       "name": "gallery-preview-390x900",
-      "url": "http://127.0.0.1:31440/canvases/1f3a4821-31dd-465d-b59c-9d1c3db5ad20",
+      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
       "viewport": {
         "width": 390,
         "height": 900
@@ -1947,7 +1947,7 @@
     },
     {
       "name": "gallery-preview-390x450",
-      "url": "http://127.0.0.1:31440/canvases/1f3a4821-31dd-465d-b59c-9d1c3db5ad20",
+      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
       "viewport": {
         "width": 390,
         "height": 450
@@ -2407,7 +2407,7 @@
     },
     {
       "name": "gallery-preview-512x340",
-      "url": "http://127.0.0.1:31440/canvases/1f3a4821-31dd-465d-b59c-9d1c3db5ad20",
+      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
       "viewport": {
         "width": 512,
         "height": 340
@@ -2867,7 +2867,7 @@
     },
     {
       "name": "read-error",
-      "url": "http://127.0.0.1:31440/canvases/1f3a4821-31dd-465d-b59c-9d1c3db5ad20",
+      "url": "http://127.0.0.1:31440/canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3",
       "viewport": {
         "width": 1024,
         "height": 680

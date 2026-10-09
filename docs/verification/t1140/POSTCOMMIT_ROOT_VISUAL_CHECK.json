@@ -1,0 +1,81 @@
+{
+  "schema": "creatoros-actual-root-visual-check/v1",
+  "at": "2026-10-09T18:11:40.175581+00:00",
+  "head": "efe9f1ce8a9695354724aad2815cb96304108367",
+  "actualJourney": {
+    "startedAt": "2026-10-09T18:08:37.027Z",
+    "finishedAt": "2026-10-09T18:09:56.033Z",
+    "exitCode": 0,
+    "sourceStable": true
+  },
+  "imagesViewed": [
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/portrait-683x450.png",
+      "sha256": "1d38282dd4806d28b4f0b71917a7066d0b965784c1446774d449032b1b971577"
+    },
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/portrait-512x340.png",
+      "sha256": "f8629ff2feed8b49776e5ecfb5819b69eda534a38dd8d5a77ff0852e5839bc0b"
+    },
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/gallery-preview-1024x680.png",
+      "sha256": "4d66ba067e408af377a402ceedffa3c57f3429bb6410b1f3d4fc1b8705e3653a"
+    },
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/gallery-preview-683x450.png",
+      "sha256": "96b4d1bbbe7ba53eb742da58b08c6249a9b9b24b5c273fe792806e015ef738a5"
+    },
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/gallery-preview-390x450.png",
+      "sha256": "47833c19039a948c9cc46bce7ed114384a793621e423bf1e0f3adf99ca49ff66"
+    },
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/gallery-preview-512x340.png",
+      "sha256": "3dae48eb0238d92b5607d002c7b62bab07de89e6b49445451cb98c2bcd0a2d52"
+    },
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/portrait-1366x900.png",
+      "sha256": "8c2c4afdfc192bc471038f66f2e299b3dff0df80250e00bccf8593f4ee4f47cb"
+    },
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/portrait-1024x680.png",
+      "sha256": "4f0a86378eade61dc41f52e9260e183f0edee91020ec29e700b02a3d6604788e"
+    },
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/portrait-390x900.png",
+      "sha256": "aeeaa245a06794d90bf077595f81139885043e7474b6bd0fba049880b964d285"
+    },
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/portrait-390x450.png",
+      "sha256": "f4e49ada17ada3ab4473d82096d1108d7246001322f14f22ec0ddfdf09dc825a"
+    },
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/gallery-preview-1366x900.png",
+      "sha256": "7adb637c5a3687fc894274ead4cf6f2e7d99bdb33effd8b858200950ff0b6f73"
+    },
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/gallery-preview-390x900.png",
+      "sha256": "4058da18c10f0c2f98067047c45c213168e35781af05b18ff571540c81009ff1"
+    },
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/read-error.png",
+      "sha256": "626792ef85e4e53a0eeff6e06696e3ac40fbfcaba075111c0381da7b371333ac"
+    },
+    {
+      "path": "docs/verification/t1140/postcommit-normal-screenshots/exact-before-confirm.png",
+      "sha256": "e3d3b6faf8b222377b48752950b2d4c8a975ffdca6ad9b075227212a75d156d8"
+    }
+  ],
+  "verdict": "PASS_LIMITED_T1140_T1145",
+  "notes": [
+    "保留现有紫色工作台和缩略图，不以原始文件名select识别素材",
+    "六视口field媒体与gallery预览完整显示，正常图库卡片/预览按自然文档流排列无重叠",
+    "512与390低高度需滚动正文分别查看图库及完整预览；不宣称二者在每一滚动位置同时完整可见",
+    "取消/确认固定；低高图库关闭先回顶部，原实际操作验证通过",
+    "错误提示中文且有真实重读，精确第二文件确认前后身份不变"
+  ],
+  "nativeApp": false,
+  "modelCalled": false,
+  "allFunctionsPass": false,
+  "reasonForFrozenImagePaths": "实际normal图已查看；后续taskctl原完整再执行覆盖通常截图，因此保原normal图和SHA，不拿新图代签旧查看"
+}

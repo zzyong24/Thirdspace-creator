@@ -9,14 +9,15 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1148 | 核对本轮共享页面修改后的旧验收记录失效 | 🔨 待办 | — | — | [实际诊断](docs/features/t1148-current-frontend-receipt-drift.md) | 当前efe9全canonical1093秒exit1/42ERROR，原39保留，新T1136/1117/1108源码绑定失效；保原报告/事件，当前素材先正式补验，旧范围最终源码复验，不改验证器或伪换head。 |
 | T-1147 | 核对固定素材抽屉的可见范围观察 | ✅ 待办 | — | — | [实际诊断](docs/features/t1147-fixed-drawer-clip-observation.md) | 当前field六窗口PASS，390×450图库whole失败但原图完整；保原失败，按实际fixed包含块核clip，不删真实边界/放宽媒体断言。 |
 | T-1146 | 核对素材弹窗重开后滚动目标被重建 | ✅ 待办 | — | — | [实际诊断](docs/features/t1146-picker-reopen-detached-observation.md) | 当前390重开旧列表后点选成功但scroll稳定时DOM重建；保原失败，按实际200ms正式重读等待本次响应和ready，再原完整媒体断言，不force或删断言。 |
 | T-1144 | 核对素材旅程完成后测试进程未退出 | 🔨 待办 | — | — | [实际诊断](docs/features/t1144-picker-worker-cleanup.md) | T1140两例PASS但worker停后300秒不退出，整轮371.938秒exit1；保原失败和归属快照，定位实际清理等待，不缩超时/force退出/忽略全局错误。 |
-| T-1145 | 核对素材图库预览与卡片重叠 | 🔨 待办 | PASS[REV:b3ff530bb6ca] | — | [实际观察](docs/features/t1145-gallery-preview-overlap.md) | 实际查看1024×680gallery原图疑似占位重叠；预览解码/关闭回读通过不代签布局，先保图核flex/滚动，产品改动先精确独评。 |
+| T-1145 | 核对素材图库预览与卡片重叠 | ✅ 待办 | PASS[REV:b3ff530bb6ca] | — | [实际观察](docs/features/t1145-gallery-preview-overlap.md) | 实际查看1024×680gallery原图疑似占位重叠；预览解码/关闭回读通过不代签布局，先保图核flex/滚动，产品改动先精确独评。 |
 | T-1143 | 核对窄窗画布走查先打开详情后无法点击节点 | ✅ 待办 | — | — | [实际诊断](docs/features/t1143-canvas-selection-inspector-observation.md) | T1140第二例真实选用/保存/reload/gallery均走过，1024×680开详情后点原节点120秒被aside/html挡；保失败核选择顺序与视口，不force点击、直接改React或冒称产品已修。 |
 | T-1142 | 核对素材布局测试把无需滚动误判为滚动区缺失 | ✅ 待办 | — | — | [实际诊断](docs/features/t1142-picker-scroll-owner-observation.md) | T1140首例683×450完整左右媒体边界已过，内容未溢出，测试要求实际滚动区恰为1而得到0；保原失败，校准唯一正文滚动责任，不强制造溢出或删媒体断言。 |
-| T-1141 | 核对旧图片页组的组画幅未进入新生成请求 | 🔨 待办 | PASS[REV:070b1fbe0e33] | — | [实际诊断](docs/features/t1141-legacy-group-generation-ratio.md) | 当前service允许node缺比例，但新task只取node未继承明确group；先隔离公共链验证，不调用模型/改旧任务或把静态分析称已修。 |
-| T-1140 | 优化低高度窗口的素材浏览与预览空间 | 🔨 待办 | PASS[REV:2a0be12aac16] | 待验 | [当前观察](docs/features/t1140-picker-low-height-preview.md) · [验收合同](docs/verification/t1140/PAGE_SPEC.md) | 当前683×450主体预览空间被原上下双滚动区挤压；按钮和取消回读通过，AssetPicker源未改。保截图后精确SPEC独评优化，不称选择失败或已修。 |
+| T-1141 | 核对旧图片页组的组画幅未进入新生成请求 | ✅ 待办 | PASS[REV:070b1fbe0e33] | — | [实际诊断](docs/features/t1141-legacy-group-generation-ratio.md) | 当前service允许node缺比例，但新task只取node未继承明确group；先隔离公共链验证，不调用模型/改旧任务或把静态分析称已修。 |
+| T-1140 | 优化低高度窗口的素材浏览与预览空间 | ✅ 待办 | PASS[REV:2a0be12aac16] | PASS:5e3ffe91488b | [当前观察](docs/features/t1140-picker-low-height-preview.md) · [验收合同](docs/verification/t1140/PAGE_SPEC.md) | 当前683×450主体预览空间被原上下双滚动区挤压；按钮和取消回读通过，AssetPicker源未改。保截图后精确SPEC独评优化，不称选择失败或已修。 |
 | T-1139 | 核对素材选择器切换视口后的即时尺寸失败 | ✅ 待办 | — | — | [实际诊断](docs/features/t1139-picker-viewport-observation.md) | 当前Chrome2PASS/1FAIL，900即时x=-30但随后实际截图x约16；保原失败并有限120秒观察原边界，不猜根因或删断言。 |
 | T-1138 | 核对共享素材弹窗走查未命中原生模式选择控件 | ✅ 待办 | — | — | [实际诊断](docs/features/t1138-calendar-shared-picker-test-selector.md) | 原Chrome2PASS/1FAIL，模式combobox确实存在；仅校准测试可访问名定位，保原日志/120秒/0retry并真实进入图库，不改产品洗绿。 |
 | T-1137 | 核对排期弹窗关闭后键盘焦点丢失 | ✅ 待办 | — | — | [实际缺陷](docs/features/t1137-calendar-focus-return.md) | T1136原Chrome Esc已关但120秒触发器inactive；原缺DialogTrigger，保失败并由T1136同路径明确扩展独评后修复，不删焦点断言。 |

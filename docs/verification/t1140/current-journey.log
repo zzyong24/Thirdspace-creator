@@ -1,0 +1,432 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1140-0aLtZS
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[WebServer] 
+[WebServer] > creatoros-frontend@1.2.0 predev /Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend
+[WebServer] > node ../ai-worker/scripts/build.mjs
+[WebServer] 
+[WebServer] 
+[WebServer] > creatoros-frontend@1.2.0 dev /Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend
+[WebServer] > next dev --hostname 127.0.0.1 --port 31440
+[WebServer] 
+[WebServer] [1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
+[WebServer] - Local:         http://127.0.0.1:31440
+[WebServer] - Network:       http://127.0.0.1:31440
+[WebServer] [32m[1m✓[22m[39m Ready in 481ms
+[WebServer] [CreatorOS] SIDECAR_STARTUP_VERIFIED
+[WebServer] 
+[WebServer]  GET / [32m200[39m in 18.7s[2m (next.js: 1313ms, proxy.ts: 164ms, application-code: 17.2s)[22m
+
+Running 2 tests using 1 worker
+
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1140-0aLtZS
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 965ms[2m (next.js: 916ms, proxy.ts: 9ms, application-code: 41ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 1769µs, proxy.ts: 2ms, application-code: 22ms)[22m
+[WebServer]  PUT /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 2.5s[2m (next.js: 2.5s, application-code: 28ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 216ms[2m (next.js: 3ms, proxy.ts: 2ms, application-code: 211ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 14ms)[22m
+[WebServer]  PUT /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 17ms[2m (next.js: 3ms, application-code: 13ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 75ms[2m (next.js: 1388µs, proxy.ts: 1866µs, application-code: 72ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 20ms)[22m
+[WebServer]  GET /canvases/fd99e152-2c35-41d2-8533-373124ebfae8 [32m200[39m in 2.4s[2m (next.js: 2.3s, proxy.ts: 4ms, application-code: 141ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 1850µs, proxy.ts: 3ms, application-code: 11ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 7ms, proxy.ts: 3ms, application-code: 13ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 5ms, proxy.ts: 23ms, application-code: 18ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 55ms[2m (next.js: 23ms, proxy.ts: 23ms, application-code: 10ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 96ms[2m (next.js: 36ms, proxy.ts: 22ms, application-code: 38ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 100ms[2m (next.js: 4ms, proxy.ts: 79ms, application-code: 17ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 86ms[2m (next.js: 24ms, proxy.ts: 49ms, application-code: 13ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 1577µs, proxy.ts: 1743µs, application-code: 23ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1596µs, proxy.ts: 3ms, application-code: 7ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 1466µs, proxy.ts: 4ms, application-code: 21ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 77ms[2m (next.js: 16ms, proxy.ts: 3ms, application-code: 58ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 85ms[2m (next.js: 39ms, proxy.ts: 3ms, application-code: 43ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 316ms[2m (next.js: 62ms, proxy.ts: 58ms, application-code: 196ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 60ms[2m (next.js: 7ms, application-code: 53ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 62ms[2m (next.js: 21ms, application-code: 41ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 27ms[2m (next.js: 1285µs, application-code: 25ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 8ms, proxy.ts: 20ms, application-code: 19ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 16ms[2m (next.js: 1609µs, application-code: 15ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 9ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 10ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 1532µs, proxy.ts: 1722µs, application-code: 25ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 23ms[2m (next.js: 1463µs, application-code: 22ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 55ms[2m (next.js: 13ms, proxy.ts: 23ms, application-code: 19ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 59ms[2m (next.js: 3ms, proxy.ts: 12ms, application-code: 43ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 60ms[2m (next.js: 23ms, proxy.ts: 10ms, application-code: 28ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 1901µs, proxy.ts: 3ms, application-code: 21ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 43ms[2m (next.js: 3ms, proxy.ts: 5ms, application-code: 35ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 18ms, proxy.ts: 7ms, application-code: 22ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1883µs, proxy.ts: 1654µs, application-code: 8ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 40ms[2m (next.js: 1833µs, proxy.ts: 3ms, application-code: 35ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 15ms, proxy.ts: 3ms, application-code: 23ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 33ms[2m (next.js: 5ms, application-code: 29ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 22ms[2m (next.js: 1349µs, application-code: 21ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 1699µs, proxy.ts: 3ms, application-code: 13ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 1720µs, proxy.ts: 2ms, application-code: 42ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 48ms[2m (next.js: 18ms, proxy.ts: 2ms, application-code: 28ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 48ms[2m (next.js: 10ms, proxy.ts: 5ms, application-code: 32ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 43ms[2m (next.js: 13ms, application-code: 29ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 45ms[2m (next.js: 3ms, application-code: 42ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 23ms[2m (next.js: 1293µs, application-code: 21ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 42ms[2m (next.js: 4ms, proxy.ts: 2ms, application-code: 36ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 22ms, proxy.ts: 3ms, application-code: 22ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 28ms[2m (next.js: 1423µs, application-code: 27ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1645µs, proxy.ts: 3ms, application-code: 9ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1794µs, proxy.ts: 1903µs, application-code: 12ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 1483µs, proxy.ts: 2ms, application-code: 20ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 15ms[2m (next.js: 1337µs, application-code: 13ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1165µs, proxy.ts: 1860µs, application-code: 11ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 39ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 47ms[2m (next.js: 24ms, proxy.ts: 4ms, application-code: 19ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 38ms[2m (next.js: 1834µs, application-code: 37ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 20ms[2m (next.js: 1358µs, application-code: 19ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1629µs, proxy.ts: 2ms, application-code: 10ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 30ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 36ms[2m (next.js: 17ms, proxy.ts: 3ms, application-code: 16ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 34ms[2m (next.js: 4ms, application-code: 31ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 20ms[2m (next.js: 1556µs, application-code: 18ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1574µs, proxy.ts: 4ms, application-code: 10ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 39ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 34ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 42ms[2m (next.js: 18ms, proxy.ts: 3ms, application-code: 21ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 3ms, proxy.ts: 2ms, application-code: 22ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 57ms[2m (next.js: 2ms, application-code: 55ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 48ms[2m (next.js: 1519µs, application-code: 46ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 32ms[2m (next.js: 1477µs, application-code: 30ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 5ms, proxy.ts: 3ms, application-code: 16ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 16ms[2m (next.js: 1237µs, application-code: 15ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 15ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1849µs, proxy.ts: 2ms, application-code: 11ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 1465µs, proxy.ts: 1817µs, application-code: 20ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 22ms[2m (next.js: 1322µs, application-code: 20ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1922µs, proxy.ts: 2ms, application-code: 10ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 42ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 37ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 17ms, proxy.ts: 3ms, application-code: 24ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 67ms[2m (next.js: 1429µs, application-code: 66ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 110ms[2m (next.js: 1323µs, application-code: 109ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 20ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 32ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 39ms[2m (next.js: 19ms, proxy.ts: 4ms, application-code: 17ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 27ms[2m (next.js: 3ms, application-code: 24ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 17ms[2m (next.js: 1495µs, application-code: 16ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1702µs, proxy.ts: 2ms, application-code: 8ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 1529µs, proxy.ts: 3ms, application-code: 30ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 16ms, proxy.ts: 3ms, application-code: 17ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 39ms[2m (next.js: 15ms, proxy.ts: 6ms, application-code: 19ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 39ms[2m (next.js: 13ms, application-code: 26ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 40ms[2m (next.js: 2000µs, application-code: 38ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 19ms[2m (next.js: 910µs, application-code: 19ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 30ms[2m (next.js: 8ms, proxy.ts: 3ms, application-code: 18ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 12ms[2m (next.js: 1055µs, application-code: 11ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 12ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 1790µs, proxy.ts: 2ms, application-code: 13ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 1653µs, proxy.ts: 6ms, application-code: 31ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 55ms[2m (next.js: 4ms, application-code: 51ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 4ms, proxy.ts: 4ms, application-code: 19ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 57ms[2m (next.js: 9ms, proxy.ts: 6ms, application-code: 42ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 58ms[2m (next.js: 32ms, proxy.ts: 7ms, application-code: 19ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 3ms, proxy.ts: 11ms, application-code: 31ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 169ms[2m (next.js: 10ms, proxy.ts: 17ms, application-code: 142ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 159ms[2m (next.js: 84ms, proxy.ts: 9ms, application-code: 67ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 139ms[2m (next.js: 67ms, proxy.ts: 6ms, application-code: 67ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 118ms[2m (next.js: 8ms, proxy.ts: 13ms, application-code: 97ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 123ms[2m (next.js: 55ms, proxy.ts: 10ms, application-code: 57ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 425ms[2m (next.js: 376ms, proxy.ts: 8ms, application-code: 42ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 487ms[2m (next.js: 119ms, application-code: 368ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 87ms[2m (next.js: 17ms, application-code: 71ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 71ms[2m (next.js: 4ms, application-code: 67ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 39ms[2m (next.js: 10ms, proxy.ts: 4ms, application-code: 25ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 191ms[2m (next.js: 5ms, application-code: 187ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 4ms, proxy.ts: 4ms, application-code: 14ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 18ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 5ms, proxy.ts: 11ms, application-code: 21ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 82ms[2m (next.js: 10ms, proxy.ts: 13ms, application-code: 59ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 124ms[2m (next.js: 16ms, proxy.ts: 53ms, application-code: 54ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 105ms[2m (next.js: 6ms, application-code: 99ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 93ms[2m (next.js: 3ms, application-code: 90ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 60ms[2m (next.js: 27ms, proxy.ts: 6ms, application-code: 27ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 90ms[2m (next.js: 8ms, proxy.ts: 5ms, application-code: 77ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 100ms[2m (next.js: 45ms, proxy.ts: 7ms, application-code: 48ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 6ms, proxy.ts: 8ms, application-code: 10ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 96ms[2m (next.js: 4ms, application-code: 92ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 76ms[2m (next.js: 4ms, application-code: 72ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 135ms[2m (next.js: 22ms, proxy.ts: 9ms, application-code: 103ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 135ms[2m (next.js: 71ms, proxy.ts: 11ms, application-code: 53ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 95ms[2m (next.js: 2ms, proxy.ts: 61ms, application-code: 32ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 102ms[2m (next.js: 6ms, application-code: 96ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 155ms[2m (next.js: 27ms, application-code: 129ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 114ms[2m (next.js: 3ms, application-code: 111ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 39ms[2m (next.js: 1605µs, proxy.ts: 17ms, application-code: 21ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-14-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 25ms[2m (next.js: 5ms, application-code: 20ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 125ms[2m (next.js: 20ms, proxy.ts: 10ms, application-code: 94ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1353µs, proxy.ts: 3ms, application-code: 14ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 20ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-5/inbox/uploads/objkey-ff1d77a1-7-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 19ms[2m (next.js: 1355µs, application-code: 17ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 1794µs, proxy.ts: 6ms, application-code: 10ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 162ms[2m (next.js: 137ms, proxy.ts: 4ms, application-code: 22ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 192ms[2m (next.js: 4ms, proxy.ts: 31ms, application-code: 157ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 4ms, proxy.ts: 8ms, application-code: 17ms)[22m
+  ✓  1 [e2e] › tests/e2e/t1140-picker-low-height.spec.ts:86:1 › T-1140 六种窗口完整预览、统一滚动、搜索与取消不写 (27.4s)
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 47ms[2m (next.js: 3ms, proxy.ts: 6ms, application-code: 38ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1536µs, proxy.ts: 3ms, application-code: 16ms)[22m
+[WebServer]  PUT /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-162-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 21ms[2m (next.js: 3ms, application-code: 17ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 127ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 121ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1447µs, proxy.ts: 1991µs, application-code: 16ms)[22m
+[WebServer]  PUT /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 18ms[2m (next.js: 1346µs, application-code: 16ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 74ms[2m (next.js: 1434µs, proxy.ts: 1985µs, application-code: 70ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1263µs, proxy.ts: 1751µs, application-code: 12ms)[22m
+[WebServer]  GET /canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3 [32m200[39m in 109ms[2m (next.js: 6ms, proxy.ts: 1495µs, application-code: 102ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 74ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 68ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 9ms, proxy.ts: 6ms, application-code: 10ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 18ms, proxy.ts: 6ms, application-code: 13ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 54ms[2m (next.js: 29ms, proxy.ts: 8ms, application-code: 17ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 131ms[2m (next.js: 59ms, proxy.ts: 9ms, application-code: 63ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 118ms[2m (next.js: 3ms, proxy.ts: 93ms, application-code: 22ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 135ms[2m (next.js: 26ms, proxy.ts: 94ms, application-code: 15ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 16ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1439µs, proxy.ts: 3ms, application-code: 10ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 2ms, proxy.ts: 1880µs, application-code: 11ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 4ms, proxy.ts: 6ms, application-code: 34ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 66ms[2m (next.js: 36ms, proxy.ts: 5ms, application-code: 25ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 62ms[2m (next.js: 13ms, proxy.ts: 10ms, application-code: 39ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 94ms[2m (next.js: 32ms, application-code: 62ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-162-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 50ms[2m (next.js: 7ms, application-code: 43ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 27ms[2m (next.js: 2ms, application-code: 25ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1526µs, proxy.ts: 2ms, application-code: 16ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 14ms[2m (next.js: 1324µs, application-code: 12ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 1692µs, proxy.ts: 3ms, application-code: 28ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1418µs, proxy.ts: 2ms, application-code: 8ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1208µs, proxy.ts: 1756µs, application-code: 12ms)[22m
+[WebServer]  GET /canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3 [32m200[39m in 110ms[2m (next.js: 6ms, proxy.ts: 2ms, application-code: 103ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 1898µs, proxy.ts: 2ms, application-code: 12ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 2ms, proxy.ts: 17ms, application-code: 14ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 51ms[2m (next.js: 33ms, proxy.ts: 8ms, application-code: 10ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 69ms[2m (next.js: 22ms, proxy.ts: 32ms, application-code: 15ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 98ms[2m (next.js: 38ms, proxy.ts: 33ms, application-code: 26ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 132ms[2m (next.js: 65ms, proxy.ts: 34ms, application-code: 33ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 6ms, proxy.ts: 5ms, application-code: 16ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 160ms[2m (next.js: 141ms, proxy.ts: 6ms, application-code: 12ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 56ms[2m (next.js: 5ms, proxy.ts: 22ms, application-code: 28ms)[22m
+[WebServer]  GET /canvases [32m200[39m in 364ms[2m (next.js: 50ms, proxy.ts: 99ms, application-code: 215ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 1706µs, proxy.ts: 3ms, application-code: 16ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 87ms[2m (next.js: 34ms, proxy.ts: 32ms, application-code: 22ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 88ms[2m (next.js: 14ms, proxy.ts: 32ms, application-code: 42ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 87ms[2m (next.js: 23ms, proxy.ts: 32ms, application-code: 33ms)[22m
+[WebServer]  GET /canvases/197bf7d4-a94a-4a32-b350-e73ca5140ac3 [32m200[39m in 182ms[2m (next.js: 3ms, proxy.ts: 1804µs, application-code: 177ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1235µs, proxy.ts: 1798µs, application-code: 11ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 1200µs, proxy.ts: 2ms, application-code: 12ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 5ms, proxy.ts: 3ms, application-code: 8ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 3ms, proxy.ts: 13ms, application-code: 11ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 14ms, proxy.ts: 13ms, application-code: 8ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 53ms[2m (next.js: 23ms, proxy.ts: 13ms, application-code: 17ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 4ms, proxy.ts: 4ms, application-code: 9ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 13ms, proxy.ts: 4ms, application-code: 7ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 22ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 20ms[2m (next.js: 3ms, application-code: 17ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1263µs, proxy.ts: 1954µs, application-code: 8ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 1586µs, proxy.ts: 2ms, application-code: 28ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 15ms, proxy.ts: 2ms, application-code: 16ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 27ms[2m (next.js: 1209µs, application-code: 26ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-162-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 18ms[2m (next.js: 953µs, application-code: 17ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 1574µs, proxy.ts: 3ms, application-code: 17ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 102ms[2m (next.js: 1507µs, application-code: 101ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1439µs, proxy.ts: 1845µs, application-code: 7ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1388µs, proxy.ts: 1934µs, application-code: 8ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1507µs, proxy.ts: 2ms, application-code: 10ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 36ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 30ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 17ms, proxy.ts: 3ms, application-code: 19ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 39ms[2m (next.js: 1323µs, application-code: 38ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-162-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 81ms[2m (next.js: 1537µs, application-code: 80ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 182ms[2m (next.js: 24ms, proxy.ts: 12ms, application-code: 146ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 111ms[2m (next.js: 1780µs, application-code: 110ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1397µs, proxy.ts: 1686µs, application-code: 10ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 9ms[2m (next.js: 1143µs, proxy.ts: 1517µs, application-code: 6ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1444µs, proxy.ts: 2ms, application-code: 10ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 77ms[2m (next.js: 1741µs, proxy.ts: 47ms, application-code: 28ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 15ms, proxy.ts: 3ms, application-code: 16ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 40ms[2m (next.js: 19ms, proxy.ts: 4ms, application-code: 17ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 54ms[2m (next.js: 3ms, application-code: 51ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-162-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 41ms[2m (next.js: 3ms, application-code: 38ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 18ms[2m (next.js: 3ms, application-code: 15ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1290µs, proxy.ts: 1578µs, application-code: 7ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 8ms[2m (next.js: 1009µs, proxy.ts: 1412µs, application-code: 6ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1180µs, proxy.ts: 1925µs, application-code: 8ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 1840µs, proxy.ts: 2ms, application-code: 29ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 16ms, proxy.ts: 2ms, application-code: 15ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 25ms[2m (next.js: 1648µs, application-code: 24ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-162-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 16ms[2m (next.js: 1404µs, application-code: 15ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 31ms[2m (next.js: 3ms, proxy.ts: 2ms, application-code: 27ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 17ms, proxy.ts: 2ms, application-code: 15ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 20ms[2m (next.js: 1668µs, application-code: 19ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1829µs, proxy.ts: 1967µs, application-code: 7ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 9ms[2m (next.js: 1298µs, proxy.ts: 1719µs, application-code: 6ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1716µs, proxy.ts: 3ms, application-code: 9ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 1522µs, proxy.ts: 2ms, application-code: 31ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 17ms, proxy.ts: 2ms, application-code: 17ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 31ms[2m (next.js: 2ms, application-code: 29ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-162-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 21ms[2m (next.js: 1476µs, application-code: 19ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 2ms, proxy.ts: 6ms, application-code: 15ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 22ms[2m (next.js: 3ms, application-code: 20ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1241µs, proxy.ts: 2ms, application-code: 9ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 9ms[2m (next.js: 1249µs, proxy.ts: 1487µs, application-code: 6ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1691µs, proxy.ts: 1983µs, application-code: 9ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 2ms, proxy.ts: 1998µs, application-code: 29ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 17ms, proxy.ts: 1991µs, application-code: 17ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 25ms[2m (next.js: 1327µs, application-code: 24ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-162-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 14ms[2m (next.js: 1063µs, application-code: 13ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1168µs, proxy.ts: 1967µs, application-code: 19ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 14ms[2m (next.js: 1082µs, application-code: 13ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1295µs, proxy.ts: 1830µs, application-code: 7ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 9ms[2m (next.js: 1247µs, proxy.ts: 1629µs, application-code: 6ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 19ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 20ms, proxy.ts: 3ms, application-code: 14ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 25ms[2m (next.js: 1134µs, application-code: 24ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 15ms[2m (next.js: 1152µs, application-code: 14ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1326µs, proxy.ts: 1591µs, application-code: 8ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 1461µs, proxy.ts: 1900µs, application-code: 26ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 31ms[2m (next.js: 14ms, proxy.ts: 1902µs, application-code: 14ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-169-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E6%A8%AA%E5%9B%BE.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 28ms[2m (next.js: 3ms, application-code: 25ms)[22m
+[WebServer]  GET /api/v1/blob/groups/grp-ff1d77a1-160/inbox/uploads/objkey-ff1d77a1-162-%E7%B4%A0%E6%9D%90%E9%A2%84%E8%A7%88%E9%95%BF%E5%9B%BE-portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_portrait_.png?[SIGNED_QUERY_REDACTED] [32m200[39m in 14ms[2m (next.js: 1335µs, application-code: 13ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1517µs, proxy.ts: 1990µs, application-code: 7ms)[22m
+[WebServer]  POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1404µs, proxy.ts: 1847µs, application-code: 9ms)[22m
+  ✓  2 [e2e] › tests/e2e/t1140-picker-low-height.spec.ts:114:1 › T-1140 精确选用、正式回读、刷新返回与原gallery流程 (15.8s)
+
+  2 passed (1.3m)
+[WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[WebServer] 
+[WebServer]     ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[WebServer]       47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[WebServer]          ╵                                                     ~~~~~~~~~~~
+[WebServer] 
+[WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
+[WebServer] 
+[WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[WebServer] 
+[WebServer]     ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[WebServer]       11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[WebServer]          ╵                                                    ~~~~~~~~~~~
+[WebServer] 
+[WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
+[WebServer] 
+[WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[WebServer] 
+[WebServer]     ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[WebServer]       319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[WebServer]           ╵                                           ~~~~~~~~~~~
+[WebServer] 
+[WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
+[WebServer] 
+[WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[WebServer] 
+[WebServer]     ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[WebServer]       6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[WebServer]         ╵                                                     ~~~~~~~~~~~
+[WebServer] 
+[WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
+[WebServer] 
+[WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[WebServer] 
+[WebServer]     ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[WebServer]       11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[WebServer]          ╵                                                    ~~~~~~~~~~~
+[WebServer] 
+[WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
+[WebServer] 
+[WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[WebServer] 
+[WebServer]     ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[WebServer]       47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[WebServer]          ╵                                                     ~~~~~~~~~~~
+[WebServer] 
+[WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
+[WebServer] 
+[WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[WebServer] 
+[WebServer]     ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[WebServer]       319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[WebServer]           ╵                                           ~~~~~~~~~~~
+[WebServer] 
+[WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
+[WebServer] 
+[WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[WebServer] 
+[WebServer]     ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[WebServer]       6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[WebServer]         ╵                                                     ~~~~~~~~~~~
+[WebServer] 
+[WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
+[WebServer] 
+[WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[WebServer] 
+[WebServer]     ../ai-worker/vendor/codex-acp/src/CodexJsonRpcConnection.ts:27:93:
+[WebServer]       27 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[WebServer]          ╵                              ~~~~~~~~~~~
+[WebServer] 
+[WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
+[WebServer] 
+[WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[WebServer] 
+[WebServer]     ../ai-worker/vendor/codex-acp/src/CodexCli.ts:29:89:
+[WebServer]       29 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[WebServer]          ╵                              ~~~~~~~~~~~
+[WebServer] 
+[WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
+[WebServer] 
+[WebServer] [secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[WebServer] [persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+[WebServer] [31m[1m⨯[22m[39m Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
+[WebServer] [31m[1m⨯[22m[39m Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
+[WebServer] [31m[1m⨯[22m[39m Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
+[WebServer] Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
+[WebServer] [31m[1m⨯[22m[39m uncaughtException: Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
+[WebServer] [31m[1m⨯[22m[39m uncaughtException:  Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
+[WebServer] [31m[1m⨯[22m[39m Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
+[WebServer] [31m[1m⨯[22m[39m Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
+[WebServer] [31m[1m⨯[22m[39m Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
+[WebServer] [31m[1m⨯[22m[39m Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
+[WebServer] [31m[1m⨯[22m[39m Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
+[WebServer] Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
+[WebServer] [31m[1m⨯[22m[39m uncaughtException: Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
+[WebServer] [31m[1m⨯[22m[39m uncaughtException:  Error: aborted
+[WebServer]     at [3mignore-listed frames[23m {
+[WebServer]   code: [32m'ECONNRESET'[39m
+[WebServer] }
