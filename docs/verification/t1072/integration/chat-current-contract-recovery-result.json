@@ -1,0 +1,43 @@
+{
+  "sourceParent": "24b432b1e0f1a5067a555f766b0d1b66aa1f3c1e",
+  "codeWriteSet": [
+    "backend/src/modules/ai-runtime/chat-assembly.test.ts"
+  ],
+  "codeSha256": "db5061e8e74491a990bc7a2ede431d7911cb7a2b9c9e5bd3f90fb7206c1d61a5",
+  "productionChanged": false,
+  "publicContractChanged": false,
+  "originalChatInputs": 90,
+  "chatFinal": {
+    "passed": 90,
+    "failed": 0,
+    "durationSeconds": 8.64,
+    "exit": 0
+  },
+  "full170": {
+    "passed": 159,
+    "failed": 11,
+    "chatFailed": 0,
+    "transcribeFailed": 11,
+    "durationSeconds": 36.9,
+    "exit": 1
+  },
+  "related46": {
+    "passed": 43,
+    "failed": 3,
+    "durationSeconds": 26.32,
+    "exit": 1
+  },
+  "typecheckExit": 0,
+  "reviewKind": "本轮独立只读历史来源审查，非reviewctl PASS",
+  "logs": {
+    "backend-chat-toolset-current-green.log": "4d7ce7fbfbbd7e505e7bd7a988e9df89e3f2cea114ad2acfd2b7c8117551598a",
+    "backend-chat-current-contract-first-full90.log": "7660dd37ddc75748267ba1f799c9062b1cd27816371569750f357f5a79ce331e",
+    "backend-chat-current-contract-second-full90.log": "3966c3eb792674a2985c2acdb492f1da9c94dfefd5ac6690b5e7678b439f995b",
+    "backend-chat-current-contract-frozen-full90.log": "14cc038a217585976e59b1c33ff78d5c1f00843531c4c81314f745d738a3ea1d",
+    "backend-chat-current-contract-first-typecheck.log": "8f5bb4cb4f6c56f17637707dc983cd876926b8daf8d422a58407ddf0de1b676e",
+    "backend-chat-current-contract-final-typecheck.log": "a1b81a57f4f88292738196bd97767b54ebc874c2cbcb6b8c6a7b80517162c8c3",
+    "backend-chat-current-contract-corrected-typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "backend-chat-current-contract-ports-worker.log": "12a64a578641b724d12b2aa501d8b8a292fe61df5d0057fd687b4d14a9cb0c30",
+    "backend-five-chat-current-contract-full170.log": "47764cccaccd9575bb91c75c7d62c24908d06058781115c96bdd383052115bea"
+  }
+}
