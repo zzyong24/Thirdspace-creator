@@ -1,9 +1,17 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, beforeAll, afterAll, afterEach, vi } from "vitest";
 
-// /api/chat 路由单测(SPEC §7「/api/chat 装配」+ 鉴权 + 持久化 wiring)。
-// 真正的流式由 chat-runner.runChatStream 负责(那层另有装配单测;真跑需 dev server + key)。
-// 这里 mock 掉 runChatStream + 组合根 getter,断言路由:鉴权门、ChatContext 默认、会话/消息
-// 持久化(ai_conversations/ai_messages)、把流式响应透传(toUIMessageStreamResponse)。
+// /api/chat 当前持久契约：身份/消息/外部内容端口为合成夹具；真实PGlite提交、租约、账本、完成与SSE。
+import {createRouteDurableFixture} from '../../../../../backend/src/modules/ai/chat-route-durable.test-fixture';
+import {registerAllTemplates,getOfficialSkillBase} from '@creatoros/ai-worker';
+let durableFixture: Awaited<ReturnType<typeof createRouteDurableFixture>>;
+const prepareChatReplySpy=vi.hoisted(()=>vi.fn());
+vi.mock('@/server/prepare-chat-reply',async original=>{
+ const actual=await original<typeof import('@/server/prepare-chat-reply')>();
+ return {...actual,prepareChatReply:(...args:Parameters<typeof actual.prepareChatReply>)=>prepareChatReplySpy(...args)};
+});
+beforeAll(async()=>{registerAllTemplates();durableFixture=await createRouteDurableFixture();});
+afterEach(async()=>{await durableFixture.reset();});
+afterAll(async()=>{await durableFixture.close();});
 
 const resolveContextFromToken = vi.fn();
 const resolveLocalContext = vi.fn();
@@ -14,31 +22,11 @@ const appendAssistantMessage = vi.fn();
 const getConversation = vi.fn();
 // [T-239f] user 去重的历史读(兜底路径:无 trigger 的老客户端按「最后一条=同内容 user 行」判)。
 const listMessages = vi.fn();
-const runChatStream = vi.fn();
 const dispatchDouyinShare = vi.fn();
 const readChatAttachment = vi.fn();
 const resolveCurrentScriptSelection = vi.fn();
 const resolveEffectiveSkillSnapshot = vi.fn();
-const runWithEffectiveSkillSnapshot = vi.hoisted(() =>
-  vi.fn(
-    async (_snapshot: unknown, execute: () => Promise<unknown>) => execute(),
-  ),
-);
 
-// [T-128] 捕获路由传给 toUIMessageStreamResponse 的 init(headers + onFinish),让测试能手动
-// 触发 onFinish 断言 assistant 回复(text + parts)落库。[T-239c] onFinish 现带 isAborted。
-let capturedStreamInit:
-  | {
-      headers?: Record<string, string>;
-      originalMessages?: unknown[];
-      consumeSseStream?: unknown;
-      onError?: (error: unknown) => string;
-      onFinish?: (e: {
-        responseMessage: unknown;
-        isAborted?: boolean;
-      }) => Promise<void> | void;
-    }
-  | null = null;
 
 vi.mock("@/server/persistence-client", () => ({
   getIdentityService: async () => ({
@@ -54,42 +42,38 @@ vi.mock("@/server/persistence-client", () => ({
       listMessages,
     },
     resolveEffectiveSkillSnapshot,
+    durable: {
+      get:(...args:Parameters<typeof durableFixture.runtime.get>)=>durableFixture.runtime.get(...args),
+      command:(...args:Parameters<typeof durableFixture.runtime.command>)=>durableFixture.runtime.command(...args),
+      subscribe:(...args:Parameters<typeof durableFixture.runtime.subscribe>)=>durableFixture.runtime.subscribe(...args),
+      submit:async(ctx:Parameters<typeof durableFixture.runtime.submit>[0],input:Parameters<typeof durableFixture.runtime.submit>[1],assemble:Parameters<typeof durableFixture.runtime.submit>[2])=>{
+        const created=createConversation.mock.calls.at(-1)?.[1];
+        const conversation=created??await getConversation.mock.results.at(-1)?.value??{scope:'global'};
+        let history:Record<string,unknown>[]=[];
+        try{history=await listMessages.mock.results.at(-1)?.value??[];}catch{}
+        const saved=await createMessage.mock.results.at(-1)?.value;
+        const source=saved?.id===input.sourceMessageId && createMessage.mock.calls.at(-1)?.[2]
+          ? {...createMessage.mock.calls.at(-1)![2],id:saved.id,role:'user'}
+          : history.find(row=>row.id===input.sourceMessageId && row.role==='user');
+        if(!source)throw Error('隔离夹具没有匹配的保存回执或历史源消息');
+        await durableFixture.seed(ctx,input,conversation,history,source);
+        return durableFixture.runtime.submit(ctx,input,assemble);
+      },
+    },
     resolveModelSpec: vi.fn(),
     dispatchDouyinShare,
     readChatAttachment,
     resolveCurrentScriptSelection,
+    contextReaders:{getProjectDetail:async()=>({id:"project-1",title:"项目",stage:"planning",status:"active",publish:{published:false,platform:null,publishedAt:null},brief:{},artifacts:[]})},
+    searchWeb:async()=>{throw Error("装配不得访问外网")},
     context: {
-      positioning: {},
-      learnings: {},
-      signals: {},
-      knowledge: {},
+      positioning: {getPositioningCenter:async()=>({profile:null,currentStatement:null})},
+      learnings: {getSuggestions:async()=>[]},
+      signals: {list:async()=>[]},
+      knowledge: {list:async()=>[]},
+      accounts:{list:async()=>[]},
     },
   }),
-}));
-
-vi.mock("@creatoros/backend/modules/ai-runtime", () => ({
-  requiredSkillIdsForTask: (_taskType: string, input: { surface?: string }) =>
-    input.surface === "review"
-      ? ["chatbox.review"]
-      : input.surface === "topics" || input.surface === "project"
-        ? ["chatbox.topic", "creatoros.guide"]
-        : ["chatbox.topic"],
-  runChatStream: (...args: unknown[]) => runChatStream(...args),
-  formatErrorDiagnostic: () => "class=Error reason=unknown",
-  normalizeWebReadUrl: (value: string) => {
-    try {
-      const url = new URL(value.trim());
-      if (url.protocol !== "http:" && url.protocol !== "https:") return null;
-      url.hash = "";
-      return url.toString();
-    } catch {
-      return null;
-    }
-  },
-}));
-
-vi.mock("@creatoros/ai-worker", () => ({
-  runWithEffectiveSkillSnapshot,
 }));
 
 // readSessionCookie reads the cookie header; keep the real impl (it's pure).
@@ -159,30 +143,32 @@ function minimalTextPdf(text: string): Uint8Array {
 const MINIMAL_DOCX_BASE64 =
   "UEsDBAoAAAAIAAwKB115bjPX6AAAAK0BAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbH1QyU7DMBD9FWuuKHHggBCK0wPLETiUDxjZk8SqN3nc0v49Tlt6QIXjzFv1+tXeO7GjzDYGBbdtB4KCjsaGScHn+rV5AMEFg0EXAyk4EMNq6NeHRCyqNrCCuZT0KCXrmTxyGxOFiowxeyz1zJNMqDc4kbzrunupYygUSlMWDxj6Zxpx64p42df3qUcmxyCeTsQlSwGm5KzGUnG5C+ZXSnNOaKvyyOHZJr6pBJBXExbk74Cz7r0Ok60h8YG5vKGvLPkVs5Em6q2vyvZ/mys94zhaTRf94pZy1MRcF/euvSAebfjpL49zD99QSwMECgAAAAAADAoHXQAAAAAAAAAAAAAAAAYAAABfcmVscy9QSwMECgAAAAgADAoHXZv9N+qtAAAAKQEAAAsAAABfcmVscy8ucmVsc43POw7CMAwG4KtE3mlaBoRQ0y4IqSsqB7ASN61oHkrCo7cnAwNFDIy2f3+W6/ZpZnanECdnBVRFCYysdGqyWsClP232wGJCq3B2lgQsFKFt6jPNmPJKHCcfWTZsFDCm5A+cRzmSwVg4TzZPBhcMplwGzT3KK2ri27Lc8fBpwNpknRIQOlUB6xdP/9huGCZJRydvhmz6ceIrkWUMmpKAhwuKq3e7yCzwpuarF5sXUEsDBAoAAAAAAAwKB10AAAAAAAAAAAAAAAAFAAAAd29yZC9QSwMECgAAAAgADAoHXXQLjfvZAAAA/wAAABEAAAB3b3JkL2RvY3VtZW50LnhtbEWOsU7DMBCGXyXyTh06IBQl6cbMAGI2tmkjxXeRzxC6IQRsqExIwErXdmOJ+jTEUvMW2GHo8p3uP/2fLp/dmzq505YqhIIdT1KWaJCoKpgX7PLi7OiUJeQEKFEj6IItNbFZmbeZQnlrNLgkCICytmAL55qMc5ILbQRNsNEQbjdojXBhtXPeolWNRamJgt/UfJqmJ9yIClhUXqNaxtlE2AhXXoXK8PHUdz9+te279X7b+dW7/9r5l+fh+21Yb/zms9+9/j485jwWIu3IUUNaunPLx+Dfzw+/l39QSwECFAAKAAAACAAMCgddeW4z1+gAAACtAQAAEwAAAAAAAAAAAAAAAAAAAAAAW0NvbnRlbnRfVHlwZXNdLnhtbFBLAQIUAAoAAAAAAAwKB10AAAAAAAAAAAAAAAAGAAAAAAAAAAAAEAAAABkBAABfcmVscy9QSwECFAAKAAAACAAMCgddm/036q0AAAApAQAACwAAAAAAAAAAAAAAAAA9AQAAX3JlbHMvLnJlbHNQSwECFAAKAAAAAAAMCgddAAAAAAAAAAAAAAAABQAAAAAAAAAAABAAAAATAgAAd29yZC9QSwECFAAKAAAACAAMCgdddAuN+9kAAAD/AAAAEQAAAAAAAAAAAAAAAAA2AgAAd29yZC9kb2N1bWVudC54bWxQSwUGAAAAAAUABQAgAQAAPgMAAAAA";
 
-beforeEach(() => {
+beforeEach(async () => {
   resolveContextFromToken.mockReset();
-  resolveContextFromToken.mockResolvedValue({ userId: "u-1" });
+  resolveContextFromToken.mockResolvedValue({ userId: "u-1", accountId: "acct-1" });
   resolveLocalContext.mockReset();
-  resolveLocalContext.mockResolvedValue({ userId: "u-1" });
+  resolveLocalContext.mockResolvedValue({ userId: "u-1", accountId: "acct-1" });
   createConversation.mockReset();
-  createConversation.mockResolvedValue({ id: "conv-1" });
+  let conversationSequence=0;
+  createConversation.mockImplementation(async()=>({id:`conv-${++conversationSequence}`}));
   getConversation.mockReset();
   getConversation.mockResolvedValue({ id: "conv-existing", scope: "global" });
   createMessage.mockReset();
-  createMessage.mockResolvedValue({ id: "m-1" });
+  let messageSequence=0;
+  createMessage.mockImplementation(async()=>{
+    let history:Array<{id:string}>=[];try{history=await listMessages.mock.results.at(-1)?.value??[];}catch{}
+    let id:string;do{id=`m-${++messageSequence}`;}while(history.some(row=>row.id===id));
+    return {id};
+  });
   listMessages.mockReset();
   listMessages.mockResolvedValue([]);
   appendAssistantMessage.mockReset();
   appendAssistantMessage.mockResolvedValue({ id: "m-2" });
   resolveEffectiveSkillSnapshot.mockReset();
-  resolveEffectiveSkillSnapshot.mockResolvedValue({
-    snapshotVersion: 1,
-    userId: "u-1",
-    accountId: "acct-1",
-    skills: [],
-  });
-  runWithEffectiveSkillSnapshot.mockClear();
-  runChatStream.mockReset();
+  resolveEffectiveSkillSnapshot.mockImplementation(async(ctx,ids:string[])=>({snapshotVersion:1,userId:ctx.userId,accountId:ctx.accountId,resolvedAt:'2026-09-08T00:00:00Z',platformPolicyVersion:'1',platformPolicy:'遵守用户选择',skills:[...new Set(ids)].sort().map(skillId=>{const t=getOfficialSkillBase(skillId);if(!t)throw Error(`缺少官方 Skill ${skillId}`);return {skillId,baseVersion:t.baseVersion,overlayRevision:null,overlayVersion:null,effective:{methodSystem:t.methodSystem,template:t.template,tools:t.tools??[],requiredFacets:t.requiredFacets??[],contextRequirements:t.contextRequirements??[],outputSchema:t.outputSchema??null,completionPolicy:t.completionPolicy??null,completionPolicyAdapter:t.completionPolicyAdapter??null}};})}));
+  prepareChatReplySpy.mockReset();
+  const {prepareChatReply}=await vi.importActual<typeof import('@/server/prepare-chat-reply')>('@/server/prepare-chat-reply');
+  prepareChatReplySpy.mockImplementation(prepareChatReply);
   dispatchDouyinShare.mockReset();
   readChatAttachment.mockReset();
   readChatAttachment.mockResolvedValue({
@@ -207,24 +193,7 @@ beforeEach(() => {
       matchStrategy: "id",
     }),
   );
-  capturedStreamInit = null;
-  // Default: a stream result whose toUIMessageStreamResponse captures its init(headers +
-  // [T-128] onFinish 持久化回调)并返回普通 Response。
-  runChatStream.mockResolvedValue({
-    toUIMessageStreamResponse: (init?: {
-      headers?: Record<string, string>;
-      originalMessages?: unknown[];
-      consumeSseStream?: unknown;
-      onError?: (error: unknown) => string;
-      onFinish?: (e: {
-        responseMessage: unknown;
-        isAborted?: boolean;
-      }) => Promise<void> | void;
-    }) => {
-      capturedStreamInit = init ?? null;
-      return new Response("stream", { status: 200, headers: init?.headers });
-    },
-  });
+
 });
 
 // ── [T-267②] 会话标题净化:斜杠命令 / 裸路径不当标题 ──────────────────────────────
@@ -274,7 +243,7 @@ describe("POST /api/chat — 鉴权门", () => {
     const res = await POST(chatReq({ messages: [userMessage("hi")] }));
     expect(res.status).toBe(200);
     expect(resolveLocalContext).toHaveBeenCalledTimes(1);
-    expect(runChatStream).toHaveBeenCalledTimes(1);
+    expect(prepareChatReplySpy).toHaveBeenCalledTimes(1);
   });
 
   it("非法 JSON body → 400", async () => {
@@ -299,7 +268,7 @@ describe("POST /api/chat — 鉴权门", () => {
     await expect(res.json()).resolves.toMatchObject({
       code: "ACCOUNT_CONTEXT_MISMATCH",
     });
-    expect(runChatStream).not.toHaveBeenCalled();
+    expect(prepareChatReplySpy).not.toHaveBeenCalled();
   });
 });
 
@@ -320,7 +289,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     );
 
     expect(res.status).toBe(200);
-    const [, input] = runChatStream.mock.calls[0];
+    const [, , , input] = prepareChatReplySpy.mock.calls[0];
     expect(input.chatContext).toMatchObject({
       functionKey: "web.read",
       webReadUrl: "https://example.com/article",
@@ -346,7 +315,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     await expect(res.json()).resolves.toMatchObject({
       code: "WEB_READ_URL_INVALID",
     });
-    expect(runChatStream).not.toHaveBeenCalled();
+    expect(prepareChatReplySpy).not.toHaveBeenCalled();
   });
 
   it("[T-716] 局部改稿发送前重绑当前稿面版本与正文，并强制走 script.patch", async () => {
@@ -384,7 +353,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
 
     expect(res.status).toBe(200);
     expect(resolveCurrentScriptSelection).toHaveBeenCalledWith(
-      { userId: "u-1" },
+      { userId: "u-1", accountId: "acct-1" },
       {
         artifactId: "artifact-script",
         versionId: "version-3",
@@ -393,7 +362,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
         excerpt: "旧版段落正文",
       },
     );
-    const [, input] = runChatStream.mock.calls[0];
+    const [, , , input] = prepareChatReplySpy.mock.calls[0];
     expect(input.chatContext).toMatchObject({
       functionKey: "script.patch",
       selection: {
@@ -407,24 +376,11 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     });
     expect(input.chatContext.diagnosticRef).toMatch(/^chat-[a-f0-9]{10}$/);
 
-    const consoleSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
-    const exposed = capturedStreamInit?.onError?.(
-      new Error("opaque-secret https://opaque.example/v1 stream interrupted"),
-    );
-    expect(exposed).toBe(
-      `本次局部改写中断，稿面未被修改，目标段落已保留。参考号：${input.chatContext.diagnosticRef}。请直接重试。`,
-    );
-    const logSnapshot = JSON.stringify(consoleSpy.mock.calls);
-    expect(logSnapshot).toContain("provider_stream_error");
-    expect(logSnapshot).toContain(input.chatContext.diagnosticRef);
-    expect(logSnapshot).toContain("script.patch");
-    expect(logSnapshot).toContain("class=Error reason=unknown");
-    expect(logSnapshot).not.toMatch(
-      /opaque-secret|opaque\.example|stream interrupted/,
-    );
-    consoleSpy.mockRestore();
+    expect((await durableFixture.rows()).execution[0].payload).toMatchObject({hostContext:{chatContext:{functionKey:'script.patch',selection:{versionId:'version-8'}}}});
+    await durableFixture.fail('opaque-secret https://opaque.example/v1 stream interrupted');
+    const body=await res.text();expect(body).toContain('"type":"error"');expect(body).not.toMatch(/opaque-secret|opaque\.example|stream interrupted/);
+    expect((await durableFixture.rows()).execution[0].status).toBe('failed');
+
   });
 
   it("[T-716] 当前稿面已经没有目标段落时明确要求重新点选，不拿旧快照继续改", async () => {
@@ -455,7 +411,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     await expect(res.json()).resolves.toMatchObject({
       code: "SCRIPT_SELECTION_STALE",
     });
-    expect(runChatStream).not.toHaveBeenCalled();
+    expect(prepareChatReplySpy).not.toHaveBeenCalled();
   });
 
   it("[T-732] 连续对话保留的段落锚点只提供可选局部工具，不劫持明确整稿请求", async () => {
@@ -490,7 +446,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     );
 
     expect(res.status).toBe(200);
-    const [, input] = runChatStream.mock.calls[0];
+    const [, , , input] = prepareChatReplySpy.mock.calls[0];
     expect(input.chatContext.functionKey).toBeUndefined();
     expect(input.chatContext.selection).toMatchObject({
       kind: "script_section",
@@ -526,7 +482,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     );
 
     expect(res.status).toBe(200);
-    const [, input] = runChatStream.mock.calls[0];
+    const [, , , input] = prepareChatReplySpy.mock.calls[0];
     expect(input.chatContext.functionKey).toBeUndefined();
     expect(input.chatContext.selection).toBeUndefined();
   });
@@ -557,7 +513,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
 
     expect(res.status).toBe(200);
     expect(resolveCurrentScriptSelection).not.toHaveBeenCalled();
-    const [, input] = runChatStream.mock.calls[0];
+    const [, , , input] = prepareChatReplySpy.mock.calls[0];
     expect(input.chatContext.functionKey).toBe("script.draft");
     expect(input.chatContext.selection).toBeUndefined();
   });
@@ -586,10 +542,10 @@ describe("POST /api/chat — 装配 + 持久化", () => {
       code: "SCRIPT_SELECTION_REQUIRED",
       error: expect.stringContaining("不会因此改写整稿"),
     });
-    expect(runChatStream).not.toHaveBeenCalled();
+    expect(prepareChatReplySpy).not.toHaveBeenCalled();
   });
 
-  it("有 cookie → 持久化会话+用户消息,委派 runChatStream,透传流式响应 + 会话头", async () => {
+  it("有cookie保存输入后提交真实持久任务，返回原任务和会话回执", async () => {
     const res = await POST(
       chatReq(
         { messages: [userMessage("基于评论出 5 个选题")], chatContext: { surface: "topics" } },
@@ -603,51 +559,35 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     // 持久化:lazy 建会话 + 落最新一条用户消息(SPEC §3.3 消息落 ai_conversations/ai_messages)。
     expect(createConversation).toHaveBeenCalledTimes(1);
     expect(createMessage).toHaveBeenCalledWith(
-      { userId: "u-1" },
+      { userId: "u-1", accountId: "acct-1" },
       "conv-1",
       { content: "基于评论出 5 个选题" },
     );
 
-    // 委派装配:runChatStream 收到 messages + chatContext(surface)。
+    // 实际prepareChatReply只装配冻结输入，不执行模型。
     expect(resolveEffectiveSkillSnapshot).toHaveBeenCalledWith(
-      { userId: "u-1" },
-      ["chatbox.topic", "creatoros.guide"],
+      { userId: "u-1", accountId: "acct-1" },
+      expect.arrayContaining(["chatbox.topic", "creatoros.guide"]),
     );
-    expect(runChatStream).toHaveBeenCalledTimes(1);
-    const [, input] = runChatStream.mock.calls[0];
+    expect(prepareChatReplySpy).toHaveBeenCalledTimes(1);
+    const [, , , input] = prepareChatReplySpy.mock.calls[0];
     expect(input.chatContext.surface).toBe("topics");
     expect(input.messages).toHaveLength(1);
-    // [T-673] HITL 续跑时服务端会先收到末条 assistant 的 approval-responded，随后只流出
-    // tool-output。必须把原消息交给 SDK 作为续写基线，否则服务端自己的流组装器从空态处理
-    // tool-output，会报 “No tool invocation found” 并让前端对同一授权无限续跑。
-    expect(capturedStreamInit?.originalMessages).toEqual([
-      userMessage("基于评论出 5 个选题"),
-    ]);
-    const [, , deps] = runChatStream.mock.calls[0];
-    expect(deps.dispatchDouyinSharePort).toBe(dispatchDouyinShare);
+    const receipt=durableFixture.receipt()!;
+    expect(res.headers.get('x-execution-task-id')).toBe(receipt.executionTaskId);
+    expect((await durableFixture.rows()).business).toEqual([expect.objectContaining({id:receipt.taskId,status:'queued',executionTaskId:receipt.executionTaskId})]);
+    await durableFixture.finish('stream');
+    expect(await res.text()).toContain('[DONE]');
+    for(const failure of [
+      {message:'raw-error opaque-model opaque-secret https://opaque.example/v1 response-body',code:'MODEL_CONFIGURATION_REQUIRED',expected:'本次执行未完成，请检查模型配置后重试。'},
+      {message:'AI 额度不足，请充值后再试。',code:'AI_CREDIT_EXHAUSTED',expected:'AI 额度不足，请充值后再试。'},
+    ]){
+      await durableFixture.reset();
+      const failed=await POST(chatReq({messages:[userMessage('基于评论出 5 个选题')],chatContext:{surface:'topics'}},'creatoros_session=tok'));
+      await durableFixture.fail(failure.message,failure.code);
+      const body=await failed.text();expect(body).toContain(failure.expected);expect(body).toContain('[DONE]');expect(body).not.toMatch(/opaque-model|opaque-secret|opaque\.example|response-body|raw-error/);
+    }
 
-    const consoleSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
-    const exposed = capturedStreamInit?.onError?.(
-      new Error(
-        "raw-error opaque-model opaque-secret https://opaque.example/v1 response-body",
-      ),
-    );
-    expect(exposed).toBe("模型调用失败，请稍后重试。");
-    const logSnapshot = JSON.stringify(consoleSpy.mock.calls);
-    expect(logSnapshot).toContain("provider_stream_error");
-    expect(logSnapshot).not.toMatch(
-      /opaque-model|opaque-secret|opaque\.example|response-body|raw-error/,
-    );
-    consoleSpy.mockRestore();
-
-    const creditExhausted = capturedStreamInit?.onError?.(
-      Object.assign(new Error("AI 额度不足，请充值后再试。"), {
-        code: "AI_CREDIT_EXHAUSTED",
-      }),
-    );
-    expect(creditExhausted).toBe("AI 额度不足，请充值后再试。");
   });
 
   it("[T-267②] 首条消息是斜杠命令+路径 → lazy 建会话用净化后的标题(文件名),不用路径原文", async () => {
@@ -658,14 +598,14 @@ describe("POST /api/chat — 装配 + 持久化", () => {
       ),
     );
     expect(createConversation).toHaveBeenCalledWith(
-      { userId: "u-1" },
+      { userId: "u-1", accountId: "acct-1" },
       expect.objectContaining({ title: "2026-07-12_x.md" }),
     );
   });
 
   it("缺 chatContext.surface → 默认 topics(选题编导)", async () => {
     await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
-    const [, input] = runChatStream.mock.calls[0];
+    const [, , , input] = prepareChatReplySpy.mock.calls[0];
     expect(input.chatContext.surface).toBe("topics");
   });
 
@@ -678,67 +618,36 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     );
     expect(createConversation).not.toHaveBeenCalled();
     expect(createMessage).toHaveBeenCalledWith(
-      { userId: "u-1" },
+      { userId: "u-1", accountId: "acct-1" },
       "conv-existing",
       { content: "hi" },
     );
   });
 
-  it("[T-128] onFinish 把 assistant 文本 + 完整 parts(含 tool-result 卡)落 appendAssistantMessage", async () => {
-    // 路由把 assistant 持久化放进 toUIMessageStreamResponse 的 onFinish —— 那里拿得到 SDK 组装好的
-    // responseMessage.parts(text + tool-result 卡数据)。手动触发,断言 text + parts 一并落库
-    // (刷新恢复据 parts 重建候选卡/素材卡/审核报告卡,不再丢卡)。
-    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
-    const parts = [
-      { type: "text", text: "给你 3 个选题" },
-      {
-        type: "tool-topic.generate",
-        toolCallId: "tc-1",
-        state: "output-available",
-        input: {},
-        output: { kind: "topic.candidates", items: [{ title: "A" }] },
-      },
-    ];
-    expect(capturedStreamInit?.onFinish).toBeTypeOf("function");
-    await capturedStreamInit!.onFinish!({
-      responseMessage: { id: "m-2", role: "assistant", parts },
-    });
-    expect(appendAssistantMessage).toHaveBeenCalledWith(
-      { userId: "u-1" },
-      "conv-1",
-      "给你 3 个选题",
-      parts,
-    );
+  it("[T-128] 已确认正文与完整工具parts由持久完成事务保存，刷新可回读", async () => {
+    const res=await POST(chatReq({messages:[userMessage("hi")]},"creatoros_session=tok"));
+    await durableFixture.finish("给你 3 个选题",{tool:{name:"topic.generate",input:{},output:{kind:"topic.candidates",items:[{title:"A"}]}}});
+    const messages=await durableFixture.messages();
+    const reply=messages.find(row=>row.role==='assistant')!;
+    expect(reply.content).toBe("给你 3 个选题");
+    expect(reply.parts).toEqual(expect.arrayContaining([expect.objectContaining({type:"text",text:"给你 3 个选题"}),expect.objectContaining({type:"tool-topic_generate",state:"output-available",output:{kind:"topic.candidates",items:[{title:"A"}]}})]));
+    expect(messages.filter(row=>row.role==='assistant')).toHaveLength(1);
+    const body=await res.text();expect(body).toContain('tool-output-available');expect(body).toContain('[DONE]');
+    expect((await durableFixture.rows()).execution[0].status).toBe('succeeded');
   });
 
-  it("[T-128/T-464] 纯空轮 → 落一条兜底提示 assistant 消息(而非静默空气泡)", async () => {
-    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
-    await capturedStreamInit!.onFinish!({
-      responseMessage: {
-        id: "m-x",
-        role: "assistant",
-        parts: [{ type: "step-start" }],
-      },
-    });
-    // T-464 修:非中断空轮不再 silent return,而是落一条含"AI 未返回任何内容"的信封,
-    //   让用户能看到出了啥事(codex.hiyo.top 类代理返 200 空流场景的自诊断)。
-    expect(appendAssistantMessage).toHaveBeenCalledTimes(1);
-    const args = appendAssistantMessage.mock.calls[0];
-    expect(args[2]).toContain("AI 未返回任何内容");
-    expect(args[3]).toEqual([]);
+  it("[T-128/T-464] 纯空轮拒绝保存成功，不伪造兜底产物", async () => {
+    await POST(chatReq({messages:[userMessage("hi")]},"creatoros_session=tok"));
+    await expect(durableFixture.finish("")).rejects.toThrow("没有可保存产物");
+    expect((await durableFixture.messages()).filter(row=>row.role==='assistant')).toEqual([]);
+    expect((await durableFixture.rows()).execution[0].status).toBe('running');
   });
 
-  it("[T-464] 中断轮空 → 仍不落库(用户主动停,本就该空)", async () => {
-    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
-    await capturedStreamInit!.onFinish!({
-      responseMessage: {
-        id: "m-x",
-        role: "assistant",
-        parts: [{ type: "step-start" }],
-      },
-      isAborted: true,
-    });
-    expect(appendAssistantMessage).not.toHaveBeenCalled();
+  it("[T-464] 中断订阅的空轮保留原任务，未有产物不落空气泡", async () => {
+    const res=await POST(chatReq({messages:[userMessage("hi")]},"creatoros_session=tok"));
+    await res.body!.cancel();
+    expect((await durableFixture.messages()).filter(row=>row.role==='assistant')).toEqual([]);
+    expect((await durableFixture.rows()).execution[0].status).toBe('queued');
   });
 
   // ── [T-096] 会话作用域:lazy 建落 scope + 续接服务端硬门(§3 矩阵 #2)──
@@ -753,7 +662,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
       ),
     );
     expect(createConversation).toHaveBeenCalledWith(
-      { userId: "u-1" },
+      { userId: "u-1", accountId: "acct-1" },
       expect.objectContaining({ scope: "surface:topics" }),
     );
   });
@@ -769,14 +678,14 @@ describe("POST /api/chat — 装配 + 持久化", () => {
       ),
     );
     expect(createConversation).toHaveBeenCalledWith(
-      { userId: "u-1" },
+      { userId: "u-1", accountId: "acct-1" },
       expect.objectContaining({ scope: "project:proj-1" }),
     );
 
     createConversation.mockClear();
     await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
     expect(createConversation).toHaveBeenCalledWith(
-      { userId: "u-1" },
+      { userId: "u-1", accountId: "acct-1" },
       expect.objectContaining({ scope: "global" }),
     );
   });
@@ -800,7 +709,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     expect(res.status).toBe(403);
     // 不续写(用户消息不落库)、不流式(不触发装配)。
     expect(createMessage).not.toHaveBeenCalled();
-    expect(runChatStream).not.toHaveBeenCalled();
+    expect(prepareChatReplySpy).not.toHaveBeenCalled();
   });
 
   it("[T-096] 续接 scope 一致 → 放行(同 scope = 一条记忆线)", async () => {
@@ -816,12 +725,12 @@ describe("POST /api/chat — 装配 + 持久化", () => {
       ),
     );
     expect(res.status).toBe(200);
-    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1" }, "conv-g", {
+    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1", accountId: "acct-1" }, "conv-g", {
       content: "继续上次",
     });
   });
 
-  it("[T-096] 非法 scope 声明(文法不符)按未声明处理:不触发续接校验,lazy 建回落推导", async () => {
+  it("[T-096] 非法scope按未声明推导，既有会话仍检查真实属主与有效scope", async () => {
     await POST(
       chatReq(
         {
@@ -832,14 +741,14 @@ describe("POST /api/chat — 装配 + 持久化", () => {
         "creatoros_session=tok",
       ),
     );
-    expect(getConversation).not.toHaveBeenCalled();
-    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1" }, "conv-any", {
+    expect(getConversation).toHaveBeenCalledWith({userId:"u-1",accountId:"acct-1"},"conv-any");
+    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1", accountId: "acct-1" }, "conv-any", {
       content: "hi",
     });
   });
 
   it("装配抛错(如没配 key)→ 400(诚实,不假成功)", async () => {
-    runChatStream.mockRejectedValue(
+    prepareChatReplySpy.mockRejectedValue(
       new Error(
         "https://channel-model.internal/v1 model=private-model apiKey=SECRET_CHANNEL_KEY",
       ),
@@ -850,154 +759,90 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     expect(res.status).toBe(400);
     expect(res.headers.get("x-conversation-id")).toBe("conv-1");
     const body = await res.json();
-    expect(body.error).toBe("模型调用失败，请稍后重试或检查模型配置。");
+    expect(body.error).toBe("本轮请求准备或提交未完成，输入已保留。请重试；仍失败时请提供诊断日志。");
     expect(JSON.stringify(body)).not.toContain("SECRET_CHANNEL_KEY");
     expect(JSON.stringify(body)).not.toContain("private-model");
     expect(JSON.stringify(body)).not.toContain("channel-model.internal");
   });
 
-  it("持久化失败不阻断流式(best-effort)—— 仍委派 runChatStream 并返回 200", async () => {
+  it("持久化失败保留重试提示且不创建持久执行", async () => {
     createMessage.mockRejectedValue(new Error("db down"));
     const res = await POST(
       chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"),
     );
-    expect(res.status).toBe(200);
-    expect(runChatStream).toHaveBeenCalledTimes(1);
+    expect(res.status).toBe(500);
+    expect(prepareChatReplySpy).not.toHaveBeenCalled();
+    expect((await durableFixture.rows()).execution).toEqual([]);
   });
 });
 
 // ── [T-239c S2] 中断真一致:signal 贯通 + 中断轮部分产出落库 ─────────────────────────
 describe("[T-239c] POST /api/chat — 中断真一致", () => {
-  it("req.signal 贯通到 runChatStream(input.abortSignal)—— 用户点「停止」服务端立停", async () => {
+  it("req.signal贯通当前准备阶段，持久执行取消由明确命令控制", async () => {
     await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
-    const [, input] = runChatStream.mock.calls[0];
+    const [, , , input] = prepareChatReplySpy.mock.calls[0];
     // Request.signal 是 AbortSignal 实例,原样透传给 streamText。
     expect(input.abortSignal).toBeInstanceOf(AbortSignal);
   });
 
-  it("挂 consumeSseStream 兜底消费 —— 客户端断开后 onFinish 仍能触发(中断落库前提)", async () => {
-    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
-    expect(capturedStreamInit?.consumeSseStream).toBeTypeOf("function");
+  it("断开SSE订阅不取消持久任务，原任务仍能完成并回读", async () => {
+    const res=await POST(chatReq({messages:[userMessage("hi")]},"creatoros_session=tok"));
+    const original=res.headers.get('x-execution-task-id');
+    const reader=res.body!.getReader();expect(new TextDecoder().decode((await reader.read()).value)).toContain('"type":"start"');
+    await reader.cancel();
+    expect((await durableFixture.rows()).execution[0]).toMatchObject({id:original,status:'queued'});
+    await durableFixture.finish('断开后保存的回复');
+    expect((await durableFixture.rows()).execution[0]).toMatchObject({id:original,status:'succeeded'});
+    expect((await durableFixture.messages()).find(row=>row.role==='assistant')?.content).toBe('断开后保存的回复');
   });
 
-  it("中断轮(isAborted=true)→ 部分文本+已完成 tool parts 带 aborted 标记落库(刷新后该轮仍在)", async () => {
-    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
-    const parts = [
-      { type: "text", text: "已产出的半截回答" },
-      {
-        type: "tool-material.gather",
-        toolCallId: "tc-1",
-        state: "output-available",
-        input: {},
-        output: { kind: "material.gather", items: [], grounding: "web" },
-      },
-    ];
-    await capturedStreamInit!.onFinish!({
-      responseMessage: { id: "m-a", role: "assistant", parts },
-      isAborted: true,
-    });
-    expect(appendAssistantMessage).toHaveBeenCalledWith(
-      { userId: "u-1" },
-      "conv-1",
-      "已产出的半截回答",
-      parts,
-      { aborted: true },
-    );
+  it("长度中断轮保留部分正文与已确认工具卡，原任务投影partial", async () => {
+    const res=await POST(chatReq({messages:[userMessage("hi")]},"creatoros_session=tok"));
+    await durableFixture.finish('已产出的半截回答',{reason:'length',tool:{name:'material.gather',input:{query:'隔离资料'},output:{kind:'material.gather',items:[],grounding:'web'}}});
+    const reply=(await durableFixture.messages()).find(row=>row.role==='assistant')!;
+    expect(reply).toMatchObject({content:'已产出的半截回答',modelMetadata:{completeness:'partial',stopReason:'length'}});
+    expect(reply.parts).toEqual(expect.arrayContaining([expect.objectContaining({type:'tool-material_gather',state:'output-available',output:{kind:'material.gather',items:[],grounding:'web'}})]));
+    expect((await durableFixture.rows()).execution[0].status).toBe('partial');
+    expect(await res.text()).toContain('"status":"partial"');
   });
 
-  it("中断轮毫无产出(无文本无 tool part)→ 不落空气泡", async () => {
-    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
-    await capturedStreamInit!.onFinish!({
-      responseMessage: { id: "m-a", role: "assistant", parts: [{ type: "step-start" }] },
-      isAborted: true,
-    });
-    expect(appendAssistantMessage).not.toHaveBeenCalled();
+  it("主动停止空轮提交明确cancel命令，不保存空气泡", async () => {
+    const res=await POST(chatReq({messages:[userMessage("hi")]},"creatoros_session=tok"));
+    const receipt=durableFixture.receipt()!;await res.body!.cancel();
+    await durableFixture.runtime.command({userId:'u-1',accountId:'acct-1',requestId:'cancel',source:'user'},receipt.executionTaskId,'cancel');
+    expect((await durableFixture.rows()).execution[0]).toMatchObject({id:receipt.executionTaskId,status:'cancelled'});
+    expect((await durableFixture.messages()).filter(row=>row.role==='assistant')).toEqual([]);
   });
 });
 
 // ── [T-239e] 用量可见:onUsage 回报的 tokens 随 assistant 落库 ────────────────────────
 describe("[T-239e] POST /api/chat — usage 落库", () => {
-  it("runChatStream 收到 onUsage 回报口;回报后 onFinish 落库带 usage + modelKey", async () => {
-    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
-    const [, input] = runChatStream.mock.calls[0];
-    expect(input.onUsage).toBeTypeOf("function");
-    // 模拟 chat-runner 流式中回报累计用量(finish 时的权威值)。
-    input.onUsage({
-      inputTokens: 2100,
-      outputTokens: 480,
-      cachedTokens: 1500,
-      modelKey: "deepseek-chat",
-    });
-    await capturedStreamInit!.onFinish!({
-      responseMessage: {
-        id: "m-2",
-        role: "assistant",
-        parts: [{ type: "text", text: "好的" }],
-      },
-    });
-    expect(appendAssistantMessage).toHaveBeenCalledWith(
-      { userId: "u-1" },
-      "conv-1",
-      "好的",
-      [{ type: "text", text: "好的" }],
-      {
-        usage: { inputTokens: 2100, outputTokens: 480, cachedTokens: 1500 },
-        modelKey: "deepseek-chat",
-      },
-    );
+  it("已确认调用用量随完成事务落库，不以route回调冒调用回执", async () => {
+    const res=await POST(chatReq({messages:[userMessage("hi")]},"creatoros_session=tok"));
+    await durableFixture.finish('好的',{usage:{inputTokens:2100,outputTokens:480,cachedTokens:1500}});
+    expect((await durableFixture.messages()).find(row=>row.role==='assistant')).toMatchObject({content:'好的',inputTokens:2100,outputTokens:480,cachedTokens:1500});
+    expect(await res.text()).toContain('[DONE]');
   });
 
-  it("中断轮也带已回报的 usage(aborted 与 usage 并存)", async () => {
-    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
-    const [, input] = runChatStream.mock.calls[0];
-    input.onUsage({
-      inputTokens: 900,
-      outputTokens: 120,
-      cachedTokens: 0,
-      modelKey: "glm-4",
-    });
-    await capturedStreamInit!.onFinish!({
-      responseMessage: {
-        id: "m-a",
-        role: "assistant",
-        parts: [{ type: "text", text: "半截" }],
-      },
-      isAborted: true,
-    });
-    expect(appendAssistantMessage).toHaveBeenCalledWith(
-      { userId: "u-1" },
-      "conv-1",
-      "半截",
-      [{ type: "text", text: "半截" }],
-      {
-        aborted: true,
-        usage: { inputTokens: 900, outputTokens: 120, cachedTokens: 0 },
-        modelKey: "glm-4",
-      },
-    );
+  it("部分产物仍保留已确认真实用量，partial与usage并存", async () => {
+    const res=await POST(chatReq({messages:[userMessage("hi")]},"creatoros_session=tok"));
+    await durableFixture.finish('半截',{reason:'length',usage:{inputTokens:900,outputTokens:120,cachedTokens:0}});
+    expect((await durableFixture.messages()).find(row=>row.role==='assistant')).toMatchObject({content:'半截',inputTokens:900,outputTokens:120,cachedTokens:0,modelMetadata:{completeness:'partial'}});
+    expect(await res.text()).toContain('"status":"partial"');
   });
 
-  it("整轮没回报 usage → 维持 4 参调用(不带空 opts,老语义原样)", async () => {
-    await POST(chatReq({ messages: [userMessage("hi")] }, "creatoros_session=tok"));
-    await capturedStreamInit!.onFinish!({
-      responseMessage: {
-        id: "m-2",
-        role: "assistant",
-        parts: [{ type: "text", text: "无用量轮" }],
-      },
-    });
-    expect(appendAssistantMessage).toHaveBeenCalledWith(
-      { userId: "u-1" },
-      "conv-1",
-      "无用量轮",
-      [{ type: "text", text: "无用量轮" }],
-    );
+  it("整轮没有provider用量回执时保持null，不伪造零用量", async () => {
+    const res=await POST(chatReq({messages:[userMessage("hi")]},"creatoros_session=tok"));
+    await durableFixture.finish('无用量轮');
+    expect((await durableFixture.messages()).find(row=>row.role==='assistant')).toMatchObject({content:'无用量轮',inputTokens:null,outputTokens:null,cachedTokens:null});
+    expect(await res.text()).toContain('[DONE]');
   });
 });
 
 // ── [T-239f S6] regenerate 幂等:user 消息不重复落库 ────────────────────────────────
 describe("[T-239f] POST /api/chat — user 消息去重", () => {
   it("trigger='regenerate-message'(useChat regenerate 重发同一条 user)→ 不重复 insert,流式照跑", async () => {
+    listMessages.mockResolvedValue([{id:'m-saved',role:'user',content:'hi'}]);
     const res = await POST(
       chatReq(
         {
@@ -1011,7 +856,7 @@ describe("[T-239f] POST /api/chat — user 消息去重", () => {
     );
     expect(res.status).toBe(200);
     expect(createMessage).not.toHaveBeenCalled();
-    expect(runChatStream).toHaveBeenCalledTimes(1);
+    expect(prepareChatReplySpy).toHaveBeenCalledTimes(1);
   });
 
   it("兜底(无 trigger 的老客户端):续接会话且库中最后一条=同内容 user 行 → 不重插", async () => {
@@ -1026,7 +871,7 @@ describe("[T-239f] POST /api/chat — user 消息去重", () => {
       ),
     );
     expect(createMessage).not.toHaveBeenCalled();
-    expect(runChatStream).toHaveBeenCalledTimes(1);
+    expect(prepareChatReplySpy).toHaveBeenCalledTimes(1);
   });
 
   it("兜底不误伤:最后一条是 assistant(正常新一轮,即使内容与更早 user 相同)→ 照常 insert", async () => {
@@ -1040,7 +885,7 @@ describe("[T-239f] POST /api/chat — user 消息去重", () => {
         "creatoros_session=tok",
       ),
     );
-    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1" }, "conv-existing", {
+    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1", accountId: "acct-1" }, "conv-existing", {
       content: "hi",
     });
   });
@@ -1077,14 +922,14 @@ describe("[T-716] POST /api/chat — 附件上下文", () => {
 
     expect(res.status).toBe(200);
     expect(readChatAttachment).toHaveBeenCalledWith(
-      { userId: "u-1" },
+      { userId: "u-1", accountId: "acct-1" },
       "asset-img",
     );
-    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1" }, "conv-1", {
+    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1", accountId: "acct-1" }, "conv-1", {
       content: "看看这张图",
       attachments: ["asset-img"],
     });
-    const [, input] = runChatStream.mock.calls[0];
+    const [, , , input] = prepareChatReplySpy.mock.calls[0];
     const last = input.messages.at(-1);
     expect(last.parts).toEqual(
       expect.arrayContaining([
@@ -1117,12 +962,12 @@ describe("[T-716] POST /api/chat — 附件上下文", () => {
         "creatoros_session=tok",
       ),
     );
-    const [, input] = runChatStream.mock.calls[0];
+    const [, , , input] = prepareChatReplySpy.mock.calls[0];
     const injected = input.messages.at(-1).parts.at(-1);
     expect(injected.type).toBe("text");
     expect(injected.text).toContain("<user_data>");
     expect(injected.text).toContain("目标用户是国内餐饮老板");
-    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1" }, "conv-1", {
+    expect(createMessage).toHaveBeenCalledWith({ userId: "u-1", accountId: "acct-1" }, "conv-1", {
       content: "结合资料给建议",
       attachments: ["asset-doc"],
     });
@@ -1165,7 +1010,7 @@ describe("[T-716] POST /api/chat — 附件上下文", () => {
     );
 
     expect(res.status).toBe(200);
-    const [, input] = runChatStream.mock.calls[0];
+    const [, , , input] = prepareChatReplySpy.mock.calls[0];
     expect(input.messages.at(-1).parts.at(-1).text).toContain(
       "用户希望服务国内餐饮老板",
     );
@@ -1194,7 +1039,7 @@ describe("[T-716] POST /api/chat — 附件上下文", () => {
     );
 
     expect(res.status).toBe(200);
-    const [, input] = runChatStream.mock.calls[0];
+    const [, , , input] = prepareChatReplySpy.mock.calls[0];
     expect(input.messages.at(-1).parts.at(-1).text).toContain(
       "PDF attachment works",
     );
@@ -1224,7 +1069,7 @@ describe("[T-716] POST /api/chat — 附件上下文", () => {
     );
 
     expect(res.status).toBe(200);
-    const [, input] = runChatStream.mock.calls[0];
+    const [, , , input] = prepareChatReplySpy.mock.calls[0];
     expect(input.messages.at(-1).parts.at(-1).text).toContain(
       "Word附件可以读取国内餐饮定位",
     );
@@ -1255,7 +1100,7 @@ describe("[T-716] POST /api/chat — 附件上下文", () => {
     expect(await res.json()).toEqual({
       error: "附件内容解析失败，请确认文件未损坏后重试。",
     });
-    expect(runChatStream).not.toHaveBeenCalled();
+    expect(prepareChatReplySpy).not.toHaveBeenCalled();
   });
 
   it("拒绝超过五个附件，且不会启动模型", async () => {
@@ -1269,6 +1114,64 @@ describe("[T-716] POST /api/chat — 附件上下文", () => {
       ),
     );
     expect(res.status).toBe(400);
-    expect(runChatStream).not.toHaveBeenCalled();
+    expect(prepareChatReplySpy).not.toHaveBeenCalled();
+  });
+});
+
+// 原50个场景之外补当前恢复边界，不把明确再次生成混成同键恢复。
+describe('持久source恢复反例',()=>{
+  it.each([
+    {name:'源消息不存在',history:[]},
+    {name:'源正文已改变',history:[{id:'m-saved',role:'user',content:'不同输入'}]},
+    {name:'源附件已改变',history:[{id:'m-saved',role:'user',content:'hi',attachments:['other-asset']}]},
+  ])('$name拒绝重试，不补造user或换key',async({history})=>{
+    listMessages.mockResolvedValue(history);
+    const res=await POST(chatReq({messages:[userMessage('hi')],conversationId:'conv-existing',trigger:'regenerate-message'},'creatoros_session=tok'));
+    expect(res.status).toBe(409);expect(await res.json()).toMatchObject({code:'CHAT_RETRY_SOURCE_MISMATCH'});
+    expect(createMessage).not.toHaveBeenCalled();expect(prepareChatReplySpy).not.toHaveBeenCalled();expect((await durableFixture.rows()).execution).toEqual([]);
+  });
+  it('已成功原source只回读同一回答与回执，不重复模型或伪装成明确新生成',async()=>{
+    listMessages.mockResolvedValue([{id:'m-saved',role:'user',content:'hi'}]);
+    const input={messages:[userMessage('hi')],conversationId:'conv-existing'};
+    const first=await POST(chatReq(input,'creatoros_session=tok'));const receipt=durableFixture.receipt()!;
+    await durableFixture.finish('原答案',{usage:{inputTokens:2,outputTokens:3}});expect(await first.text()).toContain('原答案');
+    const again=await POST(chatReq({...input,trigger:'regenerate-message'},'creatoros_session=tok'));
+    expect(durableFixture.receipt()).toMatchObject({...receipt,replayed:true});expect(await again.text()).toContain('原答案');
+    expect(createMessage).not.toHaveBeenCalled();expect(prepareChatReplySpy).toHaveBeenCalledTimes(1);
+    const rows=await durableFixture.rows();expect(rows.execution).toHaveLength(1);expect(rows.calls).toHaveLength(1);
+    expect((await durableFixture.messages()).filter(row=>row.role==='user')).toHaveLength(1);
+  });
+  it('未知原调用重发只观察同任务，不换键、不再请求模型',async()=>{
+    listMessages.mockResolvedValue([{id:'m-saved',role:'user',content:'hi'}]);
+    const input={messages:[userMessage('hi')],conversationId:'conv-existing'};
+    const first=await POST(chatReq(input,'creatoros_session=tok'));const receipt=durableFixture.receipt()!;
+    await durableFixture.unknown();await first.body!.cancel();
+    const before=await durableFixture.rows();
+    const again=await POST(chatReq({...input,trigger:'regenerate-message'},'creatoros_session=tok'));
+    expect(durableFixture.receipt()).toMatchObject({...receipt,replayed:true});
+    const body=await again.text();expect(body).toContain('CHAT_MODEL_RESPONSE_INTERRUPTED');expect(body).toContain('unknown_result');
+    const after=await durableFixture.rows();expect(after.execution).toHaveLength(1);expect(after.calls).toEqual(before.calls);
+    expect(after.execution[0]).toMatchObject({id:receipt.executionTaskId,status:'unknown_result',deadlineAt:before.execution[0].deadlineAt,executionBudget:before.execution[0].executionBudget});
+    expect(createMessage).not.toHaveBeenCalled();expect(prepareChatReplySpy).toHaveBeenCalledTimes(1);
+  });
+  it.each([false,true])('主动停止已有正文与工具卡，确认用量=$0，原事件和账本保留且迟到成功拒绝',async(withUsage)=>{
+    const res=await POST(chatReq({messages:[userMessage('hi')]},'creatoros_session=tok'));
+    const prepared=await durableFixture.finish('停止前保存的半段',{deferCompletion:true,tool:{name:'material.gather',input:{query:'隔离资料'},output:{kind:'material.gather',items:[],grounding:'web'}},...(withUsage?{usage:{inputTokens:900,outputTokens:120,cachedTokens:0}}:{})});
+    if(!('acknowledgeCancel' in prepared))throw Error('取消测试缺少待完成原调用');
+    const receipt=durableFixture.receipt()!;
+    await durableFixture.runtime.command({userId:'u-1',accountId:'acct-1',requestId:'cancel',source:'user'},receipt.executionTaskId,'cancel');
+    await prepared.acknowledgeCancel();await expect(prepared.commit()).rejects.toThrow();
+    const rows=await durableFixture.rows();expect(rows.execution[0]).toMatchObject({id:receipt.executionTaskId,status:'cancelled'});
+    expect(JSON.stringify(rows.events)).toContain('停止前保存的半段');expect(JSON.stringify(rows.events)).toContain('tool-output-available');
+    const model=rows.calls.filter(call=>call.kind==='model').at(-1)!;
+    expect(model.status).toBe('settled');expect(model.providerResult).toMatchObject({usage:{inputTokens:withUsage?{total:900,cacheRead:0}:{},outputTokens:withUsage?{total:120}:{}}});
+    expect((await durableFixture.messages()).filter(row=>row.role==='assistant')).toEqual([]);
+    const body=await res.text();expect(body).toContain('停止前保存的半段');expect(body).toContain('"type":"abort"');expect(body).toContain('[DONE]');
+  });
+  it('夹具本身拒绝缺失ID或非user源，不补造消息修好错误请求',async()=>{
+    for(const source of [{id:'wrong',role:'user',content:'hi'},{id:'m',role:'assistant',content:'hi'},{}]){
+      await expect(durableFixture.seed({userId:'u-1',accountId:'acct-1',requestId:'source',source:'user'},{conversationId:'c',sourceMessageId:'m'},{scope:'global'},[],source)).rejects.toThrow('源消息与保存回执不符');
+    }
+    expect((await durableFixture.rows()).execution).toEqual([]);
   });
 });

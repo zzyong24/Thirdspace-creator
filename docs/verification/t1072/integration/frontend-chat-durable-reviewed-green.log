@@ -1,0 +1,511 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:18198) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/app/api/chat/route.test.ts > POST /api/chat — 鉴权门 > 无 session cookie → 200 直通本机主用户(T-046,装配照常)
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-813] 全文阅读动作规范化并绑定用户点击的 URL
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stdout | src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-716] 局部改稿发送前重绑当前稿面版本与正文，并强制走 script.patch
+[T-716][script.patch] rebound to current script truth {
+  diagnosticRef: 'chat-6d1819f30a',
+  matchStrategy: 'text',
+  mode: 'required',
+  requestedSectionIndex: 1
+}
+
+stderr | src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-716] 局部改稿发送前重绑当前稿面版本与正文，并强制走 script.patch
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stdout | src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-732] 连续对话保留的段落锚点只提供可选局部工具，不劫持明确整稿请求
+[T-716][script.patch] rebound to current script truth {
+  diagnosticRef: 'chat-57602fd160',
+  matchStrategy: 'id',
+  mode: 'available',
+  requestedSectionIndex: 4
+}
+
+stderr | src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-732] 连续对话保留的段落锚点只提供可选局部工具，不劫持明确整稿请求
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stdout | src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-732] 可选旧段落已失效时丢弃锚点并继续整稿请求，不再返回 409
+[T-732][script.patch] optional anchor dropped { diagnosticRef: 'chat-a7f650aac5', reason: 'selection_stale' }
+
+stderr | src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-732] 可选旧段落已失效时丢弃锚点并继续整稿请求，不再返回 409
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-732] 明确点击整稿功能时先丢弃旧段落锚点并执行 script.draft
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > 有cookie保存输入后提交真实持久任务，返回原任务和会话回执
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-128] 已确认正文与完整工具parts由持久完成事务保存，刷新可回读
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-128/T-464] 纯空轮拒绝保存成功，不伪造兜底产物
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-464] 中断订阅的空轮保留原任务，未有产物不落空气泡
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-096] 续接 scope 一致 → 放行(同 scope = 一条记忆线)
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > [T-239c] POST /api/chat — 中断真一致 > 断开SSE订阅不取消持久任务，原任务仍能完成并回读
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > [T-239c] POST /api/chat — 中断真一致 > 长度中断轮保留部分正文与已确认工具卡，原任务投影partial
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > [T-239c] POST /api/chat — 中断真一致 > 主动停止空轮提交明确cancel命令，不保存空气泡
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > [T-239e] POST /api/chat — usage 落库 > 已确认调用用量随完成事务落库，不以route回调冒调用回执
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > [T-239e] POST /api/chat — usage 落库 > 部分产物仍保留已确认真实用量，partial与usage并存
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > [T-239e] POST /api/chat — usage 落库 > 整轮没有provider用量回执时保持null，不伪造零用量
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > [T-239f] POST /api/chat — user 消息去重 > trigger='regenerate-message'(useChat regenerate 重发同一条 user)→ 不重复 insert,流式照跑
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > [T-716] POST /api/chat — 附件上下文 > 图片经素材归属门读取，只把 assetId 落消息，模型临时收到 file part
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > [T-716] POST /api/chat — 附件上下文 > Markdown 无预抽取结果时仍直接读取原始字节
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > [T-716] POST /api/chat — 附件上下文 > PDF 无预抽取结果时可直接抽取文本
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > [T-716] POST /api/chat — 附件上下文 > DOCX 无预抽取结果时可直接抽取文本
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > 持久source恢复反例 > 已成功原source只回读同一回答与回执，不重复模型或伪装成明确新生成
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > 持久source恢复反例 > 未知原调用重发只观察同任务，不换键、不再请求模型
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > 持久source恢复反例 > 主动停止已有正文与工具卡，确认用量=false，原事件和账本保留且迟到成功拒绝
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+stderr | src/app/api/chat/route.test.ts > 持久source恢复反例 > 主动停止已有正文与工具卡，确认用量=true，原事件和账本保留且迟到成功拒绝
+[api/chat] stream failed class=ZodError reason=unknown { phase: 'context_preparation', codes: [] }
+
+ ❯ src/app/api/chat/route.test.ts (58 tests | 26 failed) 2515ms
+     × 无 session cookie → 200 直通本机主用户(T-046,装配照常) 31ms
+     × [T-813] 全文阅读动作规范化并绑定用户点击的 URL 13ms
+     × [T-716] 局部改稿发送前重绑当前稿面版本与正文，并强制走 script.patch 13ms
+     × [T-732] 连续对话保留的段落锚点只提供可选局部工具，不劫持明确整稿请求 12ms
+     × [T-732] 可选旧段落已失效时丢弃锚点并继续整稿请求，不再返回 409 14ms
+     × [T-732] 明确点击整稿功能时先丢弃旧段落锚点并执行 script.draft 12ms
+     × 有cookie保存输入后提交真实持久任务，返回原任务和会话回执 18ms
+     × [T-128] 已确认正文与完整工具parts由持久完成事务保存，刷新可回读 12ms
+     × [T-128/T-464] 纯空轮拒绝保存成功，不伪造兜底产物 15ms
+     × [T-464] 中断订阅的空轮保留原任务，未有产物不落空气泡 14ms
+     × [T-096] 续接 scope 一致 → 放行(同 scope = 一条记忆线) 13ms
+     × 断开SSE订阅不取消持久任务，原任务仍能完成并回读 12ms
+     × 长度中断轮保留部分正文与已确认工具卡，原任务投影partial 12ms
+     × 主动停止空轮提交明确cancel命令，不保存空气泡 12ms
+     × 已确认调用用量随完成事务落库，不以route回调冒调用回执 13ms
+     × 部分产物仍保留已确认真实用量，partial与usage并存 12ms
+     × 整轮没有provider用量回执时保持null，不伪造零用量 12ms
+     × trigger='regenerate-message'(useChat regenerate 重发同一条 user)→ 不重复 insert,流式照跑 12ms
+     × 图片经素材归属门读取，只把 assetId 落消息，模型临时收到 file part 16ms
+     × Markdown 无预抽取结果时仍直接读取原始字节 12ms
+     × PDF 无预抽取结果时可直接抽取文本 370ms
+     × DOCX 无预抽取结果时可直接抽取文本 97ms
+     × 已成功原source只回读同一回答与回执，不重复模型或伪装成明确新生成 11ms
+     × 未知原调用重发只观察同任务，不换键、不再请求模型 12ms
+     × 主动停止已有正文与工具卡，确认用量=false，原事件和账本保留且迟到成功拒绝 13ms
+     × 主动停止已有正文与工具卡，确认用量=true，原事件和账本保留且迟到成功拒绝 11ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 26 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 鉴权门 > 无 session cookie → 200 直通本机主用户(T-046,装配照常)
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ src/app/api/chat/route.test.ts:244:24
+    242|   it("无 session cookie → 200 直通本机主用户(T-046,装配照常)", async () => {
+    243|     const res = await POST(chatReq({ messages: [userMessage("hi")] }));
+    244|     expect(res.status).toBe(200);
+       |                        ^
+    245|     expect(resolveLocalContext).toHaveBeenCalledTimes(1);
+    246|     expect(prepareChatReplySpy).toHaveBeenCalledTimes(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-813] 全文阅读动作规范化并绑定用户点击的 URL
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ src/app/api/chat/route.test.ts:291:24
+    289|     );
+    290|
+    291|     expect(res.status).toBe(200);
+       |                        ^
+    292|     const [, , , input] = prepareChatReplySpy.mock.calls[0];
+    293|     expect(input.chatContext).toMatchObject({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-716] 局部改稿发送前重绑当前稿面版本与正文，并强制走 script.patch
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ src/app/api/chat/route.test.ts:354:24
+    352|     );
+    353|
+    354|     expect(res.status).toBe(200);
+       |                        ^
+    355|     expect(resolveCurrentScriptSelection).toHaveBeenCalledWith(
+    356|       { userId: "u-1", accountId: "acct-1" },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-732] 连续对话保留的段落锚点只提供可选局部工具，不劫持明确整稿请求
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ src/app/api/chat/route.test.ts:448:24
+    446|     );
+    447|
+    448|     expect(res.status).toBe(200);
+       |                        ^
+    449|     const [, , , input] = prepareChatReplySpy.mock.calls[0];
+    450|     expect(input.chatContext.functionKey).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-732] 可选旧段落已失效时丢弃锚点并继续整稿请求，不再返回 409
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ src/app/api/chat/route.test.ts:484:24
+    482|     );
+    483|
+    484|     expect(res.status).toBe(200);
+       |                        ^
+    485|     const [, , , input] = prepareChatReplySpy.mock.calls[0];
+    486|     expect(input.chatContext.functionKey).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-732] 明确点击整稿功能时先丢弃旧段落锚点并执行 script.draft
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ src/app/api/chat/route.test.ts:514:24
+    512|     );
+    513|
+    514|     expect(res.status).toBe(200);
+       |                        ^
+    515|     expect(resolveCurrentScriptSelection).not.toHaveBeenCalled();
+    516|     const [, , , input] = prepareChatReplySpy.mock.calls[0];
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > 有cookie保存输入后提交真实持久任务，返回原任务和会话回执
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ src/app/api/chat/route.test.ts:555:24
+    553|       ),
+    554|     );
+    555|     expect(res.status).toBe(200);
+       |                        ^
+    556|     // 会话头回带(客户端可复用)。
+    557|     expect(res.headers.get("x-conversation-id")).toBe("conv-1");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-128] 已确认正文与完整工具parts由持久完成事务保存，刷新可回读
+Error: 缺少真实提交回执
+ ❯ Object.finish ../backend/src/modules/ai/chat-route-durable.test-fixture.ts:35:21
+
+ ❯ src/app/api/chat/route.test.ts:629:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-128/T-464] 纯空轮拒绝保存成功，不伪造兜底产物
+AssertionError: expected [Function] to throw error including '没有可保存产物' but got '缺少真实提交回执'
+
+Expected: "没有可保存产物"
+Received: "缺少真实提交回执"
+
+ ❯ src/app/api/chat/route.test.ts:641:43
+    639|   it("[T-128/T-464] 纯空轮拒绝保存成功，不伪造兜底产物", async () => {
+    640|     await POST(chatReq({messages:[userMessage("hi")]},"creatoros_sessi…
+    641|     await expect(durableFixture.finish("")).rejects.toThrow("没有可保存产物");
+       |                                           ^
+    642|     expect((await durableFixture.messages()).filter(row=>row.role==='a…
+    643|     expect((await durableFixture.rows()).execution[0].status).toBe('ru…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-464] 中断订阅的空轮保留原任务，未有产物不落空气泡
+TypeError: Cannot read properties of undefined (reading 'status')
+ ❯ src/app/api/chat/route.test.ts:650:55
+    648|     await res.body!.cancel();
+    649|     expect((await durableFixture.messages()).filter(row=>row.role==='a…
+    650|     expect((await durableFixture.rows()).execution[0].status).toBe('qu…
+       |                                                       ^
+    651|   });
+    652|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > POST /api/chat — 装配 + 持久化 > [T-096] 续接 scope 一致 → 放行(同 scope = 一条记忆线)
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ src/app/api/chat/route.test.ts:727:24
+    725|       ),
+    726|     );
+    727|     expect(res.status).toBe(200);
+       |                        ^
+    728|     expect(createMessage).toHaveBeenCalledWith({ userId: "u-1", accoun…
+    729|       content: "继续上次",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > [T-239c] POST /api/chat — 中断真一致 > 断开SSE订阅不取消持久任务，原任务仍能完成并回读
+AssertionError: expected '{"error":"本轮请求准备或提交未完成，输入已保留。请重试；仍失败时…' to contain '"type":"start"'
+
+Expected: ""type":"start""
+Received: "{"error":"本轮请求准备或提交未完成，输入已保留。请重试；仍失败时请提供诊断日志。"}"
+
+ ❯ src/app/api/chat/route.test.ts:791:102
+    789|     const res=await POST(chatReq({messages:[userMessage("hi")]},"creat…
+    790|     const original=res.headers.get('x-execution-task-id');
+    791|     const reader=res.body!.getReader();expect(new TextDecoder().decode…
+       |                                                                                                      ^
+    792|     await reader.cancel();
+    793|     expect((await durableFixture.rows()).execution[0]).toMatchObject({…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > [T-239c] POST /api/chat — 中断真一致 > 长度中断轮保留部分正文与已确认工具卡，原任务投影partial
+Error: 缺少真实提交回执
+ ❯ Object.finish ../backend/src/modules/ai/chat-route-durable.test-fixture.ts:35:21
+
+ ❯ src/app/api/chat/route.test.ts:801:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > [T-239c] POST /api/chat — 中断真一致 > 主动停止空轮提交明确cancel命令，不保存空气泡
+TypeError: Cannot read properties of undefined (reading 'executionTaskId')
+ ❯ src/app/api/chat/route.test.ts:812:117
+    810|     const res=await POST(chatReq({messages:[userMessage("hi")]},"creat…
+    811|     const receipt=durableFixture.receipt()!;await res.body!.cancel();
+    812|     await durableFixture.runtime.command({userId:'u-1',accountId:'acct…
+       |                                                                                                                     ^
+    813|     expect((await durableFixture.rows()).execution[0]).toMatchObject({…
+    814|     expect((await durableFixture.messages()).filter(row=>row.role==='a…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > [T-239e] POST /api/chat — usage 落库 > 已确认调用用量随完成事务落库，不以route回调冒调用回执
+Error: 缺少真实提交回执
+ ❯ Object.finish ../backend/src/modules/ai/chat-route-durable.test-fixture.ts:35:21
+
+ ❯ src/app/api/chat/route.test.ts:822:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > [T-239e] POST /api/chat — usage 落库 > 部分产物仍保留已确认真实用量，partial与usage并存
+Error: 缺少真实提交回执
+ ❯ Object.finish ../backend/src/modules/ai/chat-route-durable.test-fixture.ts:35:21
+
+ ❯ src/app/api/chat/route.test.ts:829:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > [T-239e] POST /api/chat — usage 落库 > 整轮没有provider用量回执时保持null，不伪造零用量
+Error: 缺少真实提交回执
+ ❯ Object.finish ../backend/src/modules/ai/chat-route-durable.test-fixture.ts:35:21
+
+ ❯ src/app/api/chat/route.test.ts:836:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > [T-239f] POST /api/chat — user 消息去重 > trigger='regenerate-message'(useChat regenerate 重发同一条 user)→ 不重复 insert,流式照跑
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ src/app/api/chat/route.test.ts:857:24
+    855|       ),
+    856|     );
+    857|     expect(res.status).toBe(200);
+       |                        ^
+    858|     expect(createMessage).not.toHaveBeenCalled();
+    859|     expect(prepareChatReplySpy).toHaveBeenCalledTimes(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > [T-716] POST /api/chat — 附件上下文 > 图片经素材归属门读取，只把 assetId 落消息，模型临时收到 file part
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ src/app/api/chat/route.test.ts:923:24
+    921|     );
+    922|
+    923|     expect(res.status).toBe(200);
+       |                        ^
+    924|     expect(readChatAttachment).toHaveBeenCalledWith(
+    925|       { userId: "u-1", accountId: "acct-1" },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > [T-716] POST /api/chat — 附件上下文 > Markdown 无预抽取结果时仍直接读取原始字节
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ src/app/api/chat/route.test.ts:1012:24
+    1010|     );
+    1011|
+    1012|     expect(res.status).toBe(200);
+       |                        ^
+    1013|     const [, , , input] = prepareChatReplySpy.mock.calls[0];
+    1014|     expect(input.messages.at(-1).parts.at(-1).text).toContain(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > [T-716] POST /api/chat — 附件上下文 > PDF 无预抽取结果时可直接抽取文本
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ src/app/api/chat/route.test.ts:1041:24
+    1039|     );
+    1040|
+    1041|     expect(res.status).toBe(200);
+       |                        ^
+    1042|     const [, , , input] = prepareChatReplySpy.mock.calls[0];
+    1043|     expect(input.messages.at(-1).parts.at(-1).text).toContain(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > [T-716] POST /api/chat — 附件上下文 > DOCX 无预抽取结果时可直接抽取文本
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ src/app/api/chat/route.test.ts:1071:24
+    1069|     );
+    1070|
+    1071|     expect(res.status).toBe(200);
+       |                        ^
+    1072|     const [, , , input] = prepareChatReplySpy.mock.calls[0];
+    1073|     expect(input.messages.at(-1).parts.at(-1).text).toContain(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > 持久source恢复反例 > 已成功原source只回读同一回答与回执，不重复模型或伪装成明确新生成
+Error: 缺少真实提交回执
+ ❯ Object.finish ../backend/src/modules/ai/chat-route-durable.test-fixture.ts:35:21
+
+ ❯ src/app/api/chat/route.test.ts:1137:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > 持久source恢复反例 > 未知原调用重发只观察同任务，不换键、不再请求模型
+Error: 缺少真实提交回执
+ ❯ Object.unknown ../backend/src/modules/ai/chat-route-durable.test-fixture.ts:75:21
+     73|  }
+     74|  async function unknown(){
+     75|   if(!receipt)throw Error('缺少真实提交回执');
+       |                     ^
+     76|   const claim=(await tasks.claimTask({taskId:receipt.executionTaskId,w…
+     77|   const ref={executionTaskId:receipt.executionTaskId,attempt:claim.lea…
+ ❯ src/app/api/chat/route.test.ts:1148:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/26]⎯
+
+ FAIL  src/app/api/chat/route.test.ts > 持久source恢复反例 > 主动停止已有正文与工具卡，确认用量=false，原事件和账本保留且迟到成功拒绝
+ FAIL  src/app/api/chat/route.test.ts > 持久source恢复反例 > 主动停止已有正文与工具卡，确认用量=true，原事件和账本保留且迟到成功拒绝
+Error: 缺少真实提交回执
+ ❯ Object.finish ../backend/src/modules/ai/chat-route-durable.test-fixture.ts:35:21
+
+ ❯ src/app/api/chat/route.test.ts:1159:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/26]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  26 failed | 32 passed (58)
+   Start at  14:32:57
+   Duration  7.49s (transform 2.78s, setup 151ms, import 4.12s, tests 2.52s, environment 500ms)
+
