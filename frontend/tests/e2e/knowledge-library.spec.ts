@@ -155,7 +155,7 @@ for (const viewport of [
     await expect(
       dialog.getByRole("textbox", { name: "资料标题", exact: true }),
     ).toBeDisabled();
-    await page.unroute("**/api/v1/dispatch", saveRecovery);
+    await page.unrouteAll({ behavior: "wait" });
     await dialog.getByRole("button", { name: "重新读取已保存资料" }).click();
     await expect(dialog).toHaveCount(0);
     const afterRecovery = await op(
@@ -317,7 +317,7 @@ for (const viewport of [
     await expect(page.getByRole("region", { name: "资料原文" })).toContainText(
       "定价要经过验证",
     );
-    await page.unroute("**/api/v1/dispatch");
+    await page.unrouteAll({ behavior: "wait" });
     // 临时网络故障，正文失败可原地重读，不伪造成功结果。
     let fail = true;
     await page.route("**/api/v1/dispatch", async (route) => {
@@ -337,7 +337,7 @@ for (const viewport of [
       page.getByRole("region", { name: "资料原文" }).getByRole("alert"),
     ).toBeVisible();
     await capture(page, `error-${viewport.width}`, ["detail"]);
-    await page.unroute("**/api/v1/dispatch");
+    await page.unrouteAll({ behavior: "wait" });
     await page.getByRole("button", { name: "重新读取正文" }).click();
     await expect(page.getByRole("region", { name: "资料原文" })).toContainText(
       "第二份真实资料",
