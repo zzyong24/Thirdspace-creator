@@ -275,6 +275,13 @@ function adjacentReviewPath(specFile) {
     : `${specFile}.review.md`;
 }
 
+function taskScopedReviewPath(specFile, taskId) {
+  const extension = path.extname(specFile);
+  return extension
+    ? `${specFile.slice(0, -extension.length)}.${taskId}.review${extension}`
+    : `${specFile}.${taskId}.review.md`;
+}
+
 function setBacklogReview(backlogFile, taskId, value) {
   const parsed = readBacklog(backlogFile);
   const matches = parsed.tasks.filter((task) => task.id === taskId);
@@ -725,6 +732,34 @@ function renderSnapshot(state) {
   ].join("\n");
 }
 
+function stateFromEvent(event) {
+  const stateBody = {
+    schema: "spec-review-state/v2",
+    task_id: event.task_id,
+    cycle: event.cycle ?? 1,
+    round: event.round,
+    max_rounds: 3,
+    review_kind: event.review_kind,
+    verdict: event.verdict,
+    summary: event.packet.summary,
+    spec_path: event.spec_path,
+    spec_sha256: event.spec_sha256,
+    constitution_path: event.constitution_path,
+    constitution_sha256: event.constitution_sha256,
+    review_path: event.review_path,
+    review_mode: event.review_mode,
+    model: event.model,
+    policy: event.policy,
+    cycle_authorization: event.cycle_authorization ?? null,
+    latest_event_hash: event.event_hash,
+    open_findings: event.packet.findings.filter((finding) => finding.status === "open"),
+    resolved_findings: event.packet.findings
+      .filter((finding) => finding.status === "resolved")
+      .map((finding) => ({ id: finding.id, resolution_evidence: finding.resolution_evidence })),
+  };
+  return { ...stateBody, receipt: hashObject(stateBody).slice(0, 12) };
+}
+
 function validateStateReceipt(state, expectedReceipt) {
   if (!state || state.schema !== "spec-review-state/v2") {
     throw new Error("review snapshot schema 不是 spec-review-state/v2");
@@ -842,9 +877,11 @@ function record(args) {
   const constitutionFile = resolveInside(root, args.flags.constitution, "constitution");
   const inputFile = resolveInside(root, args.flags.input, "review input");
   const reviewFile = resolveInside(root, args.flags.review, "review snapshot");
-  const canonicalReview = adjacentReviewPath(specFile);
-  if (reviewFile !== canonicalReview) {
-    throw new Error(`review 必须与 SPEC 相邻并命名为 ${relativePortable(root, canonicalReview)}`);
+  const allowedReviews = [adjacentReviewPath(specFile), taskScopedReviewPath(specFile, taskId)];
+  if (!allowedReviews.includes(reviewFile)) {
+    throw new Error(
+      `review 必须与 SPEC 相邻并命名为 ${allowedReviews.map((file) => relativePortable(root, file)).join(" 或 ")}`,
+    );
   }
   for (const [label, file] of [
     ["BACKLOG", backlogFile],
@@ -888,6 +925,12 @@ function record(args) {
   const changeIds = cleanText(args.flags["change-ids"]).split(/[,\s]+/).filter(Boolean);
   let cycleAuthorization = null;
   if (previousEvent) {
+    const previousReviewFile = resolveInside(root, previousEvent.review_path, "previous review snapshot");
+    if (reviewFile !== previousReviewFile) {
+      throw new Error(
+        `review lineage 已绑定 ${previousEvent.review_path}；共享 SPEC 冲突请先运行 migrate-shared-review ${taskId}`,
+      );
+    }
     if (startsNewCycle) {
       cycleAuthorization = validateCycleCapability({ root, decisionId: requestedCycleDecision, taskId, previousEvent, changeIds, events });
       verifyReviewReceipt({
@@ -1101,6 +1144,131 @@ export function auditReviewReceipts({ root, backlogFile }) {
   return errors;
 }
 
+function migrateSharedReview(args) {
+  const taskId = args.positionals[0];
+  if (!taskId) throw new Error("用法: reviewctl.mjs migrate-shared-review <task-id> [--backlog BACKLOG.md]");
+  const backlogFile = realpathSync(path.resolve(process.cwd(), args.flags.backlog ?? "BACKLOG.md"));
+  const root = realpathSync(path.dirname(backlogFile));
+  const eventsFile = path.join(root, "orchestrator", "review-events.ndjson");
+  const events = readEvents(eventsFile);
+  const chainErrors = verifyEventChain(events);
+  if (chainErrors.length) throw new Error(chainErrors.join("\n"));
+  const previousEvent = [...events].reverse().find((event) => event.task_id === taskId);
+  if (!previousEvent) throw new Error(`任务 ${taskId} 尚无 v2 review history`);
+
+  const specFile = resolveInside(root, previousEvent.spec_path, "SPEC");
+  const sharedReviewFile = resolveInside(root, previousEvent.review_path, "shared review snapshot");
+  if (sharedReviewFile !== adjacentReviewPath(specFile)) {
+    if (
+      previousEvent.snapshot_migration?.schema === "shared-review-snapshot-migration/v1" &&
+      !Object.prototype.hasOwnProperty.call(previousEvent, "cycle_authorization")
+    ) {
+      const { event_hash: sourceEventHash, ...sourceBody } = previousEvent;
+      const normalizationBody = {
+        ...sourceBody,
+        cycle_authorization: null,
+        reviewctl_sha256: sha(readFileSync(SELF, "utf8")),
+        recorded_at: new Date().toISOString(),
+        previous_event_hash: events.at(-1)?.event_hash ?? "",
+        snapshot_migration: {
+          ...previousEvent.snapshot_migration,
+          normalized_from_event_hash: sourceEventHash,
+        },
+      };
+      const normalizationEvent = { ...normalizationBody, event_hash: hashObject(normalizationBody) };
+      const state = stateFromEvent(normalizationEvent);
+      const releaseStateLock = acquireStateLock(root, { operation: `reviewctl:normalize-shared-review:${taskId}` });
+      const beforeReview = readFileSync(sharedReviewFile, "utf8");
+      const beforeBacklog = readFileSync(backlogFile, "utf8");
+      const beforeEvents = readFileSync(eventsFile, "utf8");
+      try {
+        atomicWrite(sharedReviewFile, renderSnapshot(state));
+        setBacklogReview(backlogFile, taskId, `${state.verdict}[REV:${state.receipt}]`);
+        atomicWrite(eventsFile, `${beforeEvents}${JSON.stringify(normalizationEvent)}\n`);
+      } catch (error) {
+        try { atomicWrite(sharedReviewFile, beforeReview); } catch {}
+        try { atomicWrite(backlogFile, beforeBacklog); } catch {}
+        try { atomicWrite(eventsFile, beforeEvents); } catch {}
+        throw new Error(`shared review normalization 未提交，已回滚可恢复文件: ${error.message}`);
+      }
+      releaseStateLock();
+      console.log(`✓ ${taskId} task-scoped review snapshot normalized ${state.verdict}[REV:${state.receipt}]`);
+      return;
+    }
+    throw new Error(`${taskId} review 已是任务级路径，无需迁移`);
+  }
+  const collision = events.some(
+    (event) =>
+      event.task_id !== taskId &&
+      event.spec_path === previousEvent.spec_path &&
+      event.review_path === previousEvent.review_path,
+  );
+  if (!collision) throw new Error(`${taskId} 未检测到共享 SPEC review 路径冲突`);
+  if (!existsSync(sharedReviewFile)) throw new Error(`共享 review snapshot 缺失: ${previousEvent.review_path}`);
+  const currentSharedState = extractState(sharedReviewFile);
+  if (currentSharedState.task_id === taskId) {
+    throw new Error(`${taskId} 当前仍持有共享 snapshot；请先迁移覆盖它的另一任务`);
+  }
+
+  const backlogMatches = readBacklog(backlogFile).tasks.filter((task) => task.id === taskId);
+  if (backlogMatches.length !== 1) {
+    throw new Error(`BACKLOG 中任务 ${taskId} 必须且只能出现一次（实际 ${backlogMatches.length} 次）`);
+  }
+  const linkedSpecs = markdownTargets(backlogMatches[0].document).map((target) =>
+    resolveInside(root, target, "任务文档链接"),
+  );
+  if (!linkedSpecs.includes(specFile)) {
+    throw new Error(`任务 ${taskId} 文档列必须显式链接被审 SPEC: ${previousEvent.spec_path}`);
+  }
+
+  const scopedReviewFile = taskScopedReviewPath(specFile, taskId);
+  if (existsSync(scopedReviewFile)) {
+    throw new Error(`任务级 review snapshot 已存在，拒绝覆盖: ${relativePortable(root, scopedReviewFile)}`);
+  }
+  const { event_hash: sourceEventHash, ...sourceBody } = previousEvent;
+  const migrationBody = {
+    ...sourceBody,
+    cycle: previousEvent.cycle ?? 1,
+    cycle_authorization: previousEvent.cycle_authorization ?? null,
+    review_path: relativePortable(root, scopedReviewFile),
+    reviewctl_sha256: sha(readFileSync(SELF, "utf8")),
+    recorded_at: new Date().toISOString(),
+    previous_event_hash: events.at(-1)?.event_hash ?? "",
+    snapshot_migration: {
+      schema: "shared-review-snapshot-migration/v1",
+      source_event_hash: sourceEventHash,
+      source_review_path: previousEvent.review_path,
+      reason: "multiple tasks share one SPEC and the adjacent snapshot was overwritten",
+    },
+  };
+  const migrationEvent = { ...migrationBody, event_hash: hashObject(migrationBody) };
+  const state = stateFromEvent(migrationEvent);
+
+  const releaseStateLock = acquireStateLock(root, { operation: `reviewctl:migrate-shared-review:${taskId}` });
+  const beforeBacklog = readFileSync(backlogFile, "utf8");
+  const beforeEvents = readFileSync(eventsFile, "utf8");
+  try {
+    atomicWrite(scopedReviewFile, renderSnapshot(state));
+    setBacklogReview(backlogFile, taskId, `${state.verdict}[REV:${state.receipt}]`);
+    atomicWrite(eventsFile, `${beforeEvents}${JSON.stringify(migrationEvent)}\n`);
+  } catch (error) {
+    try {
+      if (existsSync(scopedReviewFile)) unlinkSync(scopedReviewFile);
+    } catch {}
+    try {
+      atomicWrite(backlogFile, beforeBacklog);
+    } catch {}
+    try {
+      atomicWrite(eventsFile, beforeEvents);
+    } catch {}
+    throw new Error(`shared review migration 未提交，已回滚可恢复文件: ${error.message}`);
+  }
+  releaseStateLock();
+  console.log(
+    `✓ ${taskId} shared review snapshot → ${relativePortable(root, scopedReviewFile)} ${state.verdict}[REV:${state.receipt}]`,
+  );
+}
+
 function audit(args) {
   const backlogFile = path.resolve(process.cwd(), args.flags.backlog ?? "BACKLOG.md");
   if (!existsSync(backlogFile)) throw new Error(`BACKLOG 不存在: ${backlogFile}`);
@@ -1175,7 +1343,8 @@ function main() {
     if (args.command === "record") record(args);
     else if (args.command === "audit") audit(args);
     else if (args.command === "context") context(args);
-    else throw new Error("用法: reviewctl.mjs <record|audit|context> ...");
+    else if (args.command === "migrate-shared-review") migrateSharedReview(args);
+    else throw new Error("用法: reviewctl.mjs <record|audit|context|migrate-shared-review> ...");
   } catch (error) {
     console.error(`✗ ${error.message}`);
     process.exit(1);

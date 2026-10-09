@@ -31,7 +31,6 @@ const PACKS = {
     refs: [
       "workflows/v3-2-contract.md",
       "gates/03-scope-budget-gate.md",
-      "gates/12-service-contract-gate.md",
       "gates/15b-contract-completeness-gate.md",
       "templates/SERVICE_CONTRACT_TEMPLATE.md",
     ],

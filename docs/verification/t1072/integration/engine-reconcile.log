@@ -1,0 +1,92 @@
+
+── orchestrator reconcile ─────────────────────────────
+✗ [ERROR] boundary-scan.mjs found NEW structural violation(s) past baseline (exit 1). Run `node orchestrator/process/boundary-scan.mjs` for the offending files; after an intentional refactor, `--update-baseline` (with a DEC). Rules: orchestrator/SYSTEM_ARCHITECTURE.md.
+✗ [ERROR] backlog-health.mjs: BACKLOG RUNAWAY (exit 2, >2× hard limit) — every session pays this tax; compact BEFORE other work: `node orchestrator/process/backlog-compact.mjs` archives ✅ rows mechanically, then squeeze flagged rows per rules/task-ledger-rules.md.
+✗ [ERROR] review receipt: T-1021: review receipt 已过期：SPEC hash 1ca8392b4d5e != 242b25c4f83f
+✗ [ERROR] review receipt: T-915: review receipt 已过期：SPEC hash 76d22c886076 != b990a38a0156
+✗ [ERROR] review receipt: T-859: review receipt 已过期：SPEC hash 4db0a4daa9ba != e6fe3ad73fa9
+✗ [ERROR] review receipt: T-858: review receipt 已过期：SPEC hash 9027f820a773 != ab768b979e62
+✗ [ERROR] review receipt: T-824: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] review receipt: T-819: review receipt 已过期：SPEC hash 4c0f39c41f58 != d89d457083d1
+✗ [ERROR] review receipt: T-816: review receipt 已过期：SPEC hash b532db470f69 != b9490f4fac3f
+✗ [ERROR] review receipt: T-768: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] review receipt: T-726: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] review receipt: T-703: review receipt 已过期：SPEC hash 6ecdc3a00c87 != 70e49d3ae5a3
+✗ [ERROR] review receipt: T-691: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] review receipt: T-694: review receipt 已过期：SPEC hash 678f818f2d18 != 6ea31e784c68
+✗ [ERROR] review receipt: T-656: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] review receipt: T-652: 审核列为「待审」；存在未销账问题，不得开工
+✗ [ERROR] review receipt: T-645: review receipt 已过期：SPEC hash 24659d7d13f3 != c693c9a4ad11
+✗ [ERROR] review receipt: T-642: 任务 T-642 文档列未链接 receipt 绑定的 SPEC: docs/superpowers/specs/2026-08-01-content-radar-creative-handoff.md
+✗ [ERROR] review receipt: T-635: review receipt 已过期：constitution hash 已变化
+✗ [ERROR] lesson LED-055 RECURRED — 资源生命周期回归：修复实际消费者的释放、背压、单在途和停止屏障；保留原任务/attempt/fence/deadline、审批、完整历史与合法大输出。等待状态按真实任务ID保护；取消接受仅释放原turn本地关联，最终终态由原租约确认。禁止删历史、重发任务或伪造释放/成功。
+✗ [ERROR] lesson LED-053 RECURRED — 超时预算回归：正执行最低两分钟；独立外层覆盖完整内部预算；原绝对期限/continuous/即时取消保持；前端保留原任务ID；HyperFrames同版本补丁与实际CLI配置必须一致。公共链回归失败不能用词法扫描替代。
+✗ [ERROR] lesson LED-052 RECURRED — 归档执行门失败：普通AI/source_sync claim与新动作必须拒绝；四类实际collector按真实job/member/owner/version验证；已存在同键调用settlement必须保留幂等。缺隔离PG配置不能skip。
+✗ [ERROR] lesson LED-045 RECURRED — 生图幂等恢复门回归：只有 channel-managed 同步生图可在 network/submit 无 HTTP 响应时沿用同一 Idempotency-Key 有界恢复；用户自配中转站与异步视频必须保持一次即停，成功只落一份候选。
+✗ [ERROR] lesson LED-044 RECURRED — 竖屏真人常驻门回归：有真实 talking-head 时人物 beat 全幅，card/B-roll 时间窗固定左下 PiP；旧 hidden 必须安全兼容，素材可读区避开人物与字幕；横屏和 visual-only 不受影响。
+✗ [ERROR] lesson LED-043 RECURRED — 关键链路可用性审查失败：有安全输出路径时必须先确定性降级；只有输入损坏、权限/归属错误或无任何安全输出路径时才允许 hard-fail。发布证据必须包含旧版成功样例、正式公共调用链和该门覆盖的全部输入族，孤立 helper/几何单测无效。
+✗ [ERROR] lesson LED-003 RECURRED — 门卫拦截:出现【新】边界违规(结构回归)。见 boundary-scan 输出与 orchestrator/SYSTEM_ARCHITECTURE.md。修掉新违规;若是有意消减,跑 boundary-scan.mjs --update-baseline 收紧基线。
+✗ [ERROR] lesson LED-005 RECURRED — 长输入分块门失败：保持确定性切块、原序归并；字幕局部 fallback，知识蒸馏整次失败，并保留进度/截断覆盖真相。
+✗ [ERROR] lesson LED-006 RECURRED — 桌面启动门回归：必须保留静态 splash、显式 sidecar cwd、runtime 失败可见且落日志，并在 Windows 安装后真启动 GUI 等待 MAIN_PAGE_LOAD_FINISHED。
+✗ [ERROR] lesson LED-007 RECURRED — 模型连通门回归：必须消费 fullStream；正文或思考流任一非空即连通，error part 必须抛出并安全归类，二者全空才报空响应。
+✗ [ERROR] lesson LED-008 RECURRED — 渠道作用域门回归：缺签名 channelRef 必须投影 activation_scope_missing、零出网且 UI 可见；真实复校成功后必须刷新 SSR authority。
+✗ [ERROR] lesson LED-009 RECURRED — 语义职责边界回归：意图理解、内容归类和素材/场景匹配必须走 Skill/模型；代码只守真实 ID、归属、类型、范围、时间、幂等和安全。确定性相似度仅可用于去重/协议纠错/安全校验，并须标记 SEMANTIC_BOUNDARY_ALLOW: 与测试。
+✗ [ERROR] lesson LED-010 RECURRED — 本机打包入口回归：必须由 desktop:package-local 从 ~/.creatoros 读取 verdict 双密钥并补齐 CreatorOS/Growth 固定公共配置；缺失要在重型构建前失败，禁止私钥入库或输出。
+✗ [ERROR] lesson LED-011 RECURRED — 视频可读性门回归：material.match 必须输出 presentation/时长并贯穿 render props；录屏/截图和竖屏人物必须满足真实像素占屏与容器比例下限。
+✗ [ERROR] lesson LED-012 RECURRED — 视频版式门回归：full_frame 必须占满画布，large_stage 必须与人物安全区零重叠；渲染前跑确定性几何门，配置视觉模型时对成片接触表做非阻断审核并向用户展示问题。
+✗ [ERROR] lesson LED-013 RECURRED — 视频编导边界回归：人工选材必须触发二次分镜；素材须保源比例；SCENE/分镜序号/title/summary 只能留在编辑器，成片只上经 AI 筛选的短视觉信息。
+✗ [ERROR] lesson LED-014 RECURRED — 局部改稿门回归：脚本写入必须持久化稳定段落 ID，存量无 ID 版本须用稿面同一兼容锚点并在新版本自愈；技术锚点必须由稿面点击时可信绑定；模型只产新段落正文；未保存稿先自动保存；采纳只替换目标段；冲突不得静默覆盖，也不得让失效锚点污染后续普通对话。
+✗ [ERROR] lesson LED-015 RECURRED — 本地交付命名回归：构建成功后必须生成 ~/Downloads/CreatorOS-<version>.dmg（Windows 为 .exe）；安装目录只保留 CreatorOS.app，备份不得留在 /Applications。
+✗ [ERROR] lesson LED-016 RECURRED — 信息密度门回归：无真实素材场景必须按时长形成 2/3/4 个原文可溯信息节拍，连续视觉空档不得超过 7 秒；信息卡必须使用固定可读主舞台，不能依内容收缩成角落标签。
+✗ [ERROR] lesson LED-017 RECURRED — 逐字保真门回归：必须从本轮受信 sourceRef 恢复精确原文、校验长度和 SHA-256，并由确定性 runner 生成待采纳候选；恢复失败不得退回 extraBrief 摘要或模型生成。
+✗ [ERROR] lesson LED-018 RECURRED — 桌面浏览器交付门回归：壳层注入目录必须覆盖宿主机残留环境；入口先系统 Chrome、再随包 Chromium；正式桌面态不得依赖 CLI/npm/联网下载；安装校验必须看到真实 chrome.exe。
+✗ [ERROR] lesson LED-020 RECURRED — 封面工具链回归：生成封面入口必须绑定 cover.generate；发布参考候选只含真实已发布且有封面的作品；模型按相关性优先、时间次序选择后必须传真实 coverAssetId；组合回合禁止 local.tools 且不得静默纯文降级。
+✗ [ERROR] lesson LED-022 RECURRED — 跨平台文件定位门回归：win32/darwin/linux 必须各有 command/API、shell-free argv/path、completion 和中性 user copy；route 必须消费 plan + launcher，禁止直接执行单平台命令。
+✗ [ERROR] lesson LED-023 RECURRED — 外部能力稳定性门回归：结构化与纯文本节点都必须有调用方按真实耗时设置的有限上界并中止 provider；长结构节点只能显式、有界放宽；只对明确的 response_format/json_schema 不兼容改走同 schema JSON 验收；SERP 用 DOM 就绪，已确认登录墙仅有界冷却，不得用模型记忆冒充联网证据。
+✗ [ERROR] lesson LED-024 RECURRED — 内容动效门回归：关系选择归 video.cards Skill，代码只校验可溯原文和安全边界；数字、对比、步骤、因果、替换必须有独立渐进配方，坏计划兼容降级，虚线网格保持静态低对比。
+✗ [ERROR] lesson LED-025 RECURRED — 主视觉与时序门回归：需要阅读结构/文字的静态图必须由 material.match 选为 large_stage；主图期间信息卡只能成为舞台外短标注；新卡以 AI 选择的 srtLineIndex 映射真实起秒，禁止大卡遮图与上一段内容跨字幕滞留。
+✗ [ERROR] lesson LED-027 RECURRED — 稿件并发门回归：带 expected version 的版本追加与指针移动必须共享数据库事务和条件更新，竞争失败回滚新增行；撤销同样 CAS，previousVersionId 只能由成功服务事务返回。
+✗ [ERROR] lesson LED-028 RECURRED — H3 端点兼容门回归：纯域名、v2 根、完整提交接口和中转前缀必须经共享解析器只规范化一次；生成与设置探测不得各自拼接，也不得以多 POST 重试兼容 404。
+✗ [ERROR] lesson LED-029 RECURRED — 成片视觉承接门回归：可溯真值必须同时覆盖冻结稿与权威 SRT；纯基础补位必须明确标注未生成 Scene Graph；large_stage 结束后恢复信息卡，横屏短空窗由同源低亮度人像承接。
+✗ [ERROR] lesson LED-031 RECURRED — 分层运行时消费门回归：正式 HyperFrames argv 必须显式 --require 随包 creatoros-module-resolver.cjs，并保持 NODE_OPTIONS 禁用；生产 argv 与 RAT 真渲染必须使用同一解析契约。
+✗ [ERROR] lesson LED-032 RECURRED — 竖屏编导落地门回归：人物 beat 保持全画布，card/B-roll 辅助窗保持固定左下人脸常驻；direction 的 B-roll ref 必须随沙箱物化文件同步改名；字幕强调只执行 AI 给出的 Unicode 范围与时间窗，禁止代码猜重点。
+✗ [ERROR] lesson LED-034 RECURRED — 图片编辑协议门回归：FormData 普通字段没有数字类型；单图编辑须省略可选 n，真实 wire body 不得含 name="n"；纯文生图 JSON 仍须发送数字 n:1，禁止多 POST 盲试。
+✗ [ERROR] lesson LED-035 RECURRED — 信息卡局部恢复门回归：关键枚举或 sceneIdx/at 非法只丢该张卡，可选 motion/visualPlan 的静态或根级动态协议非法只降级可选字段；根级 custom issue 逐卡交回同一动态 schema，不猜错误消息路径，恢复后仍须经过原 schema、可溯校验和导演审核，不得增加模型重试。
+✗ [ERROR] lesson LED-036 RECURRED — AI 自动素材匹配门回归：addedByType=ai 必须保留 AI 来源；本稿生成素材必须保留服务原文/画面职责并由 material.match 自动匹配；存在本稿绑定时空匹配不得落候选，人工选场景只用于纠错。
+✗ [ERROR] lesson LED-038 RECURRED — 内容雷达持久任务消费门回归：启动恢复必须让每种持久 kind 都有对应消费者，持续处理到队列为空，并以固定小并发或顺序消费保护外部模型、取流、ASR 与本地数据库；不得只 recover lease 不 drain，也不得按积压数量同时调用外部服务。
+✗ [ERROR] lesson LED-039 RECURRED — 时间线闭合门回归：每次补位后必须重算实际 card/B-roll intervals，未真实新增不得推进；确定性 gap 卡落真实空洞起点并使用当前活动原句，overlay 不计主舞台覆盖，修后 audit 必须零 blocking。
+✗ [ERROR] lesson LED-040 RECURRED — B-roll 删除版本门回归：删除必须先写新 editing-plan revision 并清 decisions/render props/inventory/direction；runner 失败回退只保留当前 inventory；旧 sourceRenderTaskId 解绑，晚到旧任务不得覆盖当前成片。
+✗ [ERROR] lesson LED-041 RECURRED — Whisper 分层消费门回归：生产 worker 必须显式加载随包 creatoros-module-resolver 并绑定同一 runtime root；传统 runtime 兼容；Windows closure 必须用随包 Node 启动真实 worker consumer，主进程 import 不能替代。
+✗ [ERROR] lesson LED-042 RECURRED — 分页真相门回归：可见总数必须消费同一服务端查询的 meta.total；items.length 只表示已显示；超过首批必须能继续加载并保持筛选、排序、账号上下文一致。
+✗ [ERROR] lesson LED-046 RECURRED — 修复真实安装布局的Worker入口、依赖文件与解析器；先短验证再正式构建，不放宽功能门或盲目重试。
+✗ [ERROR] lesson LED-047 RECURRED — 使用共享本地弹层入口，展开后才处理详情；轮询限制在途请求并保留过期与卸载保护。修复回归，不删除历史或阻断合法操作。
+✗ [ERROR] lesson LED-048 RECURRED — 保留原执行与成功进度，修复独立优先调度、按账号资源管理及各源计数；禁止总时长误杀、TTL抢锁、关闭开关后自动新建任务或盲目重试。
+✗ [ERROR] lesson LED-049 RECURRED — 修复有界读取与同用户账号缓存失效，保留日历/运行真值及稀疏趋势口径；禁止删除历史或统一长TTL提速。
+✗ [ERROR] lesson LED-050 RECURRED — 按真实过渡完成token合并同目标、先筛选再展开；保留不同导航与失败重试，不缓存整页动态待办。
+✗ [ERROR] lesson LED-051 RECURRED — 检查实际子进程预算传播；禁止关闭类型检查、无限加内存或污染安装后运行时。
+✗ [ERROR] lesson LED-054 RECURRED — 核对同一次完整响应的结束事实、无损映射与真实usage，补共享validator并验证实际后端回放/工件；保留真实断流未知和原任务，不重复付费调用。
+✓ [OK] delivery phase: maintenance (legacy-compat)
+✓ [OK] required artifact present: ARTIFACT_MANIFEST.yaml
+✓ [OK] required artifact present: DECISION_LOG.md
+✓ [OK] governance-guard: scope authorization + complexity budget clean.
+✓ [OK] autonomy-guard: execution claim + delivery progress clean.
+✓ [OK] parsed 42 stages
+✓ [OK] CHANGE_IMPACT.md present
+✓ [OK] orphan-scan.mjs: bidirectional trace clean (computed, not attested).
+✓ [OK] asset-check.mjs: reuse-asset library integrity clean.
+✓ [OK] frontend-validation: journey receipts reconcile (or no UI receipts yet).
+✓ [OK] research-gate: no open technical blocker.
+✓ [OK] knowledge-drift.mjs: clean (or knowledge layer not enabled).
+✓ [OK] knowledge-coverage.mjs: clean (or knowledge layer not enabled).
+✓ [OK] docs-health.mjs: clean (or knowledge layer not enabled).
+✓ [OK] consistency_gate blocks 5-ship (status draft) — OK
+✓ [OK] consistency_gate blocks 17-integration-release (status draft) — OK
+✓ [OK] probe 2-contract ↔ contract/package.json: consistent (status passed, present true)
+✓ [OK] probe 4-build ↔ backend/src: consistent (status draft, present true)
+✓ [OK] probe 4-build ↔ ai-worker: consistent (status draft, present true)
+✓ [OK] probe 4-build ↔ frontend/src/app/api/v1/dispatch: consistent (status draft, present true)
+✓ [OK] updated_at (2026-08-11) is >= newest decision (2026-08-09).
+✓ [OK] lesson LED-001: guard holds (.env.local(含真实密钥)被提交进 git)
+───────────────────────────────────────────────────────
+65 error(s), 0 warning(s).
+✗ DRIFT: manifest does not reconcile with reality.

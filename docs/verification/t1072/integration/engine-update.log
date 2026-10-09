@@ -1,0 +1,55 @@
+▶ update vendored engine → /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/orchestrator/process (3.27.4 → 3.29.0)
+✓ active engine matches recorded vendor baseline
+· engine differed — preserved: orchestrator/process/context-plan.mjs.pre-update.3.27.4
+· engine differed — preserved: orchestrator/process/backlog-health.mjs.pre-update.3.27.4
+· engine differed — preserved: orchestrator/process/harness/evaluator.md.pre-update.3.27.4
+· engine differed — preserved: orchestrator/process/harness/evaluator-rebuttal.md.pre-update.3.27.4
+· engine differed — preserved: orchestrator/process/harness/coding-agent.md.pre-update.3.27.4
+· engine differed — preserved: orchestrator/process/backlog-compact.mjs.pre-update.3.27.4
+· engine differed — preserved: orchestrator/process/reviewctl.mjs.pre-update.3.27.4
+✓ engine refreshed: 53 files copied, 0 project configs/baselines preserved
+· stale (not in skill anymore, left as-is): orchestrator/process/verify-t872-public-skill.mjs
+· stale (not in skill anymore, left as-is): orchestrator/process/verify-t799-motion-text-safety.mjs
+· stale (not in skill anymore, left as-is): orchestrator/process/context-plan.mjs.pre-update.3.27.4
+· stale (not in skill anymore, left as-is): orchestrator/process/verify-t823-main-visual-preview.mjs
+· stale (not in skill anymore, left as-is): orchestrator/process/verify-t842-opening-preview.mjs
+· stale (not in skill anymore, left as-is): orchestrator/process/MODULE-TASKS.md
+· stale (not in skill anymore, left as-is): orchestrator/process/semantic-boundary-scan.mjs
+· stale (not in skill anymore, left as-is): orchestrator/process/creatoros-guide-live-eval.mts
+· stale (not in skill anymore, left as-is): orchestrator/process/t802-scene-graph-loop.ts
+· stale (not in skill anymore, left as-is): orchestrator/process/backlog-compact.mjs.pre-update.3.27.4
+· stale (not in skill anymore, left as-is): orchestrator/process/harness/evaluator.md.pre-update.3.27.4
+· stale (not in skill anymore, left as-is): orchestrator/process/harness/evaluator-rebuttal.md.pre-update.3.27.4
+· stale (not in skill anymore, left as-is): orchestrator/process/harness/coding-agent.md.pre-update.3.27.4
+· stale (not in skill anymore, left as-is): orchestrator/process/reviewctl.mjs.pre-update.3.27.4
+· stale (not in skill anymore, left as-is): orchestrator/process/verify-t839-real-timeline-preview.mjs
+· stale (not in skill anymore, left as-is): orchestrator/process/verify-t794-motion-card-preview.mjs
+· stale (not in skill anymore, left as-is): orchestrator/process/verify-t902-portrait-presenter.mts
+· stale (not in skill anymore, left as-is): orchestrator/process/pmem.mjs
+· stale (not in skill anymore, left as-is): orchestrator/process/rules/orchestrator-state-machine.md
+· stale (not in skill anymore, left as-is): orchestrator/process/verify-t896-video-layout-fallback.mts
+· stale (not in skill anymore, left as-is): orchestrator/process/run-recent-data-safety-fixed.mjs
+· stale (not in skill anymore, left as-is): orchestrator/process/verify-t858-unified-stage-preview.mjs
+· stale (not in skill anymore, left as-is): orchestrator/process/backlog-health.mjs.pre-update.3.27.4
+· stale (not in skill anymore, left as-is): orchestrator/process/render-t802-samples.mjs
+· stale (not in skill anymore, left as-is): orchestrator/process/verify-t800-cross-theme-motion.mjs
+· stale (not in skill anymore, left as-is): orchestrator/process/verify-t802-scene-graph.mjs
+· stale (not in skill anymore, left as-is): orchestrator/process/t800-cross-theme-motion-eval.ts
+✓ .vendor-manifest.json records 53 managed engine files
+✓ Claude Code + Codex core hooks refreshed
+✓ .claude/settings.json → SessionStart/PreToolUse
+✓ .codex/hooks.json → SessionStart/PreToolUse
+✓ existing project topology=single
+✓ .skill-version → 3.29.0
+✗ BACKLOG.md 中找到 2 个活动任务表；请先合并为唯一活动任务表，避免迁移错表
+! strict receipt migration required; inspect active tasks, then run:
+  node orchestrator/process/strict-receipts-migrate.mjs apply --non-ui <explicit-non-ui-task-ids>
+✗ reconcile failed — 64 error(s), 1 warning(s).
+  ✗ boundary-scan.mjs found NEW structural violation(s) past baseline (exit 1). Run `node orchestrator/process/boundary-scan.mjs` for the offending files; after an intentional refactor, `--update-baseline` (with a DEC). Rules: orchestrator/SYSTEM_ARCHITECTURE.md.
+  ✗ review receipt: T-1021: review receipt 已过期：SPEC hash 1ca8392b4d5e != 242b25c4f83f
+  ✗ review receipt: T-915: review receipt 已过期：SPEC hash 76d22c886076 != b990a38a0156
+  ✗ review receipt: T-859: review receipt 已过期：SPEC hash 4db0a4daa9ba != e6fe3ad73fa9
+  ✗ review receipt: T-858: review receipt 已过期：SPEC hash 9027f820a773 != ab768b979e62
+  … 59 more error(s) omitted.
+Run `node orchestrator/process/reconcile.mjs` for the full report.
+! reconcile non-zero after update — new guards may be surfacing REAL drift; fix forward, do NOT roll the engine back to silence it
