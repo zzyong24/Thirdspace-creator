@@ -50,7 +50,24 @@ for (const scanRoot of scanRoots) {
 }
 
 // T-712 的真实链路契约：画面规划不得再次自己挑素材，必须调用 official material.match。
-const videoRunnerPath = "backend/src/modules/ai-runtime/video-decisions-runner.ts";
+const videoCompatibilityPath = "backend/src/modules/ai-runtime/video-decisions-runner.ts";
+const videoRunnerPath = "ai-worker/src/runtime/video-decisions-runner.ts";
+const compatibility = await readFile(path.join(root, videoCompatibilityPath), "utf8");
+const compatibilityCode = compatibility.split("\n")
+  .filter((line) => !line.trim().startsWith("//"))
+  .join("\n").trim();
+if (compatibilityCode !== 'export * from "@creatoros/ai-worker/video-decisions-runner";') {
+  failures.push(`${videoCompatibilityPath} 未精确导出唯一 Worker 实现`);
+}
+const workerPackage = JSON.parse(await readFile(path.join(root, "ai-worker/package.json"), "utf8"));
+const workerExport = workerPackage.exports?.["./video-decisions-runner"];
+if (workerPackage.name !== "@creatoros/ai-worker" ||
+    workerExport === null || typeof workerExport !== "object" || Array.isArray(workerExport) ||
+    Object.keys(workerExport).sort().join(",") !== "default,types" ||
+    workerExport.types !== "./src/runtime/video-decisions-runner.ts" ||
+    workerExport.default !== "./src/runtime/video-decisions-runner.ts") {
+  failures.push("ai-worker/package.json video-decisions-runner 导出未指向唯一受控实现");
+}
 const videoRunner = await readFile(path.join(root, videoRunnerPath), "utf8");
 if (!videoRunner.includes('skillId: "material.match"')) {
   failures.push(`${videoRunnerPath} 未调用 material.match Skill`);
