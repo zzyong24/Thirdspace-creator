@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/features/content-calendar/group-calendar-planning-control.test.tsx",
+    "src/features/content-calendar/content-calendar-readonly.test.tsx",
+    "src/features/content-calendar/content-calendar-account.test.tsx",
+    "src/features/content-calendar/content-calendar-month-view.test.tsx",
+    "src/components/media/asset-picker.test.tsx",
+    "src/components/shell/issue-feedback-dialog.test.tsx",
+    "--retry=0",
+    "--no-file-parallelism",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T15:52:33.484974+00:00",
+  "finishedAt": "2026-10-09T15:53:08.691305+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 35.203687708999496,
+  "logSha256": "7cd4412b9e31a8b67bf0bfcd1e5bc6f5b9e3a693a95909bfb8574c82405e646b"
+}

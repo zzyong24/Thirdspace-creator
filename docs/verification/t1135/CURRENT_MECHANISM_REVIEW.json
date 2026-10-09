@@ -1,0 +1,70 @@
+{
+  "schema": "creatoros-research-mechanism-independent-review/v1",
+  "task": "T1135",
+  "reviewedAt": "2026-10-09T15:29:00Z",
+  "head": "703669796b2d9fbf61ced8dcba3145be2c61ba1f",
+  "verdict": "MECHANISM_NARROWED_BUT_NOT_CLOSED_HOLD_IMPLEMENTATION",
+  "provenBoundary": {
+    "lastNearSourceStage": "prepared video decoded RGB 15/35/56",
+    "firstObservedDarkStage": "HyperFrames render_raw decoded RGB 3/22/43",
+    "finalStage": "final stream-copy remains 3/22/43",
+    "encoderOnlyCounterexample": "isolated PNG encodes including current full-to-tv scale decode as 17/36/57",
+    "conclusion": "change occurs in browser composition/capture or its handoff into raw render, not final remux; exact substage remains unknown"
+  },
+  "unresolvedMechanisms": [
+    "Chrome video decode/color management",
+    "HyperFrames BeginFrame capture bytes",
+    "template background/ambient/border composition",
+    "capture-to-encoder handoff"
+  ],
+  "sampling": {
+    "sufficientForObservedDifference": true,
+    "sufficientForExactRootCause": false,
+    "limitations": [
+      "uniform low-detail source does not isolate video from composition layers",
+      "actual frame PNG passed to encoder is absent",
+      "no same-frame DOM video / capture PNG / raw output identity chain"
+    ]
+  },
+  "researchProcess": {
+    "gateOpenedLate": true,
+    "diagnosticGroupsAlreadyExecuted": 3,
+    "remainingNewExperimentsAllowed": 0,
+    "historicalPreGatePassMustNotBeInvented": true,
+    "implementationAdmissible": false
+  },
+  "legalNextStep": {
+    "now": "static source and existing-artifact review only",
+    "requiresNewGovernanceDecision": true,
+    "reason": "the only discriminating observation requires preserving and binding an actual captured frame, which is a new experiment",
+    "proposedBoundedObservation": "one frozen input/html/frame; bind DOM visible pixel, actual capture PNG and raw output; no color or product mutation"
+  },
+  "forbiddenFixes": [
+    "global brightness/gamma compensation",
+    "changing final stream-copy remux",
+    "assuming all unknown metadata has one color range",
+    "generalizing the solid-color sample to all codecs/HDR/templates",
+    "modifying original user media or accepted render"
+  ],
+  "sha256": {
+    "docs/research/t1135/COLOR_FIDELITY_RESEARCH.md": "3e3ee3482833415c6e96cede9f7451b7c680fea763d7d9eda6d584c9f3794944",
+    "backend/src/modules/execution/video-render/executor.ts": "2e0bc1734b2a078c34733f26a1b17e5a1684ee7ce235a747e5280fe3cdf4e1ba",
+    "backend/src/modules/execution/video-render/template.ts": "2790836313a311108f9dbb40b60313c74dc1782ca5355ea74f3eb33ad4be93b4",
+    "frontend/node_modules/hyperframes/dist/cli.js": "1250669d951c4a462b7e4b5d574256f61978797ba3b941cc8491d620e3ef925b",
+    "docs/verification/t1135/private-current-render-stage-colors.json": "aac53b45a796f6e4e3b28e73c43c21c8c3d32ecb21786711a153b35fdd1d3a65",
+    "docs/verification/t1135/private-current-render-command.json": "38393c49f1208f8a945ddb588f33ac85401d583702f732c8854416873a94450e",
+    "docs/verification/t1135/isolated-color-stage-counterevidence.json": "5443e2b94ee9182642c7b7d5aa07418b8359997ce4bde3e538551e82113dfbee",
+    "docs/verification/t1135/encoder-mechanical-readback.json": "d0e8cc7a8aacb8393f06a76715beb725dfa1e0eab4c61f0b5f051819beff6d23",
+    "existing-media-pixel-grid-readback.json": "451f76d2d57af93c4a880b7b8276f00f7658cd62a5830a66d17d3caf3053c5f9",
+    "generated.html": "e02b0a66ab5f426fe07cef38f8304e6a2bc928fc14f50c726d674f5f7a6f655d"
+  },
+  "execution": {
+    "newExperiments": 0,
+    "render": false,
+    "model": false,
+    "app": false,
+    "database": false,
+    "repositoryModified": false,
+    "taskStateModified": false
+  }
+}

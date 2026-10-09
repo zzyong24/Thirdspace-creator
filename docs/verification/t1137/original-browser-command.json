@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "node",
+    "docs/verification/t1136/run-layout-journey.mjs",
+    "--baseline"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T15:45:37.646198+00:00",
+  "finishedAt": "2026-10-09T15:48:57.252943+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 199.6041976249544,
+  "logSha256": "6b4874261c59df44a026a942ce257f22349e95bc6cf2ff6c47723f789d5df35e"
+}

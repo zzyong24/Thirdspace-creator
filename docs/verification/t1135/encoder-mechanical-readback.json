@@ -1,0 +1,101 @@
+[
+  {
+    "variant": "hf-current-scale",
+    "argv": [
+      "/opt/homebrew/bin/ffmpeg",
+      "-v",
+      "error",
+      "-threads",
+      "1",
+      "-filter_threads",
+      "1",
+      "-i",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/color-final-encoder-mechanical-probe-v2/hf-current-scale.mp4",
+      "-frames:v",
+      "1",
+      "-vf",
+      "format=rgb24,crop=1:1:0:0",
+      "-pix_fmt",
+      "rgb24",
+      "-f",
+      "rawvideo",
+      "-"
+    ],
+    "startedAt": "2026-10-09T15:21:27.079189+00:00",
+    "finishedAt": "2026-10-09T15:21:27.213730+00:00",
+    "elapsedSeconds": 0.13406562502495944,
+    "exitCode": 0,
+    "rgb": [
+      17,
+      36,
+      57
+    ],
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "variant": "explicit-709-matrix",
+    "argv": [
+      "/opt/homebrew/bin/ffmpeg",
+      "-v",
+      "error",
+      "-threads",
+      "1",
+      "-filter_threads",
+      "1",
+      "-i",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/color-final-encoder-mechanical-probe-v2/explicit-709-matrix.mp4",
+      "-frames:v",
+      "1",
+      "-vf",
+      "format=rgb24,crop=1:1:0:0",
+      "-pix_fmt",
+      "rgb24",
+      "-f",
+      "rawvideo",
+      "-"
+    ],
+    "startedAt": "2026-10-09T15:21:27.214117+00:00",
+    "finishedAt": "2026-10-09T15:21:27.297696+00:00",
+    "elapsedSeconds": 0.08360245899530128,
+    "exitCode": 0,
+    "rgb": [
+      17,
+      36,
+      57
+    ],
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "variant": "no-extra-scale",
+    "argv": [
+      "/opt/homebrew/bin/ffmpeg",
+      "-v",
+      "error",
+      "-threads",
+      "1",
+      "-filter_threads",
+      "1",
+      "-i",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/color-final-encoder-mechanical-probe-v2/no-extra-scale.mp4",
+      "-frames:v",
+      "1",
+      "-vf",
+      "format=rgb24,crop=1:1:0:0",
+      "-pix_fmt",
+      "rgb24",
+      "-f",
+      "rawvideo",
+      "-"
+    ],
+    "startedAt": "2026-10-09T15:21:27.297986+00:00",
+    "finishedAt": "2026-10-09T15:21:27.372502+00:00",
+    "elapsedSeconds": 0.0745537499897182,
+    "exitCode": 0,
+    "rgb": [
+      17,
+      36,
+      57
+    ],
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

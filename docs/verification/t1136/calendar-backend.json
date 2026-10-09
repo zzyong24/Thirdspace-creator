@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/content-calendar/group-calendar.integration.test.ts",
+    "--retry=0",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T15:52:33.484480+00:00",
+  "finishedAt": "2026-10-09T15:52:54.823206+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 21.338131041964516,
+  "logSha256": "67f7014f283f938f5f7ed39c441115ec2638e9b3cb63b71d2931a59066aa3b3f"
+}

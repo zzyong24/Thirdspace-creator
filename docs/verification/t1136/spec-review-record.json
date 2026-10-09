@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/reviewctl.mjs",
+    "record",
+    "T-1136",
+    "--spec",
+    "docs/features/t1136-calendar-dialog-current-integration.md",
+    "--constitution",
+    "docs/产品定位.md",
+    "--input",
+    "docs/features/t1136-calendar-dialog-current-integration.review-input.json",
+    "--review",
+    "docs/features/t1136-calendar-dialog-current-integration.review.md",
+    "--backlog",
+    "BACKLOG.md",
+    "--review-mode",
+    "independent",
+    "--model",
+    "codex-inherited"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T15:47:57.927969+00:00",
+  "finishedAt": "2026-10-09T15:47:58.130038+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.20182295894483104,
+  "logSha256": "9004cc58ed12e14400ff2bac2f6808b34659c6078f9df5b14b2c4318b9d5b584"
+}

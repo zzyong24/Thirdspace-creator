@@ -1,0 +1,44 @@
+{
+  "schema": "creatoros-browser-journey/v1",
+  "task_id": "T-1136",
+  "head": "de7bc56e758d6301466c7aecde016d349445a1e8",
+  "phase": "baseline",
+  "surface": "browser",
+  "mode": "non-fixture",
+  "input": "fresh public synthetic group/project/account records",
+  "startedAt": "2026-10-09T15:45:37.897Z",
+  "finishedAt": "2026-10-09T15:48:57.238Z",
+  "elapsedSeconds": 199.329486458,
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "playwright",
+    "test",
+    "tests/e2e/t1136-calendar-dialog-layout.spec.ts",
+    "--project=e2e",
+    "--retries=0",
+    "-g",
+    "四种窗口尺寸"
+  ],
+  "exitCode": 1,
+  "signal": null,
+  "error": null,
+  "logSha256": "cff5d71f2a166eb97e43b476df91a824650f159aca5df993f57ae62f884ccfed",
+  "sourceSha256": {
+    "frontend/src/components/ui/dialog.tsx": "05ef54740d8ebb6dc0628bb1a35caabc4445717dab8e6bf73ad1bff87323d21b",
+    "frontend/src/features/content-calendar/group-calendar-planning-control.tsx": "d0c060754341568d99f9671dadd785c033e24c2c8c1b81008d8f8c528a8d91e4",
+    "frontend/tests/e2e/t1136-calendar-dialog-layout.spec.ts": "7284ed96b50109442e593e47e442931ba0e6604273e1baecfbeee01c27df52ee"
+  },
+  "sourceAfter": {
+    "frontend/src/components/ui/dialog.tsx": "05ef54740d8ebb6dc0628bb1a35caabc4445717dab8e6bf73ad1bff87323d21b",
+    "frontend/src/features/content-calendar/group-calendar-planning-control.tsx": "d0c060754341568d99f9671dadd785c033e24c2c8c1b81008d8f8c528a8d91e4",
+    "frontend/tests/e2e/t1136-calendar-dialog-layout.spec.ts": "7284ed96b50109442e593e47e442931ba0e6604273e1baecfbeee01c27df52ee"
+  },
+  "retries": 0,
+  "nativeApp": false,
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "humanViewed": false
+}

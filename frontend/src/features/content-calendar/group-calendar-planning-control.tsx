@@ -3,7 +3,7 @@ import * as React from "react";
 import {useRouter} from "next/navigation";
 import {CalendarDays,LoaderCircle} from "lucide-react";
 import {Button} from "@/components/ui/button";
-import {Dialog,DialogContent,DialogDescription,DialogFooter,DialogHeader,DialogTitle} from "@/components/ui/dialog";
+import {Dialog,DialogContent,DialogDescription,DialogFooter,DialogHeader,DialogTitle,DialogTrigger} from "@/components/ui/dialog";
 import {CreatorDatePicker} from "@/components/ui/creator-date-picker";
 import {client} from "@/lib/contract-client";
 import type {GroupMemberResource} from "@creatoros/contract";
@@ -24,8 +24,8 @@ export function GroupCalendarPlanningControl({groupId,projects,today,entryId}:{g
   }catch{if(generation.current===current)setError("保存失败。项目可能已发布或账号归属已改变，请检查选择后重试。")}finally{inflight.current=false;if(generation.current===current)setPending(false)}
  }
  return <Dialog open={open} onOpenChange={value=>{if(!pending)setOpen(value)}}>
-  <Button type="button" variant={entryId?"outline":"default"} size="sm" onClick={()=>setOpen(true)}><CalendarDays aria-hidden="true" className="size-4"/>{entryId?"重新选择目标":"安排创作"}</Button>
-  <DialogContent className="max-w-md"><DialogHeader><DialogTitle>{entryId?"选择发布目标":"安排创作日期"}</DialogTitle><DialogDescription>计划保存在当前账号组。未绑定平台账号也可以安排创作；这里保存计划，实际发布需另行确认。</DialogDescription></DialogHeader>
+  <DialogTrigger asChild><Button type="button" variant={entryId?"outline":"default"} size="sm"><CalendarDays aria-hidden="true" className="size-4"/>{entryId?"重新选择目标":"安排创作"}</Button></DialogTrigger>
+  <DialogContent className="sm:max-w-md"><DialogHeader><DialogTitle>{entryId?"选择发布目标":"安排创作日期"}</DialogTitle><DialogDescription>计划保存在当前账号组。未绑定平台账号也可以安排创作；这里保存计划，实际发布需另行确认。</DialogDescription></DialogHeader>
    {archived?<p role="status" className="text-sm text-muted-foreground">已归档账号组仅能查看历史，请恢复后再安排创作。</p>:null}
    {!entryId?<><label className="flex flex-col gap-2 text-sm">共享项目<select aria-label="共享项目" value={projectId} onChange={e=>setProjectId(e.target.value)} disabled={pending||loading||archived} className="h-10 rounded-control border border-border bg-surface px-3"><option value="">选择项目</option>{projects.filter(p=>p.schedulable!==false).map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></label>
    <div className="flex flex-col gap-2 text-sm"><span>创作日期</span><CreatorDatePicker value={date} onChange={value=>setDate(value??"")} minDate={today} placeholder="选择日期" label="创作日期" disabled={pending||loading||archived}/></div></>:null}

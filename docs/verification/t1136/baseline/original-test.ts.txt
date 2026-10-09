@@ -1,0 +1,200 @@
+import type {Page, Locator, BrowserContext} from "@playwright/test";
+import {mkdirSync, readFileSync, writeFileSync} from "node:fs";
+import {resolve} from "node:path";
+import {expect, test} from "../helpers/test-environment";
+
+const evidence = resolve("../docs/verification/t1136");
+const viewports = [{width:1366,height:900},{width:900,height:900},{width:390,height:900},{width:683,height:450}];
+const wait = {timeout:120_000};
+type Scope = {groupId?:string};
+type Entry = {id:string;projectId:string;accountId:string|null;plannedDate:string;targetStatus:string};
+const title = "发布策略复盘与内容创作计划".repeat(9);
+const handle = "@calendar_creator_" + "long_unbroken_platform_identity_".repeat(8);
+
+async function dispatch<T = {id:string}>(page:Page,id:string,input:unknown,scope:Scope={}):Promise<T> {
+ const response=await page.request.post("/api/v1/dispatch",{...wait,headers:{"content-type":"application/json",...(scope.groupId?{"x-group-id":scope.groupId}:{})},data:{id,input}});
+ expect(response.ok(),id+" HTTP "+response.status()).toBe(true);
+ return (await response.json() as {data:T}).data;
+}
+async function createGroup(page:Page,name:string) {
+ return dispatch(page,"accountGroups.create",{body:{name,idempotencyKey:crypto.randomUUID()}});
+}
+async function transfer(page:Page,accountId:string,toGroupId:string) {
+ const preview=await dispatch<Record<string,unknown>>(page,"accountGroups.members.previewTransfer",{body:{accountId,toGroupId}});
+ await dispatch(page,"accountGroups.members.transfer",{body:{...preview,idempotencyKey:crypto.randomUUID()}});
+}
+async function setup(page:Page) {
+ const group=await createGroup(page,"排期布局验证-"+crypto.randomUUID());
+ const first=await dispatch(page,"accounts.create",{body:{platform:"wechatOfficial",accountHandle:handle,idempotencyKey:crypto.randomUUID()}});
+ const second=await dispatch(page,"accounts.create",{body:{platform:"xiaohongshu",accountHandle:handle+"2",idempotencyKey:crypto.randomUUID()}});
+ await transfer(page,first.id,group.id);await transfer(page,second.id,group.id);
+ const project=await dispatch(page,"projects.create",{body:{title,brief:"本地隔离验证"}},{groupId:group.id});
+ return {group,first,second,project};
+}
+async function enter(page:Page,context:BrowserContext,baseURL:string,groupId:string) {
+ await context.addCookies([{name:"creatoros_current_group",value:encodeURIComponent(groupId),url:baseURL}]);
+ await page.addInitScript(id=>{localStorage.setItem("creatoros:current-group",id);localStorage.removeItem("creatoros:current-account");},groupId);
+ await page.goto("/publishing",wait);
+ await expect(page.getByRole("button",{name:"安排创作",exact:true})).toBeVisible(wait);
+}
+function today() {
+ const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+ return ["year","month","day"].map(type=>parts.find(p=>p.type===type)!.value).join("-");
+}
+async function list(page:Page,groupId:string) {
+ const day=today(),month=day.slice(0,7),year=Number(month.slice(0,4)),m=Number(month.slice(5));
+ const end=new Date(Date.UTC(year,m,0)).toISOString().slice(0,10);
+ return dispatch<Entry[]>(page,"group.calendar.list",{params:{groupId},query:{from:month+"-01T00:00:00.000Z",to:end+"T23:59:59.000Z",limit:100,offset:0}},{groupId});
+}
+async function date(page:Page,dialog:Locator) {
+ await dialog.getByRole("button",{name:"创作日期",exact:true}).click(wait);
+ const cell=page.locator('.ant-picker-dropdown:not(.ant-picker-dropdown-hidden) td[title="'+today()+'"]');
+ await expect(cell).toBeVisible(wait);await cell.click(wait);
+ await expect(dialog.getByLabel("创作日期")).toHaveValue(today(),wait);
+}
+async function openDay(page:Page) {
+ await page.getByRole("button",{name:new RegExp("^"+today()+"(?: 今天)?，发布 ")}).click(wait);
+ await expect(page.getByTestId("calendar-day-drawer")).toBeVisible(wait);
+}
+async function dimensions(dialog:Locator) {
+ return dialog.evaluate(node=>{
+  const rect=node.getBoundingClientRect(),style=getComputedStyle(node);
+  const controls=Array.from(node.querySelectorAll("select,button,input")).filter(el=>getComputedStyle(el).position!=="absolute").map(el=>{
+   const box=el.getBoundingClientRect();
+   return {label:el.getAttribute("aria-label")||el.textContent?.trim(),left:box.left,right:box.right,width:box.width};
+  });
+  return {viewport:innerWidth,left:rect.left,right:rect.right,width:rect.width,scrollWidth:node.scrollWidth,clientWidth:node.clientWidth,maxWidth:style.maxWidth,gridTemplateColumns:style.gridTemplateColumns,controls};
+ });
+}
+function noOverflow(d:Awaited<ReturnType<typeof dimensions>>) {
+ return d.left>=15&&d.right<=d.viewport-15&&d.scrollWidth<=d.clientWidth+1&&d.controls.every(c=>c.left>=d.left-1&&c.right<=d.right+1);
+}
+async function capture(page:Page,dialog:Locator,name:string) {
+ mkdirSync(resolve(evidence,"screenshots"),{recursive:true});
+ await page.screenshot({path:resolve(evidence,"screenshots",name+".png")});
+ return {name,url:page.url(),viewport:page.viewportSize(),dimensions:await dimensions(dialog),text:await dialog.innerText()};
+}
+
+test("T-1136 当前真实排期长名称的四种窗口尺寸",async({page,context,baseURL})=>{
+ test.setTimeout(600_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
+ const {group,first,project}=await setup(page);await enter(page,context,baseURL!,group.id);
+ const records=[];
+ for(const vp of viewports) {
+  await page.setViewportSize(vp);const trigger=page.getByRole("button",{name:"安排创作",exact:true});await trigger.click(wait);
+  const dialog=page.getByRole("dialog",{name:"安排创作日期"});
+  await expect(dialog.getByRole("option",{name:"微信公众号 · "+handle,exact:true})).toHaveCount(1,wait);
+  await dialog.getByLabel("共享项目",{exact:true}).selectOption(project.id,wait);
+  await dialog.getByLabel("发布目标（可选）",{exact:true}).selectOption(first.id,wait);
+  records.push(await capture(page,dialog,"calendar-long-"+vp.width));
+  await page.keyboard.press("Escape");await expect(dialog).toBeHidden(wait);await expect(trigger).toBeFocused(wait);
+ }
+ writeFileSync(resolve(evidence,"layout-observation.json"),JSON.stringify({surface:"browser",mode:"non-fixture",input:"fresh public synthetic group/project/accounts",viewports:records},null,2));
+ expect(records.filter(r=>!noOverflow(r.dimensions)).map(r=>r.name),"弹窗或控件超出窗口/容器").toEqual([]);
+ for(const r of records.filter(r=>r.viewport!.width>=640))expect(r.dimensions.width).toBeCloseTo(448,0);
+ expect(await list(page,group.id)).toHaveLength(0);
+});
+
+test("T-1136 真实保存回读重开、目标转组重选与失败保留输入",async({page,context,baseURL})=>{
+ test.setTimeout(720_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
+ const {group,first,second,project}=await setup(page);await enter(page,context,baseURL!,group.id);await page.setViewportSize({width:900,height:900});
+ const captures=[];const trigger=page.getByRole("button",{name:"安排创作",exact:true});
+ await trigger.click(wait);let dialog=page.getByRole("dialog",{name:"安排创作日期"});
+ await expect(dialog.getByRole("option",{name:"微信公众号 · "+handle,exact:true})).toHaveCount(1,wait);
+ expect(noOverflow(await dimensions(dialog))).toBe(true);
+ await dialog.getByLabel("共享项目",{exact:true}).selectOption(project.id,wait);await date(page,dialog);
+ await dialog.getByLabel("发布目标（可选）",{exact:true}).selectOption(first.id,wait);
+ await dialog.getByRole("button",{name:"保存计划",exact:true}).click(wait);await expect(dialog).toBeHidden(wait);
+ let rows=await list(page,group.id);expect(rows).toHaveLength(1);const entry=rows[0]!;
+ expect(entry).toMatchObject({projectId:project.id,accountId:first.id,plannedDate:today(),targetStatus:"ready"});
+ await page.reload(wait);expect(await list(page,group.id)).toEqual(rows);
+ await trigger.click(wait);dialog=page.getByRole("dialog",{name:"安排创作日期"});await expect(dialog.getByLabel("共享项目")).toBeVisible(wait);
+ await dialog.getByRole("button",{name:"取消",exact:true}).click(wait);await expect(dialog).toBeHidden(wait);expect(await list(page,group.id)).toEqual(rows);
+ const other=await createGroup(page,"排期目标转出验证-"+crypto.randomUUID());await transfer(page,first.id,other.id);
+ await page.reload(wait);await openDay(page);await page.getByRole("button",{name:"重新选择目标",exact:true}).click(wait);
+ dialog=page.getByRole("dialog",{name:"选择发布目标"});await expect(dialog.getByRole("option",{name:"小红书 · "+handle+"2",exact:true})).toHaveCount(1,wait);
+ await dialog.getByLabel("发布目标（可选）",{exact:true}).selectOption(second.id,wait);
+ let injected=0;
+ await page.route("**/api/v1/dispatch",async route=>{
+  const payload=route.request().postDataJSON();
+  if(payload?.id==="calendar.entries.target"&&injected===0){injected++;await route.fulfill({status:409,contentType:"application/json",body:JSON.stringify({data:null,error:{code:"ConflictError",message:"隔离测试：一次保存失败"}})});return;}
+  await route.fallback();
+ });
+ await dialog.getByRole("button",{name:"保存计划",exact:true}).click(wait);await expect(dialog.getByRole("alert")).toBeVisible(wait);
+ expect(injected).toBe(1);await expect(dialog.getByLabel("发布目标（可选）")).toHaveValue(second.id,wait);
+ rows=await list(page,group.id);expect(rows[0]).toMatchObject({id:entry.id,accountId:first.id,targetStatus:"needs_reselection"});
+ captures.push(await capture(page,dialog,"calendar-save-error-900"));
+ await dialog.getByRole("button",{name:"取消",exact:true}).click(wait);await expect(dialog).toBeHidden(wait);expect(await list(page,group.id)).toEqual(rows);
+ await page.getByRole("button",{name:"重新选择目标",exact:true}).click(wait);dialog=page.getByRole("dialog",{name:"选择发布目标"});
+ await expect(dialog.getByLabel("发布目标（可选）")).toBeEnabled(wait);
+ await dialog.getByLabel("发布目标（可选）").selectOption(second.id,wait);
+ await dialog.getByRole("button",{name:"保存计划",exact:true}).click(wait);await expect(dialog).toBeHidden(wait);
+ rows=await list(page,group.id);expect(rows).toHaveLength(1);expect(rows[0]).toMatchObject({id:entry.id,projectId:project.id,accountId:second.id,targetStatus:"ready"});
+ await page.reload(wait);expect(await list(page,group.id)).toEqual(rows);
+ await page.goto("/projects",wait);await page.goto("/publishing",wait);expect(await list(page,group.id)).toEqual(rows);
+ // 空目标沿正式原操作，保真实entry/归属，不开启发布或模型。
+ await transfer(page,second.id,other.id);await page.reload(wait);await openDay(page);await page.getByRole("button",{name:"重新选择目标",exact:true}).click(wait);
+ dialog=page.getByRole("dialog",{name:"选择发布目标"});await expect(dialog.getByText("当前组未绑定平台账号，可先安排创作。")).toBeVisible(wait);
+ await dialog.getByLabel("发布目标（可选）").selectOption("",wait);
+ captures.push(await capture(page,dialog,"calendar-empty-target-900"));
+ await dialog.getByRole("button",{name:"保存计划",exact:true}).click(wait);await expect(dialog).toBeHidden(wait);
+ rows=await list(page,group.id);expect(rows[0]).toMatchObject({id:entry.id,accountId:null,targetStatus:"unassigned"});
+ writeFileSync(resolve(evidence,"public-write-read-observation.json"),JSON.stringify({surface:"browser",mode:"non-fixture",witnesses:{groupId:group.id,projectId:project.id,entryId:entry.id},finalEntry:rows[0],faultFixture:{operation:"calendar.entries.target",http:409,count:injected,successfulWritesReplaced:false},captures},null,2));
+});
+
+test("T-1136 读取中及共享反馈、参考素材弹窗仍可操作",async({page,context,baseURL})=>{
+ test.setTimeout(600_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
+ const {group,project}=await setup(page);await enter(page,context,baseURL!,group.id);
+ const captures=[];
+ let release!:()=>void,held=false;const gate=new Promise<void>(resolve=>{release=resolve;});
+ await page.route("**/api/v1/dispatch",async route=>{
+  if(route.request().postDataJSON()?.id==="accountGroups.get"&&!held){held=true;await gate;}
+  await route.fallback();
+ });
+ await page.getByRole("button",{name:"安排创作",exact:true}).click(wait);
+ let dialog=page.getByRole("dialog",{name:"安排创作日期"});
+ try {
+  await expect(dialog.getByText("正在读取当前组的平台账号…")).toBeVisible(wait);
+  await expect(dialog.getByRole("button",{name:"保存计划",exact:true})).toBeDisabled(wait);
+  captures.push(await capture(page,dialog,"calendar-loading-900"));
+ } finally {release();}
+ await expect(dialog.getByLabel("共享项目")).toBeEnabled(wait);
+ await dialog.getByRole("button",{name:"取消",exact:true}).click(wait);expect(await list(page,group.id)).toHaveLength(0);
+ // 反馈只填写、检查和关闭；不发送反馈、外部消息或诊断日志。
+ await page.getByRole("button",{name:"帮助与反馈",exact:true}).click(wait);
+ dialog=page.getByRole("dialog",{name:"帮助与反馈",exact:true});
+ await dialog.getByLabel("问题摘要",{exact:true}).fill("本地隔离验证弹窗可操作",wait);
+ await dialog.getByLabel("问题描述",{exact:true}).fill("核对表单、中文换行和关闭功能，未提交反馈。",wait);
+ for(const vp of [{width:1366,height:900},{width:900,height:900}]){
+  await page.setViewportSize(vp);expect(noOverflow(await dimensions(dialog))).toBe(true);
+  captures.push(await capture(page,dialog,"shared-feedback-"+vp.width));
+ }
+ await page.keyboard.press("Escape");await expect(dialog).toBeHidden(wait);
+ await expect(page.getByRole("button",{name:"帮助与反馈",exact:true})).toBeFocused(wait);
+ const name="本地弹窗预览图.png",bytes=readFileSync(resolve("public/douyin-icon.png"));
+ const upload=await dispatch<{uploadId:string;uploadUrl:string}>(page,"assets.uploads.create",{body:{assetType:"image",mimeType:"image/png",fileSize:bytes.length,fileName:name}},{groupId:group.id});
+ const put=await page.request.put(upload.uploadUrl,{...wait,headers:{"content-type":"image/png"},data:bytes});expect(put.ok()).toBe(true);
+ const asset=await dispatch<{id:string;currentFileId:string}>(page,"assets.uploads.complete",{params:{uploadId:upload.uploadId},body:{name}},{groupId:group.id});
+ const canvas=await dispatch(page,"canvas.create",{body:{title:"共享弹窗验证画布",projectId:project.id}},{groupId:group.id});
+ await page.goto("/canvases/"+canvas.id,wait);await page.getByRole("button",{name:"＋ 图片生成",exact:true}).click(wait);
+ await page.getByRole("button",{name:"编导与详情",exact:true}).click(wait);
+ const inspector=page.locator("aside").filter({has:page.getByRole("heading",{name:"节点设置",exact:true})});
+ await inspector.getByLabel("模式",{exact:true}).selectOption("image_to_image",wait);
+ const field=inspector.getByRole("button",{name:"参考图片",exact:true});await field.click(wait);
+ dialog=page.getByRole("dialog",{name:"参考图片",exact:true});
+ const preview=dialog.getByRole("button",{name:"预览 "+name,exact:true});await preview.click(wait);
+ const large=dialog.getByAltText("画布图片素材",{exact:true});
+ await expect.poll(()=>large.evaluate((node:HTMLImageElement)=>node.complete&&node.naturalWidth>0),wait).toBe(true);
+ await expect.poll(()=>preview.getByRole("img").evaluate((node:HTMLImageElement)=>node.complete&&node.naturalWidth>0),wait).toBe(true);
+ for(const vp of [{width:1366,height:900},{width:900,height:900},{width:683,height:450}]){
+  await page.setViewportSize(vp);const box=await dialog.boundingBox();expect(box).not.toBeNull();
+  expect(box!.x).toBeGreaterThanOrEqual(15);expect(box!.x+box!.width).toBeLessThanOrEqual(vp.width-15);
+  const confirm=await dialog.getByRole("button",{name:"使用此素材",exact:true}).boundingBox();expect(confirm).not.toBeNull();
+  expect(confirm!.y).toBeGreaterThanOrEqual(0);expect(confirm!.y+confirm!.height).toBeLessThanOrEqual(vp.height);
+  captures.push(await capture(page,dialog,"shared-asset-picker-"+vp.width));
+ }
+ await dialog.getByRole("button",{name:"取消",exact:true}).click(wait);await expect(dialog).toBeHidden(wait);
+ await expect(field).toBeFocused(wait);
+ const saved=await dispatch<{document:{nodes:Array<{referenceAssetId?:string}>}}>(page,"canvas.get",{params:{canvasId:canvas.id}},{groupId:group.id});
+ expect(saved.document.nodes.every(node=>node.referenceAssetId!==asset.id)).toBe(true);
+ writeFileSync(resolve(evidence,"shared-consumer-observation.json"),JSON.stringify({surface:"browser",loadingFixture:"once held real accountGroups.get; original response retained",feedbackSubmitted:false,modelCalled:false,assetId:asset.id,canvasId:canvas.id,captures},null,2));
+});

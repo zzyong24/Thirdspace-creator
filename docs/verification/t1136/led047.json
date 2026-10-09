@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/features/copilot/ai-copilot-interactions.test.tsx",
+    "src/features/knowledge/knowledge-dump-zone.test.tsx",
+    "src/features/topics/topics-interactions.test.tsx",
+    "src/components/overlays/overlay-routing.test.tsx",
+    "src/lib/copilot-navigation.test.ts",
+    "src/features/copilot/chat-tool-trace.test.tsx",
+    "src/features/automations/run-controls.test.tsx",
+    "src/features/automations/cadence.test.ts",
+    "--retry=0",
+    "--no-file-parallelism",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T15:53:59.620656+00:00",
+  "finishedAt": "2026-10-09T15:54:25.820797+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 26.187334791000467,
+  "logSha256": "a7fc27ca4ed341759f8265e75340f11e2583396f1e753973199662dd7388afe0"
+}

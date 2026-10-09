@@ -9,7 +9,10 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-1135 | 核对安装版粗剪成片解码画面比原素材偏暗 | 🔨 待办 | — | — | [实际诊断](docs/features/t1135-installed-render-color-fidelity.md) | 已批准r7中性成片正式exact-file下载/245帧解码通过，但源+6.76秒三处背景RGB17/36/57变为0/19/44；先核原工程与编码色彩/公共渲染路径，根因未知，不重提渲染或改原稿/媒体；修产品前精确SPEC独评。 |
+| T-1138 | 核对共享素材弹窗走查未命中原生模式选择控件 | 🔨 待办 | — | — | [实际诊断](docs/features/t1138-calendar-shared-picker-test-selector.md) | 原Chrome2PASS/1FAIL，模式combobox确实存在；仅校准测试可访问名定位，保原日志/120秒/0retry并真实进入图库，不改产品洗绿。 |
+| T-1137 | 核对排期弹窗关闭后键盘焦点丢失 | 🔨 待办 | — | — | [实际缺陷](docs/features/t1137-calendar-focus-return.md) | T1136原Chrome Esc已关但120秒触发器inactive；原缺DialogTrigger，保失败并由T1136同路径明确扩展独评后修复，不删焦点断言。 |
+| T-1136 | 在当前main修复长项目与平台账号撑宽排期弹窗 | 🔨 待办 | PASS[REV:db7fe4526b24] | 待验 | [SPEC](docs/features/t1136-calendar-dialog-current-integration.md) | T1124来源两条布局缺失；仅共享Dialog单列收缩与排期断点及必要select收缩，先独评/当前Chrome真实尺寸RED，再原公共选择保存回读和相邻消费者验证；不签旧来源或全功能。 |
+| T-1135 | 核对安装版粗剪成片解码画面比原素材偏暗 | ⏸️ 待办 | — | — | [实际诊断](docs/features/t1135-installed-render-color-fidelity.md) | 已批准r7中性成片正式exact-file下载/245帧解码通过，但源+6.76秒三处背景RGB17/36/57变为0/19/44；先核原工程与编码色彩/公共渲染路径，根因未知，不重提渲染或改原稿/媒体；修产品前精确SPEC独评。 |
 | T-1134 | 核对恢复素材不可用提示的读取时序 | ✅ 待办 | — | — | [实际诊断](docs/features/t1134-recovered-material-readiness.md) | T1133校准后37例36PASS/1FAIL，素材标记同步断言未等清单ready；先按原断言120秒观察实际状态，持续缺失再补产品SPEC，不猜界面缺陷或放宽为总提示。 |
 | T-1133 | 修正制作回归测试的素材选择、操作目录与结果归属漂移 | ✅ 待办 | PASS[REV:c6d0579feef6] | — | [SPEC](docs/features/t1133-production-regression-fixture-compatibility.md) | 原顺序LED032/040实际失败：退役select、目录18对32、假结果资产；先独评保原恢复/导出/归属断言，按当前选择器及真实公开资产链校准，不改产品洗绿。 |
 | T-1132 | 核对完整对账新增资源生命周期回归失败 | ✅ 待办 | — | — | [实际诊断](docs/features/t1132-resource-lifecycle-current-gate.md) | 同轮完整canonical新增LED061；先原命令分段保实际断言、作用域和sourceSHA，核释放/背压/停止及等待真值，不删历史、重发任务或用旧PASS代签。 |

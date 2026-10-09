@@ -1,0 +1,110 @@
+[
+  {
+    "stage": "source-prepared",
+    "argv": [
+      "/opt/homebrew/bin/ffmpeg",
+      "-v",
+      "error",
+      "-threads",
+      "1",
+      "-filter_threads",
+      "1",
+      "-ss",
+      "7.06",
+      "-i",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/color-current-full-diagnostic/prepared-media/main-3984537083f155bcce0c820599bd8f472492bd181aaade6e68120f1ed8832ea0.mp4",
+      "-frames:v",
+      "1",
+      "-vf",
+      "format=rgb24,crop=1:1:0:0",
+      "-pix_fmt",
+      "rgb24",
+      "-f",
+      "rawvideo",
+      "-"
+    ],
+    "startedAt": "2026-10-09T15:23:55.552200+00:00",
+    "finishedAt": "2026-10-09T15:23:55.778132+00:00",
+    "elapsedSeconds": 0.22570454102242365,
+    "exitCode": 0,
+    "rgb": [
+      15,
+      35,
+      56
+    ],
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fileSha256": "b2ebe35c2f2ec8b9645f71b88daff37926fba8d05102d3b567ecba9864064e49"
+  },
+  {
+    "stage": "raw-render",
+    "argv": [
+      "/opt/homebrew/bin/ffmpeg",
+      "-v",
+      "error",
+      "-threads",
+      "1",
+      "-filter_threads",
+      "1",
+      "-ss",
+      "0.3",
+      "-i",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/color-current-full-diagnostic/render_raw.mp4",
+      "-frames:v",
+      "1",
+      "-vf",
+      "format=rgb24,crop=1:1:0:0",
+      "-pix_fmt",
+      "rgb24",
+      "-f",
+      "rawvideo",
+      "-"
+    ],
+    "startedAt": "2026-10-09T15:23:55.778904+00:00",
+    "finishedAt": "2026-10-09T15:23:55.870472+00:00",
+    "elapsedSeconds": 0.09161354199750349,
+    "exitCode": 0,
+    "rgb": [
+      3,
+      22,
+      43
+    ],
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fileSha256": "a4d614aab56031ebdbdbc949235dfe4e065abf7049339874c5e21f27b2d131dd"
+  },
+  {
+    "stage": "final-render",
+    "argv": [
+      "/opt/homebrew/bin/ffmpeg",
+      "-v",
+      "error",
+      "-threads",
+      "1",
+      "-filter_threads",
+      "1",
+      "-ss",
+      "0.3",
+      "-i",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/color-current-full-diagnostic/final.mp4",
+      "-frames:v",
+      "1",
+      "-vf",
+      "format=rgb24,crop=1:1:0:0",
+      "-pix_fmt",
+      "rgb24",
+      "-f",
+      "rawvideo",
+      "-"
+    ],
+    "startedAt": "2026-10-09T15:23:55.870727+00:00",
+    "finishedAt": "2026-10-09T15:23:55.962138+00:00",
+    "elapsedSeconds": 0.09147699997993186,
+    "exitCode": 0,
+    "rgb": [
+      3,
+      22,
+      43
+    ],
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "fileSha256": "40202d9cd972e7c108432262d729823b93cda00ed9690cc2a056f99708a4854b"
+  }
+]
