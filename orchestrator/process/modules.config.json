@@ -6848,6 +6848,41 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1111": {
+      "task_id": "T-1111",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1111-freeze-resolved-review.md",
+        "BACKLOG.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1107/IMPLEMENTATION_REVIEW_FINAL.json",
+        "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-package/freeze-source.py"
+      ],
+      "write_set": [
+        "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-package/freeze-source.py",
+        "docs/features/t1111-freeze-resolved-review.md",
+        "docs/features/t1111-freeze-resolved-review.review-input.json",
+        "docs/features/t1111-freeze-resolved-review.review.md",
+        "docs/features/t1111-freeze-resolved-review.independent-review.md",
+        "docs/verification/t1111/**",
+        "BACKLOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "python3 /Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-package/freeze-source.py"
+        ]
+      }
     }
   }
 }
