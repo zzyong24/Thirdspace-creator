@@ -1,0 +1,280 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts (30 tests | 30 failed) 311ms
+   × 账号组内同类私有任务查询只复用当前实际账号，组总列表仍完整 66ms
+   × 共享选题和雷达任务不需要假账号，私有指标任务仍要求实际账号 16ms
+   × 归档组仅真实私有系统任务后台创建可行，普通job/shared job拒绝 9ms
+   × 归档组私有collector沿实际job创建AI task并交接执行，普通AI拒绝 9ms
+   × 转组只重绑未来私有job，历史run和共享选题留原组 15ms
+   × 归档私有automation入队验证实际job/current member，伪造组/号和共享topic拒绝 9ms
+   × 私有collector创建先持实际账号/member锁：转组真实等待后拒绝，不移动在途task 6ms
+   × 转组先持实际账号/member锁：旧版本collector创建真实等待后拒绝，新版本可执行 10ms
+   × 未来job更新失败导致转组membership与job冻结归属整事务回滚 12ms
+   × 转组后历史run依原冻结组可读，新组不吞旧组历史，跨用户拒绝 10ms
+   × 手动登记的昵称和externalID不能伪装成真实绑定回执，跨用户查询也拒绝 3ms
+   × 实际future job能力不匹配时后台归档通道拒绝其它平台账号 4ms
+   × 真实自动化driver可认领无账号的组共享topic.daily，payload保留真实scope 8ms
+   × 真实自动化driver可认领无账号的组共享intelligence.sync，payload保留真实scope 5ms
+   × 真实自动化driver在归档组只认领活跃真实号的私有collector，冻结payload不取当前页面组 6ms
+   × 归档组真实公共trigger通过AI admission、run intent和execution交接，保留原实际账号scope 5ms
+   × 归档后普通写稿和source_sync的既有排队任务不能获得persistent执行权 6ms
+   × 归档后普通已认领任务的新动作lease admission拒绝，已有结算仍可settle 6ms
+   × 旧AI执行公开入口在归档后拒绝普通claim与新的模型调用，不写调用账本 10ms
+   × 归档后self.metrics真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用 9ms
+   × 归档后self.traffic真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用 4ms
+   × 归档后comments真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用 3ms
+   × 归档后self.detail真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用 16ms
+   × 归档claim读取实际job/member/AI映射，missing-job伪造冻结事实不能授予采集豁免 6ms
+   × 归档claim读取实际job/member/AI映射，other-account-job伪造冻结事实不能授予采集豁免 8ms
+   × 归档claim读取实际job/member/AI映射，wrong-membership伪造冻结事实不能授予采集豁免 4ms
+   × 归档claim读取实际job/member/AI映射，spoofed-owner伪造冻结事实不能授予采集豁免 10ms
+   × 普通AI模型账本在归档前已启动的调用可结算，归档后新reserve/start拒绝 9ms
+   × T1101真实PG kuaishou后台指标任务可建，用户关闭不被重启竞态打开，AI原job准入验证 8ms
+   × T1101真实PG xiaohongshu后台指标任务可建，用户关闭不被重启竞态打开，AI原job准入验证 14ms
+ ❯ src/modules/execution/execution-call-ledger.service.test.ts (25 tests | 25 skipped) 18744ms
+ ❯ src/modules/execution/execution-lease.service.test.ts (4 tests | 4 skipped) 25592ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-call-ledger.service.test.ts > T-915 持久调用账本
+Error: Hook timed out in 10000ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ src/modules/execution/execution-call-ledger.service.test.ts:11:3
+      9| describe("T-915 持久调用账本", () => {
+     10|   let db: Db; let close: () => Promise<void>;
+     11|   beforeAll(async () => {const c = await createDb(); db = c.db; close …
+       |   ^
+     12|   afterAll(async () => close?.());
+     13|   async function fixture(id: string, budget = {maxCalls: 2, maxTokens:…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/32]⎯
+
+ FAIL  src/modules/execution/execution-lease.service.test.ts > T-915 持久执行租约
+Error: Hook timed out in 10000ms.
+If this is a long-running hook, pass a timeout value as the last argument or configure it globally with "hookTimeout".
+ ❯ src/modules/execution/execution-lease.service.test.ts:10:3
+      8|   let db: Db;
+      9|   let close: () => Promise<void>;
+     10|   beforeAll(async () => {const connection = await createDb(); db = con…
+       |   ^
+     11|   afterAll(async () => close?.());
+     12|   async function fixture(id: string) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/32]⎯
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 30 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 账号组内同类私有任务查询只复用当前实际账号，组总列表仍完整
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:29:67
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 共享选题和雷达任务不需要假账号，私有指标任务仍要求实际账号
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:30:67
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档组仅真实私有系统任务后台创建可行，普通job/shared job拒绝
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:31:75
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档组私有collector沿实际job创建AI task并交接执行，普通AI拒绝
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:32:79
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 转组只重绑未来私有job，历史run和共享选题留原组
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:33:64
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档私有automation入队验证实际job/current member，伪造组/号和共享topic拒绝
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:34:92
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 私有collector创建先持实际账号/member锁：转组真实等待后拒绝，不移动在途task
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:46:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 转组先持实际账号/member锁：旧版本collector创建真实等待后拒绝，新版本可执行
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:52:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 未来job更新失败导致转组membership与job冻结归属整事务回滚
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:58:74
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 转组后历史run依原冻结组可读，新组不吞旧组历史，跨用户拒绝
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:59:68
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 手动登记的昵称和externalID不能伪装成真实绑定回执，跨用户查询也拒绝
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:60:76
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 实际future job能力不匹配时后台归档通道拒绝其它平台账号
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:61:70
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 真实自动化driver可认领无账号的组共享topic.daily，payload保留真实scope
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 真实自动化driver可认领无账号的组共享intelligence.sync，payload保留真实scope
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:64:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 真实自动化driver在归档组只认领活跃真实号的私有collector，冻结payload不取当前页面组
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:70:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档组真实公共trigger通过AI admission、run intent和execution交接，保留原实际账号scope
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:75:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档后普通写稿和source_sync的既有排队任务不能获得persistent执行权
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:87:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档后普通已认领任务的新动作lease admission拒绝，已有结算仍可settle
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:93:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 旧AI执行公开入口在归档后拒绝普通claim与新的模型调用，不写调用账本
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:98:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档后self.metrics真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档后self.traffic真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档后comments真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档后self.detail真实collector可经旧AI claim/model admission及persistent claim/lease，保留可用
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:102:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档claim读取实际job/member/AI映射，missing-job伪造冻结事实不能授予采集豁免
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档claim读取实际job/member/AI映射，other-account-job伪造冻结事实不能授予采集豁免
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档claim读取实际job/member/AI映射，wrong-membership伪造冻结事实不能授予采集豁免
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 归档claim读取实际job/member/AI映射，spoofed-owner伪造冻结事实不能授予采集豁免
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:109:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > 普通AI模型账本在归档前已启动的调用可结算，归档后新reserve/start拒绝
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:117:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/32]⎯
+
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > T1101真实PG kuaishou后台指标任务可建，用户关闭不被重启竞态打开，AI原job准入验证
+ FAIL  src/integration/startup-group-collectors.postgres.integration.test.ts > T1101真实PG xiaohongshu后台指标任务可建，用户关闭不被重启竞态打开，AI原job准入验证
+error: role "zyongzhu" does not exist
+ ❯ ../node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+ ❯ fixture src/integration/startup-group-collectors.postgres.integration.test.ts:17:134
+
+ ❯ src/integration/startup-group-collectors.postgres.integration.test.ts:123:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/32]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  30 failed | 29 skipped (59)
+   Start at  12:52:59
+   Duration  56.90s (transform 28.67s, setup 0ms, import 46.74s, tests 44.65s, environment 0ms)
+

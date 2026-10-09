@@ -73,5 +73,21 @@
     "没有执行新的真实采集或认证探针",
     "不能证明此刻Cookie有效或无效",
     "未读取或导出Cookie、未写真实用户数据库、未重试真实任务"
-  ]
+  ],
+  "additionalReadOnlyDiagnostics": {
+    "requestId": "req-c4504fa1-710",
+    "operation": "workbench.tasks.inspect",
+    "effect": "read",
+    "taskId": "execution-task-db19e969-418",
+    "callsCount": 0,
+    "hasMore": false,
+    "nextSequence": 0,
+    "taskResourceProjection": {
+      "attempt": 18,
+      "maxAttempts": 3,
+      "executionBudget": "not_exposed",
+      "deadlineAt": "not_exposed"
+    },
+    "scope": "仅公开元数据；没有Cookie、原输入/结果、数据库读取或真实任务重试。字段未投影不等于存储NULL；不能据18/3认定上限耗尽。"
+  }
 }

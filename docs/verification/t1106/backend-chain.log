@@ -1,0 +1,35 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts (19 tests | 1 failed) 6128ms
+     × foreign-history不能凭缺失版本取得执行权 12ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > foreign-history不能凭缺失版本取得执行权
+AssertionError: promise resolved "undefined" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+undefined
+
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts:72:60
+     70|   if(mode==='group-only-version')frozen={...frozen,groupVersion:1};
+     71|   if(mode==='membership-only-version')frozen={...frozen,membershipVers…
+     72|   const before=await snapshot(f);await expect(admit(frozen)).rejects.t…
+       |                                                            ^
+     73|  });
+     74|  it('旧任务初始组归档时，即使调用者请求归档豁免也不能使用旧证明',async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 passed (19)
+   Start at  12:47:52
+   Duration  15.73s (transform 6.25s, setup 0ms, import 9.21s, tests 6.13s, environment 0ms)
+

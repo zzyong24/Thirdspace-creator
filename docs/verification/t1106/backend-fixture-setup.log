@@ -1,0 +1,86 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts (14 tests | 14 failed) 5181ms
+     × 初始旧组双NULL可以准入，原任务、checkpoint、输入与归属数据逐字段不变 5ms
+     × 仅改组名和组版本，原成员未变的双NULL旧任务仍可准入且不补写版本 1ms
+     × transferred-returned不能凭缺失版本取得执行权 1ms
+     × other-history不能凭缺失版本取得执行权 1ms
+     × member-version不能凭缺失版本取得执行权 1ms
+     × foreign-user不能凭缺失版本取得执行权 0ms
+     × foreign-account不能凭缺失版本取得执行权 0ms
+     × non-initial-group不能凭缺失版本取得执行权 0ms
+     × archived-account不能凭缺失版本取得执行权 0ms
+     × archived-group不能凭缺失版本取得执行权 1ms
+     × group-only-version不能凭缺失版本取得执行权 1ms
+     × membership-only-version不能凭缺失版本取得执行权 1ms
+     × 旧任务初始组归档时，即使调用者请求归档豁免也不能使用旧证明 1ms
+     × 完整冻结但成员版本错误继续拒绝，正确原版本仍按原守卫执行 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 14 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > 初始旧组双NULL可以准入，原任务、checkpoint、输入与归属数据逐字段不变
+TypeError: Cannot read properties of undefined (reading 'Symbol(drizzle:Columns)')
+ ❯ ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pg-core/query-builders/insert.ts:89:27
+ ❯ PgInsertBuilder.values ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pg-core/query-builders/insert.ts:87:30
+ ❯ fixture src/modules/platform-account/legacy-task-membership.integration.test.ts:15:33
+
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts:35:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/14]⎯
+
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > 仅改组名和组版本，原成员未变的双NULL旧任务仍可准入且不补写版本
+TypeError: Cannot read properties of undefined (reading 'Symbol(drizzle:Columns)')
+ ❯ ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pg-core/query-builders/insert.ts:89:27
+ ❯ PgInsertBuilder.values ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pg-core/query-builders/insert.ts:87:30
+ ❯ fixture src/modules/platform-account/legacy-task-membership.integration.test.ts:15:33
+
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts:40:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/14]⎯
+
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > transferred-returned不能凭缺失版本取得执行权
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > other-history不能凭缺失版本取得执行权
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > member-version不能凭缺失版本取得执行权
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > foreign-user不能凭缺失版本取得执行权
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > foreign-account不能凭缺失版本取得执行权
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > non-initial-group不能凭缺失版本取得执行权
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > archived-account不能凭缺失版本取得执行权
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > archived-group不能凭缺失版本取得执行权
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > group-only-version不能凭缺失版本取得执行权
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > membership-only-version不能凭缺失版本取得执行权
+TypeError: Cannot read properties of undefined (reading 'Symbol(drizzle:Columns)')
+ ❯ ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pg-core/query-builders/insert.ts:89:27
+ ❯ PgInsertBuilder.values ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pg-core/query-builders/insert.ts:87:30
+ ❯ fixture src/modules/platform-account/legacy-task-membership.integration.test.ts:15:33
+
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts:44:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/14]⎯
+
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > 旧任务初始组归档时，即使调用者请求归档豁免也不能使用旧证明
+TypeError: Cannot read properties of undefined (reading 'Symbol(drizzle:Columns)')
+ ❯ ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pg-core/query-builders/insert.ts:89:27
+ ❯ PgInsertBuilder.values ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pg-core/query-builders/insert.ts:87:30
+ ❯ fixture src/modules/platform-account/legacy-task-membership.integration.test.ts:15:33
+
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts:66:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/14]⎯
+
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > 完整冻结但成员版本错误继续拒绝，正确原版本仍按原守卫执行
+TypeError: Cannot read properties of undefined (reading 'Symbol(drizzle:Columns)')
+ ❯ ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pg-core/query-builders/insert.ts:89:27
+ ❯ PgInsertBuilder.values ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/src/pg-core/query-builders/insert.ts:87:30
+ ❯ fixture src/modules/platform-account/legacy-task-membership.integration.test.ts:15:33
+
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts:70:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/14]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  14 failed (14)
+   Start at  12:42:56
+   Duration  6.87s (transform 886ms, setup 0ms, import 1.54s, tests 5.18s, environment 0ms)
+

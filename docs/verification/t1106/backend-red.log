@@ -1,0 +1,72 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts (14 tests | 3 failed) 6080ms
+     × 初始旧组双NULL可以准入，原任务、checkpoint、输入与归属数据逐字段不变 35ms
+     × 仅改组名和组版本，原成员未变的双NULL旧任务仍可准入且不补写版本 14ms
+     × membership-only-version不能凭缺失版本取得执行权 12ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > 初始旧组双NULL可以准入，原任务、checkpoint、输入与归属数据逐字段不变
+AssertionError: promise rejected "ConflictError: 任务缺少冻结账号归属版本，请重新选择目标 { code: '…' }" instead of resolving
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts:37:31
+     35|  it('初始旧组双NULL可以准入，原任务、checkpoint、输入与归属数据逐字段不变',async()=>{
+     36|   const f=await fixture(),before=await snapshot(f);
+     37|   await expect(admit(f.frozen)).resolves.toBeUndefined();
+       |                               ^
+     38|   expect(await snapshot(f)).toEqual(before);
+     39|  });
+
+Caused by: ConflictError: 任务缺少冻结账号归属版本，请重新选择目标
+ ❯ assertFrozenWorkspaceMembership src/modules/platform-account/membership-lock.service.ts:48:61
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts:32:78
+ ❯ ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/drizzle-orm/pglite/session.js:94:14
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1622
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ConflictError' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > 仅改组名和组版本，原成员未变的双NULL旧任务仍可准入且不补写版本
+AssertionError: promise rejected "ConflictError: 任务缺少冻结账号归属版本，请重新选择目标 { code: '…' }" instead of resolving
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts:42:62
+
+
+Caused by: ConflictError: 任务缺少冻结账号归属版本，请重新选择目标
+ ❯ assertFrozenWorkspaceMembership src/modules/platform-account/membership-lock.service.ts:48:61
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts:32:78
+ ❯ ../node_modules/.pnpm/drizzle-orm@0.36.4_@electric-sql+pglite@0.2.17_@opentelemetry+api@1.9.0_@types+pg@8.20._2b67dc22f5b69a01eab93a65df972558/node_modules/drizzle-orm/pglite/session.js:94:14
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/dist/chunk-A7RFOIQ7.js:8:1622
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ConflictError' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/modules/platform-account/legacy-task-membership.integration.test.ts > T1106 真实初始旧任务归属证明 > membership-only-version不能凭缺失版本取得执行权
+AssertionError: promise resolved "undefined" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+undefined
+
+ ❯ src/modules/platform-account/legacy-task-membership.integration.test.ts:64:60
+     62|   if(mode==='group-only-version')frozen={...frozen,groupVersion:1};
+     63|   if(mode==='membership-only-version')frozen={...frozen,membershipVers…
+     64|   const before=await snapshot(f);await expect(admit(frozen)).rejects.t…
+       |                                                            ^
+     65|  });
+     66|  it('旧任务初始组归档时，即使调用者请求归档豁免也不能使用旧证明',async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 11 passed (14)
+   Start at  12:43:27
+   Duration  8.18s (transform 749ms, setup 0ms, import 1.49s, tests 6.08s, environment 0ms)
+
