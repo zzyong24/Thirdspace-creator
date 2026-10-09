@@ -194,7 +194,12 @@ describe("assets ops registered in the composite transport", () => {
     // [T-135] 自建 fixture 素材(不依赖 canonical seed)。
     const assetId = await createAsset(owner);
     // Create a 用料链 edge that references this asset, then reverse-look it up.
-    const projectId = canonicalDataset.projects[0]!.id;
+    const project = (await compositeTransport.request(
+      ep("projects.create"),
+      { body: { title: "用料反查隔离项目" } } as never,
+      owner,
+    )) as { data: { id: string } };
+    const projectId = project.data.id;
     await compositeTransport.request(
       ep("materialLinks.create"),
       {

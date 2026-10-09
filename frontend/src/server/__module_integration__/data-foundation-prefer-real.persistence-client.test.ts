@@ -64,6 +64,7 @@ async function getCalibrationOverview(): Promise<CalibrationOverviewDto> {
 
 beforeEach(() => {
   __resetPersistenceForTests();
+  owner.accountId = `acct-of-${canonicalDataset.user.id}`;
 });
 
 describe("数据底座 §1.4 — pages.dashboard.get 优先读真 / fixture 兜底", () => {
@@ -117,6 +118,13 @@ describe("数据底座 §1.4 — pages.dashboard.get 优先读真 / fixture 兜�
   });
 
   it("优先读真:种入 imported 真项目后,最近发布让 fixture 让位、只出真实导入作品", async () => {
+    const account = (await compositeTransport.request(
+      ep("accounts.create"),
+      { body: { platform: "douyin", accountHandle: "@data-foundation-isolated", followerBaseline: 0 } } as never,
+      { ...owner, accountId: null },
+    )) as { data: { id: string } };
+    // 项目、输出与登记必须贯穿同一真实账号，避免悬空账号绕过归属验证。
+    owner.accountId = account.data.id;
     // —— 种一个真实采集导入项目(source:imported)+ 作品 + 已发布 publication ——
     const proj = (await compositeTransport.request(
       ep("projects.create"),
@@ -143,24 +151,9 @@ describe("数据底座 §1.4 — pages.dashboard.get 优先读真 / fixture 兜�
       owner,
     )) as { data: { id: string } };
 
-    const pub = (await compositeTransport.request(
-      ep("outputs.publications.create"),
-      {
-        params: { outputId: output.data.id },
-        query: undefined,
-        body: { platform: "douyin", accountReference: "@me" },
-      } as never,
-      owner,
-    )) as { data: { id: string } };
-
-    // 真实作品发布出去(published),才进入"最近发布"。
     await compositeTransport.request(
-      ep("publications.transition"),
-      {
-        params: { publicationId: pub.data.id },
-        query: undefined,
-        body: { status: "published" },
-      } as never,
+      ep("outputs.publications.register"),
+      { params: { outputId: output.data.id }, body: { platform: "douyin", externalId: "aweme-real-1", externalUrl: "https://www.douyin.com/video/aweme-real-1", title: "真实导入作品·四步法" } } as never,
       owner,
     );
 

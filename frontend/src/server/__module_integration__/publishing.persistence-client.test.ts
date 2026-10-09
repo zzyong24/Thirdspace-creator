@@ -8,23 +8,32 @@ import { canonicalDataset } from "@/fixtures/canonical";
 import { PUBLISHING_OP_IDS } from "@creatoros/backend/modules/publishing";
 
 // Step 4/6 — the 6 publishing ops are registered into the composite
-// (PERSISTED_OPS) and the create → list → revisions.create → transition chain
+// (PERSISTED_OPS) and the create → list → revisions.create → 手工登记链
 // round-trips through compositeTransport against the seeded pglite store. Proves
 // the module is wired into the SAME store server reads + the /api/v1 route share
 // (foundation §1 registry) — the FE 确认发布 path. The transition → published
-// fan-out runs over the same store (MockPublisher mints the external id; search
+// fan-out runs over the same store (外部发布未接通时明确拒绝；手工登记事实可继续；search
 // upsert is best-effort post-commit).
 
 const ep = (id: string) => ({ id }) as unknown as Endpoint;
 // [T-332 S2] strict 账号门:projects/publishing 域 per-account,ctx 必须带 accountId
 // (未选号 → AccountRequiredError,SPEC §4.2)。测试号按 userId 派生;composite 层 ctx
-// 可信,无需真建账号行。
+// 可信，但真实发布守卫仍要求正常创建账号。
 const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
   accountId,
 });
+
+async function createTargetAccount(owner: RequestContext, platform: "douyin" | "bilibili"): Promise<RequestContext> {
+  const created = (await compositeTransport.request(
+    ep("accounts.create"),
+    { body: { platform, accountHandle: "@publishing-isolated", followerBaseline: 0 } } as never,
+    { ...owner, accountId: null },
+  )) as { data: { id: string } };
+  return { ...owner, accountId: created.data.id };
+}
 
 beforeEach(() => {
   __resetPersistenceForTests();
@@ -69,7 +78,7 @@ describe("publishing ops registered in the composite transport", () => {
   });
 
   it("create → list → revise → transition(published) round-trips over the shared store", async () => {
-    const owner = ctx(canonicalDataset.user.id);
+    const owner = await createTargetAccount(ctx(canonicalDataset.user.id), "bilibili");
     const OUTPUT_ID = await createRealOutput(owner);
 
     // POST create a publication for the seeded output (draft, auto-mints rev-1).
@@ -125,24 +134,32 @@ describe("publishing ops registered in the composite transport", () => {
     expect(revs.data[0]!.revisionNumber).toBe(2);
     expect(revs.data[0]!.title).toBe("正式标题");
 
-    // POST transition → published (确认发布). MockPublisher mints external id.
-    const published = (await compositeTransport.request(
+    // 正式外部发布没有供应商时不能伪成功；保留当前草稿供恢复。
+    await expect(compositeTransport.request(
       ep("publications.transition"),
-      {
-        params: { publicationId },
-        query: undefined,
-        body: { status: "published" },
-      } as never,
+      { params: { publicationId }, body: { status: "published" } } as never,
       owner,
-    )) as { data: { status: string; externalId: string | null } };
+    )).rejects.toThrow();
+    const unchanged = (await compositeTransport.request(
+      ep("outputs.publications.list"),
+      { params: { outputId: OUTPUT_ID }, query: { limit: 20, offset: 0 } } as never,
+      owner,
+    )) as { data: Array<{ id: string; status: string; externalId: string | null }> };
+    expect(unchanged.data.find(row => row.id === publicationId)).toMatchObject({ status: "draft", externalId: null });
+    // 用户实际已发布后，从正常手工登记交接外部事实；这里仅使用隔离合成对象。
+    const published = (await compositeTransport.request(
+      ep("outputs.publications.register"),
+      { params: { outputId: OUTPUT_ID }, body: { platform: "bilibili", externalId: "BV-isolated-register", externalUrl: "https://www.bilibili.com/video/BV-isolated-register", title: "正式标题" } } as never,
+      owner,
+    )) as { data: { id: string; status: string; externalId: string | null } };
     expect(published.data.status).toBe("published");
-    expect(published.data.externalId).not.toBeNull();
+    expect(published.data.externalId).toBe("BV-isolated-register");
 
     // Idempotent re-publish returns the same external id (no duplicate).
     const again = (await compositeTransport.request(
       ep("publications.transition"),
       {
-        params: { publicationId },
+        params: { publicationId: published.data.id },
         query: undefined,
         body: { status: "published" },
       } as never,
@@ -154,7 +171,7 @@ describe("publishing ops registered in the composite transport", () => {
   // [T-055h③/T-063c] 登记已发布:粘链接解析出的 aweme_id 经 composite 直接落一条
   // published publication(revision 补铸,幂等)—— 稿面/排期「登记已发布」的服务端链路。
   it("outputs.publications.register 落 published+external_id 且幂等(同 external key 返回既有行)", async () => {
-    const owner = ctx(canonicalDataset.user.id);
+    const owner = await createTargetAccount(ctx(canonicalDataset.user.id), "douyin");
     const OUTPUT_ID = await createRealOutput(owner);
     const registered = (await compositeTransport.request(
       ep("outputs.publications.register"),

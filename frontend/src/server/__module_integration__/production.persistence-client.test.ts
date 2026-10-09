@@ -119,18 +119,34 @@ describe("production ops registered in the composite transport", () => {
     expect(exp.data.status).toBe("queued");
 
     // POST complete (导出视频 phase 2) → ready + cross-module primary-asset link。
-    // resultAssetId 只作事实落库(fan-out 副作用失败会被吞,SPEC §11),不校验存在性。
+    // 当前归属门要求真实已完成素材；测试经公开 upload→complete 建立输出交接对象。
+    const upload = (await compositeTransport.request(
+      ep("assets.uploads.create"),
+      { body: { assetType: "video", mimeType: "video/mp4", fileSize: 1024 } } as never,
+      owner,
+    )) as { data: { uploadId: string } };
+    const asset = (await compositeTransport.request(
+      ep("assets.uploads.complete"),
+      { params: { uploadId: upload.data.uploadId }, body: { name: "隔离导出视频" } } as never,
+      owner,
+    )) as { data: { id: string } };
     const done = (await compositeTransport.request(
       ep("exports.complete"),
       {
         params: { exportId: exp.data.id },
         query: undefined,
-        body: { resultAssetId: "asset-export-e2e" },
+        body: { resultAssetId: asset.data.id },
       } as never,
       owner,
     )) as { data: { status: string; resultAssetId: string } };
     expect(done.data.status).toBe("ready");
-    expect(done.data.resultAssetId).toBe("asset-export-e2e");
+    expect(done.data.resultAssetId).toBe(asset.data.id);
+    const output = (await compositeTransport.request(
+      ep("outputs.get"),
+      { params: { outputId: OUTPUT_ID } } as never,
+      owner,
+    )) as { data: { primaryAssetId: string | null } };
+    expect(output.data.primaryAssetId).toBe(asset.data.id);
   });
 
   // [T-721] 素材包统一导出:真实 wiring 全链(materialLinks 聚合 → 本地 zip →
