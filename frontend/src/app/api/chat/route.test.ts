@@ -1175,3 +1175,17 @@ describe('持久source恢复反例',()=>{
     expect((await durableFixture.rows()).execution).toEqual([]);
   });
 });
+
+
+describe("明确素材类型别名真实冻结",()=>{
+ it.each(["image","video"])("%s 入口冻结真实素材工具与当前稿读取，保持明确类型",async kind=>{
+  const result=await POST(chatReq({messages:[userMessage("按当前稿生成素材")],chatContext:{surface:"project",projectId:"project-1",functionKey:`material.generate.${kind}`}},"creatoros_session=tok"));
+  expect(result.status).toBe(200);
+  const rows=await durableFixture.rows();const payload=rows.execution[0].payload as {modelInput:{forcedToolSequence:string[];tools:Array<{name:string}>};hostContext:{chatContext:{functionKey:string}}};
+  expect(payload.hostContext.chatContext.functionKey).toBe(`material.generate.${kind}`);
+  expect(payload.modelInput.forcedToolSequence).toEqual(["context.artifact.text","material.generate"]);
+  expect(payload.modelInput.tools.some(tool=>tool.name==="material.generate")).toBe(true);
+  expect(payload.modelInput.tools.some(tool=>tool.name===`material.generate.${kind}`)).toBe(false);
+  await result.body!.cancel();
+ });
+});

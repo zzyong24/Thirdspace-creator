@@ -45,6 +45,8 @@ function extractFunctionKeys(source: string): string[] {
 describe("[T-265] functionKey ↔ ALL_CHAT_TOOL_NAMES 不变量(死链防复发)", () => {
   const files = collectSourceFiles(SRC_DIR);
   const toolNames = new Set(ALL_CHAT_TOOL_NAMES);
+  // 已批准的图片/视频明确选择是 functionKey 路由别名，实际执行仍是同一个正式工具。
+  const explicitAliases:Readonly<Record<string,string>>={"material.generate.image":"material.generate","material.generate.video":"material.generate"};
 
   // 收集全部 (文件, functionKey) 对,便于失败时精确定位是哪个 CTA 指向了不存在的工具。
   const occurrences: Array<{ file: string; key: string }> = [];
@@ -60,8 +62,14 @@ describe("[T-265] functionKey ↔ ALL_CHAT_TOOL_NAMES 不变量(死链防复发)
     expect(occurrences.some((o) => o.key === "planning.thesis")).toBe(true);
   });
 
-  it("每个前端 functionKey 字面量都 ∈ ALL_CHAT_TOOL_NAMES(否则 forcedTool 命不中 = 死链)", () => {
-    const dead = occurrences.filter((o) => !toolNames.has(o.key));
+  it("素材别名严格两项且底层工具已注册，未知别名不放行",()=>{
+    expect(Object.keys(explicitAliases).sort()).toEqual(["material.generate.image","material.generate.video"]);
+    for(const tool of Object.values(explicitAliases))expect(toolNames.has(tool)).toBe(true);
+    expect(toolNames.has(explicitAliases["material.generate.unknown"]??"material.generate.unknown")).toBe(false);
+  });
+
+  it("每个 functionKey 或明确素材类型别名必须指向真实工具（未知仍是死链）", () => {
+    const dead = occurrences.filter((o) => !toolNames.has(explicitAliases[o.key]??o.key));
     const detail = dead
       .map((o) => `  ${o.key}  ← ${o.file.replace(process.cwd(), ".")}`)
       .join("\n");
