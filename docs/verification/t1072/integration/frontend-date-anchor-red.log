@@ -1,0 +1,325 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:99822) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/components/ui/creator-date-picker-antd.test.tsx (7 tests | 1 failed | 6 skipped) 1300ms
+     × 空字符串代表未选日期，以北京时间当天作为面板锚点，不渲染 Invalid Date 1296ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/ui/creator-date-picker-antd.test.tsx > 真实中文Ant日历 > 空字符串代表未选日期，以北京时间当天作为面板锚点，不渲染 Invalid Date
+TestingLibraryElementError: Unable to find an element with the text: 9月. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-picker ant-picker-large ant-picker-outlined css-dev-only-do-not-override-u6izyw css-var-_r_0_ ant-picker-css-var"[39m
+      [33mstyle[39m=[32m"max-width: 100%; min-width: 0px;"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-picker-input"[39m
+      [36m>[39m
+        [36m<input[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33maria-label[39m=[32m"选择日期"[39m
+          [33mautocomplete[39m=[32m"off"[39m
+          [33mplaceholder[39m=[32m"选择日期"[39m
+          [33mreadonly[39m=[32m""[39m
+          [33msize[39m=[32m"12"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"ant-picker-suffix"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33maria-label[39m=[32m"calendar"[39m
+            [33mclass[39m=[32m"anticon anticon-calendar"[39m
+            [33mrole[39m=[32m"img"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mdata-icon[39m=[32m"calendar"[39m
+              [33mfill[39m=[32m"currentColor"[39m
+              [33mfocusable[39m=[32m"false"[39m
+              [33mheight[39m=[32m"1em"[39m
+              [33mviewBox[39m=[32m"64 64 896 896"[39m
+              [33mwidth[39m=[32m"1em"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M880 184H712v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H384v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H144c-17.7 0-32 14.3-32 32v664c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V216c0-17.7-14.3-32-32-32zm-40 656H184V460h656v380zM184 392V256h128v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h256v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h128v136H184z"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+        [36m</span>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-picker-dropdown ant-slide-up-appear ant-slide-up-appear-active ant-slide-up css-dev-only-do-not-override-u6izyw css-var-_r_0_ ant-picker-css-var ant-picker-dropdown-placement-bottomLeft"[39m
+      [33mstyle[39m=[32m"--arrow-x: 0px; --arrow-y: 0px; left: -1000vw; top: -1000vh; right: auto; bottom: auto; box-sizing: border-box; max-width: calc(100vw - 24px); overflow-x: auto;"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-picker-panel-container ant-picker-date-panel-container"[39m
+        [33mstyle[39m=[32m"margin-left: 0px; margin-right: auto;"[39m
+        [33mtabindex[39m=[32m"-1"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-picker-panel-layout"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-picker-panel"[39m
+              [33mtabindex[39m=[32m"0"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-picker-date-panel"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-picker-header"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"上一年"[39m
+                    [33mclass[39m=[32m"ant-picker-header-super-prev-btn"[39m
+                    [33mtabindex[39m=[32m"-1"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-picker-super-prev-icon"[39m
+                    [36m/>[39m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"上个月"[39m
+                    [33mclass[39m=[32m"ant-picker-header-prev-btn"[39m
+                    [33mtabindex[39m=[32m"-1"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-picker-prev-icon"[39m
+                    [36m/>[39m
+                  [36m</button>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-picker-header-view"[39m
+                  [36m>[39m
+                    [36m<button[39m
+                      [33maria-label[39m=[32m"选择年份"[39m
+                      [33mclass[39m=[32m"ant-picker-year-btn"[39m
+                      [33mtabindex[39m=[32m"-1"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [0m2026年[0m
+                    [36m</button>[39m
+                    [36m<button[39m
+                      [33maria-label[39m=[32m"选择月份"[39m
+                      [33mclass[39m=[32m"ant-picker-month-btn"[39m
+                      [33mtabindex[39m=[32m"-1"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [0m10月[0m
+                    [36m</button>[39m
+                  [36m</div>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"下个月"[39m
+                    [33mclass[39m=[32m"ant-picker-header-next-btn"[39m
+                    [33mtabindex[39m=[32m"-1"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-picker-next-icon"[39m
+                    [36m/>[39m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"下一年"[39m
+                    [33mclass[39m=[32m"ant-picker-header-super-next-btn"[39m
+                    [33mtabindex[39m=[32m"-1"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-picker-super-next-icon"[39m
+                    [36m/>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-picker-body"[39m
+                [36m>[39m
+                  [36m<table[39m
+                    [33mclass[39m=[32m"ant-picker-content"[39m
+                  [36m>[39m
+                    [36m<thead>[39m
+                      [36m<tr>[39m
+                        [36m<th>[39m
+                          [0m一[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0m二[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0m三[0m
+                        [36m</th>[39m
+                       ...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-picker ant-picker-large ant-picker-outlined css-dev-only-do-not-override-u6izyw css-var-_r_0_ ant-picker-css-var"[39m
+      [33mstyle[39m=[32m"max-width: 100%; min-width: 0px;"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-picker-input"[39m
+      [36m>[39m
+        [36m<input[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33maria-label[39m=[32m"选择日期"[39m
+          [33mautocomplete[39m=[32m"off"[39m
+          [33mplaceholder[39m=[32m"选择日期"[39m
+          [33mreadonly[39m=[32m""[39m
+          [33msize[39m=[32m"12"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"ant-picker-suffix"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33maria-label[39m=[32m"calendar"[39m
+            [33mclass[39m=[32m"anticon anticon-calendar"[39m
+            [33mrole[39m=[32m"img"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mdata-icon[39m=[32m"calendar"[39m
+              [33mfill[39m=[32m"currentColor"[39m
+              [33mfocusable[39m=[32m"false"[39m
+              [33mheight[39m=[32m"1em"[39m
+              [33mviewBox[39m=[32m"64 64 896 896"[39m
+              [33mwidth[39m=[32m"1em"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M880 184H712v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H384v-64c0-4.4-3.6-8-8-8h-56c-4.4 0-8 3.6-8 8v64H144c-17.7 0-32 14.3-32 32v664c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V216c0-17.7-14.3-32-32-32zm-40 656H184V460h656v380zM184 392V256h128v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h256v48c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8v-48h128v136H184z"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+        [36m</span>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"ant-picker-dropdown ant-slide-up-appear ant-slide-up-appear-active ant-slide-up css-dev-only-do-not-override-u6izyw css-var-_r_0_ ant-picker-css-var ant-picker-dropdown-placement-bottomLeft"[39m
+      [33mstyle[39m=[32m"--arrow-x: 0px; --arrow-y: 0px; left: -1000vw; top: -1000vh; right: auto; bottom: auto; box-sizing: border-box; max-width: calc(100vw - 24px); overflow-x: auto;"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ant-picker-panel-container ant-picker-date-panel-container"[39m
+        [33mstyle[39m=[32m"margin-left: 0px; margin-right: auto;"[39m
+        [33mtabindex[39m=[32m"-1"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"ant-picker-panel-layout"[39m
+        [36m>[39m
+          [36m<div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"ant-picker-panel"[39m
+              [33mtabindex[39m=[32m"0"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"ant-picker-date-panel"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-picker-header"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"上一年"[39m
+                    [33mclass[39m=[32m"ant-picker-header-super-prev-btn"[39m
+                    [33mtabindex[39m=[32m"-1"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-picker-super-prev-icon"[39m
+                    [36m/>[39m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"上个月"[39m
+                    [33mclass[39m=[32m"ant-picker-header-prev-btn"[39m
+                    [33mtabindex[39m=[32m"-1"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-picker-prev-icon"[39m
+                    [36m/>[39m
+                  [36m</button>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"ant-picker-header-view"[39m
+                  [36m>[39m
+                    [36m<button[39m
+                      [33maria-label[39m=[32m"选择年份"[39m
+                      [33mclass[39m=[32m"ant-picker-year-btn"[39m
+                      [33mtabindex[39m=[32m"-1"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [0m2026年[0m
+                    [36m</button>[39m
+                    [36m<button[39m
+                      [33maria-label[39m=[32m"选择月份"[39m
+                      [33mclass[39m=[32m"ant-picker-month-btn"[39m
+                      [33mtabindex[39m=[32m"-1"[39m
+                      [33mtype[39m=[32m"button"[39m
+                    [36m>[39m
+                      [0m10月[0m
+                    [36m</button>[39m
+                  [36m</div>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"下个月"[39m
+                    [33mclass[39m=[32m"ant-picker-header-next-btn"[39m
+                    [33mtabindex[39m=[32m"-1"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-picker-next-icon"[39m
+                    [36m/>[39m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"下一年"[39m
+                    [33mclass[39m=[32m"ant-picker-header-super-next-btn"[39m
+                    [33mtabindex[39m=[32m"-1"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"ant-picker-super-next-icon"[39m
+                    [36m/>[39m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"ant-picker-body"[39m
+                [36m>[39m
+                  [36m<table[39m
+                    [33mclass[39m=[32m"ant-picker-content"[39m
+                  [36m>[39m
+                    [36m<thead>[39m
+                      [36m<tr>[39m
+                        [36m<th>[39m
+                          [0m一[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0m二[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0m三[0m
+                        [36m</th>[39m
+                       ...
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/components/ui/creator-date-picker-antd.test.tsx:11:166
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  14:05:04
+   Duration  5.93s (transform 2.04s, setup 349ms, import 2.71s, tests 1.30s, environment 1.21s)
+
