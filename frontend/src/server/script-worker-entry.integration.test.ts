@@ -5,12 +5,16 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { beforeAll, expect, it, vi } from "vitest";
+import type {Db} from "@creatoros/backend";
+import {executionTasks,executionCalls,eq} from "@creatoros/backend";
 import type { Endpoint } from "@creatoros/contract";
 const fixture = vi.hoisted(() => ({
   url: "",
   credentialReads: 0,
   verbatim: false,
+  db:undefined as Db|undefined,
 }));
+vi.mock("@creatoros/backend",async original=>{const actual=await original<typeof import("@creatoros/backend")>();return {...actual,createConfiguredDb:async(...args:Parameters<typeof actual.createConfiguredDb>)=>{const result=await actual.createConfiguredDb(...args);fixture.db=result.db;return result;}};});
 vi.mock("@creatoros/backend/modules/ai-runtime", async (original) => ({
   ...(await original<typeof import("@creatoros/backend/modules/ai-runtime")>()),
   resolveLlmConfig: async () => {
@@ -199,21 +203,19 @@ it.each(["normal", "verbatim", "mismatch", "malformed", "retry"] as const)(
           },
           { timeout: 10000, interval: 100 },
         );
-        const sourceTask = task;
-        await call("ai.tasks.cancel", { taskId: sourceTask.id });
-        await vi.waitFor(
-          async () =>
-            expect(
-              (await call("ai.tasks.get", { taskId: sourceTask.id })).status,
-            ).toBe("cancelled"),
-          { timeout: 5000, interval: 100 },
-        );
-        task = await call("ai.tasks.create", undefined, {
-          taskType: "script.draft",
-          attemptId: "script-production-explicit-retry",
-          retryOfTaskId: sourceTask.id,
-          inputData,
-        });
+        const sourceTask = await call("ai.tasks.get",{taskId:task.id});
+        const [beforeExecution]=await fixture.db!.select().from(executionTasks).where(eq(executionTasks.id,sourceTask.executionTaskId));
+        const beforeCalls=await fixture.db!.select().from(executionCalls).where(eq(executionCalls.executionTaskId,sourceTask.executionTaskId));
+        // T-915：配置恢复必须原任务 resume；复制已绑定执行任务会重置预算，保持明确拒绝。
+        await expect(call("ai.tasks.create",undefined,{taskType:"script.draft",attemptId:"unsafe-copied-retry",retryOfTaskId:sourceTask.id,inputData})).rejects.toThrow("请通过原执行恢复任务，不能复制任务重置预算");
+        await call("execution.tasks.command",undefined,{taskIds:[sourceTask.executionTaskId],command:"resume",idempotencyKey:"script-original-config-restored"});
+        const restored=await call("ai.tasks.get",{taskId:sourceTask.id});
+        expect(restored.id).toBe(sourceTask.id);expect(restored.executionTaskId).toBe(sourceTask.executionTaskId);
+        const [afterExecution]=await fixture.db!.select().from(executionTasks).where(eq(executionTasks.id,sourceTask.executionTaskId));
+        expect(afterExecution!.deadlineAt).toBe(beforeExecution!.deadlineAt);
+        expect(afterExecution!.executionBudget).toEqual(beforeExecution!.executionBudget);
+        expect((await fixture.db!.select().from(executionCalls).where(eq(executionCalls.executionTaskId,sourceTask.executionTaskId))).filter(row=>beforeCalls.some(before=>before.id===row.id))).toHaveLength(beforeCalls.length);
+
       }
       await vi.waitFor(
         async () => {
@@ -265,9 +267,12 @@ it.each(["normal", "verbatim", "mismatch", "malformed", "retry"] as const)(
           expect(results[0].resultData.qualityWarnings.length).toBeGreaterThan(
             0,
           );
-          expect(
-            requests.filter((r) => r.stage === "storyboard").length,
-          ).toBeLessThanOrEqual(2);
+          const storyboardRequests=requests.filter(r=>r.stage==="storyboard");
+          if(mode==="malformed"){
+            // T-921：整个节点共享最多两次格式恢复，repairAttempts=0时固定 1+0+2 调用。
+            expect(storyboardRequests).toHaveLength(3);
+            expect(storyboardRequests.slice(1).every(request=>request.body.includes("{}"))).toBe(true);
+          }else expect(storyboardRequests.length).toBeLessThanOrEqual(2);
         }
       }
       expect((await call("ai.tasks.confirm", { taskId: task.id })).status).toBe(

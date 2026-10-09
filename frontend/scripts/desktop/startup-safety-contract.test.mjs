@@ -113,7 +113,12 @@ describe("T-535 desktop startup safety contract", () => {
       /async function openContext\([\s\S]*?\n}\n\nasync function isLoggedIn/,
     )?.[0];
     expect(openContext).toBeTruthy();
-    expect(openContext).toContain("launchWithBrowser((selection)");
+    expect(openContext).toContain("openDouyinProfileContext(lease.authDir, headless");
+    expect(openContext).toContain("createSharedReadBrowserSessionPool");
+    expect(openContext).toContain("pool.checkoutExclusive(authDir, signal)");
+    const profileContext=readFileSync(join(process.cwd(),"..","ai-worker","src","runtime","browser","douyin-profile-context.ts"),"utf8");
+    expect(profileContext).toContain("launchWithBrowser(selection=>chromium.launchPersistentContext");
+    expect(profileContext).not.toContain("ensureChromiumInstalled()");
     expect(openContext).not.toContain("ensureChromiumInstalled()");
 
     const ensureChromium = douyinCdp.match(

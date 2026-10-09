@@ -9,8 +9,8 @@ import { canonicalDataset } from "@/fixtures/canonical";
 // 「全局搜索完全不可用」回归护栏(实测确诊:建项目/知识后 search_documents 空)。
 // 每条都走 compositeTransport(= /api/v1 route 与 server 读共享的同一 store,
 // T-1022：写入前正常创建所属账号及其资源组，不伪造 legacy group 外键。
-async function createAccountContext(platform: "douyin" | "bilibili" = "douyin"): Promise<RequestContext> {
-  const owner = ctx(canonicalDataset.user.id);
+async function createAccountContext(platform: "douyin" | "bilibili" = "douyin", userId = canonicalDataset.user.id): Promise<RequestContext> {
+  const owner = ctx(userId);
   const created = await compositeTransport.request(ep("accounts.create"), {body:{platform,accountHandle:"@isolated-index",followerBaseline:0}} as never, {...owner,accountId:null}) as {data:{id:string}};
   return {...owner,accountId:created.data.id};
 }
@@ -191,5 +191,18 @@ describe("实体 create/update/delete 写搜索索引(全局搜索可用)", () =
     // 显式窄化到 video tab 也能命中(?type=video)。
     const narrowed = await search(owner, "bilibili", "video");
     expect(narrowed.videos.some((v) => v.id === publicationId)).toBe(true);
+
+    // 另一个正常创建的工作区与另一个操作者只回读各自搜索域。
+    const otherWorkspace = await createAccountContext("bilibili");
+    const otherOwner = await createAccountContext("bilibili", "isolated-search-other-owner");
+    for (const foreign of [otherWorkspace, otherOwner]) {
+      expect(foreign.accountId).not.toBe(owner.accountId);
+      const all = await search(foreign, "bilibili");
+      const videos = await search(foreign, "bilibili", "video");
+      expect(all.videos).toEqual([]);
+      expect(videos.videos).toEqual([]);
+      expect(tabCount(all, "video")).toBe(0);
+      expect(tabCount(videos, "video")).toBe(0);
+    }
   });
 });

@@ -391,9 +391,10 @@ describe("[T-332 S6] 双号全域交叉泄漏 = 0(ISO-08,dispatch 真链)", () =
     });
     // 报错(dispatch 对无 code 的错走字符串 error 信封,HTTP 400):绝不 200、绝不带 data
     // (静默返回 A 的行 = 静默收编,才是要防的事故)。
-    expect(clash.status).toBeGreaterThanOrEqual(400);
+    expect(clash.status).toBe(404);
     expect(clash.body.data).toBeUndefined();
-    expect(JSON.stringify(clash.body.error)).toContain("归属号与当前 ctx 不一致");
+    expect(clash.body.error?.code).toBe("OwnershipError");
+    expect(clash.body.error?.message).toBe("发布记录不属于当前工作区");
   });
 
   it("复盘/经验:review 经父锚跨号 404;learning 同名各建互不可见", async () => {
