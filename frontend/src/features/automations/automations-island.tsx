@@ -15,18 +15,18 @@
  *     渲染范式;run 未产 ai_task 或步骤为空时诚实空态)。
  *  5. 「立即运行」(D5):点击 → scheduledJobs.runNow(手动产 ai_task + job_run,fire-and-forget,
  *     走 triggerScheduledJob 幂等双闸)→ 自动打开运行详情抽屉轮询 ai_task_steps。
- *  6. 「登录抖音」恢复(D4,SPEC §6):某作业最近一次 run 是 needs_reconnect(登录态过期,调度器
- *     停跑)→ 该行红标「需重连 Chrome」+「登录抖音」按钮 → 点击调 ingestion.douyin.login(headed
+ *  6. 「扫码绑定」恢复(D4,SPEC §6):某作业最近一次 run 是 needs_reconnect(登录态过期,调度器
+ *     停跑)→ 该行红标「需重连 Chrome」+「扫码绑定」按钮 → 点击调 ingestion.douyin.login(headed
  *     弹 Chromium 扫码,复用 calibration 的现成登录链)→ 登录成功后调 scheduledJobs.runNow 触发
  *     一次恢复(下次到点调度器见最近 run 非 needs_reconnect 自动恢复自动跑)。
  *
  * 最近 run 状态:island 挂载时批量拉每个 job 的最近一次 run(jobRuns.listByJob limit 1)→
- * 每行据此判 needs_reconnect(红标 + 登录抖音)/ 正常(立即运行)。
+ * 每行据此判 needs_reconnect(红标 + 扫码绑定)/ 正常(立即运行)。
  *
  * 诚实空态:D3 采集器尚未落地前,list 可为空(引导空态)、job_run 可为空(抽屉空态)。
  * 不写死、不假装有数据 —— 每个数字都追得到真实 job_run / ai_task_steps。
  *
- * 诚实缺口:「登录抖音」是 headed 扫码(开本地 Chromium),真恢复卡用户扫码 —— dev 本机可跑,
+ * 诚实缺口:「扫码绑定」是 headed 扫码(开本地 Chromium),真恢复卡用户扫码 —— dev 本机可跑,
  * 真扫码恢复待用户。绝不假装登录过。
  *
  * Determinism:唯一非确定来源是用户显式交互;开关/新建/立即运行后 router.refresh() 重读列表。
@@ -293,7 +293,7 @@ function runResultText(run: {
         ? `✅ 新增 ${run.itemsNew} 条${run.itemsUpdated > 0 ? ` · 更新 ${run.itemsUpdated} 条` : ""}`
         : run.itemsUpdated > 0 ? `✅ 更新 ${run.itemsUpdated} 条` : "✅ 已完成 · 无新数据";
     case "needs_reconnect":
-      return "⚠️ 需重连抖音 —— 去扫码登录";
+      return "⚠️ 需重连账号 · 去扫码绑定";
     case "failed":
       return "❌ 采集失败,请稍后重试;若一直失败,去账号管理重新扫码。";
     default:
@@ -382,7 +382,7 @@ interface TaskStep {
 
 // ── 单个作业行 ────────────────────────────────────────────────────────────────
 
-// D4「登录抖音」恢复的按钮相位(某行 needs_reconnect 时)。
+// D4「扫码绑定」恢复的按钮相位(某行 needs_reconnect 时)。
 export type LoginPhase = "idle" | "logging_in" | "recovering";
 
 // [T-332 S4·§6.3] 当前号 badge 数据(server 页解析好 handle 传下来;island 不自拉)。
@@ -423,7 +423,7 @@ export function JobRow({
 }) {
   const meta = SOURCE_META[job.sourceKind as SourceKind];
   const SourceIcon = meta?.icon ?? BarChart3;
-  // D4:最近一次 run 是 needs_reconnect → 登录态过期(调度器停跑),该行红标 + 换「登录抖音」。
+  // D4:最近一次 run 是 needs_reconnect → 登录态过期(调度器停跑),该行红标 + 换「扫码绑定」。
   const needsReconnect = latestRun?.status === "needs_reconnect";
   // [T-152] 最近一次 run 正在跑 → 行内显实时进度(阶段 + 累计条数)。进度详情在运行详情抽屉
   //   持续 2s 轮询;此处行级是挂载/刷新时的快照(点作业名进抽屉看实时刷新)。
@@ -469,7 +469,7 @@ export function JobRow({
               className="inline-flex w-fit items-center gap-1 text-[11px] font-medium text-amber-600"
             >
               <AlertTriangle className="size-3" />
-              需重连抖音 —— 去扫码登录
+              需重连账号 · 去扫码绑定
             </span>
           ) : (
             <span className="truncate text-[11px] text-muted-foreground">
@@ -580,7 +580,7 @@ export function JobRow({
         ) : null}
       </div>
 
-      {/* 操作:编辑(T-248)+ needs_reconnect → 登录抖音(D4);否则 立即运行(D5) */}
+      {/* 操作:编辑(T-248)+ needs_reconnect → 扫码绑定(D4);否则 立即运行(D5) */}
       <div className="flex flex-wrap items-center gap-2 md:justify-end">
         {(
           <button
@@ -602,7 +602,7 @@ export function JobRow({
             data-testid="automation-login-douyin"
             disabled={loginPhase !== "idle"}
             onClick={onLogin}
-            title="登录态过期 —— 点此弹 Chromium 扫码登录抖音,成功后自动恢复采集"
+            title="登录态过期 —— 点此弹 Chromium 扫码扫码绑定,成功后自动恢复采集"
             className="inline-flex h-8 items-center gap-1.5 rounded-control bg-amber-500 px-3 text-xs font-medium text-white hover:bg-amber-500/90 disabled:opacity-60"
           >
             <RefreshCw
@@ -615,7 +615,7 @@ export function JobRow({
               ? "扫码登录中…"
               : loginPhase === "recovering"
                 ? "恢复中…"
-                : "登录抖音"}
+                : "扫码绑定"}
           </button>
         ) : (
           <button
@@ -1578,14 +1578,14 @@ export function AutomationsIsland({
   const [pendingToggleId, setPendingToggleId] = React.useState<string | null>(
     null,
   );
-  // D5:立即运行进行中的 jobId(按钮 spinner);D4:登录抖音相位(按 jobId)。
+  // D5:立即运行进行中的 jobId(按钮 spinner);D4:扫码绑定相位(按 jobId)。
   const [pendingRunNowId, setPendingRunNowId] = React.useState<string | null>(
     null,
   );
   const [loginPhaseById, setLoginPhaseById] = React.useState<
     Record<string, LoginPhase>
   >({});
-  // D4:每个 job 最近一次 run(判 needs_reconnect 红标 + 登录抖音)。挂载/刷新时批量拉。
+  // D4:每个 job 最近一次 run(判 needs_reconnect 红标 + 扫码绑定)。挂载/刷新时批量拉。
   const [latestRuns, setLatestRuns] = React.useState<
     Record<string, JobRunResource | null>
   >({});
@@ -1803,35 +1803,13 @@ export function AutomationsIsland({
    finally{pendingRequests.current.delete(job.id);if(alive.current&&accountRef.current===account)setPendingRunNowId(id=>id===job.id?null:id);}
   },[]);
 
-  // D4「登录抖音」恢复(SPEC §6):某 job 最近 run 是 needs_reconnect → 弹 Chromium 扫码
+  // D4「扫码绑定」恢复(SPEC §6):某 job 最近 run 是 needs_reconnect → 弹 Chromium 扫码
   // (ingestion.douyin.login,复用 calibration 现成登录链)→ 成功后 runNow 触发一次恢复。
   // 诚实:headed 扫码卡用户,前端只发起 + 据结果推进,不假装登录过。
   const login = React.useCallback(
     async (job: ScheduledJobResource) => {
-      setLoginPhaseById((m) => ({ ...m, [job.id]: "logging_in" }));
-      try {
-        const res = (await client.loginDouyin({
-          params: undefined,
-          query: undefined,
-          body: {},
-        })) as { loggedIn?: boolean };
-        if (res.loggedIn) {
-          // 登录成功 → 立刻触发一次采集恢复(job_run 从 needs_reconnect 翻篇)。
-          setLoginPhaseById((m) => ({ ...m, [job.id]: "recovering" }));
-          await client.runScheduledJobNow({
-            params: { jobId: job.id },
-            query: undefined,
-            body: {},
-          });
-          setDetailJob(job);
-          setDetailOpen(true);
-        }
-        // [Bug-7 T-020] 跨页失效广播(同 settings / account-manager 页)。
-        notifyAccountsChanged();
-        router.refresh();
-      } finally {
-        setLoginPhaseById((m) => ({ ...m, [job.id]: "idle" }));
-      }
+      // 由账号管理按真实平台/账号执行持久扫码，不再把所有重连投到抖音。
+      router.push('/accounts');
     },
     [router],
   );

@@ -1,5 +1,5 @@
 import type {Page} from "@playwright/test";
-import {readFileSync} from "node:fs";
+import {readFileSync,writeFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {createHash} from "node:crypto";
 import {expect,test} from "../helpers/test-environment";
@@ -11,8 +11,8 @@ async function dispatch<T={id:string}>(page:Page,id:string,input:unknown,scope:S
  return (await response.json() as {data:T}).data;
 }
 
-async function groupedAccount(page:Page,platform="douyin",handle=`@canvas-${Date.now()}-${crypto.randomUUID()}`){
- const group=await dispatch(page,"accountGroups.create",{body:{name:`画布测试组-${crypto.randomUUID()}`,idempotencyKey:crypto.randomUUID()}}) as {id:string};
+async function groupedAccount(page:Page,platform="douyin",handle=`@canvas-${Date.now()}-${crypto.randomUUID()}`,groupName=`画布测试组-${crypto.randomUUID()}`){
+ const group=await dispatch(page,"accountGroups.create",{body:{name:groupName,idempotencyKey:crypto.randomUUID()}}) as {id:string};
  const account=await dispatch(page,"accounts.create",{body:{platform,accountHandle:handle,idempotencyKey:crypto.randomUUID()}}) as {id:string};
  const preview=await dispatch(page,"accountGroups.members.previewTransfer",{body:{accountId:account.id,toGroupId:group.id}}) as Record<string,unknown>;
  await dispatch(page,"accountGroups.members.transfer",{body:{...preview,idempotencyKey:crypto.randomUUID()}});
@@ -371,4 +371,58 @@ test("T-1021 资产独立上传，选用追加原画布并冻结真实文件",as
  const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId:original.id}}}});const saved=(await response.json()).data;
  expect(saved.document.nodes[0].assetId).toBeTruthy();expect(saved.document.nodes[0].fileId).toBeTruthy();expect(saved.document.nodes[0].checksum).toMatch(/^[a-f0-9]{64}$/);
  await page.reload();await expect(page.getByTestId("canvas-node")).toHaveCount(1);
+});
+
+// T1101：公开真实canvas/asset/save；模型运行回执和能力为合成fixture，不访问用户profile。
+test('T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟模型回执）',async({page,context,baseURL},testInfo)=>{
+ test.setTimeout(600_000);
+ const account=await groupedAccount(page,'douyin','创作验收账号','创作验收组');const scope={groupId:account.groupId};
+ const canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope);
+ const assetId=await uploadMedia(page,scope,resolve(process.cwd(),'../docs/verification/t1101/user-baseline.png'),'image','image/png','不应展示的很长素材文件名称.png');
+ const file=await dispatch<{currentFileId:string}>(page,'assets.get',{params:{assetId}},scope);
+ await dispatch(page,'canvas.save',{params:{canvasId:canvas.id},body:{expectedRevision:1,document:{...canvas.document,nodes:[{id:'upstream',type:'image_generation',label:'上游生成',position:{x:20,y:20},size:{width:350,height:650},prompt:'验收生成图片',mode:'text_to_image'},{id:'downstream',type:'video_generation',label:'下游视频',position:{x:440,y:20},size:{width:350,height:650},prompt:'镜头缓慢推进',mode:'text_to_video'}],edges:[{id:'exact-edge',source:'upstream',target:'downstream'}]}}},scope);
+ let status='running',submissions=0,confirmations=0;const stamp=new Date().toISOString(),taskId='fixture-task-t1101';
+ const link={id:'fixture-link',canvasId:canvas.id,nodeId:'upstream',attemptId:'fixture-attempt-t1101',taskId,mediaKind:'image',inputRevision:2,inputDigest:'a'.repeat(64),referenceFileId:null,referenceChecksum:null,resultAssetId:assetId,createdAt:stamp,updatedAt:stamp};
+ await page.route('**/api/v1/dispatch',async route=>{
+  const req=route.request().postDataJSON();let data:unknown;
+  if(req.id==='canvas.node.tasks'&&req.input?.params?.canvasId===canvas.id)data=[link];
+  else if(req.id==='canvas.capabilities')data={modes:['text_to_image','image_to_image','text_to_video','image_to_video'].map(mode=>({mode,available:true,model:'image-01',reason:null}))};
+  else if(req.id==='ai.tasks.get'&&req.input?.params?.taskId===taskId)data={id:taskId,userId:canvas.userId,projectId:null,contentOutputId:null,taskType:'asset.generate',status,inputData:{prompt:'验收生成图片',mode:'text_to_image'},modelKey:'fixture/image',idempotencyKey:'fixture-key',attemptId:link.attemptId,requestFingerprint:'sha256:'+link.inputDigest,retryOfTaskId:null,requestedAt:stamp,startedAt:stamp,completedAt:status==='running'?null:stamp,errorMessage:null};
+  else if(req.id==='canvas.generations.material.get'&&req.input?.params?.generationLinkId===link.id)data=status==='running'?{status:'not_ready',reason:'生成中',canvasId:canvas.id,generationLinkId:link.id,nodeId:'upstream',taskId,attemptId:link.attemptId,inputRevision:2,inputDigest:link.inputDigest}:{status:'available',phase:'candidate',origin:{canvasId:canvas.id,generationLinkId:link.id,nodeId:'upstream',attemptId:link.attemptId,inputRevision:2,inputDigest:link.inputDigest,taskId,resultId:'fixture-result',executionTaskId:'fixture-execution',callId:'fixture-call'},file:{assetId,assetFileId:file.currentFileId},checksum:'a'.repeat(64),assetType:'image',name:'合成模型回执',assetStatus:'pending',taskStatus:'awaiting_confirmation'};
+  else if(req.id==='canvas.node.generate'){submissions++;status='running';data={...link,attemptId:req.input.body.attemptId};}
+  else if(req.id==='ai.tasks.confirm'){confirmations++;throw Error('连线不得自动采纳');}
+  if(data!==undefined){await route.fulfill({json:{data,meta:{requestId:'fixture-t1101',page:1,pageSize:100,total:Array.isArray(data)?data.length:1}}});return;}await route.continue();
+ });
+ await enterGroup(page,context,baseURL!,account.groupId);await page.setViewportSize({width:1366,height:900});await page.goto('/canvases/'+canvas.id);
+ const up=page.getByTestId('canvas-node').filter({hasText:'上游生成'}),down=page.getByTestId('canvas-node').filter({hasText:'下游视频'});
+ await expect(up.getByRole('button',{name:'生成中…'})).toBeDisabled();expect(submissions).toBe(0);
+ await page.screenshot({path:testInfo.outputPath('t1101-running.png')});
+ status='awaiting_confirmation';await page.reload();await expect(up.getByText('最近结果',{exact:false})).toBeVisible();
+ await expect.poll(async()=>{const saved=await dispatch<{document:{nodes:Array<{id:string;referenceFileId?:string}>}}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);return saved.document.nodes.find(n=>n.id==='downstream')?.referenceFileId;}).toBe(file.currentFileId);
+ expect(confirmations).toBe(0);await expect(down.getByText('选择素材',{exact:true})).toHaveCount(0);
+ await up.getByRole('button',{name:'生成',exact:true}).click();await expect(page.getByRole('dialog',{name:'重新生成图片？'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-regenerate.png')});
+ await page.getByRole('button',{name:'取消',exact:true}).click();expect(submissions).toBe(0);
+ await up.getByRole('button',{name:'生成',exact:true}).click();await page.getByRole('button',{name:'确认重新生成'}).click();await expect.poll(()=>submissions).toBe(1);await expect(up.getByRole('button',{name:'生成中…'})).toBeDisabled();
+ await page.getByRole('button',{name:'素材库',exact:true}).click();const gallery=page.getByRole('complementary',{name:'当前账号素材'});await expect(gallery.getByRole('button',{name:'放到画布'}).first()).toBeVisible();await expect(gallery.getByText('不应展示的很长素材文件名称.png',{exact:true})).toHaveCount(0);await page.screenshot({path:testInfo.outputPath('t1101-gallery.png')});
+ await expect(page.getByText('已保存',{exact:true})).toBeVisible();
+ const captures=[{checkpoint:'canvas-normal',check_ids:['AC-GALLERY','AC-GENERATION','AC-EDGE'],viewport:{width:1366,height:900},text:await page.locator('body').innerText()}];
+ await page.getByRole('button',{name:'关闭素材库'}).click();await page.setViewportSize({width:900,height:900});await page.getByRole('button',{name:'适合内容'}).click();await expect(up.getByRole('button',{name:'生成中…'})).toBeDisabled();await page.getByRole('button',{name:'素材库',exact:true}).click();await expect(gallery.getByRole('button',{name:'放到画布'}).first()).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-canvas-narrow.png')});
+ await expect(page.getByText('已保存',{exact:true})).toBeVisible();
+ captures.push({checkpoint:'canvas-narrow',check_ids:['AC-GALLERY','AC-GENERATION','AC-EDGE'],viewport:{width:900,height:900},text:await page.locator('body').innerText()});
+ writeFileSync(resolve(process.cwd(),'../docs/verification/t1101/canvas-copy.json'),JSON.stringify(captures));
+});
+
+test('T-1101 三平台表格直接打开扫码弹窗，无重复刷新和下方扫码区',async({page,context,baseURL},testInfo)=>{
+ test.setTimeout(600_000);const account=await groupedAccount(page,'douyin','创作验收账号','创作验收组');await enterGroup(page,context,baseURL!,account.groupId);
+ await page.setViewportSize({width:1366,height:900});await page.goto('/accounts');
+ const table=page.getByRole('table',{name:'各平台能力'});await expect(table).toBeVisible();
+ for(const name of ['抖音','快手','小红书'])await expect(table.getByRole('button',{name:'扫码绑定'+name+'账号'})).toBeEnabled();
+ await expect(page.getByRole('button',{name:'重新读取平台能力'})).toHaveCount(0);await expect(page.getByText('兼容扫码入口',{exact:true})).toHaveCount(0);
+ await page.screenshot({path:testInfo.outputPath('t1101-platform-table.png'),fullPage:true});
+ await table.getByRole('button',{name:'扫码绑定小红书账号'}).click();await expect(page.getByRole('dialog',{name:'扫码绑定小红书账号'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-qr-dialog.png')});
+ await expect(page.getByRole('dialog').getByRole('button',{name:'扫码绑定小红书账号',exact:true})).toBeEnabled();
+ await expect(page.getByText('正在读取共享资源…',{exact:true})).toHaveCount(0);
+ const captures=[{checkpoint:'binding-normal',check_ids:['AC-BINDING'],viewport:{width:1366,height:900},text:await page.locator('body').innerText()}];
+ await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);await page.setViewportSize({width:900,height:900});await expect(table.getByRole('button',{name:'扫码绑定抖音账号'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-platform-narrow.png'),fullPage:true});
+ captures.push({checkpoint:'binding-narrow',check_ids:['AC-BINDING'],viewport:{width:900,height:900},text:await page.locator('body').innerText()});writeFileSync(resolve(process.cwd(),'../docs/verification/t1101/binding-copy.json'),JSON.stringify(captures));
 });

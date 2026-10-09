@@ -753,3 +753,11 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
   destructive` 真路径，dev server 证据不可替代。
 - **当前 Gate**：用户方向已确认；因授权模型和范围改变，旧 PASS[REV:805cc308700e] 已失效，重写后的
   SPEC 必须独立复审 PASS，才能启动 T-843 BUILD。
+
+## CI-T1101 — 画布与平台绑定采集交互修复（2026-10-09）
+
+- 用户截图与DEC-T1101为来源；局部UI沿用现有tokens，不更换品牌/数据归属/公共contract。
+- 生成同节点行锁加入原runtime状态准入，原attempt恢复保留；用户连线只传exact file，候选采纳仍由用户确认。
+- 三平台扫码入口集中至能力表，各平台仍走原持久扫码服务。KS/XHS self.metrics经平台service/原执行期限串行完成目录与真实指标，停止旧周期新建，保留旧独立run恢复。
+- 新默认错峰北京时间00/05/10分；未知系统默认不迁移，已有用户计划/关闭/历史保持。旧可信binding补缺，手填身份不充证明。
+- 验证见docs/verification/t1101；真实本人扫码/付费模型/安装发布未执行，不代签这些历史证据。

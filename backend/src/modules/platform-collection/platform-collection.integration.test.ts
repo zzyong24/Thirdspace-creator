@@ -26,7 +26,9 @@ async function fixture() {
       platformIdentity: `identity-${accountId}`, scopes: ["workCatalog", "accountOverview", "workMetrics"],
       proofSource: "test-trusted-adapter", verifiedAt: t });
   }
+  const ownerStates = new Map<string, {status:string}>();
   const svc = createPlatformCollectionService({ db, now: () => clock.value,
+    readScheduledOwner: async (_ctx, taskId) => ownerStates.get(taskId) ?? null,
     nextId: prefix => `${prefix}-${++n}`, visibilitySourcePriority: { manage: 100, feed: 10 },
     sourceAdapters: { douyin: ["workCatalog", "accountOverview", "workMetrics"].map(capability => ({
       platform: "douyin" as const, capability: capability as "workCatalog" | "accountOverview" | "workMetrics",
@@ -61,7 +63,7 @@ async function fixture() {
       works: options.works ?? [], accountMetrics: [], workMetrics: [],
     };
   }
-  return { db, client, svc, begin, page, clock };
+  return { db, client, svc, begin, page, clock, ownerStates };
 }
 
 describe("platform collection service with real PGlite transactions", () => {
@@ -418,4 +420,48 @@ describe("platform collection service with real PGlite transactions", () => {
         .rejects.toMatchObject({ code: "FORBIDDEN_ACCOUNT" });
     } finally { await f.client.close(); }
   });
+});
+
+// T1101：原平台运行必须归原scheduled owner管理；旧真实binding可补齐调度，凭据失效不伪报。
+it('T1101持久owner识别、旧绑定证明、扫码后原needsAuth恢复和generation隔离',async()=>{
+ const f=await fixture(),scope=ctx('user-a','acct-a');try{
+ f.ownerStates.set('original-task',{status:'running'});
+ expect(await f.svc.hasCredentialEvidence(scope,'acct-a')).toBe(true);
+ const run=await f.svc.start(scope,{accountId:'acct-a',capability:'workCatalog',clientRequestId:'scheduled-original-task-catalog'});
+ expect(await f.svc.scheduledOwnerTaskId(scope,'acct-a',run.attemptId)).toBe('original-task');
+ const lease=await f.svc.claim(run.attemptId,'worker');await f.svc.failRun(run.attemptId,lease.generation,lease.leaseToken,'needsAuth','LOGIN_REQUIRED');
+ await f.svc.resumeScheduledAuthorization(scope,'acct-a',run.attemptId,'original-task');expect((await f.svc.status(scope,'acct-a',run.attemptId)).status).toBe('needsAuth');
+ await expect(f.svc.resumeScheduledAuthorization(scope,'acct-a',run.attemptId,'another-task')).rejects.toThrow('原调度');
+ f.clock.value='2026-09-30T00:01:00.000Z';await f.db.update(platformCollectionBindings).set({verifiedAt:f.clock.value}).where(eq(platformCollectionBindings.accountId,'acct-a'));
+ await f.svc.resumeScheduledAuthorization(scope,'acct-a',run.attemptId,'original-task');expect((await f.svc.status(scope,'acct-a',run.attemptId)).status).toBe('partial');
+ const resumed=await f.svc.claim(run.attemptId,'worker');expect(resumed.generation).toBeGreaterThan(lease.generation);
+ const metric=await f.svc.start(scope,{accountId:'acct-a',capability:'workMetrics',clientRequestId:run.attemptId+'-metrics'});expect(await f.svc.scheduledOwnerTaskId(scope,'acct-a',metric.attemptId)).toBe('original-task');
+ await f.svc.cancel(scope,'acct-a',run.attemptId);await f.svc.resumeScheduledAuthorization(scope,'acct-a',run.attemptId,'original-task');expect((await f.svc.status(scope,'acct-a',run.attemptId)).status).toBe('cancelled');
+ await f.db.update(platformCollectionBindings).set({revokedAt:f.clock.value}).where(eq(platformCollectionBindings.accountId,'acct-a'));expect(await f.svc.hasCredentialEvidence(scope,'acct-a')).toBe(false);
+ await expect(f.svc.hasCredentialEvidence(ctx('user-b','acct-a'),'acct-a')).rejects.toThrow();
+ }finally{await f.client.close();}
+});
+
+it('T1101取消或失败的真实原owner释放queued，暂停保留，伪造请求键不冒充owner',async()=>{
+ const f=await fixture(),scope=ctx('user-a','acct-a');try{
+ const manual=await f.svc.start(scope,{accountId:'acct-a',capability:'workCatalog',clientRequestId:'scheduled-fiction-catalog'});
+ expect(await f.svc.scheduledOwnerTaskId(scope,'acct-a',manual.attemptId)).toBeNull();
+ await f.svc.cancel(scope,'acct-a',manual.attemptId);
+ f.ownerStates.set('original-task',{status:'paused'});
+ const original=await f.svc.start(scope,{accountId:'acct-a',capability:'workCatalog',clientRequestId:'scheduled-original-task-catalog'});
+ await expect(f.svc.start(scope,{accountId:'acct-a',capability:'workCatalog',clientRequestId:'next-catalog'})).rejects.toMatchObject({code:'LEASE_EXPIRED'});
+ expect((await f.svc.status(scope,'acct-a',original.attemptId)).status).toBe('queued');
+ f.ownerStates.set('original-task',{status:'cancelled'});
+ const next=await f.svc.start(scope,{accountId:'acct-a',capability:'workCatalog',clientRequestId:'next-catalog'});
+ expect((await f.svc.status(scope,'acct-a',original.attemptId)).status).toBe('cancelled');expect(next.attemptId).not.toBe(original.attemptId);
+ await f.svc.cancel(scope,'acct-a',next.attemptId);
+ f.ownerStates.set('failed-task',{status:'failed'});
+ const failed=await f.svc.start(scope,{accountId:'acct-a',capability:'workCatalog',clientRequestId:'scheduled-failed-task-catalog'});
+ const afterFailed=await f.svc.start(scope,{accountId:'acct-a',capability:'workCatalog',clientRequestId:'after-failed'});
+ await f.svc.cancel(scope,'acct-a',afterFailed.attemptId);
+ expect((await f.svc.status(scope,'acct-a',failed.attemptId)).status).toBe('partial');
+ f.ownerStates.set('failed-task',{status:'queued'});
+ const resumed=await f.svc.start(scope,{accountId:'acct-a',capability:'workCatalog',clientRequestId:'scheduled-failed-task-catalog'});
+ expect(resumed.attemptId).toBe(failed.attemptId);expect((await f.svc.claim(resumed.attemptId,'retry-worker')).attemptId).toBe(failed.attemptId);
+ }finally{await f.client.close();}
 });

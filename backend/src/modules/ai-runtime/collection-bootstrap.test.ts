@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import {
   bootstrapDouyinCollectionJobs,
+  collectionJobDefaultsForPlatform,
   ensureCollectionJobs,
   DAILY_COLLECTION_JOB_DEFAULTS,
   staggeredSchedule,
@@ -375,4 +376,15 @@ describe("[T-433 S3] 跨账号错峰(staggeredSchedule / deterministicAccountOff
 it('重新绑定不触发用户已经关闭的统一同步，保留已存能力选择',async()=>{
  const deps=makeDeps();deps._listJobs.mockImplementation(async(_c,kind)=>kind==='self.metrics'?[{id:'saved',accountId:'acct-1',enabled:false,target:{operationsSync:{version:1,capabilities:{metrics:true,comments:false,traffic:false,content:true}}}}]:[]);
  const result=await bootstrapDouyinCollectionJobs(ctx,deps);expect(result.triggered).toEqual([]);expect(deps._trigger).not.toHaveBeenCalled();
+});
+
+// T-1101：不同平台只建立真实支持的任务；系统补齐不覆盖已有关闭/时间。
+it('三平台私有采集默认错峰，快手小红书没有未实现的评论流量任务',async()=>{
+ const schedules=['douyin','kuaishou','xiaohongshu'].map(platform=>collectionJobDefaultsForPlatform(platform).find(t=>t.sourceKind==='self.metrics')!.schedule);
+ expect(new Set(schedules).size).toBe(3);
+ for(const platform of ['kuaishou','xiaohongshu']){const defaults=collectionJobDefaultsForPlatform(platform);expect(defaults.filter(t=>t.sourceKind.startsWith('self.')||t.sourceKind==='comments').map(t=>t.sourceKind)).toEqual(['self.metrics']);
+ const createJob=vi.fn(async()=>({id:'new'})),trigger=vi.fn(async()=>{});
+ await bootstrapDouyinCollectionJobs(ctx,{defaults,listJobsBySourceKind:async(_c,sourceKind)=>[{id:sourceKind,accountId:ctx.accountId,enabled:false,target:{userChoice:true}}],createJob,trigger});
+ expect(createJob).not.toHaveBeenCalled();expect(trigger).not.toHaveBeenCalled();}
+ expect(collectionJobDefaultsForPlatform('wechatVideo')).toEqual([]);
 });

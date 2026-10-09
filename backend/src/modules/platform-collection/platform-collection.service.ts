@@ -48,6 +48,8 @@ export interface PlatformCollectionServiceDeps {
   leaseMs?: number;
   bindAttemptMs?: number;
   accountBindingPort?: VerifiedAccountBindingPort;
+  /** 内部只读端口：AI owner核真实调度执行归属，公开clientRequestId不构成证明。 */
+  readScheduledOwner?: (ctx: RequestContext, taskId: string, accountId: string) => Promise<{status: string} | null>;
   revokeTemporaryProfile?: (bindAttemptId: string, attempt: {
     userId: string; platform: string; platformIdentity: string | null; status: string;
   }) => Promise<void>;
@@ -312,6 +314,7 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
     for (const run of running) if (run.leaseExpiresAt && expired(run.leaseExpiresAt)) {
       await expireRunLease(run.id, { userId: ctx.userId, accountId: input.accountId });
     }
+    await releaseTerminatedScheduledRuns(ctx, input.accountId);
     return db.transaction(async tx => {
       const [existing] = await tx.select().from(platformCollectionRuns).where(and(
         eq(platformCollectionRuns.userId, ctx.userId), eq(platformCollectionRuns.accountId, input.accountId),
@@ -396,6 +399,57 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
       eq(platformCollectionRuns.capability, capability),
     )).orderBy(desc(platformCollectionRuns.startedAt), desc(platformCollectionRuns.id)).limit(1);
     return run ? toStatus(run) : null;
+  }
+
+  /** 内部恢复归属：从持久请求协议识别原调度任务，防旧周期恢复重启被暂停/取消的任务。 */
+  async function scheduledOwnerTaskId(ctx:RequestContext,accountId:string,attemptId:string):Promise<string|null>{
+    await ownedAccount(ctx,accountId);
+    const read=async(id:string)=>{const [row]=await db.select().from(platformCollectionRuns).where(and(eq(platformCollectionRuns.id,id),eq(platformCollectionRuns.userId,ctx.userId),eq(platformCollectionRuns.accountId,accountId)));return row;};
+    let row=await read(attemptId);if(!row)deny('FORBIDDEN_ACCOUNT','采集任务不属于当前账号');
+    // SEMANTIC_BOUNDARY_ALLOW: 解析内部幂等请求协议和父任务ID，不做语义分类。
+    if(row.capability==='workMetrics'&&row.clientRequestId.endsWith('-metrics'))row=await read(row.clientRequestId.slice(0,-8));
+    else if(row.capability==='accountOverview'&&row.clientRequestId.endsWith('-overview'))row=await read(row.clientRequestId.slice(0,-9));
+    const key=row?.capability==='workCatalog'?row.clientRequestId:'';
+    const taskId=key.startsWith('scheduled-')&&key.endsWith('-catalog')?key.slice(10,-8):null;
+    return taskId&&await deps.readScheduledOwner?.(ctx,taskId,accountId)?taskId:null;
+  }
+
+  /** 只有真实持久owner已取消/失败才释放原run；暂停、控制中和未知均保留。 */
+  async function releaseTerminatedScheduledRuns(ctx:RequestContext,accountId:string):Promise<void>{
+    await ownedAccount(ctx,accountId);
+    if(!deps.readScheduledOwner)return;
+    const rows=await db.select({id:platformCollectionRuns.id}).from(platformCollectionRuns).where(and(
+      eq(platformCollectionRuns.userId,ctx.userId),eq(platformCollectionRuns.accountId,accountId),
+      inArray(platformCollectionRuns.status,['queued','running','partial','needsAuth'])));
+    for(const row of rows){
+      const taskId=await scheduledOwnerTaskId(ctx,accountId,row.id);
+      if(!taskId)continue;
+      const owner=await deps.readScheduledOwner(ctx,taskId,accountId);
+      if(owner?.status==='cancelled')await cancel(ctx,accountId,row.id);
+      else if(owner?.status==='failed')await db.transaction(async tx=>{
+        const [run]=await tx.select().from(platformCollectionRuns).where(and(eq(platformCollectionRuns.id,row.id),eq(platformCollectionRuns.userId,ctx.userId),eq(platformCollectionRuns.accountId,accountId))).for('update');
+        if(!run||!['queued','running'].includes(run.status))return;
+        await tx.update(platformCollectionRuns).set({status:'partial',generation:run.generation+1,leaseToken:null,leaseExpiresAt:null,reasonCode:'OWNER_FAILED',updatedAt:now()}).where(eq(platformCollectionRuns.id,row.id));
+      });
+    }
+  }
+
+  /** 只读凭据证明供旧绑定升级补计划；手填外部ID不构成授权。 */
+  async function hasCredentialEvidence(ctx:RequestContext,accountId:string):Promise<boolean>{
+    const account=await ownedAccount(ctx,accountId);const [binding]=await db.select().from(platformCollectionBindings).where(and(eq(platformCollectionBindings.accountId,accountId),eq(platformCollectionBindings.userId,ctx.userId)));
+    return !!binding&&binding.platform===account.platform&&binding.platformIdentity===account.externalAccountId&&!binding.revokedAt&&(!binding.expiresAt||!expired(binding.expiresAt))&&['workCatalog','workMetrics'].every(scope=>binding.scopes.includes(scope));
+  }
+  /** 原调度任务在重新扫码核验后恢复原run；被取消任务与旧证明不能被动重启。 */
+  async function resumeScheduledAuthorization(ctx:RequestContext,accountId:string,attemptId:string,taskId:string):Promise<void>{
+    if(await scheduledOwnerTaskId(ctx,accountId,attemptId)!==taskId)deny('FORBIDDEN_ACCOUNT','采集恢复必须属于原调度任务');
+    const account=await ownedAccount(ctx,accountId);
+    await db.transaction(async tx=>{
+      const [run]=await tx.select().from(platformCollectionRuns).where(and(eq(platformCollectionRuns.id,attemptId),eq(platformCollectionRuns.userId,ctx.userId),eq(platformCollectionRuns.accountId,accountId))).for('update');
+      if(!run||run.status!=='needsAuth')return;
+      const [binding]=await tx.select().from(platformCollectionBindings).where(and(eq(platformCollectionBindings.accountId,accountId),eq(platformCollectionBindings.userId,ctx.userId)));
+      if(!binding||binding.platform!==run.platform||binding.platformIdentity!==run.platformIdentity||account.externalAccountId!==run.platformIdentity||binding.revokedAt||(binding.expiresAt&&expired(binding.expiresAt))||!binding.scopes.includes(run.capability)||Date.parse(binding.verifiedAt)<=Date.parse(run.updatedAt))return;
+      await tx.update(platformCollectionRuns).set({status:'partial',reasonCode:'AUTH_REVERIFIED',leaseToken:null,leaseExpiresAt:null,updatedAt:now()}).where(eq(platformCollectionRuns.id,attemptId));
+    });
   }
 
   async function cancel(ctx: RequestContext, accountId: string, attemptId: string): Promise<CollectionRunResource> {
@@ -874,6 +928,6 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
   }
 
   return { commitVerifiedBinding, listCapabilities, bindBegin, recordVerifiedIdentity, bindConfirm, bindCancel, retryBindCleanup,
-    start, claim, renewLease, sweepExpiredLeases, status, latestRun, cancel, failRun, commitPage, listWorks, readMetrics,
+    start, claim, renewLease, sweepExpiredLeases, status, latestRun, scheduledOwnerTaskId, releaseTerminatedScheduledRuns, hasCredentialEvidence, resumeScheduledAuthorization, cancel, failRun, commitPage, listWorks, readMetrics,
     recordConfirmedLegacyImport };
 }

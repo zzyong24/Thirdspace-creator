@@ -1,5 +1,5 @@
 import {createAccountGroupService} from '../platform-account';
-import {PRIVATE_COLLECTION_SOURCE_KINDS} from './private-collector-admission.service';
+import {supportsPrivateCollection,PRIVATE_COLLECTION_SOURCE_KINDS} from './private-collector-admission.service';
 import {requireWorkspace,workspaceFilter} from "../../workspace-scope";
 import {lockWorkspaceMembership,assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import { isNull, and, desc, eq, sql, type Db } from "@creatoros/backend";
@@ -244,7 +244,7 @@ export function createSchedulingRepository(
       return db.transaction(async tx=>{
       const backgroundCollector=deps.backgroundCollector===true&&PRIVATE_COLLECTION_SOURCE_KINDS.has(input.sourceKind)&&!!deps.accountId;
       const frozen=await lockWorkspaceMembership(tx,{...deps,requestId:"scheduled-job-create",source:"user"},{allowArchived:backgroundCollector});
-      if(backgroundCollector){const member=await createAccountGroupService({db:tx as unknown as Db,now:deps.now,nextId:deps.nextId}).forAccount({...deps,requestId:"scheduled-job-create",source:"ingestion"},deps.accountId!);if(member.platform!=="douyin")throw new OwnershipError("该平台未接入私有自动采集");}
+      if(backgroundCollector){const member=await createAccountGroupService({db:tx as unknown as Db,now:deps.now,nextId:deps.nextId}).forAccount({...deps,requestId:"scheduled-job-create",source:"ingestion"},deps.accountId!);if(!supportsPrivateCollection(member.platform,input.sourceKind))throw new OwnershipError("该平台未接入私有自动采集");}
       const isCollectionKind = COLLECTION_JOB_SOURCE_KINDS.has(input.sourceKind);
       // [T-359] 尊重入参(分层启用:默认关的模板建即 disabled);缺省保持旧行为 true。
       const wantEnabled = input.enabled ?? true;
@@ -270,7 +270,7 @@ export function createSchedulingRepository(
         return rows[0];
       };
       const reuse = async (row: ScheduledJobRow): Promise<ScheduledJobRow> => {
-        if (wantEnabled && !row.enabled) {
+        if (wantEnabled && !row.enabled && !backgroundCollector) {
           const updated = await tx
             .update(scheduledJobs)
             .set({ enabled: true, updatedAt: deps.now() })

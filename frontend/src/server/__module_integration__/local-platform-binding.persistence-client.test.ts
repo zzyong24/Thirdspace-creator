@@ -170,4 +170,13 @@ it.each(['xiaohongshu','kuaishou'] as const)('T1069 %s公开持久任务绑定�
  expect(result.data).toMatchObject({status:'succeeded',accountId:expect.any(String)});
  const account=await compositeTransport.request(ENDPOINTS.getAccount,{params:{accountId:result.data.accountId!},query:undefined,body:undefined},frozen) as {data:{platform:string}};expect(account.data.platform).toBe(platform);
  const group=await compositeTransport.request(ENDPOINTS.getAccountGroup,{params:{groupId:created.data.id},query:undefined,body:undefined},frozen) as {data:{members:Array<{accountId:string}>}};expect(group.data.members.map(member=>member.accountId)).toEqual([result.data.accountId]);
+ // T1101：同一公开扫码链补独立平台job；立即运行沿持久task进入真实service+隔离供应商端口。
+ const owned={...frozen,accountId:result.data.accountId!};
+ let jobs:{data:Array<{id:string;schedule:string;accountId:string;sourceKind:string}>};const jobsUntil=Date.now()+120_000;
+ do{jobs=await compositeTransport.request(ENDPOINTS.listScheduledJobs,{params:undefined,query:{sourceKind:'self.metrics',page:1,pageSize:100},body:undefined},owned) as typeof jobs;if(jobs.data.length)break;await new Promise(resolve=>setTimeout(resolve,100));}while(Date.now()<jobsUntil);
+ expect(jobs.data).toHaveLength(1);const job=jobs.data[0]!;expect(job.schedule).toBe(platform==='kuaishou'?'5 */2 * * *':'10 */2 * * *');expect(job.accountId).toBe(owned.accountId);
+ const invoked=await compositeTransport.request(ENDPOINTS.runScheduledJobNow,{params:{jobId:job.id},query:undefined,body:{}},owned) as {data:{aiTaskId:string;jobRunId:string}};
+ let task:{data:{status:string;errorMessage:string|null}}|undefined;const deadline=Date.now()+120_000;
+ do{task=await compositeTransport.request(ENDPOINTS.getTask,{params:{taskId:invoked.data.aiTaskId},query:undefined,body:undefined},owned) as typeof task;if(['succeeded','failed','cancelled'].includes(task!.data.status))break;await new Promise(resolve=>setTimeout(resolve,100));}while(Date.now()<deadline);
+ expect(task!.data.status,task!.data.errorMessage??'原任务尚未终态').toBe('succeeded');
 });

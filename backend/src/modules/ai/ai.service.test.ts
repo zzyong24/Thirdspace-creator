@@ -1,6 +1,6 @@
 import {projects as parentProjects,contentOutputs as parentOutputs,publications as parentPublications,reviews as parentReviews} from "@creatoros/backend";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createDb, assets, eq, type Db } from "@creatoros/backend";
+import { createDb, assets, aiTasks, executionTasks, eq, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
   createAiService,
@@ -9,6 +9,8 @@ import {
   type AiKnowledgePort,
   type AiPositioningPort,
 } from "./ai.service";
+import {accountGroups,accountGroupMemberships} from "../../schema/account-groups";
+import {platformAccounts} from "../../schema/platform-account";
 import { ConflictError } from "./ai.errors";
 import { createAiRepository } from "./ai.repository";
 
@@ -1528,4 +1530,24 @@ describe("[T-332 S2] AI 按号隔离:C-07 未选号禁建 + 双号零交叉", ()
     });
     expect(t1again.id).toBe(t1.id);
   });
+});
+
+it('T1101调度owner仅认同用户账号真实执行投影和原job绑定，不信任手填type或请求键',async()=>{
+ const {db,client}=await createDb();try{
+ const {service}=makeService(db);
+ await db.insert(platformAccounts).values({id:'acct-a',userId:'user-a',platform:'xiaohongshu',accountHandle:'测试账号',createdAt:NOW,updatedAt:NOW});
+ await db.insert(accountGroups).values({id:'original-group',userId:'user-a',name:'原组',createdAt:NOW,updatedAt:NOW});
+ await db.insert(accountGroupMemberships).values({id:'original-membership',userId:'user-a',accountId:'acct-a',groupId:'original-group',joinedAt:NOW});
+ await db.insert(aiTasks).values({id:'scheduled-owner',userId:'user-a',accountId:'acct-a',groupId:'original-group',taskType:'scheduled.self.metrics',status:'running',inputData:{jobId:'original-job'},idempotencyKey:'original-key',requestedAt:NOW});
+ expect(await service.readScheduledCollectionOwner(ctx,'scheduled-owner','acct-a')).toBeNull();
+ await db.insert(executionTasks).values({id:'original-execution',userId:'user-a',accountId:'acct-a',groupId:'original-group',kind:'ai_task',ownerType:'ai_task',ownerId:'scheduled-owner',status:'paused',idempotencyKey:'original-execution-key',payload:{modelInput:{kind:'scheduled.flywheel',sourceKind:'self.metrics',jobId:'original-job',jobRunId:'original-run'}},createdAt:NOW,updatedAt:NOW});
+ await db.update(aiTasks).set({executionTaskId:'original-execution'}).where(eq(aiTasks.id,'scheduled-owner'));
+ expect(await service.readScheduledCollectionOwner({...ctx,groupId:'new-group'},'scheduled-owner','acct-a')).toEqual({status:'paused'});
+ await db.update(executionTasks).set({status:'cancelled'}).where(eq(executionTasks.id,'original-execution'));
+ expect(await service.readScheduledCollectionOwner(ctx,'scheduled-owner','acct-a')).toEqual({status:'cancelled'});
+ expect(await service.readScheduledCollectionOwner({...ctx,userId:'another-user'},'scheduled-owner','acct-a')).toBeNull();
+ expect(await service.readScheduledCollectionOwner(ctx,'scheduled-owner','another-account')).toBeNull();
+ await db.update(executionTasks).set({payload:{modelInput:{kind:'scheduled.flywheel',sourceKind:'self.metrics',jobId:'forged-job',jobRunId:'original-run'}}}).where(eq(executionTasks.id,'original-execution'));
+ expect(await service.readScheduledCollectionOwner(ctx,'scheduled-owner','acct-a')).toBeNull();
+ }finally{await client.close();}
 });

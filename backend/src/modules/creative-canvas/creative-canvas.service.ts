@@ -51,7 +51,7 @@ export function createCreativeCanvasService(db:Db,deps:{
  assertReferenceAsset:(ctx:RequestContext,id:string,tx?:Db)=>Promise<void>;
  getMediaFileDownloadUrl:(ctx:RequestContext,assetId:string,fileId:string)=>Promise<{url:string;fileName:string}>;
  getReference:(ctx:RequestContext,id:string,fileId?:string,tx?:Db)=>Promise<Reference|null>;
- readTask:(ctx:RequestContext,taskId:string,tx?:Db)=>Promise<{id:string;userId:string;attemptId:string|null;idempotencyKey?:string;projectId:string|null;taskType:string;inputData:unknown}|null>;
+ readTask:(ctx:RequestContext,taskId:string,tx?:Db)=>Promise<{id:string;userId:string;attemptId:string|null;idempotencyKey?:string;projectId:string|null;taskType:string;inputData:unknown;status?:string;runtimeStatus?:string|null}|null>;
  readTaskResults:(ctx:RequestContext,taskId:string,tx?:Db)=>Promise<Array<{id?:string;resultType:string;assetId?:string|null}>>;
  getCommittedAssetResult?:(ctx:RequestContext,input:{taskId:string;resultId:string},tx:Db)=>Promise<{status:"verified";proof:z.infer<typeof committedGeneratedAssetProof>}|{status:"unverifiable";reason:string}>;
  submitTask:(ctx:RequestContext,input:{attemptId:string;inputData:CanvasTaskInput})=>Promise<{id:string}>;
@@ -231,6 +231,14 @@ export function createCreativeCanvasService(db:Db,deps:{
    if(admission){if(Date.parse(now())>=Date.parse(admission.deadlineAt))throw new CanvasConflictError('原生成确认期限已耗尽');taskInput.canvasOwner.proposalAdmission=admission;taskInput.canvasOwner.inputDigest=canvasInputDigest(canvas.revision,nodeId,taskInput);}
    const [existing]=await transaction.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.attemptId,input.attemptId));
    if(existing){if(!rowOwned(ctx,existing)||existing.canvasId!==canvasId||existing.nodeId!==nodeId||!isDeepStrictEqual(frozenInput(existing),taskInput))throw new CanvasConflictError('原生成尝试与本次确认不符');return {link:link(existing),inputData:frozenInput(existing),context:sourceContext(ctx,existing)};}
+   // 同一canvas行锁串行预约：不同attempt不可绕过原任务在途/未知状态；原attempt仍由上方回读。
+   const previous=await transaction.select().from(canvasGenerationLinks).where(and(eq(canvasGenerationLinks.canvasId,canvasId),eq(canvasGenerationLinks.nodeId,nodeId),eq(canvasGenerationLinks.userId,ctx.userId),workspaceFilter(canvasGenerationLinks,ctx)));
+   for(const pending of previous){
+    if(!pending.taskId)throw new CanvasConflictError("此节点的原提交结果尚未明确，请继续原任务");
+    const task=await deps.readTask(sourceContext(ctx,pending),pending.taskId,transaction);
+    const status=task?.runtimeStatus??task?.status;
+    if(!status||!["succeeded","awaiting_confirmation","failed","partial","cancelled"].includes(status))throw new CanvasConflictError("此节点仍在生成或等待原任务结果，请勿重复提交");
+   }
    const stamp=now();
    const [row]=await transaction.insert(canvasGenerationLinks).values({id:randomUUID(),userId:ctx.userId,...workspaceStamp(workspaceKey(originalContext)),groupVersion:freeze.groupVersion,membershipVersion:freeze.membershipVersion,canvasId,nodeId,attemptId:input.attemptId,taskId:null,inputRevision:canvas.revision,inputDigest:taskInput.canvasOwner.inputDigest,inputJson:taskInput,referenceFileId:taskInput.referenceFileId??null,referenceChecksum:taskInput.referenceChecksum??null,resultAssetId:null,createdAt:stamp,updatedAt:stamp}).onConflictDoNothing().returning();
    if(!row){
@@ -431,8 +439,7 @@ export function createCreativeCanvasService(db:Db,deps:{
    const taskInput=frozenInput(reservation);
    const originalContext=sourceContext(ctx,reservation);
    if(taskInput.canvasOwner.inputDigest!==reservation.inputDigest)throw new CanvasConflictError("生成输入与原提交不符");
-   if(!reservation.taskId){const currentCanvas=await requireCanvas(ctx,canvasId),currentNode=canvasDocumentSchema.parse(currentCanvas.documentJson).nodes.find(node=>node.id===nodeId);
-   if(!currentNode||(currentNode.type!=="image_generation"&&currentNode.type!=="video_generation")||currentNode.prompt!==taskInput.prompt||currentNode.mode!==taskInput.mode||(currentNode.referenceAssetId??null)!==(taskInput.referenceAssetId??null)||Boolean(currentNode.referenceFileId&&currentNode.referenceFileId!==taskInput.referenceFileId)||(currentNode.aspectRatio??null)!==(taskInput.aspectRatio??null)||(currentNode.visualMode??null)!==(taskInput.visualMode??null)||(currentNode.templateId??null)!==(taskInput.templateId??null)||(currentNode.templateVersion??null)!==(taskInput.templateVersion??null))throw new CanvasConflictError("节点输入已编辑，请明确再创作而不是恢复旧提交");}
+   // 用户明确继续原提交时只恢复预约冻结输入；后续编辑不改写原attempt，也不自动重发新任务。
    if(!reservation.taskId){await assertWritableWorkspace(db,originalContext);const currentCanvas=await requireCanvas(ctx,canvasId);if(currentCanvas.projectId)await deps.assertProject(originalContext,currentCanvas.projectId);}
    // Known link re-reads the original task; only an unknown submission invokes the original idempotent attempt again.
    const task=reservation.taskId?{id:reservation.taskId}:await deps.submitTask(originalContext,{attemptId:reservation.attemptId,inputData:taskInput});

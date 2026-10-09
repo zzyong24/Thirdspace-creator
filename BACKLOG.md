@@ -9,6 +9,8 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1101 | 修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集 | 🔨 | PASS[REV:bf8f886d8ce4] | 待验 | [SPEC](docs/features/t1101-canvas-binding-collection.md) | 用户2026-10-09截图明确要求：素材只显示预览；生成中禁止重复提交、已有结果再生成需确认；图片连线传递默认参考；扫码入口放平台能力表，删除刷新和下方重复框；三平台独立采集错峰执行。基于main隔离实现，不发布、不改真实Cookie。 |
+| T-1101-global-gates | 核对独立main工作树全局对账失败及历史收据漂移 | 📋 待办 | — | — | [根因记录](docs/verification/t1101/global-gates.md) | 前置对账76项失败含未装依赖阶段环境、历史审核收据和教训检查；本轮安装依赖后重跑真实Gate。范围外旧类型/契约/短预算仍关联T-1018/T-1081；不得补拍历史PASS。 |
 | T-1094 | 修复部分完成AI任务公开查询状态合同缺口 | 🔨 | PASS[REV:5d2c91b81b45] | — | [SPEC](docs/features/t1094-public-partial-task-status.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) | 源码e71022ff新包装入当前App，原task200get/list真实partial，正常重启后10原任务/原键/稿件一致。新增公共链/消费者与安装恢复通过；正式相关9+6旧失败登记T1096、全局原42仍保留，不complete，不重发或采纳。 |
 | T-1096 | 核对文章工作流与任务父归属旧回归断言的实际漂移 | 📋 | — | — | [当场基线](docs/verification/t1094/RELATED_BASELINE_DIAGNOSIS.md) | T1094正式回归文章9FAIL/任务6FAIL；原main770037原测试同名同因复现。先核用户确认的联合创作入口、保存回读与组父归属，再独评是否修fixture或真实代码；原断言/owner不洗绿，不恢复已删快转入口。 |
 | T-1097 | 修复文章编导参考资料与候选审读保护缺口 | 📋 | — | — | [缺陷诊断](docs/features/t1097-article-director-options-diagnosis.md) | 用户要求有问题及时建task修复；T1096确认身份/文档只接不可触达旧generate，当前联合未接；事实替换对照及未请求元数据保护也需当前链实证。核真实来源与审读后独评闭合，不恢复旧快转，不把旧恢复/checkbox测试当新链通过。 |
