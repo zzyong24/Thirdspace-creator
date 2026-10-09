@@ -229,7 +229,7 @@ describe("[T-482] 单条分享导入持久任务", () => {
       ctx,
       { taskId: "task-1", existingClaim: claim() },
       {
-        tasks: {} as PersistentTaskService,
+        tasks: {get:vi.fn().mockResolvedValue(claim().task),heartbeat:vi.fn().mockResolvedValue(claim().task),saveCheckpoint:vi.fn().mockResolvedValue({}),finish:vi.fn().mockResolvedValue({})} as unknown as PersistentTaskService,
         fetcher: {
           fetch: vi.fn().mockResolvedValue({
             shareUrl: "https://v.douyin.com/abc/",
