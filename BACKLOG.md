@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-1104 | 修复运行时展开错误链与清理诊断失真 | 🔨 | PASS[REV:055e0175f519] | — | [SPEC](docs/features/t1104-runtime-extraction-error-chain.md) | T1102确认tar内层I/O原因被Display丢失，清理Result被忽略却称已清理。唯一Rust文件保留有限真实链与清理结果，先独评/真实tar碰撞RED；不改解压安全/旧runtime/超时或当前App，不代签首次根因。 |
+| T-1104 | 修复运行时展开错误链与清理诊断失真 | ✅ | PASS[REV:055e0175f519] | — | [SPEC](docs/features/t1104-runtime-extraction-error-chain.md) | T1102确认tar内层I/O原因被Display丢失，清理Result被忽略却称已清理。唯一Rust文件保留有限真实链与清理结果，先独评/真实tar碰撞RED；不改解压安全/旧runtime/超时或当前App，不代签首次根因。 |
 | T-1103 | 排查Pi联合提案反复遗漏完整图文参数 | 🔨 | — | — | [实际缺陷](docs/features/t1103-pi-joint-argument-diagnosis.md) | T1099安装源码070287真实Pi task272只读成功，3次提案仅digest/文章，图文始终缺失，收到具体错误却重复同参；真实partial、零候选、原稿不变。保原ID/调用/期限；两实验已用尽：完整分片3PASS，截断3PASS/2FAIL；宽容解析保真缺口已复现，task272原wire未知，先兼容设计独评，不放宽schema或新键重发。T1099/T1095仍待实际候选。 |
 | T-1102 | 排查并恢复本地安装首次运行时展开失败 | 🔨 | — | — | [诊断与边界](docs/features/t1102-installed-runtime-extraction.md) | T1099源码070287新DMG校验/签名/安装成功，但首次展开Chrome框架条目失败，落tauri错误页且CLI无连接。原日志已保存，根因未确认；同包一次温和重启已恢复HTTP61596/CLI，首次根因仍UNKNOWN；另立T1104修确定的错误链/清理诊断缺口，不删原runtime/数据、不重发AI。 |
 | T-1094 | 修复部分完成AI任务公开查询状态合同缺口 | 🔨 | PASS[REV:5d2c91b81b45] | — | [SPEC](docs/features/t1094-public-partial-task-status.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) | 源码e71022ff新包装入当前App，原task200get/list真实partial，正常重启后10原任务/原键/稿件一致。新增公共链/消费者与安装恢复通过；正式相关9+6旧失败登记T1096、全局原42仍保留，不complete，不重发或采纳。 |

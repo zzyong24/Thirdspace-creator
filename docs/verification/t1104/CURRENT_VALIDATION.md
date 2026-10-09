@@ -16,3 +16,7 @@ flowchart LR
 
 
 独立实施复核已实际PASS_LIMITED_IMPLEMENTATION、0 findings，源508a5063及原始命令/日志均独立核对。仅源码准入，本任务仍待完整reconcile终态；没有对根因、包/安装、Pi或父任务代签。
+
+## 本次实际全局终态
+
+2026-10-09T04:21:03Z，完整reconcile实际exit1，1111.976秒，42 ERROR/0 WARNING；原始日志SHA256 `5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a`，与T1099修复前基线逐字节相同，新增/消失均0。旧review/lesson/timeout债务继续留在T1018/T1081/T1082/T1083/T1025；本任务专项Gate及独评通过，源码仍508a5063，不代签全仓或安装版。实现提交8428b504。较早“运行中”段落保留为当时事实，此处为实际终态。

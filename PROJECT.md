@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ 07028702
+LAST_SYNCED: main @ 8428b504
 
 ## 这是什么(定位)
 
@@ -23,7 +23,6 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
-- [open] T-1104 修复运行时展开错误链与清理诊断失真
 - [wip] T-1103 排查Pi联合提案反复遗漏完整图文参数
 - [wip] T-1102 排查并恢复本地安装首次运行时展开失败
 - [wip] T-1094 修复部分完成AI任务公开查询状态合同缺口

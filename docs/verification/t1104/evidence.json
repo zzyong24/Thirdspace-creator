@@ -1,6 +1,6 @@
 {
   "task": "T-1104",
-  "taskComplete": false,
+  "taskComplete": true,
   "sourceBinding": {
     "observedAt": "2026-10-09T04:02:11.546371+00:00",
     "sourceSha256": "508a50632893f27970eb1fab0fef04d53c87255891b5b0bc1af4b60ab2ad2e29",
@@ -20,7 +20,7 @@
   "fullLib": "264 PASS / 12原ignored；未代签Windows实机",
   "scope": "原解压/旧runtime/数据/预算保留，只补诊断；未退出当前App或安装此修复",
   "firstStartupRootCause": "UNKNOWN，T1102保留",
-  "reconcile": "实际运行中，尚未完成，不签PASS",
+  "reconcile": "实际exit1，42 ERROR/0 WARNING，日志逐字同T1099此前基线；本任务没有新增失败，保留范围外旧债，不签全仓通过",
   "checks": {
     "runtime-baseline": {
       "argv": [
@@ -169,6 +169,18 @@
       "exitCode": 0,
       "elapsedSeconds": 0.0752288329822477,
       "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "full-reconcile": {
+      "argv": [
+        "node",
+        "orchestrator/process/reconcile.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:02:31.794845+00:00",
+      "finishedAt": "2026-10-09T04:21:03.777334+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 1111.9755243750114,
+      "logSha256": "5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a"
     }
   },
   "implementationReview": {
@@ -176,6 +188,38 @@
     "reportSha256": "89069bf911e721f74b0891c5c43f37bc081c2c663301110dcb958a188589c94a",
     "sourceSha256": "508a50632893f27970eb1fab0fef04d53c87255891b5b0bc1af4b60ab2ad2e29",
     "taskComplete": false,
-    "reconcilePending": true
-  }
+    "reconcilePending": false
+  },
+  "globalComparison": {
+    "oldErrors": 42,
+    "currentErrors": 42,
+    "addedErrors": [],
+    "removedErrors": [],
+    "logsByteIdentical": true,
+    "previousLogSha256": "5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a",
+    "currentLogSha256": "5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a",
+    "currentRun": {
+      "argv": [
+        "node",
+        "orchestrator/process/reconcile.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:02:31.794845+00:00",
+      "finishedAt": "2026-10-09T04:21:03.777334+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 1111.9755243750114,
+      "logSha256": "5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a"
+    },
+    "existingDebtTasks": [
+      "T-1018",
+      "T-1081",
+      "T-1082",
+      "T-1083",
+      "T-1025"
+    ],
+    "taskScopePass": true,
+    "installedContainsT1104": false,
+    "firstStartupCause": "UNKNOWN"
+  },
+  "completion": "taskctl complete T-1104 实际exit0，源码限定验收；未代签当前包/首次根因/全功能"
 }
