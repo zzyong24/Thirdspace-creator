@@ -28,6 +28,11 @@ const sourceWitness=sourcePaths.map(file=>({path:file,sha256:createHash("sha256"
 const record=async(action,details={})=>{steps.push({at:new Date().toISOString(),action,...details,fixtureCalls:await page.evaluate(()=>window.__t1106Fixture.calls)});};
 async function capture(checkpoint,check_ids,file) {
   const viewport=page.viewportSize();
+  // 等正式弹层的有限入场动画结束再取文字几何；无限同步spinner不阻塞取证。
+  // 前一轮两次真实运行文字相同、弹层rect随入场进度变化，原证据保留，不改产品动画。
+  await page.evaluate(()=>document.fonts.ready);
+  await page.waitForFunction(()=>document.getAnimations().every(animation=>
+    animation.playState!=="running"||!Number.isFinite(animation.effect?.getComputedTiming().endTime)),undefined,{timeout:120_000});
   // 只取真正出现在本视口和overflow裁切区内的文字节点，避免把滚动区外文案冒充可见证据。
   const visible=await page.evaluate(()=>{
     const texts=[];
