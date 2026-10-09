@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 import { createDb, aiTasks, executionTasks, projects, eq, type Db } from '@creatoros/backend';
-import type { AsrRequest, WorkerPort } from '@creatoros/contract/execution-worker';
+import { transcribePostprocessResultSchema, transcribePostprocessPlanSchema, type AsrRequest, type WorkerPort } from '@creatoros/contract/execution-worker';
 import { runTranscribeInWorker } from '../../../../ai-worker/src/execution/transcribe-worker-run';
 import { runTranscribePostprocessInWorker } from '../../../../ai-worker/src/execution/transcribe-postprocess-run';
 import { buildTranscriptPostprocessNode, TRANSCRIPT_POSTPROCESS_SCHEMA } from '../../../../ai-worker/src/runtime/transcript-postprocess';
@@ -182,3 +183,81 @@ it.each(['source', 'bundle'] as const)('实际转录Worker闭合工件写入/终
     expect(f.requests).toBe(1);
   } finally { await supervisor?.stop(); await f.cleanup(); }
 }, 300_000); // 原deadline包含启动，另覆盖120秒关闭与60秒清理余量。
+
+// JSONB 只规范对象键顺序；完整字段、模型身份及原作品数组顺序仍严格核验。
+async function receiptGuardFixture(mode: 'unconfigured' | 'json' = 'unconfigured') {
+  const f = await fixture(mode);
+  const stamp = f.now(), projectId = `guard-project-${f.id}`;
+  await db.insert(projects).values({ id: projectId, userId: f.ctx.userId, accountId: f.ctx.accountId, title: '合成回执守卫作品', source: 'imported', platformRef: { platform: 'douyin', externalId: f.awemeId }, creationMode: 'talking_head', status: 'active', currentStage: 'script', startedAt: stamp, createdAt: stamp, updatedAt: stamp });
+  const result = await runTranscribePostprocessInWorker(f.awemeId, new AbortController().signal, f.call);
+  expect(result.applied).toBe(mode === 'json');
+  const [task] = await db.select().from(executionTasks).where(eq(executionTasks.id, f.ref.executionTaskId));
+  if (!task) throw Error('缺少原真实执行');
+  const payload = task.payload as Record<string, unknown>;
+  const entries = payload.transcribePostprocess as Record<string, { plan: unknown; result: unknown }>;
+  const frozen = entries[f.awemeId];
+  if (!frozen) throw Error('缺少完整回执');
+  return { ...f, projectId, result, payload, entries, frozen };
+}
+async function assertRejectedWithoutReplay(f: Awaited<ReturnType<typeof receiptGuardFixture>>, workflow = f.workflow) {
+  const before = await f.ledger.inspect(f.ref), requests = f.requests;
+  await expect(workflow.saveArtifact(f.ref, { awemeId: f.awemeId })).rejects.toThrow();
+  expect(f.requests).toBe(requests);
+  expect((await f.ledger.inspect(f.ref)).calls).toEqual(before.calls);
+  expect(await createArtifactsService({ db, now: f.now, nextId: f.nextId }).listProjectArtifacts(f.ctx, f.projectId)).toHaveLength(0);
+}
+it('JSONB完整回执键重排仍保存原文，原ASR账本只结算一次', async () => {
+  const f = await receiptGuardFixture();
+  try {
+    const frozen = transcribePostprocessResultSchema.parse(f.frozen.result);
+    expect(isDeepStrictEqual(f.frozen.result, frozen)).toBe(true);
+    expect(JSON.stringify(f.frozen.result)).not.toBe(JSON.stringify(frozen));
+    expect(await f.workflow.saveArtifact(f.ref, { awemeId: f.awemeId })).toMatchObject({ status: 'saved', projectId: f.projectId });
+    expect(await f.workflow.saveArtifact(f.ref, { awemeId: f.awemeId })).toMatchObject({ status: 'saved', projectId: f.projectId });
+    expect(f.requests).toBe(0);
+    expect((await f.ledger.inspect(f.ref)).calls.map(row => row.status)).toEqual(['settled']);
+    const service = createArtifactsService({ db, now: f.now, nextId: f.nextId });
+    const outputs = (await service.listProjectArtifacts(f.ctx, f.projectId)).filter(row => row.artifactType === 'output_script');
+    expect(outputs).toHaveLength(1);
+    const versions = await service.listVersions(f.ctx, outputs[0]!.id);
+    expect(versions.find(row => row.id === outputs[0]!.currentVersionId)?.contentText).toBe(original);
+  } finally { await f.cleanup(); }
+});
+it.each(['transcript', 'applied', 'reason'] as const)('完整回执真实字段不等必须拒绝保存：%s', async field => {
+  const f = await receiptGuardFixture();
+  try {
+    if (f.result.applied) throw Error('此反例需要真实未执行分支');
+    const changed = transcribePostprocessResultSchema.parse(field === 'transcript' ? { ...f.result, transcript: '篡改正文' } : field === 'applied' ? { applied: true, transcript: f.result.transcript } : { ...f.result, reason: '篡改完整原因' });
+    const workflow = createExecutionTranscribeWorkflowService(db, { now: f.now, nextId: f.nextId, postprocess: { read: async () => changed }, hasTranscriptArtifact: async () => false });
+    await assertRejectedWithoutReplay(f, workflow);
+  } finally { await f.cleanup(); }
+});
+it.each(['missing-transcript', 'missing-reason', 'extra-engine', 'extra-array'] as const)('strict回执缺字段或额外字段拒绝，不借深相等放宽schema：%s', async kind => {
+  const f = await receiptGuardFixture();
+  try {
+    if (f.result.applied) throw Error('此反例需要真实未执行分支');
+    const result = kind === 'missing-transcript' ? { applied: false, reason: f.result.reason } : kind === 'missing-reason' ? { applied: false, transcript: f.result.transcript } : kind === 'extra-engine' ? { ...f.result, actualEngine: 'whisper-local' } : { ...f.result, segments: ['first', 'second'] };
+    await db.update(executionTasks).set({ payload: { ...f.payload, transcribePostprocess: { ...f.entries, [f.awemeId]: { ...f.frozen, result } } } }).where(eq(executionTasks.id, f.ref.executionTaskId));
+    await assertRejectedWithoutReplay(f);
+  } finally { await f.cleanup(); }
+});
+it.each(['model', 'apiFormat'] as const)('独立冻结模型identity被改必须拒绝：%s', async field => {
+  const f = await receiptGuardFixture('json');
+  try {
+    // 回读真实已完成HTTP模型调用所冻结的identity；保原operationKey和账本。
+    const originalPlan = transcribePostprocessPlanSchema.parse(f.frozen.plan);
+    if (!originalPlan.identity) throw Error('真实HTTP调用应有冻结identity');
+    const plan = { ...originalPlan, identity: { ...originalPlan.identity, [field]: field === 'model' ? 'different-model' : 'openai_responses' } };
+    await db.update(executionTasks).set({ payload: { ...f.payload, transcribePostprocess: { ...f.entries, [f.awemeId]: { ...f.frozen, plan } } } }).where(eq(executionTasks.id, f.ref.executionTaskId));
+    await assertRejectedWithoutReplay(f);
+  } finally { await f.cleanup(); }
+});
+it('原作品数组顺序改变拒绝保存，不能把有序binding改成集合', async () => {
+  const f = await receiptGuardFixture();
+  try {
+    const originalIds = [f.awemeId, 'second-original-video'];
+    await db.update(aiTasks).set({ inputData: { awemeIds: originalIds } }).where(eq(aiTasks.id, f.id));
+    await db.update(executionTasks).set({ payload: { ...f.payload, modelInput: { ...f.input, awemeIds: [...originalIds].reverse() } } }).where(eq(executionTasks.id, f.ref.executionTaskId));
+    await assertRejectedWithoutReplay(f);
+  } finally { await f.cleanup(); }
+});

@@ -1,0 +1,42 @@
+{
+  "test_only_assembly_commit": "46f7f5c8af6b36007c1c6897379e60527db0f94d",
+  "production_files": [
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts"
+  ],
+  "test_files": [
+    "backend/src/modules/execution/transcribe-postprocess.integration.test.ts"
+  ],
+  "source_hashes": {
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts": "66784d2d4605c484129e05d8c33073be092429f0609978f3767a2f2b509a5235",
+    "backend/src/modules/execution/transcribe-postprocess.integration.test.ts": "d48220c86bf5fe2c91ce3a8eab1ea141d297761f63f6ce2f0df7064a6e26ec58"
+  },
+  "red": {
+    "selected": 11,
+    "pass": 10,
+    "fail": 1,
+    "exit": 1,
+    "log": "backend-transcribe-jsonb-real-identity-red.log"
+  },
+  "green": {
+    "selected": 11,
+    "pass": 11,
+    "fail": 0,
+    "exit": 0,
+    "log": "backend-transcribe-jsonb-real-identity-green.log"
+  },
+  "terminal_changes": false,
+  "review_round_consumed": false,
+  "full_regression": {
+    "files": 3,
+    "pass": 51,
+    "fail": 0,
+    "skip": 0,
+    "exit": 0,
+    "duration_seconds": 21.39,
+    "log": "backend-transcribe-jsonb-full-guard-regression.log"
+  },
+  "backend_typecheck": {
+    "exit": 0,
+    "log": "backend-jsonb-guard-final-typecheck.log"
+  }
+}

@@ -1,0 +1,26 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/transcribe-postprocess.integration.test.ts (24 tests | 1 failed | 13 skipped) 7055ms
+   × JSONB完整回执键重排仍保存原文，原ASR账本只结算一次 338ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/transcribe-postprocess.integration.test.ts > JSONB完整回执键重排仍保存原文，原ASR账本只结算一次
+ConflictError: 后处理最终正文与原回执不符
+ ❯ src/modules/execution/execution-transcribe-workflow.service.ts:56:187
+
+ ❯ src/modules/execution/execution-transcribe-workflow.service.ts:19:205
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed | 13 skipped (24)
+   Start at  17:01:17
+   Duration  14.80s (transform 5.04s, setup 0ms, import 7.42s, tests 7.05s, environment 0ms)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/transcribe-postprocess.integration.test.ts --maxWorkers=2 --retry=0 -t JSONB|完整回执真实|strict回执|独立冻结模型|原作品数组
