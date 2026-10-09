@@ -78,6 +78,18 @@ impl SnapshotStore for FileSnapshot<'_> {
         license::write_snapshot_file_checked(&self.vault.dir.join("license.enc"),s,Some(&self.vault.key))
     }
 }
+struct ConfirmedAckHttp;
+impl Transport for ConfirmedAckHttp {
+    fn post(&self,origin:&str,path:&str,body:&str,bearer:Option<&str>)->Result<Response,String> {
+        let response=Transport::post(&Http,origin,path,body,bearer)?;
+        // 正式consumer允许已过期意向清理；本驱动的ACK证据必须是实际200 acknowledged。
+        if path==ACK && (response.signed.status!=200
+            || parse::<Status>(&response.signed.body)?.status!="acknowledged") {
+            return Err(error("真实HTTP未收到200 acknowledged，不能冒称ACK确认"));
+        }
+        Ok(response)
+    }
+}
 fn run_live_driver()->Result<(),String> {
     if std::env::var("CREATOROS_OWNED_DEVICES_HTTP_LAB").as_deref()!=Ok("1") {
         return Err(error("必须显式启用隔离HTTP Lab"));
@@ -138,6 +150,22 @@ fn run_live_driver()->Result<(),String> {
     let capsule=vault.capsule()?;let mut j=capsule.journal;
     let cfg=LicenseConfig{base_url:ACTIVITY.into(),project_key:crate::product_identity::built_in_project_key().into(),strict_verify:true,public_key_b64:driver.public_key_b64,machine_id:capsule.machine_id};
     validate_journal(&j,&cfg)?;
+    let store=FileSnapshot{vault:&vault};
+    if let Some(saved)=store.read() {
+        // 与正式resume相同：只回读同一journal记录的已验签结果，再续ACK；不重复激活。
+        if !saved.allowed || !saved.signature_verified
+            || j.saved_snapshot_hash.as_deref()!=Some(snapshot_hash(&saved).as_str()) {
+            return Err(error("隔离输出与本次安全journal不一致，拒绝替换"));
+        }
+        j.committed=true;j.integrity=seal(&j);vault.save(&j)?;
+        let flight=Flight::begin()?;
+        if !ack(&j,&ConfirmedAckHttp,&vault,&flight)? || vault.load()?.is_some() {
+            return Err(error("回读已保存授权后ACK仍未确认，胶囊保留待恢复"));
+        }
+        println!("{}",serde_json::json!({"phase":"consumeRecovery","savedSnapshotMatchedJournal":true,"originalActivatedAt":saved.activated_at,"originalExpiresAt":saved.expires_at,"acknowledged":true,"journalCleared":true,"secretExposure":false}));
+        return Ok(());
+    }
+    if j.committed {return Err(error("journal称已保存但授权文件不存在，不能重新激活冒充恢复"));}
     let request=Zeroizing::new(serde_json::json!({"deviceSecret":j.device_secret,"codeVerifier":j.code_verifier}).to_string());
     let response=Transport::post(&Http,GROWTH,POLL,&request,None)?;
     if response.signed.status!=200 {check_response(&response)?;return Err(error("真实POLL尚未ready，请保留意向"));}
@@ -148,8 +176,6 @@ fn run_live_driver()->Result<(),String> {
     if snapshot.activated_at!=ready.activated_at||snapshot.expires_at!=ready.license_expires_at{return Err(error("原期限不一致"));}
     let wrong_cfg=LicenseConfig{base_url:cfg.base_url.clone(),project_key:cfg.project_key.clone(),strict_verify:true,machine_id:cfg.machine_id.clone(),public_key_b64:base64::engine::general_purpose::STANDARD.encode(ed25519_dalek::SigningKey::from_bytes(&[42;32]).verifying_key().as_bytes())};
     if candidate(&ready,&j,&wrong_cfg,&Http,&Http,&Clock).is_ok(){return Err(error("真实HTTP错误验签钥匙竟然通过"));}
-    let store=FileSnapshot{vault:&vault};
-    if store.read().is_some(){return Err(error("隔离输出已有授权文件，拒绝替换未核对对象"));}
     j.saved_snapshot_hash=Some(snapshot_hash(&snapshot));j.integrity=seal(&j);vault.save(&j)?;
     save_candidate(&store,&snapshot)?;
     if store.read().as_ref()!=Some(&snapshot){return Err(error("真实加密写盘回读不一致"));}
@@ -157,7 +183,7 @@ fn run_live_driver()->Result<(),String> {
     if String::from_utf8_lossy(&bytes).contains(&snapshot.code){return Err(error("真实授权文件泄漏明码"));}
     j.committed=true;j.integrity=seal(&j);vault.save(&j)?;
     let flight=Flight::begin()?;
-    if !ack(&j,&Http,&vault,&flight)?{return Err(error("真实ACK未确认，胶囊保留待恢复"));}
+    if !ack(&j,&ConfirmedAckHttp,&vault,&flight)?{return Err(error("真实ACK未确认，胶囊保留待恢复"));}
     if vault.load()?.is_some(){return Err(error("ACK后隔离胶囊尚未清除"));}
     println!("{}",serde_json::json!({"phase":"consume","ready":true,"signatureVerified":snapshot.signature_verified,"untrustedCertificateRejected":untrusted_certificate_rejected,"foreignOriginRejected":true,"wrongSigningKeyRejected":true,"originalActivatedAt":snapshot.activated_at,"originalExpiresAt":snapshot.expires_at,"encryptedSavedAndReadBack":true,"acknowledged":true,"journalCleared":true,"secretExposure":false}));
     Ok(())
