@@ -648,5 +648,16 @@
     "historical44ErrorLogRetained": true,
     "currentBoundaryNoIntroducedFinding": true,
     "fullReconcileNowNoIntroducedFinding": true
+  },
+  "publicPartialRepairInstalled": {
+    "sourceSha": "e71022fff7cee5bb8b5917bba33b498e017f0133",
+    "taskGetAndListRecovered": true,
+    "status": "partial",
+    "originalMessagesAndResultsUnchanged": true,
+    "originalMessageKeyReplayed": true,
+    "warmRestartPassed": true,
+    "creationCandidateStillMissing": true,
+    "newTaskSentByT1094": false,
+    "proof": "docs/verification/t1094/evidence.json"
   }
 }

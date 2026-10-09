@@ -7,3 +7,5 @@
 原T1091八任务均已通过正式读取确认终态。两个Pi旧失败仍保留。main770037已固定入口无备份构建并安装：DMG SHA256 005ebbfe93a3340fd451e544cd2e9d19e0e9d1f67139db3426266f425e729846，实际HTTP首页完成与CLI连通通过。新Pi原生task186成功候选且仅改剪头两个数字字段，DTO不变、原key回放同消息；候选未采用。新Pi联合task200首读{}成功，但三次propose实际ruleSnapshotRef={}、省略、省略，从未调用null，均被严格合同正确拒绝，没有候选。模型最终如实保留部分完成说明；原messages/results可读，而公开taskGET因partial缺合同连续400，独立诊断登记T1094/T1095。当前770037重启恢复未运行；该轮完整reconcile真实44错误/0告警，其中新增两项来自本轮测试跨模块repo夹具，已仅改测试经正式AiService并得到11PASS、boundary无新增；原44失败日志保留，T1094新完整对账已结束、42错误/0告警与T1091原日志逐字相同；T1093/T1091不能完成，也不能称全功能稳定。
 
 实际context-compile/generate的旧progress/glob欠债保留；3.29单人交互不生成任务包，root串行实施，精确绑定/显式step计划与独评守边界。详见SPEC及evidence.json。
+
+T1094后续包源码e71022ff已安装：原task200公开get/list恢复partial，原两消息/一结果及原键不变，正常重启后10原任务与稿件保持。此仅关闭公开状态读取与恢复缺口，不补造联合候选；本任务真实Pi联合生成仍未通过。见[T1094新包验证](../t1094/CURRENT_VALIDATION.md)。

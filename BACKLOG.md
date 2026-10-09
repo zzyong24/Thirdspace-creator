@@ -9,7 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
-| T-1094 | 修复部分完成AI任务公开查询状态合同缺口 | 🔨 | PASS[REV:5d2c91b81b45] | — | [SPEC](docs/features/t1094-public-partial-task-status.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) | 新安装真实Pi联合任务200有限部分完成，messages/results可读而ai.tasks.get持续400：内部partial不在公共enum。先独评真实状态与终态消费，保原ID/账本/结果/未知/owner，不重发、不把部分完成投影成全成功。 |
+| T-1094 | 修复部分完成AI任务公开查询状态合同缺口 | 🔨 | PASS[REV:5d2c91b81b45] | — | [SPEC](docs/features/t1094-public-partial-task-status.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) | 源码e71022ff新包装入当前App，原task200get/list真实partial，正常重启后10原任务/原键/稿件一致。新增公共链/消费者与安装恢复通过；正式相关9+6旧失败登记T1096、全局原42仍保留，不complete，不重发或采纳。 |
 | T-1096 | 核对文章工作流与任务父归属旧回归断言的实际漂移 | 📋 | — | — | [当场基线](docs/verification/t1094/RELATED_BASELINE_DIAGNOSIS.md) | T1094正式回归文章9FAIL/任务6FAIL；原main770037原测试同名同因复现。先核用户确认的联合创作入口、保存回读与组父归属，再独评是否修fixture或真实代码；原断言/owner不洗绿，不恢复已删快转入口。 |
 | T-1095 | 验证Pi联合创作必填nullable字段遵循与原任务恢复方法 | 📋 | — | — | [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) | 新task200首读空对象成功，模型propose实际{}、省略、省略，从未调用null；严格合同/JSONschema/Pi codec均正确。先核真实供应商schema和原回执，单次受控纠错方法，不堆提示、编快照ID、放宽合同或重发未知；未有候选不能签PASS。 |
 | T-1093 | 校准编导数字参数、联合首次读取与真实候选失败恢复 | 🔨 | PASS[REV:267bf399a6b1] | — | [SPEC](docs/features/t1093-director-method-recovery.md) | T1091真实安装6候选通过/2失败；Pi整数发字符串被拒后仍称就绪、联合首读猜错可省略digest。只改功能方法提示，不放宽schema/回执/owner/旧任务或重发未知；正式独评后RED/GREEN及新包真实Pi复验，旧失败保留。 |
