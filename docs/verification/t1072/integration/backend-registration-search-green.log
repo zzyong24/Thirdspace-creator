@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+ ❯ src/modules/publishing/publishing.service.test.ts (45 tests | 1 failed) 38354ms
+   × 手工登记索引失败保 published；同外部锚补偿原 ID 并使用准确目标账号 921ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/publishing/publishing.service.test.ts > 手工登记索引失败保 published；同外部锚补偿原 ID 并使用准确目标账号
+TypeError: Cannot read properties of undefined (reading 'limit')
+ ❯ Object.listPublicationsByOutput src/modules/publishing/publishing.repository.ts:323:21
+    321|         )
+    322|         .orderBy(desc(publications.createdAt))
+    323|         .limit(page.limit)
+       |                     ^
+    324|         .offset(page.offset);
+    325|     },
+ ❯ Object.listPublications src/modules/publishing/publishing.service.ts:814:27
+ ❯ src/modules/publishing/publishing.service.test.ts:1099:10
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 44 passed (45)
+   Start at  14:48:00
+   Duration  39.50s (transform 532ms, setup 0ms, import 990ms, tests 38.35s, environment 0ms)
+

@@ -51,3 +51,9 @@ Activity服务器移除后立即拒绝该设备验码和新票据。旧客户端
 验证原生协议、秘密隔离、签名拒绝、永久/月卡、错误产品、不重复占槽、保存失败原文件保留、resume与过期、前端单在途/卸载/失败恢复，完整配套required checks；本地真实HTTP跨仓链路与UI操作证据分开记录。正式Mac与Windows安装包各一台、已验证owner、首台/第二台/第三台替换/重启/返回刷新/离线限制是最终用户验收，fixture不能代替；未完成保留待验，不补写PASS。
 
 本任务不含push、发布、安装版替换、生产数据库或真实码/设备操作，候选与恢复方案完成后再按准确对象处理发布。
+
+## 2026-10-09 完整回归中既有实现遗漏修复
+
+用户授权完整功能测试工程，主控独立核对后确认：手工登记 `outputs.publications.register` 是已批准发布交接路径，成功的 publication 必须沿既有 SearchIndexPublication seam 立即在当前 workspace 视频搜索可见。当前代码只驱动项目已发布和 imported 收口，遗漏搜索投影。修复只在权威事务提交后以原 result.id/platform/accountReference 与现有 `entityType=publication` 形状 upsert；组/账号定位取正常 targetCtx，现有组合根继续映射 video。索引失败不回滚已成功发布事实，按同 external key 重复登记补偿原 ID，不新建发布、不改外部发布能力或 body/tags/URL 业务形状。
+
+真实 RED 为 integration/frontend-account-scope-green.log（正常身份及既有手工登记后，原搜索断言失败，13/14），需验证登记后立即搜索、索引失败后原发布仍 published、同锚重复登记恢复、跨 owner/workspace 不可见及原换锚防护。此项属于 required 全回归维修，不意味着真实双机/原生HTTP已验收。

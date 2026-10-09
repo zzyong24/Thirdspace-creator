@@ -1022,7 +1022,12 @@ export function createPublishingService(deps: ServiceDeps): PublishingService {
       if(existing&&existing.contentOutputId!==outputId)owners.set(existing.contentOutputId,await resolveOwner(ctx,existing.contentOutputId));
       const afterCommit:Array<()=>Promise<void>>=[];
       const result=await withTarget(targetCtx,input.platform,repo=>registerOwnerPublicationInRepo(targetCtx,outputId,input,repo,owners,afterCommit),false,[...owners].filter(([id,owner])=>id===outputId||owner!==null).map(([id])=>id));
-      for(const effect of afterCommit)await effect();return result;
+      for(const effect of afterCommit)await effect();
+      // 正式手工登记与同外部锚重试都补偿现有搜索投影；派生索引失败不撤销发布事实。
+      if(deps.searchIndex){
+        try{await deps.searchIndex(targetCtx,{entityType:"publication",entityId:result.id,title:`${result.platform} 发布`,body:result.accountReference});}catch{}
+      }
+      return result;
     },
 
     async listPublicationIdsByProject(ctx, projectId) {
