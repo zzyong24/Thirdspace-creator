@@ -79,7 +79,7 @@ it("公开创建素材经业务准备、真实Worker重试后公开采纳",async
  try{
   // 旧入口允许省略 kind，保持默认生图；这里不手工植入执行 payload。
   const task=await ai.createTask(ctx,{taskType:"asset.generate",inputData:{prompt:"公开任务原画面"}});
-  const prepared=await business.prepare(ctx,task.id);expect(prepared.legacy).toBeUndefined();host.start();
+  const prepared=await business.prepare(ctx,task.id);expect(prepared).not.toHaveProperty("legacy");expect(prepared).toMatchObject({aiTaskId:task.id,executionTaskId:expect.any(String)});host.start();
   await vi.waitFor(async()=>expect((await ai.getTask(ctx,task.id)).status).toBe("awaiting_confirmation"),{timeout:10000});
   expect(requests).toBe(2);expect(await ai.listResults(ctx,task.id)).toHaveLength(1);
   expect((await ai.confirmTask(ctx,task.id)).status).toBe("succeeded");expect((await ai.confirmTask(ctx,task.id)).status).toBe("succeeded");

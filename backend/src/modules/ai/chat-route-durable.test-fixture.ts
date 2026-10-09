@@ -41,6 +41,7 @@ export async function createRouteDurableFixture(){
   if(options.tool){
    const tool=options.tool;
    const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,ref.executionTaskId));
+   if(!execution)throw Error("真实提交执行任务不存在");
    const frozen=(execution.payload as {modelInput:{tools:Array<{name:string;version:string;effect:'none'|'proposal'|'committed';parameters:Record<string,unknown>;execution?:'host'|'worker.structured-node'|'worker.research'}>}}).modelInput;
    const definition=frozen.tools.find(item=>item.name===tool.name);if(!definition)throw Error('合成工具不在真实冻结白名单');
    const parameters=z.fromJSONSchema(definition.parameters);parameters.parse(tool.input);

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import {
   isStrongSignal,
   isNoiseSignal,
@@ -7,7 +7,51 @@ import {
   buildSignalQualityProfile,
   renderSignalQualityBrief,
 } from "./signal-quality";
-import { trendQualityFromDetail } from "./topic-task-adapter";
+import { workerSkillSnapshotSchema } from "@creatoros/contract/execution-worker";
+import type { ZodType } from "zod";
+import { modelFor, registerAllTemplates, getTemplate, runWithEffectiveSkillSnapshot } from "@creatoros/ai-worker";
+import { runTopicWorkerPipeline } from "../../../../ai-worker/src/execution/topic-worker-pipeline";
+import { topicGenerateFrozenSchema } from "../../../../ai-worker/src/execution/topic-worker-input";
+const { structuredNode, qualityObservation } = vi.hoisted(() => ({
+ qualityObservation: vi.fn<(trend: {sourceCount:number;signalCount:number})=>void>(),
+ structuredNode: vi.fn<(input: {facets: Record<string,string>; outputSchema: ZodType}) => Promise<{object: unknown}>>(),
+}));
+vi.mock("../../../../ai-worker/src/nodes/structured-node", () => ({runStructuredNode: structuredNode}));
+vi.mock("../../../../ai-worker/src/nodes/topic-signal-quality", async original => {
+ const actual=await original<typeof import("../../../../ai-worker/src/nodes/topic-signal-quality")>();
+ return {...actual,renderSignalQualityBrief:(profile:Parameters<typeof actual.renderSignalQualityBrief>[0])=>{
+  qualityObservation(profile.trend);return actual.renderSignalQualityBrief(profile);
+ }};
+});
+beforeEach(() => {
+ registerAllTemplates();
+ structuredNode.mockReset();qualityObservation.mockReset();
+ structuredNode.mockImplementation(async input => ({object: input.outputSchema.parse({topics: [{title: "真实计数选题"}]})}));
+});
+async function readActualTrendQuality(populated: boolean) {
+ const qualityProfile=buildSignalQualityProfile({signals:[],positioning:null,knowledge:[],trend:{sourceCount:0,signalCount:0},nowIso:"2026-10-09T00:00:00.000Z"});
+ const input=topicGenerateFrozenSchema.parse({version:1,basis:"trend",projectId:null,context:{positioningBrief:"真实定位",knowledgeBrief:"",learningsBrief:""},qualityNow:"2026-10-09T00:00:00.000Z",qualityInputs:{signals:[],positioning:null,knowledge:[]},qualityProfile,basisBrief:"",trendSources:[
+  {id:"source-a",name:"来源甲",url:"https://source-a.example/feed",domain:"source-a.example",sourceType:"rss"},
+  {id:"source-b",name:"来源乙",url:"https://source-b.example/feed",domain:"source-b.example",sourceType:"rss"},
+ ]});
+ const template=getTemplate("topic.generate");
+ await runWithEffectiveSkillSnapshot(workerSkillSnapshotSchema.parse({snapshotVersion:1,userId:"quality-owner",accountId:"quality-account",resolvedAt:input.qualityNow,platformPolicyVersion:"fixture-policy",platformPolicy:"真实计数边界",skills:[{
+  skillId:template.id,baseVersion:template.version,overlayRevision:null,overlayVersion:null,
+  effective:{methodSystem:template.system,template:template.template,tools:template.tools,requiredFacets:template.requiredFacets,contextRequirements:template.contextRequirements??[],outputSchema:null,completionPolicy:null,completionPolicyAdapter:null},
+ }]}),()=>runTopicWorkerPipeline(input,{
+  model:modelFor({apiFormat:"openai_chat",baseUrl:"http://127.0.0.1:1",model:"fixture",token:"fixture"}),
+  signal:new AbortController().signal,maxOutputTokens:1000,
+  read:async target=>{
+   if(target.kind==="search")return {kind:"search",results:populated?Array.from({length:4},(_,i)=>({title:`搜索${i}`,url:`https://search.example/${i}`,snippet:"真实搜索摘要"})):[]};
+   const source=input.trendSources.find(item=>item.id===target.sourceId);
+   if(!source)throw Error("来源不在真实冻结输入中");
+   return {kind:"rss",sourceUrl:source.url,title:source.name,text:populated?`<rss><channel>${Array.from({length:3},(_,i)=>`<item><title>条目${i}</title><link>${source.url}/${i}</link></item>`).join("")}</channel></rss>`:"<rss><channel/></rss>"};
+  },
+ }));
+ expect(structuredNode).toHaveBeenCalledTimes(1);
+ expect(qualityObservation).toHaveBeenCalledTimes(1);
+ return {trend:qualityObservation.mock.calls[0]![0],brief:structuredNode.mock.calls[0]![0].facets.signalQuality};
+}
 import type { SignalRow } from "./creative-context";
 
 // [T-238] 信号质量画像纯函数测试:评论强信号/噪声启发式、各源边界(空/满)、画像渲染、
@@ -193,27 +237,19 @@ describe("buildSignalQualityProfile(各源边界)", () => {
   });
 });
 
-describe("trendQualityFromDetail(热点画像指标派生)", () => {
-  it("distinct 信源名 + web 搜索算一路(有命中才算)", () => {
-    expect(
-      trendQualityFromDetail({
-        brief: "x",
-        sourceSignalCount: 6,
-        searchHitCount: 4,
-        sourceNameCount: 2,
-      }),
-    ).toEqual({ sourceCount: 3, signalCount: 10 });
+describe("当前topic Worker热点画像指标派生", () => {
+  it("distinct 信源名 + web 搜索算一路(有命中才算)", async () => {
+    const {brief,trend}=await readActualTrendQuality(true);
+    expect(trend).toEqual({sourceCount:3,signalCount:10});
+    expect(brief).toContain("热点信号:10 条(来自 3 路信源)");
+    expect(brief).toContain("多源佐证");
   });
-
-  it("两路全空 → 0/0", () => {
-    expect(
-      trendQualityFromDetail({
-        brief: "",
-        sourceSignalCount: 0,
-        searchHitCount: 0,
-        sourceNameCount: 0,
-      }),
-    ).toEqual({ sourceCount: 0, signalCount: 0 });
+  it("两路全空 → 0/0", async () => {
+    const {brief,trend}=await readActualTrendQuality(false);
+    expect(trend).toEqual({sourceCount:0,signalCount:0});
+    expect(brief).toContain("热点信号:本次未拉到实时信号");
+    expect(brief).toContain("不要声称候选基于实时热榜");
+    expect(brief).not.toContain("多源佐证");
   });
 });
 

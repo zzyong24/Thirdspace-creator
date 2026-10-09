@@ -5,7 +5,7 @@ import {detectCopilotMediaRoute,isScratchPositioningConversation} from "./chat-a
 import { parseSemanticVerbatimSelection } from "./chat-script-import-authorization";
 import { prepareChatTurn, prepareDurableChatTurn } from "./chat-turn-preparation";
 import { resolveChatMaxSteps, buildForcedToolInstruction } from "@creatoros/ai-worker/chat";
-import { describe, it, expect, vi, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 import {
   registerAllTemplates,
   runWithEffectiveSkillSnapshot,
@@ -21,12 +21,22 @@ import {
   type RequestContext,
 } from "@creatoros/contract";
 import type { ChatContext } from "./chat-context";
+import {createDb, type Db} from "@creatoros/backend";
+import {createAiRepository} from "../ai/ai.repository";
+import {createChatTurnSubmissionService} from "../ai/chat-turn-submission.service";
+import {createPersistentTaskService} from "../execution/persistent-task.service";
+import {createChatHostContextReader} from "../ai/chat-host-context.service";
+import {createChatIngestionTaskToolHost} from "./chat-ingestion-tool-host";
+import {runChatWebReadInWorker} from "../../../../ai-worker/src/execution/chat-web-read-worker";
+import {chatWorkerInputSchema} from "@creatoros/contract/execution-worker";
+import type {ReadResult} from "../../../../ai-worker/src/runtime/browser/web-reader";
 
-const ctx = {
+const ctx: RequestContext = {
   userId: "u-1",
   accountId: "acct-current",
-  correlationId: "c-1",
-} as never;
+  requestId: "c-1",
+  source: "user",
+};
 
 describe("[T-523] Copilot 媒体意图确定性路由", () => {
   it("只用最新一轮原文授权转写；历史轮次的转写要求不能污染普通分享", () => {
@@ -500,7 +510,7 @@ describe("prepareChatAssembly — 三层注入装配", () => {
       {
         snapshotVersion: 1,
         userId: "u-1",
-        accountId: "account-a",
+        accountId: ctx.accountId ?? null,
         resolvedAt: "2026-07-24T00:00:00.000Z",
         platformPolicyVersion: "policy-v1",
         platformPolicy: "平台规则",
@@ -552,7 +562,7 @@ describe("prepareChatAssembly — 三层注入装配", () => {
         {
           snapshotVersion: 1,
           userId: "u-1",
-          accountId: "account-a",
+          accountId: ctx.accountId ?? null,
           resolvedAt: "2026-08-11T00:00:00.000Z",
           platformPolicyVersion: "policy-v1",
           platformPolicy: "平台规则",
@@ -1502,61 +1512,59 @@ describe("Pi 显式工具指令", () => {
 
 // ── [T-239c S2] 长工具可中断:execute 第二参 abortSignal → 端口 signal(提前退出)────────
 describe("[T-239c] 长工具 signal 透传(material.screenshot / web.read)", () => {
-  it("material.screenshot:SDK callOptions.abortSignal 经工具 execute 透传到 captureScreenshotPort", async () => {
-    const captured: { signal?: AbortSignal } = {};
-    const captureScreenshotPort = vi.fn(
-      async (
-        _ctx: unknown,
-        input: { url: string; fullPage?: boolean; signal?: AbortSignal },
-      ) => {
-        captured.signal = input.signal;
-        return {
-          assetId: "as-1",
-          name: "截图·x",
-          previewUrl: null,
-          sourceUrl: input.url,
-        };
-      },
-    );
-    const { deps } = makeDeps({ captureScreenshotPort });
-    const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-    const tool = a.tools["material.screenshot"]! as { execute?: unknown };
-    const ac = new AbortController();
-    const exec = tool.execute as (i: unknown, o: unknown) => Promise<unknown>;
-    const res = (await exec(
-      { url: "https://example.com" },
-      { toolCallId: "tc", messages: [], context: {}, abortSignal: ac.signal },
-    )) as { kind: string; error: string | null };
-    expect(res.kind).toBe("material.screenshot");
-    expect(res.error).toBeNull();
-    // 端口收到的就是本轮请求的 abortSignal(用户点「停止」→ Playwright 层提前退出)。
-    expect(captured.signal).toBe(ac.signal);
+  let db: Db, close: () => Promise<void>, sequence=0;
+  beforeAll(async () => {const opened=await createDb();db=opened.db;close=()=>opened.client.close();});
+  afterAll(async () => {await close();});
+  async function currentTask(name:"material.screenshot"|"web.read") {
+    const {deps}=makeDeps(),snapshot=durableChatSnapshot(ctx.accountId!,"真实冻结方法");
+    snapshot.skills[0]!.effective.tools=[name];
+    const repo=createAiRepository(db,{...ctx,accountId:ctx.accountId??null,now:()=>new Date().toISOString(),nextId:(prefix:string)=>`${prefix}-signal-${++sequence}`});
+    const conversation=await repo.createConversation({title:`停止测试-${name}`,projectId:null,scope:"global"});
+    const message=await repo.createMessage(conversation.id,{role:"user",content:"读取授权来源",attachments:[],modelMetadata:{}});
+    const prepared=await prepareDurableChatTurn(ctx,{messages:[{id:message.id,role:"user",parts:[{type:"text",text:message.content}]}],chatContext:{surface:"topics"}},deps,snapshot,{workerWebRead:name==="web.read"});
+    // 只冻结此场景真实长动作定义；身份、历史摘要和宿主上下文均由正式submit绑定。
+    const tools=prepared.toolDefinitions.filter(tool=>tool.name===name);
+    const submission=await createChatTurnSubmissionService(db,{assemble:async()=>({capability:"copilot.assist",system:prepared.assembly.system,messages:chatWorkerInputSchema.shape.messages.parse(JSON.parse(JSON.stringify(prepared.modelMessages))),tools,maxSteps:4,maxOutputTokens:128,hostContext:prepared.hostContext})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:message.id});
+    const tasks=createPersistentTaskService(db),claim=await tasks.claimTask({taskId:submission.executionTaskId,workerId:"signal-test-worker"});
+    if(!claim)throw Error("真实长动作任务未取得租约");
+    const execution={executionTaskId:submission.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
+    return {tasks,submission,execution,reader:createChatHostContextReader(db)};
+  }
+  it("material.screenshot:正式冻结宿主 execute 的停止信号传给真实截图端口", async () => {
+    const f=await currentTask("material.screenshot"),controller=new AbortController();
+    const captureScreenshot=vi.fn(async (_owner:RequestContext,input:{url:string;fullPage?:boolean;signal?:AbortSignal})=>({assetId:"as-1",name:"截图·x",previewUrl:null,sourceUrl:input.url}));
+    const resolve=createChatIngestionTaskToolHost(f.reader,{captureScreenshot,dispatchProjectTranscribe:async()=>{throw Error("未授权转写");},dispatchDouyinShare:async()=>{throw Error("未授权分享");}});
+    const restored=await f.reader.read(f.execution),tools=await resolve(ctx,restored.modelInput,f.execution,controller.signal);
+    const tool=tools["material.screenshot"];
+    if(!tool?.execute)throw Error("真实截图工具未装配");
+    const res=await tool.execute(ctx,{url:"https://example.com"},{execution:f.execution,aiTaskId:f.submission.taskId,callId:"screenshot-call",toolCallId:"tc",signal:controller.signal});
+    expect(res.status).toBe("ok");
+    expect(res.data).toMatchObject({kind:"material.screenshot",error:null});
+    expect(captureScreenshot).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({userId:ctx.userId,accountId:ctx.accountId}),{url:"https://example.com",signal:controller.signal});
+    // 前置取消不得再次启动截图；保持既有取消admission门。
+    await expect(tool.execute(ctx,{url:"https://example.com"},{execution:f.execution,aiTaskId:f.submission.taskId,callId:"cancelled-screenshot",toolCallId:"tc2",signal:AbortSignal.abort()})).rejects.toMatchObject({name:"AbortError"});
+    expect(captureScreenshot).toHaveBeenCalledTimes(1);
   });
-
-  it("web.read:同款透传到 readWebUrlPort;端口抛 AbortError → 工具信封人话(不裸抛给 SDK)", async () => {
-    const captured: { signal?: AbortSignal } = {};
-    const readWebUrlPort = vi.fn(
-      async (_ctx: unknown, input: { url: string; signal?: AbortSignal }) => {
-        captured.signal = input.signal;
-        const err = new Error("已中断:用户停止了本轮对话,网页读取已取消。");
-        err.name = "AbortError";
-        throw err;
-      },
-    );
-    const { deps } = makeDeps({ readWebUrlPort });
-    const a = await prepareChatAssembly(ctx, { surface: "topics" }, deps);
-    const tool = a.tools["web.read"]! as { execute?: unknown };
-    const ac = new AbortController();
-    ac.abort();
-    const exec = tool.execute as (i: unknown, o: unknown) => Promise<unknown>;
-    const res = (await exec(
-      { url: "https://chatgpt.com/share/x" },
-      { toolCallId: "tc", messages: [], context: {}, abortSignal: ac.signal },
-    )) as { kind: string; error: string | null };
-    expect(captured.signal).toBe(ac.signal);
-    // 中断错误进结果信封(execute 内 catch 转人话),kind 不变 → 前端卡渲错误态不崩。
-    expect(res.kind).toBe("web.read");
-    expect(res.error).toContain("已中断");
+  it("web.read:真实Worker已启动读取后同signal取消，公开任务可回读停止且不结算假正文", async () => {
+    const f=await currentTask("web.read"),controller=new AbortController();
+    const readDocument=vi.fn(async (_url:string,scope:{callId:string;signal:AbortSignal}):Promise<ReadResult>=>{
+      expect(scope.signal).toBe(controller.signal);
+      await f.tasks.command(ctx,{taskIds:[f.execution.executionTaskId],command:"cancel",idempotencyKey:"signal-stop"});
+      controller.abort();throw new DOMException("网页读取已中断","AbortError");
+    });
+    const call=vi.fn(async(port:string)=>{
+      if(port==="prepareChatWebRead")return {url:"https://chatgpt.com/share/x",observation:null,evidenceRef:null};
+      if(port==="readChatWebReadCache")return {status:"miss"};
+      throw Error(`取消后不得调用 ${port}`);
+    });
+    await expect(runChatWebReadInWorker("web-call",controller.signal,{call,readDocument,searchers:async()=>[],hasSession:async()=>false})).rejects.toMatchObject({name:"AbortError"});
+    expect(readDocument).toHaveBeenCalledExactlyOnceWith("https://chatgpt.com/share/x",{callId:"web-call",signal:controller.signal});
+    expect(call.mock.calls.map(row=>row[0])).toEqual(["prepareChatWebRead","readChatWebReadCache"]);
+    await f.tasks.acknowledgeControl({taskId:f.execution.executionTaskId,workerId:"signal-test-worker",attempt:f.execution.attempt});
+    expect(await f.tasks.get(ctx,f.execution.executionTaskId)).toMatchObject({status:"cancelled"});
+    // 用户继续沿原公开任务读停止结果，Worker AbortError不伪装成功的网页卡片。
+    await expect(runChatWebReadInWorker("web-call",AbortSignal.abort(),{call,readDocument,searchers:async()=>[],hasSession:async()=>false})).rejects.toMatchObject({name:"AbortError"});
+    expect(readDocument).toHaveBeenCalledTimes(1);expect(call).toHaveBeenCalledTimes(2);
   });
 });
 
