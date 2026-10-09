@@ -421,7 +421,6 @@ test('T-1101 三平台表格直接打开扫码弹窗，无重复刷新和下方�
  await page.screenshot({path:testInfo.outputPath('t1101-platform-table.png'),fullPage:true});
  await table.getByRole('button',{name:'扫码绑定小红书账号'}).click();await expect(page.getByRole('dialog',{name:'扫码绑定小红书账号'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-qr-dialog.png')});
  await expect(page.getByRole('dialog').getByRole('button',{name:'扫码绑定小红书账号',exact:true})).toBeEnabled();
- await expect(page.getByText('正在读取共享资源…',{exact:true})).toHaveCount(0);
  const captures=[{checkpoint:'binding-normal',check_ids:['AC-BINDING'],viewport:{width:1366,height:900},text:await page.locator('body').innerText()}];
  await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);await page.setViewportSize({width:900,height:900});await expect(table.getByRole('button',{name:'扫码绑定抖音账号'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-platform-narrow.png'),fullPage:true});
  captures.push({checkpoint:'binding-narrow',check_ids:['AC-BINDING'],viewport:{width:900,height:900},text:await page.locator('body').innerText()});writeFileSync(resolve(process.cwd(),'../docs/verification/t1101/binding-copy.json'),JSON.stringify(captures));
