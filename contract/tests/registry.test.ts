@@ -110,6 +110,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/outputs/:outputId/production"],
   ["PUT", "/outputs/:outputId/production"],
   ["PUT", "/outputs/:outputId/production/editing-plan"],
+  // [T-881 / DEC-VIDEO-045] 按当前revision持久移除真实B-roll。
+  ["PUT", "/outputs/:outputId/production/editing-plan/broll/remove"],
   ["POST", "/productions/:productionId/segments"],
   // [T-051 2e] 章节列表读(时间线读真)。
   ["GET", "/productions/:productionId/segments"],
@@ -165,6 +167,10 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/notifications"],
   ["POST", "/notifications/:notificationId/read"],
   ["GET", "/settings"],
+  // [T-962] 本人独立RedFox integration密钥的状态/保存/删除，响应不回显secret。
+  ["GET", "/settings/redfox"],
+  ["PUT", "/settings/redfox"],
+  ["DELETE", "/settings/redfox"],
   // [T-051 2e] 偏好读 op(设置页初值读真)。
   ["GET", "/settings/preferences"],
   ["PATCH", "/settings/preferences"],
@@ -318,6 +324,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["GET", "/intelligence/items"],
   ["GET", "/intelligence/items/:itemId"],
   ["POST", "/intelligence/items/import-douyin-share"],
+  // [T-937 / DEC-RUNTIME-062] 原作品后台升级队列，T1017不覆盖。
+  ["POST", "/intelligence/projects/enqueue"],
   ["POST", "/intelligence/transcripts/enqueue"],
   ["POST", "/intelligence/transcripts/upload-manual"],
   ["POST", "/intelligence/transforms/topic-preview"],

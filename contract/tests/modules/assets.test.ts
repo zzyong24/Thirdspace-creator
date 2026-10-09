@@ -24,28 +24,45 @@ describe("assets contract", () => {
       extractStatus: null,
       materialSummary: null,
       extractedText: null,
+      // [T-813] image没有当前文件来源，投影诚实为null，不伪造URL。
+      sourceUrl: null,
       createdAt: "2026-06-06T02:00:00.000Z",
       updatedAt: "2026-06-06T02:00:00.000Z",
     });
     expect(a.assetType).toBe("image");
     expect(a.status).toBe("active");
+    expect(a.sourceUrl).toBeNull();
   });
 
   it("rejects an unknown asset status", () => {
-    expect(() =>
-      assetResource.parse({
-        id: "a",
-        userId: "u",
-        currentFileId: "f",
-        assetType: "image",
-        name: "n",
-        description: "",
-        status: "trashed", // not an Asset status member
-        deletedAt: null,
-        createdAt: "2026-06-06T02:00:00.000Z",
-        updatedAt: "2026-06-06T02:00:00.000Z",
-      }),
-    ).toThrow();
+    const invalid = {
+      id: "a",
+      userId: "u",
+      currentFileId: "f",
+      assetType: "image",
+      name: "n",
+      description: "",
+      status: "trashed", // not an Asset status member
+      isFavorite: false,
+      mimeType: "image/png",
+      fileSize: 245760,
+      width: 1920,
+      height: 1080,
+      durationMs: null,
+      extractStatus: null,
+      materialSummary: null,
+      extractedText: null,
+      sourceUrl: null,
+      deletedAt: null,
+      createdAt: "2026-06-06T02:00:00.000Z",
+      updatedAt: "2026-06-06T02:00:00.000Z",
+    };
+    // 只恢复合法status就能解析，证明此负控制没有被缺其它必需字段冒充。
+    expect(assetResource.safeParse({...invalid, status: "active"}).success).toBe(true);
+    expect(() => assetResource.parse(invalid)).toThrow();
+    const rejected = assetResource.safeParse(invalid);
+    expect(rejected.success).toBe(false);
+    if (!rejected.success) expect(rejected.error.issues.map(issue => issue.path)).toEqual([["status"]]);
   });
 
   it("registers the assets list + upload-complete endpoints with FR ids", () => {
