@@ -136,9 +136,46 @@
       "exitCode": 0,
       "elapsedSeconds": 0.2839329580019694,
       "logSha256": "9bd1250edac0f5561f62e73e66c58d9532ca444508fcc7afa63e7b501dce9d5b"
+    },
+    "publishing-real-tests": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/modules/publishing/publishing.repository.integration.test.ts",
+        "src/modules/publishing/publishing.contract.test.ts",
+        "src/modules/publishing/publishing.acceptance.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T04:57:01.125994+00:00",
+      "finishedAt": "2026-10-09T05:03:38.867200+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 397.7380214589939,
+      "logSha256": "436d08d5596d2c17684ac6818bf99cb9588dbcf6b007e65c6d230ab9b617e0ef"
     }
   },
   "taskComplete": false,
   "installed": false,
-  "fullReconcile": "本轮待执行；原42失败由T1018/T1081/T1082等保留"
+  "fullReconcile": "本轮待执行；原42失败由T1018/T1081/T1082等保留",
+  "publishingActualCoverage": {
+    "serviceOriginal": {
+      "files": 1,
+      "passed": 44
+    },
+    "supplementRealFiles": {
+      "files": 3,
+      "passed": 27
+    },
+    "totalRealFiles": 4,
+    "totalPassed": 71,
+    "scope": "两次真实执行的并集，非一次4文件命令；原不存在文件命令只算1文件44"
+  },
+  "independentReviewFinal": "docs/verification/t1107/IMPLEMENTATION_REVIEW_FINAL.json"
 }

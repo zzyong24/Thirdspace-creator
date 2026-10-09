@@ -1,0 +1,62 @@
+{
+  "reviewedAt": "2026-10-09T05:08:04.780460+00:00",
+  "head": "188c52c08a2a03ef0de926a2c8a496c54957ee11",
+  "verdict": "PASS_LIMITED_T1107_IMPLEMENTATION_AND_PUBLISHING_REGRESSION",
+  "sourceHashes": {
+    "docs/features/t1107-platform-public-regression.md": "73b1d7ab7235953252275c5228bcd7d3c59809e199c983a637a8fe3651871e74",
+    "orchestrator/process/modules.config.json": "d29f66c84728b3bf1a04c1a77638ceacaf477b3067ae0da941a8757853cac75e",
+    "frontend/src/server/__module_integration__/account-isolation.acceptance.test.ts": "0aea5e4c93b5b0b606e5083a4b0d91a1e40a4d95ebe599a0ba9b249373fd4d47",
+    "frontend/src/server/__module_integration__/platform-account.persistence-client.test.ts": "347588e5ce867019d130a49a60f8a5cd64389829e5a1065aabb67855361627da",
+    "backend/src/modules/publishing/publishing.service.test.ts": "f1e907c17f7d5d3dcbbe7c7865a4cfe07b41ff203b8a16a450d3def05f91647e",
+    "backend/src/modules/publishing/publishing.repository.integration.test.ts": "2bda4bc43efb742c7ba505aa530d528ada0ed339568083227a68fa2f1af881fc",
+    "backend/src/modules/publishing/publishing.contract.test.ts": "61186d7581505538b35f5cbbc0bc0a0efbae65ec75497cc006c10df7ea87d6a7",
+    "backend/src/modules/publishing/publishing.acceptance.test.ts": "b9841e2af39ffae799f29fd3ad79cf742484c4a52f2a7d4c862bc0af0112369a",
+    "backend/src/modules/publishing/publishing.repository.ts": "d81d5ec29ca293164ace45777a51d1c28269503e43ddd340f321f14f1cbfb54e",
+    "backend/src/modules/publishing/publishing.service.ts": "5c741ec2fa1924ca2035a9c953a79cc5f3a5f75e91754bd4ee25f8fba15b07e9",
+    "backend/src/modules/publishing/publishing.transport.ts": "569b4d4d67319ba3c6e7232c6397e497e4b42ebd11f40e70d41c33dddd2fa807",
+    "backend/src/workspace-scope.ts": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+  },
+  "evidence": {
+    "publicFocused": {
+      "jsonSha256": "48f74e354c6f1ec64a600ef479fc50fafc9e22a31ed0a79ad26903d78cb42a03",
+      "logSha256": "903d33996013e98a7b142f8b9faaa638a545e6c8ebba749360913bc63207808a",
+      "files": 3,
+      "tests": 24,
+      "skipped": 0,
+      "exitCode": 0
+    },
+    "publishingServiceHistoricalRun": {
+      "jsonSha256": "040248aa0f8db3e87b7f3151ddaef49fbe1d5320c9bfef6c152a97dc58bf78f1",
+      "logSha256": "c4552ac20cec1ff0120b190427256625d49de4d785df1b8b1bce7cbd651670cf",
+      "files": 1,
+      "tests": 44,
+      "exitCode": 0,
+      "note": "原错误argv保留；实际只运行service"
+    },
+    "publishingRealSupplement": {
+      "jsonSha256": "518ee7682d54631457973b4f7067dbb64786eb9172a1ec39a3cefb167b67f3e0",
+      "logSha256": "436d08d5596d2c17684ac6818bf99cb9588dbcf6b007e65c6d230ab9b617e0ef",
+      "files": 3,
+      "tests": 27,
+      "skipped": 0,
+      "exitCode": 0,
+      "elapsedSeconds": 397.7380214589939
+    },
+    "combinedPublishingCoverage": {
+      "files": 4,
+      "tests": 71
+    }
+  },
+  "findings": [
+    {
+      "id": "IMP-001",
+      "status": "resolved",
+      "resolution": "保留原不存在文件命令及1-file/44-test日志；新增真实repository.integration、contract、acceptance三文件实际3-file/27-test exit0，并修正modules绑定。与原service实际结果合计覆盖4文件71例。"
+    }
+  ],
+  "limitations": [
+    "未独立签署双端类型检查",
+    "未签署全局reconcile、安装或全仓",
+    "新增三文件结果不抹除原错误命令历史"
+  ]
+}
