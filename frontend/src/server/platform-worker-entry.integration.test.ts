@@ -28,6 +28,9 @@ describe("生产多平台创建入口",()=>{
     const server=createServer((req,res)=>{req.resume();requests++;res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"fixture",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:JSON.stringify(generated)},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));});
     await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));fixture.url=`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`;
     try{
+   // 账号与资源组先走正常公开创建，保留真实属主和平台守卫。
+   const account=await compositeTransport.request({id:"accounts.create"} as Endpoint,{body:{platform:"douyin",accountHandle:"@isolated-worker",followerBaseline:0}} as never,{...ctx,accountId:null}) as {data:{id:string}};
+   ctx.accountId=account.data.id;
       const project=await call("projects.create",undefined,{title:"隔离测试项目"});
       const output=await call("projects.outputs.create",{projectId:project.id},{title:"隔离测试作品"});
       const artifact=taskType!=="publish.platform_adapt" ? await call("artifacts.create",{projectId:project.id},{title:"结构方案",artifactType:taskType==="planning.contract" ? "content_contract" : "content_outline",stage:"planning"}) : null;

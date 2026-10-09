@@ -1,0 +1,45 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:21261) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21806) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:22266) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/__module_integration__/search-indexing.persistence-client.test.ts > 实体 create/update/delete 写搜索索引(全局搜索可用) > 5. 发布作品索引 entity_type='video',video 作品 tab 能搜到(tab 对齐)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/__module_integration__/search-indexing.persistence-client.test.ts (5 tests | 1 failed) 6468ms
+     × 5. 发布作品索引 entity_type='video',video 作品 tab 能搜到(tab 对齐) 1170ms
+(node:22520) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/__module_integration__/search-indexing.persistence-client.test.ts > 实体 create/update/delete 写搜索索引(全局搜索可用) > 5. 发布作品索引 entity_type='video',video 作品 tab 能搜到(tab 对齐)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/server/__module_integration__/search-indexing.persistence-client.test.ts:188:61
+    186|     // (entity_type='video'),而不是 tab 白名单外的 'publication' 类型(那样恒 0)。
+    187|     const data = await search(owner, "bilibili");
+    188|     expect(data.videos.some((v) => v.id === publicationId)).toBe(true);
+       |                                                             ^
+    189|     expect(tabCount(data, "video")).toBeGreaterThanOrEqual(1);
+    190|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 13 passed (14)
+   Start at  14:37:59
+   Duration  74.53s (transform 4.38s, setup 716ms, import 10.94s, tests 58.66s, environment 3.30s)
+

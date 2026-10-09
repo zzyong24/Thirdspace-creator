@@ -20,6 +20,9 @@ describe("生产复盘 Worker 入口与采纳",()=>{
   const server=createServer((req,res)=>{req.on("data",chunk=>{requestBody+=chunk.toString();});req.on("end",()=>{requests++;res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"fixture",object:"chat.completion",created:1,model:"review-fixture",choices:[{index:0,message:{role:"assistant",content:JSON.stringify(generated)},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));});});
   await new Promise<void>(r=>server.listen(0,"127.0.0.1",r));fixture.url=`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`;
   try{
+   // 账号与资源组先走正常公开创建，保留真实属主和平台守卫。
+   const account=await compositeTransport.request({id:"accounts.create"} as Endpoint,{body:{platform:"bilibili",accountHandle:"@isolated-worker",followerBaseline:0}} as never,{...ctx,accountId:null}) as {data:{id:string}};
+   ctx.accountId=account.data.id;
    const project=await call("projects.create",undefined,{title:"真实复盘项目"});const output=await call("projects.outputs.create",{projectId:project.id},{title:"真实作品"});
    const publication=await call("outputs.publications.register",{outputId:output.id},{platform:"bilibili",externalId:"BV-fixture-insights",externalUrl:"https://www.bilibili.com/video/BV-fixture-insights",title:"实际登记的作品",publishedAt:"2026-09-05T00:00:00.000Z"});
    const stamp=new Date().toISOString();await fixture.db!.insert(metricSnapshots).values({id:"fixture-metric",userId:ctx.userId,accountId:ctx.accountId,publicationId:publication.id,capturedAt:stamp,source:"manual",rawMetrics:{views:321,likes:23},createdAt:stamp});

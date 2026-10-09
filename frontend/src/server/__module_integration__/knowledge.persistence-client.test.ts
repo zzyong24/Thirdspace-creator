@@ -29,14 +29,20 @@ afterAll(() => {
 
 const ep = (id: string, isList = false) => ({ id, isList }) as unknown as Endpoint;
 // [T-332 S2] strict 账号门:知识库按号独立(SPEC C-01),ctx 必须带 accountId
-// (未选号 → AccountRequiredError,SPEC §4.2)。测试号按 userId 派生即可(composite
-// 层 ctx 可信,无需真建账号行);开箱空断言不受影响(该号下本就没有任何条目)。
+// (未选号 → AccountRequiredError,SPEC §4.2)。空读域可派生；写入必须正常创建账号。
 const ctx = (userId: string, accountId = `acct-of-${userId}`): RequestContext => ({
   userId,
   requestId: "req-test",
   source: "user",
   accountId,
 });
+// T-1022：写入前正常创建所属账号及其资源组，不伪造 legacy group 外键。
+async function createAccountContext(platform: "douyin" | "bilibili" = "douyin"): Promise<RequestContext> {
+  const owner = ctx(canonicalDataset.user.id);
+  const created = await compositeTransport.request(ep("accounts.create"), {body:{platform,accountHandle:"@isolated-index",followerBaseline:0}} as never, {...owner,accountId:null}) as {data:{id:string}};
+  return {...owner,accountId:created.data.id};
+}
+
 
 beforeEach(() => {
   __resetPersistenceForTests();
@@ -79,7 +85,7 @@ describe("knowledge ops registered in the composite transport", () => {
   });
 
   it("knowledge.create round-trips: the new item is then listable", async () => {
-    const owner = ctx(canonicalDataset.user.id);
+    const owner = await createAccountContext();
     const created = (await compositeTransport.request(
       ep("knowledge.create"),
       {

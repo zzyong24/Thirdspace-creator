@@ -8,6 +8,13 @@ import { canonicalDataset } from "@/fixtures/canonical";
 
 // 「全局搜索完全不可用」回归护栏(实测确诊:建项目/知识后 search_documents 空)。
 // 每条都走 compositeTransport(= /api/v1 route 与 server 读共享的同一 store,
+// T-1022：写入前正常创建所属账号及其资源组，不伪造 legacy group 外键。
+async function createAccountContext(platform: "douyin" | "bilibili" = "douyin"): Promise<RequestContext> {
+  const owner = ctx(canonicalDataset.user.id);
+  const created = await compositeTransport.request(ep("accounts.create"), {body:{platform,accountHandle:"@isolated-index",followerBaseline:0}} as never, {...owner,accountId:null}) as {data:{id:string}};
+  return {...owner,accountId:created.data.id};
+}
+
 // pages.search.get 由 query-services 模块接管),证明实体的 create/update/delete
 // 路径真写/删了 search_document、且 pages.search.get 能命中/失效。
 //
@@ -130,7 +137,7 @@ describe("实体 create/update/delete 写搜索索引(全局搜索可用)", () =
   });
 
   it("4. knowledge.create 后,pages.search.get 立刻命中 knowledge tab(await 消竞态)", async () => {
-    const owner = ctx(canonicalDataset.user.id);
+    const owner = await createAccountContext();
     const created = (await compositeTransport.request(
       ep("knowledge.create"),
       {
@@ -152,7 +159,7 @@ describe("实体 create/update/delete 写搜索索引(全局搜索可用)", () =
   });
 
   it("5. 发布作品索引 entity_type='video',video 作品 tab 能搜到(tab 对齐)", async () => {
-    const owner = ctx(canonicalDataset.user.id);
+    const owner = await createAccountContext("bilibili");
     // [T-326 DATA-H03] createPublication 有归属门,fixture output id 在 seeded 库不存在
     //   会被正确拒绝 —— 走真 op 链现建 project + output。
     const projectId = await createProject(owner, "视频tab探针项目", "简介");
@@ -167,27 +174,13 @@ describe("实体 create/update/delete 写搜索索引(全局搜索可用)", () =
     )) as { data: { id: string } };
     const outputId = outputCreated.data.id;
 
-    // 建 publication(draft)→ transition published。发布索引 title=`${platform} 发布`。
+    // 自动 publisher 尚未接通；用既有正式手工登记交接并触发同一搜索投影。
     const created = (await compositeTransport.request(
-      ep("outputs.publications.create"),
-      {
-        params: { outputId },
-        query: undefined,
-        body: { platform: "bilibili", accountReference: "@video-tab-probe" },
-      } as never,
+      ep("outputs.publications.register"),
+      {params:{outputId},body:{platform:"bilibili",externalId:"BV-isolated-index",externalUrl:"https://www.bilibili.com/video/BV-isolated-index",title:"bilibili 隔离搜索作品",publishedAt:"2026-09-05T00:00:00.000Z"}} as never,
       owner,
-    )) as { data: { id: string } };
-    const publicationId = created.data.id;
-
-    await compositeTransport.request(
-      ep("publications.transition"),
-      {
-        params: { publicationId },
-        query: undefined,
-        body: { status: "published" },
-      } as never,
-      owner,
-    );
+    )) as {data:{id:string}};
+    const publicationId=created.data.id;
 
     // 搜 "bilibili"(命中发布索引 title `bilibili 发布`)应落在 video tab
     // (entity_type='video'),而不是 tab 白名单外的 'publication' 类型(那样恒 0)。
