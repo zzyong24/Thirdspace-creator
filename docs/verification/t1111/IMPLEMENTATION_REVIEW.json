@@ -1,0 +1,44 @@
+{
+  "reviewedAt": "2026-10-09T06:03:01.665558+00:00",
+  "verdict": "PASS_LIMITED_PRIVATE_HELPER_IMPLEMENTATION",
+  "sourceHashes": {
+    "privateHelper": {
+      "before": "30453915117d8f037383d49af8fb684b48d20ba509ad1766bcc8e00b475790f6",
+      "current": "49c810e874c4ed156048cddcf2e53a87fcd789de62f797b74037268d3137a8f8"
+    },
+    "t1107FinalReport": "8b42a94efc503a5007181a744c0ac279f3cf6e5f0696f853e6a378cf475bebf6"
+  },
+  "findings": [],
+  "mechanicalDiff": {
+    "reconstructedBeforeMatches": true,
+    "changedBehavior": [
+      "exact T1107 limited-PASS verdict required",
+      "findings must be list",
+      "every item must be resolved and have non-empty string id/resolution"
+    ],
+    "emptyFindingsAllowed": true,
+    "otherHelperBytesUnchanged": true
+  },
+  "evidence": {
+    "originalFailure": {
+      "jsonSha256": "45587dd134fa715a32911d5322536ad70d7610cf22dde7f91561011cfd86aaf1",
+      "logSha256": "f03c26b90fa2379a7521ff4e4ba788a92b23433cedcddcb30692dea2fb608226",
+      "exitCode": 1
+    },
+    "green": {
+      "jsonSha256": "a8bb0f7083fee05abe052e6c2dfa27ab15812c1ddefb9e7e69d8b684a44e3faa",
+      "logSha256": "e63c2994141bdf056cc6e98d3f4c4cc5bec1c28519927e766ce5ae63ecb19393",
+      "exitCode": 0,
+      "elapsedSeconds": 1.6878728749870788,
+      "head": "94c801955f2e71ed9c07e2f8288764984b8028ef",
+      "reviewedSourceFilesUnchanged": 87,
+      "fourVersionsEqual": "1.2.0",
+      "worktreeClean": true,
+      "backupRequested": false
+    }
+  },
+  "limitations": [
+    "未运行任何命令或测试，本报告只读复核既有证据",
+    "未签基本4 suites、构建、安装或全局Gate"
+  ]
+}

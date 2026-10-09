@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "CHANGES_REQUIRED：私有helper对T1107有限PASS与resolved findings的校验设计正确，能保留原审计项并继续fail-closed；但当前modules.config.json没有T-1111任务绑定，尚不能在taskctl start前约束唯一私有修改、仓库控制写集和同一冻结入口复验。补精确模块后可recheck。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:9:ab6ba44d1f7c94b1",
+        "quote": "只改该私有辅助脚本对T1107报告的读取：verdict必须是这份已实际认可的有限PASS，findings必须数组；每一项必须明确status=resolved且有id和非空resolution，空数组也允许；open、缺字段、未知状态均拒绝。"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:11:85a1a3b41f08dd2f",
+        "quote": "写集：本机私有t1101-package/freeze-source.py；仓库只有本SPEC、BACKLOG、独评和真实验证收据。先独立只读核当前报告、原补验与设计，再taskctl start。"
+      },
+      "where": "orchestrator/process/modules.config.json",
+      "failure_mode": "当前 modules.config.json 不存在 T-1111 条目，taskctl start 前无法把私有 helper 的唯一行为修订、仓库控制写集和同一冻结入口复验绑定为任务包；因此不能机械阻止额外仓库路径或缺失真实复验。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:4010dd9eeb7ba433427d6d0d8e6343e472e58a2d22325af59f71b096dde210d3:orchestrator/process/modules.config.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:11:85a1a3b41f08dd2f",
+      "suggestion": "在正式 record/start 前增加 T-1111 精确模块绑定：产品/测试/构建脚本写集为空，仓库只允许本SPEC、评审/验证收据及必要控制文件；任务说明绑定私有 freeze-source.py 的单点修订和同一 freeze-preflight 重跑。不得改写或删除T1107原resolved finding。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

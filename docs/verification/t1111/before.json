@@ -1,0 +1,7 @@
+{
+  "beforeSha256": "30453915117d8f037383d49af8fb684b48d20ba509ad1766bcc8e00b475790f6",
+  "exactBeforeLine": "review7=json.loads((n.parent/'t1107/IMPLEMENTATION_REVIEW_FINAL.json').read_text());assert review7['findings']==[]",
+  "failureReceipt": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1101-package/freeze-preflight.json",
+  "productFilesChanged": false,
+  "helperNotModifiedYet": true
+}
