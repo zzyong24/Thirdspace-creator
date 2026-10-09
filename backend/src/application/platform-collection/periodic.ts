@@ -7,6 +7,7 @@ const RESUMABLE = new Set(["queued", "running", "partial"]);
 type Account = { id: string; platform: string; status: string };
 type Ports = {
   recoveryOnly?:boolean;
+  contextForAccount?(ctx:RequestContext,account:Account):Promise<RequestContext>;
   listAccounts(ctx: RequestContext, query: { limit: number; offset: number }): Promise<{ rows: Account[] }>;
   latestRun(ctx: RequestContext, accountId: string, capability: CollectionRunResource["capability"]): Promise<CollectionRunResource | null>;
   start(ctx: RequestContext, input: { accountId: string; capability: "workCatalog"; clientRequestId: string }): Promise<CollectionRunResource>;
@@ -28,13 +29,13 @@ export function createPeriodicPlatformCollection(ports: Ports) {
       for (let offset = 0; ; offset += 100) {
         const { rows } = await ports.listAccounts(ctx, { limit: 100, offset });
         for (const account of rows) {
-          if (account.status !== "active" || !["xiaohongshu", "kuaishou"].includes(account.platform)) continue;
+          if (account.status !== "active" || !(["xiaohongshu", "kuaishou"].includes(account.platform)||(ports.recoveryOnly&&["wechatOfficial","wechatVideo"].includes(account.platform)))) continue;
           if ((retryAfter.get(account.id) ?? 0) > nowMs) continue;
-          const scoped = { ...ctx, accountId: account.id };
           try {
+            const scoped = ports.contextForAccount?await ports.contextForAccount(ctx,account):{ ...ctx, accountId: account.id };
             if(ports.recoveryOnly){
-              const capabilities:CollectionRunResource['capability'][]=account.platform==='kuaishou'?['workCatalog','workMetrics','accountOverview']:['workCatalog','workMetrics'];
-              for(const capability of capabilities){const original=await ports.latestRun(scoped,account.id,capability);if(original&&RESUMABLE.has(original.status))ports.resume(scoped,original);}
+              const capabilities:CollectionRunResource['capability'][]=account.platform==='wechatOfficial'||account.platform==='wechatVideo'?['nativeReports']:account.platform==='kuaishou'?['workCatalog','workMetrics','accountOverview']:['workCatalog','workMetrics'];
+              for(const capability of capabilities){const original=await ports.latestRun(scoped,account.id,capability);if(original&&RESUMABLE.has(original.status)&&!(capability==='nativeReports'&&original.status==='partial'&&original.reasonCode==='TASK_TIMEOUT'))ports.resume(scoped,original);}
               continue;
             }
             const latest = await ports.latestRun(scoped, account.id, "workCatalog");

@@ -3,17 +3,18 @@ import { and, or, asc, desc, eq, lt, inArray, count, isNotNull } from "drizzle-o
 import type { Db } from "../../db";
 import type { RequestContext, CollectionPageCommit, CollectionRunResource, PlatformCapabilityState } from "@creatoros/contract";
 import { collectionPageCommit, collectionStartRequest, platformWorksListQuery, platformMetricsReadQuery,
-  platformBindBeginRequest, platformBindConfirmRequest, platformId, platformCapability } from "@creatoros/contract";
+  platformNativeReportsListQuery, platformBindBeginRequest, platformBindConfirmRequest, platformId, platformCapability } from "@creatoros/contract";
 import { platformAccounts } from "../../schema/platform-account";
 import { publications } from "../../schema/publishing";
 import { projects, contentOutputs } from "../../schema/projects";
 import {
   platformCollectionBindings, platformCollectionRuns, platformCollectionPages,
   platformCatalogs, platformWorks, platformVisibilityTombstones,
-  platformAccountMetricSnapshots, platformWorkMetricSnapshots, platformBindAttempts,
+  platformAccountMetricSnapshots, platformWorkMetricSnapshots, platformBindAttempts, platformNativeReports,
 } from "../../schema/platform-collection";
 
-type Capability = "accountOverview" | "workCatalog" | "workMetrics";
+type Capability = "accountOverview" | "workCatalog" | "workMetrics" | "nativeReports";
+type NativeOwner={userId:string;accountId:string|null;groupId:string|null;groupVersion:number|null;membershipVersion:number|null};
 type MetricMapping = { metricKey: string; unit: "count" };
 type SourceWork = CollectionPageCommit["works"][number];
 type SourceMetric = CollectionPageCommit["accountMetrics"][number];
@@ -53,6 +54,7 @@ export interface PlatformCollectionServiceDeps {
   revokeTemporaryProfile?: (bindAttemptId: string, attempt: {
     userId: string; platform: string; platformIdentity: string | null; status: string;
   }) => Promise<void>;
+  nativeReportOwnership?: {freeze(tx:BindingTx,ctx:RequestContext,accountId:string):Promise<NativeOwner>;assert(tx:BindingTx,frozen:NativeOwner):Promise<void>};
   // Platform adapters provide an explicit, reviewed field dictionary. Unknown fields are rejected.
   metricDictionary?: Record<string, Record<string, MetricMapping>>;
   // Only verified source classes receive a trust priority. Unknown evidence remains local and frozen.
@@ -68,6 +70,8 @@ export function computeProbeDigest(probe: { requestCursor: string; nextCursor: s
   recordIds: string[]; observedAt: string }) {
   return `sha256:${digest(probe)}`;
 }
+// SEMANTIC_BOUNDARY_ALLOW: JSON字段排序只用于原生证据幂等，不匹配作品或解释内容。
+function stableNativeEvidence(value:unknown):string {if(Array.isArray(value))return `[${value.map(stableNativeEvidence).join(",")}]`;if(value&&typeof value==="object")return `{${Object.keys(value).sort().map(k=>`${JSON.stringify(k)}:${stableNativeEvidence((value as Record<string,unknown>)[k])}`).join(",")}}`;return JSON.stringify(value);}
 const isPrivate = (visibility: string) => visibility !== "public";
 
 export function createPlatformCollectionService(deps: PlatformCollectionServiceDeps) {
@@ -129,7 +133,7 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
   // Trusted adapter port only. A public caller cannot provide identity/proof to bindConfirm.
   async function recordVerifiedIdentity(proof: TrustedPlatformIdentityProof) {
     if (!proof.platformIdentity || !proof.proofSource ||
-      !proof.scopes.length || proof.scopes.some(scope => !["accountOverview", "workCatalog", "workMetrics"].includes(scope)) ||
+      !proof.scopes.length || proof.scopes.some(scope => !["accountOverview", "workCatalog", "workMetrics", "nativeReports"].includes(scope)) ||
       !Number.isFinite(Date.parse(proof.verifiedAt)) || Date.parse(proof.verifiedAt) > Date.parse(now()) ||
       (proof.expiresAt !== null && expired(proof.expiresAt))) {
       deny("WRONG_PLATFORM_IDENTITY", "平台身份证明无效");
@@ -161,7 +165,7 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
 
   /** 内部受信端口：沿调用者现有事务登记同一真实账号的身份授权，不创建第二绑定尝试。 */
   async function commitVerifiedBinding(tx:BindingTx,ctx:RequestContext,input:{accountId:string;platform:string;platformIdentity:string;proofSource:string;scopes:Capability[];verifiedAt:string;expiresAt:string|null},adapterAlreadyVerified=false):Promise<void>{
-    if(!input.platformIdentity||!input.proofSource||!input.scopes.length||input.scopes.some(scope=>!["accountOverview","workCatalog","workMetrics"].includes(scope))||!Number.isFinite(Date.parse(input.verifiedAt))||Date.parse(input.verifiedAt)>Date.parse(now())||(input.expiresAt!==null&&expired(input.expiresAt)))deny("WRONG_PLATFORM_IDENTITY","平台身份证明无效");
+    if(!input.platformIdentity||!input.proofSource||!input.scopes.length||input.scopes.some(scope=>!["accountOverview","workCatalog","workMetrics","nativeReports"].includes(scope))||!Number.isFinite(Date.parse(input.verifiedAt))||Date.parse(input.verifiedAt)>Date.parse(now())||(input.expiresAt!==null&&expired(input.expiresAt)))deny("WRONG_PLATFORM_IDENTITY","平台身份证明无效");
     // 旧begin已验证端口；confirm保留其既有完成语义，不因后来的能力状态变化反杀真实身份证明。
     if(!adapterAlreadyVerified)assertAdapterReady(input.platform,"bind");
     const [existing]=await tx.select().from(platformCollectionBindings).where(and(eq(platformCollectionBindings.userId,ctx.userId),eq(platformCollectionBindings.platform,input.platform),eq(platformCollectionBindings.platformIdentity,input.platformIdentity))).for("update");
@@ -257,6 +261,17 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
     return account;
   }
 
+  async function freezeNativeOwner(tx:BindingTx,ctx:RequestContext,accountId:string){
+    if(!deps.nativeReportOwnership||!ctx.groupId)deny("FORBIDDEN_ACCOUNT","请选择该账号所在的账号组");
+    const frozen=await deps.nativeReportOwnership.freeze(tx,ctx,accountId);
+    if(frozen.userId!==ctx.userId||frozen.accountId!==accountId||frozen.groupId!==ctx.groupId||frozen.groupVersion===null||frozen.membershipVersion===null)deny("FORBIDDEN_ACCOUNT","无法确认当前账号归属");
+    return frozen;
+  }
+  async function assertNativeRunOwner(tx:BindingTx,run:typeof platformCollectionRuns.$inferSelect){
+    if(!deps.nativeReportOwnership||!run.groupId||run.groupVersion===null||run.membershipVersion===null)deny("FORBIDDEN_ACCOUNT","无法确认这次采集的原账号归属");
+    await deps.nativeReportOwnership.assert(tx,{userId:run.userId,accountId:run.accountId,groupId:run.groupId,groupVersion:run.groupVersion,membershipVersion:run.membershipVersion});
+  }
+
   function toStatus(run: typeof platformCollectionRuns.$inferSelect): CollectionRunResource {
     return {
       attemptId: run.id, accountId: run.accountId, capability: run.capability as Capability,
@@ -316,11 +331,22 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
     }
     await releaseTerminatedScheduledRuns(ctx, input.accountId);
     return db.transaction(async tx => {
+      const frozen=input.capability==="nativeReports"?await freezeNativeOwner(tx,ctx,input.accountId):null;
       const [existing] = await tx.select().from(platformCollectionRuns).where(and(
         eq(platformCollectionRuns.userId, ctx.userId), eq(platformCollectionRuns.accountId, input.accountId),
         eq(platformCollectionRuns.capability, input.capability), eq(platformCollectionRuns.clientRequestId, input.clientRequestId),
       ));
-      if (existing) return toStatus(existing);
+      if (existing) {
+        if(input.capability==="nativeReports"){
+          await assertNativeRunOwner(tx,existing);
+          // A new scan re-verifies the same account; resume the original manual attempt.
+          const scheduled=existing.clientRequestId.startsWith("scheduled-");
+          if(!scheduled&&existing.status==="needsAuth"&&Date.parse(binding.verifiedAt)>Date.parse(existing.updatedAt)){
+            const [resumed]=await tx.update(platformCollectionRuns).set({status:"partial",reasonCode:"AUTH_REVERIFIED",updatedAt:now()}).where(eq(platformCollectionRuns.id,existing.id)).returning();return toStatus(resumed!);
+          }
+        }
+        return toStatus(existing);
+      }
       const [active] = await tx.select().from(platformCollectionRuns).where(and(
         eq(platformCollectionRuns.accountId, input.accountId), eq(platformCollectionRuns.capability, input.capability),
         inArray(platformCollectionRuns.status, ["queued", "running"]),
@@ -331,6 +357,7 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
         id: nextId("collection"), userId: ctx.userId, accountId: input.accountId,
         platform: account.platform, platformIdentity: binding.platformIdentity,
         capability: input.capability, clientRequestId: input.clientRequestId,
+        ...(frozen?{groupId:frozen.groupId,groupVersion:frozen.groupVersion,membershipVersion:frozen.membershipVersion}:{}),
         status: "queued", generation: 1, startedAt: t, updatedAt: t,
       }).onConflictDoNothing().returning();
       if (run) return toStatus(run);
@@ -347,6 +374,8 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
     if (!workerId) deny("LEASE_EXPIRED", "缺少 Worker 身份");
     await expireRunLease(attemptId);
     return db.transaction(async tx => {
+      const [original]=await tx.select().from(platformCollectionRuns).where(eq(platformCollectionRuns.id,attemptId));
+      if(original?.capability==="nativeReports")await assertNativeRunOwner(tx,original);
       const [run] = await tx.select().from(platformCollectionRuns).where(eq(platformCollectionRuns.id, attemptId)).for("update");
       if (!run || !["queued", "running", "partial"].includes(run.status)) deny("GENERATION_STALE", "采集任务不可领取");
       const [other] = await tx.select().from(platformCollectionRuns).where(and(
@@ -361,7 +390,7 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
       await tx.update(platformCollectionRuns).set({ status: "running", generation, leaseToken,
         leaseExpiresAt, committedPages: 0, sourceSnapshotKey: null, updatedAt: now(), reasonCode: null,
       }).where(eq(platformCollectionRuns.id, attemptId));
-      return { attemptId, accountId: run.accountId, platform: run.platform,
+      return { attemptId, accountId: run.accountId, platform: platformId.parse(run.platform),
         expectedPlatformIdentity: run.platformIdentity, capability: run.capability as Capability,
         generation, leaseToken, leaseExpiresAt };
     });
@@ -383,6 +412,7 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
     const [run] = await db.select().from(platformCollectionRuns).where(and(eq(platformCollectionRuns.id, attemptId),
       eq(platformCollectionRuns.accountId, accountId), eq(platformCollectionRuns.userId, ctx.userId)));
     if (!run) deny("FORBIDDEN_ACCOUNT", "采集任务不属于当前账号");
+    if(run.capability==="nativeReports")await db.transaction(async tx=>{await freezeNativeOwner(tx,ctx,accountId);if(run.groupId!==ctx.groupId)deny("FORBIDDEN_ACCOUNT","任务属于其他账号组");await assertNativeRunOwner(tx,run);});
     await expireRunLease(attemptId, { userId: ctx.userId, accountId });
     const [current] = await db.select().from(platformCollectionRuns).where(and(
       eq(platformCollectionRuns.id, attemptId), eq(platformCollectionRuns.accountId, accountId),
@@ -398,6 +428,7 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
       eq(platformCollectionRuns.accountId, accountId),
       eq(platformCollectionRuns.capability, capability),
     )).orderBy(desc(platformCollectionRuns.startedAt), desc(platformCollectionRuns.id)).limit(1);
+    if(run?.capability==="nativeReports")await db.transaction(async tx=>{await freezeNativeOwner(tx,ctx,accountId);if(run.groupId!==ctx.groupId)deny("FORBIDDEN_ACCOUNT","任务属于其他账号组");await assertNativeRunOwner(tx,run);});
     return run ? toStatus(run) : null;
   }
 
@@ -409,8 +440,12 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
     // SEMANTIC_BOUNDARY_ALLOW: 解析内部幂等请求协议和父任务ID，不做语义分类。
     if(row.capability==='workMetrics'&&row.clientRequestId.endsWith('-metrics'))row=await read(row.clientRequestId.slice(0,-8));
     else if(row.capability==='accountOverview'&&row.clientRequestId.endsWith('-overview'))row=await read(row.clientRequestId.slice(0,-9));
-    const key=row?.capability==='workCatalog'?row.clientRequestId:'';
-    const taskId=key.startsWith('scheduled-')&&key.endsWith('-catalog')?key.slice(10,-8):null;
+    if(row?.capability==='nativeReports'){
+      await db.transaction(async tx=>{await freezeNativeOwner(tx,ctx,accountId);if(row!.groupId!==ctx.groupId)deny('FORBIDDEN_ACCOUNT','任务属于其他账号组');await assertNativeRunOwner(tx,row!);});
+    }
+    const key=row?.clientRequestId??'';
+    const suffix=row?.capability==='workCatalog'?'-catalog':row?.capability==='nativeReports'?'-reports':null;
+    const taskId=suffix&&key.startsWith('scheduled-')&&key.endsWith(suffix)?key.slice(10,-suffix.length):null;
     return taskId&&await deps.readScheduledOwner?.(ctx,taskId,accountId)?taskId:null;
   }
 
@@ -427,6 +462,8 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
       const owner=await deps.readScheduledOwner(ctx,taskId,accountId);
       if(owner?.status==='cancelled')await cancel(ctx,accountId,row.id);
       else if(owner?.status==='failed')await db.transaction(async tx=>{
+        const [original]=await tx.select().from(platformCollectionRuns).where(eq(platformCollectionRuns.id,row.id));
+        if(original?.capability==='nativeReports'){await freezeNativeOwner(tx,ctx,accountId);if(original.groupId!==ctx.groupId)deny('FORBIDDEN_ACCOUNT','任务属于其他账号组');await assertNativeRunOwner(tx,original);}
         const [run]=await tx.select().from(platformCollectionRuns).where(and(eq(platformCollectionRuns.id,row.id),eq(platformCollectionRuns.userId,ctx.userId),eq(platformCollectionRuns.accountId,accountId))).for('update');
         if(!run||!['queued','running'].includes(run.status))return;
         await tx.update(platformCollectionRuns).set({status:'partial',generation:run.generation+1,leaseToken:null,leaseExpiresAt:null,reasonCode:'OWNER_FAILED',updatedAt:now()}).where(eq(platformCollectionRuns.id,row.id));
@@ -437,13 +474,15 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
   /** 只读凭据证明供旧绑定升级补计划；手填外部ID不构成授权。 */
   async function hasCredentialEvidence(ctx:RequestContext,accountId:string):Promise<boolean>{
     const account=await ownedAccount(ctx,accountId);const [binding]=await db.select().from(platformCollectionBindings).where(and(eq(platformCollectionBindings.accountId,accountId),eq(platformCollectionBindings.userId,ctx.userId)));
-    return !!binding&&binding.platform===account.platform&&binding.platformIdentity===account.externalAccountId&&!binding.revokedAt&&(!binding.expiresAt||!expired(binding.expiresAt))&&['workCatalog','workMetrics'].every(scope=>binding.scopes.includes(scope));
+    return !!binding&&binding.platform===account.platform&&binding.platformIdentity===account.externalAccountId&&!binding.revokedAt&&(!binding.expiresAt||!expired(binding.expiresAt))&&(account.platform==='wechatOfficial'||account.platform==='wechatVideo'?['nativeReports']:['workCatalog','workMetrics']).every(scope=>binding.scopes.includes(scope));
   }
   /** 原调度任务在重新扫码核验后恢复原run；被取消任务与旧证明不能被动重启。 */
   async function resumeScheduledAuthorization(ctx:RequestContext,accountId:string,attemptId:string,taskId:string):Promise<void>{
     if(await scheduledOwnerTaskId(ctx,accountId,attemptId)!==taskId)deny('FORBIDDEN_ACCOUNT','采集恢复必须属于原调度任务');
     const account=await ownedAccount(ctx,accountId);
     await db.transaction(async tx=>{
+      const [original]=await tx.select().from(platformCollectionRuns).where(eq(platformCollectionRuns.id,attemptId));
+      if(original?.capability==='nativeReports'){await freezeNativeOwner(tx,ctx,accountId);if(original.userId!==ctx.userId||original.accountId!==accountId||original.groupId!==ctx.groupId)deny('FORBIDDEN_ACCOUNT','任务属于其他账号组');await assertNativeRunOwner(tx,original);}
       const [run]=await tx.select().from(platformCollectionRuns).where(and(eq(platformCollectionRuns.id,attemptId),eq(platformCollectionRuns.userId,ctx.userId),eq(platformCollectionRuns.accountId,accountId))).for('update');
       if(!run||run.status!=='needsAuth')return;
       const [binding]=await tx.select().from(platformCollectionBindings).where(and(eq(platformCollectionBindings.accountId,accountId),eq(platformCollectionBindings.userId,ctx.userId)));
@@ -455,6 +494,8 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
   async function cancel(ctx: RequestContext, accountId: string, attemptId: string): Promise<CollectionRunResource> {
     await ownedAccount(ctx, accountId);
     return db.transaction(async tx => {
+      const [original]=await tx.select().from(platformCollectionRuns).where(eq(platformCollectionRuns.id,attemptId));
+      if(original?.capability==="nativeReports"){await freezeNativeOwner(tx,ctx,accountId);if(original.userId!==ctx.userId||original.accountId!==accountId||original.groupId!==ctx.groupId)deny("FORBIDDEN_ACCOUNT","任务属于其他账号组");await assertNativeRunOwner(tx,original);}
       const [run] = await tx.select().from(platformCollectionRuns).where(and(eq(platformCollectionRuns.id, attemptId),
         eq(platformCollectionRuns.accountId, accountId), eq(platformCollectionRuns.userId, ctx.userId))).for("update");
       if (!run) deny("FORBIDDEN_ACCOUNT", "采集任务不属于当前账号");
@@ -491,6 +532,7 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
       deny("LEASE_EXPIRED", "采集租约已超时，目录保持上一完整版本");
     }
     return db.transaction(async tx => {
+      if(page.capability==="nativeReports"){const [original]=await tx.select().from(platformCollectionRuns).where(eq(platformCollectionRuns.id,page.attemptId));if(!original)deny("GENERATION_STALE","采集任务不存在");await assertNativeRunOwner(tx,original);}
       const [run] = await tx.select().from(platformCollectionRuns).where(eq(platformCollectionRuns.id, page.attemptId)).for("update");
       if (!run || run.generation !== page.generation || run.status !== "running") deny("GENERATION_STALE", "采集世代已失效");
       if (run.leaseToken !== page.leaseToken || !run.leaseExpiresAt || expired(run.leaseExpiresAt)) deny("LEASE_EXPIRED", "采集租约已失效");
@@ -505,6 +547,8 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
       if (page.scanPass === 2 && page.sourceSnapshotKey !== null) deny("INCOMPLETE_CATALOG", "稳定快照不需要二次扫描");
       if (page.hasMore && (!page.nextCursor || page.nextCursor === page.requestCursor)) deny("INCOMPLETE_CATALOG", "目录游标未前进");
       if (!page.hasMore && page.terminalEvidence?.kind === "platformHasMoreFalse" && page.nextCursor !== null) deny("INCOMPLETE_CATALOG", "平台明确终页不能带下一游标");
+      const nativeReports=page.capability==="nativeReports"?page.nativeReports:[];
+      if(nativeReports.some(r=>r.platform!==run.platform))deny("WRONG_PLATFORM_IDENTITY","报表平台与绑定账号不一致");
       const metricRecords = page.capability === "accountOverview" ? page.accountMetrics : page.workMetrics;
       for (const metric of metricRecords) {
         const mapping = deps.metricDictionary?.[page.platform]?.[metric.sourceField];
@@ -517,7 +561,7 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
       }
       // The backend hashes the full accepted payload. The adapter's pageDigest is informational,
       // never an authority for deciding whether a replay changed its contents.
-      const payloadDigest = digest({ works: page.works, metrics: metricRecords, observedAt: page.observedAt,
+      const payloadDigest = digest({ ...(page.capability==="nativeReports"?{nativeReports}:{}),works: page.works, metrics: metricRecords, observedAt: page.observedAt,
         sourceSnapshotKey: page.sourceSnapshotKey, hasMore: page.hasMore, requestCursor: page.requestCursor,
         nextCursor: page.nextCursor, platformReportedTotal: page.platformReportedTotal,
         totalSource: page.totalSource, totalObservedAt: page.totalObservedAt,
@@ -565,6 +609,14 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
         payloadDigest, hasMore: page.hasMore ? 1 : 0, recordIds: page.works.map(w => w.externalId),
         works: page.works, metrics: metricRecords, observedAt: page.observedAt, createdAt: now(),
       });
+      for(const report of nativeReports){
+        // SEMANTIC_BOUNDARY_ALLOW: 原生文件去重按明确日期选择协议，不做作品或内容匹配。
+        const {startDate,endDate,timeZone,meaning}=report.selection;
+        const selectionKey=createHash('sha256').update(JSON.stringify([startDate,endDate,timeZone,meaning])).digest('hex');
+        const [prior]=await tx.select().from(platformNativeReports).where(and(eq(platformNativeReports.userId,run.userId),eq(platformNativeReports.groupId,run.groupId!),eq(platformNativeReports.accountId,run.accountId),eq(platformNativeReports.platform,run.platform),eq(platformNativeReports.kind,report.kind),eq(platformNativeReports.sha256,report.sha256),eq(platformNativeReports.selectionKey,selectionKey)));
+        if(prior&&stableNativeEvidence(prior.payload)!==stableNativeEvidence(report))deny("PAGE_DIGEST_CONFLICT","同一原生报表证据内容冲突");
+        if(!prior)await tx.insert(platformNativeReports).values({id:nextId("native-report"),userId:run.userId,groupId:run.groupId!,accountId:run.accountId,membershipVersion:run.membershipVersion!,platform:run.platform,kind:report.kind,sha256:report.sha256,selectionKey,payload:report,observedAt:page.observedAt,ingestedAt:now()});
+      }
       // Visibility is a safety watermark independent of catalog publication.
       for (const work of page.works) {
         const priority = deps.visibilitySourcePriority?.[work.visibility.source];
@@ -743,6 +795,19 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
       return { attemptId: run.id, generation: run.generation, scanPass: page.scanPass,
         pageIndex: page.pageIndex, disposition: "accepted" as const, nextCursor: page.nextCursor,
         completeCatalogGeneration };
+    });
+  }
+
+  async function listNativeReports(ctx:RequestContext,raw:unknown){
+    const query=platformNativeReportsListQuery.parse(raw);await ownedAccount(ctx,query.accountId);
+    const offset=query.cursor===null?0:Number(query.cursor);
+    if(!Number.isSafeInteger(offset)||offset<0)deny("INCOMPLETE_CATALOG","无效分页位置");
+    return db.transaction(async tx=>{
+      const frozen=await freezeNativeOwner(tx,ctx,query.accountId);
+      const scope=and(eq(platformNativeReports.userId,ctx.userId),eq(platformNativeReports.groupId,frozen.groupId!),eq(platformNativeReports.accountId,query.accountId));
+      const [total]=await tx.select({value:count()}).from(platformNativeReports).where(scope);
+      const rows=await tx.select().from(platformNativeReports).where(scope).orderBy(desc(platformNativeReports.observedAt),desc(platformNativeReports.id)).offset(offset).limit(query.pageSize);
+      return {items:rows.map(({payload,kind:_kind,platform:_platform,sha256:_sha,selectionKey:_selection,...resource})=>({...payload,...resource})),total:total?.value??0,nextCursor:offset+rows.length<(total?.value??0)?String(offset+rows.length):null};
     });
   }
 
@@ -928,6 +993,6 @@ export function createPlatformCollectionService(deps: PlatformCollectionServiceD
   }
 
   return { commitVerifiedBinding, listCapabilities, bindBegin, recordVerifiedIdentity, bindConfirm, bindCancel, retryBindCleanup,
-    start, claim, renewLease, sweepExpiredLeases, status, latestRun, scheduledOwnerTaskId, releaseTerminatedScheduledRuns, hasCredentialEvidence, resumeScheduledAuthorization, cancel, failRun, commitPage, listWorks, readMetrics,
+    start, claim, renewLease, sweepExpiredLeases, status, latestRun, scheduledOwnerTaskId, releaseTerminatedScheduledRuns, hasCredentialEvidence, resumeScheduledAuthorization, cancel, failRun, commitPage, listWorks, readMetrics, listNativeReports,
     recordConfirmedLegacyImport };
 }

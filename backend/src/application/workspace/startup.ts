@@ -23,7 +23,7 @@ export async function runAccountGroupStartup(ctx:RequestContext,ports:{
      for(const [stage,work] of [['知识预设',ports.seedGroup],['共享任务',ports.ensureSharedJobs]] as const){try{await work(shared);}catch(error){ports.warn(stage,error,account.id);}}
     }
     // 平台真实能力与账号凭据分别验证；每个平台只补齐已实现的私有任务。
-    if(['douyin','kuaishou','xiaohongshu'].includes(account.platform)&&capabilities.some(row=>row.platform===account.platform&&row.collect.available)&&await ports.hasCredentialEvidence(scoped,account))await ports.ensurePrivateJobs(scoped,account);
+    if(['douyin','kuaishou','xiaohongshu','wechatVideo','wechatOfficial'].includes(account.platform)&&capabilities.some(row=>row.platform===account.platform&&row.collect.available)&&await ports.hasCredentialEvidence(scoped,account))await ports.ensurePrivateJobs(scoped,account);
    }catch(error){ports.warn('账号启动',error,account.id);}
   }
   if(offset+page.rows.length>=page.total||page.rows.length===0)break;

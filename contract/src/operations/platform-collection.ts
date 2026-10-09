@@ -7,6 +7,8 @@ import {
   collectionCapability, platformMetricKey,
 } from "../resources/platform-capabilities";
 
+import {platformNativeReportsListResponse} from "../resources/platform-native-reports";
+
 const accountParams = z.strictObject({ accountId: id });
 const attemptParams = z.strictObject({ accountId: id, attemptId: id });
 const bindParams = z.strictObject({ bindAttemptId: id });
@@ -18,6 +20,7 @@ const page = z.strictObject({
 // Source pages and identity proofs are deliberately absent: only a trusted
 // worker/adapter may call the backend service port with those facts.
 export const platformCollectionOperations = {
+  listNativeReports: defineEndpoint({id:"platforms.reports.list",method:"GET",path:"/accounts/:accountId/platform-reports",params:accountParams,query:page,response:platformNativeReportsListResponse,fr:["FR-1110-03"]}),
   listCapabilities: defineEndpoint({
     id: "platforms.capabilities.list", method: "GET", path: "/platforms/capabilities",
     response: platformCapabilitiesListResponse, fr: ["FR-PLATFORM-CAPABILITIES"],

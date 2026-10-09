@@ -187,3 +187,12 @@ it('补充冻结SQL或journal损坏时拒绝，不接受仅身份白名单',asyn
   await expect(inspectMigrationConvergence(drizzle(c) as never,copy)).rejects.toThrow('冻结journal校验失败');
  }finally{await c.close()}
 });
+
+import {assertMigrationConverged} from './migration-convergence';
+it('T1110迁移后必须有真实0131回执，旧完整前缀不得冒充新runtime已准备',async()=>{
+ const store=await createDb();try{
+  const hash=createHash('sha256').update(await readFile(join(folder,'0131_platform_native_reports.sql'),'utf8')).digest('hex');
+  await store.client.exec(`DELETE FROM drizzle.__drizzle_migrations WHERE hash='${hash}'; DROP TABLE platform_native_reports; ALTER TABLE platform_collection_runs DROP COLUMN group_id, DROP COLUMN group_version, DROP COLUMN membership_version;`);
+  await expect(assertMigrationConverged(store.db as never,folder)).rejects.toThrow('0131');
+ }finally{await store.client.close();}
+},180000);

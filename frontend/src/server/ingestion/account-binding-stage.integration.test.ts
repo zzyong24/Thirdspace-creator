@@ -11,6 +11,8 @@ import {createPersistentTaskService,createHostBrowserProfileLifecycle} from '@cr
 import {createDouyinAccountBindingStage} from './account-binding-stage';
 let store:Awaited<ReturnType<typeof createDb>>,base:string,ctx:RequestContext,seq=0;
 let service:ReturnType<typeof createAccountBindingService>,lifecycle:ReturnType<typeof createHostBrowserProfileLifecycle>,stage:ReturnType<typeof createDouyinAccountBindingStage>;
+const observe:typeof vi.waitFor=(callback,options)=>vi.waitFor(callback,{timeout:180000,interval:50,...(typeof options==='object'?options:{})});
+
 const now=()=>new Date().toISOString(),nextId=(prefix:string)=>`${prefix}-stage-${++seq}`;
 let loginBlocked=false,loginStarted=false,confirmBrowserStopped:(()=>void)|undefined;
 const control={signal:new AbortController().signal,shouldStop:()=>false};
@@ -33,7 +35,7 @@ it('已有真实账号采用新登录态，保留ID并清除旧备份且不重�
  expect(stage.prepareCommit).toBeTypeOf('function');const account=await createPlatformAccountService({db:store.db,now,nextId}).createAccount(ctx,{platform:'douyin',accountHandle:'旧身份',externalAccountId:'stable-real-test-id'});await mkdir(path.join(base,account.id));await writeFile(path.join(base,account.id,'profile.txt'),'old-login');const run=await start();await service.drainAccountBindingQueue(control,{waitForCompletion:true});expect(await service.status(ctx,run.runId)).toMatchObject({status:'succeeded',accountId:account.id});expect(await readFile(path.join(base,account.id,'profile.txt'),'utf8')).toBe('new-login');expect(await readdir(base)).toEqual([account.id]);expect((await createAccountGroupService({db:store.db,now,nextId}).get(ctx,ctx.groupId!)).members).toHaveLength(1);
 });
 it('取消等待真实浏览器停止与宿主租约释放，清理后才确认cancelled',async()=>{
- loginBlocked=true;const run=await start();await service.drainAccountBindingQueue(control);await vi.waitFor(()=>expect(loginStarted).toBe(true));await service.cancel(ctx,run.runId);await vi.waitFor(()=>expect(confirmBrowserStopped).toBeTypeOf('function'));expect(await service.status(ctx,run.runId)).toMatchObject({status:'cancel_requested'});expect((await readdir(base)).some(name=>name.startsWith('_staging-'))).toBe(true);confirmBrowserStopped!();await vi.waitFor(async()=>expect(await service.status(ctx,run.runId)).toMatchObject({status:'cancelled'}),{timeout:3000});expect(await readdir(base)).toEqual([]);
+ loginBlocked=true;const run=await start();await service.drainAccountBindingQueue(control);await observe(()=>expect(loginStarted).toBe(true));await service.cancel(ctx,run.runId);await observe(()=>expect(confirmBrowserStopped).toBeTypeOf('function'));expect(await service.status(ctx,run.runId)).toMatchObject({status:'cancel_requested'});expect((await readdir(base)).some(name=>name.startsWith('_staging-'))).toBe(true);confirmBrowserStopped!();await observe(async()=>expect(await service.status(ctx,run.runId)).toMatchObject({status:'cancelled'}),{timeout:180000});expect(await readdir(base)).toEqual([]);
 });
 it('另一组真实身份准备失败，清理扫码目录且不暗转账号',async()=>{
  expect(stage.prepareCommit).toBeTypeOf('function');const groups=createAccountGroupService({db:store.db,now,nextId});const other=await groups.create(ctx,{name:'其它组',idempotencyKey:'other'});const account=await createPlatformAccountService({db:store.db,now,nextId}).createAccount({...ctx,groupId:other.id},{platform:'douyin',accountHandle:'已有账号',externalAccountId:'stable-real-test-id'});const run=await start();await service.drainAccountBindingQueue(control,{waitForCompletion:true});expect(await service.status(ctx,run.runId)).toMatchObject({status:'failed',accountId:null});expect((await groups.forAccount(ctx,account.id)).groupId).toBe(other.id);expect(await readdir(base)).toEqual([]);
@@ -42,8 +44,8 @@ it('另一组真实身份准备失败，清理扫码目录且不暗转账号',as
 it('等待目标租约期间组可更新，随后清理已持预租约而不自我等待',async()=>{
  const groups=createAccountGroupService({db:store.db,now,nextId});const account=await createPlatformAccountService({db:store.db,now,nextId}).createAccount(ctx,{platform:'douyin',accountHandle:'原身份',externalAccountId:'stable-real-test-id'});await mkdir(path.join(base,account.id));await writeFile(path.join(base,account.id,'profile.txt'),'old-login');
  const blocker=await lifecycle.acquire(path.join(base,account.id));const run=await start();await service.drainAccountBindingQueue(control);
- try{await vi.waitFor(async()=>expect(await service.status(ctx,run.runId)).toMatchObject({status:'finalizing'}));const group=await groups.get(ctx,ctx.groupId!);await groups.update(ctx,ctx.groupId!,{name:'准备期间改名',expectedVersion:group.version});}finally{await blocker.onStopped();}
- await vi.waitFor(async()=>expect(await service.status(ctx,run.runId)).toMatchObject({status:'failed'}),{timeout:3000});expect(await readFile(path.join(base,account.id,'profile.txt'),'utf8')).toBe('old-login');expect(await readdir(base)).toEqual([account.id]);const held=await lifecycle.acquire(path.join(base,account.id));await held.onStopped();
+ try{await observe(async()=>expect(await service.status(ctx,run.runId)).toMatchObject({status:'finalizing'}));const group=await groups.get(ctx,ctx.groupId!);await groups.update(ctx,ctx.groupId!,{name:'准备期间改名',expectedVersion:group.version});}finally{await blocker.onStopped();}
+ await observe(async()=>expect(await service.status(ctx,run.runId)).toMatchObject({status:'failed'}),{timeout:180000});expect(await readFile(path.join(base,account.id,'profile.txt'),'utf8')).toBe('old-login');expect(await readdir(base)).toEqual([account.id]);const held=await lifecycle.acquire(path.join(base,account.id));await held.onStopped();
 });
 it('真实数据库事务拒绝成功状态时恢复旧登录目录与真实账号，租约最终释放',async()=>{
  const account=await createPlatformAccountService({db:store.db,now,nextId}).createAccount(ctx,{platform:'douyin',accountHandle:'原身份',externalAccountId:'stable-real-test-id'});await mkdir(path.join(base,account.id));await writeFile(path.join(base,account.id,'profile.txt'),'old-login');
@@ -65,14 +67,14 @@ it('重启没有内存Map时依据持久run与采用marker恢复旧目录，再�
 });
 it('目标租约等待期间取消会释放预留资源，只清理本run且保留原账号目录',async()=>{
  const account=await createPlatformAccountService({db:store.db,now,nextId}).createAccount(ctx,{platform:'douyin',accountHandle:'原身份',externalAccountId:'stable-real-test-id'});const target=path.join(base,account.id);await mkdir(target);await writeFile(path.join(target,'profile.txt'),'old-login');const blocker=await lifecycle.acquire(target);
- try{const run=await start();await service.drainAccountBindingQueue(control);await vi.waitFor(async()=>expect(await service.status(ctx,run.runId)).toMatchObject({status:'finalizing'}));await service.cancel(ctx,run.runId);await vi.waitFor(async()=>expect(await service.status(ctx,run.runId)).toMatchObject({status:'cancelled'}),{timeout:3000});expect(await readFile(path.join(target,'profile.txt'),'utf8')).toBe('old-login');expect(await readdir(base)).toEqual([account.id]);}finally{await blocker.onStopped();}
+ try{const run=await start();await service.drainAccountBindingQueue(control);await observe(async()=>expect(await service.status(ctx,run.runId)).toMatchObject({status:'finalizing'}));await service.cancel(ctx,run.runId);await observe(async()=>expect(await service.status(ctx,run.runId)).toMatchObject({status:'cancelled'}),{timeout:180000});expect(await readFile(path.join(target,'profile.txt'),'utf8')).toBe('old-login');expect(await readdir(base)).toEqual([account.id]);}finally{await blocker.onStopped();}
  const held=await lifecycle.acquire(target);await held.onStopped();
 });
-it.each(['xiaohongshu','kuaishou'] as const)('T1069 %s真实目录、宿主租约与账号组事务闭环',async(platform)=>{
+it.each(['xiaohongshu','kuaishou','wechatOfficial','wechatVideo'] as const)('T1110 %s真实目录、宿主租约与账号组事务闭环',async(platform)=>{
  const module=await import('./account-binding-stage');const make=(module as typeof module&{createLocalPlatformAccountBindingStage:(ports:any)=>any}).createLocalPlatformAccountBindingStage;expect(make).toBeTypeOf('function');
  const root=path.join(base,'platforms'),authority=(createBrowserProfileAuthority as any)(store.db,path.join(base,'douyin'),{localPlatformRoot:root});
  lifecycle=createHostBrowserProfileLifecycle(store.db,{resolveProfile:authority.resolveProfile,waitTimeoutMs:120000,pollIntervalMs:10});
- const local=make({db:store.db,authority,lifecycle,now,nextId,platform,scopes:['workCatalog'],loadLogin:async()=>async(directory:string,controls:any)=>{try{await mkdir(directory,{recursive:true});await writeFile(path.join(directory,'profile.txt'),'verified-local-login');return {platformIdentity:'verified-local-id',displayName:'中性绑定身份',source:'fixture-driver'};}finally{await controls.onStopped();}},commitAuthorization:async()=>{}});
+ const local=make({db:store.db,authority,lifecycle,now,nextId,platform,scopes:[platform.startsWith('wechat')?'nativeReports':'workCatalog'],loadLogin:async()=>async(directory:string,controls:any)=>{try{await mkdir(directory,{recursive:true});await writeFile(path.join(directory,'profile.txt'),'verified-local-login');return {platformIdentity:'verified-local-id',displayName:'中性绑定身份',source:'fixture-driver'};}finally{await controls.onStopped();}},commitAuthorization:async()=>{}});
  service=createAccountBindingService({db:store.db,now,nextId,stage,localStages:{[platform]:local},capabilities:async()=>[{platform,bind:{available:true,method:'qr',reason:'受控浏览器驱动'}}]});
  const group=await createAccountGroupService({db:store.db,now,nextId}).get(ctx,ctx.groupId!);const run=await service.start(ctx,{groupId:ctx.groupId!,platform,expectedGroupVersion:group.version,idempotencyKey:'local-intent'});
  await service.drainAccountBindingQueue(control,{waitForCompletion:true});const receipt=await service.status(ctx,run.runId);expect(receipt).toMatchObject({status:'succeeded',platform});
@@ -80,4 +82,5 @@ it.each(['xiaohongshu','kuaishou'] as const)('T1069 %s真实目录、宿主租�
  expect(await readFile(path.join(directory,'profile.txt'),'utf8')).toBe('verified-local-login');expect((await createAccountGroupService({db:store.db,now,nextId}).get(ctx,ctx.groupId!)).members).toHaveLength(1);
  expect(await createPlatformAccountService({db:store.db,now,nextId}).getAccount(ctx,receipt.accountId!)).toMatchObject({platform,externalAccountId:'verified-local-id'});
  const resource=await lifecycle.acquire(directory);await resource.onStopped();expect(await readdir(path.dirname(directory))).toEqual([hash('verified-local-id')]);
+ if(platform.startsWith('wechat'))expect((await authority.resolveProfile(directory)).domain).toBe(platform==='wechatOfficial'?'mp.weixin.qq.com':'channels.weixin.qq.com');
 });

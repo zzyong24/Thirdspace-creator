@@ -459,6 +459,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/accounts/:accountId/collections/:attemptId/cancel"],
   ["GET", "/accounts/:accountId/platform-works"],
   ["GET", "/accounts/:accountId/platform-metrics"],
+  // T-1110已评审原生报表读取契约。
+  ["GET", "/accounts/:accountId/platform-reports"],
   // T-1023 项目公众号文章、候选采纳与历史素材文件预览。
   ["GET", "/outputs/:outputId/article"],
   ["GET", "/outputs/:outputId/article/versions/:versionId"],

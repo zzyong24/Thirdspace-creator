@@ -6744,6 +6744,94 @@
           "python3 -m json.tool docs/research/evidence/t1107-official-sources.json > /dev/null"
         ]
       }
+    },
+    "T-1110": {
+      "task_id": "T-1110",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1110-wechat-browser-collection.md",
+        "docs/产品定位.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "orchestrator/THREAT_MODEL.json",
+        "docs/research/evidence/t1108-browser-export.json",
+        "docs/research/evidence/t1109-channels-native-export.json"
+      ],
+      "write_set": [
+        "contract/src/**",
+        "contract/tests/**",
+        "backend/src/schema/platform-collection.ts",
+        "backend/src/modules/platform-collection/**",
+        "backend/src/modules/platform-account/**",
+        "backend/src/application/platform-collection/**",
+        "backend/src/application/scheduling/**",
+        "backend/src/application/workspace/startup.ts",
+        "backend/src/modules/ai-runtime/collection-bootstrap.ts",
+        "backend/src/modules/ai-runtime/collection-bootstrap.test.ts",
+        "backend/src/modules/scheduling/private-collector-admission.service.ts",
+        "backend/src/modules/scheduling/private-collector-admission.integration.test.ts",
+        "backend/drizzle/**",
+        "ai-worker/src/runtime/platform/**",
+        "ai-worker/package.json",
+        "ai-worker/scripts/build.mjs",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/ingestion/account-binding-stage.ts",
+        "frontend/src/server/ingestion/douyin-binding-profile.ts",
+        "frontend/src/features/platform-account/**",
+        "frontend/src/app/(creator)/accounts/works/page.tsx",
+        "frontend/src/features/analytics/**",
+        "frontend/src/features/account-group/**",
+        "frontend/tests/e2e/**",
+        "pnpm-lock.yaml",
+        "docs/features/t1110-wechat-browser-collection.md",
+        "docs/features/t1110-wechat-browser-collection.review.md",
+        "docs/features/t1110-wechat-browser-collection.review-input.json",
+        "docs/features/t1110-wechat-browser-collection.PAGE_SPEC.md",
+        "docs/verification/t1110/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1110.md",
+        "backend/src/migration-convergence.ts",
+        "backend/src/migration-convergence.test.ts",
+        "frontend/src/server/ingestion/account-binding-stage.integration.test.ts",
+        "backend/src/application/collection/wechat-native-collector.ts",
+        "backend/src/application/collection/wechat-native-collector.test.ts",
+        "ai-worker/smoke/t1110-native-report-private-files.ts",
+        "backend/src/application/platform-collection/periodic.ts",
+        "backend/src/application/platform-collection/periodic.test.ts",
+        "orchestrator/ARTIFACT_MANIFEST.yaml",
+        "backend/src/application/workspace/startup.test.ts",
+        "backend/src/modules/scheduling/private-collector-wechat-admission.test.ts",
+        "docs/features/t1110-wechat-browser-collection.window-review-input.json",
+        "orchestrator/.lessons-stats.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm -C contract test",
+          "pnpm -C backend typecheck",
+          "pnpm -C frontend typecheck",
+          "pnpm -C ai-worker typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

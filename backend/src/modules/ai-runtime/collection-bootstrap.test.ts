@@ -386,5 +386,16 @@ it('三平台私有采集默认错峰，快手小红书没有未实现的评论�
  const createJob=vi.fn(async()=>({id:'new'})),trigger=vi.fn(async()=>{});
  await bootstrapDouyinCollectionJobs(ctx,{defaults,listJobsBySourceKind:async(_c,sourceKind)=>[{id:sourceKind,accountId:ctx.accountId,enabled:false,target:{userChoice:true}}],createJob,trigger});
  expect(createJob).not.toHaveBeenCalled();expect(trigger).not.toHaveBeenCalled();}
- expect(collectionJobDefaultsForPlatform('wechatVideo')).toEqual([]);
+ expect(collectionJobDefaultsForPlatform('youtube')).toEqual([]);
+});
+
+it('T1110五平台默认分钟按0/5/10/15/20错峰，微信只有原生报表同步，不建未支持评论流量任务',async()=>{
+ const expected={douyin:0,xiaohongshu:5,kuaishou:10,wechatVideo:15,wechatOfficial:20};
+ for(const [platform,minute] of Object.entries(expected)){const defaults=collectionJobDefaultsForPlatform(platform);expect(defaults.find(t=>t.sourceKind==='self.metrics')?.schedule).toBe(`${minute} */2 * * *`);if(platform!=='douyin')expect(defaults.filter(t=>t.sourceKind.startsWith('self.')||t.sourceKind==='comments').map(t=>t.sourceKind)).toEqual(['self.metrics']);}
+});
+it.each(['wechatVideo','wechatOfficial'])('T1110 %s重复绑定保留用户关闭、原ID/目标和自定义计划，不初始化触发',async platform=>{
+ const original={id:'original-job',accountId:ctx.accountId,enabled:false,target:{scheduleTimezone:'Asia/Shanghai',userChoice:true},schedule:'7 11 * * *'};
+ const createJob=vi.fn(async()=>({id:'new'})),trigger=vi.fn(async()=>{});
+ const result=await bootstrapDouyinCollectionJobs(ctx,{defaults:collectionJobDefaultsForPlatform(platform).filter(t=>t.sourceKind==='self.metrics'),listJobsBySourceKind:async()=>[original],createJob,trigger});
+ expect(createJob).not.toHaveBeenCalled();expect(trigger).not.toHaveBeenCalled();expect(result).toEqual({created:[],triggered:[]});expect(original).toMatchObject({id:'original-job',enabled:false,schedule:'7 11 * * *',target:{userChoice:true}});
 });

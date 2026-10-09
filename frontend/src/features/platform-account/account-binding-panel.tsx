@@ -11,8 +11,8 @@ type Intent=typeof ENDPOINTS.startAccountBinding.body["_output"];
 const finished=(run:Run)=>["succeeded","failed","cancelled"].includes(run.status);
 const labels:Record<Run["status"],string>={queued:"等待打开扫码窗口",waiting_verification:"等待扫码验证",verifying:"正在核对平台身份",finalizing:"正在保存绑定结果",cancel_requested:"正在停止本次扫码",cancelled:"本次绑定已取消",succeeded:"绑定已完成",failed:"本次绑定未完成"};
 type Saved={intent?:Intent;runId?:string};
-export function AccountBindingPanel({group,canStart,platform="douyin",disabled=false,onChanged,onBusyChange}:{group:AccountGroupResource;canStart:boolean;platform?:"douyin"|"xiaohongshu"|"kuaishou";disabled?:boolean;onChanged:()=>void|Promise<void>;onBusyChange?:(busy:boolean)=>void}){
- const platformLabel={douyin:"抖音",xiaohongshu:"小红书",kuaishou:"快手"}[platform];
+export function AccountBindingPanel({group,canStart,platform="douyin",disabled=false,onChanged,onBusyChange}:{group:AccountGroupResource;canStart:boolean;platform?:"douyin"|"xiaohongshu"|"kuaishou"|"wechatOfficial"|"wechatVideo";disabled?:boolean;onChanged:()=>void|Promise<void>;onBusyChange?:(busy:boolean)=>void}){
+ const platformLabel={douyin:"抖音",xiaohongshu:"小红书",kuaishou:"快手",wechatOfficial:"公众号",wechatVideo:"视频号"}[platform];
  const [run,setRun]=React.useState<Run|null>(null),[pending,setPending]=React.useState(false),[busy,setBusy]=React.useState(false),[error,setError]=React.useState<string|null>(null);
  const alive=React.useRef(false),reading=React.useRef(false),mutating=React.useRef(false),saved=React.useRef<Saved>({}),completed=React.useRef<string|null>(null),timer=React.useRef<ReturnType<typeof setTimeout>|null>(null),epoch=React.useRef(0);
  const foregroundEnd=React.useRef<(()=>void)|null>(null);

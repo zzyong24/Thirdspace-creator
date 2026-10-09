@@ -157,7 +157,8 @@
     "@modelcontextprotocol/sdk": "1.29.0",
     "diff": "9.0.0",
     "open": "11.0.1",
-    "vscode-jsonrpc": "9.0.1"
+    "vscode-jsonrpc": "9.0.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@ai-sdk/provider": "^4.0.0",

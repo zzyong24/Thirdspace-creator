@@ -5,6 +5,7 @@ export const PLATFORM_LABELS: Record<string, string> = {
   douyin: "抖音",
   xiaohongshu: "小红书",
   wechatVideo: "视频号",
+  wechatOfficial: "公众号",
   wechatOfficialAccount: "微信公众号",
   kuaishou: "快手",
   x: "X",

@@ -1,6 +1,20 @@
 # Decision Log — CreatorOS
 
+## DEC-WECHAT-1110-EMPTY-WINDOW（2026-10-09，独立复评PASS[REV:b6b7772b74ff]）
+
+T1110独立源码复核发现：合法空单篇作品导出只有固定表头，两个发布时间窗口可能有同一原字节摘要。原SPEC只按SHA去重会误拒第二个合法窗口或混淆日期。沿用户“开始推进”的完整数据同步授权与原保真日期要求，修正内部报表观察键为原SHA+规范化selection摘要；公开DTO、原字节SHA、账号归属、五报表范围和权限均不变，不发布、不迁移真实研究数据。原同页重放及同窗口payload冲突保护保留。先按修正后的SPEC独立评审再改schema/service；不能把原收据代签新hash，也不隐藏原设计缺口。
+
+
 Record confirmations, assumptions, tradeoffs, accepted risks, and skipped stages so future agents do not need chat history.
+
+## DEC-WECHAT-1110（2026-10-09）：微信本人后台原生报表接入
+
+**Owner**：user。**Status**：用户执行方向Confirmed，SPEC独评及窗口复评PASS[REV:b6b7772b74ff]。用户在本人后台导出T1108/T1109验证后明确“那你开始推进”。授权接入两微信平台扫码、隔离登录、原生报表读写及错峰自动化；不重复请求方向确认。
+
+沿现有账号组、唯一持久任务和受管浏览器，新增nativeReports能力/资源以保存账号日报与有限范围单篇数据。原count/lifetime字典及catalog语义保留；窗口导出不声明全历史，不按公众号标题猜publication或复制研究Cookie。依赖官方SheetJS CE锁定0.20.3解析真实BIFF，HTML/CSV按实测格式分流。具体契约与验收见[T1110 SPEC](../docs/features/t1110-wechat-browser-collection.md)。后台稳定ID尚需实际正常页面witness，未读到不能声称绑定成功；真人扫码和公共链路证据未完成不能宣称交付。没有新增打包、安装、发布或真实库手工迁移授权。
+
+---
+
 
 ## DEC-GROUP-1022（2026-10-04）：账号组统一多平台工作区与页面设计方法
 

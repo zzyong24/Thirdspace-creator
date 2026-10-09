@@ -1,0 +1,197 @@
+{
+  "ok": false,
+  "minimumExecutionMs": 120000,
+  "scannedFiles": 2701,
+  "failures": [
+    {
+      "file": "ai-worker/src/execution/codex-acp-worker-run.ts",
+      "line": 56,
+      "kind": "timeoutMs",
+      "valueMs": 10000,
+      "source": "timeoutMs:10_000"
+    },
+    {
+      "file": "ai-worker/src/execution/codex-acp-worker-run.ts",
+      "line": 69,
+      "kind": "timeoutMs",
+      "valueMs": 10000,
+      "source": "timeoutMs:10_000"
+    },
+    {
+      "file": "ai-worker/src/execution/codex-app-server-protocol.ts",
+      "line": 79,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 1000,
+      "source": "setTimeout(()=>{try{process.kill(-pid,'SIGKILL');}catch{/* Already stopped. */}},1000)"
+    },
+    {
+      "file": "ai-worker/src/execution/codex-app-server.ts",
+      "line": 57,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15000"
+    },
+    {
+      "file": "backend/src/modules/ai-runtime/local-codex-status.service.ts",
+      "line": 7,
+      "kind": "timeoutMs",
+      "valueMs": 25000,
+      "source": "timeoutMs:deps.timeoutMs??25000"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/codemirror-C3tEDw1q.js",
+      "line": 10081,
+      "kind": "timeout",
+      "valueMs": 400,
+      "source": "timeout: 400"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-codemirror-CzoyEQLj.js",
+      "line": 11,
+      "kind": "timeout",
+      "valueMs": 400,
+      "source": "timeout:400"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js",
+      "line": 12,
+      "kind": "timeout",
+      "valueMs": 2000,
+      "source": "timeout:2e3"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "line": 63,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(()=>{this.popper&&!this.popperStatus&&(this.popper.popper.style.display=\"none\",this.popper.destroy(),this.popper=null),this.popperStatus=!1},300)"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "line": 92,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(()=>{this.destroy(),this.onRemove()},300)"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "line": 92,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(()=>{this.closing=!1,this.destroy()},300)"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 38974,
+      "kind": "timeout",
+      "valueMs": 1,
+      "source": "timeout: y"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 53491,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(() => {\n          this.popper && !this.popperStatus && (this.popper.popper.style.display = \"none\", this.popper.destroy(), this.popper = null), this.popperStatus = !1;\n        }, 300)"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 59840,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(() => {\n            this.destroy(), this.onRemove();\n          }, 300)"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 60642,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(() => {\n            this.closing = !1, this.destroy();\n          }, 300)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 194,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 90000,
+      "source": "setTimeout(()=>{s.abort.abort();void serial(s,()=>close(s,true)).catch(()=>{});},ports.idleMs??90_000)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 203,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 1000,
+      "source": "setTimeout(()=>{timedOut=true;reject(observationDeadline);},1000)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 240,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 1000,
+      "source": "setTimeout(()=>{active=false;reject(observationDeadline);},1000)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 322,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 5000,
+      "source": "setTimeout(()=>s.abort.abort(),ports.checkoutMs??5000)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 324,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 354,
+      "kind": "timeout",
+      "valueMs": 5000,
+      "source": "timeout:5000"
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-render.ts",
+      "line": 98,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15_000"
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-render.ts",
+      "line": 112,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15_000"
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-render.ts",
+      "line": 115,
+      "kind": "timeout",
+      "valueMs": 20000,
+      "source": "timeout:20_000"
+    },
+    {
+      "file": "frontend/src/server/workbench-browser-host.ts",
+      "line": 168,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "AbortSignal.timeout(10_000)"
+    },
+    {
+      "file": "frontend/src/server/workbench-browser-host.ts",
+      "line": 180,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "AbortSignal.timeout(15_000)"
+    },
+    {
+      "file": "frontend/src/server/workbench-native-client.ts",
+      "line": 47,
+      "kind": "request timer",
+      "valueMs": 10000,
+      "source": "socket.setTimeout(10_000)"
+    }
+  ],
+  "limits": "静态已知数值及默认回归；动态调用链、库默认、绝对deadline与观察终态由聚焦测试和逐条清单核对"
+}

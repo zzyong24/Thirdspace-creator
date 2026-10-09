@@ -26,3 +26,5 @@ it('T1069 小红书入口冻结真实平台，同组不同平台的未知请求�
  fireEvent.click(screen.getByRole('button',{name:'扫码绑定小红书账号'}));await waitFor(()=>expect(api.startAccountBinding).toHaveBeenCalled());expect(api.startAccountBinding.mock.calls[0][0].body.platform).toBe('xiaohongshu');
  expect(JSON.parse(sessionStorage.getItem('creatoros:account-binding:u:g:xiaohongshu')!).runId).toBe(run.runId);expect(sessionStorage.getItem('creatoros:account-binding:u:g')).toBeNull();
 });
+
+it.each([['wechatOfficial','公众号'],['wechatVideo','视频号']] as const)('T1110 %s扫码冻结真实微信平台而不调抖音入口',async(platform,label)=>{api.startAccountBinding.mockResolvedValue({...run,platform});api.getAccountBinding.mockResolvedValue({...run,platform});render(<AccountBindingPanel group={group} canStart platform={platform} onChanged={vi.fn()}/>);fireEvent.click(screen.getByRole('button',{name:`扫码绑定${label}账号`}));await waitFor(()=>expect(api.startAccountBinding).toHaveBeenCalledOnce());expect(api.startAccountBinding.mock.calls[0][0].body).toMatchObject({platform,groupId:'g',expectedGroupVersion:1});await screen.findByText('等待扫码验证');});
