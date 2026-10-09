@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "PASS：REV-001 已销账。SPEC SHA 3c7720477c882202f0971383405cd82e81c3bba3a0c782043e041dd62b90dc08 字节不变；modules SHA 591ba464729b69fa473dcda9e1820f66612d864cdfdd1b481e07a0a13c543c29 已在T-1117 implementation正式命令中逐字加入LED-047原8文件--retry=0检查，位置在boundary前，原聚焦组件、类型、真实Chrome、三门卫、pmem与reconcile均保留。产品尚未修改，本结论只允许后续实施。宪法SHA 86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:34:6ea5e6f2edb0d269",
+        "quote": "AC03：frontend typecheck、LED047原174例、boundary/semantic/orphan、git diff --check、pmem及完整reconcile真实记录。"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:34:6ea5e6f2edb0d269",
+        "quote": "AC03：frontend typecheck、LED047原174例、boundary/semantic/orphan、git diff --check、pmem及完整reconcile真实记录。"
+      },
+      "where": "orchestrator/process/modules.config.json 的 T-1117.verify_commands.implementation",
+      "failure_mode": "正式验证命令没有运行SPEC明确要求的LED-047原8文件回归。当前改动触及CanvasEditor错误状态和共享AssetPicker显示/确认路径，完整reconcile即使运行也不能替代一条可审计、可计数的174例精确命令；实现可破坏本地弹层、延迟渲染或轮询迟到保护，同时通过当前modules全部聚焦命令。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:10fb2d44b921dc0367817be075dfe6f49e0fd2531cc4c5b83738c5a034168a55:orchestrator/process/modules.config.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "不扩大产品或测试写集；把reconcile.config中LED-047的原8文件Vitest命令逐字加入T1117 implementation verify_commands，保retry=0及现有预算。聚焦组件、真实Chrome、类型、三门卫和reconcile继续保留。",
+      "resolution_evidence": "EVIDENCE-SHA256:591ba464729b69fa473dcda9e1820f66612d864cdfdd1b481e07a0a13c543c29:orchestrator/process/modules.config.json（T-1117 implementation verify_commands 在 boundary 前逐字加入 reconcile.config 的LED-047原8文件--retry=0命令；产品/测试写集与SPEC不变）",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

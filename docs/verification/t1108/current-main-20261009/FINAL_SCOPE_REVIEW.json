@@ -1,0 +1,45 @@
+{
+  "schema": "creatoros-final-scope-review/v1",
+  "taskId": "T-1108",
+  "reviewedAt": "2026-10-09T09:44:32.793219+00:00",
+  "verdict": "PASS_LIMITED_T1108_SCOPE_COMPLETE_WITH_EXTERNAL_TASKS",
+  "findings": [],
+  "sourceCommit": "6a71a60749bc898d21e5806d369c952e140ab184",
+  "specSha256": "eb800589add497ec7e7815a4dc9e38a63e4fe79ecc3245da84ac36cf4e83e6b7",
+  "sourceHashes": {
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "716551060482e62c578596870778d4eb57465b2a04ce0f86ec652d8631dbe4e7",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "1fd99888d634aea9b43162bffc0004c39021c406f64df9716d8d76ffe2397daa",
+    "frontend/tests/e2e/creative-canvas.spec.ts": "e8cebd5a95a8e502b2d77022154226cabaee67790b9ec726e24b098b0ba22f10"
+  },
+  "evidenceHashes": {
+    "browser-journey.json": "f833c8c7d8d71718eeaca14d1f3e6e75d6352a4ae9838910a629e2d8603d59d4",
+    "browser-journey.log": "404cd16a076ee0f9b139351e21a74f161103e792f8a1b07a5f715e4d829de05d",
+    "shared-resource-journey.json": "d1add1b88d5ce3a26a59310a4c2ecd2186bb2867294b4f29775de06838af09b1",
+    "source-freeze.json": "b8e54793b1872ee3fd3f0bc12caab9f31bb44aff81f060834b195bd5c95d5f84",
+    "FRONTEND_VALIDATION_REPORT.md": "e23004d972ea3020eb45e8ec9a5d52da459bd523e29a739fd293c41d47463595",
+    "visible-copy.json": "7200aed884df615d21012136cf78ac7d71347cc1de42a5c2d48d88eb0311483e",
+    "screenshots/t1108-legacy-normal.png": "3bc8f846cfa296a520566e969546dd00172ef66e0c38a05da1864c7fc840254f",
+    "screenshots/t1108-legacy-narrow.png": "528925657b1663dd97b2bff54e7f92af18936373851d00c134d1d7bf5345fea6",
+    "screenshots/t1108-interrupted-save.png": "da3b4146781ca12a237185d2314619850eb8265d5d772418d450ad0d332aa54e"
+  },
+  "actual": {
+    "canvasJourney": "2 PASS / 0 retry / 81.514807875s",
+    "sharedResourceJourney": "1 PASS / 0 retry / 35.698370459s",
+    "viewports": [
+      "1366x900",
+      "900x900"
+    ],
+    "screenshotsReviewed": 3
+  },
+  "completionDecision": {
+    "mayCompleteT1108": true,
+    "reason": "保存回读、referenceFileId、刷新/重复/back及旧标记恢复在当前main原runner实际通过；三watched源与既有独评字节一致。"
+  },
+  "externalBoundaries": [
+    "T1117：截图中英文 Failed to fetch 与参考field长文件名/身份展示遗漏，未倒退T1108保存语义。",
+    "T1110：开发资源网络底层原因仍UNKNOWN。",
+    "T1116：历史完整LED027内层原因仍UNKNOWN。",
+    "完整reconcile exit1/41errors；旧23组件/174 LED047未在本轮重跑，只保留原收据。",
+    "非原生安装UI人工验收，非供应商生成、扫码、模型采纳或全功能PASS。"
+  ]
+}

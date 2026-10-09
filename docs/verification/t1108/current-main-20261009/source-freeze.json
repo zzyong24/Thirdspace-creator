@@ -1,0 +1,13 @@
+{
+  "sourceCommit": "6a71a60749bc898d21e5806d369c952e140ab184",
+  "sourceSha256": {
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "716551060482e62c578596870778d4eb57465b2a04ce0f86ec652d8631dbe4e7",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "1fd99888d634aea9b43162bffc0004c39021c406f64df9716d8d76ffe2397daa",
+    "frontend/tests/e2e/creative-canvas.spec.ts": "e8cebd5a95a8e502b2d77022154226cabaee67790b9ec726e24b098b0ba22f10",
+    "docs/features/t1108-canvas-public-observation.md": "eb800589add497ec7e7815a4dc9e38a63e4fe79ecc3245da84ac36cf4e83e6b7",
+    "docs/verification/t1101/run-journey.mjs": "13c1605c0e5d40a649d36630c22b411e275d9d152b5d59173fc088182a0ffc7e",
+    "frontend/playwright.config.ts": "b6f65e248dcd83f3181288563e3a104d8847363c2c65269ecf519507fa3bd39c"
+  },
+  "isolatedData": true,
+  "currentAppModified": false
+}
