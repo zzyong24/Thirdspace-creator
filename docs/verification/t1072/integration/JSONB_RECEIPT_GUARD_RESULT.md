@@ -18,3 +18,11 @@
 
 
 完整专项backend-transcribe-jsonb-full-guard-regression.log：3files51/51通过、21.39秒、exit0，无skip。覆盖现integration全部24（含11新增）与原preparation/audio27；实际源码Worker及已构建独立bundle保存全文/终态均运行。guard后backend-jsonb-guard-final-typecheck.log再次exit0；没有放宽原timeout或改待裁决expected。
+
+
+独立实现复核纠正：上述初次GREEN的fixture使用{...f}导致getter计数静态求值，因此当时不能据f.requests前后相等声称0新HTTP；原ledger/无工件/严格拒绝断言仍实测，HTTP专项证据需重跑。仅test修复为显式实时get requests(){return f.requests;}，正常JSONB场景在保存零HTTP验证后补真实供应商请求正控制，计数从0变1且原ASR账本不变；正控制不属于业务调用，不冒新增ASR。仍11个guard场景，不增加/删原案例或动production。
+
+
+实时getter修正后聚焦backend-transcribe-jsonb-live-counter-sse-green.log：11/11通过，11.11秒exit0（原13场景定位未选）；完整backend-transcribe-jsonb-live-counter-full51.log：3files51/51、24.87秒exit0，无skip。正控制显式确认合成SSE响应实际[DONE]、HTTP计数0→1；严格反例均回读实时计数与完整账本，0新增HTTP/ASR和0新工件证据以此后两份日志为准。第一轮正控制误用JSON解析SSE的FAIL日志完整保留，不能按green文件名视为通过。
+
+实时getter修正后backend-jsonb-live-counter-typecheck.log真实exit0。仅test fixture/正控制调整，原production完整深相等实现未再修改。

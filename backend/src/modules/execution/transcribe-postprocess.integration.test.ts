@@ -81,7 +81,7 @@ async function fixture(mode: Mode) {
     if (['prepareTranscribeItem', 'recordTranscribeSource', 'saveTranscribeArtifact', 'failTranscribeItem', 'completeTranscribeTask'].includes(port)) return workflow.invoke(ref, port, raw, signal);
     return post.invoke(ref, port, raw, signal);
   };
-  return { id, awemeId, ctx, input, ref, tasks, asr, post, workflow, call, now, nextId, requestObserved,
+  return { id, awemeId, ctx, input, ref, tasks, asr, post, workflow, call, now, nextId, requestObserved, modelBaseUrl: baseUrl,
     ledger: createExecutionCallLedgerService(db, { budget, now }), get requests() { return requests; },
     async cleanup() { server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())); },
   };
@@ -197,7 +197,7 @@ async function receiptGuardFixture(mode: 'unconfigured' | 'json' = 'unconfigured
   const entries = payload.transcribePostprocess as Record<string, { plan: unknown; result: unknown }>;
   const frozen = entries[f.awemeId];
   if (!frozen) throw Error('缺少完整回执');
-  return { ...f, projectId, result, payload, entries, frozen };
+  return { ...f, projectId, result, payload, entries, frozen, get requests() { return f.requests; } };
 }
 async function assertRejectedWithoutReplay(f: Awaited<ReturnType<typeof receiptGuardFixture>>, workflow = f.workflow) {
   const before = await f.ledger.inspect(f.ref), requests = f.requests;
@@ -221,6 +221,14 @@ it('JSONB完整回执键重排仍保存原文，原ASR账本只结算一次', as
     expect(outputs).toHaveLength(1);
     const versions = await service.listVersions(f.ctx, outputs[0]!.id);
     expect(versions.find(row => row.id === outputs[0]!.currentVersionId)?.contentText).toBe(original);
+    // driver正控制：保存的零HTTP断言之后直接访问合成供应商，实时计数必须改变。
+    const beforeControl = await f.ledger.inspect(f.ref);
+    const response = await fetch(`${f.modelBaseUrl}/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+    expect(response.ok).toBe(true);
+    expect(response.headers.get('content-type')).toBe('text/event-stream');
+    expect(await response.text()).toContain('data: [DONE]');
+    expect(f.requests).toBe(1);
+    expect((await f.ledger.inspect(f.ref)).calls).toEqual(beforeControl.calls);
   } finally { await f.cleanup(); }
 });
 it.each(['transcript', 'applied', 'reason'] as const)('完整回执真实字段不等必须拒绝保存：%s', async field => {

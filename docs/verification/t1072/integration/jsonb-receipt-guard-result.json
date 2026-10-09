@@ -38,5 +38,19 @@
   "backend_typecheck": {
     "exit": 0,
     "log": "backend-jsonb-guard-final-typecheck.log"
-  }
+  },
+  "initial_http_counter_evidence_valid": false,
+  "live_counter_correction": {
+    "focused_pass": 11,
+    "focused_log": "backend-transcribe-jsonb-live-counter-sse-green.log",
+    "full_pass": 51,
+    "full_skip": 0,
+    "full_log": "backend-transcribe-jsonb-live-counter-full51.log",
+    "duration_seconds": 24.87,
+    "driver_positive_control": "actual_http_sse_0_to_1",
+    "negative_assertions": "live_requests_and_full_ledger_unchanged_no_artifact",
+    "typecheck_exit": 0,
+    "typecheck_log": "backend-jsonb-live-counter-typecheck.log"
+  },
+  "corrected_test_sha256": "8f288b22af9a396896a0b31ad5a2331e2c8cc55f703ec175c9b877480575aadc"
 }

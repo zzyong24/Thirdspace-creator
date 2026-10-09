@@ -1,0 +1,21 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/transcribe-postprocess.integration.test.ts (24 tests | 1 failed | 13 skipped) 4578ms
+   × JSONB完整回执键重排仍保存原文，原ASR账本只结算一次 283ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/transcribe-postprocess.integration.test.ts > JSONB完整回执键重排仍保存原文，原ASR账本只结算一次
+SyntaxError: Unexpected token 'd', "data: {"id"... is not valid JSON
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed | 13 skipped (24)
+   Start at  17:07:59
+   Duration  8.82s (transform 2.77s, setup 0ms, import 4.07s, tests 4.58s, environment 0ms)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/execution/transcribe-postprocess.integration.test.ts --maxWorkers=2 --retry=0 -t JSONB|完整回执真实|strict回执|独立冻结模型|原作品数组
