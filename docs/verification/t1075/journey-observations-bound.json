@@ -1,0 +1,23 @@
+{
+  "commit_sha": "a030dab73ba94e688bce0928afa3e5c9d47406d1",
+  "witnesses": [
+    {
+      "id": "knowledge-f6a8775c-22",
+      "role": "primary-knowledge"
+    },
+    {
+      "id": "knowledge-f6a8775c-62",
+      "role": "secondary-knowledge"
+    },
+    {
+      "id": "knowledge-f6a8775c-1224",
+      "role": "primary-knowledge"
+    },
+    {
+      "id": "knowledge-f6a8775c-1264",
+      "role": "secondary-knowledge"
+    }
+  ],
+  "observed_at": "2026-10-09T15:41:28.192Z",
+  "data_mode": "non-fixture"
+}

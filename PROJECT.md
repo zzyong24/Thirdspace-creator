@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: codex/t1062-account-group-snapshot @ f032522d
+LAST_SYNCED: codex/t1062-account-group-snapshot @ a030dab7
 
 ## 这是什么(定位)
 
@@ -23,7 +23,6 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
-- [wip] T-1075 调研知识库产品与开源项目并重新设计易懂的创作者知识库
 - [open] T-1072 配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口
 - [wip] T-1063 取消双端出包人为超时与阻断检查并重跑 Windows 流水线
 - [open] T-1067 清理通用产品流程Skill既有公开分发校验债务

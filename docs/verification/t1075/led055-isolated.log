@@ -1,0 +1,77 @@
+资源生命周期检查：pnpm --dir contract exec vitest run --config ../docs/verification/t1073/worker/contract-vitest.config.mjs src/internal/execution-worker.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  23:58:47
+   Duration  477ms (transform 159ms, setup 0ms, import 311ms, tests 9ms, environment 0ms)
+
+资源生命周期检查：pnpm --dir ai-worker exec vitest run src/execution/worker-runtime.test.ts src/execution/transcribe-worker-run.test.ts src/execution/transcribe-asr-run.test.ts src/execution/transcribe-postprocess-run.test.ts src/runtime/multimodal-whisper-local.test.ts src/runtime/multimodal-whisper-local.cancel.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  6 passed (6)
+      Tests  83 passed (83)
+   Start at  23:58:48
+   Duration  3.58s (transform 3.10s, setup 0ms, import 6.71s, tests 3.07s, environment 1ms)
+
+资源生命周期检查：pnpm --dir backend exec vitest run src/modules/execution/worker-supervisor.memory.test.ts src/modules/execution/worker-supervisor.test.ts src/modules/execution/execution-stream.service.test.ts src/modules/ai-runtime/automation-driver.test.ts src/modules/intelligence/source-sync-runner.test.ts src/application/scheduling/automation.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+{"witness":"T-1073 scheduler 慢窗口","wakeups":10,"active":1,"peak":1,"calls":2}
+{"witness":"T-1073 durable automation","originalIds":["execution-task_70445935-e2e3-4588-a6b4-57515aaf28c1","execution-task_494ef439-2858-41e5-b0b5-5c6afeed4f97"],"callbacks":10,"handlers":2,"peak":1,"status":"succeeded","attempts":[1,1]}
+{"witness":"T-1073 public source","mode":"success","simulatedMs":250000,"calls":1,"peak":1,"pendingAfter":0,"status":"succeeded","attempt":1}
+{"witness":"T-1073 public source","mode":"cancel","simulatedMs":250000,"calls":1,"peak":1,"pendingAfter":0,"status":"cancelled","attempt":1}
+{"witness":"T-1073 public source","mode":"failure","simulatedMs":250000,"calls":1,"peak":1,"pendingAfter":0,"status":"succeeded","attempt":2}
+
+ Test Files  6 passed (6)
+      Tests  62 passed (62)
+   Start at  23:58:53
+   Duration  39.05s (transform 17.90s, setup 0ms, import 27.46s, tests 72.11s, environment 1ms)
+
+本次内存观测 ipc-memory-serial-observation.json: [{"label":"baseline","returnedBuffers":0,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.85},{"label":"running-25","returnedBuffers":25,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.88},{"label":"running-50","returnedBuffers":50,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.88},{"label":"running-75","returnedBuffers":75,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.88},{"label":"running-100","returnedBuffers":100,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.87},{"label":"after-stopped","returnedBuffers":100,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.87}]
+本次内存观测 ipc-memory-parallel-observation.json: [{"label":"baseline","returnedBuffers":0,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.85},{"label":"running-100","returnedBuffers":100,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.87,"firstCompletedAudio":99,"lastCompletedAudio":1},{"label":"after-stopped","returnedBuffers":100,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.87,"firstCompletedAudio":99,"lastCompletedAudio":1}]
+资源生命周期检查：pnpm --dir frontend exec vitest run src/features/copilot/live-chat-session.test.ts src/features/copilot/live-chat-session.consumer.test.tsx src/features/copilot/chat-script-draft-card.test.tsx src/features/copilot/chat-thesis-card.test.tsx src/features/copilot/chat-publish-package-card.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/features/draft-workbench/use-latest-script-review.test.tsx src/features/intelligence/use-project-upgrade-queue.test.tsx src/features/intelligence/intelligence-workbench-api.test.ts src/components/resources/asset-preview-url.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:26215) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26217) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26222) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26216) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26221) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26220) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26218) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26219) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26223) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26214) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  10 passed (10)
+      Tests  121 passed (121)
+   Start at  23:59:33
+   Duration  7.53s (transform 7.23s, setup 3.30s, import 12.05s, tests 6.51s, environment 19.99s)
+
+资源生命周期检查：pnpm --dir frontend exec vitest run src/server/chat-execution-stream.test.ts src/server/persistence-client.lifecycle.test.ts src/server/browser-host-dispose.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+{"witness":"T-1073 root dispose","sweepsBeforeStop":2,"sweepsAfterStop":2,"cronStops":1,"timersAfterStop":0}
+
+ Test Files  3 passed (3)
+      Tests  28 passed (28)
+   Start at  23:59:41
+   Duration  24.92s (transform 12.61s, setup 465ms, import 14.88s, tests 30.38s, environment 0ms)

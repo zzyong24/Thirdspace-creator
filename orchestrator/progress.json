@@ -3145,7 +3145,12 @@
         "frontend/src/features/draft-workbench/ammo-card-list.tsx",
         "frontend/src/features/draft-workbench/ammo-card-list.test.tsx",
         "frontend/tests/e2e/knowledge-library.spec.ts",
-        "orchestrator/DECISION_LOG.md"
+        "orchestrator/DECISION_LOG.md",
+        "backend/src/modules/knowledge/**",
+        "backend/src/application/knowledge.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+        "orchestrator/process/reconcile.config.json"
       ],
       "read_set": [
         "docs/features/t1075-knowledge-redesign.md",

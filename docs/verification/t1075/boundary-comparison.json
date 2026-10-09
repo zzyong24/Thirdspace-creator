@@ -1,0 +1,15 @@
+{
+  "baseline": "a3aa81d1",
+  "prior_log": "docs/verification/t1074/boundary.log",
+  "current_log": "docs/verification/t1075/boundary-final.log",
+  "prior_outside_baseline": [
+    "R2-no-agent-sdk-in-frontend-pages::frontend/src/features/copilot/live-chat-session.ts::@ai-sdk/react",
+    "R2-no-agent-sdk-in-frontend-pages::frontend/src/features/copilot/live-chat-session.ts::ai"
+  ],
+  "current_outside_baseline": [
+    "R2-no-agent-sdk-in-frontend-pages::frontend/src/features/copilot/live-chat-session.ts::@ai-sdk/react",
+    "R2-no-agent-sdk-in-frontend-pages::frontend/src/features/copilot/live-chat-session.ts::ai"
+  ],
+  "added": [],
+  "note": "静态基线仍为5，当前与此前同7条；同2条live-chat SDK违规归T-1018，本任务未改该文件或缩减规则"
+}

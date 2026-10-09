@@ -1,0 +1,53 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/knowledge/knowledge.service.test.ts (26 tests | 1 failed) 30764ms
+     × 拒绝不存在和其他账号的文件夹且没有落库 1011ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/knowledge/knowledge.service.test.ts > 资料书架创建目标守卫 > 拒绝不存在和其他账号的文件夹且没有落库
+AssertionError: promise resolved "{ id: 'knowledge-1', …(18) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "accountId": "acct-a",
++   "archivedAt": null,
++   "assetId": null,
++   "createdAt": "2026-06-21T00:00:00.000Z",
++   "currentRevisionId": "revision-1",
++   "folderId": "missing-folder",
++   "groupId": "grp_legacy_acct-a",
++   "id": "knowledge-1",
++   "knowledgeType": "note",
++   "sourceMetadata": {},
++   "sourceNote": null,
++   "sourceType": "manual",
++   "sourceUrl": null,
++   "status": "active",
++   "title": "越界资料",
++   "updatedAt": "2026-06-21T00:00:00.000Z",
++   "usedCount": 0,
++   "usedInPublished": false,
++   "userId": "user-a",
+  }
+
+ ❯ src/modules/knowledge/knowledge.service.test.ts:411:86
+    409|     const foreign = await service.createFolder(ctxA2, {name:"另一账号文件夹"}…
+    410|     for(const folderId of ["missing-folder", foreign.id]) {
+    411|       await expect(service.createKnowledge(ctxA,{title:"越界资料",content:…
+       |                                                                                      ^
+    412|     }
+    413|     expect(await service.listKnowledge(ctxA)).toHaveLength(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 25 passed (26)
+   Start at  22:44:04
+   Duration  32.41s (transform 771ms, setup 0ms, import 1.46s, tests 30.76s, environment 0ms)

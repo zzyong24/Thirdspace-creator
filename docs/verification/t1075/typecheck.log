@@ -1,0 +1,2 @@
+src/features/knowledge/knowledge-library.tsx(69,145): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.

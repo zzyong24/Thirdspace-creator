@@ -1,0 +1,23 @@
+{
+  "baseline_log": "docs/verification/t1074/reconcile.log",
+  "current_log": "docs/verification/t1075/reconcile.log",
+  "baseline_error_count": 34,
+  "current_error_count": 35,
+  "added_errors": [
+    "✗ [ERROR] lesson LED-055 RECURRED — 资源生命周期回归：修复实际消费者的释放、背压、单在途和停止屏障；保留原任务/attempt/fence/deadline、审批、完整历史与合法大输出。等待状态按真实任务ID保护；取消接受仅释放原turn本地关联，最终终态由原租约确认。禁止删历史、重发任务或伪造释放/成功。"
+  ],
+  "removed_errors": [],
+  "root_tasks": [
+    "T-916",
+    "T-1015",
+    "T-1018"
+  ],
+  "led055_followup": {
+    "command": "node docs/verification/t1073/verify-resource-lifecycle.mjs",
+    "log": "docs/verification/t1075/led055-isolated.log",
+    "exit_code": 0,
+    "source_changed_between_runs": false,
+    "cause": "未定位；不推定为并发或内存问题，也不覆盖完整reconcile的原失败",
+    "root_task": "T-1018"
+  }
+}

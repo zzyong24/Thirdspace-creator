@@ -1,0 +1,5 @@
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/draft-workbench/draft-workbench-data.ts
+  4:10  warning  'client' import from '@/lib/contract-client.server' is restricted. `client` is the canonical-ctx singleton (SSR/test seam only) and leaks the canonical tenant's data. Derive the request ctx and use `createServerClient(session.ctx)` instead. See contract-client.server.ts  no-restricted-imports
+
+✖ 1 problem (0 errors, 1 warning)
