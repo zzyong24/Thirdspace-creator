@@ -7906,6 +7906,67 @@
           "git diff --check"
         ]
       }
+    },
+    "T-1149": {
+      "task_id": "T-1149",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1149-current-cover-group-aspect.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        ".agents/skills/oil-ui-pro/SKILL.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "contract/src/resources/creative-canvas.ts",
+        "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+        "frontend/src/features/creative-canvas/canvas-editor.tsx",
+        "frontend/src/features/creative-canvas/canvas-template-library.tsx",
+        "frontend/src/features/creative-canvas/canvas-editor.test.tsx",
+        "frontend/src/features/creative-canvas/canvas-template-library.test.tsx"
+      ],
+      "write_set": [
+        "frontend/src/features/creative-canvas/cover-aspect-ratio-labels.ts",
+        "frontend/src/features/creative-canvas/canvas-editor.tsx",
+        "frontend/src/features/creative-canvas/canvas-template-library.tsx",
+        "frontend/src/features/creative-canvas/canvas-editor.test.tsx",
+        "frontend/src/features/creative-canvas/canvas-template-library.test.tsx",
+        "frontend/tests/e2e/t1149-cover-aspect-group.spec.ts",
+        "docs/features/t1149-current-cover-group-aspect.md",
+        "docs/features/t1149-current-cover-group-aspect.review.md",
+        "docs/features/t1149-current-cover-group-aspect.review-input.json",
+        "docs/verification/t1149/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/process/reconcile.config.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/features/creative-canvas/canvas-editor.test.tsx src/features/creative-canvas/canvas-template-library.test.tsx --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "node docs/verification/t1149/run-aspect-journey.mjs",
+          "node docs/verification/t1136/run-layout-journey.mjs",
+          "node docs/verification/t1101/run-journey.mjs",
+          "node docs/verification/t1140/run-picker-journey.mjs",
+          "pnpm --dir frontend typecheck",
+          "pnpm --dir backend exec vitest run src/modules/creative-canvas/creative-canvas.service.test.ts --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "./frontend/node_modules/.bin/tsx docs/verification/t1141/run-public-ratio.mts",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "git diff --check",
+          "node orchestrator/process/pmem.mjs sync",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

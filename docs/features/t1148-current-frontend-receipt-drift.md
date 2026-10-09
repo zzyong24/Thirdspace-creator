@@ -16,3 +16,9 @@ flowchart LR
  B --> C[保存旧证据并登记]
  C --> D[最终源码按原合同补验]
 ```
+
+## 当前正式失效事件（2026-10-09 UTC）
+
+18:21:22–23，按独立审查确认的原taskctl路径分别block T1108、T1117、T1136，旧验收自动回到待验，原报告与历史completion事件均保留。18:31:19，T1149在当前正式SPEC PASS后修改CanvasEditor，另正式block T1140；原efe9两次成功及实际查看14图不改头换面。原四次wrapper receipt分别保于私有验收目录，T1140新事件日志SHA bbbdcf5b25cade149d4e9f04034173a579c689ef5a412c691b5d8f9ac3c1103b。
+
+当前需要按最终受测字节补验的旧任务为这四项。新T1149 Chrome不能代替它们原合同。后续真正resume/新report/complete发生后单独登记；此段只记录已经发生的block，不声称旧验收已恢复。

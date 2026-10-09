@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "CONCERNS：产品语义边界总体可实现，组内非空比例、能力交集、晚到能力、部分提交、旧预约/旧null及保存后引用均与当前调用链相容；depends_on=[]也避免父整合任务形成流程环。但正式模块没有绑定 CanvasEditor 变更必然触发的 T1140 原旅程与旧收据重验，违反 SPEC 明示的 T1148 闭环。修正该确定性验证缺口后可 recheck；本结论不授权实施，也不代签模型、安装或全局 Gate。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:46:bdc984993aa6cb2a",
+        "quote": "T1140已当前正式taskctl完成，本任务更改其watched CanvasEditor时必须通过同一正式失效与最终重验路径，不声称旧PASS仍签新字节。"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:55:99c79b4bc3a17c3b",
+        "quote": "taskctl通过新PAGE_SPEC真实执行本任务Chrome；不继承来源报告、不是安装/模型/平台验收。后续剩余源码若改此任务watched路径，同样正式失效与最终重验。"
+      },
+      "where": "orchestrator/process/modules.config.json 的 T-1149 verify_commands.implementation",
+      "failure_mode": "CanvasEditor 是 T1140 PAGE_SPEC 的 watched_paths；T1149 会改变该字节，但正式命令只运行新 T1149 旅程，未运行 T1140 原 run-picker-journey。新旅程不能更新 T1140 的正式 frontend-validation 收据，因此即使 T1149 自测通过，仍可能留下旧收据绑定旧 CanvasEditor 字节，违反 SPEC 自己声明的失效与最终重验要求。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:88be7f3a2c7f5109ffe15a0a7d0c4cda9279a36a3169b7d469626a8025c15a5d:orchestrator/process/modules.config.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:46:bdc984993aa6cb2a",
+      "suggestion": "实施前把 T1140 原公开旅程 `node docs/verification/t1140/run-picker-journey.mjs` 精确加入 T-1149 implementation 命令，并按现有 T1148 流程先正式失效旧收据、在最终 CanvasEditor 字节上生成新的 T1140 报告后再恢复/完成。保留新 T1149 旅程；两者不能互相替代。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

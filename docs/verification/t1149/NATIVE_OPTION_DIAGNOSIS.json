@@ -1,0 +1,27 @@
+{
+  "taskId": "T-1154",
+  "consumerPath": "node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js",
+  "consumerSha256": "f74353fcb8e406756a70a6af0dfc4a5069acd577e35ec9d923ccf36ac009c2f5",
+  "mechanism": "elementState follow-label 将外层label包裹的option转为label.control；该select enabled",
+  "actualOutput": {
+    "enclosedInLabel": true,
+    "nativeDisabled": true,
+    "hasDisabledAttribute": true,
+    "parentSelectDisabled": false,
+    "matcherDisabled": false
+  },
+  "probeWholeExit": 1,
+  "keyboardHomeExit": 1,
+  "keyboardArrowUpExit": 1,
+  "keyboardVerified": false,
+  "completePublicBrowserExit": 0,
+  "publicSource": {
+    "frontend/src/features/creative-canvas/cover-aspect-ratio-labels.ts": "e78d44f0850bfc3b212804763fb0537713286cd790e63fff399f8170fcb5d408",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "d67ba3e119fc7aa8dc18c2b83a295befdecd710915fccf34d8bc45716780cec9",
+    "frontend/src/features/creative-canvas/canvas-template-library.tsx": "296211da8ab736533477714310744e14ce7ee17e11e230976fee0ec59f8b8899",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "50636caf2a006875d4b2b9d040645a2018a032f6dd94ff436367481998db5b5f",
+    "frontend/src/features/creative-canvas/canvas-template-library.test.tsx": "585702fbe59bccc81ff8f0b1d4517edf5b0c1172930f08fc37ed3998b73b3dff",
+    "frontend/tests/e2e/t1149-cover-aspect-group.spec.ts": "4f4740185171f9d0b51b60602b09899ad00bfb67c38d036c9933a7d5f3ffbf2d",
+    "docs/verification/t1149/run-aspect-journey.mjs": "0efbbc6192d11a805c92ef1689ba60d213dd43b0c663d81247f597ae785ce40a"
+  }
+}

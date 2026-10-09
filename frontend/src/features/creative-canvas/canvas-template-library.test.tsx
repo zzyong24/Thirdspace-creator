@@ -38,6 +38,11 @@ it("私人参考图版本已变化时不显示为已保存风格样图",async()=
  await screen.findByRole("button",{name:/杂志封面/});expect(api.getAssetFileDownloadUrl).not.toHaveBeenCalled();
 });
 
+it("T1149 比例用途可见且保留原可访问名，21:9明确提醒发布前裁切",async()=>{
+ function Uses(){const [ratio,setRatio]=useState("3:4");return <CanvasTemplateLibrary accountId="account-a" assets={[]} capabilities={[{mode:"text_to_image",available:true,model:"用途测试",reason:null,aspectRatios:["3:4","16:9","21:9"]}]} aspectRatio={ratio} onAspectRatio={setRatio} onInsert={insert} onClose={vi.fn()} onUpload={vi.fn()} onLoadMoreAssets={vi.fn()} hasMoreAssets={false} loadingAssets={false}/>;}
+ render(<Uses/>);fireEvent.click(await screen.findByRole("button",{name:/杂志封面/}));expect(screen.getByRole("button",{name:"3:4"})).toHaveTextContent("小红书 · 竖版封面");expect(screen.getByRole("button",{name:"16:9"})).toHaveTextContent("B站 · 横版视频");fireEvent.click(screen.getByRole("button",{name:"21:9"}));expect(screen.getByText(/公众号头图底稿，发布前请按平台要求裁切/)).toBeVisible();expect(insert).not.toHaveBeenCalled();
+},120000);
+
 // T1062_COMPONENT_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
 vi.mock("@/lib/creation-workspace-scope", async importOriginal => {
   const actual = await importOriginal<typeof import("@/lib/creation-workspace-scope")>();

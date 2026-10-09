@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ efe9f1ce
+LAST_SYNCED: main @ 2af9cab4
 
 ## 这是什么(定位)
 
@@ -23,6 +23,8 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-1155 核对浏览器导航时本地服务连接中断日志
+- [wip] T-1149 在当前main整合封面用途与图片页组统一画幅
 - [wip] T-1148 核对本轮共享页面修改后的旧验收记录失效
 - [wip] T-1144 核对素材旅程完成后测试进程未退出
 - [wip] T-1124 核对本轮新增来源分支未合入main的源码并闭合整合

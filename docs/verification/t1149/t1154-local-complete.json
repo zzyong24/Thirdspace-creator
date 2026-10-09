@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1154",
+    "--evidence",
+    "已核真实elementState follow-label及原生option.disabled=true，当前两个模式和不支持选项的原公开旅程两例PASS/78.616238秒0。Home/ArrowUp两附带探针各120秒FAIL/exit1保留，未签键盘/模型；仅观察API校准。"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T19:08:03.612484+00:00",
+  "finishedAt": "2026-10-09T19:08:03.731396+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.1187402920331806,
+  "logSha256": "c1fd2bfeff042186924911d63811bf83e1b61954652fffe20b23094b2bc77a9f"
+}

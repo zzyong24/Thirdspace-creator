@@ -1,0 +1,56 @@
+{
+  "schema": "creatoros-independent-implementation-review/v1",
+  "taskId": "T-1149",
+  "reviewedAt": "2026-10-10T03:00:53+08:00",
+  "head": "2af9cab4c4cff2677f470ee096e4f2a2e98fca40",
+  "verdict": "STATIC_PASS_PENDING_CURRENT_BROWSER",
+  "sourceHashes": {
+    "frontend/src/features/creative-canvas/cover-aspect-ratio-labels.ts": "e78d44f0850bfc3b212804763fb0537713286cd790e63fff399f8170fcb5d408",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "d67ba3e119fc7aa8dc18c2b83a295befdecd710915fccf34d8bc45716780cec9",
+    "frontend/src/features/creative-canvas/canvas-template-library.tsx": "296211da8ab736533477714310744e14ce7ee17e11e230976fee0ec59f8b8899",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "50636caf2a006875d4b2b9d040645a2018a032f6dd94ff436367481998db5b5f",
+    "frontend/src/features/creative-canvas/canvas-template-library.test.tsx": "585702fbe59bccc81ff8f0b1d4517edf5b0c1172930f08fc37ed3998b73b3dff",
+    "frontend/tests/e2e/t1149-cover-aspect-group.spec.ts": "fa51e5e019b20863ebfe3ddc5aa7e31062d29d217a138b8a1f853b3cf75c09be",
+    "docs/verification/t1149/run-aspect-journey.mjs": "0efbbc6192d11a805c92ef1689ba60d213dd43b0c663d81247f597ae785ce40a",
+    "docs/verification/t1149/PAGE_SPEC.md": "cb2906ee1ba429ac3e7c4fe8e05027d385653c099d9a496db550895cb23ae26a",
+    "docs/features/t1149-current-cover-group-aspect.md": "7818267628134fda88c4d332558211ba08adfe831e9a7d61e85b71ceb4d5e195"
+  },
+  "findings": [],
+  "resolvedFindings": [
+    {
+      "id": "IMP-001",
+      "status": "resolved",
+      "resolution": "能力fixture补齐四mode并由正式resource.parse校验；后续真实公开模板快照替代虚构ID。"
+    },
+    {
+      "id": "T1154-OPTION-OBSERVATION",
+      "status": "resolved-as-test-calibration",
+      "resolution": "以原生option.disabled JS属性和disabled属性验证；不使用会沿label.control重定向的toBeDisabled。"
+    }
+  ],
+  "implementationConclusions": [
+    "组比例只同步目标group及其pageOrder中的image_generation；静态图片、组外节点、reference、attempt、edges与viewport未进入同步集合。",
+    "能力列表缺失时保持unknown；明确列表不含值才拒绝。模式冲突在引用清理前返回，两个入口共用updateNode。",
+    "generateGroup先保留recreate、在途、已有结果、failed与旧null语义，再跳过明确不支持的新页；只有pending页生成attempt，全无pending不保存幽灵attempt。",
+    "部分提交先saveNow保存真实attempt，再逐页走公开generateCanvasNode；owner/epoch和错误恢复保持。",
+    "E2E经公开group/project/upload/template list/canvas save/get；能力与一次503明确标fixture，不替换成功写。"
+  ],
+  "actualFinishedEvidence": {
+    "components": "48 PASS",
+    "backendService": "25 PASS",
+    "LED047": "174 PASS",
+    "frontendType": "exit0",
+    "t1141PublicRoot": "exit0"
+  },
+  "preservedFailures": [
+    "三轮Chrome失败均保留并分别归因到四mode schema、真实模板ID、main alert/native option观察校准。",
+    "Home/ArrowUp键盘观察各120秒失败；不声明键盘路径已验或探针整轮PASS。"
+  ],
+  "pending": [
+    "当前root session18921新Chrome终态",
+    "实际截图与视觉复核",
+    "T1140/T1108/T1117/T1136最终HEAD原旅程报告与resume/complete",
+    "static/timeout/full reconcile",
+    "安装、模型、native与全功能"
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "t1153-current-public-browser.log": {
+    "originalDecodedSha256": "0502cd29ce2feffd6d1b7488fcbce29bfd69e6953571ef4fedbec0be7b8263ad",
+    "originalGzip": "t1153-current-public-browser.log.original.gz",
+    "readableSha256": "5ff920d884c76b2a336f41c095b9d3b440bc06af2873dbaa61d6540d6a81df59",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1149-current-public-browser.log": {
+    "originalDecodedSha256": "4f4f6ff314fff0169af8e40fb4ddf9f1e61299182f875010fbf0a454eacbeebe",
+    "originalGzip": "t1149-current-public-browser.log.original.gz",
+    "readableSha256": "9f0dd8fe5571e593403656cbf0ca5d14bac98ade1acb9a6f25b210ad79ea2c6f",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1149-led047.log": {
+    "originalDecodedSha256": "9285c49e4ba3eb4316f41df35fe99ab77601c8a9bacd084a43e72f557d567bc5",
+    "originalGzip": "t1149-led047.log.original.gz",
+    "readableSha256": "9285c49e4ba3eb4316f41df35fe99ab77601c8a9bacd084a43e72f557d567bc5",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1140-t1149-source-invalidate.log": {
+    "originalDecodedSha256": "bbbdcf5b25cade149d4e9f04034173a579c689ef5a412c691b5d8f9ac3c1103b",
+    "originalGzip": "t1140-t1149-source-invalidate.log.original.gz",
+    "readableSha256": "bbbdcf5b25cade149d4e9f04034173a579c689ef5a412c691b5d8f9ac3c1103b",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1150-corrected-type.log": {
+    "originalDecodedSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035",
+    "originalGzip": "t1150-corrected-type.log.original.gz",
+    "readableSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1150-corrected-components.log": {
+    "originalDecodedSha256": "66a9fa8f3df54a254896b73725ca977e22fe761bbb23450bf7cc795571061d96",
+    "originalGzip": "t1150-corrected-components.log.original.gz",
+    "readableSha256": "66a9fa8f3df54a254896b73725ca977e22fe761bbb23450bf7cc795571061d96",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1151-current-fixture-type.log": {
+    "originalDecodedSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035",
+    "originalGzip": "t1151-current-fixture-type.log.original.gz",
+    "readableSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1149-frontend-type.log": {
+    "originalDecodedSha256": "5d6553812783fa6810329b0afe80a7d6a66924ec3e881d45b49b47d6f7b8a594",
+    "originalGzip": "t1149-frontend-type.log.original.gz",
+    "readableSha256": "5d6553812783fa6810329b0afe80a7d6a66924ec3e881d45b49b47d6f7b8a594",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1149-target-current-green.log": {
+    "originalDecodedSha256": "b4818239b2e8c7e37a2cf955882f1b084343bf9be293e18412448bc1fc57864e",
+    "originalGzip": "t1149-target-current-green.log.original.gz",
+    "readableSha256": "b4818239b2e8c7e37a2cf955882f1b084343bf9be293e18412448bc1fc57864e",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1154-current-public-browser.log": {
+    "originalDecodedSha256": "befe658da6e467ed6f178772ef0b140abbc958f3cdf261f3beceb8bcc071dd13",
+    "originalGzip": "t1154-current-public-browser.log.original.gz",
+    "readableSha256": "befe658da6e467ed6f178772ef0b140abbc958f3cdf261f3beceb8bcc071dd13",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1149-target-current-corrected-green.log": {
+    "originalDecodedSha256": "da9a31de545adaf76248a0f10cba494c4edf92ca9bc4f16670d1127ec2bd9715",
+    "originalGzip": "t1149-target-current-corrected-green.log.original.gz",
+    "readableSha256": "da9a31de545adaf76248a0f10cba494c4edf92ca9bc4f16670d1127ec2bd9715",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1149-target-calibrated-current-red.log": {
+    "originalDecodedSha256": "c9f8f6b5c05219b905570bce219d094653e76a39247a2226d472c0c3e3294f7c",
+    "originalGzip": "t1149-target-calibrated-current-red.log.original.gz",
+    "readableSha256": "c9f8f6b5c05219b905570bce219d094653e76a39247a2226d472c0c3e3294f7c",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1154-native-option-arrow-current.log": {
+    "originalDecodedSha256": "8028f214ad967681a3753b62533fc0acccba158c11004f598e65ad621d4448a6",
+    "originalGzip": "t1154-native-option-arrow-current.log.original.gz",
+    "readableSha256": "8028f214ad967681a3753b62533fc0acccba158c11004f598e65ad621d4448a6",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1152-current-public-browser.log": {
+    "originalDecodedSha256": "c318d42774a1b49412e2a9b2ad93abf38b3d9e6d09a4a72f56e1dcdad539ca3a",
+    "originalGzip": "t1152-current-public-browser.log.original.gz",
+    "readableSha256": "f8b79e2abdefffc72dca365c0f1febdedf4e84562a181e57160bfda7acc9ed10",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1149-current-timeout-policy.log": {
+    "originalDecodedSha256": "0ae5c891c2b998b54dabb16bb305bffe2d2620197626ca3d8454ecfbdc8af258",
+    "originalGzip": "t1149-current-timeout-policy.log.original.gz",
+    "readableSha256": "0ae5c891c2b998b54dabb16bb305bffe2d2620197626ca3d8454ecfbdc8af258",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1149-semantic.log": {
+    "originalDecodedSha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+    "originalGzip": "t1149-semantic.log.original.gz",
+    "readableSha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1150-local-complete.log": {
+    "originalDecodedSha256": "6cef13dabba8aa644ab5f2f4b1fac992e183e0d014da59b6e523c44ea33ba792",
+    "originalGzip": "t1150-local-complete.log.original.gz",
+    "readableSha256": "6cef13dabba8aa644ab5f2f4b1fac992e183e0d014da59b6e523c44ea33ba792",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1149-orphan.log": {
+    "originalDecodedSha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+    "originalGzip": "t1149-orphan.log.original.gz",
+    "readableSha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1149-public-root-current.log": {
+    "originalDecodedSha256": "14e864cbf9135ae706246001a807dfc894d1463d5018a68cdff564646b223e9e",
+    "originalGzip": "t1149-public-root-current.log.original.gz",
+    "readableSha256": "14e864cbf9135ae706246001a807dfc894d1463d5018a68cdff564646b223e9e",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1156-final-frontend-type.log": {
+    "originalDecodedSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035",
+    "originalGzip": "t1156-final-frontend-type.log.original.gz",
+    "readableSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1154-native-option-current.log": {
+    "originalDecodedSha256": "9c11afff0d81badca92b555b3027d2f08a7a76b8eea1b55bc7ece6330860cc80",
+    "originalGzip": "t1154-native-option-current.log.original.gz",
+    "readableSha256": "9c11afff0d81badca92b555b3027d2f08a7a76b8eea1b55bc7ece6330860cc80",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1149-backend-service.log": {
+    "originalDecodedSha256": "a4f3ed80a6b88b7a7ff35e62ca09e9e9c6809f8998c5ea5f01d154012bf97229",
+    "originalGzip": "t1149-backend-service.log.original.gz",
+    "readableSha256": "a4f3ed80a6b88b7a7ff35e62ca09e9e9c6809f8998c5ea5f01d154012bf97229",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1149-all-current-components.log": {
+    "originalDecodedSha256": "66211d73555a98aa102d9ec112a80a6063889a556374e3560647886c86cc8d28",
+    "originalGzip": "t1149-all-current-components.log.original.gz",
+    "readableSha256": "66211d73555a98aa102d9ec112a80a6063889a556374e3560647886c86cc8d28",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1149-boundary.log": {
+    "originalDecodedSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+    "originalGzip": "t1149-boundary.log.original.gz",
+    "readableSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "current-journey.log": {
+    "originalDecodedSha256": "4b6fe2c0e9e1dfeee01b3e9c3064b2417544d011e1fb0f0eebfeb0d193732ca3",
+    "originalGzip": "current-journey.log.original.gz",
+    "readableSha256": "5cbc4521aea367c5046bb1a30b16b03afad587e8f7b60c916266363db7cf160e",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  },
+  "t1156-current-public-browser.log": {
+    "originalDecodedSha256": "f8816804cd1dcb7d2944add0836d3caee50e2123aee976936649612c60135cf1",
+    "originalGzip": "t1156-current-public-browser.log.original.gz",
+    "readableSha256": "f8816804cd1dcb7d2944add0836d3caee50e2123aee976936649612c60135cf1",
+    "onlyTransform": "strip trailing ASCII space/tab per line; preserve newline and all result/error text"
+  }
+}

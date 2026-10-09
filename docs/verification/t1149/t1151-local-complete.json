@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1151",
+    "--evidence",
+    "四mode正式schema实际parse、公开模板准备、当前Chrome两例PASS/0retry/78.616238秒exit0；t1156-current-public-browser.json；新type7.387269秒0。仅校准fixture，不签模型/安装/整T1149。"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T19:08:02.614909+00:00",
+  "finishedAt": "2026-10-09T19:08:02.744343+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.1289509170455858,
+  "logSha256": "8a0931a03583bb8ba3ad693ba59e2cec536592572048daba8b7ff218d0d8be3e"
+}

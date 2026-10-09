@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "node",
+    "docs/verification/t1149/run-aspect-journey.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T18:41:29.187707+00:00",
+  "finishedAt": "2026-10-09T18:42:11.968689+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 42.780324916995596,
+  "logSha256": "4f4f6ff314fff0169af8e40fb4ddf9f1e61299182f875010fbf0a454eacbeebe"
+}

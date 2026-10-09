@@ -1,0 +1,9 @@
+{
+  "reason": "新增label内部说明被并入combobox可访问名，原exact画幅定位不能命中；当前运行已超过单次120秒，停止这次已知有问题的本任务测试以修正产品名，不计为GREEN或完整测试结果",
+  "ownedProcessRows": [
+    "18900 18899 node ./node_modules/.bin/../../../node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/vitest.mjs run src/features/creative-canvas/canvas-editor.test.tsx -t T1149",
+    "18906 18900 /opt/homebrew/Cellar/node/25.9.0_2/bin/node --experimental-import-meta-resolve --require /Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/suppress-warnings.cjs --conditions node --conditions development /Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/workers/forks.js"
+  ],
+  "sourceSha256": "68c13bd378461511e188da8f3ebb5093433fdd2949c0864f1234a9637e8175f1",
+  "gate": "取消不算PASS，不删原timeout或断言"
+}

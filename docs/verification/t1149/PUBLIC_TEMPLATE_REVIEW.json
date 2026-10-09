@@ -1,0 +1,32 @@
+{
+  "schema": "creatoros-independent-implementation-supplement/v1",
+  "taskId": "T-1149",
+  "diagnosticTask": "T-1152",
+  "reviewedAt": "2026-10-10T02:44:37+08:00",
+  "verdict": "PASS_CALIBRATION_PENDING_BROWSER_RERUN",
+  "head": "2af9cab4c4cff2677f470ee096e4f2a2e98fca40",
+  "sourceHashes": {
+    "frontend/tests/e2e/t1149-cover-aspect-group.spec.ts": "bf5b7a013abc07172e068fb7388d110c7c4bf30c4f8798868ed5b3fda1b5d8ea",
+    "docs/verification/t1149/run-aspect-journey.mjs": "0efbbc6192d11a805c92ef1689ba60d213dd43b0c663d81247f597ae785ce40a",
+    "docs/verification/t1149/PAGE_SPEC.md": "cb2906ee1ba429ac3e7c4fe8e05027d385653c099d9a496db550895cb23ae26a"
+  },
+  "preservedFailureEvidence": {
+    "outerJson": "ac36d8a256d80326b1010500eda255d8bd8364a26df563c5b9eecf359869c16c",
+    "innerJson": "68223f7cd0e8915dff9ac2fcb04271f4addbec986b574395f48cd5ab31ca834c",
+    "outerLog": "4f4f6ff314fff0169af8e40fb4ddf9f1e61299182f875010fbf0a454eacbeebe",
+    "innerLog": "7926f789aeadcb2f772a656d156fe3f919c93dfe65068cca0fe3015ac1633da2"
+  },
+  "findings": [],
+  "conclusions": [
+    "首轮42.780秒exit1发生在setup初始canvas.save，两个用例均未进入画幅交互；不能称产品RED。",
+    "原虚构neutral-style/other-style已删除。setup按同fresh group通过公开assets.visualTemplates.list分别读取xhs与cover builtin目录，选择graphic且requiredIdentity=false的真实模板。",
+    "templateSnapshot的id/name/version/prompt/visualMode/requiredIdentity全部逐字段来自公开资源；没有伪造owner、绕过resolveTemplateRequirement或改后端校验。",
+    "节点、参考图、save/get、能力fixture、产品三路径、runner和PAGE_SPEC语义不变。"
+  ],
+  "pending": [
+    "校准后T1149 Chrome实际终态",
+    "截图与视觉复核",
+    "旧T1140/T1108/T1117/T1136最终HEAD重验与恢复",
+    "完整Gate/安装/模型/native"
+  ]
+}

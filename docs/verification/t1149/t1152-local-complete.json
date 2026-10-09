@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1152",
+    "--evidence",
+    "真实公开builtin模板ID/version经原归属校验，当前两条公开save/get/reload/back旅程78.616238秒exit0；保原404/trace，不改产品权限或省模板断言。"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T19:08:02.951917+00:00",
+  "finishedAt": "2026-10-09T19:08:03.074210+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.12217525002779439,
+  "logSha256": "844f1051d651858db7ebe86ce675801b7d3ef92322cc9faa25b1fa29eea4a611"
+}

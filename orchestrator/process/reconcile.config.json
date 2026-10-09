@@ -372,7 +372,8 @@
     "canvas-binding-collection:e2e": "node docs/verification/t1101/run-journey.mjs",
     "shared-resource-lifecycle:e2e": "node docs/verification/t1105/run-journey.mjs",
     "calendar-dialog-layout:e2e": "node docs/verification/t1136/run-layout-journey.mjs",
-    "picker-low-height:e2e": "node docs/verification/t1140/run-picker-journey.mjs"
+    "picker-low-height:e2e": "node docs/verification/t1140/run-picker-journey.mjs",
+    "cover-group-aspect:e2e": "node docs/verification/t1149/run-aspect-journey.mjs"
   },
   "research_verify_commands": {
     "t987-baseline-timing": "node docs/research/t987/verify-baseline.mjs timing",

@@ -1,0 +1,48 @@
+{
+  "schema": "creatoros-independent-implementation-review/v1",
+  "taskId": "T-1149",
+  "reviewedAt": "2026-10-10T02:39:40+08:00",
+  "head": "2af9cab4c4cff2677f470ee096e4f2a2e98fca40",
+  "specSha256": "7818267628134fda88c4d332558211ba08adfe831e9a7d61e85b71ceb4d5e195",
+  "modulesSha256": "687f70bfdf9bc160e47f7418bd307bb3587cc6a0db5e05ee6a106062a32db0c6",
+  "verdict": "CHANGES_REQUIRED",
+  "sourceHashes": {
+    "frontend/src/features/creative-canvas/cover-aspect-ratio-labels.ts": "e78d44f0850bfc3b212804763fb0537713286cd790e63fff399f8170fcb5d408",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "d67ba3e119fc7aa8dc18c2b83a295befdecd710915fccf34d8bc45716780cec9",
+    "frontend/src/features/creative-canvas/canvas-template-library.tsx": "296211da8ab736533477714310744e14ce7ee17e11e230976fee0ec59f8b8899",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "50636caf2a006875d4b2b9d040645a2018a032f6dd94ff436367481998db5b5f",
+    "frontend/src/features/creative-canvas/canvas-template-library.test.tsx": "585702fbe59bccc81ff8f0b1d4517edf5b0c1172930f08fc37ed3998b73b3dff",
+    "frontend/tests/e2e/t1149-cover-aspect-group.spec.ts": "fc3b1973261012ccd48d76d2dbea92d54dfd046aafaaab823d1a8ecb19750040",
+    "docs/verification/t1149/run-aspect-journey.mjs": "0efbbc6192d11a805c92ef1689ba60d213dd43b0c663d81247f597ae785ce40a",
+    "docs/verification/t1149/PAGE_SPEC.md": "cb2906ee1ba429ac3e7c4fe8e05027d385653c099d9a496db550895cb23ae26a"
+  },
+  "findings": [
+    {
+      "id": "IMP-001",
+      "status": "open",
+      "severity": "major",
+      "category": "testability",
+      "where": "frontend/tests/e2e/t1149-cover-aspect-group.spec.ts:32-36",
+      "failureMode": "capabilities() 拦截正式 canvas.capabilities 响应时只返回 text_to_image 与 image_to_image 两项；contract 的 canvasGenerationCapabilitiesResource 强制 modes 恰好四项。真实 contract client 会拒绝该响应，浏览器无法取得预期能力，两个公共旅程不能验证产品行为。",
+      "evidence": {
+        "contractSha256": "4143dc37e960405de6e2c038b28b8c65b5a7107dc4550a76f7cd3defe7e0c733",
+        "testSha256": "fc3b1973261012ccd48d76d2dbea92d54dfd046aafaaab823d1a8ecb19750040",
+        "contractRule": "canvasGenerationCapabilitiesResource.modes.length(4)"
+      },
+      "requiredFix": "仅校准新E2E能力fixture，补齐 text_to_video 与 image_to_video 两条合法模式记录；不得放宽schema、修改产品逻辑或减少现有断言。随后在最终冻结字节上实际运行新旅程。"
+    }
+  ],
+  "staticConclusions": [
+    "产品实现按组同步group.aspectRatio及全部image_generation节点；静态图片和组外节点不在更新集合。",
+    "已知能力表才拒绝，缺失aspectRatios保持unknown；模式拒绝发生在清理引用之前，两个入口均汇入updateNode。",
+    "generateGroup保持recreate、在途、完成、failed与旧null判断顺序；明确不支持只跳过新提交页，全无pending时不写attempt。",
+    "部分支持时只为pending页建立attempt并经saveNow后提交；错误/epoch/owner和T1108引用记忆代码未被绕过。"
+  ],
+  "pending": [
+    "IMP-001修正后的新浏览器旅程",
+    "当前运行中的组件/public-root/type终态",
+    "T1148旧任务分别block、最终HEAD报告、resume/complete",
+    "LED047/static/timeout/full reconcile",
+    "实际截图独立视觉复核、安装、模型与原生App"
+  ]
+}

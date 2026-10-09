@@ -1,0 +1,419 @@
+{
+  "surface": "browser",
+  "mode": "non-fixture",
+  "witnesses": {
+    "groupId": "grp-e50d0508-5",
+    "projectId": "project-e50d0508-7",
+    "canvasId": "aa55e9cd-dfdd-42fa-80ed-125c45ca97f9",
+    "reference": {
+      "id": "asset-e50d0508-19",
+      "userId": "user-e50d0508-1",
+      "currentFileId": "afile-e50d0508-23",
+      "assetType": "image",
+      "name": "中性人物示意图.png",
+      "description": "",
+      "status": "active",
+      "isFavorite": false,
+      "mimeType": "image/png",
+      "fileSize": 1952233,
+      "width": 1086,
+      "height": 1448,
+      "durationMs": null,
+      "extractStatus": null,
+      "materialSummary": null,
+      "extractedText": null,
+      "sourceUrl": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-09T19:05:11.910Z",
+      "updatedAt": "2026-10-09T19:05:11.910Z"
+    },
+    "staticImage": {
+      "id": "asset-e50d0508-26",
+      "userId": "user-e50d0508-1",
+      "currentFileId": "afile-e50d0508-30",
+      "assetType": "image",
+      "name": "横版示意图.png",
+      "description": "",
+      "status": "active",
+      "isFavorite": false,
+      "mimeType": "image/png",
+      "fileSize": 1988542,
+      "width": 1672,
+      "height": 941,
+      "durationMs": null,
+      "extractStatus": null,
+      "materialSummary": null,
+      "extractedText": null,
+      "sourceUrl": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-09T19:05:12.039Z",
+      "updatedAt": "2026-10-09T19:05:12.039Z"
+    }
+  },
+  "capabilityFixture": true,
+  "successfulWritesReplaced": false,
+  "modelCalled": false,
+  "refresh": true,
+  "back": true,
+  "repeat": true,
+  "writes": [
+    {
+      "beforeRevision": 2,
+      "savedRevision": 3,
+      "ratio": "16:9",
+      "document": {
+        "schemaVersion": 1,
+        "viewport": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "page-one",
+            "position": {
+              "x": 30,
+              "y": 100
+            },
+            "label": "第一张图片",
+            "size": {
+              "width": 350,
+              "height": 430
+            },
+            "type": "image_generation",
+            "prompt": "中性图片描述一",
+            "mode": "image_to_image",
+            "referenceAssetId": "asset-e50d0508-19",
+            "referenceFileId": "afile-e50d0508-23",
+            "aspectRatio": "16:9"
+          },
+          {
+            "id": "page-two",
+            "position": {
+              "x": 460,
+              "y": 100
+            },
+            "label": "第二张图片",
+            "size": {
+              "width": 350,
+              "height": 430
+            },
+            "type": "image_generation",
+            "prompt": "中性图片描述二",
+            "mode": "text_to_image",
+            "aspectRatio": "16:9"
+          },
+          {
+            "id": "static-image",
+            "position": {
+              "x": 890,
+              "y": 100
+            },
+            "label": "静态原图",
+            "size": {
+              "width": 380,
+              "height": 300
+            },
+            "type": "image",
+            "assetId": "asset-e50d0508-26",
+            "fileId": "afile-e50d0508-30",
+            "checksum": "69f5af085dd8d01989a516c124680b01b96d2a67efff107e88f5672813721b54"
+          },
+          {
+            "id": "other-page",
+            "position": {
+              "x": 1340,
+              "y": 100
+            },
+            "label": "另一组图片",
+            "size": {
+              "width": 350,
+              "height": 430
+            },
+            "type": "image_generation",
+            "prompt": "中性图片描述一",
+            "mode": "image_to_image",
+            "referenceAssetId": "asset-e50d0508-19",
+            "referenceFileId": "afile-e50d0508-23",
+            "aspectRatio": "16:9"
+          }
+        ],
+        "edges": [
+          {
+            "id": "unchanged-connection",
+            "source": "page-one",
+            "target": "other-page"
+          }
+        ],
+        "visualGroups": [
+          {
+            "id": "picture-group",
+            "name": "统一画幅组",
+            "libraryKind": "xhs",
+            "aspectRatio": "16:9",
+            "caption": "原配文",
+            "pageOrder": [
+              "page-one",
+              "page-two",
+              "static-image"
+            ],
+            "templateSnapshot": {
+              "id": "xhs-learning",
+              "name": "步骤笔记",
+              "version": 1,
+              "prompt": "为小红书笔记制作统一视觉。主题：{{本期主题}}。资料：{{真实素材与当前确认稿}}。\n暖白、深蓝、薄荷绿；手写笔记与图解。\n用户选择单图或确认多页计划后生成。每页独立输出，首图引出主题，正文每页只解释一件事。\n图片里的地点、体验、日期、产品质地均为示例，发布前必须替换真实资料；不要编造使用结果。\n配文：场景→方法/记录→个人观察与局限。",
+              "visualMode": "graphic",
+              "requiredIdentity": false
+            },
+            "generationAttempts": {}
+          },
+          {
+            "id": "other-group",
+            "name": "另一图片组",
+            "libraryKind": "cover",
+            "aspectRatio": "16:9",
+            "caption": "另一配文",
+            "pageOrder": [
+              "other-page"
+            ],
+            "templateSnapshot": {
+              "id": "evidence-cards",
+              "name": "证据卡片",
+              "version": 1,
+              "prompt": "制作单张封面。标题：{{本期标题}}。内容：{{当前确认稿}}。\n暖白纸面、深蓝主标题、铜橙强调；标题与知识卡分开，关系图清楚，只用本期真实证据。\n示例只用于参考构图，请替换本期标题和内容，不继承示例数字、人物与事实。",
+              "visualMode": "graphic",
+              "requiredIdentity": false
+            },
+            "generationAttempts": {}
+          }
+        ]
+      }
+    },
+    {
+      "beforeRevision": 3,
+      "savedRevision": 4,
+      "ratio": "3:4",
+      "document": {
+        "schemaVersion": 1,
+        "viewport": {
+          "x": 0,
+          "y": 0,
+          "zoom": 1
+        },
+        "nodes": [
+          {
+            "id": "page-one",
+            "position": {
+              "x": 30,
+              "y": 100
+            },
+            "label": "第一张图片",
+            "size": {
+              "width": 350,
+              "height": 430
+            },
+            "type": "image_generation",
+            "prompt": "中性图片描述一",
+            "mode": "image_to_image",
+            "referenceAssetId": "asset-e50d0508-19",
+            "referenceFileId": "afile-e50d0508-23",
+            "aspectRatio": "3:4"
+          },
+          {
+            "id": "page-two",
+            "position": {
+              "x": 460,
+              "y": 100
+            },
+            "label": "第二张图片",
+            "size": {
+              "width": 350,
+              "height": 430
+            },
+            "type": "image_generation",
+            "prompt": "中性图片描述二",
+            "mode": "text_to_image",
+            "aspectRatio": "3:4"
+          },
+          {
+            "id": "static-image",
+            "position": {
+              "x": 890,
+              "y": 100
+            },
+            "label": "静态原图",
+            "size": {
+              "width": 380,
+              "height": 300
+            },
+            "type": "image",
+            "assetId": "asset-e50d0508-26",
+            "fileId": "afile-e50d0508-30",
+            "checksum": "69f5af085dd8d01989a516c124680b01b96d2a67efff107e88f5672813721b54"
+          },
+          {
+            "id": "other-page",
+            "position": {
+              "x": 1340,
+              "y": 100
+            },
+            "label": "另一组图片",
+            "size": {
+              "width": 350,
+              "height": 430
+            },
+            "type": "image_generation",
+            "prompt": "中性图片描述一",
+            "mode": "image_to_image",
+            "referenceAssetId": "asset-e50d0508-19",
+            "referenceFileId": "afile-e50d0508-23",
+            "aspectRatio": "16:9"
+          }
+        ],
+        "edges": [
+          {
+            "id": "unchanged-connection",
+            "source": "page-one",
+            "target": "other-page"
+          }
+        ],
+        "visualGroups": [
+          {
+            "id": "picture-group",
+            "name": "统一画幅组",
+            "libraryKind": "xhs",
+            "aspectRatio": "3:4",
+            "caption": "原配文",
+            "pageOrder": [
+              "page-one",
+              "page-two",
+              "static-image"
+            ],
+            "templateSnapshot": {
+              "id": "xhs-learning",
+              "name": "步骤笔记",
+              "version": 1,
+              "prompt": "为小红书笔记制作统一视觉。主题：{{本期主题}}。资料：{{真实素材与当前确认稿}}。\n暖白、深蓝、薄荷绿；手写笔记与图解。\n用户选择单图或确认多页计划后生成。每页独立输出，首图引出主题，正文每页只解释一件事。\n图片里的地点、体验、日期、产品质地均为示例，发布前必须替换真实资料；不要编造使用结果。\n配文：场景→方法/记录→个人观察与局限。",
+              "visualMode": "graphic",
+              "requiredIdentity": false
+            },
+            "generationAttempts": {}
+          },
+          {
+            "id": "other-group",
+            "name": "另一图片组",
+            "libraryKind": "cover",
+            "aspectRatio": "16:9",
+            "caption": "另一配文",
+            "pageOrder": [
+              "other-page"
+            ],
+            "templateSnapshot": {
+              "id": "evidence-cards",
+              "name": "证据卡片",
+              "version": 1,
+              "prompt": "制作单张封面。标题：{{本期标题}}。内容：{{当前确认稿}}。\n暖白纸面、深蓝主标题、铜橙强调；标题与知识卡分开，关系图清楚，只用本期真实证据。\n示例只用于参考构图，请替换本期标题和内容，不继承示例数字、人物与事实。",
+              "visualMode": "graphic",
+              "requiredIdentity": false
+            },
+            "generationAttempts": {}
+          }
+        ]
+      }
+    }
+  ],
+  "captures": [
+    {
+      "name": "group-before-1366",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "节点设置\n名称\n生成描述\n模式\n文生图\n参考图生图\n\n参考图片\n\n已选素材\n\n移除当前素材\n画幅\n1:1 · 公众号次条 · 方形封面\n3:4 · 小红书 · 竖版封面\n16:9 · B站 · 横版视频\n9:16 · 抖音 · 全屏竖版\n2:3 · 竖版海报\n3:2 · 横版照片\n4:3 · 横版图文\n4:5 · 竖版图文\n5:4 · 横版海报\n21:9 · 公众号头图底稿\n选择画幅会同步这组的全部图片生成页。\n\n当前模型：参考能力合成样本\n\n生成删除节点\n编导建议\n刷新\n和编导讨论这张画布\n连线\n第一张图片 → 另一组图片\n移除\n生成历史\n\n暂无生成任务",
+      "check_ids": [
+        "AC-ASPECT",
+        "AC-COPY"
+      ],
+      "referenceReady": {
+        "naturalWidth": 1086,
+        "naturalHeight": 1448,
+        "complete": true
+      }
+    },
+    {
+      "name": "group-after-1366",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "节点设置\n名称\n生成描述\n模式\n文生图\n参考图生图\n\n参考图片\n\n已选素材\n\n移除当前素材\n画幅\n1:1 · 公众号次条 · 方形封面\n3:4 · 小红书 · 竖版封面\n16:9 · B站 · 横版视频\n9:16 · 抖音 · 全屏竖版\n2:3 · 竖版海报\n3:2 · 横版照片\n4:3 · 横版图文\n4:5 · 竖版图文\n5:4 · 横版海报\n21:9 · 公众号头图底稿\n选择画幅会同步这组的全部图片生成页。\n\n当前模型：参考能力合成样本\n\n生成删除节点\n编导建议\n刷新\n和编导讨论这张画布\n连线\n第一张图片 → 另一组图片\n移除\n生成历史\n\n暂无生成任务",
+      "check_ids": [
+        "AC-ASPECT",
+        "AC-COPY"
+      ],
+      "referenceReady": {
+        "naturalWidth": 1086,
+        "naturalHeight": 1448,
+        "complete": true
+      }
+    },
+    {
+      "name": "group-before-900",
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "text": "节点设置\n名称\n生成描述\n模式\n文生图\n参考图生图\n\n参考图片\n\n已选素材\n\n移除当前素材\n画幅\n1:1 · 公众号次条 · 方形封面\n3:4 · 小红书 · 竖版封面\n16:9 · B站 · 横版视频\n9:16 · 抖音 · 全屏竖版\n2:3 · 竖版海报\n3:2 · 横版照片\n4:3 · 横版图文\n4:5 · 竖版图文\n5:4 · 横版海报\n21:9 · 公众号头图底稿\n选择画幅会同步这组的全部图片生成页。\n\n当前模型：参考能力合成样本\n\n生成删除节点\n编导建议\n刷新\n和编导讨论这张画布\n连线\n第一张图片 → 另一组图片\n移除\n生成历史\n\n暂无生成任务",
+      "check_ids": [
+        "AC-ASPECT",
+        "AC-COPY"
+      ],
+      "referenceReady": {
+        "naturalWidth": 1086,
+        "naturalHeight": 1448,
+        "complete": true
+      }
+    },
+    {
+      "name": "group-after-900",
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "text": "节点设置\n名称\n生成描述\n模式\n文生图\n参考图生图\n\n参考图片\n\n已选素材\n\n移除当前素材\n画幅\n1:1 · 公众号次条 · 方形封面\n3:4 · 小红书 · 竖版封面\n16:9 · B站 · 横版视频\n9:16 · 抖音 · 全屏竖版\n2:3 · 竖版海报\n3:2 · 横版照片\n4:3 · 横版图文\n4:5 · 竖版图文\n5:4 · 横版海报\n21:9 · 公众号头图底稿\n选择画幅会同步这组的全部图片生成页。\n\n当前模型：参考能力合成样本\n\n生成删除节点\n编导建议\n刷新\n和编导讨论这张画布\n连线\n第一张图片 → 另一组图片\n移除\n生成历史\n\n暂无生成任务",
+      "check_ids": [
+        "AC-ASPECT",
+        "AC-COPY"
+      ],
+      "referenceReady": {
+        "naturalWidth": 1086,
+        "naturalHeight": 1448,
+        "complete": true
+      }
+    },
+    {
+      "name": "template-uses-1366",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "案例与收藏\n\n挑选风格，放到当前画布继续制作。\n\n返回模板库\n证据卡片\n\n教育学习 · 科技数码 · 商业服务 · 文字与图解\n\n本期标题\n本期内容\n提示词\n\n内容参考图（可选）\n\n选择素材\n\n去素材中心上传\n生成比例\n1:1\n公众号次条 · 方形封面\n3:4\n小红书 · 竖版封面\n16:9\nB站 · 横版视频\n9:16\n抖音 · 全屏竖版\n2:3\n竖版海报\n3:2\n横版照片\n4:3\n横版图文\n4:5\n竖版图文\n5:4\n横版海报\n21:9\n公众号头图底稿\n\n图片输出比例，与画布缩放分开。用途仅为常见创作参考。 公众号头图底稿，发布前请按平台要求裁切。 灰色比例为当前模型不支持，可先在模型设置中切换模型。\n\n收藏名称\n收藏提示词\n收藏整套风格\n放入当前画布\n私人收藏归当前创作账号 · 跨项目复用",
+      "check_ids": [
+        "AC-COPY"
+      ],
+      "referenceReady": null
+    },
+    {
+      "name": "template-uses-900",
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "text": "案例与收藏\n\n挑选风格，放到当前画布继续制作。\n\n返回模板库\n证据卡片\n\n教育学习 · 科技数码 · 商业服务 · 文字与图解\n\n本期标题\n本期内容\n提示词\n\n内容参考图（可选）\n\n选择素材\n\n去素材中心上传\n生成比例\n1:1\n公众号次条 · 方形封面\n3:4\n小红书 · 竖版封面\n16:9\nB站 · 横版视频\n9:16\n抖音 · 全屏竖版\n2:3\n竖版海报\n3:2\n横版照片\n4:3\n横版图文\n4:5\n竖版图文\n5:4\n横版海报\n21:9\n公众号头图底稿\n\n图片输出比例，与画布缩放分开。用途仅为常见创作参考。 公众号头图底稿，发布前请按平台要求裁切。 灰色比例为当前模型不支持，可先在模型设置中切换模型。\n\n收藏名称\n收藏提示词\n收藏整套风格\n放入当前画布\n私人收藏归当前创作账号 · 跨项目复用",
+      "check_ids": [
+        "AC-COPY"
+      ],
+      "referenceReady": null
+    }
+  ]
+}

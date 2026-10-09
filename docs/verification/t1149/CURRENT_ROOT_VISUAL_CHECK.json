@@ -1,0 +1,82 @@
+{
+  "schema": "creatoros-current-root-visual-check/v1",
+  "taskId": "T-1149",
+  "viewedAt": "2026-10-09T19:06:33.434Z",
+  "viewer": "root",
+  "head": "2af9cab4c4cff2677f470ee096e4f2a2e98fca40",
+  "browserReceipt": {
+    "schema": "creatoros-browser-journey/v1",
+    "task_id": "T-1149",
+    "head": "2af9cab4c4cff2677f470ee096e4f2a2e98fca40",
+    "surface": "browser",
+    "mode": "non-fixture",
+    "input": "fresh public synthetic group/project/canvas records and uploaded built-in illustrative images; declared capability and one save-error response fixtures",
+    "startedAt": "2026-10-09T19:04:34.551Z",
+    "finishedAt": "2026-10-09T19:05:53.047Z",
+    "elapsedSeconds": 78.49378237500001,
+    "argv": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "playwright",
+      "test",
+      "tests/e2e/t1149-cover-aspect-group.spec.ts",
+      "--project=e2e",
+      "--retries=0"
+    ],
+    "exitCode": 0,
+    "signal": null,
+    "error": null,
+    "logSha256": "4b6fe2c0e9e1dfeee01b3e9c3064b2417544d011e1fb0f0eebfeb0d193732ca3",
+    "rawLogSha256": "82348baa39b05aea5f71b4c8c793a6861a999cd578946fe9f7f559292766616c",
+    "rawLogPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1149-oN38GT/aspect-journey-raw.log",
+    "sourceSha256": {
+      "frontend/src/features/creative-canvas/cover-aspect-ratio-labels.ts": "e78d44f0850bfc3b212804763fb0537713286cd790e63fff399f8170fcb5d408",
+      "frontend/src/features/creative-canvas/canvas-editor.tsx": "d67ba3e119fc7aa8dc18c2b83a295befdecd710915fccf34d8bc45716780cec9",
+      "frontend/src/features/creative-canvas/canvas-template-library.tsx": "296211da8ab736533477714310744e14ce7ee17e11e230976fee0ec59f8b8899",
+      "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "50636caf2a006875d4b2b9d040645a2018a032f6dd94ff436367481998db5b5f",
+      "frontend/src/features/creative-canvas/canvas-template-library.test.tsx": "585702fbe59bccc81ff8f0b1d4517edf5b0c1172930f08fc37ed3998b73b3dff",
+      "frontend/tests/e2e/t1149-cover-aspect-group.spec.ts": "4f4740185171f9d0b51b60602b09899ad00bfb67c38d036c9933a7d5f3ffbf2d",
+      "docs/verification/t1149/run-aspect-journey.mjs": "0efbbc6192d11a805c92ef1689ba60d213dd43b0c663d81247f597ae785ce40a"
+    },
+    "sourceAfter": {
+      "frontend/src/features/creative-canvas/cover-aspect-ratio-labels.ts": "e78d44f0850bfc3b212804763fb0537713286cd790e63fff399f8170fcb5d408",
+      "frontend/src/features/creative-canvas/canvas-editor.tsx": "d67ba3e119fc7aa8dc18c2b83a295befdecd710915fccf34d8bc45716780cec9",
+      "frontend/src/features/creative-canvas/canvas-template-library.tsx": "296211da8ab736533477714310744e14ce7ee17e11e230976fee0ec59f8b8899",
+      "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "50636caf2a006875d4b2b9d040645a2018a032f6dd94ff436367481998db5b5f",
+      "frontend/src/features/creative-canvas/canvas-template-library.test.tsx": "585702fbe59bccc81ff8f0b1d4517edf5b0c1172930f08fc37ed3998b73b3dff",
+      "frontend/tests/e2e/t1149-cover-aspect-group.spec.ts": "4f4740185171f9d0b51b60602b09899ad00bfb67c38d036c9933a7d5f3ffbf2d",
+      "docs/verification/t1149/run-aspect-journey.mjs": "0efbbc6192d11a805c92ef1689ba60d213dd43b0c663d81247f597ae785ce40a"
+    },
+    "retries": 0,
+    "nativeApp": false,
+    "modelCalled": false,
+    "realPlatformCalled": false,
+    "humanViewed": false
+  },
+  "actualPicturesViewed": true,
+  "independentVisualReview": false,
+  "design": "局部自检；保原丰富紫色工作台、现有tokens/组件和账号组UI_RULES，比例用途与错误状态可读",
+  "observations": [
+    "两视口画幅前后同一具体参考图片可见，1086×1448解码与complete验证",
+    "共同支持比例选择整组同步，组外/静态页/引用/edges/attempt原读回保持",
+    "两个模式拒绝原引用保留；一次声明503错误可读且原输入保留，成功重试真公共链",
+    "模板常用用途/21:9底稿裁切说明可读；未改变既定视觉方向"
+  ],
+  "pictures": {
+    "template-uses-900.png": "5f191960179616358a055cc0fda77c0a434a239ed09749458dea88fa6b4858f8",
+    "template-uses-1366.png": "ac50180b77fb6d2052f8bceccacba549fa60843e3e02b638810f26fd74869d69",
+    "mode-rejected.png": "47db9b47f632f9cb2d977438c7eb7f732e2136fc974853e81b927ac8903d2d9f",
+    "save-error-keeps-input.png": "99d7005e7825d9ce6f7af2945e7efa42f6e2ceb1d2bc5ce3c8afa114f19ef470",
+    "group-after-900.png": "18df8b58f5aef139d648f3492137a0ef27f584e508939b4123fefdefb49492a8",
+    "group-after-1366.png": "00f10019cb3a29d8b6b9814dc289a3b928031ce25046b047a94baed0ecbf5774",
+    "group-before-1366.png": "d0e0301b75f54d2fbd624af17bb534435f9548f40c41639e2fbbdd603cc4d0fc",
+    "group-before-900.png": "b1dd344d2c0e0a581b6b8d3bd340611535758d8dff387b7c265447611298f722"
+  },
+  "limits": [
+    "非原生App/模型/平台/全功能验收",
+    "两个原生下拉键盘探针原FAIL保留，未签键盘",
+    "T1155连接中断仍16处uncaughtException，根因UNKNOWN，正常退出不等于已修"
+  ]
+}

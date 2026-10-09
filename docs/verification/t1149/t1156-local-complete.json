@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1156",
+    "--evidence",
+    "具体参考img在四group前后和mode拒绝采证点1086×1448/complete=true；原公开两例78.616238秒0，新type7.387269秒0，根实际查看八原图；独立8a9cd001限定实施PASS。原未加载图保留，不签T1155日志/安装。"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T19:08:03.945912+00:00",
+  "finishedAt": "2026-10-09T19:08:04.065708+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.11966287501854822,
+  "logSha256": "01488d4b64bab6e9e4c034b6d74e819ee585b84a995c04efeafd50683ad1daf7"
+}
