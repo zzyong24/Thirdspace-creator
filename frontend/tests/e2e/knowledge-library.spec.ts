@@ -603,12 +603,49 @@ for (const viewport of [
       document.cookie = `creatoros_current_group=${id}; Path=/`;
     }, group.id);
     await page.reload();
-    // 附加极限：200%对应窗口内容宽度，检查可读，不代替两个正式viewport。
+    // 附加长标题与多段原文，均由真实服务保存。
     if (viewport.width === 1024) {
+      const longTitle =
+        "用户访谈：为什么整理资料时会丢失上下文，以及产品上线以后怎样验证用户需求";
+      const reading = await op(
+        page,
+        "knowledge.create",
+        {
+          body: {
+            title: longTitle,
+            knowledgeType: "reference",
+            content:
+              "访谈日期：本周\n\n受访者：独立内容创作者\n\n采访者：你通常怎样保存资料？\n受访者：我希望原文和出处保留在一起。\n\n采访者：找到原文后会做什么？\n受访者：修改笔记，把它引用到当前项目继续写稿。",
+          },
+        },
+        group.id,
+      );
+      await page.goto(`/knowledge?item=${reading.id}`);
+      await expect(
+        page.getByRole("heading", { name: longTitle, exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("region", { name: "资料原文" }),
+      ).toContainText("引用到当前项目继续写稿");
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+      ).toBeLessThanOrEqual(1024);
+      await capture(page, "long-title-1024", checks);
+      await page.setViewportSize({ width: 1366, height: 900 });
+      await capture(page, "long-title-1366", checks);
+
       await page.setViewportSize({ width: 390, height: 844 });
       await expect(
         page.getByRole("button", { name: "添加资料", exact: true }),
       ).toBeVisible();
+      await expect(
+        page.getByRole("navigation", { name: "资料分类" }),
+      ).toBeHidden();
+      await page.getByRole("button", { name: /^资料目录/ }).click();
+      await expect(
+        page.getByRole("navigation", { name: "资料分类" }),
+      ).toBeVisible();
+      await page.getByRole("button", { name: /^资料目录/ }).click();
       await capture(page, "extreme-390", checks);
       await page.setViewportSize(viewport);
     }

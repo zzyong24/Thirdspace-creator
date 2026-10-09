@@ -115,6 +115,7 @@ function KnowledgeLibraryWorkspace({
     setPreviousInitial(initial);
     setVm(initial);
   }
+  const [directoryOpen, setDirectoryOpen] = React.useState(false);
   const [modal, setModal] = React.useState<Modal>(null);
   const [modalTarget, setModalTarget] = React.useState<LibraryItem | null>(
     null,
@@ -479,81 +480,102 @@ function KnowledgeLibraryWorkspace({
           aria-label="资料目录"
           className="flex flex-col gap-5 overflow-y-auto border-b border-border bg-surface-subtle/40 p-4 md:border-r md:border-b-0"
         >
-          <nav className="flex flex-col gap-1" aria-label="资料分类">
-            <DirectoryButton
-              label="全部资料"
-              count={vm.items.length}
-              active={filter.folder === "all" && filter.type === "all"}
-              disabled={busy}
-              onClick={() =>
-                changeFilter({ folder: null, type: null, q: null })
-              }
-            />
-            <DirectoryButton
-              label="未放入文件夹"
-              count={vm.items.filter((x) => !x.folderId).length}
-              active={filter.folder === "unfiled"}
-              disabled={busy}
-              onClick={() => changeFilter({ folder: "unfiled", type: null })}
-            />
-            <p className="mt-4 mb-1 font-medium text-muted-foreground">
-              资料类别
-            </p>
-            {LIBRARY_TYPES.filter((t) =>
-              vm.items.some((x) => x.knowledgeType === t.value),
-            ).map((t) => (
+          <Button
+            variant="ghost"
+            className="justify-between md:hidden"
+            aria-expanded={directoryOpen}
+            aria-controls="library-directories"
+            onClick={() => setDirectoryOpen((value) => !value)}
+          >
+            <span>资料目录 · {filterLabel}</span>
+            <ChevronRight className={directoryOpen ? "rotate-90" : ""} />
+          </Button>
+          <div
+            id="library-directories"
+            className={
+              (directoryOpen ? "flex" : "hidden") + " flex-col gap-5 md:flex"
+            }
+          >
+            <nav className="flex flex-col gap-1" aria-label="资料分类">
               <DirectoryButton
-                key={t.value}
-                label={t.label}
-                count={
-                  vm.items.filter((x) => x.knowledgeType === t.value).length
-                }
-                active={filter.type === t.value && filter.folder === "all"}
+                label="全部资料"
+                count={vm.items.length}
+                active={filter.folder === "all" && filter.type === "all"}
                 disabled={busy}
-                onClick={() => changeFilter({ type: t.value, folder: null })}
+                onClick={() =>
+                  changeFilter({ folder: null, type: null, q: null })
+                }
               />
-            ))}
-          </nav>
-          <section>
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="font-medium text-muted-foreground">文件夹</h2>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label="新建文件夹"
-                disabled={busy || !!vm.folderError}
-                onClick={() => open("folder")}
-              >
-                <FolderPlus />
-              </Button>
-            </div>
-            {vm.folderError ? (
-              <div role="alert">
-                <p className="text-destructive">{vm.folderError}</p>
-                <Button variant="link" onClick={() => void refresh()}>
-                  重读文件夹
+              <DirectoryButton
+                label="未放入文件夹"
+                count={vm.items.filter((x) => !x.folderId).length}
+                active={filter.folder === "unfiled"}
+                disabled={busy}
+                onClick={() => changeFilter({ folder: "unfiled", type: null })}
+              />
+              <p className="mt-4 mb-1 font-medium text-muted-foreground">
+                资料类别
+              </p>
+              {LIBRARY_TYPES.filter((t) =>
+                vm.items.some((x) => x.knowledgeType === t.value),
+              ).map((t) => (
+                <DirectoryButton
+                  key={t.value}
+                  label={t.label}
+                  count={
+                    vm.items.filter((x) => x.knowledgeType === t.value).length
+                  }
+                  active={filter.type === t.value && filter.folder === "all"}
+                  disabled={busy}
+                  onClick={() => changeFilter({ type: t.value, folder: null })}
+                />
+              ))}
+            </nav>
+            <section>
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="font-medium text-muted-foreground">文件夹</h2>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="新建文件夹"
+                  disabled={busy || !!vm.folderError}
+                  onClick={() => open("folder")}
+                >
+                  <FolderPlus />
                 </Button>
               </div>
-            ) : (
-              <nav aria-label="文件夹列表" className="flex flex-col gap-1">
-                {vm.folders.length === 0 ? (
-                  <p className="text-muted-foreground">还没有文件夹</p>
-                ) : (
-                  vm.folders.map((f) => (
-                    <DirectoryButton
-                      key={f.id}
-                      label={f.name}
-                      icon="folder"
-                      count={vm.items.filter((x) => x.folderId === f.id).length}
-                      active={filter.folder === f.id}
-                      disabled={busy}
-                      onClick={() => changeFilter({ folder: f.id, type: null })}
-                    />
-                  ))
-                )}
-              </nav>
-            )}
-          </section>
+              {vm.folderError ? (
+                <div role="alert">
+                  <p className="text-destructive">{vm.folderError}</p>
+                  <Button variant="link" onClick={() => void refresh()}>
+                    重读文件夹
+                  </Button>
+                </div>
+              ) : (
+                <nav aria-label="文件夹列表" className="flex flex-col gap-1">
+                  {vm.folders.length === 0 ? (
+                    <p className="text-muted-foreground">还没有文件夹</p>
+                  ) : (
+                    vm.folders.map((f) => (
+                      <DirectoryButton
+                        key={f.id}
+                        label={f.name}
+                        icon="folder"
+                        count={
+                          vm.items.filter((x) => x.folderId === f.id).length
+                        }
+                        active={filter.folder === f.id}
+                        disabled={busy}
+                        onClick={() =>
+                          changeFilter({ folder: f.id, type: null })
+                        }
+                      />
+                    ))
+                  )}
+                </nav>
+              )}
+            </section>
+          </div>
         </aside>
         <section
           aria-label="资料列表"
@@ -651,7 +673,7 @@ function KnowledgeLibraryWorkspace({
                           : "text-text-subtle")
                       }
                     />
-                    <span className="break-words font-medium leading-6">
+                    <span className="break-words text-pretty font-medium leading-6">
                       {item.title}
                     </span>
                   </span>
@@ -705,7 +727,7 @@ function KnowledgeLibraryWorkspace({
                     ? "文件导入"
                     : selected.updatedAt.slice(0, 10)}
                 </p>
-                <h2 className="break-words text-xl font-semibold leading-8">
+                <h2 className="break-words text-balance text-xl font-semibold leading-8">
                   {selected.title}
                 </h2>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -824,11 +846,6 @@ function KnowledgeLibraryWorkspace({
                   ? "选择一份资料，阅读完整原文"
                   : "添加资料后，在这里阅读原文"}
               </h2>
-              <p className="mt-3 max-w-sm leading-7 text-muted-foreground">
-                {rows.length
-                  ? "从左侧列表打开资料，可继续编辑、整理或引用到项目。"
-                  : ""}
-              </p>
             </div>
           )}
         </section>
