@@ -335,3 +335,193 @@ it('X12 waiting_user认可与receipt同写；旧resume不再次认可后续阻�
   }
  }finally{await f.client.close();}
 },180000);
+
+
+// T217：保留上方原22案例，仅追加独立版本服务的真实受理/回放与适用域。
+// HTTP strict body及旧dispatch404由另两套测试核验，本文件不模拟transport分支。
+import {jobRuns,scheduledJobs} from '@creatoros/backend';
+import {createExecutionScheduledChildService} from './execution-scheduled-child.service';
+const V1='transcribe-command-v1' as const;
+const versioned=(f:Fixture,key:string,command:'pause'|'resume'|'cancel'|'retry'='retry')=>
+ f.tasks.command(f.ctx,{taskIds:[f.executionId],command,idempotencyKey:key,receiptProtocol:V1});
+async function protocolSnapshot(db:Db,id:string){
+ return {...await snapshot(db,id),executionAll:await db.select().from(executionTasks),
+  groups:await db.select().from(accountGroups),memberships:await db.select().from(accountGroupMemberships),
+  jobs:await db.select().from(scheduledJobs),runs:await db.select().from(jobRuns)};
+}
+async function assertProtocolReplay(f:Fixture,key:string,command:'pause'|'resume'|'cancel'|'retry'='retry'){
+ const before=await protocolSnapshot(f.db,f.executionId),reopens=daily.reopens,current=await f.tasks.get(f.ctx,f.executionId);
+ const response=await versioned(f,key,command);
+ expect(response).toEqual([current]);expect(JSON.stringify(response)).not.toContain(FIELD);
+ expect(await protocolSnapshot(f.db,f.executionId)).toEqual(before);expect(daily.reopens).toBe(reopens);
+ // 旧三个字段继续沿同原receipt回读；不强制旧客户端发送新内部literal。
+ expect(await f.tasks.command(f.ctx,{taskIds:[f.executionId],command,idempotencyKey:key})).toEqual([current]);
+ expect(await protocolSnapshot(f.db,f.executionId)).toEqual(before);expect(daily.reopens).toBe(reopens);
+}
+it.each(['queued','running','failed','succeeded','cancelled','waiting_user','unknown_result'] as const)(
+ 'V01 v1原受理key只回当前%s投影，保原事实/费用且旧call兼容',async state=>{
+ const f=await fixture();try{
+  const original=await protocolSnapshot(f.db,f.executionId),reopens=daily.reopens;
+  expect((await versioned(f,'v1-original'))[0]?.status).toBe('queued');expect(daily.reopens).toBe(reopens+1);
+  const accepted=await protocolSnapshot(f.db,f.executionId);expect(accepted.calls).toEqual(original.calls);expect(accepted.versions).toEqual(original.versions);
+  expect(Object.keys(receiptMap(accepted.execution) as object)).toEqual([hash('v1-original')]);
+  if(state==='running')await f.claim();
+  if(state==='failed')await f.failAttempt();
+  if(state==='succeeded'){
+   const ref=await f.claim();await f.workflow.recordSource(ref,{awemeId:f.failed,source:{kind:'image-album'}});
+   expect(await f.workflow.saveArtifact(ref,{awemeId:f.failed})).toMatchObject({status:'no-project'});
+   expect(await f.workflow.complete(ref,{})).toEqual({status:'succeeded'});
+  }
+  if(state==='cancelled')await f.tasks.command(f.ctx,{taskIds:[f.executionId],command:'cancel',idempotencyKey:'separate-cancel'});
+  if(state==='waiting_user'||state==='unknown_result'){
+   const ref=await f.claim();
+   if(state==='unknown_result'){
+    const ledger=createExecutionCallLedgerService(f.db,{budget:f.budget,now:f.now});
+    const call=await ledger.reserve(ref,{operationKey:'v1-unknown-tool',kind:'tool',inputDigest:'sha256:'+'9'.repeat(64),reservedTokens:0});
+    await ledger.start(ref,call.id);await ledger.settle(ref,call.id,{status:'unknown'});
+   }
+   await createExecutionWorkerOutcomeService(f.db,{now:f.now}).recordFailure(ref,{outcome:state,errorCode:'V1_SYNTHETIC_BLOCK'});
+  }
+  const current=await f.tasks.get(f.ctx,f.executionId);
+  expect(state==='waiting_user'||state==='unknown_result'?current.runtimeStatus:current.status).toBe(state);
+  await assertProtocolReplay(f,'v1-original');
+  if(['succeeded','cancelled','unknown_result','waiting_user'].includes(state)){
+   const before=await protocolSnapshot(f.db,f.executionId);
+   await expect(versioned(f,'v1-new-retry')).rejects.toMatchObject({name:'ConflictError'});
+   expect(await protocolSnapshot(f.db,f.executionId)).toEqual(before);
+  }
+ }finally{await f.client.close();}
+},180000);
+it('V02 v1 pause/resume/cancel经真实claim/ACK，终态回放不再次执行任何旧控制',async()=>{
+ const f=await fixture(undefined,undefined,'v1-controls',{initialFailure:false});try{
+  const first=await f.claim();expect((await versioned(f,'v1-pause','pause'))[0]?.status).toBe('pause_requested');
+  expect((await f.tasks.acknowledgeControl({taskId:f.executionId,workerId:'t215-synthetic-host',attempt:first.attempt})).status).toBe('paused');
+  expect((await versioned(f,'v1-resume','resume'))[0]?.status).toBe('queued');const next=await f.claim();
+  expect((await versioned(f,'v1-cancel','cancel'))[0]?.status).toBe('cancel_requested');
+  expect((await f.tasks.acknowledgeControl({taskId:f.executionId,workerId:'t215-synthetic-host',attempt:next.attempt})).status).toBe('cancelled');
+  for(const command of ['pause','resume','cancel'] as const)await assertProtocolReplay(f,`v1-${command}`,command);
+  expect(Object.keys(receiptMap((await snapshot(f.db,f.executionId)).execution) as object)).toHaveLength(3);
+ }finally{await f.client.close();}
+},180000);
+it('V03 未支持内部protocol即使带已受理原key也拒绝，原三字段call不受影响',async()=>{
+ const f=await fixture();try{
+  await f.retry('legacy-original');await f.failAttempt();const before=await protocolSnapshot(f.db,f.executionId),reopens=daily.reopens;
+  await expect(f.tasks.command(f.ctx,{taskIds:[f.executionId],command:'retry',idempotencyKey:'legacy-original',receiptProtocol:'future-protocol' as typeof V1})).rejects.toMatchObject({name:'ExecutionValidationError'});
+  expect(await protocolSnapshot(f.db,f.executionId)).toEqual(before);expect(daily.reopens).toBe(reopens);
+  await assertProtocolReplay(f,'legacy-original');
+ }finally{await f.client.close();}
+},180000);
+it('V04 v1严格single：mixed/重复target不能借原回执绕域，原call完整mixed规则保',async()=>{
+ const f=await fixture();try{
+  await versioned(f,'v1-single');await f.failAttempt();
+  const other=await f.tasks.enqueue(f.ctx,{kind:'source_sync',ownerType:'source',ownerId:'v1-other',idempotencyKey:'v1-other',payload:{}});
+  const before=await protocolSnapshot(f.db,f.executionId),reopens=daily.reopens;
+  for(const taskIds of [[f.executionId,other.id],[f.executionId,f.executionId]]){
+   await expect(f.tasks.command(f.ctx,{taskIds,command:'retry',idempotencyKey:'v1-single',receiptProtocol:V1})).rejects.toMatchObject({name:'ExecutionValidationError'});
+   expect(await protocolSnapshot(f.db,f.executionId)).toEqual(before);
+  }
+  expect(daily.reopens).toBe(reopens);
+  await expect(f.tasks.command(f.ctx,{taskIds:[f.executionId,other.id],command:'retry',idempotencyKey:'v1-single'})).rejects.toMatchObject({name:'ConflictError'});
+  expect(await protocolSnapshot(f.db,f.executionId)).toEqual(before);await assertProtocolReplay(f,'v1-single');
+ }finally{await f.client.close();}
+},180000);
+it.each(['source_sync','ai_task'] as const)('V05 非转写%s不能用v1取消，旧合法cancel仍可执行',async kind=>{
+ const f=await fixture();try{
+  const ownerId=`v1-${kind}`;
+  if(kind==='ai_task')await f.db.insert(aiTasks).values({id:ownerId,userId:f.ctx.userId,groupId:f.ctx.groupId,accountId:f.ctx.accountId,taskType:'script.draft',idempotencyKey:ownerId,requestedAt:f.now()});
+  const other=await f.tasks.enqueue(f.ctx,{kind,ownerType:kind==='ai_task'?'ai_task':'source',ownerId,idempotencyKey:ownerId,payload:kind==='ai_task'?{aiTaskId:ownerId}:{}});
+  const before=await protocolSnapshot(f.db,other.id);
+  await expect(f.tasks.command(f.ctx,{taskIds:[other.id],command:'cancel',idempotencyKey:'v1-outside',receiptProtocol:V1})).rejects.toMatchObject({name:'ExecutionValidationError'});
+  expect(await protocolSnapshot(f.db,other.id)).toEqual(before);
+  expect((await f.tasks.command(f.ctx,{taskIds:[other.id],command:'cancel',idempotencyKey:'old-legal-cancel'}))[0]?.status).toBe('cancelled');
+  expect((await snapshot(f.db,other.id)).execution!.payload).toEqual(before.execution!.payload);
+ }finally{await f.client.close();}
+},180000);
+it('V06 实际scheduled attach父子均不属于v1，拒绝零写而原父cancel原子传播',async()=>{
+ const opened=await createDb(),db=opened.db,stamp=now(),ctx={userId:'v1-scheduled-owner',accountId:'v1-scheduled-account',requestId:'v1-scheduled',source:'user' as const};
+ try{
+  const tasks=createPersistentTaskService(db,{now:()=>stamp}),jobId='v1-scheduled-job',businessId='v1-scheduled-ai',runId='v1-scheduled-run';
+  await db.insert(scheduledJobs).values({id:jobId,userId:ctx.userId,accountId:ctx.accountId,name:'已有调度任务',sourceKind:'topic.daily',schedule:'* * * * *',createdAt:stamp,updatedAt:stamp});
+  const parent=await tasks.enqueue(ctx,{kind:'automation_sync',ownerType:'scheduled_job',ownerId:jobId,idempotencyKey:'scheduled-parent',payload:{job:{id:jobId},scheduledFor:stamp}});
+  const claim=await tasks.claimTask({taskId:parent.id,workerId:'v1-scheduled-host'});if(!claim)throw Error('合法父任务必须可以领取');
+  const child=await tasks.enqueue(ctx,{kind:'ai_task',ownerType:'ai_task',ownerId:businessId,idempotencyKey:'scheduled-child',payload:{aiTaskId:businessId,modelInput:{facets:{__dailyTopic:JSON.stringify({jobId,jobRunId:runId})}}}});
+  await db.insert(aiTasks).values({id:businessId,userId:ctx.userId,accountId:ctx.accountId,taskType:'scheduled.topic.daily',idempotencyKey:businessId,requestedAt:stamp,executionTaskId:child.id});
+  await db.insert(jobRuns).values({id:runId,userId:ctx.userId,jobId,aiTaskId:businessId,scheduledFor:stamp,startedAt:stamp});
+  await createExecutionScheduledChildService(db,{now:()=>stamp}).attach({executionTaskId:parent.id,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken},child.id);
+  const before=await protocolSnapshot(db,parent.id),childBefore=await tasks.get(ctx,child.id);
+  for(const id of [parent.id,child.id]){
+   await expect(tasks.command(ctx,{taskIds:[id],command:'cancel',idempotencyKey:'v1-scheduled-control',receiptProtocol:V1})).rejects.toMatchObject({name:'ExecutionValidationError'});
+   expect(await protocolSnapshot(db,parent.id)).toEqual(before);expect(await tasks.get(ctx,child.id)).toEqual(childBefore);
+  }
+  expect((await tasks.command(ctx,{taskIds:[parent.id],command:'cancel',idempotencyKey:'old-scheduled-cancel'}))[0]?.status).toBe('cancelled');
+  expect((await tasks.get(ctx,child.id)).status).toBe('cancelled');
+  for(const id of [parent.id,child.id])expect(Object.hasOwn((await snapshot(db,id)).execution!.payload as object,FIELD)).toBe(false);
+ }finally{await opened.client.close();}
+},180000);
+it('V07 已受理direct历史行后来出现delegated标记，v1不能抢先回放原key',async()=>{
+ const f=await fixture();try{
+  await versioned(f,'v1-owned-original');await f.failAttempt();const original=(await snapshot(f.db,f.executionId)).execution!.payload as Record<string,unknown>;
+  // 明确损坏行负控制；不声称这是合法scheduled prepare或新增委派方式。
+  for(const marker of [{parentExecutionTaskId:'stored-parent'},{__scheduledChild:{executionTaskId:'missing-child'}}]){
+   await f.db.update(executionTasks).set({payload:{...original,...marker}}).where(eq(executionTasks.id,f.executionId));
+   const before=await protocolSnapshot(f.db,f.executionId);
+   await expect(versioned(f,'v1-owned-original')).rejects.toThrow();expect(await protocolSnapshot(f.db,f.executionId)).toEqual(before);
+  }
+ }finally{await f.client.close();}
+},180000);
+it('V08 v1新受理和已有key均核真实owner/group与双向业务绑定，坏映射零写',async()=>{
+ const f=await fixture();try{
+  await versioned(f,'v1-owned');await f.failAttempt();
+  for(const ctx of [{...f.ctx,userId:'other-owner'},{...f.ctx,groupId:'other-group'}]){
+   const before=await protocolSnapshot(f.db,f.executionId);
+   for(const key of ['v1-owned','v1-new-owned'])await expect(f.tasks.command(ctx,{taskIds:[f.executionId],command:'retry',idempotencyKey:key,receiptProtocol:V1})).rejects.toThrow();
+   expect(await protocolSnapshot(f.db,f.executionId)).toEqual(before);
+  }
+  const original=await protocolSnapshot(f.db,f.executionId),business=original.tasks.find(t=>t.id===f.id)!;
+  for(const change of [{executionTaskId:null},{taskType:'script.draft'},{inputData:{awemeIds:[f.failed,f.saved]}},{groupVersion:99}]){
+   await f.db.update(aiTasks).set(change).where(eq(aiTasks.id,f.id));const before=await protocolSnapshot(f.db,f.executionId);
+   await expect(versioned(f,'v1-owned')).rejects.toThrow();await expect(versioned(f,'v1-new-owned')).rejects.toThrow();expect(await protocolSnapshot(f.db,f.executionId)).toEqual(before);
+   await f.db.update(aiTasks).set({executionTaskId:business.executionTaskId,taskType:business.taskType,inputData:business.inputData,groupVersion:business.groupVersion}).where(eq(aiTasks.id,f.id));
+  }
+  await assertProtocolReplay(f,'v1-owned');
+ }finally{await f.client.close();}
+},180000);
+it('V09 v1合法旧account-only冻结归属继续受理与回放，不补组且跨account拒绝',async()=>{
+ const f=await fixture(undefined,undefined,'v1-historical',{legacy:true});try{
+  expect(await f.db.select().from(accountGroups)).toEqual([]);expect((await versioned(f,'v1-historical'))[0]?.status).toBe('queued');
+  await f.failAttempt();await assertProtocolReplay(f,'v1-historical');const before=await protocolSnapshot(f.db,f.executionId);
+  await expect(f.tasks.command({...f.ctx,accountId:'other-account'},{taskIds:[f.executionId],command:'retry',idempotencyKey:'v1-historical',receiptProtocol:V1})).rejects.toThrow();
+  expect(await protocolSnapshot(f.db,f.executionId)).toEqual(before);expect(before.groups).toEqual([]);expect(before.memberships).toEqual([]);
+ }finally{await f.client.close();}
+},180000);
+it('V10 v1回执与状态仍同tx回滚，故障移除后原key首次受理且再次核对零写',async()=>{
+ const f=await fixture();try{
+  const before=await protocolSnapshot(f.db,f.executionId);
+  await f.client.exec(`ALTER TABLE execution_tasks ADD CONSTRAINT t217_receipt_fault CHECK (NOT (payload ? '__transcribeCommandReceiptsV1'))`);
+  await expect(versioned(f,'v1-fault-original')).rejects.toThrow();expect(await protocolSnapshot(f.db,f.executionId)).toEqual(before);
+  await f.client.exec('ALTER TABLE execution_tasks DROP CONSTRAINT t217_receipt_fault');
+  expect((await versioned(f,'v1-fault-original'))[0]?.status).toBe('queued');await assertProtocolReplay(f,'v1-fault-original');
+ }finally{await f.client.close();}
+},180000);
+it('V11 v1不延长原deadline：旧key回当前事实，新key原queue仍被claim期限门拒绝',async()=>{
+ let stamp='2026-10-10T00:00:00.000Z';const f=await fixture(undefined,undefined,'v1-deadline',{now:()=>stamp});try{
+  await versioned(f,'v1-deadline-original');await f.failAttempt();const before=await protocolSnapshot(f.db,f.executionId);
+  stamp=new Date(Date.parse(before.execution!.deadlineAt!)+1).toISOString();await assertProtocolReplay(f,'v1-deadline-original');
+  expect((await versioned(f,'v1-deadline-new'))[0]?.status).toBe('queued');const queued=await protocolSnapshot(f.db,f.executionId);
+  expect(queued.execution!.deadlineAt).toBe(before.execution!.deadlineAt);expect(await f.tasks.claimTask({taskId:f.executionId,workerId:'v1-expired'})).toBeNull();
+  expect(await protocolSnapshot(f.db,f.executionId)).toEqual(queued);
+ }finally{await f.client.close();}
+},180000);
+it('V12 v1磁盘重开仍用原receipt回当前failed；legacy原call与公开DTO保持兼容',async()=>{
+ const directory=await mkdtemp(join(tmpdir(),'t217-synthetic-'));let close:(()=>Promise<void>)|undefined;
+ try{
+  const f=await fixture(directory);close=()=>f.client.close();await versioned(f,'v1-durable');await f.failAttempt();const before=await protocolSnapshot(f.db,f.executionId);
+  await close();close=undefined;const reopened=await createDb({dataDir:directory});close=()=>reopened.client.close();const tasks=createPersistentTaskService(reopened.db);
+  const current=await tasks.get(f.ctx,f.executionId),reopens=daily.reopens;
+  for(const receiptProtocol of [V1,undefined]){
+   const response=await tasks.command(f.ctx,{taskIds:[f.executionId],command:'retry',idempotencyKey:'v1-durable',...(receiptProtocol?{receiptProtocol}:{})});
+   expect(response).toEqual([current]);expect(current.status).toBe('failed');expect(JSON.stringify(response)).not.toContain(FIELD);
+   expect(await protocolSnapshot(reopened.db,f.executionId)).toEqual(before);expect(daily.reopens).toBe(reopens);
+  }
+ }finally{await close?.();await rm(directory,{recursive:true,force:true});}
+},180000);

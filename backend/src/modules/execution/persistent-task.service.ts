@@ -114,6 +114,8 @@ export interface PersistentTaskService {
       taskIds: string[];
       command: PersistentTaskCommand;
       idempotencyKey: string;
+      /** 仅版本端点内部设置；不是客户端授权事实。 */
+      receiptProtocol?: "transcribe-command-v1";
     },
   ): Promise<ExecutionTaskResourceV2[]>;
   /** Worker-only internal port. It returns one opaque lease, never an arbitrary account listing. */
@@ -472,6 +474,9 @@ export function createPersistentTaskService(
     },
 
     async command(ctx, input) {
+      if (input.receiptProtocol !== undefined && input.receiptProtocol !== "transcribe-command-v1") {
+        throw new ExecutionValidationError("不支持的转写控制恢复协议");
+      }
       await assertWritableWorkspace(db,ctx);
       requireWorkspace(ctx);
       const taskIds = [...new Set(input.taskIds)];
@@ -483,6 +488,9 @@ export function createPersistentTaskService(
         throw new ExecutionValidationError(
           "taskIds 必须非空且不得重复，idempotencyKey 不能为空",
         );
+      }
+      if (input.receiptProtocol === "transcribe-command-v1" && taskIds.length !== 1) {
+        throw new ExecutionValidationError("转写控制恢复协议仅支持单个直接转写任务");
       }
       const routeRows=await db.select().from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
       const workspaceWrite=await routeTranscribeCommand(db,ctx,routeRows,taskIds,input.idempotencyKey);
@@ -520,11 +528,15 @@ export function createPersistentTaskService(
         }
         const transcribeBindings=new Map<string,NonNullable<Awaited<ReturnType<typeof readTranscribeCommandBinding>>>>();
         for(const row of rows){if(!inspectTranscribeCommand(row,taskIds,input.idempotencyKey))continue;const bound=await readTranscribeCommandBinding(tx,row,ctx);if(bound)transcribeBindings.set(row.id,bound);}
+        const receiptTaskId=taskIds.length===1&&effectiveIds.length===1&&effectiveIds[0]===taskIds[0]&&!parents.length&&!transcribeBindings.get(taskIds[0]!)?.delegated&&transcribeBindings.has(taskIds[0]!)?taskIds[0]:undefined;
+        // 先核新协议的真实适用域，再回放已有原意图。
+        if (input.receiptProtocol === "transcribe-command-v1" && !receiptTaskId) {
+          throw new ExecutionValidationError("转写控制恢复协议仅支持单个直接转写任务");
+        }
         // mixed输入若包含已受理原任务，完整target摘要必须一致；不能借批量绕回执。
         for(const bound of transcribeBindings.values()){
           if(isTranscribeCommandReplay(bound,input.idempotencyKey,input.command,taskIds)){if(!workspaceWrite)throw new ConflictError("转写控制回执已改变，请沿原任务回读同一意图");return taskIds.map(target=>toResource(rows.find(row=>row.id===target)!));}
         }
-        const receiptTaskId=taskIds.length===1&&effectiveIds.length===1&&effectiveIds[0]===taskIds[0]&&!parents.length&&!transcribeBindings.get(taskIds[0]!)?.delegated&&transcribeBindings.has(taskIds[0]!)?taskIds[0]:undefined;
         // 若预查询后真实绑定改变，不在未受workspace写锁保护的事务里新建受理。
         if(receiptTaskId&&!workspaceWrite)throw new ConflictError('转写控制绑定已改变，请沿原任务重试同一意图');
         const targetById = new Map(

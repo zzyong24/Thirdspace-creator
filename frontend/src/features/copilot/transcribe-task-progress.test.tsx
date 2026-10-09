@@ -4,7 +4,7 @@ import {act,cleanup,fireEvent,render,screen,waitFor} from "@testing-library/reac
 import {afterEach,beforeEach,describe,expect,it,vi} from "vitest";
 import {ENDPOINTS} from "@creatoros/contract";
 import {TranscribeTaskProgress,TranscribeTaskReceipt,readTranscribeScope,readExactTranscribeTask,readExactExecution,readTranscribeCandidates,hasCurrentTranscript,readLocalReference,storeLocalReference,clearLocalReference,stableOwnerKey,selectionKey,type TranscribeScope,type AITaskResource} from "./transcribe-task-progress";
-const aiTaskResource=ENDPOINTS.getTask.response,artifactResource=ENDPOINTS.listArtifacts.response,artifactVersionResource=ENDPOINTS.listArtifactVersions.response,executionTaskResourceV2=ENDPOINTS.commandExecutionTasks.response.shape.tasks.element,projectResource=ENDPOINTS.getProject.response;
+const aiTaskResource=ENDPOINTS.getTask.response,artifactResource=ENDPOINTS.listArtifacts.response,artifactVersionResource=ENDPOINTS.listArtifactVersions.response,executionTaskResourceV2=ENDPOINTS.commandTranscribeExecutionTaskV1.response.shape.tasks.element,projectResource=ENDPOINTS.getProject.response;
 const PUBLIC_EXECUTION_STATUS:Record<string,string>={partial:"succeeded",retry_wait:"queued",unknown_result:"blocked",waiting_user:"blocked"};
 const TIME="2026-10-09T00:00:00.000Z";
 type Dispatch={id:string;input:{params?:{taskId?:string;projectId?:string;artifactId?:string};query?:{page?:number;pageSize?:number;ownerId?:string;kind?:string};body?:{taskIds?:string[];command?:string;idempotencyKey?:string}}};
@@ -32,7 +32,7 @@ function fixture(){
    case "artifacts.list":return list(state.artifacts);
    case "artifacts.versions.list":return list(state.versions);
    case "execution.tasks.list":return list([execution()]);
-   case "execution.tasks.command":
+   case "execution.tasks.transcribeCommand.v1":
     if(state.commandMode==="reject")return Response.json({error:{code:"ConflictError",message:"exact original rejected"}},{status:409});
     if(state.commandMode==="lost")throw new TypeError("lost original ACK");
     state.executionStatus=req.input.body?.command==="cancel"?"cancel_requested":"queued";
@@ -42,12 +42,12 @@ function fixture(){
    default:throw new Error(`Unexpected endpoint ${req.id}`);
   }
  }));
- return {state,requests,hooks,envelope,execution,commands:()=>requests.filter(row=>row.id==="execution.tasks.command")};
+ return {state,requests,hooks,envelope,execution,commands:()=>requests.filter(row=>row.id==="execution.tasks.transcribeCommand.v1")};
 }
 async function open(scope:TranscribeScope,props:Partial<React.ComponentProps<typeof TranscribeTaskProgress>>={}){
  const rendered=render(<TranscribeTaskProgress scope={scope} taskId="task-1" projectId="project-1" awemeId="aweme-1" {...props}/>);fireEvent.click(screen.getByRole("button",{name:"查看转写进度"}));await waitFor(()=>expect(screen.getByRole("button",{name:"复制任务编号"})).toBeEnabled());return rendered;
 }
-function commandRecord(){const key=Array.from({length:sessionStorage.length},(_,i)=>sessionStorage.key(i)).find(key=>key?.includes(":command:"));return key?JSON.parse(sessionStorage.getItem(key)||"null") as {key:string;action:string;outcome:string}:null;}
+function commandRecord(){const key=Array.from({length:sessionStorage.length},(_,i)=>sessionStorage.key(i)).find(key=>key?.includes(":command:"));return key?JSON.parse(sessionStorage.getItem(key)||"null") as {key:string;action:string;outcome:string;protocol?:string;taskIds?:string[]}:null;}
 beforeEach(()=>{localStorage.setItem("creatoros:current-group","group-1");window.history.replaceState(null,"","/projects/project-1");});
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals();vi.useRealTimers();});
 
@@ -67,7 +67,7 @@ describe("原任务步骤/结果/控制恢复",()=>{
  it("同作品多个task必须本人准确选择，不猜latest；批量停止范围明示",async()=>{const f=fixture();f.state.tasks=[sampleTask(),sampleTask({id:"task-2",inputData:{awemeIds:["aweme-1","aweme-2"]},executionTaskId:undefined})];const scope=await readTranscribeScope();render(<TranscribeTaskProgress scope={scope} projectId="project-1" awemeId="aweme-1"/>);fireEvent.click(screen.getByRole("button",{name:"查看转写进度"}));await screen.findByRole("button",{name:/选择任务 task-2/});expect(f.requests.filter(row=>row.id==="ai.tasks.get")).toHaveLength(0);fireEvent.click(screen.getByRole("button",{name:/选择任务 task-2/}));await screen.findByText("这是含 2 个作品的批量任务；停止会作用于整个原任务。");await waitFor(()=>expect(screen.queryByRole("button",{name:"停止原任务"})).toBeNull());});
  it("取消沿原execution/key；cancel_requested不能冒cancelled",async()=>{const f=fixture();const scope=await readTranscribeScope();await open(scope);fireEvent.click(screen.getByRole("button",{name:"停止原任务"}));await waitFor(()=>expect(commandRecord()?.outcome).toBe("accepted"));expect(f.commands()).toHaveLength(1);expect(f.commands()[0]?.input.body).toEqual({taskIds:["execution-1"],command:"cancel",idempotencyKey:expect.any(String)});expect(screen.queryByText("任务已取消")).toBeNull();expect(screen.queryByRole("button",{name:"停止原任务"})).toBeNull();});
  it.each(["reject","lost","wrong-id","wrong-owner","empty","get-denied"] as const)("原POST及后GET错误 %s 精确区分受理/拒绝/未知",async mode=>{const f=fixture();f.state.executionStatus="failed";f.state.tasks=[sampleTask({status:"failed",runtimeStatus:"failed"})];f.state.commandMode=mode;const scope=await readTranscribeScope();await open(scope);fireEvent.click(screen.getByRole("button",{name:"重试原任务"}));await waitFor(()=>expect(f.commands()).toHaveLength(1));await waitFor(()=>expect(commandRecord()?.outcome).toBe(mode==="reject"?"rejected":"unknown"));const key=commandRecord()?.key;expect(key).toBeTruthy();if(mode!=="reject"){cleanup();f.state.getDenied=0;f.state.executionStatus="failed";f.state.tasks=[sampleTask({status:"failed",runtimeStatus:"failed"})];await open(await readTranscribeScope());expect(screen.getByRole("button",{name:"重试原任务"})).toBeDisabled();expect(commandRecord()?.key).toBe(key);expect(f.commands()).toHaveLength(1);}else await screen.findByText("服务端拒绝了原命令；请刷新原任务，未标为受理");});
- it.each([401,403,404,409])("POST200后身份GET%d保原command unknown，不冒POST rejected",async code=>{const f=fixture();const scope=await readTranscribeScope();await open(scope);f.hooks.set("execution.tasks.command",()=>{f.state.getDenied=code;return f.envelope({tasks:[{...f.execution(),status:"cancel_requested"}]});});fireEvent.click(screen.getByRole("button",{name:"停止原任务"}));await waitFor(()=>expect(f.commands()).toHaveLength(1));await waitFor(()=>expect(commandRecord()?.outcome).toBe("unknown"));expect(f.commands()).toHaveLength(1);});
+ it.each([401,403,404,409])("POST200后身份GET%d保原command unknown，不冒POST rejected",async code=>{const f=fixture();const scope=await readTranscribeScope();await open(scope);f.hooks.set("execution.tasks.transcribeCommand.v1",()=>{f.state.getDenied=code;return f.envelope({tasks:[{...f.execution(),status:"cancel_requested"}]});});fireEvent.click(screen.getByRole("button",{name:"停止原任务"}));await waitFor(()=>expect(f.commands()).toHaveLength(1));await waitFor(()=>expect(commandRecord()?.outcome).toBe("unknown"));expect(f.commands()).toHaveLength(1);});
  it("损坏command记录禁止控制，真实可读任务不解除unknown",async()=>{const f=fixture();const scope=await readTranscribeScope();const key="creatoros:transcribe:v2:command:"+encodeURIComponent(stableOwnerKey(scope))+":execution-1";sessionStorage.setItem(key,"bad json");await open(scope);await waitFor(()=>expect(screen.getByRole("button",{name:"停止原任务"})).toBeDisabled());expect(f.commands()).toHaveLength(0);expect(sessionStorage.getItem(key)).toBe("bad json");});
  it("控制存储失败零POST；原行与runtime变化拒过时动作",async()=>{const f=fixture();const scope=await readTranscribeScope();await open(scope);const originalStorage=window.sessionStorage;vi.spyOn(window,"sessionStorage","get").mockReturnValue({get length(){return originalStorage.length;},getItem:originalStorage.getItem.bind(originalStorage),key:originalStorage.key.bind(originalStorage),removeItem:originalStorage.removeItem.bind(originalStorage),clear:originalStorage.clear.bind(originalStorage),setItem(){throw new Error("storage unavailable");}});fireEvent.click(screen.getByRole("button",{name:"停止原任务"}));await screen.findByText("无法保留原操作恢复记录；本次未发送命令，只能查看原任务");expect(f.commands()).toHaveLength(0);});
  it("已知身份失败先撤正文/steps/链接/control，慢旧响应不得回写",async()=>{const f=fixture();render(<TranscribeTaskReceipt taskId="task-1"/>);fireEvent.click(await screen.findByRole("button",{name:"查看转写进度"}));await screen.findByText("第 1 步：原保存已确认");await screen.findByRole("link",{name:"查看当前项目稿件"});let release:(response:Response)=>void=()=>{};const delayed=new Promise<Response>(resolve=>{release=resolve;});f.hooks.set("settings.get",()=>delayed);act(()=>{window.dispatchEvent(new Event("creatoros:accounts-changed"));});expect(screen.queryByText("第 1 步：原保存已确认")).toBeNull();expect(screen.queryByRole("link",{name:"查看当前项目稿件"})).toBeNull();expect(screen.queryByRole("button",{name:"停止原任务"})).toBeNull();f.hooks.set("settings.get",()=>f.envelope({id:"new-user",email:"new@example.invalid",displayName:"新身份",timezone:"Asia/Shanghai",locale:"zh-CN",createdAt:TIME,updatedAt:TIME}));f.state.userId="new-user";act(()=>window.dispatchEvent(new Event("creatoros:accounts-changed")));await screen.findByRole("button",{name:"查看转写进度"});await act(async()=>release(f.envelope({id:"user-1",email:"old@example.invalid",displayName:"旧身份",timezone:"Asia/Shanghai",locale:"zh-CN",createdAt:TIME,updatedAt:TIME})));expect(screen.queryByText("第 1 步：原保存已确认")).toBeNull();expect(f.commands()).toHaveLength(0);});
@@ -110,4 +110,78 @@ it("真实步骤端口meta使用全部rows.length，101相同编号/时间行原
 });
 it("真实空步骤meta pageSize1/total0仍合法，不伪造步骤",async()=>{
  const f=fixture();f.state.steps=[];await open(await readTranscribeScope());expect(screen.queryByText(/^第 /)).toBeNull();expect(screen.getByRole("button",{name:"复制任务编号"})).toBeEnabled();expect(f.commands()).toHaveLength(0);
+});
+
+
+// T217未应用候选：真实client→HttpTransport→受控HTTP envelope；不冒真实旧dispatcher/账本验收。
+const V1_COMMAND="execution.tasks.transcribeCommand.v1";
+const LEGACY_COMMAND="execution.tasks.command";
+const recordKey=(scope:TranscribeScope)=>"creatoros:transcribe:v2:command:"+encodeURIComponent(stableOwnerKey(scope))+":execution-1";
+async function lostRetry(){
+ const f=fixture();f.state.executionStatus="failed";f.state.tasks=[sampleTask({status:"failed",runtimeStatus:"failed"})];f.state.commandMode="lost";
+ const scope=await readTranscribeScope();await open(scope);fireEvent.click(screen.getByRole("button",{name:"重试原任务"}));
+ await waitFor(()=>expect(commandRecord()?.outcome).toBe("unknown"));await waitFor(()=>expect(screen.getByRole("button",{name:"核对原操作结果"})).toBeEnabled());
+ expect(commandRecord()).toMatchObject({protocol:"transcribe-command-v1",taskIds:["execution-1"]});return {f,scope,original:f.commands()[0]!.input.body!};
+}
+it.each(["running","failed","unknown_result","succeeded","cancelled"])("新版本原key重挂核对当前%s回执，零新意图/旧入口",async runtime=>{
+ const {f,original}=await lostRetry();cleanup();f.state.executionStatus=runtime;f.state.tasks=[sampleTask({status:runtime==="succeeded"?"succeeded":runtime==="failed"?"failed":runtime==="cancelled"?"cancelled":"running",runtimeStatus:runtime})];
+ const beforeAttempt=f.state.attempt;f.hooks.set(V1_COMMAND,r=>{expect(r.input.body).toEqual(original);return f.envelope({tasks:[f.execution()]});});
+ await open(await readTranscribeScope());fireEvent.click(screen.getByRole("button",{name:"核对原操作结果"}));
+ await waitFor(()=>expect(commandRecord()?.outcome).toBe("accepted"));expect(f.commands()).toHaveLength(2);expect(f.commands()[1]!.input.body).toEqual(original);expect(f.state.attempt).toBe(beforeAttempt);expect(f.state.executionStatus).toBe(runtime);expect(f.requests.filter(r=>r.id===LEGACY_COMMAND)).toHaveLength(0);expect(f.commands()[1]!.input.body).not.toHaveProperty("receiptProtocol");
+});
+it.each(["cancel","resume"] as const)("丢响应%s沿原action/key/target核对，不改成retry",async action=>{
+ const f=fixture();if(action==="resume"){f.state.executionStatus="paused";f.state.tasks=[sampleTask({runtimeStatus:"paused"})];}f.state.commandMode="lost";await open(await readTranscribeScope());fireEvent.click(screen.getByRole("button",{name:action==="cancel"?"停止原任务":"继续原任务"}));await waitFor(()=>expect(screen.getByRole("button",{name:"核对原操作结果"})).toBeEnabled());
+ const original=f.commands()[0]!.input.body;f.hooks.set(V1_COMMAND,r=>{expect(r.input.body).toEqual(original);return f.envelope({tasks:[f.execution()]});});fireEvent.click(screen.getByRole("button",{name:"核对原操作结果"}));await waitFor(()=>expect(commandRecord()?.outcome).toBe("accepted"));expect(f.commands()[1]!.input.body?.command).toBe(action);expect(f.commands()).toHaveLength(2);
+});
+it("未记录版本的旧unknown保持只读，不能补标或重送",async()=>{
+ const {f,scope}=await lostRetry();const stored=commandRecord()!;delete stored.protocol;delete stored.taskIds;sessionStorage.setItem(recordKey(scope),JSON.stringify(stored));cleanup();await open(await readTranscribeScope());expect(screen.queryByRole("button",{name:"核对原操作结果"})).toBeNull();expect(screen.getByRole("button",{name:"重试原任务"})).toBeDisabled();expect(commandRecord()).toEqual(stored);expect(f.commands()).toHaveLength(1);
+});
+it.each([{protocol:"unsupported"},{taskIds:["different-execution"]},{taskIds:["execution-1","other"]},{taskIds:undefined}])("损坏新版记录%j不核对/不补造",async change=>{
+ const {f,scope}=await lostRetry();const stored={...commandRecord(),...change};sessionStorage.setItem(recordKey(scope),JSON.stringify(stored));cleanup();await open(await readTranscribeScope());expect(screen.queryByRole("button",{name:"核对原操作结果"})).toBeNull();expect(screen.getByRole("button",{name:"重试原任务"})).toBeDisabled();expect(sessionStorage.getItem(recordKey(scope))).toBe(JSON.stringify(stored));expect(f.commands()).toHaveLength(1);
+});
+it.each([400,401,403,404,409,422])("核对HTTP%d保原unknown/key，不以本次拒绝推断先前未受理",async code=>{
+ const {f,scope,original}=await lostRetry();f.hooks.set(V1_COMMAND,()=>Response.json({error:{code:"Rejected",message:"controlled peer rejected"}},{status:code}));fireEvent.click(screen.getByRole("button",{name:"核对原操作结果"}));await waitFor(()=>expect(f.commands()).toHaveLength(2));await waitFor(()=>expect(screen.queryByRole("button",{name:"核对原操作结果"})?.hasAttribute("disabled")??true).toBe(code===401||code===403));expect(commandRecord()).toMatchObject({outcome:"unknown",key:original.idempotencyKey,protocol:"transcribe-command-v1"});expect(sessionStorage.getItem(recordKey(scope))).toBeTruthy();expect(f.requests.filter(r=>r.id===LEGACY_COMMAND)).toHaveLength(0);if(code===404)await screen.findByText("当前版本暂不能核对，请保留任务编号并联系支持；原操作记录已保留");
+});
+it("受控旧peer对新op404首次零旧入口；不冒真实旧route动态验证",async()=>{
+ const f=fixture();f.hooks.set(V1_COMMAND,()=>Response.json({error:{code:"UNKNOWN_OPERATION",message:"unknown operation"}},{status:404}));const before=f.state.executionStatus;await open(await readTranscribeScope());fireEvent.click(screen.getByRole("button",{name:"停止原任务"}));await waitFor(()=>expect(commandRecord()?.outcome).toBe("rejected"));expect(f.commands()).toHaveLength(1);expect(f.requests.filter(r=>r.id===LEGACY_COMMAND)).toHaveLength(0);expect(f.state.executionStatus).toBe(before);
+});
+it.each(["wrong-id","wrong-owner","empty","extra-row"])("核对成功HTTP但%s对象不完整，保原unknown",async mode=>{
+ const {f}=await lostRetry();f.hooks.set(V1_COMMAND,()=>f.envelope({tasks:mode==="empty"?[]:mode==="extra-row"?[f.execution(),{...f.execution(),id:"other"}]:[{...f.execution(),...(mode==="wrong-id"?{id:"other"}:{ownerId:"other"})}]}));fireEvent.click(screen.getByRole("button",{name:"核对原操作结果"}));await waitFor(()=>expect(f.commands()).toHaveLength(2));await screen.findByText("暂未拿到这次操作的确认，请保留任务并核对原操作");expect(commandRecord()?.outcome).toBe("unknown");
+});
+it("核对POST200后身份GET失权保unknown，与POST明确拒绝分开",async()=>{
+ const {f}=await lostRetry();f.hooks.set(V1_COMMAND,()=>{f.state.getDenied=403;return f.envelope({tasks:[f.execution()]});});fireEvent.click(screen.getByRole("button",{name:"核对原操作结果"}));await waitFor(()=>expect(f.commands()).toHaveLength(2));await waitFor(()=>expect(screen.queryByRole("button",{name:"核对原操作结果"})).toBeNull());expect(commandRecord()?.outcome).toBe("unknown");expect(f.requests.filter(r=>r.id===LEGACY_COMMAND)).toHaveLength(0);
+});
+it("核对前scope改变零新增POST，记录保留且旧视图撤回",async()=>{
+ const {f,scope}=await lostRetry();f.state.groupVersion++;fireEvent.click(screen.getByRole("button",{name:"核对原操作结果"}));await waitFor(()=>expect(screen.queryByRole("button",{name:"核对原操作结果"})).toBeNull());expect(f.commands()).toHaveLength(1);expect(sessionStorage.getItem(recordKey(scope))).toBeTruthy();expect(screen.queryByText("第 1 步：原保存已确认")).toBeNull();
+});
+it("核对前记录被异action/key替换零POST，不能自动新key",async()=>{
+ const {f,scope,original}=await lostRetry();sessionStorage.setItem(recordKey(scope),JSON.stringify({...commandRecord(),action:"cancel",key:"changed-key"}));fireEvent.click(screen.getByRole("button",{name:"核对原操作结果"}));await screen.findByText("这次操作的记录已变化，请刷新任务核对；未再次发送操作");expect(f.commands()).toHaveLength(1);expect(commandRecord()?.key).not.toBe(original.idempotencyKey);
+});
+it("核对持久化失败零POST，保原unknown",async()=>{
+ const {f}=await lostRetry();const actual=window.sessionStorage;vi.spyOn(window,"sessionStorage","get").mockReturnValue({get length(){return actual.length;},getItem:actual.getItem.bind(actual),key:actual.key.bind(actual),removeItem:actual.removeItem.bind(actual),clear:actual.clear.bind(actual),setItem(){throw new Error("unavailable");}});fireEvent.click(screen.getByRole("button",{name:"核对原操作结果"}));await screen.findByText("无法保留原操作恢复记录；本次未发送命令，只能查看原任务");expect(f.commands()).toHaveLength(1);expect(commandRecord()?.outcome).toBe("unknown");
+});
+it("核对慢响应后关闭不回写accepted，重挂原key仍可准确核对",async()=>{
+ const {f,original}=await lostRetry();let release:(response:Response)=>void=()=>{};f.hooks.set(V1_COMMAND,()=>new Promise<Response>(resolve=>{release=resolve;}));fireEvent.click(screen.getByRole("button",{name:"核对原操作结果"}));await waitFor(()=>expect(f.commands()).toHaveLength(2));fireEvent.click(screen.getByRole("button",{name:"收起转写进度"}));await act(async()=>release(f.envelope({tasks:[f.execution()]})));expect(commandRecord()).toMatchObject({outcome:"unknown",key:original.idempotencyKey});expect(screen.queryByText("已核对原操作，正在刷新任务；没有再次发起操作")).toBeNull();
+});
+
+it("准确核对回执保存失败保原unknown，不解锁新控制",async()=>{
+ const {f}=await lostRetry();const actual=window.sessionStorage;vi.spyOn(window,"sessionStorage","get").mockReturnValue({get length(){return actual.length;},getItem:actual.getItem.bind(actual),key:actual.key.bind(actual),removeItem:actual.removeItem.bind(actual),clear:actual.clear.bind(actual),setItem(key:string,value:string){if(key.includes(":command:")&&JSON.parse(value).outcome==="accepted")throw new Error("acceptance storage unavailable");actual.setItem(key,value);}});f.hooks.set(V1_COMMAND,()=>f.envelope({tasks:[f.execution()]}));fireEvent.click(screen.getByRole("button",{name:"核对原操作结果"}));await screen.findByText("已收到操作结果，但本机未能保存确认；请保留任务编号，先不要再次操作");expect(f.commands()).toHaveLength(2);expect(commandRecord()?.outcome).toBe("unknown");expect(screen.getByRole("button",{name:"重试原任务"})).toBeDisabled();
+});
+it("核对晚回执遇持久记录变化不覆盖新记录",async()=>{
+ const {f,scope}=await lostRetry();let release:(response:Response)=>void=()=>{};f.hooks.set(V1_COMMAND,()=>new Promise<Response>(resolve=>{release=resolve;}));fireEvent.click(screen.getByRole("button",{name:"核对原操作结果"}));await waitFor(()=>expect(f.commands()).toHaveLength(2));const changed={...commandRecord(),key:"changed-while-awaiting"};sessionStorage.setItem(recordKey(scope),JSON.stringify(changed));await act(async()=>release(f.envelope({tasks:[f.execution()]})));await screen.findByText("操作记录已变化，已保留现有记录；请刷新任务核对");expect(commandRecord()).toEqual(changed);expect(f.commands()).toHaveLength(2);
+});
+
+
+// T217 v2：首次明确拒绝也不得让迟到响应覆盖关闭/重挂或已变更记录。
+it.each([400,404,409])("首次迟到HTTP%d在关闭后保原unknown，零拒绝覆盖",async code=>{
+ const f=fixture();f.state.executionStatus="failed";f.state.tasks=[sampleTask({status:"failed",runtimeStatus:"failed"})];let release:(response:Response)=>void=()=>{};f.hooks.set(V1_COMMAND,()=>new Promise<Response>(resolve=>{release=resolve;}));const scope=await readTranscribeScope();await open(scope);fireEvent.click(screen.getByRole("button",{name:"重试原任务"}));await waitFor(()=>expect(f.commands()).toHaveLength(1));const original=commandRecord();expect(original?.outcome).toBe("unknown");fireEvent.click(screen.getByRole("button",{name:"收起转写进度"}));await act(async()=>release(Response.json({error:{code:"Rejected",message:"late first refusal"}},{status:code})));expect(commandRecord()).toEqual(original);expect(f.commands()).toHaveLength(1);expect(screen.queryByText("服务端拒绝了原命令；请刷新原任务，未标为受理")).toBeNull();expect(f.requests.filter(r=>r.id===LEGACY_COMMAND)).toHaveLength(0);
+});
+it.each([400,404,409])("首次迟到HTTP%d在关闭重挂后保原unknown与新显示",async code=>{
+ const f=fixture();f.state.executionStatus="failed";f.state.tasks=[sampleTask({status:"failed",runtimeStatus:"failed"})];let release:(response:Response)=>void=()=>{};f.hooks.set(V1_COMMAND,()=>new Promise<Response>(resolve=>{release=resolve;}));await open(await readTranscribeScope());fireEvent.click(screen.getByRole("button",{name:"重试原任务"}));await waitFor(()=>expect(f.commands()).toHaveLength(1));const original=commandRecord();fireEvent.click(screen.getByRole("button",{name:"收起转写进度"}));cleanup();await open(await readTranscribeScope());await waitFor(()=>expect(screen.getByRole("button",{name:"核对原操作结果"})).toBeEnabled());await act(async()=>release(Response.json({error:{code:"Rejected",message:"late first refusal"}},{status:code})));expect(commandRecord()).toEqual(original);expect(commandRecord()?.outcome).toBe("unknown");expect(screen.getByRole("button",{name:"核对原操作结果"})).toBeEnabled();expect(screen.getByRole("button",{name:"重试原任务"})).toBeDisabled();expect(f.commands()).toHaveLength(1);expect(f.requests.filter(r=>r.id===LEGACY_COMMAND)).toHaveLength(0);
+});
+it.each([400,404,409])("首次迟到HTTP%d不覆盖已替换的新key记录",async code=>{
+ const f=fixture();f.state.executionStatus="failed";f.state.tasks=[sampleTask({status:"failed",runtimeStatus:"failed"})];let release:(response:Response)=>void=()=>{};f.hooks.set(V1_COMMAND,()=>new Promise<Response>(resolve=>{release=resolve;}));const scope=await readTranscribeScope();await open(scope);fireEvent.click(screen.getByRole("button",{name:"重试原任务"}));await waitFor(()=>expect(f.commands()).toHaveLength(1));const original=commandRecord();const changed={...original,key:"subsequent-record-key",outcome:"unknown"};sessionStorage.setItem(recordKey(scope),JSON.stringify(changed));await act(async()=>release(Response.json({error:{code:"Rejected",message:"late first refusal"}},{status:code})));await screen.findByText("操作记录已变化，本次拒绝没有覆盖现有记录；请刷新任务核对");expect(commandRecord()).toEqual(changed);expect(commandRecord()?.key).not.toBe(original?.key);expect(f.commands()).toHaveLength(1);expect(f.requests.filter(r=>r.id===LEGACY_COMMAND)).toHaveLength(0);
+});
+it.each([400,404,409])("首次迟到HTTP%d不覆盖同key已保存的accepted记录",async code=>{
+ const f=fixture();f.state.executionStatus="failed";f.state.tasks=[sampleTask({status:"failed",runtimeStatus:"failed"})];let release:(response:Response)=>void=()=>{};f.hooks.set(V1_COMMAND,()=>new Promise<Response>(resolve=>{release=resolve;}));const scope=await readTranscribeScope();await open(scope);fireEvent.click(screen.getByRole("button",{name:"重试原任务"}));await waitFor(()=>expect(f.commands()).toHaveLength(1));const accepted={...commandRecord(),outcome:"accepted"};sessionStorage.setItem(recordKey(scope),JSON.stringify(accepted));await act(async()=>release(Response.json({error:{code:"Rejected",message:"late first refusal"}},{status:code})));await screen.findByText("操作记录已变化，本次拒绝没有覆盖现有记录；请刷新任务核对");expect(commandRecord()).toEqual(accepted);expect(commandRecord()?.outcome).toBe("accepted");expect(f.commands()).toHaveLength(1);expect(f.requests.filter(r=>r.id===LEGACY_COMMAND)).toHaveLength(0);
 });

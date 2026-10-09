@@ -118,6 +118,7 @@ export const WORKSPACE_OPERATION_SCOPES = {
   "execution.tasks.create": "group",
   "execution.tasks.list": "group",
   "execution.tasks.command": "group",
+  "execution.tasks.transcribeCommand.v1": "group",
   "execution.tasks.get": "group",
   "execution.tasks.confirm": "group",
   "execution.tasks.discard": "group",

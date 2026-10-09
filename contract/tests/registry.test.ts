@@ -295,6 +295,7 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/execution/tasks"],
   ["GET", "/execution/tasks"],
   ["POST", "/execution/tasks/command"],
+  ["POST", "/execution/tasks/transcribe-commands/v1"],
   ["GET", "/execution/tasks/:taskId"],
   ["POST", "/execution/tasks/:taskId/confirm"],
   ["POST", "/execution/tasks/:taskId/discard"],

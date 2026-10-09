@@ -200,6 +200,7 @@ const MUTATION_OPERATIONS = [
   "candidates.patch",
   "candidates.promote",
   "execution.tasks.command",
+  "execution.tasks.transcribeCommand.v1",
   "execution.tasks.confirm",
   "execution.tasks.create",
   "execution.tasks.discard",

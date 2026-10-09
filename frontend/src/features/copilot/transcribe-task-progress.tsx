@@ -235,10 +235,13 @@ export async function readProjectTranscribeSnapshot(scope: TranscribeScope, proj
   if (!current()) throw new ScopeChanged();
   return { source, hasTranscript, candidates };
 }
+const COMMAND_PROTOCOL = "transcribe-command-v1" as const;
 type CommandRecord = {
   ownerKey: string; taskId: string; executionTaskId: string; action: "cancel" | "resume" | "retry";
   key: string; baselineAttempt: number; baselineStatus: string;
   outcome: "unknown" | "accepted" | "rejected";
+  protocol?: typeof COMMAND_PROTOCOL;
+  taskIds?: string[];
 };
 function commandStorageKey(scope: TranscribeScope, executionTaskId: string) { return PREFIX + "command:" + encodeURIComponent(stableOwnerKey(scope)) + ":" + encodeURIComponent(executionTaskId); }
 function readCommandRecord(scope: TranscribeScope, executionTaskId: string): CommandRecord | "incomplete" | null {
@@ -247,6 +250,7 @@ function readCommandRecord(scope: TranscribeScope, executionTaskId: string): Com
     if (!text) return null;
     const row = JSON.parse(text) as CommandRecord;
     if (!row || row.ownerKey !== stableOwnerKey(scope) || row.executionTaskId !== executionTaskId || typeof row.taskId !== "string" || !["cancel", "resume", "retry"].includes(row.action) || typeof row.key !== "string" || !row.key || !Number.isInteger(row.baselineAttempt) || typeof row.baselineStatus !== "string" || !["unknown", "accepted", "rejected"].includes(row.outcome)) return "incomplete";
+    if (row.protocol !== undefined && (row.protocol !== COMMAND_PROTOCOL || !Array.isArray(row.taskIds) || row.taskIds.length !== 1 || row.taskIds[0] !== row.executionTaskId)) return "incomplete";
     return row;
   } catch { return "incomplete"; }
 }
@@ -294,6 +298,7 @@ export function TranscribeTaskProgress({ scope, taskId, projectId, awemeId = nul
   const trigger = React.useRef<HTMLButtonElement>(null);
   const callbacks = React.useRef({ onVerified, onScopeInvalid, onReferenceInvalid }); callbacks.current = { onVerified, onScopeInvalid, onReferenceInvalid };
   const [commandUnknown, setCommandUnknown] = React.useState(false);
+  const [recoverableCommand, setRecoverableCommand] = React.useState<CommandRecord | null>(null);
   const denied = React.useRef(false);
   function selectTask(next: string | null) { selectedRef.current = next; ++generation.current; setSelected(next); }
   React.useEffect(() => { selectTask(taskId || null); }, [taskId]);
@@ -301,7 +306,7 @@ export function TranscribeTaskProgress({ scope, taskId, projectId, awemeId = nul
   function close() { ++generation.current; setOpen(false); trigger.current?.focus(); }
   function withdrawScope() {
     ++generation.current; denied.current = true; clearScopeReferences(scope);
-    setTask(null); setSteps([]); setCandidates([]); setProjectHref(null); setConfirmed(false); setBusy(false); setNotice(null); setCommandUnknown(true);
+    setTask(null); setSteps([]); setCandidates([]); setProjectHref(null); setConfirmed(false); setBusy(false); setNotice(null); setCommandUnknown(true); setRecoverableCommand(null);
     callbacks.current.onScopeInvalid?.();
   }
   async function copyTaskId() {
@@ -316,7 +321,7 @@ export function TranscribeTaskProgress({ scope, taskId, projectId, awemeId = nul
   }
   async function refresh(turn: number) {
     if (flight.current) return false;
-    flight.current = true; setBusy(true); setConfirmed(false); setProjectHref(null);
+    flight.current = true; setBusy(true); setConfirmed(false); setProjectHref(null); setRecoverableCommand(null);
     const current = () => alive.current && turn === generation.current && scope.selection === selectionKey();
     try {
       await assertTranscribeScope(scope);
@@ -342,6 +347,7 @@ export function TranscribeTaskProgress({ scope, taskId, projectId, awemeId = nul
         if (!current()) return false;
         const record = readCommandRecord(scope, execution.id);
         setCommandUnknown(record === "incomplete" || record?.outcome === "unknown");
+        setRecoverableCommand(record !== "incomplete" && record?.outcome === "unknown" && record.protocol === COMMAND_PROTOCOL && record.taskId === next.id ? record : null);
         // status/attempt只证明当前原执行事实，不猜它由哪个命令key触发。
       } else setCommandUnknown(false);
       const targetProject = projectId || next.projectId;
@@ -373,7 +379,7 @@ export function TranscribeTaskProgress({ scope, taskId, projectId, awemeId = nul
   }
   React.useEffect(() => {
     const turn = ++generation.current;
-    setTask(null); setSteps([]); setConfirmed(false); setError(null); setProjectHref(null); setBusy(false); setCommandUnknown(false); denied.current = false;
+    setTask(null); setSteps([]); setConfirmed(false); setError(null); setProjectHref(null); setBusy(false); setCommandUnknown(false); setRecoverableCommand(null); denied.current = false;
     if (!open) return;
     let timer: ReturnType<typeof setTimeout> | undefined, stopped = false;
     async function poll() {
@@ -390,10 +396,10 @@ export function TranscribeTaskProgress({ scope, taskId, projectId, awemeId = nul
     const status = taskRuntimeStatus(row);
     return action === "cancel" ? CANCELLABLE.has(status) : action === "resume" ? ["paused", "waiting_user"].includes(status) : status === "failed";
   }
-  async function command(action: "cancel" | "resume" | "retry") {
-    if (!task?.executionTaskId || !confirmed || flight.current || busy || commandUnknown || !allowed(action, task)) return;
-    const turn = generation.current, original = task; flight.current = true; setBusy(true); setConfirmed(false); setError(null);
-    const current = () => alive.current && generation.current === turn && scope.selection === selectionKey();
+  async function command(action: "cancel" | "resume" | "retry", recovery?: CommandRecord) {
+    if (!task?.executionTaskId || !confirmed || flight.current || busy || (!recovery && (commandUnknown || !allowed(action, task)))) return;
+    const turn = generation.current, original = task; flight.current = true; setBusy(true); setConfirmed(false); setError(null); setRecoverableCommand(null);
+    const current = () => alive.current && generation.current === turn && selectedRef.current === original.id && scope.selection === selectionKey();
     let record: CommandRecord | null = null;
     let awaitingCommandResponse = false;
     try {
@@ -401,28 +407,48 @@ export function TranscribeTaskProgress({ scope, taskId, projectId, awemeId = nul
       const execution = await readExactExecution(scope, fresh);
       if (!current()) return;
       const existing = readCommandRecord(scope, execution.id);
-      if (existing === "incomplete" || existing?.outcome === "unknown") { setCommandUnknown(true); setNotice("原操作结果未确认，可刷新查看原任务；暂不能再次停止、继续或重试"); return; }
-      if (fresh.executionTaskId !== original.executionTaskId || !allowed(action, fresh) || (execution.runtimeStatus ?? execution.status) !== taskRuntimeStatus(fresh)) { setTask(fresh); setNotice("原任务状态已变化，请刷新"); return; }
-      record = { ownerKey: stableOwnerKey(scope), taskId: fresh.id, executionTaskId: execution.id, action, key: crypto.randomUUID(), baselineAttempt: execution.attempt, baselineStatus: execution.runtimeStatus ?? execution.status, outcome: "unknown" };
+      if (recovery) {
+        // 只恢复本页面已记录的新版本原意图；当前状态不能证明原key是否已受理。
+        if (!existing || existing === "incomplete" || existing.outcome !== "unknown" || existing.protocol !== COMMAND_PROTOCOL || existing.ownerKey !== stableOwnerKey(scope) || existing.taskId !== fresh.id || existing.executionTaskId !== fresh.executionTaskId || existing.executionTaskId !== original.executionTaskId || existing.action !== action || existing.key !== recovery.key || JSON.stringify(existing) !== JSON.stringify(recovery)) {
+          setCommandUnknown(true); setNotice("这次操作的记录已变化，请刷新任务核对；未再次发送操作"); return;
+        }
+        record = existing;
+      } else {
+        if (existing === "incomplete" || existing?.outcome === "unknown") { setCommandUnknown(true); setNotice("上次操作结果还未确认，请先核对；暂不能再次停止、继续或重试"); return; }
+        if (fresh.executionTaskId !== original.executionTaskId || !allowed(action, fresh) || (execution.runtimeStatus ?? execution.status) !== taskRuntimeStatus(fresh)) { setTask(fresh); setNotice("原任务状态已变化，请刷新"); return; }
+        record = { ownerKey: stableOwnerKey(scope), taskId: fresh.id, executionTaskId: execution.id, action, key: crypto.randomUUID(), baselineAttempt: execution.attempt, baselineStatus: execution.runtimeStatus ?? execution.status, outcome: "unknown", protocol: COMMAND_PROTOCOL, taskIds: [execution.id] };
+      }
       if (!storeCommandRecord(scope, record)) { setNotice("无法保留原操作恢复记录；本次未发送命令，只能查看原任务"); return; }
       setCommandUnknown(true);
       awaitingCommandResponse = true;
-      const response = await scope.client.commandExecutionTasks({ ...NO_INPUT, body: { taskIds: [record.executionTaskId], command: action, idempotencyKey: record.key } });
+      const response = await scope.client.commandTranscribeExecutionTaskV1({ ...NO_INPUT, body: { taskIds: record.taskIds!, command: record.action, idempotencyKey: record.key } });
       awaitingCommandResponse = false; // 后续身份/回读错误不能反推这次POST被拒绝。
       await assertTranscribeScope(scope);
       if (!current()) return;
       const rows = response.tasks.filter(row => row.id === record!.executionTaskId && row.kind === "ai_task" && row.ownerType === "ai_task" && row.ownerId === record!.taskId && inWorkspace(row, scope));
-      const expected = action === "cancel" ? ["cancel_requested", "cancelled"] : ["queued"];
-      if (rows.length !== 1 || !expected.includes(rows[0]!.runtimeStatus ?? rows[0]!.status)) { setNotice("响应没有准确原命令结果；结果仍未知，只核对原任务"); return; }
-      if (!storeCommandRecord(scope, { ...record, outcome: "accepted" })) { setNotice("已收到准确响应但无法持久保留；请保原任务，暂停后续操作"); return; }
+      // v1成功回执证明原意图受理；回执是当前投影，可能已running/failed/unknown/terminal。
+      if (response.tasks.length !== 1 || rows.length !== 1) { setNotice("暂未拿到这次操作的确认，请保留任务并核对原操作"); return; }
+      const retained = readCommandRecord(scope, record.executionTaskId);
+      if (!retained || retained === "incomplete" || JSON.stringify(retained) !== JSON.stringify(record)) { setNotice("操作记录已变化，已保留现有记录；请刷新任务核对"); return; }
+      if (!storeCommandRecord(scope, { ...record, outcome: "accepted" })) { setNotice("已收到操作结果，但本机未能保存确认；请保留任务编号，先不要再次操作"); return; }
       setCommandUnknown(false);
-      setNotice(action === "cancel" ? rows[0]!.status === "cancelled" ? "已收到任务取消确认，正在回读原任务" : "停止请求已受理，等待确认" : "原操作已受理，正在回读原任务；不会延长原任务期限");
+      setNotice(recovery ? "已核对原操作，正在刷新任务；没有再次发起操作" : action === "cancel" ? rows[0]!.status === "cancelled" ? "已收到任务取消确认，正在回读原任务" : "停止请求已受理，等待确认" : "原操作已受理，正在回读原任务；不会延长原任务期限");
     } catch (failure) {
       if (record && awaitingCommandResponse && failure instanceof HttpTransportError && [400, 401, 403, 404, 409, 422].includes(failure.status)) {
-        // 原服务在事务中整体拒绝；明确HTTP拒绝不是受理，也不是缺ACK。
-        const kept = storeCommandRecord(scope, { ...record, outcome: "rejected" });
-        if (current()) { setCommandUnknown(!kept); setNotice(kept ? "服务端拒绝了原命令；请刷新原任务，未标为受理" : "拒绝结果未能保留，请仅核对原任务"); }
-      } else if (current()) { setCommandUnknown(Boolean(record)); setNotice("原操作结果未确认，可刷新查看原任务；暂不能再次停止、继续或重试"); }
+        if (recovery) {
+          // 本次核对被拒绝不能证明原请求未受理；保原意图unknown，不改key或降级旧入口。
+          if (current()) { setCommandUnknown(true); setNotice(failure.status === 404 ? "当前版本暂不能核对，请保留任务编号并联系支持；原操作记录已保留" : "这次核对未能完成；上次操作结果仍未确认，请保留任务编号和操作记录"); }
+        } else {
+          // 首次拒绝也属于本turn：关闭/重挂或记录已变化时，迟到4xx不能覆盖原unknown/accepted/新key。
+          if (current()) {
+            const retained = readCommandRecord(scope, record.executionTaskId);
+            if (retained && retained !== "incomplete" && JSON.stringify(retained) === JSON.stringify(record)) {
+              const kept = storeCommandRecord(scope, { ...record, outcome: "rejected" });
+              setCommandUnknown(!kept); setNotice(kept ? "服务端拒绝了原命令；请刷新原任务，未标为受理" : "拒绝结果未能保留，请仅核对原任务");
+            } else setNotice("操作记录已变化，本次拒绝没有覆盖现有记录；请刷新任务核对");
+          }
+        }
+      } else if (current()) { setCommandUnknown(Boolean(record)); setNotice("上次操作结果还未确认，请先核对；暂不能再次停止、继续或重试"); }
       if (alive.current && turn === generation.current && (failure instanceof ScopeChanged || (failure instanceof HttpTransportError && [401, 403].includes(failure.status)) || scope.selection !== selectionKey())) withdrawScope();
     } finally {
       flight.current = false;
@@ -438,6 +464,7 @@ export function TranscribeTaskProgress({ scope, taskId, projectId, awemeId = nul
       {notice ? <p role="status">{notice}</p> : null}
       {error ? <p role="alert">{error}</p> : null}
       {commandUnknown ? <p role="alert">原操作结果仍未确认。可刷新查看原任务、使用已保存稿件；暂不能再次停止、继续或重试。</p> : null}
+      {recoverableCommand ? <p>待核对的上次操作：{recoverableCommand.action === "cancel" ? "停止原任务" : recoverableCommand.action === "resume" ? "继续原任务" : "重试原任务"}。核对不会再次发起操作。</p> : null}
       {status === "unknown_result" ? <p>调用结果待核对，请保留原任务；此处不会重试识别。</p> : null}
       {task ? <p className="break-all">任务编号：{task.id}</p> : null}
       {!selected && !busy && !error && !candidates.length ? <p>本次读取未找到与此作品关联的本人任务。</p> : null}
@@ -446,6 +473,7 @@ export function TranscribeTaskProgress({ scope, taskId, projectId, awemeId = nul
       <ol className="space-y-2">{steps.map((step, index) => <li key={`${selected}:row:${index}`}  className="break-words whitespace-pre-wrap">第 {step.stepNo} 步：{step.text}</li>)}</ol>
       <div className="flex flex-wrap gap-2">
         <button type="button" className={BUTTON} disabled={busy} onClick={() => { void refresh(generation.current); }}>刷新原任务</button>
+        {recoverableCommand ? <button type="button" className={BUTTON} disabled={busy || !confirmed} onClick={() => { void command(recoverableCommand.action, recoverableCommand); }}>核对原操作结果</button> : null}
         {task?.executionTaskId && status && CANCELLABLE.has(status) ? <button type="button" className={BUTTON} disabled={busy || !confirmed || commandUnknown} onClick={() => { void command("cancel"); }}>停止原任务</button> : null}
         {task?.executionTaskId && status === "failed" ? <button type="button" className={BUTTON} disabled={busy || !confirmed || commandUnknown} onClick={() => { void command("retry"); }}>重试原任务</button> : null}
         {task?.executionTaskId && status && ["paused", "waiting_user"].includes(status) ? <button type="button" className={BUTTON} disabled={busy || !confirmed || commandUnknown} onClick={() => { void command("resume"); }}>继续原任务</button> : null}
