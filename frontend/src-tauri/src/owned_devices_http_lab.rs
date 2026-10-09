@@ -99,22 +99,38 @@ fn run_live_driver()->Result<(),String> {
     let raw=std::fs::read(input).map_err(|_|error("driver配置无法读取"))?;
     let driver:DriverConfig=serde_json::from_slice(&raw).map_err(|_|error("driver配置无效"))?;
     if driver.schema!="creator-owned-devices-http-driver/v1" {return Err(error("driver配置版本无效"));}
+    if crate::product_identity::built_in_project_key()!="creatoros"
+        || crate::product_identity::product_ref()!="creatoros" {
+        return Err(error("本驱动必须以CREATOROS_LICENSE_PROJECT_KEY=creatoros构建canonical身份，不能覆盖运行时产品"));
+    }
     license::resolve_public_key(&driver.public_key_b64).map_err(|_|error("Lab公开验签钥匙无效"))?;
     let phase=std::env::var("CREATOROS_OWNED_DEVICES_HTTP_LAB_PHASE").unwrap_or_default();
     let vault=Vault::open()?;
     if phase=="prepare" {
         if vault.dir.join("session.enc").exists(){return Err(error("已有隔离意向，请consume，不得重复登记"));}
-        let machine_id=format!("creator-native-http-{}",random());
+        // 与生产resolve_machine_id相同的32hex产物形状；种子仅本轮随机测试值，不读取硬件。
+        let machine_id=format!("{:x}",Sha256::digest(random().as_bytes()))[..32].to_string();
         let verifier=Zeroizing::new(random());
         let challenge=base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(Sha256::digest(verifier.as_bytes()));
         let body=Zeroizing::new(serde_json::json!({"intent":"register_device","client":"creatoros","projectKey":crate::product_identity::built_in_project_key(),"productRef":crate::product_identity::product_ref(),"machineId":machine_id,"deviceLabel":"Creator原生HTTP隔离电脑","codeChallenge":challenge,"codeChallengeMethod":"S256"}).to_string());
+        let metadata:serde_json::Value=serde_json::from_str(&body).map_err(|_|error("测试请求编码失败"))?;
+        let fields=metadata.as_object().ok_or_else(||error("测试请求结构失败"))?.iter().map(|(key,value)| {
+            let s=value.as_str().unwrap_or("");
+            serde_json::json!({"key":key,"type":if value.is_string(){"string"}else{"unexpected"},"bytes":s.len(),"chars":s.chars().count(),"ascii":s.is_ascii(),"machineFormat":key=="machineId"&&s.bytes().all(|b|b.is_ascii_alphanumeric()||b"._:-".contains(&b)),"challengeFormat":key=="codeChallenge"&&s.len()==43&&s.bytes().all(|b|b.is_ascii_alphanumeric()||b"_-".contains(&b))})
+        }).collect::<Vec<_>>();
+        println!("{}",serde_json::json!({"phase":"prepareRequestMetadata","identity":{"projectKey":crate::product_identity::built_in_project_key(),"productRef":crate::product_identity::product_ref()},"fields":fields,"secretExposure":false}));
         let response=Transport::post(&Http,GROWTH,CREATE,&body,None)?;
-        if !matches!(response.signed.status,200|201){check_response(&response)?;return Err(error("真实CREATE未创建隔离意向"));}
+        if !matches!(response.signed.status,200|201){
+            let failure:Failure=parse(&response.signed.body)?;
+            let code=if failure.error.code.len()<=100 && failure.error.code.bytes().all(|b|b.is_ascii_uppercase()||b.is_ascii_digit()||b==b'_') {failure.error.code.as_str()} else {"UNCLASSIFIED"};
+            return Err(format!("真实CREATE未创建隔离意向：HTTP {} {code}",response.signed.status));
+        }
         let mut created:Created=parse(&response.signed.body)?;
         let user_code=user_code(&created.user_code).ok_or_else(||error("真实短码无效"))?;
         let url=verification_url(&created.verification_url,&user_code)?;
         let deadline=canonical_time(&created.expires_at).ok_or_else(||error("真实连接期限无效"))?;
-        if !ulid(&created.registration_ref)||deadline<=now()||deadline-now()>600_000
+        println!("{}",serde_json::json!({"phase":"createdResponseMetadata","registrationRef":created.registration_ref,"userCode":user_code,"expiresAt":created.expires_at,"remainingMs":deadline-now(),"referenceFormatValid":registration_reference(&created.registration_ref),"pollIntervalSeconds":created.poll_interval_seconds,"deviceSecretBytes":created.device_secret.len(),"secretExposure":false}));
+        if !registration_reference(&created.registration_ref)||deadline<=now()||deadline-now()>600_000
             ||!(1..=60).contains(&created.poll_interval_seconds)||!(32..=256).contains(&created.device_secret.len()) {
             return Err(error("真实CREATE结果不满足原生约束"));
         }

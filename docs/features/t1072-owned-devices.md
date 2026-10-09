@@ -28,6 +28,7 @@ flowchart LR
 - 新建独立 owned-device 能力，不打开 CREATOROS_ENTITLEMENT_CLAIM_ENABLED，不改变 API-210/211/212 与 annual consume 的用途。现有PKCE构件可复用，但旧create未冻结机器证据，不能原样作为第二设备授权。
 - native 从 LicenseState 读取硬件稳定 machineId、烘焙 projectKey；JS不能输入或覆盖设备身份。machineId只作为TLS请求中的受控证据，禁止在日志、普通JS状态、URL、剪贴板、截图、持久普通文件中扩散。PKCE与桌面秘密证明同一客户端会话持有，不声称远程硬件证明。
 - 第二台创建意向冻结 projectKey/machineId、PKCE S256 challenge、设备名称。浏览器只使用短期 userCode，不能改machineId；完整普通客户会话与CSRF执行批准。deviceSecret/codeVerifier原生内存保管，不跨IPC；退出/替换会话清理，卸载组件停止轮询，同一时刻仅一个在途请求，迟到结果不能覆盖新会话。
+- 2026-10-09真实HTTP核对：Growth连接registrationRef是opaque locator，当前canonical形状为 `LDR_` 加32位小写UUIDhex（`^LDR_[0-9a-f]{32}$`）。native创建、journal完整性/电脑/PKCE绑定、恢复及ACK必须保持同一精确引用，只接受该形状，不把它当URL或错误要求Activity ULID。Activity权威registeredDeviceRef与v3票据jti仍严格26位Crockford ULID；两种引用不混淆。本轮之前未交付真实旧journal，不增加没有产品事实的ULID连接引用兼容。
 - 成功轮询得到确切本人授权的原激活码只在原生保管并通过既有Activity公开activate/status取得可信签名；在写盘前由新原生薄consumer用内存candidate code+本机请求fresh config-ticket-v3，验证Activity外层原始响应Ed25519签名、date、nonce，按冻结v3票据声明核对批准的准确hash/project/channel/TIME及原期限。现有sidecarhelper依赖已落盘快照且不回hash，不能直接使用；license_activate也会先写盘，不能先调用再补核对。拒绝错误origin、path、外来code、错误签名、nonce不匹配、版本/期限不合约及超大响应。
 - TIME永久 expiresAt 为 null，是正常情况；禁止复用旧annual consumer的“必须非空到期时间”校验挡永久。Monthly保持原usedAt/expiresAt；第二台不重新计时，不另建额度。
 - 复用 .license 的原生加密写入和读回验证、sidecar镜像与配置刷新；成功后提供重启入口。替换前失败保留原授权文件；替换后fsync或读回未知时保留安全journal并回读收敛，或用已校验的原加密文件恢复。write_snapshot_file_checked的Err不能单独证明旧文件未改变，必须分别注错验证替换前/后恢复，不清空授权，也不能假报完成。
