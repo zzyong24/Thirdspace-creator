@@ -110,6 +110,23 @@
         "stage": "readIdentity",
         "code": "IDENTITY_MISSING"
       }
+    },
+    {
+      "runId": "execution-task-b8119204-56",
+      "groupId": "grp-4eb3a857-5",
+      "platform": "wechatOfficial",
+      "status": "failed",
+      "accountId": null,
+      "error": "微信后台数据尚未就绪，请查看原任务",
+      "createdAt": "2026-10-09T16:20:40.520Z",
+      "updatedAt": "2026-10-09T16:29:01.037Z",
+      "http": 200,
+      "diagnostic": {
+        "stage": "readIdentity",
+        "code": "ENTRY_NOT_READY"
+      },
+      "humanScanConfirmationReceived": false,
+      "scope": "未收到本次新窗口扫码完成回复；不判断Cookie或平台故障"
     }
   ],
   "identityPhaseTests": {

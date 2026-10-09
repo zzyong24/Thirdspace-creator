@@ -1,9 +1,12 @@
+import fs from 'node:fs';
+import * as fsPromises from 'node:fs/promises';
 import {chromium} from '@playwright/test';
 import * as guardModule from '../browser/chromium-guard';
 import * as launchModule from '../browser/browser-launch';
 import {Readable} from 'node:stream';
 import type {BrowserContext,Download,Frame,Locator,Page} from '@playwright/test';
 import {describe,expect,it,vi} from 'vitest';
+vi.mock('node:fs/promises',async importOriginal=>({...await importOriginal<typeof import('node:fs/promises')>()}));
 import {createWechatBrowserSource,createWechatNativeDomReportWitness,type WechatCreatorPlatform,type WechatIdentityWitness,type WechatReportWitness,type WechatReportPageState,WechatBrowserSourceError} from './wechat-browser-source';
 // 仅Chromium/页面/下载为明确fixture，实际source负责账号核对、原生事件、字节边界和停止协议。
 // 不连接真实账号，不把以下displayName或stable ID宣称为两平台已测身份字段。
@@ -259,5 +262,123 @@ describe('T1110 固定内部身份诊断与默认身份串行预算候选',()=>{
    await f.source.login(platform,'/fixture-profile',{...f.controls,timeoutMs:120000,deadlineAt:inherited});
    expect((f.openProfile.mock.calls[0]?.[2] as {deadlineAt?:string}).deadlineAt).toBe(inherited);
   }finally{vi.useRealTimers();}
+ });
+});
+
+// 私有图像文件仅使用/tmp合成字节；没有真实浏览器、账户或截图。
+async function privateImageDirectory(){return fsPromises.mkdtemp('/tmp/t1110-private-image-fixture-');}
+function privateImageFixture(directory?:string,platform:WechatCreatorPlatform='wechatVideo'){
+ const f=fixture(platform),originalPrepare=vi.mocked(f.reportWitness.prepare).getMockImplementation()!;
+ let current=origins[platform]+'/platform',closed=false;
+ const url=vi.spyOn(f.page,'url').mockImplementation(()=>current),error=new WechatBrowserSourceError('REPORT_SECTION_MISSING','fixture original missing section');
+ const prepare=vi.mocked(f.reportWitness.prepare).mockImplementation(async(_page,_platform,kind)=>{current=origins[platform]+(kind==='channelsFollowers'?'/platform/statistic/follower':platform==='wechatVideo'?'/platform/statistic/post':'/misc/appmsganalysis');throw error;});
+ const screenshot=vi.fn<(_options:unknown)=>Promise<Buffer>>(async()=>Buffer.from('synthetic-private-image-bytes'));Object.assign(f.page,{screenshot});
+ f.close.mockImplementation(async()=>{if(!closed){closed=true;await f.onStopped();}});
+ const source=createWechatBrowserSource({identityWitness:f.identityWitness,reportWitness:f.reportWitness,openProfile:f.openProfile,privateFailureImageDir:directory});
+ return {...f,source,error,screenshot,prepare,originalPrepare,setUrl:(value:string)=>{current=value;},dispose:()=>url.mockRestore()};
+}
+describe('T1110 受信私有失败图候选（实际/tmp文件+合成Page）',()=>{
+ it('私有失败图启用时保存一次viewport，原失败/诊断/停止仍一条且文件0600无账号ID',async()=>{
+  const directory=await privateImageDirectory(),f=privateImageFixture(directory),onDiagnostic=vi.fn(),onReport=vi.fn(async()=>{});
+  try{
+   await expect(f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','fixture-platform-id',{...f.controls,onDiagnostic},onReport)).rejects.toBe(f.error);
+   expect(f.screenshot).toHaveBeenCalledOnce();expect(f.screenshot).toHaveBeenCalledWith({type:'png',fullPage:false,timeout:expect.any(Number)});
+   const names=await fsPromises.readdir(directory);expect(names).toHaveLength(1);expect(names[0]).toMatch(/^[0-9a-f]{32}\.png$/);
+   expect((await fsPromises.lstat(directory+'/'+names[0])).mode&0o777).toBe(0o600);expect((await fsPromises.lstat(directory)).mode&0o777).toBe(0o700);
+   expect(await fsPromises.readFile(directory+'/'+names[0])).toEqual(Buffer.from('synthetic-private-image-bytes'));
+   expect(onReport).not.toHaveBeenCalled();expect(onDiagnostic).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
+   expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain(directory);expect(JSON.stringify(onDiagnostic.mock.calls)).not.toContain('synthetic-private-image-bytes');
+  }finally{f.dispose();await fsPromises.rm(directory,{recursive:true,force:true});}
+ });
+ it('同deadline不足120秒仍只用原remaining截图，父期限不续期',async()=>{
+  const directory=await privateImageDirectory(),f=privateImageFixture(directory),deadlineAt=new Date(Date.now()+90000).toISOString();
+  try{await expect(f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','fixture-platform-id',{...f.controls,deadlineAt})).rejects.toBe(f.error);expect(f.screenshot).toHaveBeenCalledOnce();expect((f.screenshot.mock.calls[0]?.[0] as {timeout:number}).timeout).toBeLessThanOrEqual(90000);expect((await fsPromises.readdir(directory))).toHaveLength(1);}
+  finally{f.dispose();await fsPromises.rm(directory,{recursive:true,force:true});}
+ });
+ it.each(['off','official','identity','ambiguous','download','submit'] as const)('%s不触发私有截图，不新增报告/自动重发',async mode=>{
+  const directory=await privateImageDirectory(),platform=mode==='official'?'wechatOfficial':'wechatVideo',f=privateImageFixture(mode==='off'?undefined:directory,platform);
+  try{
+   if(mode==='identity')f.setIdentity('different-account');
+   if(mode==='ambiguous')f.prepare.mockRejectedValueOnce(new WechatBrowserSourceError('REPORT_SECTION_AMBIGUOUS','fixture ambiguous'));
+   if(mode==='download'||mode==='submit')f.prepare.mockImplementation(f.originalPrepare);
+   if(mode==='download')f.setDownloadFailure(Error('fixture download failed'));
+   await expect(f.source.collectNativeReports(platform,'/synthetic-only-profile','fixture-platform-id',f.controls,mode==='submit'?async()=>{throw f.error;}:undefined)).rejects.toBeDefined();
+   expect(f.screenshot).not.toHaveBeenCalled();expect(await fsPromises.readdir(directory)).toEqual([]);expect(f.openProfile).toHaveBeenCalledOnce();
+  }finally{f.dispose();await fsPromises.rm(directory,{recursive:true,force:true});}
+ });
+ it.each(['prePath','preForeign','catchUnknown','preLogin','preUnknown','postPath','postLogin','postUnknown'] as const)('%s跳过私有图片，检测不确定不改变原普通失败',async mode=>{
+  const directory=await privateImageDirectory(),f=privateImageFixture(directory);
+  try{
+   if(mode==='prePath'||mode==='preForeign')f.prepare.mockImplementation(async()=>{f.setUrl(mode==='prePath'?origins.wechatVideo+'/platform': 'https://foreign.invalid/platform/statistic/post');throw f.error;});
+   const loggedOut=vi.mocked(f.identityWitness.isLoggedOut);loggedOut.mockResolvedValueOnce(false);
+   if(mode==='catchUnknown')loggedOut.mockRejectedValueOnce(Error('fixture unknown original login probe'));else loggedOut.mockResolvedValueOnce(false);
+   if(mode==='preLogin')loggedOut.mockResolvedValueOnce(true);
+   if(mode==='preUnknown')loggedOut.mockRejectedValueOnce(Error('fixture unknown current login state'));
+   if(mode==='postLogin')loggedOut.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+   if(mode==='postUnknown')loggedOut.mockResolvedValueOnce(false).mockRejectedValueOnce(Error('fixture unknown post login state'));
+   if(mode==='postPath')f.screenshot.mockImplementation(async()=>{f.setUrl(origins.wechatVideo+'/platform');return Buffer.from('synthetic-private-image-bytes');});
+   await expect(f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','fixture-platform-id',f.controls)).rejects.toBe(f.error);
+   expect(await fsPromises.readdir(directory)).toEqual([]);expect(f.screenshot).toHaveBeenCalledTimes(mode.startsWith('post')?1:0);
+  }finally{f.dispose();await fsPromises.rm(directory,{recursive:true,force:true});}
+ });
+ it.each(['screenshot','write'] as const)('%s普通异常保原SECTION_MISSING与实停，不发第二诊断',async mode=>{
+  const directory=await privateImageDirectory(),f=privateImageFixture(directory),onDiagnostic=vi.fn();
+  const write=mode==='write'?vi.spyOn(fsPromises,'writeFile').mockRejectedValueOnce(Error('private internal I/O error')):undefined;
+  try{if(mode==='screenshot')f.screenshot.mockRejectedValueOnce(Error('private internal screenshot error'));await expect(f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','fixture-platform-id',{...f.controls,onDiagnostic})).rejects.toBe(f.error);expect(await fsPromises.readdir(directory)).toEqual([]);expect(onDiagnostic).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();}
+  finally{write?.mockRestore();f.dispose();await fsPromises.rm(directory,{recursive:true,force:true});}
+ });
+ it.each(['cancel','deadline','localWait'] as const)('%s中断挂起截图，晚bytes不落盘/晚提交/第二诊断',async mode=>{
+  const directory=await privateImageDirectory(),f=privateImageFixture(directory),controller=new AbortController(),onDiagnostic=vi.fn(),onReport=vi.fn(async()=>{}),reason=Error('fixture original cancellation');
+  let release!:(bytes:Buffer)=>void,entered!:()=>void;const screenshotStarted=new Promise<void>(resolve=>{entered=resolve;});
+  f.screenshot.mockImplementation(()=>{entered();return new Promise<Buffer>(resolve=>{release=resolve;});});
+  vi.useFakeTimers();try{
+   const deadlineAt=new Date(Date.now()+(mode==='deadline'?90000:240000)).toISOString(),run=f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','fixture-platform-id',{...f.controls,signal:controller.signal,deadlineAt,onDiagnostic},onReport);
+   const rejected=mode==='cancel'?expect(run).rejects.toBe(reason):mode==='deadline'?expect(run).rejects.toMatchObject({code:'EXECUTION_DEADLINE_EXCEEDED'}):expect(run).rejects.toBe(f.error);
+   await screenshotStarted;if(mode==='cancel')controller.abort(reason);else await vi.advanceTimersByTimeAsync(mode==='deadline'?90000:120000);await rejected;
+   release(Buffer.from('late synthetic bytes'));await vi.advanceTimersByTimeAsync(0);expect(await fsPromises.readdir(directory)).toEqual([]);expect(onReport).not.toHaveBeenCalled();expect(onDiagnostic).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
+  }finally{vi.useRealTimers();f.dispose();await fsPromises.rm(directory,{recursive:true,force:true});}
+ });
+ it('原取消中断挂起write，晚write不rename且临时文件清理',async()=>{
+  const directory=await privateImageDirectory(),f=privateImageFixture(directory),controller=new AbortController(),reason=Error('fixture original cancellation'),realWrite=fsPromises.writeFile;
+  let release!:()=>void,entered!:()=>void;const writing=new Promise<void>(resolve=>{entered=resolve;}),gate=new Promise<void>(resolve=>{release=resolve;});
+  const write=vi.spyOn(fsPromises,'writeFile').mockImplementationOnce(async(file,data,options)=>{expect((options as {signal?:AbortSignal}).signal).toBeInstanceOf(AbortSignal);await realWrite(file,data,{flag:'wx',mode:0o600});entered();await gate;});
+  try{
+   const run=f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','fixture-platform-id',{...f.controls,signal:controller.signal}),rejected=expect(run).rejects.toBe(reason);await writing;controller.abort(reason);await rejected;release();await new Promise(resolve=>setTimeout(resolve,10));expect(await fsPromises.readdir(directory)).toEqual([]);expect(f.onStopped).toHaveBeenCalledOnce();
+  }finally{release?.();write.mockRestore();f.dispose();await fsPromises.rm(directory,{recursive:true,force:true});}
+ });
+ it('rename后真实到期立即移除final，原deadline优先而非保留晚图片',async()=>{
+  const directory=await privateImageDirectory(),f=privateImageFixture(directory),realRename=fs.renameSync;
+  vi.useFakeTimers();const deadlineAt=new Date(Date.now()+240000).toISOString(),rename=vi.spyOn(fs,'renameSync').mockImplementation((from,to)=>{realRename(from,to);vi.setSystemTime(Date.parse(deadlineAt)+1);});
+  try{await expect(f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','fixture-platform-id',{...f.controls,deadlineAt})).rejects.toMatchObject({code:'EXECUTION_DEADLINE_EXCEEDED'});expect(rename).toHaveBeenCalledOnce();expect(await fsPromises.readdir(directory)).toEqual([]);expect(f.onStopped).toHaveBeenCalledOnce();}
+  finally{rename.mockRestore();vi.useRealTimers();f.dispose();await fsPromises.rm(directory,{recursive:true,force:true});}
+ });
+ it('rename后到期cleanup瞬时EIO有限重试后真实删除final，仍只原deadline失败',async()=>{
+  const directory=await privateImageDirectory(),f=privateImageFixture(directory),realRename=fs.renameSync,realUnlink=fsPromises.unlink;
+  let transientFailures=0,finalAttempts=0;
+  vi.useFakeTimers();const deadlineAt=new Date(Date.now()+240000).toISOString();
+  const rename=vi.spyOn(fs,'renameSync').mockImplementation((from,to)=>{realRename(from,to);vi.setSystemTime(Date.parse(deadlineAt)+1);});
+  const unlink=vi.spyOn(fsPromises,'unlink').mockImplementation(async file=>{
+   if(String(file).endsWith('.png')){finalAttempts++;if(transientFailures++===0)throw Object.assign(Error('fixture transient I/O error'),{code:'EIO'});}
+   return realUnlink(file);
+  });
+  const onDiagnostic=vi.fn();
+  try{
+   await expect(f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','fixture-platform-id',{...f.controls,deadlineAt,onDiagnostic})).rejects.toMatchObject({code:'EXECUTION_DEADLINE_EXCEEDED'});
+   expect(rename).toHaveBeenCalledOnce();expect(await fsPromises.readdir(directory)).toEqual([]);expect(finalAttempts).toBe(2);expect(onDiagnostic).toHaveBeenCalledOnce();expect(f.onStopped).toHaveBeenCalledOnce();
+  }finally{unlink.mockRestore();rename.mockRestore();vi.useRealTimers();f.dispose();await fsPromises.rm(directory,{recursive:true,force:true});}
+ });
+ it.each(['wide','symlink','outside'] as const)('%s私有目录拒绝保存，原失败不变且不改目录权限',async mode=>{
+  const directory=await privateImageDirectory();let configured=directory;
+  if(mode==='wide')await fsPromises.chmod(directory,0o755);
+  if(mode==='symlink'){configured=directory+'/link';await fsPromises.symlink(directory,configured);}
+  if(mode==='outside')configured='/not-under-tmp/t1110-synthetic-only';
+  const f=privateImageFixture(configured);
+  try{await expect(f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','fixture-platform-id',f.controls)).rejects.toBe(f.error);expect(await fsPromises.readdir(directory)).toEqual(mode==='symlink'?['link']:[]);if(mode==='wide')expect((await fsPromises.lstat(directory)).mode&0o777).toBe(0o755);}
+  finally{f.dispose();await fsPromises.rm(directory,{recursive:true,force:true});}
+ });
+ it('截图普通失败后browser停止未确认仍保真实onStopUnconfirmed，不提前释放',async()=>{
+  const directory=await privateImageDirectory(),f=privateImageFixture(directory);f.screenshot.mockRejectedValueOnce(Error('fixture screenshot failed'));f.close.mockRejectedValue(Error('fixture actual stop failed'));
+  try{await expect(f.source.collectNativeReports('wechatVideo','/synthetic-only-profile','fixture-platform-id',f.controls)).rejects.toMatchObject({code:'BROWSER_STOP_UNCONFIRMED',resourceStopUnconfirmed:true});expect(f.onStopUnconfirmed).toHaveBeenCalledOnce();expect(f.onStopped).not.toHaveBeenCalled();expect(await fsPromises.readdir(directory)).toEqual([]);}
+  finally{f.dispose();await fsPromises.rm(directory,{recursive:true,force:true});}
  });
 });

@@ -110,3 +110,13 @@ JYZ8N7影子Next@ee79已实际进入accounts1366并取得截图，但页面仍�
 context-plan恢复实际exit2（progress缺T1110唯一pending/claimed step），已有欠债原样保留；不改变已审SPEC、BUILD阶段与看板进行中状态。
 
 本次身份预算修改后再次完整timeout-policy actual exit1，唯一非零检查为原27个静态短预算，无新增微信文件；动态各组实际通过，包含账本执行35例。本次结果没有覆盖/改写此前10秒hook失败。索引保存独立日志SHA与本轮真实exit1。
+
+## 第三次公众号扫码意图与待验页面环境
+
+完整OA诊断修正已提交05db7f36并在原隔离产品根停止已归属Next、predev重建与温和重启。新明确intent execution-task-b8119204-56实际queued→waiting_verification，16:20:40.520Z开始；root交还同一Ego20并请求本次新Chrome扫码。至16:29:01.037Z原任务实际failed/accountId=null，readIdentity/ENTRY_NOT_READY；未收到本次扫码完成回复，不把这轮当已扫码仍绑定失败，不判断Cookie故障或设置页字段协议问题。原失败保留，不自动开第四个窗口。
+
+localhost修正已提交9b0b1d14，新隔离72Dfef服务实际准备成功，正式页面HTTP200、identityProof=false；页面旅程尚未运行，因为原Ego20仍交给用户。不能把服务就绪签交互Gate。
+
+私有失败截图候选先在root树tests-only actual3FAIL/104SKIP/107（retry0），尚未应用生产。独立实现审查发现unlink吞非ENOENT错误且无重试这一具体缺口，作者只/tmp修正中；原候选不签PASS，原RED保留。
+
+私图清理修正在root当场先应用旧能真实截图的实现，再加入EIO例；正确筛选actual1FAIL/107SKIP/108，直接显示合成随机PNG残留。第一次错误filter全108SKIP另标invalid，不当RED/PASS。最多三次顺序unlink且ENOENT成功后，完整三文件108PASS，整worker及frontend类型exit0。独评复核修正无新增阻断，永久OS故障残留仍交root本次私目录最终删除，不引入清理定时器/生产者或公共路径。薄composition仅development读取显式env传worker私参，默认关闭；尚无真实截图或native采集PASS。

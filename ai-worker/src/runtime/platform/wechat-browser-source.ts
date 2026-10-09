@@ -1,4 +1,6 @@
-import {mkdir} from 'node:fs/promises';
+import fs from 'node:fs';
+import {mkdir,lstat,realpath,unlink,writeFile} from 'node:fs/promises';
+import {randomBytes} from 'node:crypto';
 import path from 'node:path';
 import {setTimeout as delay} from 'node:timers/promises';
 import type {BrowserContext,Download,Frame,Locator,Page} from '@playwright/test';
@@ -187,7 +189,60 @@ async function receiveReport(context:BrowserContext,page:Page,platform:WechatCre
  // 只返回官方pathname/basename；含会话参数的URL不进入回执、日志或service DTO。
  return {kind,bytes,filename:name,sourcePath:paths[kind],selection:{...prepared.state.selection},...(kind==='channelsWorks'?{expectedRows:prepared.state.reportedRows}: {})};
 }
-export function createWechatBrowserSource(deps:{identityWitness?:WechatIdentityWitness;reportWitness?:WechatReportWitness;openProfile?:typeof open;now?:()=>number}={}){
+/** 内部本机诊断能力；受信/tmp目录，不返回文件名或路径，不接任意异步sink。 */
+async function privateImageDirectory(directory:string,controls:WechatOperationControls):Promise<string>{
+ const check=()=>{controls.signal.throwIfAborted();controls.timeoutMs(120000);};check();
+ if(!path.isAbsolute(directory))throw new Error('Private image directory is not absolute');
+ const temporaryRoot=await realpath('/tmp');check();
+ const within=(root:string,value:string)=>{const relative=path.relative(root,value);return relative!==''&&!relative.startsWith('..'+path.sep)&&relative!=='..'&&!path.isAbsolute(relative);};
+ const requested=path.resolve(directory);
+ if(!within(path.resolve('/tmp'),requested)&&!within(temporaryRoot,requested))throw new Error('Private image directory is outside temporary root');
+ try{await mkdir(requested,{mode:0o700});}catch(error){if((error as NodeJS.ErrnoException).code!=='EEXIST')throw error;}check();
+ const stat=await lstat(requested);check();
+ if(stat.isSymbolicLink()||!stat.isDirectory()||typeof process.getuid!=='function'||stat.uid!==process.getuid()||(stat.mode&0o077)!==0)throw new Error('Private image directory is not private');
+ const resolved=await realpath(requested);check();if(!within(temporaryRoot,resolved))throw new Error('Private image directory escaped temporary root');
+ return resolved;
+}
+async function savePrivateFailureImage(directory:string,bytes:Uint8Array,controls:WechatOperationControls):Promise<void>{
+ const check=()=>{controls.signal.throwIfAborted();controls.timeoutMs(120000);};check();
+ if(!bytes.byteLength||bytes.byteLength>MAX_BYTES)throw new Error('Private image size is invalid');
+ const destination=await privateImageDirectory(directory,controls);check();
+ const name=randomBytes(16).toString('hex'),temporary=path.join(destination,'.'+name+'.part'),final=path.join(destination,name+'.png');let committed=false;
+ // 同一清理调用内固定最多三次；无延时timer、后台producer或业务重发。
+ // ENOENT说明已清除；永久OS错误仍可能残留，受信root须在排障结束删除整个私有目录。
+ const remove=async(file:string):Promise<boolean>=>{
+  for(let attempt=0;attempt<3;attempt++){
+   try{await unlink(file);return true;}
+   catch(error){if((error as NodeJS.ErrnoException|undefined)?.code==='ENOENT')return true;}
+  }
+  return false;
+ },onAbort=()=>{void remove(temporary);void remove(final);};
+ controls.signal.addEventListener('abort',onAbort,{once:true});
+ try{
+  check();await writeFile(temporary,bytes,{flag:'wx',mode:0o600,signal:controls.signal});check();
+  // 窄同步finalize，避免任意异步sink晚提交；OS I/O不能即时撤销，真实期限后检会移除final。
+  check();fs.renameSync(temporary,final);check();committed=true;
+ }finally{
+  await remove(temporary);if(!committed||controls.signal.aborted)await remove(final);controls.signal.removeEventListener('abort',onAbort);
+ }
+}
+async function capturePrivateFailureImage(page:Page,kind:NativeReportKind,directory:string,witness:WechatIdentityWitness,original:WechatOperationControls):Promise<void>{
+ original.signal.throwIfAborted();const end=Date.now()+original.timeoutMs(120000),controller=new AbortController(),signal=AbortSignal.any([original.signal,controller.signal]);
+ const timer=setTimeout(()=>controller.abort(new Error('Private image observation ended')),Math.max(0,end-Date.now()));
+ const controls:WechatOperationControls={signal,timeoutMs(requested){original.signal.throwIfAborted();const remaining=original.timeoutMs(requested);signal.throwIfAborted();const local=end-Date.now();if(local<=0)throw new Error('Private image observation ended');return Math.min(remaining,local);}};
+ const check=()=>{controls.signal.throwIfAborted();controls.timeoutMs(120000);};
+ const samePath=()=>{try{const url=new URL(page.url());return url.origin===origins.wechatVideo&&!url.username&&!url.password&&url.pathname===paths[kind];}catch{return false;}};
+ const currentDataPage=async()=>{check();if(!samePath())return false;const loggedOut=await witness.isLoggedOut(page,'wechatVideo',controls);check();return loggedOut===false&&samePath();};
+ try{
+  await bounded(async()=>{
+   if(!await currentDataPage())return;check();
+   const bytes=await page.screenshot({type:'png',fullPage:false,timeout:controls.timeoutMs(120000)});check();
+   if(!await currentDataPage())return;check();await savePrivateFailureImage(directory,bytes,controls);
+  },signal);
+ }catch{original.signal.throwIfAborted();original.timeoutMs(120000);/* 普通截图/检测/IO失败只跳过取证，保原采集错误。 */}
+ finally{clearTimeout(timer);controller.abort();}
+}
+export function createWechatBrowserSource(deps:{identityWitness?:WechatIdentityWitness;reportWitness?:WechatReportWitness;openProfile?:typeof open;now?:()=>number;/** 受信本机诊断配置；默认off，不是公开API参数。 */privateFailureImageDir?:string}={}){
  const now=deps.now??Date.now;
  async function withProfile<T>(platform:WechatCreatorPlatform,directory:string,headless:boolean,controls:WechatBrowserControls,budgets:number[],run:(context:BrowserContext,page:Page,op:WechatOperationControls,trace:Trace)=>Promise<T>):Promise<T>{
   if(!deps.identityWitness)return rejectBeforeOpen(controls,new WechatBrowserSourceError('IDENTITY_WITNESS_MISSING','尚未核实微信普通账号信息页的稳定身份字段，不能完成绑定'));
@@ -243,7 +298,14 @@ export function createWechatBrowserSource(deps:{identityWitness?:WechatIdentityW
       trace.stage='download';const report=await receiveReport(context,page,platform,kind,prepared,op);op.signal.throwIfAborted();
       // 原service port可逐页提交；后续失败保留先前已提交证据，不在worker写库。
       trace.stage='submit';await onReport?.(report);reports.push(report);
-     }catch(error){if(op.signal.aborted)throw error;if(error instanceof WechatBrowserSourceError&&error.code==='WRONG_PLATFORM_IDENTITY')throw error;let loggedOut=false;try{loggedOut=await deps.identityWitness!.isLoggedOut(page,platform,op);}catch{op.signal.throwIfAborted();}if(loggedOut)return fail('LOGIN_REQUIRED','微信后台需要本人重新登录');throw error;}
+     }catch(error){
+      if(op.signal.aborted)throw error;if(error instanceof WechatBrowserSourceError&&error.code==='WRONG_PLATFORM_IDENTITY')throw error;
+      let loggedOut:boolean|undefined;try{loggedOut=await deps.identityWitness!.isLoggedOut(page,platform,op);}catch{op.signal.throwIfAborted();}
+      if(loggedOut)return fail('LOGIN_REQUIRED','微信后台需要本人重新登录');
+      // 本次identity已核验；仅typed section缺失取顶层viewport，不改变报表选择、状态或业务提交。
+      if(loggedOut===false&&deps.privateFailureImageDir&&platform==='wechatVideo'&&trace.stage==='prepare'&&error instanceof WechatBrowserSourceError&&error.code==='REPORT_SECTION_MISSING')await capturePrivateFailureImage(page,kind,deps.privateFailureImageDir,deps.identityWitness!,op);
+      throw error;
+     }
     }
     return reports;
    });

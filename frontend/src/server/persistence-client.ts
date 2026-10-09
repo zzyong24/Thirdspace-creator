@@ -4602,7 +4602,9 @@ dispatchIntelligenceRun});
   const accountGroup = createAccountGroupTransport(()=>accountGroupService,()=>createGroupMigrationService({db,...deps}),()=>createGroupResourceAccessService({db,now:deps.now}));
   const localBindingStages:NonNullable<Parameters<typeof createAccountBindingService>[0]["localStages"]>={};
   const wechatWitnesses=(await import('@creatoros/ai-worker/platform/wechat-dom-witness')).createVerifiedWechatDomWitnesses();
-  const wechatSource=(await import('@creatoros/ai-worker/platform/wechat-browser-source')).createWechatBrowserSource(wechatWitnesses);
+  // 本机开发排障可选配置；图像仅由worker保存在受信私有/tmp目录，默认关闭。
+  const privateFailureImageDir=process.env.NODE_ENV==='development'?process.env.CREATOROS_WECHAT_PRIVATE_FAILURE_IMAGE_DIR:undefined;
+  const wechatSource=(await import('@creatoros/ai-worker/platform/wechat-browser-source')).createWechatBrowserSource({...wechatWitnesses,...(privateFailureImageDir?{privateFailureImageDir}:{})});
   const localBindingAvailable=(platform:string)=>['xiaohongshu','kuaishou','wechatVideo','wechatOfficial'].includes(platform)&&!!localBindingStages[platform as keyof typeof localBindingStages];
   const platformAccountService = createPlatformAccountService({
     bindingCapabilities:async()=>["douyin","kuaishou","wechatVideo","wechatOfficial","xiaohongshu"].map(platform=>({platform:platform as import("@creatoros/contract").PlatformAccountCapabilitiesResource["platform"],bind:(platform==="douyin"||localBindingAvailable(platform))?{available:true,reason:"已接入平台登录与真实身份读取",method:"qr" as const}:{available:false,reason:"尚未接入该平台身份绑定",method:"none" as const},collect:{available:platform==="douyin"||localBindingAvailable(platform),reason:(platform==="douyin"||localBindingAvailable(platform))?(platform==="wechatVideo"||platform==="wechatOfficial"?"已接入后台原生报表采集":"已接入作品与明细采集"):"尚未接入该平台自动采集"},publish:{available:false,reason:"尚未接入自动发布"},draft:{available:false,reason:"尚未接入平台草稿保存"},manual:{available:true,reason:"可登记账号、导出物料与录入真实发布记录"}})),
