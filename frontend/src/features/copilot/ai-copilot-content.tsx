@@ -158,6 +158,7 @@ import {
 } from "@/lib/ai-error-humanize";
 import { openAiCreditCenter } from "@/lib/open-ai-credit-center";
 import { client } from "@/lib/contract-client";
+import { TranscribeTaskReceipt } from "./transcribe-task-progress";
 import { creatorApiHeaders } from "@/lib/http-transport";
 import type { BasePageViewModel } from "@/types/view-models";
 import {
@@ -2576,9 +2577,7 @@ export function AICopilotContent({
                         </React.Fragment>
                       );
                     }
-                    // [T-385] 抓逐字稿(project.transcribe)→ 简单状态文本(转写分钟级后台跑,
-                    // 不轮询 —— 完成后用户让编导重新拆解即可);失败(无项目上下文/无抖音锚/
-                    // dispatch 失败)→ 诚实错误态。
+                    // 原project.transcribe回执接准确任务读取；缺taskId时保未确认，不假报受理。
                     if (
                       name === "project.transcribe" &&
                       out.kind === "project.transcribe"
@@ -2592,17 +2591,18 @@ export function AICopilotContent({
                           {traceRow}
                           <p
                             data-slot="copilot-transcribe-status"
-                            data-ok={o.error ? "false" : "true"}
+                            data-ok={o.error ? "false" : o.taskId ? "true" : "unknown"}
                             className={
                               o.error
-                                ? "mt-1 text-xs text-destructive"
-                                : "mt-1 text-xs text-success"
+                                ? "mt-1 text-base text-destructive"
+                                : o.taskId ? "mt-1 text-base text-success" : "mt-1 text-base text-muted-foreground"
                             }
                           >
                             {o.error
                               ? `✗ ${o.error}`
-                              : "✓ 已发起逐字稿抓取(后台转写约 1-3 分钟)—— 完成后让我重新拆解这条作品即可。"}
+                              : o.taskId ? "已受理原转写请求；查看原任务步骤与状态，已有稿件仍可使用。" : "转写请求结果未确认，未取得准确任务编号；请保留原请求，不要重复发起。"}
                           </p>
+                          {!o.error && o.taskId ? <TranscribeTaskReceipt taskId={o.taskId} /> : null}
                         </React.Fragment>
                       );
                     }

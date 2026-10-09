@@ -50,8 +50,8 @@ vi.mock("./draft-primary-action", () => ({
 }));
 // [T-374] 顶条「立即抓取逐字稿」:mock 成可探测占位(真组件拉 contract-client)。
 vi.mock("./transcribe-now-button", () => ({
-  TranscribeNowButton: ({ projectId }: { projectId: string }) => (
-    <div data-slot="mock-transcribe-now" data-project-id={projectId} />
+  TranscribeNowButton: ({ projectId, awemeId, initialState }: { projectId: string; awemeId: string; initialState: string }) => (
+    <div data-slot="mock-transcribe-now" data-project-id={projectId} data-aweme-id={awemeId} data-initial-state={initialState} />
   ),
 }));
 vi.mock("./register-published-form", () => ({
@@ -372,7 +372,7 @@ describe("DraftWorkbenchPage — T-374 顶条立抓逐字稿按钮门", () => {
     expect(btn?.getAttribute("data-project-id")).toBe("p-1");
   });
 
-  it("已有逐字稿 → 即使有抖音锚也不再渲染二次抓取入口", () => {
+  it("已有逐字稿 → 保准确原作品任务入口；内部仍禁止二次抓取", () => {
     const { container } = render(
       <DraftWorkbenchPage
         vm={baseVm({
@@ -385,9 +385,11 @@ describe("DraftWorkbenchPage — T-374 顶条立抓逐字稿按钮门", () => {
         })}
       />,
     );
-    expect(
-      container.querySelector('[data-slot="mock-transcribe-now"]'),
-    ).toBeNull();
+    const entry = container.querySelector('[data-slot="mock-transcribe-now"]');
+    expect(entry).not.toBeNull();
+    expect(entry).toHaveAttribute("data-project-id", "p-1");
+    expect(entry).toHaveAttribute("data-aweme-id", "aweme-1");
+    expect(entry).toHaveAttribute("data-initial-state", "done");
   });
 
   it("无 douyinExternalId(手动项目)→ 不渲染(诚实,无锚无法抓)", () => {
