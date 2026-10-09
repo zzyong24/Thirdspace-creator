@@ -6743,7 +6743,7 @@
         "implementation": [
           "git diff --check",
           "pnpm --dir frontend exec vitest run src/server/__module_integration__/platform-account.persistence-client.test.ts src/server/__module_integration__/account-isolation.acceptance.test.ts src/server/__module_integration__/platform-collection.persistence-client.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
-          "pnpm --dir backend exec vitest run src/modules/publishing/publishing.service.test.ts src/modules/publishing/publishing.repository.test.ts src/modules/publishing/publishing.transport.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm --dir backend exec vitest run src/modules/publishing/publishing.service.test.ts src/modules/publishing/publishing.repository.integration.test.ts src/modules/publishing/publishing.contract.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000 src/modules/publishing/publishing.acceptance.test.ts",
           "pnpm --dir backend typecheck",
           "pnpm --dir frontend typecheck",
           "node orchestrator/process/boundary-scan.mjs",

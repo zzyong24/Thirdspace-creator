@@ -1,0 +1,65 @@
+{
+  "reviewedAt": "2026-10-09T04:55:47.518643+00:00",
+  "verdict": "CHANGES_REQUIRED_EVIDENCE_ONLY",
+  "implementationVerdict": "PASS_STATIC_AND_FOCUSED_PUBLIC_GREEN",
+  "sourceHashes": {
+    "frontend/src/server/__module_integration__/account-isolation.acceptance.test.ts": {
+      "before": "4a635c98902ef89d77f1c4e820e0641adff700121eb6b984870765de3eb0b56b",
+      "current": "0aea5e4c93b5b0b606e5083a4b0d91a1e40a4d95ebe599a0ba9b249373fd4d47"
+    },
+    "frontend/src/server/__module_integration__/platform-account.persistence-client.test.ts": {
+      "before": "2d39ed3237282f2e550e1f35a0041f055510bed8c13d00ed47dbe394afff5749",
+      "current": "347588e5ce867019d130a49a60f8a5cd64389829e5a1065aabb67855361627da"
+    },
+    "backend/src/modules/publishing/publishing.repository.ts": {
+      "before": "d81d5ec29ca293164ace45777a51d1c28269503e43ddd340f321f14f1cbfb54e",
+      "current": "d81d5ec29ca293164ace45777a51d1c28269503e43ddd340f321f14f1cbfb54e"
+    },
+    "backend/src/modules/publishing/publishing.service.ts": {
+      "before": "5c741ec2fa1924ca2035a9c953a79cc5f3a5f75e91754bd4ee25f8fba15b07e9",
+      "current": "5c741ec2fa1924ca2035a9c953a79cc5f3a5f75e91754bd4ee25f8fba15b07e9"
+    },
+    "backend/src/modules/publishing/publishing.transport.ts": {
+      "before": "569b4d4d67319ba3c6e7232c6397e497e4b42ebd11f40e70d41c33dddd2fa807",
+      "current": "569b4d4d67319ba3c6e7232c6397e497e4b42ebd11f40e70d41c33dddd2fa807"
+    },
+    "backend/src/workspace-scope.ts": {
+      "before": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712",
+      "current": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    }
+  },
+  "evidence": {
+    "publicGreen": {
+      "jsonSha256": "48f74e354c6f1ec64a600ef479fc50fafc9e22a31ed0a79ad26903d78cb42a03",
+      "logSha256": "903d33996013e98a7b142f8b9faaa638a545e6c8ebba749360913bc63207808a",
+      "exitCode": 0,
+      "filesPassed": 3,
+      "testsPassed": 24,
+      "skipped": 0,
+      "retry": 0
+    },
+    "publishingBaseline": {
+      "jsonSha256": "040248aa0f8db3e87b7f3151ddaef49fbe1d5320c9bfef6c152a97dc58bf78f1",
+      "logSha256": "c4552ac20cec1ff0120b190427256625d49de4d785df1b8b1bce7cbd651670cf",
+      "exitCode": 0,
+      "reportedFilesPassed": 1,
+      "testsPassed": 44
+    }
+  },
+  "findings": [
+    {
+      "id": "IMP-001",
+      "severity": "major",
+      "status": "open",
+      "where": "orchestrator/process/modules.config.json T-1107 verify_commands / publishing-baseline.json",
+      "finding": "声称的 publishing 三文件完整回归实际只执行了一个文件。命令中的 publishing.repository.test.ts 与 publishing.transport.test.ts 在仓库中不存在；Vitest 日志明确为 Test Files 1 passed。仓库实际相关文件名包括 publishing.repository.integration.test.ts、publishing.contract.test.ts、publishing.acceptance.test.ts。",
+      "impact": "当前证据只证明 publishing.service.test.ts 的44例通过，不能证明SPEC要求的repository/transport完整能力未回归。",
+      "minimalResolution": "校正T-1107验证命令为真实存在且覆盖service/repository/transport公共链的测试文件，并以retry=0/no-file-parallelism/原预算重新执行；保留本次错误命令及1-file日志。"
+    }
+  ],
+  "boundaries": [
+    "未代签双端类型和三门卫的共享结果来源",
+    "未代签全局reconcile、安装或全仓",
+    "未运行任何测试或修改仓库"
+  ]
+}
