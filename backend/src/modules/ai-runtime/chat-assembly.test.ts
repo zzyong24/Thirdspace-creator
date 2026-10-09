@@ -22,7 +22,7 @@ import {
 } from "@creatoros/contract";
 import type { ChatContext } from "./chat-context";
 import {createDb, type Db} from "@creatoros/backend";
-import {createAiRepository} from "../ai/ai.repository";
+import {createAiRepository} from "../ai";
 import {createChatTurnSubmissionService} from "../ai/chat-turn-submission.service";
 import {createPersistentTaskService} from "../execution/persistent-task.service";
 import {createChatHostContextReader} from "../ai/chat-host-context.service";
