@@ -1650,7 +1650,7 @@ describe("T-482 内容雷达工作区", () => {
 
     await userEvent.click(
       screen.getByRole("button", {
-        name: "重新登录 黑马：智能体 的采集账号",
+        name: "重新授权 黑马：智能体 的热点宝",
       }),
     );
     expect(
@@ -1672,6 +1672,38 @@ describe("T-482 内容雷达工作区", () => {
       );
     });
     expect(push).not.toHaveBeenCalled();
+  });
+
+  it("T-1106 历史登录失败先复用已保存账号重试，在途不重复提交", async () => {
+    const stub = api();
+    stub.startRun = vi.fn(() => new Promise<never>(() => {}));
+    const sourceWorkspace: RadarWorkspace = {
+      ...workspace,
+      sources: [{id:"source-old-login",collectionId:null,type:"creator_profile",displayName:"历史登录来源",canonicalUrl:"https://www.douyin.com/user/example",collector:{accountId:"account-1",accountHandle:"@创作号",platform:"douyin",availability:"active"},monitorEnabled:false,syncPolicy:{mode:"manual"},status:"active",lastRunAt:"2026-09-26T01:35:25.601Z",nextRunAt:null,version:1}],
+      health:[{sourceId:"source-old-login",lastRunId:"old-run",lastRunStatus:"blocked",blockedCount:1,lastErrorCode:"LOGIN_REQUIRED",scannedCount:0,newCount:0,updatedCount:0,failedCount:0}],
+    };
+    render(<IntelligenceWorkbench accountId="account-1" workspace={sourceWorkspace} items={[]} initialDetail={null} api={stub}/>);
+    expect(screen.getByText("上次同步需登录")).toBeInTheDocument();
+    const retry=screen.getByRole("button",{name:"重试 历史登录来源"});
+    await userEvent.click(retry);
+    const pending=screen.getByRole("button",{name:"正在同步 历史登录来源"});
+    expect(pending).toBeDisabled();
+    fireEvent.click(pending);
+    expect(stub.startRun).toHaveBeenCalledTimes(1);
+    expect(stub.startRun).toHaveBeenCalledWith(expect.objectContaining({sourceId:"source-old-login"}));
+    expect(stub.reconnectCollector).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("T-1106 历史登录失败仍可主动扫码，真实账号ID不改", async () => {
+    const stub=api();
+    const sourceWorkspace: RadarWorkspace = {...workspace,sources:[{id:"source-old-login",collectionId:null,type:"creator_profile",displayName:"历史登录来源",canonicalUrl:"https://www.douyin.com/user/example",collector:{accountId:"account-1",accountHandle:"@创作号",platform:"douyin",availability:"active"},monitorEnabled:false,syncPolicy:{mode:"manual"},status:"active",lastRunAt:"2026-09-26T01:35:25.601Z",nextRunAt:null,version:1}],health:[{sourceId:"source-old-login",lastRunId:"old-run",lastRunStatus:"blocked",blockedCount:1,lastErrorCode:"LOGIN_REQUIRED",scannedCount:0,newCount:0,updatedCount:0,failedCount:0}]};
+    render(<IntelligenceWorkbench accountId="account-1" workspace={sourceWorkspace} items={[]} initialDetail={null} api={stub}/>);
+    await userEvent.click(screen.getByRole("button",{name:"扫码登录 历史登录来源 的采集账号"}));
+    expect(screen.getByRole("dialog",{name:"重新登录采集账号"})).toBeInTheDocument();
+    expect(stub.reconnectCollector).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole("button",{name:"打开扫码窗口"}));
+    await waitFor(()=>expect(stub.reconnectCollector).toHaveBeenCalledWith({collectorAccountId:"account-1",sourceType:"creator_profile"}));
   });
 
   it("[T-546] 博主来源保存后可暂停每日同步，且保留手动同步", async () => {

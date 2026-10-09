@@ -6648,6 +6648,66 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1106": {
+      "task_id": "T-1106",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1106-radar-auth-owner.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "orchestrator/THREAT_MODEL.json",
+        "backend/src/modules/platform-account/**",
+        "backend/src/modules/execution/**",
+        "backend/src/modules/intelligence/**",
+        "frontend/src/features/intelligence/**",
+        "docs/verification/t1106/**"
+      ],
+      "write_set": [
+        "backend/src/modules/platform-account/membership-lock.service.ts",
+        "backend/src/modules/platform-account/legacy-task-membership.integration.test.ts",
+        "backend/src/modules/intelligence/radar-project-queue.service.test.ts",
+        "frontend/src/features/intelligence/intelligence-workbench.tsx",
+        "frontend/src/features/intelligence/intelligence-display.ts",
+        "frontend/src/features/intelligence/use-project-upgrade-queue.ts",
+        "frontend/src/features/intelligence/intelligence-workbench.test.tsx",
+        "frontend/src/features/intelligence/use-project-upgrade-queue.test.tsx",
+        "docs/features/t1106-radar-auth-owner*",
+        "docs/verification/t1106/**",
+        "frontend/tests/e2e/t1106-radar*.ts",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/.lessons-stats.json",
+        "orchestrator/progress.json",
+        "orchestrator/process/reconcile.config.json",
+        "orchestrator/context/T-1106.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm -C backend exec vitest run src/modules/platform-account/legacy-task-membership.integration.test.ts src/modules/intelligence/radar-project-queue.service.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/intelligence/use-project-upgrade-queue.test.tsx --retry=0",
+          "pnpm -C backend typecheck",
+          "pnpm -C frontend typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

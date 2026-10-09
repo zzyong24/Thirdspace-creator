@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "T-1106独立只读SPEC初审PASS。历史LOGIN_REQUIRED不作为当前Cookie状态，重试复用已保存采集账号并保留独立扫码及热点OAuth恢复。旧任务仅在原grp_legacy_account、双版本NULL、真实原user/account及活跃初始成员且无其他成员历史的完整证明下准入；不回写冻结数据或扩大group=NULL入口。原升级任务沿原ID/checkpoint恢复子任务，未知结果不重发。公开链路、负例与UI验证范围已明确，无阻断问题。",
+  "findings": []
+}

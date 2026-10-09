@@ -1,0 +1,1928 @@
+{
+  "task_id": "T-1106",
+  "outcome": "failed",
+  "startedAt": "2026-10-09T04:51:41.215Z",
+  "completedAt": "2026-10-09T04:53:58.563Z",
+  "browser": "Google Chrome (Playwright channel chrome)",
+  "source_witness": [
+    {
+      "path": "frontend/src/features/intelligence/intelligence-workbench.tsx",
+      "sha256": "7e7a21f176fbc62e79e8b1f6bf0696687f55d1c1fb4f9d8055abf34a610edae0"
+    },
+    {
+      "path": "frontend/src/features/intelligence/intelligence-display.ts",
+      "sha256": "52ff5fcb66f5c33f0094cbb19ca1f47d99fcfd97744e400ebcba8ff6243aa589"
+    },
+    {
+      "path": "frontend/src/features/intelligence/use-project-upgrade-queue.ts",
+      "sha256": "0474d5ffe5ccd73f31155de631a742322bda63bd6bfeed961cd4e3547a29889c"
+    }
+  ],
+  "evidence_scope": "隔离fixture仅证明前端操作链；不证明平台认证、模型运行或安装版任务恢复",
+  "steps": [
+    {
+      "at": "2026-10-09T04:51:56.145Z",
+      "action": "初始状态：历史失败明确，主要重试入口可用，内部术语已转为账号核对提示",
+      "fixtureCalls": [
+        {
+          "at": "2026-10-09T04:51:55.311Z",
+          "method": "listProjectUpgrades",
+          "input": {
+            "groupId": "grp_legacy_acct-ae1a8346-9",
+            "page": 1
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-09T04:51:56.281Z",
+      "action": "1024窄窗可见面板实际几何",
+      "narrowBoxes": [
+        {
+          "testid": "intelligence-sidebar",
+          "tag": "ASIDE",
+          "rect": {
+            "x": 25,
+            "y": 86,
+            "width": 974,
+            "height": 320,
+            "top": 86,
+            "right": 999,
+            "bottom": 406,
+            "left": 25
+          },
+          "scrollHeight": 319,
+          "clientHeight": 319
+        },
+        {
+          "testid": null,
+          "tag": "MAIN",
+          "rect": {
+            "x": 25,
+            "y": 406,
+            "width": 974,
+            "height": 320,
+            "top": 406,
+            "right": 999,
+            "bottom": 726,
+            "left": 25
+          },
+          "scrollHeight": 320,
+          "clientHeight": 320
+        },
+        {
+          "testid": "intelligence-detail",
+          "tag": "ASIDE",
+          "rect": {
+            "x": 25,
+            "y": 726,
+            "width": 974,
+            "height": 320,
+            "top": 726,
+            "right": 999,
+            "bottom": 1046,
+            "left": 25
+          },
+          "scrollHeight": 629,
+          "clientHeight": 320
+        }
+      ],
+      "fixtureCalls": [
+        {
+          "at": "2026-10-09T04:51:55.311Z",
+          "method": "listProjectUpgrades",
+          "input": {
+            "groupId": "grp_legacy_acct-ae1a8346-9",
+            "page": 1
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-09T04:51:57.285Z",
+      "action": "主重试调用startRun一次，未扫码；在途刷新后主要重试禁用、扫码入口隐藏且未重复提交",
+      "fixtureCalls": [
+        {
+          "at": "2026-10-09T04:51:55.311Z",
+          "method": "listProjectUpgrades",
+          "input": {
+            "groupId": "grp_legacy_acct-ae1a8346-9",
+            "page": 1
+          }
+        },
+        {
+          "at": "2026-10-09T04:51:56.637Z",
+          "method": "startRun",
+          "input": {
+            "sourceId": "intelligence-source-d001a725-1281",
+            "idempotencyKey": "manual-sync:e952af31-ba45-4263-aabf-3fedbb6fa4f5",
+            "collectorAccountId": "acct-ae1a8346-9"
+          }
+        },
+        {
+          "at": "2026-10-09T04:51:57.036Z",
+          "method": "getRun",
+          "input": "fixture-new-run-1"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-09T04:51:57.301Z",
+      "action": "合成同步回执结束后真实组件恢复同步入口；此结果不代表平台认证通过",
+      "fixtureCalls": [
+        {
+          "at": "2026-10-09T04:51:55.311Z",
+          "method": "listProjectUpgrades",
+          "input": {
+            "groupId": "grp_legacy_acct-ae1a8346-9",
+            "page": 1
+          }
+        },
+        {
+          "at": "2026-10-09T04:51:56.637Z",
+          "method": "startRun",
+          "input": {
+            "sourceId": "intelligence-source-d001a725-1281",
+            "idempotencyKey": "manual-sync:e952af31-ba45-4263-aabf-3fedbb6fa4f5",
+            "collectorAccountId": "acct-ae1a8346-9"
+          }
+        },
+        {
+          "at": "2026-10-09T04:51:57.036Z",
+          "method": "getRun",
+          "input": "fixture-new-run-1"
+        },
+        {
+          "at": "2026-10-09T04:51:57.290Z",
+          "method": "getRun",
+          "input": "fixture-new-run-1"
+        }
+      ]
+    },
+    {
+      "at": "2026-10-09T04:51:57.519Z",
+      "action": "重试升级使用原taskId的retry命令，未新enqueue，checkpoint保留原转写子任务",
+      "fixtureCalls": [
+        {
+          "at": "2026-10-09T04:51:55.311Z",
+          "method": "listProjectUpgrades",
+          "input": {
+            "groupId": "grp_legacy_acct-ae1a8346-9",
+            "page": 1
+          }
+        },
+        {
+          "at": "2026-10-09T04:51:56.637Z",
+          "method": "startRun",
+          "input": {
+            "sourceId": "intelligence-source-d001a725-1281",
+            "idempotencyKey": "manual-sync:e952af31-ba45-4263-aabf-3fedbb6fa4f5",
+            "collectorAccountId": "acct-ae1a8346-9"
+          }
+        },
+        {
+          "at": "2026-10-09T04:51:57.036Z",
+          "method": "getRun",
+          "input": "fixture-new-run-1"
+        },
+        {
+          "at": "2026-10-09T04:51:57.290Z",
+          "method": "getRun",
+          "input": "fixture-new-run-1"
+        },
+        {
+          "at": "2026-10-09T04:51:57.353Z",
+          "method": "commandTask",
+          "input": {
+            "taskId": "execution-task-db19e969-418",
+            "command": "retry",
+            "idempotencyKey": "upgrade-execution-task-db19e969-418:fb37f3b2-a327-4a75-844c-61ea89e441b4"
+          }
+        },
+        {
+          "at": "2026-10-09T04:51:57.360Z",
+          "method": "listProjectUpgrades",
+          "input": {
+            "groupId": "grp_legacy_acct-ae1a8346-9",
+            "page": 1
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-09T04:51:57.523Z",
+      "action": "独立扫码场景：仅在fixture内重置同一份历史LOGIN_REQUIRED投影，未访问平台",
+      "fixtureCalls": [
+        {
+          "at": "2026-10-09T04:51:55.311Z",
+          "method": "listProjectUpgrades",
+          "input": {
+            "groupId": "grp_legacy_acct-ae1a8346-9",
+            "page": 1
+          }
+        },
+        {
+          "at": "2026-10-09T04:51:56.637Z",
+          "method": "startRun",
+          "input": {
+            "sourceId": "intelligence-source-d001a725-1281",
+            "idempotencyKey": "manual-sync:e952af31-ba45-4263-aabf-3fedbb6fa4f5",
+            "collectorAccountId": "acct-ae1a8346-9"
+          }
+        },
+        {
+          "at": "2026-10-09T04:51:57.036Z",
+          "method": "getRun",
+          "input": "fixture-new-run-1"
+        },
+        {
+          "at": "2026-10-09T04:51:57.290Z",
+          "method": "getRun",
+          "input": "fixture-new-run-1"
+        },
+        {
+          "at": "2026-10-09T04:51:57.353Z",
+          "method": "commandTask",
+          "input": {
+            "taskId": "execution-task-db19e969-418",
+            "command": "retry",
+            "idempotencyKey": "upgrade-execution-task-db19e969-418:fb37f3b2-a327-4a75-844c-61ea89e441b4"
+          }
+        },
+        {
+          "at": "2026-10-09T04:51:57.360Z",
+          "method": "listProjectUpgrades",
+          "input": {
+            "groupId": "grp_legacy_acct-ae1a8346-9",
+            "page": 1
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-09T04:53:58.043Z",
+      "action": "失败",
+      "error": "Error: expect(locator).toBeFocused() failed\n\nLocator:  getByTestId('radar-source-row-intelligence-source-d001a725-1281').getByRole('button', { name: '扫码登录 Geo逸哥 的采集账号', exact: true })\nExpected: focused\nReceived: inactive\nTimeout:  120000ms\n\nCall log:\n  - Expect \"to.be.focused\" with timeout 120000ms\n  - waiting for getByTestId('radar-source-row-intelligence-source-d001a725-1281').getByRole('button', { name: '扫码登录 Geo逸哥 的采集账号', exact: true })\n    237 × locator resolved to <button type=\"button\" data-slot=\"button\" aria-label=\"扫码登录 Geo逸哥 的采集账号\" title=\"扫码登录采集账号（也可先用已有登录状态重试）\" class=\"group/button inline-flex items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:rin…>…</button>\n        - unexpected value \"inactive\"\n\n    at captureRawStack (/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:3130:17)\n    at callMatcherAsStep (/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12873:57)\n    at Object.toBeFocused (/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12863:23)\n    at /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/docs/verification/t1106/run-journey.mjs:146:78"
+    }
+  ],
+  "calls": [
+    {
+      "at": "2026-10-09T04:51:55.311Z",
+      "method": "listProjectUpgrades",
+      "input": {
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "page": 1
+      }
+    },
+    {
+      "at": "2026-10-09T04:51:56.637Z",
+      "method": "startRun",
+      "input": {
+        "sourceId": "intelligence-source-d001a725-1281",
+        "idempotencyKey": "manual-sync:e952af31-ba45-4263-aabf-3fedbb6fa4f5",
+        "collectorAccountId": "acct-ae1a8346-9"
+      }
+    },
+    {
+      "at": "2026-10-09T04:51:57.036Z",
+      "method": "getRun",
+      "input": "fixture-new-run-1"
+    },
+    {
+      "at": "2026-10-09T04:51:57.290Z",
+      "method": "getRun",
+      "input": "fixture-new-run-1"
+    },
+    {
+      "at": "2026-10-09T04:51:57.353Z",
+      "method": "commandTask",
+      "input": {
+        "taskId": "execution-task-db19e969-418",
+        "command": "retry",
+        "idempotencyKey": "upgrade-execution-task-db19e969-418:fb37f3b2-a327-4a75-844c-61ea89e441b4"
+      }
+    },
+    {
+      "at": "2026-10-09T04:51:57.360Z",
+      "method": "listProjectUpgrades",
+      "input": {
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "page": 1
+      }
+    },
+    {
+      "at": "2026-10-09T04:51:58.037Z",
+      "method": "getRun",
+      "input": "fixture-new-run-1"
+    },
+    {
+      "at": "2026-10-09T04:51:59.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:00.373Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:01.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:03.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:03.376Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:05.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:06.378Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:07.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:09.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:09.380Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:11.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:12.383Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:13.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:15.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:15.386Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:17.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:18.387Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:19.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:21.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:21.389Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:23.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:24.392Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:25.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:27.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:27.395Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:29.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:30.396Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:31.313Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:33.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:33.398Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:35.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:36.400Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:37.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:39.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:39.403Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:41.313Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:42.405Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:43.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:45.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:45.408Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:47.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:48.410Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:49.313Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:51.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:51.412Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:53.316Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:54.414Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:55.313Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:57.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:52:57.362Z",
+      "method": "listProjectUpgrades",
+      "input": {
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "page": 1
+      }
+    },
+    {
+      "at": "2026-10-09T04:52:59.316Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:00.363Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:01.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:03.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:03.366Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:05.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:06.368Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:07.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:09.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:09.370Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:11.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:12.373Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:13.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:15.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:15.375Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:17.316Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:18.376Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:19.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:21.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:21.378Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:23.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:24.379Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:25.316Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:27.313Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:27.380Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:29.317Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:30.384Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:31.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:33.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:33.387Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:35.316Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:36.390Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:37.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:39.316Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:39.393Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:41.316Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:42.396Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:43.316Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:45.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:45.400Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:47.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:48.403Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:49.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:51.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:51.406Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:53.314Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:54.408Z",
+      "method": "getProjectUpgrade",
+      "input": {
+        "id": "execution-task-db19e969-418",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "kind": "radar_project_upgrade",
+        "ownerId": "intelligence-item-db19e969-156",
+        "status": "queued",
+        "checkpoint": {
+          "stage": "transcribing",
+          "blockedChildId": "execution-task-db19e969-419",
+          "blockedAtAttempt": 18,
+          "transcriptTaskId": "execution-task-db19e969-419"
+        },
+        "errorCode": null,
+        "errorMessage": null,
+        "createdAt": "2026-10-06T04:23:18.914Z",
+        "updatedAt": "2026-10-09T04:15:18.849Z",
+        "userId": "fixture-user-t1106",
+        "ownerType": "item_import",
+        "priority": 1,
+        "idempotencyKey": "fixture-original-idempotency-t1106",
+        "leaseOwner": null,
+        "leaseExpiresAt": null,
+        "heartbeatAt": null,
+        "attempt": 18,
+        "maxAttempts": 3,
+        "costEstimate": null
+      }
+    },
+    {
+      "at": "2026-10-09T04:53:55.315Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:57.316Z",
+      "method": "getItem",
+      "input": "intelligence-item-db19e969-156"
+    },
+    {
+      "at": "2026-10-09T04:53:57.362Z",
+      "method": "listProjectUpgrades",
+      "input": {
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "page": 1
+      }
+    }
+  ],
+  "browserErrors": []
+}

@@ -45,7 +45,17 @@ export async function lockWorkspaceMembership(tx:MembershipTransaction,ctx:Reque
 /** 在外部副作用开始前重验原冻结值；绝不使用当前页面选中的组覆盖原任务。 */
 export async function assertFrozenWorkspaceMembership(tx:MembershipTransaction,frozen:FrozenWorkspace,options:{allowArchived?:boolean}={}):Promise<void>{
  if(!frozen.groupId){if(frozen.accountId)await lockWorkspaceMembership(tx,{userId:frozen.userId,accountId:frozen.accountId,requestId:"legacy-membership-validation",source:"ai"},options);return;}
- if(frozen.accountId&&frozen.membershipVersion===null)throw new ConflictError('任务缺少冻结账号归属版本，请重新选择目标');
+ if(frozen.accountId&&(frozen.membershipVersion===null||frozen.groupVersion===null)){
+  // 0128只补旧任务group_id；不得拿当前成员版本重新签署原任务。
+  // SEMANTIC_BOUNDARY_ALLOW: 初始legacy ID与唯一成员历史仅证明原账号权限，不做创作选择。
+  if(frozen.membershipVersion===null&&frozen.groupVersion===null&&frozen.groupId===`grp_legacy_${frozen.accountId}`){
+   // 与转组共用账号→成员→组锁；旧兼容始终要求活跃组，不能借allowArchived扩大准入。
+   const original=await lockWorkspaceMembership(tx,{userId:frozen.userId,groupId:frozen.groupId,accountId:frozen.accountId,requestId:'legacy-task-membership-proof',source:'ai'});
+   const history=await tx.select({id:accountGroupMemberships.id}).from(accountGroupMemberships).where(eq(accountGroupMemberships.accountId,frozen.accountId));
+   if(original.membershipVersion===1&&history.length===1)return;
+  }
+  throw new ConflictError('无法确认这项旧任务的原账号归属，任务和已完成内容已保留');
+ }
  await lockWorkspaceMembership(tx,{userId:frozen.userId,groupId:frozen.groupId,accountId:frozen.accountId,membershipVersion:frozen.membershipVersion??undefined,requestId:'frozen-membership-validation',source:'ai'},options);
 }
 

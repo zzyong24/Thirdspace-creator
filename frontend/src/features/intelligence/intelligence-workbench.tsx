@@ -187,6 +187,7 @@ function IntelligenceWorkbenchScope({
   );
   const [reconnectSource, setReconnectSource] =
     React.useState<RadarSource | null>(null);
+  const reconnectReturnFocus = React.useRef<HTMLElement | null>(null);
   const [reconnectBusy, setReconnectBusy] = React.useState(false);
   const [reconnectError, setReconnectError] = React.useState<string | null>(
     null,
@@ -1015,7 +1016,10 @@ function IntelligenceWorkbenchScope({
           }
         }}
       >
-        <DialogContent>
+        <DialogContent onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          if (reconnectReturnFocus.current?.isConnected) reconnectReturnFocus.current.focus();
+        }}>
           <DialogHeader>
             <DialogTitle>重新登录采集账号</DialogTitle>
             <DialogDescription>
@@ -1129,7 +1133,7 @@ function IntelligenceWorkbenchScope({
         <aside
           data-testid="intelligence-sidebar"
           aria-label="内容雷达分类和来源"
-          className="flex min-h-0 flex-col border-b border-border/70 bg-surface-subtle xl:border-b-0 xl:border-r"
+          className="flex min-h-[320px] flex-col border-b border-border/70 bg-surface-subtle xl:min-h-0 xl:border-b-0 xl:border-r"
         >
           <div className="shrink-0 space-y-2 px-3 pb-2 pt-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -1217,7 +1221,8 @@ function IntelligenceWorkbenchScope({
                       }
                       onRun={() => runSource(source.id)}
                       onToggleMonitor={() => void toggleSourceMonitor(source)}
-                      onReconnect={() => {
+                      onReconnect={(trigger) => {
+                        reconnectReturnFocus.current = trigger;
                         setReconnectError(null);
                         setReconnectSource(source);
                       }}
@@ -1253,7 +1258,8 @@ function IntelligenceWorkbenchScope({
                   onSelect={() => void selectItemScope(null, source.id)}
                   onRun={() => runSource(source.id)}
                   onToggleMonitor={() => void toggleSourceMonitor(source)}
-                  onReconnect={() => {
+                  onReconnect={(trigger) => {
+                    reconnectReturnFocus.current = trigger;
                     setReconnectError(null);
                     setReconnectSource(source);
                   }}
@@ -1274,7 +1280,7 @@ function IntelligenceWorkbenchScope({
 
         <main
           aria-busy={itemsLoading}
-          className="flex min-h-0 min-w-0 flex-col bg-canvas/55"
+          className="flex min-h-[320px] min-w-0 flex-col bg-canvas/55 xl:min-h-0"
         >
           <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border/60 px-4 py-2.5">
             <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -1543,7 +1549,7 @@ function SourceRow({
   onSelect: () => void;
   onRun: () => void;
   onToggleMonitor: () => void;
-  onReconnect: () => void;
+  onReconnect: (trigger: HTMLElement) => void;
   onRemove: () => void;
   onShowRuns: () => void;
 }) {
@@ -1553,8 +1559,12 @@ function SourceRow({
     : syncing
       ? "running"
       : (health?.lastRunStatus ?? null);
-  const loginExpired = health?.lastErrorCode === "LOGIN_REQUIRED";
-  const statusLabel = runStatusLabel(currentStatus);
+  // 信源health是上次运行的回执，不是当前Cookie认证探针。
+  const lastRunNeededLogin = !syncing && health?.lastErrorCode === "LOGIN_REQUIRED";
+  const hotspotAuthorizationNeeded = lastRunNeededLogin && source.type === "darkhorse_query";
+  const statusLabel = lastRunNeededLogin
+    ? hotspotAuthorizationNeeded ? "上次同步需授权" : "上次同步需登录"
+    : runStatusLabel(currentStatus);
   const collectorUnavailable=source.collector && source.collector.availability!=="active";
   const collectorLabel = collectorUnavailable ? "采集账号需重新选择" : source.collector
     ? `用 ${source.collector.accountHandle ?? source.collector.accountId} 采集`
@@ -1603,25 +1613,25 @@ function SourceRow({
         <Button
           type="button"
           aria-label={
-            loginExpired
-              ? `重新登录 ${source.displayName} 的采集账号`
-              : `${queued ? "等待同步" : syncing ? "正在同步" : "同步"} ${source.displayName}`
+            hotspotAuthorizationNeeded
+              ? `重新授权 ${source.displayName} 的热点宝`
+              : `${queued ? "等待同步" : syncing ? "正在同步" : lastRunNeededLogin ? "重试" : "同步"} ${source.displayName}`
           }
           variant="outline"
           size="sm"
           disabled={syncing || source.status !== "active" || !!collectorUnavailable}
-          onClick={loginExpired ? onReconnect : onRun}
+          onClick={hotspotAuthorizationNeeded ? (event) => onReconnect(event.currentTarget) : onRun}
           className={cn(
             "h-8 shrink-0 gap-1 whitespace-nowrap border-border bg-surface px-2 text-[11px] text-muted-foreground hover:border-primary/40 hover:bg-primary/10 hover:text-primary",
-            loginExpired && "border-warning/40 text-warning",
+            hotspotAuthorizationNeeded && "border-warning/40 text-warning",
           )}
         >
-          {loginExpired ? (
+          {hotspotAuthorizationNeeded ? (
             <ShieldCheck className="size-3" />
           ) : (
             <RefreshCw className={cn("size-3", syncing && "animate-spin")} />
           )}
-          {loginExpired ? "登录" : queued ? "排队中" : syncing ? "同步中" : "同步"}
+          {hotspotAuthorizationNeeded ? "授权" : queued ? "排队中" : syncing ? "同步中" : lastRunNeededLogin ? "重试" : "同步"}
         </Button>
       </div>
 
@@ -1632,6 +1642,20 @@ function SourceRow({
         >
           {collectorLabel}
         </span>
+        {lastRunNeededLogin && !hotspotAuthorizationNeeded && source.collector && (
+          <Button
+            type="button"
+            aria-label={`扫码登录 ${source.displayName} 的采集账号`}
+            title="扫码登录采集账号（也可先用已有登录状态重试）"
+            variant="ghost"
+            size="icon"
+            disabled={source.status !== "active" || !!collectorUnavailable}
+            onClick={(event) => onReconnect(event.currentTarget)}
+            className="size-6 shrink-0 text-muted-foreground hover:bg-surface hover:text-primary"
+          >
+            <ShieldCheck className="size-3" />
+          </Button>
+        )}
         <Button
           type="button"
           aria-label={`${source.monitorEnabled ? "暂停" : "恢复"} ${source.displayName} 的每日自动同步`}

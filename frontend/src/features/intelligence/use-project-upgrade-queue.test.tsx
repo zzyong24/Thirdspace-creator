@@ -9,6 +9,18 @@ import {ENDPOINTS,executionTaskResourceV2} from '@creatoros/contract';
 afterEach(cleanup);
 const task={id:'upgrade',accountId:'account',ownerId:'item',status:'blocked',errorCode:'BOUND_ASR_RESULT_UNKNOWN',errorMessage:'提交结果未知，须同键对账',createdAt:'2026-09-09'} as ExecutionTaskResourceV2;
 describe('升级未知结果处理',()=>{
+ it('T-1106 原账号校验失败显示人话，显式重试仍使用原任务',async()=>{
+  const old={...task,errorCode:'STALE_WORKSPACE_MEMBERSHIP',errorMessage:'任务缺少冻结账号归属版本，请重新选择目标'};
+  expect(upgradeNotice(old)).not.toMatch(/冻结|版本/);
+  expect(upgradeNotice(old)).toContain('原账号');
+  expect(upgradeNotice(old)).toContain('已完成内容');
+  const api={listProjectUpgrades:vi.fn().mockResolvedValue({tasks:[old],total:1}),enqueueProjectUpgrades:vi.fn(),commandTask:vi.fn().mockResolvedValue({})} as unknown as RadarApi;
+  const {result}=renderHook(()=>useProjectUpgradeQueue({api,accountId:'account',positioningVersionId:'positioning',setNotice:vi.fn()}));
+  await waitFor(()=>expect(result.current.byItem.has('item')).toBe(true));
+  await act(()=>result.current.enqueue('item'));
+  expect(api.commandTask).toHaveBeenCalledWith(expect.objectContaining({taskId:'upgrade',command:'retry'}));
+  expect(api.enqueueProjectUpgrades).not.toHaveBeenCalled();
+ });
  it('父任务正常等待子任务不显示故障，真实退避保留原因',()=>{
   const waiting={...task,status:'queued',runtimeStatus:'retry_wait',errorCode:null,errorMessage:null,checkpoint:{stage:'transcribing'}} as ExecutionTaskResourceV2;
   expect(upgradeNotice(waiting)).toBeNull();

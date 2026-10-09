@@ -14,6 +14,7 @@ export function upgradeNeedsResultCheck(task?:ExecutionTaskResourceV2):boolean {
 }
 export function upgradeNotice(task?:ExecutionTaskResourceV2):string|null {
   if (upgradeNeedsResultCheck(task)) return "转写结果尚未确认，升级已暂停，已完成内容保留。可打开作品详情补充逐字稿，再继续升级。";
+  if (task?.errorCode === "STALE_WORKSPACE_MEMBERSHIP") return "暂时无法确认任务的原账号信息。已完成内容已保留，可点击「重试升级」重试；若仍失败，请在账号组中核对该账号。";
   if (task?.runtimeStatus === "retry_wait") return task.errorMessage ?? (task.errorCode ? "处理遇到临时问题，系统已安排重试。" : null);
   return task?.errorMessage ?? null;
 }

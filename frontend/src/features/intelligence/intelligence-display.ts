@@ -57,7 +57,7 @@ export function runResultMessage(
       if (sourceType === "darkhorse_query") {
         return "同步暂停：热点宝授权已失效。请点击「热点宝授权」，授权成功后系统会自动重试。";
       }
-      return "同步暂停：采集账号登录已失效。请点击「重新登录」扫码，成功后系统会自动重试。";
+      return "上次同步时平台要求登录。可先用已有登录状态重试；仍需登录时再更新该来源的登录状态。";
     }
     if (run.errorCode === "CAPTCHA") {
       return "同步暂停：页面要求完成验证码，请在登录保管库处理后重试。";
@@ -112,4 +112,3 @@ export function progressLabel(
     attention: "需要处理",
   }[state];
 }
-
