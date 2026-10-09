@@ -1,0 +1,120 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-xuw3TU
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 predev /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend
+[2m[WebServer] [22m> node ../ai-worker/scripts/build.mjs
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexJsonRpcConnection.ts:27:93:
+[2m[WebServer] [22m      27 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexCli.ts:29:89:
+[2m[WebServer] [22m      29 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 dev /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend
+[2m[WebServer] [22m> next dev --hostname 127.0.0.1 --port 31411
+[2m[WebServer] [22m
+[2m[WebServer] [22m[1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
+[2m[WebServer] [22m- Local:         http://127.0.0.1:31411
+[2m[WebServer] [22m- Network:       http://127.0.0.1:31411
+[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 1995ms
+[2m[WebServer] [22m[CreatorOS] SIDECAR_STARTUP_VERIFIED
+[2m[WebServer] [22m
+[2m[WebServer] [22m[37m[1m○[22m[39m Compiling / ...
+[2m[WebServer] [22m[32m[1m✓[22m[39m Finished filesystem cache database compaction in 15.2s
+[2m[WebServer] [22m[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[2m[WebServer] [22m[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+[2m[WebServer] [22m GET / [32m200[39m in 58s[2m (next.js: 5.2s, proxy.ts: 826ms, application-code: 52s)[22m
+
+Running 1 test using 1 worker
+
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-xuw3TU
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 3.6s[2m (next.js: 3.4s, proxy.ts: 137ms, application-code: 56ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 56ms[2m (next.js: 1967µs, proxy.ts: 3ms, application-code: 52ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 52ms[2m (next.js: 2ms, proxy.ts: 5ms, application-code: 45ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 86ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 80ms)[22m
+[2m[WebServer] [22m[37m[1m○[22m[39m Compiling /accounts ...
+[2m[WebServer] [22m GET /accounts [32m200[39m in 9.2s[2m (next.js: 8.8s, proxy.ts: 8ms, application-code: 406ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 68ms[2m (next.js: 28ms, proxy.ts: 9ms, application-code: 31ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 99ms[2m (next.js: 56ms, proxy.ts: 14ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 122ms[2m (next.js: 86ms, proxy.ts: 18ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 173ms[2m (next.js: 101ms, proxy.ts: 22ms, application-code: 50ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 195ms[2m (next.js: 160ms, proxy.ts: 22ms, application-code: 12ms)[22m
+  ✓  1 [e2e] › tests/e2e/creative-canvas.spec.ts:409:5 › T-1101 三平台表格直接打开扫码弹窗，无重复刷新和下方扫码区 (17.3s)
+
+  1 passed (1.6m)

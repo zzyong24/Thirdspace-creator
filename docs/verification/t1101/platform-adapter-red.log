@@ -1,0 +1,25 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+ ❯ src/application/scheduling/platform-collector.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/application/scheduling/platform-collector.test.ts [ src/application/scheduling/platform-collector.test.ts ]
+Error: Cannot find module './platform-collector' imported from /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend/src/application/scheduling/platform-collector.test.ts
+ ❯ src/application/scheduling/platform-collector.test.ts:3:1
+      1| import {expect,it,vi} from 'vitest';
+      2| import type {CollectionRunResource,RequestContext} from '@creatoros/co…
+      3| import {createPlatformMetricsCollector,PlatformCollectionNeedsAuthErro…
+       | ^
+      4| const ctx:RequestContext={userId:'u',accountId:'ks',groupId:'g',member…
+      5| function fixture(platform='kuaishou',status:CollectionRunResource['sta…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  11:04:15
+   Duration  218ms (transform 24ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+

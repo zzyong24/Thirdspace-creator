@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 20 skipped (21)
+   Start at  11:43:16
+   Duration  35.88s (transform 11.16s, setup 0ms, import 14.53s, tests 21.11s, environment 0ms)
+

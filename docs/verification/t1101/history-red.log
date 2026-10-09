@@ -1,0 +1,402 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend
+
+(node:71223) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/creative-canvas/canvas-editor.test.tsx (17 tests | 1 failed | 16 skipped) 344ms
+   × 41条历史的旧候选仍可按需读取原文件，后续状态刷新保留原selection 343ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/creative-canvas/canvas-editor.test.tsx > 41条历史的旧候选仍可按需读取原文件，后续状态刷新保留原selection
+ FAIL  src/features/creative-canvas/canvas-editor.test.tsx > 41条历史的旧候选仍可按需读取原文件，后续状态刷新保留原selection
+ FAIL  src/features/creative-canvas/canvas-editor.test.tsx > 41条历史的旧候选仍可按需读取原文件，后续状态刷新保留原selection
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "编导与详情"
+
+Here are the accessible roles:
+
+  main:
+
+  Name "":
+  [36m<main[39m
+    [33mclass[39m=[32m"flex h-full min-h-0 flex-col bg-background"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  banner:
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"flex flex-wrap items-center gap-x-4 gap-y-2 border-b bg-card/80 px-4 py-2.5"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "画布库":
+  [36m<button[39m
+    [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "保存":
+  [36m<button[39m
+    [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "撤销":
+  [36m<button[39m
+    [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "重做":
+  [36m<button[39m
+    [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "归档":
+  [36m<button[39m
+    [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "连接到原生成":
+  [36m<button[39m
+    [33maria-label[39m=[32m"连接到原生成"[39m
+    [33mclass[39m=[32m"absolute -left-2 top-1/2 z-20 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-background bg-primary opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"[39m
+    [33mdata-canvas-handle-target[39m=[32m"generate-node"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "生成":
+  [36m<button[39m
+    [33mclass[39m=[32m"rounded-lg bg-primary px-3 py-1.5 text-xs text-primary-foreground disabled:opacity-40"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "从原生成连接":
+  [36m<button[39m
+    [33maria-label[39m=[32m"从原生成连接"[39m
+    [33mclass[39m=[32m"absolute -right-2 top-1/2 z-20 h-4 w-4 -translate-y-1/2 rounded-full border-2 border-background bg-primary opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"[39m
+    [33mdata-canvas-handle-source[39m=[32m"generate-node"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "调整原生成大小":
+  [36m<button[39m
+    [33maria-label[39m=[32m"调整原生成大小"[39m
+    [33mclass[39m=[32m"absolute -bottom-2 -right-2 z-20 h-5 w-5 cursor-nwse-resize rounded-md border border-background bg-primary opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"[39m
+    [33mdata-canvas-control[39m=[32m"true"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "＋ 文字":
+  [36m<button[39m
+    [33mclass[39m=[32m"inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium hover:bg-muted"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "＋ 图片生成":
+  [36m<button[39m
+    [33mclass[39m=[32m"inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "＋ 视频生成":
+  [36m<button[39m
+    [33mclass[39m=[32m"inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium hover:bg-muted"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "素材库":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mclass[39m=[32m"inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium hover:bg-muted"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "案例库":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mclass[39m=[32m"inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium hover:bg-muted"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "图文与发布":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mclass[39m=[32m"inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium hover:bg-muted"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "编导与详情41":
+  [36m<button[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33mclass[39m=[32m"pointer-events-auto inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-2xl border bg-background/95 px-3 text-xs font-medium shadow-lg hover:bg-muted"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "选择：框选":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mclass[39m=[32m"inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-xs hover:bg-muted"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "缩小":
+  [36m<button[39m
+    [33maria-label[39m=[32m"缩小"[39m
+    [33mclass[39m=[32m"rounded-lg p-2 hover:bg-muted"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "放大":
+  [36m<button[39m
+    [33maria-label[39m=[32m"放大"[39m
+    [33mclass[39m=[32m"rounded-lg p-2 hover:bg-muted"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "适合内容":
+  [36m<button[39m
+    [33mclass[39m=[32m"inline-flex min-h-8 items-center gap-1 rounded-lg px-2 text-xs hover:bg-muted"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "画布标题":
+  [36m<input[39m
+    [33maria-label[39m=[32m"画布标题"[39m
+    [33mclass[39m=[32m"w-full min-w-40 max-w-sm rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold outline-none hover:border-border focus:border-primary"[39m
+    [33mid[39m=[32m"canvas-title"[39m
+    [33mvalue[39m=[32m"原画布"[39m
+  [36m/>[39m
+
+  Name "生成描述":
+  [36m<textarea[39m
+    [33maria-label[39m=[32m"生成描述"[39m
+    [33mclass[39m=[32m"min-h-24 w-full flex-1 resize-none rounded-lg border bg-background p-2 text-xs leading-relaxed outline-none focus:border-primary"[39m
+    [33mplaceholder[39m=[32m"描述你想生成的画面…"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  status:
+
+  Name "":
+  [36m<span[39m
+    [33mclass[39m=[32m"inline-flex items-center gap-1.5 text-xs text-muted-foreground"[39m
+    [33mrole[39m=[32m"status"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "关联项目（可选）":
+  [36m<select[39m
+    [33maria-label[39m=[32m"关联项目（可选）"[39m
+    [33mclass[39m=[32m"max-w-60 rounded-lg border bg-background px-2 py-1.5"[39m
+    [33mid[39m=[32m"canvas-project"[39m
+  [36m/>[39m
+
+  Name "生成模式":
+  [36m<select[39m
+    [33maria-label[39m=[32m"生成模式"[39m
+    [33mclass[39m=[32m"w-full rounded-lg border bg-background px-2 py-1.5 text-xs"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  option:
+
+  Name "独立画布 · 当前账号":
+  [36m<option[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "文生图":
+  [36m<option[39m
+    [33mvalue[39m=[32m"text_to_image"[39m
+  [36m/>[39m
+
+  Name "参考图生图":
+  [36m<option[39m
+    [33mvalue[39m=[32m"image_to_image"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<main[39m
+      [33mclass[39m=[32m"flex h-full min-h-0 flex-col bg-background"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"flex flex-wrap items-center gap-x-4 gap-y-2 border-b bg-card/80 px-4 py-2.5"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-arrow-left size-4"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"m12 19-7-7 7-7"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M19 12H5"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m画布库[0m
+        [36m</button>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-w-0 flex-1"[39m
+        [36m>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"sr-only"[39m
+            [33mfor[39m=[32m"canvas-title"[39m
+          [36m>[39m
+            [0m画布标题[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-label[39m=[32m"画布标题"[39m
+            [33mclass[39m=[32m"w-full min-w-40 max-w-sm rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold outline-none hover:border-border focus:border-primary"[39m
+            [33mid[39m=[32m"canvas-title"[39m
+            [33mvalue[39m=[32m"原画布"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"inline-flex items-center gap-1.5 text-xs text-muted-foreground"[39m
+          [33mrole[39m=[32m"status"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-check size-3.5"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M20 6 9 17l-5-5"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m已保存[0m
+        [36m</span>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-save size-3.5"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M7 3v4a1 1 0 0 0 1 1h7"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [0m保存[0m
+        [36m</button>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-1 border-l pl-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m撤销[0m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs hover:bg-muted disabled:opacity-40"[39m
+            [33mdisabled[39m=[32m""[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m重做[0m
+          [36m</button>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"rounded-lg px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0m归档[0m
+        [36m</button>[39m
+      [36m</header>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap items-center gap-2 border-b bg-card/50 px-5 py-2 text-xs"[39m
+      [36m>[39m
+        [36m<svg[39m
+          [33maria-hidden[39m=[32m"true"[39m
+          [33mclass[39m=[32m"lucide lucide-layers size-4 text-primary"[39m
+          [33mfill[39m=[32m"none"[39m
+          [33mheight[39m=[32m"24"[39m
+          [33mstroke[39m=[32m"currentColor"[39m
+          [33mstroke-linecap[39m=[32m"round"[39m
+          [33mstroke-linejoin[39m=[32m"round"[39m
+          [33mstroke-width[39m=[32m"2"[39m
+          [33mviewBox[39m=[32m"0 0 24 24"[39m
+          [33mwidth[39m=[32m"24"[39m
+          [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+        [36m>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"[39m
+          [36m/>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"[39m
+          [36m/>[39m
+          [36m<path[39m
+            [33md[39m=[32m"M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"[39m
+          [36m/>[39m
+        ...
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/creative-canvas/canvas-editor.test.tsx:127:132
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 skipped (17)
+   Start at  11:36:43
+   Duration  3.11s (transform 1.28s, setup 190ms, import 1.92s, tests 344ms, environment 452ms)
+

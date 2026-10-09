@@ -1,0 +1,3 @@
+✗ 任务 T-1101 UI 旅程验收失败:
+旅程命令后的可见文案证据失效:
+visible_copy artifact_sha256 与当前 artifact 不一致

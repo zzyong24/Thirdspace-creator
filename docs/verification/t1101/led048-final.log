@@ -1,0 +1,23 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+ ❯ src/application/collection/cover-file-repair.test.ts (2 tests | 1 failed) 4685ms
+   × 真实临时文件删除后，经候选、补采、版本保存整链恢复可读图片，保留好封面 4676ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/application/collection/cover-file-repair.test.ts > 真实临时文件删除后，经候选、补采、版本保存整链恢复可读图片，保留好封面
+OwnershipError: 内容产物已归组或不可写，请重新选择工作区
+ ❯ assertOutputParents src/modules/publishing/publishing.service.ts:372:39
+
+ ❯ src/modules/publishing/publishing.service.ts:355:7
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 14 passed (15)
+      Tests  1 failed | 209 passed (210)
+   Start at  11:46:55
+   Duration  206.26s (transform 8.53s, setup 0ms, import 21.02s, tests 182.44s, environment 1ms)
+

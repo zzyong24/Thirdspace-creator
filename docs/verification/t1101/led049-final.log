@@ -1,0 +1,133 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend
+
+(node:77057) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77061) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77055) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77060) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77056) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77059) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:77058) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+ ❯ src/components/shell/shell.test.tsx (39 tests | 3 failed) 4590ms
+     × renders the approved primary nav items in order (定位中心 inserted as 2nd, 七步①②) 118ms
+     × [T-987] 展开与收拢导航不预取未点击页面，仍保留真实链接 102ms
+     × contentFill mode renders a fixed-height fill region without the PageScrollArea (no double scrollbar) 26ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/shell/shell.test.tsx > AppShell > renders the approved primary nav items in order (定位中心 inserted as 2nd, 七步①②)
+AssertionError: expected [ '首页', '创作者总览', '定位中心', '内容雷达', …(9) ] to deeply equal [ '首页', '创作者总览', '定位中心', '内容雷达', …(8) ]
+
+- Expected
++ Received
+
+@@ -5,10 +5,11 @@
+    "内容雷达",
+    "选题",
+    "项目",
+    "知识库",
+    "素材中心",
++   "创作画布",
+    "发布中心",
+    "运营分析",
+    "自动化",
+    "设置",
+  ]
+
+ ❯ src/components/shell/shell.test.tsx:183:20
+    181|     // SPEC §3.4: 定位中心 is the upstream constraint source — pinned 2nd.…
+    182|     // under it (定位→选题→项目 upstream order: 定位约束选题, 选题落地为项目).
+    183|     expect(labels).toEqual([
+       |                    ^
+    184|       "首页",
+    185|       "创作者总览",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/components/shell/shell.test.tsx > AppShell > [T-987] 展开与收拢导航不预取未点击页面，仍保留真实链接
+AssertionError: expected [ <a href="/" …(5)>…(2)</a>, …(12) ] to have a length of 12 but got 13
+
+- Expected
++ Received
+
+- 12
++ 13
+
+ ❯ assertLinks src/components/shell/shell.test.tsx:203:21
+    201|     const assertLinks = () => {
+    202|       const links = within(screen.getByRole("navigation", { name: "主要导…
+    203|       expect(links).toHaveLength(12);
+       |                     ^
+    204|       for (const link of links) {
+    205|         expect(link).toHaveAttribute("data-prefetch", "false");
+ ❯ src/components/shell/shell.test.tsx:209:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/components/shell/shell.test.tsx > AppShell > contentFill mode renders a fixed-height fill region without the PageScrollArea (no double scrollbar)
+AssertionError: expected <div dir="ltr" …(5)>…(2)</div> to be null
+
+- Expected:
+null
+
++ Received:
+<div
+  class="relative min-h-0 flex-1 overflow-hidden bg-canvas [&>[data-slot=scroll-area-viewport]]:!overflow-hidden [&>[data-slot=scroll-area-viewport]>div]:h-full [&>[data-slot=scroll-area-viewport]>div]:min-h-0 [&>[data-slot=scroll-area-scrollbar]]:hidden"
+  data-fill="true"
+  data-slot="page-scroll-area"
+  data-testid="page-scroll-area"
+  dir="ltr"
+  style="position: relative; --radix-scroll-area-corner-width: 0px; --radix-scroll-area-corner-height: 0px;"
+>
+  <style>
+    [data-radix-scroll-area-viewport]{scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}[data-radix-scroll-area-viewport]::-webkit-scrollbar{display:none}
+  </style>
+  <div
+    class="size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1 [&>div]:!block [&>div]:!w-full [&>div]:min-w-0"
+    data-radix-scroll-area-viewport=""
+    data-slot="scroll-area-viewport"
+    style="overflow-x: hidden; overflow-y: scroll;"
+  >
+    <div
+      style="min-width: 100%; display: table;"
+    >
+      <div
+        class="w-full min-w-0 px-page-gutter flex h-full min-h-0 flex-col overflow-hidden py-6"
+        data-fill="true"
+        data-slot="app-page-content"
+      >
+        <div
+          data-testid="page-content"
+        >
+          page content
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+ ❯ src/components/shell/shell.test.tsx:370:7
+    368|     expect(
+    369|       container.querySelector('[data-slot="page-scroll-area"]'),
+    370|     ).toBeNull();
+       |       ^
+    371|     const fill = container.querySelector(
+    372|       '[data-slot="app-page-content"][data-fill="true"]',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed | 6 passed (7)
+      Tests  3 failed | 76 passed (79)
+   Start at  11:46:55
+   Duration  6.99s (transform 12.66s, setup 2.91s, import 13.96s, tests 9.27s, environment 7.85s)
+

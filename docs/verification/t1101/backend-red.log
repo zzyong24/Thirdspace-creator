@@ -1,0 +1,43 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend
+
+ ❯ src/modules/creative-canvas/creative-canvas.service.test.ts (21 tests | 1 failed | 1 skipped) 7457ms
+   × 同节点任务运行或提交未知时拒绝新attempt，原attempt仍可回读，终态允许再次生成 68ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/creative-canvas/creative-canvas.service.test.ts > 同节点任务运行或提交未知时拒绝新attempt，原attempt仍可回读，终态允许再次生成
+AssertionError: promise resolved "{ …(13) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "attemptId": "duplicate-new-attempt",
++   "canvasId": "5d6f30da-b142-474d-9967-1101ea76bab9",
++   "createdAt": "2026-09-28T00:00:00.000Z",
++   "id": "c2281ae3-8692-4374-b3f5-6d07c2ecbf7e",
++   "inputDigest": "724f14e50b12b9be8ef41daeca2250362f97d9a0364b210fe2808b17ee3a3232",
++   "inputRevision": 2,
++   "mediaKind": "image",
++   "nodeId": "node",
++   "referenceChecksum": null,
++   "referenceFileId": null,
++   "resultAssetId": null,
++   "taskId": "task-duplicate-new-attempt",
++   "updatedAt": "2026-09-28T00:00:00.000Z",
+  }
+
+ ❯ src/modules/creative-canvas/creative-canvas.service.test.ts:263:231
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 19 passed | 1 skipped (21)
+   Start at  10:54:59
+   Duration  18.40s (transform 7.60s, setup 0ms, import 10.69s, tests 7.46s, environment 0ms)
+
