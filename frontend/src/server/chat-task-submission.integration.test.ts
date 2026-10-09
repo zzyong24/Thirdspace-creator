@@ -69,10 +69,14 @@ it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",fai
  const requests:any[]=[];
  const server=createServer(async(req,res)=>{
   let body="";for await(const chunk of req)body+=chunk.toString();const input=JSON.parse(body);requests.push(input);
-  if(!input.stream && material){res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({data:[{b64_json:Buffer.from("fixture-image").toString("base64")}]}));return;}
-  if(!input.stream){res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:JSON.stringify(script?{authorized:true,startAnchor:null,endAnchor:null}:publish?{drafts:[{platform:"douyin",title:"真实发布标题",body:"完整发布简介",tags:["真实"],coverIdea:"原稿画面",auditFlags:[]}]}:review?{verdict:"pass",summary:"已依据原文完成审核",findings:[]}:{core:{title:"真实子任务论点",summary:"选区主题的候选"},branches:[]})},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));return;}
-  const first=requests.filter(item=>item.stream).length===1;
-  const delta=first?{tool_calls:[{index:0,id:"planning-call",type:"function",function:{name:toolName.replaceAll(".","_"),arguments:script?JSON.stringify({mode:"verbatim",sourceRef:"source"}):material?JSON.stringify({kind:"image",prompt:"原素材画面"}):"{}"}}]}:{content:"论点任务已提交，请在候选中查看。"};
+  const parentChat=Array.isArray(input.tools)&&input.tools.some((tool:{function?:{name?:string}})=>tool.function?.name===toolName.replaceAll(".","_"));
+  if(!parentChat && material){res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({data:[{b64_json:Buffer.from("fixture-image").toString("base64")}]}));return;}
+  const structured=script?{authorized:true,startAnchor:null,endAnchor:null}:publish?{drafts:[{platform:"douyin",title:"真实发布标题",body:"完整发布简介",tags:["真实"],coverIdea:"原稿画面",auditFlags:[]}]}:review?{verdict:"pass",summary:"已依据原文完成审核",findings:[]}:{core:{title:"真实子任务论点",summary:"选区主题的候选"},branches:[]};
+  if(!input.stream){res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:JSON.stringify(structured)},finish_reason:"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}));return;}
+  // 真实模型工厂对子结构化请求也使用 stream；按工具协议区分，不能把子结果误当父文本。
+  const parents=requests.filter(item=>Array.isArray(item.tools)&&item.tools.some((tool:{function?:{name?:string}})=>tool.function?.name===toolName.replaceAll(".","_")));
+  const first=parentChat&&parents.length===1;
+  const delta=!parentChat?{content:JSON.stringify(structured)}:first?{tool_calls:[{index:0,id:"planning-call",type:"function",function:{name:toolName.replaceAll(".","_"),arguments:script?JSON.stringify({mode:"verbatim",sourceRef:"source"}):material?JSON.stringify({kind:"image",prompt:"原素材画面"}):"{}"}}]}:{content:"论点任务已提交，请在候选中查看。"};
   const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:first?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
   res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"root",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");
  });
@@ -82,6 +86,12 @@ it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",fai
  const call=async(id:string,params:unknown,body?:unknown)=>(await compositeTransport.request({id} as Endpoint,{params,body} as never,ctx) as {data:any}).data;
  try{
   const runtime=await getChatRuntime(),db=fixture.db!;
+  const group=await compositeTransport.request({id:"accountGroups.create"} as Endpoint,{body:{name:"隔离聊天工厂账号组",idempotencyKey:"isolated-chat-factory-group"}} as never,{...ctx,accountId:null}) as {data:{id:string;version:number}};
+  ctx.groupId=group.data.id;ctx.groupVersion=group.data.version;
+  const account=await compositeTransport.request({id:"accounts.create"} as Endpoint,{body:{platform:"douyin",accountHandle:"@isolated-chat-factory",followerBaseline:0}} as never,{...ctx,accountId:null}) as {data:{id:string}};
+  ctx.accountId=account.data.id;
+  const currentGroup=await call("accountGroups.get",{groupId:ctx.groupId});
+  ctx.groupVersion=currentGroup.version;ctx.membershipVersion=currentGroup.members.find((member:{accountId:string})=>member.accountId===ctx.accountId).version;
   // 测试只初始化隔离数据库的存储配置；禁止调用会迁移真实默认媒体目录的设置 API。
   if(material)await db.insert(storageConfigs).values({userId:ctx.userId,rootPath:resolve(directory,"media"),backend:"local",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});
   const project=await call("projects.create",undefined,{title:"论点真实工厂项目"});
@@ -90,18 +100,19 @@ it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",fai
   const originalScript="这是一份已经保存的完整原稿，说明实际操作和适用边界。".repeat(4);
   const reviewVersion=(review || publish)?await call("artifacts.versions.create",{artifactId:reviewArtifact.id},{contentText:empty?"":originalScript}):null;
   const conversation=await runtime.ai.createConversation(ctx,{title:"论点工厂",scope:"project",projectId:project.id});
+  const manuscript=script?await runtime.ai.createMessage(ctx,conversation.id,{content:originalScript}):null;
   const source=await runtime.ai.createMessage(ctx,conversation.id,{content:script?"把本轮原稿逐字导入并生成候选":"给选中主题生成内容"});
   const snapshot=await runtime.resolveEffectiveSkillSnapshot(ctx,["chatbox.topic","creatoros.guide"]);
   // 专项声明对应真实工具；全场景和正式聊天路由仍需独立验收。
   const prototypes=buildChatTools([toolName] as never,{} as never);
   const definitions=(await prepareChatToolDefinitions(prototypes,{atomicPlanningThesis:true,atomicMaterialGenerate:material,atomicScriptReview:review,atomicPublishPackage:publish,workerScriptDraft:script})).definitions;
-  const submission=await createChatTurnSubmissionService(db,{assertProject:async(c,id)=>{if(!await runtime.contextReaders.getProjectDetail!(c,{projectId:id}))throw new Error("项目不可访问");},assemble:async()=>({capability:"copilot.assist",system:"使用论点工具",messages:[{role:"user",content:source.content}],tools:definitions,maxSteps:4,maxOutputTokens:128,hostContext:{schemaVersion:1,chatContext:{surface:"project",projectId:project.id,selection:{kind:"candidate",ids:[],label:"原选区标题"}},mediaRoute:null,positioningScratch:false,trustedScriptSources:script?[{ref:"source",label:"原稿",text:originalScript,truncated:false,sourceType:"message",sourceId:source.id}]:[],...(script?{scriptDraftContext:{latestUserInstruction:source.content}}:{}),skillSnapshot:snapshot} as never})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
+  const submission=await createChatTurnSubmissionService(db,{assertProject:async(c,id)=>{if(!await runtime.contextReaders.getProjectDetail!(c,{projectId:id}))throw new Error("项目不可访问");},assemble:async()=>({capability:"copilot.assist",system:"使用论点工具",messages:[{role:"user",content:source.content}],tools:definitions,maxSteps:4,maxOutputTokens:128,hostContext:{schemaVersion:1,chatContext:{surface:"project",projectId:project.id,selection:{kind:"candidate",ids:[],label:"原选区标题"}},mediaRoute:null,positioningScratch:false,trustedScriptSources:script?[{ref:"source",label:"原稿",text:originalScript,truncated:false,sourceType:"message",sourceId:manuscript!.id}]:[],...(script?{scriptDraftContext:{latestUserInstruction:source.content}}:{}),skillSnapshot:snapshot} as never})}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
   host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"planning-parent",budget:{maxCalls:6,maxTokens:100000,deadlineMs:60000},modelConcurrency:1,pollMs:100,resolveTools:material?createChatMaterialTaskHost(createChatHostContextReader(db),runtime.contextReaders,{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatMaterialTask}):createChatTaskToolHost(createChatHostContextReader(db),runtime.contextReaders,{publish:{preparePublish:runtime.prepareChatPublishTask,wakeTask:runtime.wakeChatPublishTask},scriptDraft:{prepareDraft:runtime.prepareChatScriptDraftTask,wakeTask:runtime.wakeChatScriptDraftTask},review:{prepareReview:runtime.prepareChatScriptReviewTask,wakeTask:runtime.wakeChatScriptReviewTask},planning:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatPlanningTask},local:{detectTools:runtime.detectTools,listAuthorizedDirs:runtime.listAuthorizedDirs}}),resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:fixture.url,model:"fixture",token:"fixture"})});
   host.start();
   await vi.waitFor(async()=>{const [row]=await db.select().from(executionTasks).where(eq(executionTasks.id,submission.executionTaskId));expect(row?.status,JSON.stringify(row)).toBe("succeeded");},{timeout:15000});
   const children=await runtime.ai.listTasks(ctx,{taskType,limit:100,offset:0});
   if(empty){
-   expect(children.rows).toHaveLength(0);expect(requests.filter(item=>!item.stream)).toHaveLength(0);expect(fixture.prepares).toBe(0);
+   expect(children.rows).toHaveLength(0);expect(requests.filter(item=>!Array.isArray(item.tools)||!item.tools.some((tool:{function?:{name?:string}})=>tool.function?.name===toolName.replaceAll(".","_")))).toHaveLength(0);expect(fixture.prepares).toBe(0);
    const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));
    expect(JSON.parse(calls.find(row=>row.kind==="tool")!.resultText!).output).toMatchObject({status:"error",sideEffect:"none",data:{kind:publish?"publish.package":"review.report",taskId:null,projectId:project.id,error:expect.stringContaining(publish?"可用的整稿":"可审的整稿")}});return;
   }
@@ -110,8 +121,8 @@ it.each([{toolName:"planning.thesis",failures:0},{toolName:"planning.thesis",fai
   expect((await runtime.ai.getTask(ctx,child.id)).inputData).toMatchObject(script?{projectId:project.id,draftMode:"verbatim",verbatimSourceText:originalScript}:publish?{projectId:project.id,topic:"原选区标题",scriptText:originalScript,platforms:["douyin"]}:material?{projectId:project.id,kind:"image",prompt:"原素材画面"}:review?{projectId:project.id,artifactId:reviewArtifact.id,artifactVersion:reviewVersion.versionNumber}:{projectId:project.id,topic:"原选区标题"});
   const calls=await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,submission.executionTaskId));const tool=calls.find(row=>row.kind==="tool")!;
   expect(JSON.parse(tool.resultText!).output.data).toMatchObject({kind:review?"review.report":toolName,taskId:child.id,...(material?{}:{projectId:project.id})});
-  expect(JSON.stringify(requests.filter(item=>item.stream)[1])).toContain(child.id);
-  expect(requests.filter(item=>!item.stream)).toHaveLength(1);
+  expect(JSON.stringify(requests.filter(item=>Array.isArray(item.tools)&&item.tools.some((tool:{function?:{name?:string}})=>tool.function?.name===toolName.replaceAll(".","_")))[1])).toContain(child.id);
+  expect(requests.filter(item=>!Array.isArray(item.tools)||!item.tools.some((tool:{function?:{name?:string}})=>tool.function?.name===toolName.replaceAll(".","_")))).toHaveLength(1);
   expect(fixture.prepares).toBe(1+failures);
   if(script){const results=await call("ai.tasks.results.list",{taskId:child.id});expect(results[0].resultData).toMatchObject({body:originalScript,draftMode:"verbatim"});}
   if(publish){

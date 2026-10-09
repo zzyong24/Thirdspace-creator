@@ -7,7 +7,7 @@ import {createArtifactsService} from "./artifacts.service";
 export function createScriptDraftTargetService(deps:{now:()=>string;nextId:(prefix:string)=>string}){
  return {async ensure(tx:Db,ctx:RequestContext,projectId:string){
   await lockOwnedProjectForUpdate(tx,ctx,projectId);
-  const service=createArtifactsService({db:tx,...deps});
+  const service=createArtifactsService({db:tx,...deps,assertProjectOwned:(context,id)=>lockOwnedProjectForUpdate(tx,context,id)});
   const existing=(await service.listProjectArtifacts(ctx,projectId)).find(row=>row.stage==="script" && row.artifactType==="output_script");
   if(existing)return existing.id;
   return (await service.createArtifact(ctx,{projectId,title:"分镜脚本",artifactType:"output_script",stage:"script"})).id;

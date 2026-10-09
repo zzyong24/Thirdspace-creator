@@ -90,3 +90,58 @@ it("完整字节已发布但元数据 sidecar 缺失，恢复原字节并补齐�
  expect(await service().recover(ctx,input.operationKey)).toMatchObject({status:"committed",receipt:{assetId:row.assetId}});
  expect(storage.putObject).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({bytes:input.bytes,mimeType:input.mimeType,storageKey:row.storageKey}));
 });
+
+it("正常新组素材按冻结组提交回读，跨组/属主与旧账号回退拒绝，采纳只改原产物",async()=>{
+ const {createAccountGroupService}=await import("../platform-account/account-group.service");
+ const {verifyGeneratedAssetCandidate,activateGeneratedAssetCandidate,discardGeneratedAssetCandidate}=await import("./generated-asset-candidate.service");
+ let seq=0;const groups=createAccountGroupService({db:opened.db,now,nextId:prefix=>`${prefix}-isolated-${++seq}`});
+ const owner={userId:"generated-group-owner",accountId:null,requestId:"group-test",source:"user" as const};
+ const group=await groups.create(owner,{name:"素材真实组",idempotencyKey:"generated-group"});
+ const other=await groups.create(owner,{name:"另一个真实组",idempotencyKey:"generated-other"});
+ const c={...owner,groupId:group.id,groupVersion:group.version};
+ const callId="group-original-call",original={...input,operationKey:`execution-asset:${callId}`};
+ const receipt=await service().submit(c,original);
+ expect(await service().recover(c,original.operationKey)).toEqual({status:"committed",receipt});
+ const verify=(context:typeof c,raw:unknown=receipt)=>opened.db.transaction(tx=>verifyGeneratedAssetCandidate(tx as any,context,callId,raw));
+ expect(await verify(c)).toEqual(receipt);
+ expect(await verify({...c,accountId:"irrelevant-platform-filter"} as any)).toEqual(receipt);
+ await expect(verify({...c,groupId:other.id})).rejects.toThrow();
+ await expect(verify({...c,userId:"different-owner"})).rejects.toThrow();
+ await expect(verify({...c,groupId:null,accountId:"irrelevant-platform-filter"} as any)).rejects.toThrow();
+ await expect(verify(c,{...receipt,checksum:"forged"})).rejects.toThrow();
+ const before=await rows();expect(before.assets).toMatchObject([{accountId:null,groupId:group.id,status:"pending"}]);
+ await opened.db.transaction(tx=>activateGeneratedAssetCandidate(tx as any,c,callId,receipt,now()));
+ expect((await rows()).assets).toMatchObject([{id:receipt.assetId,groupId:group.id,status:"active"}]);
+ await expect(opened.db.transaction(tx=>discardGeneratedAssetCandidate(tx as any,c,callId,receipt,now()))).rejects.toThrow();
+ expect((await rows()).assets).toHaveLength(1);expect((await rows()).files).toHaveLength(1);
+});
+
+it("旧账号与显式legacy别名保原素材操作键，拒绝路径只删除原pending素材",async()=>{
+ const {verifyGeneratedAssetCandidate,discardGeneratedAssetCandidate}=await import("./generated-asset-candidate.service");
+ const callId="legacy-original-call",original={...input,operationKey:`execution-asset:${callId}`};
+ const receipt=await service().submit(ctx,original),alias={...ctx,groupId:`grp_legacy_${ctx.accountId}`};
+ // 旧记录无groupId；显式legacy组读取仍按现行迁移后的范围，不伪造重锚历史。
+ expect(await opened.db.transaction(tx=>verifyGeneratedAssetCandidate(tx as any,ctx,callId,receipt))).toEqual(receipt);
+ const {workspaceObjectIdentity}=await import("./workspace-object-identity");
+ expect(workspaceObjectIdentity(alias).identity).toBe(workspaceObjectIdentity(ctx).identity);
+ await opened.db.transaction(tx=>discardGeneratedAssetCandidate(tx as any,ctx,callId,receipt,now()));
+ expect((await rows()).assets).toMatchObject([{id:receipt.assetId,status:"deleted"}]);
+ expect((await rows()).files).toHaveLength(1);
+});
+
+it("正常平台注册的显式legacy组别名按原account键读回同素材，不能落入新组",async()=>{
+ const {createPlatformAccountService}=await import("../platform-account/platform-account.service");
+ const {verifyGeneratedAssetCandidate}=await import("./generated-asset-candidate.service");
+ let seq=0;const accounts=createPlatformAccountService({db:opened.db,now,nextId:prefix=>`${prefix}-legacy-${++seq}`});
+ const owner={...ctx,accountId:null};
+ const account=await accounts.createAccount(owner,{platform:"bilibili",accountHandle:"@legacy-isolated",followerBaseline:0});
+ const c={...ctx,accountId:account.id,groupId:`grp_legacy_${account.id}`};
+ const callId="explicit-legacy-original",original={...input,operationKey:`execution-asset:${callId}`};
+ const receipt=await service().submit(c,original);
+ expect(await service().recover(c,original.operationKey)).toEqual({status:"committed",receipt});
+ expect(await opened.db.transaction(tx=>verifyGeneratedAssetCandidate(tx as any,c,callId,receipt))).toEqual(receipt);
+ // 新写的组素材 accountId=null；旧客户端不携组上下文不能把NULL当所有账号。
+ await expect(opened.db.transaction(tx=>verifyGeneratedAssetCandidate(tx as any,{...c,groupId:null},callId,receipt))).rejects.toThrow();
+ await expect(opened.db.transaction(tx=>verifyGeneratedAssetCandidate(tx as any,{...c,groupId:"different-group"},callId,receipt))).rejects.toThrow();
+ expect((await rows()).assets).toHaveLength(1);
+});

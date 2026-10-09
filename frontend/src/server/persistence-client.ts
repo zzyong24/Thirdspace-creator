@@ -2509,7 +2509,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const txProjects=createProjectsService(createProjectRepository(txDb),deps);
       const txAssets=createAssetsService(createAssetRepository(txDb,deps),objectStorageForCtx,deps);
       return createMaterialLinksService({db:txDb,...deps,
-        assertProjectOwned:async(context,id)=>{await txProjects.listOutputIdsByProject(context,id);},
+        assertProjectOwned:(context,id)=>txProjects.getProject(context,id),
         assertAssetOwned:async(context,id)=>{
           const asset=await txAssets.getAsset(context,id);
           if(asset.status!=="active")throw new Error("素材已不可用，请重新选择素材");
@@ -2564,7 +2564,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
       const txProjects=createProjectsService(createProjectRepository(txDb),deps);
       const txKnowledge=createKnowledgeService(createKnowledgeRepository(txDb,deps));
       return createMaterialLinksService({db:txDb,...deps,
-        assertProjectOwned:async(context,id)=>{await txProjects.listOutputIdsByProject(context,id);},
+        assertProjectOwned:(context,id)=>txProjects.getProject(context,id),
         assertKnowledgeOwned:(context,id)=>txKnowledge.getKnowledge(context,id),
       }).create(c,input);
     },

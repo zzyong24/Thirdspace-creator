@@ -57,3 +57,11 @@ Activity服务器移除后立即拒绝该设备验码和新票据。旧客户端
 用户授权完整功能测试工程，主控独立核对后确认：手工登记 `outputs.publications.register` 是已批准发布交接路径，成功的 publication 必须沿既有 SearchIndexPublication seam 立即在当前 workspace 视频搜索可见。当前代码只驱动项目已发布和 imported 收口，遗漏搜索投影。修复只在权威事务提交后以原 result.id/platform/accountReference 与现有 `entityType=publication` 形状 upsert；组/账号定位取正常 targetCtx，现有组合根继续映射 video。索引失败不回滚已成功发布事实，按同 external key 重复登记补偿原 ID，不新建发布、不改外部发布能力或 body/tags/URL 业务形状。
 
 真实 RED 为 integration/frontend-account-scope-green.log（正常身份及既有手工登记后，原搜索断言失败，13/14），需验证登记后立即搜索、索引失败后原发布仍 published、同锚重复登记恢复、跨 owner/workspace 不可见及原换锚防护。此项属于 required 全回归维修，不意味着真实双机/原生HTTP已验收。
+
+
+### 本轮全量工程验收发现的已批准组契约遗漏（待独立边界复核）
+
+正常组真实 Worker 的 material.generate 保存键与候选读键不一致、空稿面 script.draft 未注入既有项目归属端口，分别保留真实 RED。准确 old→new、旧账号兼容、原调用恢复与守卫边界见 `docs/verification/t1072/integration/GROUP_GENERATION_REPAIR_PROPOSAL.md`。这两项只恢复 T-1022 第 60/63/70 行与现行 T-915 提交要求，不新增生成意图协议；在独立边界复核前保持生产代码未实现。
+
+
+本轮上述组实现遗漏已完成独立只读边界复核，并按最小 3 文件修复：素材候选同源 workspaceObjectIdentity/workspaceFilter、空稿面同事务 Projects 锁端口、两条采纳 MaterialLinks callback 返回同事务真实 Projects row。真实 Worker 原14场景从4失败→2失败→14通过；研究用料组合根直接真实事务1通过（跨owner/组/缺项目拒绝、写后失败回滚），后端组候选与既有恢复4文件82通过，正常平台legacy别名补测15通过。组身份与成员冻结沿既有规则，未增加groupVersion逐值拒绝、未改schema/endpoint/业务shape；失败日志完整保留。正式安装版与双电脑仍待验，母聊天规范提案未批准未实现。
