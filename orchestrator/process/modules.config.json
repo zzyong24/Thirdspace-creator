@@ -7129,6 +7129,161 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1119": {
+      "task_id": "T-1119",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1119-next-verification-type-directory-race.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/tsconfig.json",
+        "frontend/package.json",
+        "frontend/playwright.config.ts"
+      ],
+      "write_set": [
+        "docs/features/t1119-next-verification-type-directory-race.md",
+        "docs/features/t1119-next-verification-type-directory-race.review.md",
+        "docs/verification/t1119/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "docs/verification/t1119/generated-types-check.mjs",
+        "frontend/.next/dev/types/routes.d.ts",
+        "frontend/.next/dev/types/validator.ts",
+        "docs/verification/t1117/visible-copy.json",
+        "docs/verification/t1101/journey.log",
+        "docs/verification/t1101/canvas-copy.json",
+        "docs/verification/t1101/binding-copy.json",
+        "docs/verification/t1101/visible-copy.json",
+        "docs/verification/t1101/screenshots/**",
+        "docs/verification/t1108/visible-copy.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "node docs/verification/t1119/generated-types-check.mjs prepare",
+          "pnpm --dir frontend typecheck",
+          "node docs/verification/t1119/generated-types-check.mjs verify-production",
+          "node docs/verification/t1101/run-journey.mjs",
+          "node docs/verification/t1119/generated-types-check.mjs verify-development",
+          "pnpm --dir frontend typecheck",
+          "node orchestrator/process/pmem.mjs sync",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
+    },
+    "T-1120": {
+      "task_id": "T-1120",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1120-canvas-interrupted-save-observation.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/tsconfig.json",
+        "frontend/package.json",
+        "frontend/playwright.config.ts",
+        "frontend/tests/e2e/creative-canvas.spec.ts",
+        "docs/features/t1117-canvas-error-reference-preview.md"
+      ],
+      "write_set": [
+        "docs/features/t1120-canvas-interrupted-save-observation.md",
+        "docs/features/t1120-canvas-interrupted-save-observation.review.md",
+        "docs/verification/t1120/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "frontend/tests/e2e/creative-canvas.spec.ts",
+        "docs/verification/t1117/**",
+        "docs/verification/t1101/journey.log",
+        "docs/verification/t1101/canvas-copy.json",
+        "docs/verification/t1101/binding-copy.json",
+        "docs/verification/t1101/visible-copy.json",
+        "docs/verification/t1101/screenshots/**",
+        "docs/verification/t1108/visible-copy.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm --dir frontend typecheck",
+          "node docs/verification/t1101/run-journey.mjs",
+          "pnpm --dir frontend typecheck",
+          "node orchestrator/process/pmem.mjs sync",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
+    },
+    "T-1122": {
+      "task_id": "T-1122",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1122-reference-thumbnail-visual-readiness.md",
+        "docs/features/t1117-canvas-error-reference-preview.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/tests/e2e/creative-canvas.spec.ts",
+        "frontend/src/components/media/asset-picker.tsx",
+        "frontend/src/components/media/asset-media-preview.tsx"
+      ],
+      "write_set": [
+        "docs/features/t1122-reference-thumbnail-visual-readiness.md",
+        "docs/features/t1122-reference-thumbnail-visual-readiness.review.md",
+        "docs/verification/t1122/**",
+        "frontend/tests/e2e/creative-canvas.spec.ts",
+        "docs/verification/t1117/**",
+        "docs/verification/t1108/visible-copy.json",
+        "docs/verification/t1101/journey.log",
+        "docs/verification/t1101/canvas-copy.json",
+        "docs/verification/t1101/binding-copy.json",
+        "docs/verification/t1101/visible-copy.json",
+        "docs/verification/t1101/screenshots/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm --dir frontend typecheck",
+          "node docs/verification/t1101/run-journey.mjs",
+          "pnpm --dir frontend typecheck",
+          "node orchestrator/process/pmem.mjs sync",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

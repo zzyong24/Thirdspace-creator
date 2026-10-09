@@ -1,0 +1,71 @@
+{
+  "schema": "t1117-implementation-precheck/v1",
+  "task_id": "T-1117",
+  "reviewed_at": "2026-10-09T10:06:54.809552+00:00",
+  "verdict": "PASS_STATIC_PENDING_BROWSER_VISUAL_FINAL",
+  "base_head": "05267e2d",
+  "spec_sha256": "3c7720477c882202f0971383405cd82e81c3bba3a0c782043e041dd62b90dc08",
+  "modules_sha256": "591ba464729b69fa473dcda9e1820f66612d864cdfdd1b481e07a0a13c543c29",
+  "formal_review_receipt": "PASS[REV:161a32c6331a]",
+  "source_hashes": {
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "ad8b4d076954ae6b7272e0acc948e0e6f1d62b208242a2fabec42ac4c5729cac",
+    "frontend/src/features/creative-canvas/infinite-canvas-node.tsx": "299315ec4f20f2228078641f7833fcdd700c7678bde7e559e43cca87d235007a",
+    "frontend/src/components/media/asset-picker.tsx": "ab1b7323dc1947c6352b0ead2a0e2747b9d371406c30a641b4fbceaf831c04f3",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "1d655252b89a812d57090af4263ace3cbc3da6ee4c4b64325aed42321c3a8824",
+    "frontend/src/features/creative-canvas/infinite-canvas-node-reference.test.tsx": "b9cd8eb947121fdb6fc1c0d66d3af74bd0bf8300091883b1ee58b9178941419c",
+    "frontend/src/components/media/asset-picker.test.tsx": "1b9b74ba4787ff841bb7eec53e88fd11926772a8fb76484a9d98a095511705cb",
+    "frontend/tests/e2e/creative-canvas.spec.ts": "d4089c3d0cb18c61656235d325a7928e391fc958de03507be3f776e7e5d2af7d"
+  },
+  "wrapper": {
+    "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/run-evidence.py",
+    "sha256": "bf30facba67dd0a230f39e386e2717a80caa40a85f4b1b3551ce22d32b21572a",
+    "verdict": "faithful",
+    "facts": [
+      "argv数组直传subprocess.run，不经shell",
+      "继承调用cwd/env/stdin",
+      "stdout与stderr合并写入新建xb日志",
+      "返回真实子进程exit code",
+      "日志关闭后计算SHA256并记录UTC和monotonic elapsed",
+      "同名log存在时拒绝覆盖"
+    ]
+  },
+  "evidence": {
+    "unit_green": {
+      "exit": 0,
+      "files": 3,
+      "tests": 32,
+      "skip": 0,
+      "log_sha256": "cef1168af66c7b72a1252e6361b0a11e49f358a4349fa2571f10f5eafbb51596"
+    },
+    "led047": {
+      "exit": 0,
+      "files": 8,
+      "tests": 174,
+      "skip": 0,
+      "log_sha256": "8ccfcf2f12096581646841e7c8dc8c9ca8f0c1ea4f1cc404f65b415fee8e6b4a"
+    },
+    "frontend_typecheck": {
+      "exit": 0,
+      "log_sha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035"
+    },
+    "boundary_semantic_orphan_diff": {
+      "exit": 0
+    }
+  },
+  "findings": [],
+  "confirmed_behavior": [
+    "网络错误改用既有describeUserError展示中文，显式HTTP状态分支不变；失败保留dirty，重试仍携带原expectedRevision",
+    "仅Canvas两处传showIdentity=false；AssetPicker默认true行为不变",
+    "隐藏可见身份时仍以真实assetId/fileId预览；取消零采用，确认返回精确choice",
+    "新测试保留原断言并增加字段隐藏、取消、键盘确认、精确文件及失败重试"
+  ],
+  "pending": [
+    "公共浏览器旅程终态及其日志/产物",
+    "normal/narrow截图实际视觉复核",
+    "最终源冻结与运行前后零漂移绑定"
+  ],
+  "evidence_boundary": [
+    "旧临时目录消失前的RED 29PASS/3FAIL与GREEN 32PASS仅保留仓库RED_TOOL_OBSERVATION中的实际工具观察；完整旧日志不可读，未重建或冒签",
+    "本报告不代表浏览器、安装版、原生UI、全局reconcile或T1118结论"
+  ]
+}

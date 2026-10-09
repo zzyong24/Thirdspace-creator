@@ -1,0 +1,60 @@
+{
+  "schema": "t1117-implementation-precheck-corrected/v1",
+  "task_id": "T-1117",
+  "reviewed_at": "2026-10-09T10:09:00.129039+00:00",
+  "supersedes_factual_claims_in": "IMPLEMENTATION_PRECHECK.json",
+  "preserves_original_reports": true,
+  "verdict": "PASS_STATIC_PENDING_BROWSER_VISUAL_FINAL",
+  "findings": [],
+  "corrections": [
+    {
+      "id": "COR-001",
+      "incorrect_prior_statement": "包装器使用xb且同名日志拒绝覆盖",
+      "actual_fact": "包装器使用open('wb')，同名日志会被截断覆盖；root通过每次使用不同stem保留旧日志，而非包装器自身防覆盖",
+      "wrapper_sha256": "bf30facba67dd0a230f39e386e2717a80caa40a85f4b1b3551ce22d32b21572a"
+    }
+  ],
+  "wrapper_faithful_properties": [
+    "argv数组直传subprocess.run且不经shell",
+    "继承调用cwd/env/stdin",
+    "stdout和stderr合并写入指定log",
+    "返回真实子进程exit code",
+    "日志写完后计算SHA256并记录UTC与monotonic elapsed"
+  ],
+  "wrapper_limitations": [
+    "open('wb')允许覆盖同名log；证据保全依赖调用方使用唯一stem",
+    "stdout/stderr为合并流，不能分别归因"
+  ],
+  "browser_first_failure": {
+    "exit": 1,
+    "tests_passed": 1,
+    "tests_failed": 1,
+    "elapsed_seconds": 370.88766216597287,
+    "log_sha256": "7c3b8acc44e0052ec67f7b1482b9b4edbab8faa4f63f390af487d91eb8a5a028",
+    "diagnosis_sha256": "877a4391d079a17c15b19759df5005c8a73facf5766b29dc86e3ebffbd1fafa6",
+    "facts": [
+      "CanvasEditor实际alert已显示中文网络错误",
+      "全page英文断言命中Next开发诊断portal中的console错误而非产品界面",
+      "首次失败保留，不能计为浏览器PASS"
+    ]
+  },
+  "assertion_scope_correction": {
+    "path": "frontend/tests/e2e/creative-canvas.spec.ts",
+    "sha256": "7be78ed5d50373b49f64faee98a8e8b3f7455c8fb4a9a0227db32172aa55d00a",
+    "verdict": "APPROPRIATE",
+    "reason": [
+      "locator限定到包含画布标题textbox的CanvasEditor main，再检查中文alert与无裸英文",
+      "不隐藏或关闭Next诊断portal，不删除产品错误断言",
+      "原保存、精确file、reload、恢复、防重复与平台流程断言未删"
+    ]
+  },
+  "still_pending": [
+    "当前scoped公共浏览器复跑终态",
+    "normal/narrow截图实际视觉复核",
+    "最终source freeze及前后零漂移"
+  ],
+  "scope_boundary": [
+    "不签最终browser、视觉、安装、全局Gate或T1118",
+    "旧消失目录证据不重建"
+  ]
+}

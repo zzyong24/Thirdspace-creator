@@ -1,0 +1,81 @@
+[
+  {
+    "type": "context-options",
+    "time": 167208.159,
+    "wallTime": 1791541102309
+  },
+  {
+    "type": "context-options",
+    "time": 180120.233,
+    "wallTime": 1791541115221
+  },
+  {
+    "type": "before",
+    "method": "goto",
+    "startTime": 220510.492,
+    "endTime": null,
+    "callId": "call@52"
+  },
+  {
+    "type": "console",
+    "time": 242108.229,
+    "message": "[Fast Refresh] rebuilding"
+  },
+  {
+    "type": "console",
+    "time": 243193.788,
+    "message": "[Fast Refresh] done in 1276ms"
+  },
+  {
+    "type": "console",
+    "time": 243347.808,
+    "message": "[Fast Refresh] rebuilding"
+  },
+  {
+    "type": "console",
+    "time": 243394.739,
+    "message": "[Fast Refresh] done in 147ms"
+  },
+  {
+    "type": "console",
+    "time": 243688.234,
+    "message": "[Fast Refresh] rebuilding"
+  },
+  {
+    "type": "console",
+    "time": 243787.223,
+    "message": "[Fast Refresh] done in 198ms"
+  },
+  {
+    "type": "before",
+    "method": "reload",
+    "startTime": 248141.669,
+    "endTime": null,
+    "callId": "call@286"
+  },
+  {
+    "type": "console",
+    "time": 251041.841,
+    "message": "[describeUserError] TypeError: Failed to fetch\n    at fetchCreatorApi (http://127.0.0.1:31411/_next/static/chunks/frontend_src_0efnj-2._.js:90:12)\n    at Object.request (http://127.0.0.1:31411/_next/static/chunks/frontend_src_0efnj-2._.js:331:224)\n    at client.<computed> (http://127.0.0.1:31411/_ne"
+  },
+  {
+    "type": "console",
+    "time": 292616.408,
+    "message": "[Fast Refresh] rebuilding"
+  },
+  {
+    "type": "console",
+    "time": 292701.858,
+    "message": "[Fast Refresh] done in 201ms"
+  },
+  {
+    "type": "console",
+    "time": 293023.152,
+    "message": "[Fast Refresh] rebuilding"
+  },
+  {
+    "type": "console",
+    "time": 293058.758,
+    "message": "[Fast Refresh] done in 270ms"
+  }
+]

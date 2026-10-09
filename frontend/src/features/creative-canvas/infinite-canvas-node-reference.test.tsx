@@ -9,6 +9,14 @@ afterEach(cleanup);
 function view(){const onPatch=vi.fn();render(<InfiniteCanvasNode item={{id:'node',type:'image_generation',position:{x:0,y:0},label:'页图',prompt:'画面',mode:'image_to_image',referenceAssetId:'old',referenceFileId:'old-file'}} assets={[{id:'old',name:'原图',assetType:'image',currentFileId:'old-file'},{id:'new',name:'新图',assetType:'image',currentFileId:'new-file'}]} selected busy={false} busyResult={false} projectTitle={null} onPatch={onPatch} onSelect={vi.fn()} onStartDrag={vi.fn()} onStartResize={vi.fn()} onStartConnect={vi.fn()} onGenerate={vi.fn()} onInsertResult={vi.fn()} onKeepResult={vi.fn()} onReferenceDrop={vi.fn()}/>);return onPatch;}
 it('切换生成模式清掉精确参考，旧file不能残留阻断合法保存',()=>{const patch=view();fireEvent.change(screen.getByRole('combobox',{name:'生成模式'}),{target:{value:'text_to_image'}});expect(patch.mock.calls[0]?.[1]).toHaveProperty('referenceFileId',undefined);expect(patch.mock.calls[0]?.[1]).toHaveProperty('referenceAssetId',undefined);});
 it('参考图库确认冻结新资产和精确文件，预览时仍保留旧引用',async()=>{const patch=view();fireEvent.click(screen.getByRole('button',{name:'参考图片'}));fireEvent.click(await screen.findByRole('button',{name:'预览 新图'}));expect(patch).not.toHaveBeenCalled();fireEvent.click(screen.getByRole('button',{name:'使用此素材'}));await waitFor(()=>expect(patch.mock.calls[0]?.[1]).toMatchObject({referenceFileId:'new-file',referenceAssetId:'new'}));});
+it('画布参考用缩略图展示，取消保留旧文件且可访问预览仍能确认新文件',async()=>{
+ const patch=view();expect(screen.queryByText('原图')).toBeNull();expect(screen.getByText('已选素材')).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'参考图片'}));fireEvent.click(await screen.findByRole('button',{name:'预览 新图'}));
+ expect(screen.queryByText('新图')).toBeNull();expect(screen.getByText('已选，可预览后使用')).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'取消'}));expect(patch).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole('button',{name:'参考图片'}));fireEvent.click(await screen.findByRole('button',{name:'预览 新图'}));fireEvent.click(screen.getByRole('button',{name:'使用此素材'}));
+ await waitFor(()=>expect(patch.mock.calls[0]?.[1]).toMatchObject({referenceFileId:'new-file',referenceAssetId:'new'}));
+});
 
 // T1069_EXISTING_PORT_SEAM: 仅本文件既有业务spies；真实scope/epoch/signal/lifecycle不替换。
 vi.mock("@/lib/creation-workspace-scope", async importOriginal => {

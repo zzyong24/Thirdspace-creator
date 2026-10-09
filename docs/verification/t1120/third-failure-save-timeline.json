@@ -1,0 +1,65 @@
+[
+  {
+    "startedDateTime": "2026-10-09T10:19:15.342Z",
+    "time": 198.09599999999045,
+    "operation": "canvas.save",
+    "expectedRevision": 1,
+    "downstreamHasReference": false,
+    "status": 200,
+    "failure": null
+  },
+  {
+    "startedDateTime": "2026-10-09T10:19:38.538Z",
+    "time": -1,
+    "operation": "canvas.get",
+    "expectedRevision": null,
+    "downstreamHasReference": false,
+    "status": -1,
+    "failure": null
+  },
+  {
+    "startedDateTime": "2026-10-09T10:19:38.539Z",
+    "time": 113.872,
+    "operation": "canvas.get",
+    "expectedRevision": null,
+    "downstreamHasReference": false,
+    "status": 200,
+    "failure": null
+  },
+  {
+    "startedDateTime": "2026-10-09T10:19:46.067Z",
+    "time": -1,
+    "operation": "canvas.save",
+    "expectedRevision": 2,
+    "downstreamHasReference": true,
+    "status": -1,
+    "failure": null
+  },
+  {
+    "startedDateTime": "2026-10-09T10:20:27.753Z",
+    "time": -1,
+    "operation": "canvas.get",
+    "expectedRevision": null,
+    "downstreamHasReference": false,
+    "status": -1,
+    "failure": null
+  },
+  {
+    "startedDateTime": "2026-10-09T10:20:27.782Z",
+    "time": 168.17,
+    "operation": "canvas.get",
+    "expectedRevision": null,
+    "downstreamHasReference": false,
+    "status": 200,
+    "failure": null
+  },
+  {
+    "startedDateTime": "2026-10-09T10:20:29.419Z",
+    "time": 2824.165,
+    "operation": "canvas.save",
+    "expectedRevision": 2,
+    "downstreamHasReference": true,
+    "status": 200,
+    "failure": null
+  }
+]

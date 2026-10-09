@@ -1,0 +1,25 @@
+{
+  "schema": "reconcile-error-comparison/v1",
+  "observedAt": "2026-10-09T10:58:18.727012+00:00",
+  "previousCount": 41,
+  "currentCount": 42,
+  "added": [
+    "✗ [ERROR] lesson LED-052 RECURRED — 归档执行门失败：普通AI/source_sync claim与新动作必须拒绝；四类实际collector按真实job/member/owner/version验证；已存在同键调用settlement必须保留幂等。缺隔离PG配置不能skip。"
+  ],
+  "removed": [],
+  "currentReceipt": {
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55423/postgres",
+      "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55423/postgres",
+      "node",
+      "orchestrator/process/reconcile.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T10:16:32.044346+00:00",
+    "finishedAt": "2026-10-09T10:48:52.561062+00:00",
+    "exitCode": 1,
+    "elapsedSeconds": 1940.496897791978,
+    "logSha256": "5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "schema": "frontend-visible-copy/v1",
   "task_id": "T-1108",
-  "commit_sha": "6a71a60749bc898d21e5806d369c952e140ab184",
+  "commit_sha": "05267e2d83d70eba81a4892613ed6bd78686f248",
   "captures": [
     {
       "checkpoint": "legacy-normal",

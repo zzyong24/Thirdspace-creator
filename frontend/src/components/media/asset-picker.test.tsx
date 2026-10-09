@@ -10,6 +10,16 @@ afterEach(()=>{window.localStorage.removeItem("creatoros:current-account");});
 // 只替换媒体文件读取端口，选择/范围/对话框操作走实际组件。
 vi.mock("./asset-media-preview",()=>({AssetMediaPreview:({assetId,fileId}:{assetId:string;fileId:string})=><div data-testid="preview" data-asset={assetId} data-file={fileId}/> }));
 describe("可视素材选择",()=>{
+ it("预览模式隐藏已选名称及底部摘要，取消不采用且确认保留精确版本",async()=>{
+  const onConfirm=vi.fn();render(<AssetPicker ownerKey="preview-output" label="本人照片" showIdentity={false} source={source} value={one} onConfirm={onConfirm}/>);
+  expect(screen.queryByText("本人照片.png")).toBeNull();expect(screen.getByText("已选素材")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button",{name:"本人照片"}));fireEvent.click(screen.getByRole("button",{name:"预览 本人照片新版.png"}));
+  expect(screen.queryByText("本人照片新版.png")).toBeNull();expect(screen.queryByText(/已选：/)).toBeNull();expect(screen.getByText("已选，可预览后使用")).toBeInTheDocument();
+  expect(screen.getAllByTestId("preview").some(element=>element.dataset.file==="version-two")).toBe(true);
+  fireEvent.click(screen.getByRole("button",{name:"取消"}));expect(onConfirm).not.toHaveBeenCalled();expect(screen.getByText("已选素材")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button",{name:"本人照片"}));fireEvent.click(screen.getByRole("button",{name:"预览 本人照片新版.png"}));fireEvent.click(screen.getByRole("button",{name:"使用此素材"}));
+  await waitFor(()=>expect(onConfirm).toHaveBeenCalledWith(two));
+ });
  it("候选预览不替换原值，取消保留原值；确认精确文件版本",async()=>{
   const onConfirm=vi.fn();render(<AssetPicker ownerKey="output-a" label="本人照片" source={source} value={one} onConfirm={onConfirm}/>);
   fireEvent.click(screen.getByRole("button",{name:"本人照片"}));fireEvent.click(screen.getByRole("button",{name:"预览 本人照片新版.png"}));

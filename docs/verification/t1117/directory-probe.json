@@ -1,0 +1,8 @@
+{
+  "observedAt": "2026-10-09T10:00:09.231166+00:00",
+  "path": "/Users/zyongzhu/CreatorOS-local-acceptance",
+  "exists": false,
+  "cause": "UNKNOWN",
+  "earlierRuns": "T1117 RED exit1/29PASS3FAIL; GREEN exit0/32PASS; original full log files currently unavailable",
+  "followupCommands": "seven attempted wrapper invocations returned exit2 before underlying verification commands; not product Gate failures"
+}

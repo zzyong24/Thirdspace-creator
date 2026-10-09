@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "/opt/homebrew/opt/postgresql@16/bin/pg_ctl",
+    "-D",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/isolated-pg/data",
+    "-l",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/isolated-pg/server-55422.log",
+    "-o",
+    "-h 127.0.0.1 -p 55422 -k /tmp",
+    "-w",
+    "start"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T10:56:41.833482+00:00",
+  "finishedAt": "2026-10-09T10:56:42.008189+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.1744303330196999,
+  "logSha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+}

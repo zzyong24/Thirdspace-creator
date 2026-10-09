@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "PASS recheck：REV-001 已关闭。当前 modules 将闭集 prepare、原typecheck、生产产物核验、T1119自身原公共run-journey、开发产物/include核验、最终原typecheck按失败即停的顺序绑定；不依赖T1120完成状态。SPEC同时限定helper必须lsof本树dev写者、lstat/realpath/SHA/0700副本/二次写者检查后只unlink两文件，并保持写坏源头UNKNOWN。实现代码尚未出现，后续仍须独立审helper和实际串行结果；本PASS仅允许实施。SPEC SHA256=61f4cec545ef1c5740478c7ece9592f070db44a44748abd120ee50fa91f002e5；modules SHA256=1f908d753c313d29cd9f10a2202b75ad379b5e37d3167a2edfdced41aaa26029；constitution SHA256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。原初审CHANGES_REQUIRED与两次真实type失败保留。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "限定维护方案-验证闭环",
+        "quote": "最后原浏览器会由实际Next dev重新产生dev两产物，浏览器结束后再原typecheck并核它们非空且原tsc包含路径没移除。"
+      },
+      "acceptance_anchor": {
+        "id": "验收",
+        "quote": "删除前两SHA与非空复制、闭集/当前无dev证据、原完整消费者type绿色、dev实际重新生成与最后类型复验"
+      },
+      "where": "orchestrator/process/modules.config.json 的 T-1119.verify_commands.implementation",
+      "failure_mode": "正式验证命令仅运行一次frontend typecheck，未机械执行或核验删除前SHA/非空副本、无dev写者、限定两文件、生产产物非空、真实dev重新生成、最终typecheck与dev产物仍被tsc消费。任务可在核心维护闭环未发生时通过模块Gate，产生与SPEC不同的完成结果。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "orchestrator/process/modules.config.json SHA256=00a551bd1a33f6aecc31a98c0ddfdc126dac06ed415411e3ebfe7fd3182e5307; T-1119 implementation commands only git diff/typecheck/pmem/reconcile",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "verification",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "在T-1119 verify_commands中绑定一个受SPEC闭集约束的私有维护/核验入口或等价精确命令，并绑定真实dev再生与最后typecheck；该入口必须核两文件当前SHA、非symlink、无dev写者、0700副本、仅删两文件、prod/dev产物非空及最终tsc仍消费dev路径。不得扩大为清理.next。",
+      "resolution_evidence": "EVIDENCE-SHA256:1f908d753c313d29cd9f10a2202b75ad379b5e37d3167a2edfdced41aaa26029:orchestrator/process/modules.config.json — T-1119 implementation now binds prepare → original frontend typecheck → verify-production → original run-journey → verify-development → original frontend typecheck → pmem/reconcile; SPEC SHA256=61f4cec545ef1c5740478c7ece9592f070db44a44748abd120ee50fa91f002e5 section “正式执行绑定（REV-001整改）” fixes the helper invariants and independent public-consumer execution.",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

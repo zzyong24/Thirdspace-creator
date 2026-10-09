@@ -1,0 +1,15 @@
+{
+  "observedAt": "2026-10-09T10:04:54.495159+00:00",
+  "baseCommit": "05267e2d83d70eba81a4892613ed6bd78686f248",
+  "sourceSha256": {
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "ad8b4d076954ae6b7272e0acc948e0e6f1d62b208242a2fabec42ac4c5729cac",
+    "frontend/src/features/creative-canvas/infinite-canvas-node.tsx": "299315ec4f20f2228078641f7833fcdd700c7678bde7e559e43cca87d235007a",
+    "frontend/src/components/media/asset-picker.tsx": "ab1b7323dc1947c6352b0ead2a0e2747b9d371406c30a641b4fbceaf831c04f3",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "1d655252b89a812d57090af4263ace3cbc3da6ee4c4b64325aed42321c3a8824",
+    "frontend/src/features/creative-canvas/infinite-canvas-node-reference.test.tsx": "b9cd8eb947121fdb6fc1c0d66d3af74bd0bf8300091883b1ee58b9178941419c",
+    "frontend/src/components/media/asset-picker.test.tsx": "1b9b74ba4787ff841bb7eec53e88fd11926772a8fb76484a9d98a095511705cb",
+    "frontend/tests/e2e/creative-canvas.spec.ts": "d4089c3d0cb18c61656235d325a7928e391fc958de03507be3f776e7e5d2af7d"
+  },
+  "state": "uncommitted candidate; not packaging freeze",
+  "limits": "早于T1120/T1122新采证修正；只保存当时候选，不代签当前冻结。"
+}

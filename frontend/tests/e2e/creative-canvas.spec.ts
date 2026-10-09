@@ -375,6 +375,7 @@ test("T-1021 资产独立上传，选用追加原画布并冻结真实文件",as
 });
 
 // T1101：公开真实canvas/asset/save；模型运行回执和能力为合成fixture，不访问用户profile。
+// TEST-T1117-CANVAS：保留该公共流程，追加网络反馈与预览选择的实际DOM/键盘证据。
 test('T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟模型回执）',async({page,context,baseURL},testInfo)=>{
  test.setTimeout(7_200_000);const observe=expect.configure({timeout:120_000});page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
  const account=await groupedAccount(page,'douyin','创作验收账号','创作验收组');const scope={groupId:account.groupId};
@@ -397,10 +398,19 @@ test('T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟�
  });
  await enterGroup(page,context,baseURL!,account.groupId);await page.setViewportSize({width:1366,height:900});await page.goto('/canvases/'+canvas.id);
  const up=page.getByTestId('canvas-node').filter({hasText:'上游生成'}),down=page.getByTestId('canvas-node').filter({hasText:'下游视频'});
+ const t1117Captures:Array<{checkpoint:string;check_ids:string[];viewport:{width:number;height:number};text:string}>=[];
  await observe(up.getByRole('button',{name:'生成中…'})).toBeDisabled();expect(submissions).toBe(0);
  await page.screenshot({path:testInfo.outputPath('t1101-running.png')});
- status='awaiting_confirmation';await page.reload();await observe(up.getByText('最近结果',{exact:false})).toBeVisible();
- await observe.poll(()=>interruptedSave,{timeout:120_000}).toBe(1);await observe(page.getByText('保存失败',{exact:true})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1108-interrupted-save.png')});await page.reload();await observe(up.getByText('最近结果',{exact:false})).toBeVisible();
+ status='awaiting_confirmation';await page.reload({waitUntil:'domcontentloaded'});await observe(up.getByText('最近结果',{exact:false})).toBeVisible();
+ await observe.poll(()=>interruptedSave,{timeout:120_000}).toBe(1);await observe(page.getByText('保存失败',{exact:true})).toBeVisible();
+ // 只检查实际画布界面；Next开发诊断portal保留原异常日志，不是产品错误文案。
+ const editor=page.locator('main').filter({has:page.getByRole('textbox',{name:'画布标题'})}).last();
+ const saveError=editor.getByRole('alert').filter({hasText:'网络连接不稳定,请检查网络后重试。'});await observe(saveError).toBeVisible();await observe(editor.getByText('Failed to fetch',{exact:true})).toHaveCount(0);
+ await page.screenshot({path:testInfo.outputPath('t1108-interrupted-save.png')});await page.screenshot({path:testInfo.outputPath('t1117-error-normal.png')});
+ t1117Captures.push({checkpoint:'error-normal',check_ids:['AC-ERROR'],viewport:{width:1366,height:900},text:await saveError.innerText()});
+ await page.setViewportSize({width:900,height:900});await observe(saveError).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1117-error-narrow.png')});
+ t1117Captures.push({checkpoint:'error-narrow',check_ids:['AC-ERROR'],viewport:{width:900,height:900},text:await saveError.innerText()});
+ await page.setViewportSize({width:1366,height:900});await page.reload();await observe(up.getByText('最近结果',{exact:false})).toBeVisible();
  await observe.poll(async()=>{const saved=await dispatch<{document:{nodes:Array<{id:string;referenceFileId?:string}>}}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);return saved.document.nodes.find(n=>n.id==='downstream')?.referenceFileId;},{timeout:360_000}).toBe(file.currentFileId);
  expect(confirmations).toBe(0);await observe(down.getByText('选择素材',{exact:true})).toHaveCount(0);
  await observe(page.getByText('已保存',{exact:true})).toBeVisible();await page.reload();
@@ -421,6 +431,29 @@ test('T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟�
  await page.setViewportSize({width:1366,height:900});await page.getByRole('button',{name:/^收起详情/}).click();
  await page.getByRole('button',{name:'画布库',exact:true}).click();await observe(page).toHaveURL(/\/canvases\?tab=canvases$/);await observe(canvasEntry).toBeVisible();await canvasEntry.click();await observe(page).toHaveURL(new RegExp('/canvases/'+canvas.id+'$'));await observe(up.getByText('最近结果',{exact:false})).toBeVisible();
  const afterBack=await dispatch<{document:import('@creatoros/contract').CanvasDocument}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);expect(afterBack.document.nodes.find(n=>n.id==='downstream')).toMatchObject({referenceAssetId:assetId,referenceFileId:file.currentFileId});expect(confirmations).toBe(0);expect(submissions).toBe(0);
+ // 选择框实际查正式上传素材；取消不写，Enter只落实用户明确选中的同一精确文件。
+ const referenceField=down.getByRole('button',{name:'参考图片',exact:true});await observe(referenceField.getByText('已选素材',{exact:true})).toBeVisible();await observe(referenceField.getByText('不应展示的很长素材文件名称.png',{exact:true})).toHaveCount(0);
+ const normalReferenceText=await referenceField.innerText();await referenceField.click();const referenceDialog=page.getByRole('dialog',{name:'参考图片',exact:true});
+ const previewButton=referenceDialog.getByRole('button',{name:'预览 不应展示的很长素材文件名称.png',exact:true});await observe(previewButton).toBeVisible();await previewButton.click();
+ await observe(referenceDialog.getByText('已选，可预览后使用',{exact:true})).toBeVisible();await observe(referenceDialog.getByText('不应展示的很长素材文件名称.png',{exact:true})).toHaveCount(0);
+ const largePreview=referenceDialog.getByAltText('画布图片素材',{exact:true});await observe(largePreview).toBeVisible();await observe.poll(()=>largePreview.evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);
+ await observe(previewButton.getByRole('img')).toBeVisible();await observe.poll(()=>previewButton.getByRole('img').evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);
+ expect(await referenceDialog.innerText()).not.toMatch(/\d+\s*×\s*\d+/);await page.screenshot({path:testInfo.outputPath('t1117-preview-normal.png')});
+ t1117Captures.push({checkpoint:'preview-normal',check_ids:['AC-PREVIEW'],viewport:{width:1366,height:900},text:normalReferenceText+'\n'+await referenceDialog.innerText()});
+ await page.keyboard.press('Escape');await observe(referenceDialog).toHaveCount(0);
+ const afterCancel=await dispatch<{document:import('@creatoros/contract').CanvasDocument}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);expect(afterCancel.document).toEqual(afterBack.document);expect(confirmations).toBe(0);expect(submissions).toBe(0);
+ await page.setViewportSize({width:900,height:900});const narrowReferenceText=await referenceField.innerText();await referenceField.focus();await page.keyboard.press('Enter');await observe(previewButton).toBeVisible();await previewButton.focus();await page.keyboard.press('Enter');
+ await observe(referenceDialog.getByText('已选，可预览后使用',{exact:true})).toBeVisible();await observe(largePreview).toBeVisible();await observe.poll(()=>largePreview.evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);
+ await observe(previewButton.getByRole('img')).toBeVisible();await observe.poll(()=>previewButton.getByRole('img').evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);
+ expect(await referenceDialog.innerText()).not.toContain('不应展示的很长素材文件名称.png');await page.screenshot({path:testInfo.outputPath('t1117-preview-narrow.png')});
+ t1117Captures.push({checkpoint:'preview-narrow',check_ids:['AC-PREVIEW'],viewport:{width:900,height:900},text:narrowReferenceText+'\n'+await referenceDialog.innerText()});
+ await referenceDialog.getByRole('button',{name:'使用此素材',exact:true}).focus();await page.keyboard.press('Enter');await observe(referenceDialog).toHaveCount(0);await observe(page.getByText('已保存',{exact:true})).toBeVisible();
+ const afterSelection=await dispatch<{document:import('@creatoros/contract').CanvasDocument}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);expect(afterSelection.document.nodes.find(n=>n.id==='downstream')).toMatchObject({referenceAssetId:assetId,referenceFileId:file.currentFileId});expect(confirmations).toBe(0);expect(submissions).toBe(0);
+ await page.setViewportSize({width:1366,height:900});await page.getByRole('button',{name:/^编导与详情/}).click();
+ const inspector=page.locator('aside').filter({has:page.getByRole('heading',{name:'节点设置',exact:true})});const inspectorReference=inspector.getByRole('button',{name:'参考图片',exact:true});
+ await observe(inspectorReference.getByText('已选素材',{exact:true})).toBeVisible();await observe(inspectorReference.getByText('不应展示的很长素材文件名称.png',{exact:true})).toHaveCount(0);await inspectorReference.click();await observe(previewButton).toBeVisible();await previewButton.click();
+ await observe(referenceDialog.getByText('已选，可预览后使用',{exact:true})).toBeVisible();await observe(referenceDialog.getByText('不应展示的很长素材文件名称.png',{exact:true})).toHaveCount(0);await page.keyboard.press('Escape');await page.getByRole('button',{name:/^收起详情/}).click();
+ writeFileSync(resolve(process.cwd(),'../docs/verification/t1117/visible-copy.json'),JSON.stringify({schema:'frontend-visible-copy/v1',task_id:'T-1117',commit_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),captures:t1117Captures},null,2)+'\n');
  writeFileSync(resolve(process.cwd(),'../docs/verification/t1108/visible-copy.json'),JSON.stringify({schema:'frontend-visible-copy/v1',task_id:'T-1108',commit_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),captures:legacyCaptures},null,2)+'\n');
 
  await up.getByRole('button',{name:'生成',exact:true}).click();await observe(page.getByRole('dialog',{name:'重新生成图片？'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-regenerate.png')});

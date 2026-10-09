@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：T1120 将唯一变更限制为原T1101第一例首次reload的waitUntil=domcontentloaded，依据真实trace纠正观察开始晚于短暂错误状态42.558612秒的问题；原保存失败、中文alert、精确保存/回读、取消零写、键盘确认、防重复、三平台及0retry断言全部保留。它不关闭HMR/console、不造错误、不新增重试、不改产品或owner，且正式命令绑定原两条浏览器入口与前后typecheck。原因边界仍只说明默认load等待导致观察过晚，不把HMR或源文件写成已定根因。SPEC SHA256=dad92e654e6bcae7f2f4116a7b34f1741475e019d3d6920967ad76ef8cd66f91；modules SHA256=00a551bd1a33f6aecc31a98c0ddfdc126dac06ed415411e3ebfe7fd3182e5307；constitution SHA256=86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800。PASS仅表示可实施，不代表浏览器、视觉、T1117、T1119或全局Gate已通过。",
+  "findings": []
+}
