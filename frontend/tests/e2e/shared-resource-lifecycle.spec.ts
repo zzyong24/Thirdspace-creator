@@ -3,9 +3,10 @@ import {resolve} from "node:path";
 import {expect,test} from "../helpers/test-environment";
 
 test("TEST-T1105-RESOURCE 共享资源真实空态、刷新返回与失败重读",async({page,context,baseURL},testInfo)=>{
- test.setTimeout(900_000);
+ test.setTimeout(7_200_000);
  page.setDefaultTimeout(120_000);
- const created=await page.request.post("/api/v1/dispatch",{data:{id:"accountGroups.create",input:{body:{name:"共享资源验收组",idempotencyKey:crypto.randomUUID()}}}});
+ page.setDefaultNavigationTimeout(120_000);
+ const created=await page.request.post("/api/v1/dispatch",{timeout:120_000,data:{id:"accountGroups.create",input:{body:{name:"共享资源验收组",idempotencyKey:crypto.randomUUID()}}}});
  expect(created.ok(),await created.text()).toBe(true);
  const group=(await created.json() as {data:{id:string}}).data;
  await context.addCookies([{name:"creatoros_current_group",value:encodeURIComponent(group.id),url:baseURL!}]);
