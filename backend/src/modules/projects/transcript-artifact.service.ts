@@ -2,6 +2,7 @@ import type { Db } from '@creatoros/backend';
 import type { RequestContext } from '@creatoros/contract';
 import { createArtifactsService, type SearchUpsert } from '../artifacts';
 import { createProjectRepository } from './projects.repository';
+import { createProjectsService } from './projects.service';
 import { lockOwnedProjectForUpdate } from './project-lock.service';
 import { ensureTranscriptArtifact, type EnsureTranscriptArtifactInput, type EnsureTranscriptArtifactResult } from './transcript-artifact';
 /** 后端独占写入。事实事务与可选口播初始化分开，后者失败不损失已完成的转写。 */
@@ -13,11 +14,21 @@ export function createTranscriptArtifactService(deps: {
     searchUpsert?: SearchUpsert;
 }) {
     const warn = deps.warn ?? console.warn;
+    // 项目归属由同一 store 的 Projects 公共服务核验；保留每处原有索引参数。
+    function artifactsFor(store: Parameters<typeof createArtifactsService>[0]) {
+        const projects = createProjectsService(createProjectRepository(store.db), {
+            now: store.now, nextId: store.nextId,
+        });
+        return createArtifactsService({
+            ...store,
+            assertProjectOwned: (ctx, projectId) => projects.getProject(ctx, projectId),
+        });
+    }
     async function index(ctx: RequestContext, artifactId: string) {
         if (!deps.searchUpsert)
             return;
         try {
-            const service = createArtifactsService(deps);
+            const service = artifactsFor(deps);
             const row = await service.getArtifact(ctx, artifactId);
             const version = (await service.listVersions(ctx, artifactId)).find(v => v.id === row.currentVersionId);
             if (version)
@@ -33,7 +44,7 @@ export function createTranscriptArtifactService(deps: {
                 const project = await createProjectRepository(tx).findImportedByRef(ctx, { platform: 'douyin', externalId: awemeId });
                 if (project?.id !== projectId)
                     throw new Error('转写项目来源已变化');
-                const service = createArtifactsService({ db: tx, now: deps.now, nextId: deps.nextId });
+                const service = artifactsFor({ db: tx, now: deps.now, nextId: deps.nextId });
                 const rows = await service.listProjectArtifacts(ctx, projectId);
                 if (rows.some(r => r.artifactType === 'master_script'))
                     return null;
@@ -60,7 +71,7 @@ export function createTranscriptArtifactService(deps: {
         async hasExisting(ctx:RequestContext,awemeId:string):Promise<boolean>{
             const project=await createProjectRepository(deps.db).findImportedByRef(ctx,{platform:'douyin',externalId:awemeId});
             if(!project)return false;
-            const artifacts=createArtifactsService(deps);
+            const artifacts=artifactsFor(deps);
             for(const artifact of await artifacts.listProjectArtifacts(ctx,project.id)){
                 if(artifact.artifactType!=='output_script'||!artifact.currentVersionId)continue;
                 const version=(await artifacts.listVersions(ctx,artifact.id)).find(row=>row.id===artifact.currentVersionId);
@@ -73,7 +84,7 @@ export function createTranscriptArtifactService(deps: {
             const result = await deps.db.transaction(async (transaction) => {
                 const tx = transaction as unknown as Db;
                 const projects = createProjectRepository(tx);
-                const service = createArtifactsService({ db: tx, now: deps.now, nextId: deps.nextId });
+                const service = artifactsFor({ db: tx, now: deps.now, nextId: deps.nextId });
                 const contents = new Map<string, Record<string, unknown>>();
                 return ensureTranscriptArtifact(ctx, { ...input, skipMasterScript: true }, {
                     async findImportedProjectByAwemeId(c, awemeId) {
@@ -120,7 +131,7 @@ export function createTranscriptArtifactService(deps: {
             const project = await createProjectRepository(deps.db).findImportedByRef(ctx, { platform: 'douyin', externalId: awemeId });
             if (!project)
                 return;
-            const artifacts = createArtifactsService(deps);
+            const artifacts = artifactsFor(deps);
             for (const row of await artifacts.listProjectArtifacts(ctx, project.id)) {
                 if (row.artifactType !== 'output_script' || !row.currentVersionId)
                     continue;
