@@ -1,0 +1,24 @@
+{
+  "originalReceipt": {
+    "argv": [
+      "node",
+      "docs/verification/t1136/run-layout-journey.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T19:11:33.364236+00:00",
+    "finishedAt": "2026-10-09T19:12:53.418809+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 80.05349933297839,
+    "logSha256": "91a73ef1207fe921d0890fabcad3dbeeb411074d4c9fb7456b6df4f596284959"
+  },
+  "observedAt": "2026-10-09T19:32:04.901201+00:00",
+  "observerSourceSha256": "7153f81d5c507dfa76a88926d12f97672e20fe399dc72b07dee048d445778f86",
+  "observerKind": "uncaughtExceptionMonitor只追加错误栈，不注册handler、不抑制/强制退出、不记录请求body",
+  "uncaughtExceptionCount": 0,
+  "abortedCount": 1,
+  "monitorFileExists": false,
+  "cause": "UNKNOWN",
+  "availabilityScope": "T1136原必需公共旅程exit0；不代表原T1149 family已复现或修复",
+  "logPath": "docs/verification/t1148/revalidation-aa7de1e9/t1136/journey-readable.log",
+  "logSha256": "aa14fffaedba434c14afe4ac77ede67032991c24a371db1e7fd4469174480ebb"
+}

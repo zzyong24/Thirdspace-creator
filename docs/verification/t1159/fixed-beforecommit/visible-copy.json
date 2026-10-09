@@ -1,0 +1,103 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-1159",
+  "commit_sha": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "captures": [
+    {
+      "checkpoint": "wechatVideo-empty-1366",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "返回账号\n中性视频号账号的作品与数据\n\n视频号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n尚无后台报表，可点击“同步数据”读取当前账号数据。"
+    },
+    {
+      "checkpoint": "wechatVideo-empty-900",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ],
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "text": "返回账号\n中性视频号账号的作品与数据\n\n视频号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n尚无后台报表，可点击“同步数据”读取当前账号数据。"
+    },
+    {
+      "checkpoint": "wechatVideo-empty-390",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "text": "返回账号\n中性视频号账号的作品与数据\n\n视频号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n尚无后台报表，可点击“同步数据”读取当前账号数据。"
+    },
+    {
+      "checkpoint": "wechatVideo-identity-required",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "返回账号\n中性视频号账号的作品与数据\n\n视频号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n请先扫码绑定这个账号，再同步数据。\n\n扫码绑定账号\n\n尚无后台报表，可点击“同步数据”读取当前账号数据。"
+    },
+    {
+      "checkpoint": "wechatOfficial-empty-1366",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "返回账号\n中性公众号账号的作品与数据\n\n公众号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n尚无后台报表，可点击“同步数据”读取当前账号数据。"
+    },
+    {
+      "checkpoint": "wechatOfficial-empty-900",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ],
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "text": "返回账号\n中性公众号账号的作品与数据\n\n公众号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n尚无后台报表，可点击“同步数据”读取当前账号数据。"
+    },
+    {
+      "checkpoint": "wechatOfficial-empty-390",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "text": "返回账号\n中性公众号账号的作品与数据\n\n公众号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n尚无后台报表，可点击“同步数据”读取当前账号数据。"
+    },
+    {
+      "checkpoint": "wechatOfficial-identity-required",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "返回账号\n中性公众号账号的作品与数据\n\n公众号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n请先扫码绑定这个账号，再同步数据。\n\n扫码绑定账号\n\n尚无后台报表，可点击“同步数据”读取当前账号数据。"
+    }
+  ]
+}

@@ -56,6 +56,8 @@ export enum ErrorCode {
   AssetNotConfirmed = "ASSET_NOT_CONFIRMED",
   VersionConflict = "VERSION_CONFLICT",
   IdempotencyConflict = "IDEMPOTENCY_CONFLICT",
+  // T1165：平台身份/授权拒绝保留固定码，供既有扫码恢复消费；HTTP沿原400。
+  ScopeMissing = "SCOPE_MISSING",
 }
 
 export const ERROR_HTTP: Record<ErrorCode, number> = {
@@ -91,6 +93,7 @@ export const ERROR_HTTP: Record<ErrorCode, number> = {
   [ErrorCode.AssetNotConfirmed]: 409,
   [ErrorCode.VersionConflict]: 409,
   [ErrorCode.IdempotencyConflict]: 409,
+  [ErrorCode.ScopeMissing]: 400,
 };
 
 // `code` is a free string (domain codes like PROJECT_NOT_FOUND) but every

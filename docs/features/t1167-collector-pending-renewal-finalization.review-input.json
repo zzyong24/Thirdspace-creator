@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：collector当前finally无界等待renewalInFlight，可让不返回的续租端口阻塞deadline、父取消或正常完成的终态交付。允许仅在终态清理后不再await该不可取消Promise；原renew try/catch、active=false、timer清理、backend行锁/世代/status校验及onStopped唯一释放证明保证晚resolve/reject不再续租、回写或假释放。三种pending续租RED必须分别证明timeout、cancelled、complete及晚回执零副作用。",
+  "findings": []
+}

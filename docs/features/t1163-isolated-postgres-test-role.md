@@ -1,0 +1,5 @@
+# T1163 核对迁移测试使用的隔离PostgreSQL角色
+
+T1159原backend109例真实105PASS/4FAIL，167.596271秒exit1，原日志SHA509c9db01758a2336d560835ea8f07ae02ecfb4641430c3ded8675390dcfa04e。4FAIL来自migration-convergence.test.ts硬编码旧隔离测试入口127.0.0.1:55422/zyongzhu，当前本会话隔离cluster只有creatoros_test角色；未到实际SQL迁移断言，不称产品迁移损坏。
+
+产品/测试写集为空。先核55422实际监听PID/完整data目录、CURRENT_USER与data_directory只属于本会话N/isolated-pg/data；允许仅在此一次性测试cluster补LOGIN CREATEDB角色zyongzhu，不改用户系统PG/真实库/密码或加SUPERUSER，不覆盖既有角色。然后原完整backend组合0retry/原预算复验，4条PG及原PGlite数据保留/全catalog/原字节回读断言不删不skip。原失败保留；若SQL出现真实失败另登记根因。无App/用户DB备份，原测试自己的中性隔离库备份/恢复夹具正常保留。

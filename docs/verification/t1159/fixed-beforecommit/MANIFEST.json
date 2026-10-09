@@ -1,0 +1,15 @@
+{
+  "public-read-observation.json": "deb3de355ed19241f8e5cb1ab0553fd0e03a60b77ec3fc323b032abc37e7f43a",
+  "visible-copy.json": "3f512cdf728cb364967e8992640b378c57f3c9e8e8a5344cc61e57e4e09735c6",
+  "current-journey.json": "4dec1b4a3db407c63bef50cbec1eec7516464ec27bdff291d9d1e3d848c94131",
+  "current-journey.log": "4f94eac463ade394ee4b66f38ed37301b7c85b74c9f79bcd9b5521048084da95",
+  "post-stop-side-effect-observation.json": "56bebf1cf97e19b6d668b3a4c9b3722aa8d1f8c6e70fa9420a6ee34f29658d66",
+  "screenshots/wechatOfficial-empty-390.png": "6f59282fa083a1463733f831da0dac9df749347085fba37cfc16ff9c7d595dbd",
+  "screenshots/wechatOfficial-identity-required.png": "17769353058b4fa52a451fd9cc35b5b3883404d98a64b5afb07654b59309b91d",
+  "screenshots/wechatOfficial-empty-900.png": "88cf86cbc25fb5d12a786c93761ffb2746730407d65b9a46ddffa76b0a66ac9c",
+  "screenshots/wechatOfficial-empty-1366.png": "f6c238c4d623b2fc2789eb4e208b6e97df6f188d5ddb17d7e922e0aa7a6b6694",
+  "screenshots/wechatVideo-empty-1366.png": "7d1097537441a9e203827eafa9713b02db828b40e35ac47ac5f3e30388a1b003",
+  "screenshots/wechatVideo-identity-required.png": "54d4a5fabb618061cd7b4d34ec98c739828e2a542ccd16add517c78206178685",
+  "screenshots/wechatVideo-empty-900.png": "3f0776c64b35e22dd9eeaba4cd7dc17a6ba4d0bd48396406bd90e09881b5cc47",
+  "screenshots/wechatVideo-empty-390.png": "b74e95cfdf1297c8cdf09ef9380f8e5f5cdf7fdcad4e73531bed2896ae9dd172"
+}

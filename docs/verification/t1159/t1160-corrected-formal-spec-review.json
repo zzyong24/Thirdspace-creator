@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/reviewctl.mjs",
+    "record",
+    "T-1159",
+    "--spec",
+    "docs/features/t1159-current-wechat-native-report-integration.md",
+    "--constitution",
+    "docs/产品定位.md",
+    "--input",
+    "docs/features/t1159-current-wechat-native-report-integration.review-input.json",
+    "--review",
+    "docs/features/t1159-current-wechat-native-report-integration.review.md",
+    "--backlog",
+    "BACKLOG.md",
+    "--review-mode",
+    "independent",
+    "--model",
+    "codex-inherited"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T19:45:31.202569+00:00",
+  "finishedAt": "2026-10-09T19:45:31.346477+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.14378783397842199,
+  "logSha256": "88a9fecb078c84d1b5d8163ef0b0fb08d99b2906936b83c9ca1918b9bb8d68dc"
+}

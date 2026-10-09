@@ -1,0 +1,18 @@
+{
+  "head": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "observedAt": "2026-10-09T19:25:17.492596+00:00",
+  "runner": "node docs/verification/t1101/run-journey.mjs",
+  "originalExitCode": 0,
+  "rawPrivatePath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1148-specific-canvas-raw.log",
+  "rawSha256": "92c3083b6bbf12b0fc9453de717d2f96b9ec6bf4ddfd6a0e2f446b2027413101",
+  "normalReceiptSha256": "938f74e636c87287b737e7d0189d22f03febd3bfd84fbb15b938dcb0c7f25fdd",
+  "readableLogSha256": "607c4d7ea22b9d9cc12651fde5e12fed951b1cf048da6ddadc9b480a7ee6417d",
+  "sourceInspectedAfterRun": true,
+  "sourcesHaveNoWorkingChanges": true,
+  "pictures": [
+    "t1117-preview-narrow.png",
+    "t1117-error-narrow.png",
+    "t1117-preview-normal.png",
+    "t1117-error-normal.png"
+  ]
+}

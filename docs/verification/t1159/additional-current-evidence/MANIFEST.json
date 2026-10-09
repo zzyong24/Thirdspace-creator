@@ -1,0 +1,76 @@
+{
+  "capturedAt": "2026-10-09T20:23:52.062929+00:00",
+  "purpose": "实际运行原字节与收据；gzip只容器压缩，不修改原日志；timeout全入口exit1/旧27静态逐项完全一致，运行测试全过",
+  "entries": [
+    {
+      "sourceName": "t1166-1167-current-timeout-policy.json",
+      "artifact": "docs/verification/t1159/additional-current-evidence/t1166-1167-current-timeout-policy.json",
+      "rawSha256": "6f2a838cef67260cef0e177c8f5f98cb115ec3b728cee324fd5171d1e0926eef",
+      "artifactSha256": "6f2a838cef67260cef0e177c8f5f98cb115ec3b728cee324fd5171d1e0926eef",
+      "encoding": "json-original-bytes"
+    },
+    {
+      "sourceName": "t1166-1167-current-timeout-policy.log",
+      "artifact": "docs/verification/t1159/additional-current-evidence/t1166-1167-current-timeout-policy.log.gz",
+      "rawSha256": "74d8120246b458e676ab5978ec26f6f294004f5949fff0330884dbc7430246aa",
+      "artifactSha256": "4406771a20cce2e503568f0b99fac9dad7c1f292b6eaa69857092a00cf11e04e",
+      "encoding": "gzip-original-bytes"
+    },
+    {
+      "sourceName": "t1159-current-led047.json",
+      "artifact": "docs/verification/t1159/additional-current-evidence/t1159-current-led047.json",
+      "rawSha256": "680528b916076549e7147e2bd9a1c9cc7672f69fbd6a9c1b04ec42b0ed875e07",
+      "artifactSha256": "680528b916076549e7147e2bd9a1c9cc7672f69fbd6a9c1b04ec42b0ed875e07",
+      "encoding": "json-original-bytes"
+    },
+    {
+      "sourceName": "t1159-current-led047.log",
+      "artifact": "docs/verification/t1159/additional-current-evidence/t1159-current-led047.log.gz",
+      "rawSha256": "fbea955c247c27afbcdd84391a47085ef10a05ee4610bb675185e36cfd51dea3",
+      "artifactSha256": "e1a7853b367010f22f0b3357223fab1452baf911181fcf8bce914f7ba0c5eb33",
+      "encoding": "gzip-original-bytes"
+    },
+    {
+      "sourceName": "t1159-current-worker-build.json",
+      "artifact": "docs/verification/t1159/additional-current-evidence/t1159-current-worker-build.json",
+      "rawSha256": "0d87de711542aef834653e1e46021f0fe802ccbe09b39f8ddc66eea81908ebe5",
+      "artifactSha256": "0d87de711542aef834653e1e46021f0fe802ccbe09b39f8ddc66eea81908ebe5",
+      "encoding": "json-original-bytes"
+    },
+    {
+      "sourceName": "t1159-current-worker-build.log",
+      "artifact": "docs/verification/t1159/additional-current-evidence/t1159-current-worker-build.log.gz",
+      "rawSha256": "77f4ab92810765546b71da6ce7bf695a2ab2949ab9671b0ee19254d204fe9551",
+      "artifactSha256": "59e4acab1ce3ec1470b88691e9944cc8aaffc08b4284a748d4bfc86e3c73890f",
+      "encoding": "gzip-original-bytes"
+    },
+    {
+      "sourceName": "t1164-current-receipts-actual-verify.json",
+      "artifact": "docs/verification/t1159/additional-current-evidence/t1164-current-receipts-actual-verify.json",
+      "rawSha256": "87dbefa5ffe3a56047eda9550cecdd536e8dc4b8b0b446143f4ad4a892c7eba4",
+      "artifactSha256": "87dbefa5ffe3a56047eda9550cecdd536e8dc4b8b0b446143f4ad4a892c7eba4",
+      "encoding": "json-original-bytes"
+    },
+    {
+      "sourceName": "t1164-current-receipts-actual-verify.log",
+      "artifact": "docs/verification/t1159/additional-current-evidence/t1164-current-receipts-actual-verify.log.gz",
+      "rawSha256": "63398baddf333bf32fa1579c090875b4d7d5f997340c6f3a6f07219d0b634571",
+      "artifactSha256": "3c15d94e62c6ee90d5e04014c3a532d8772bccbf1a4626399113bf3d0ba496d6",
+      "encoding": "gzip-original-bytes"
+    },
+    {
+      "sourceName": "t1164-1167-after-original-artifact-restore-diff.json",
+      "artifact": "docs/verification/t1159/additional-current-evidence/t1164-1167-after-original-artifact-restore-diff.json",
+      "rawSha256": "d8fa26223130dd3b76a557078477f170f31cd615785e2169ea7d19f51e5744ad",
+      "artifactSha256": "d8fa26223130dd3b76a557078477f170f31cd615785e2169ea7d19f51e5744ad",
+      "encoding": "json-original-bytes"
+    },
+    {
+      "sourceName": "t1164-1167-after-original-artifact-restore-diff.log",
+      "artifact": "docs/verification/t1159/additional-current-evidence/t1164-1167-after-original-artifact-restore-diff.log.gz",
+      "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "artifactSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "encoding": "gzip-original-bytes"
+    }
+  ]
+}

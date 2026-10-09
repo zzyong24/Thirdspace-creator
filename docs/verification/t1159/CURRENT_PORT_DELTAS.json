@@ -1,0 +1,77 @@
+{
+  "observedAt": "2026-10-09T20:38:08.888704+00:00",
+  "baselineHead": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "initialPortManifestSha256": "ec905c36a9a0e63b10aebaf607659189e0687200a53011e014132e524ef9b8bc",
+  "initialManifestNotRewritten": true,
+  "approvedFollowupTasks": [
+    "T-1162",
+    "T-1165",
+    "T-1166",
+    "T-1167",
+    "T-1168",
+    "T-1169"
+  ],
+  "changedAfterInitialPort": [
+    {
+      "path": "backend/src/application/collection/wechat-native-collector.test.ts",
+      "initialPortSha256": "eddb707930046b1f10d8cf2a4ae60801ca756a9d3424926f44058d120ff978ea",
+      "currentSha256": "008e10ed7e7c819261250e34ee9618c4533c70f9ad5ebad6f7a9c94bc1dfcfea"
+    },
+    {
+      "path": "backend/src/application/collection/wechat-native-collector.ts",
+      "initialPortSha256": "c09b829dc9ecf0b19b8b89ffa901a732f68500018d94b32d20d11d0a93f02dd9",
+      "currentSha256": "869bf687228bcd1a1fe70f86901e2cf9f872fbc742dd7cc293413208b500003b"
+    },
+    {
+      "path": "contract/tests/registry.test.ts",
+      "initialPortSha256": "4a0a8ae95c464c010215b8ae5ce9a6636d64208eacaa1ab12f6f780c82b82f2b",
+      "currentSha256": "a33328805e4ee0fd7f466c6e2d0e2a7a2b0f9f769e37d034f20f4c708898e280"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.test.tsx",
+      "initialPortSha256": "6d096c4410a259edb8c1d63f5f1848f03cdd7f5832cb80593b24a0a97c20eccd",
+      "currentSha256": "e6256d79b570a6078a307fd0804a8d0cd72d4f709c99d0e7142d34495a6cacd7"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.tsx",
+      "initialPortSha256": "c0f3bc1a27a64ee7c4500b31d311e854e32464260b5ca50535d4ddbf653235a2",
+      "currentSha256": "2f03585d319e21cb24f850dc22aba80f45ed1a3761a4734bfed6e831fdeb67b2"
+    },
+    {
+      "path": "frontend/src/features/platform-account/native-report-panel.test.tsx",
+      "initialPortSha256": "02bce911e5b4ec7d19296565a861d22195fcd7a2f984a5d7ed28cb5b394a84a7",
+      "currentSha256": "b8717bb3e466d4c6c8ea11d234113c3709b156a29dffa3bad763ce0095541e6d"
+    },
+    {
+      "path": "frontend/src/features/platform-account/native-report-panel.tsx",
+      "initialPortSha256": "c79e758d4821cfb1e01f407999e83d75f84c71ac234e85b08853ee52764d2bec",
+      "currentSha256": "5a28c3e89a1ce62d00e8f16c53228f97548946f4e09446e6c0d4fc0c171ad4b4"
+    }
+  ],
+  "additionalVerificationAndEnvelope": [
+    {
+      "path": "contract/src/envelope.ts",
+      "sha256": "8fa72b5982906f1c637a05bf10d262385adb0eb0e0f43e826b69f119e8b2b429"
+    },
+    {
+      "path": "frontend/src/app/api/v1/dispatch/route.test.ts",
+      "sha256": "166db333742da94e2031ce67fe5e005a04d2e2c00e6be7265ccb6ca991c6fcce"
+    },
+    {
+      "path": "contract/tests/current-wechat-integration.test.ts",
+      "sha256": "c681ba3262a680a5d514729613c405d9aa58c438e4526b9b53bf832ef93ac920"
+    },
+    {
+      "path": "frontend/tests/e2e/t1159-wechat-native-report.spec.ts",
+      "sha256": "df40efd73678a1d7d36d251ebe17164a5d57f9affde00d7b9396f0e0c554a200"
+    },
+    {
+      "path": "docs/verification/t1159/run-report-journey.mjs",
+      "sha256": "8c2ca0103be7c954043db4ae1e88f9385c5d6f3ae0802b8076857456e31ce98f"
+    }
+  ],
+  "currentBrowserFreeze": "docs/verification/t1168-1169/fixed-current/current-journey.json",
+  "currentImplementationReview": "docs/verification/t1168-1169/implementation-current-review/REVIEW.json",
+  "realWechatReports": 0,
+  "liveAcceptance": "待验"
+}

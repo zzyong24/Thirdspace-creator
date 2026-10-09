@@ -1,0 +1,29 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/application/collection/wechat-native-collector.test.ts",
+    "src/application/platform-collection/periodic.test.ts",
+    "src/application/scheduling/platform-collector.test.ts",
+    "src/application/workspace/startup.test.ts",
+    "src/migration-convergence.test.ts",
+    "src/modules/ai-runtime/collection-bootstrap.test.ts",
+    "src/modules/platform-collection/platform-collection.transport.integration.test.ts",
+    "src/modules/platform-collection/platform-native-reports.integration.test.ts",
+    "src/modules/scheduling/private-collector-wechat-admission.test.ts",
+    "--retry=0",
+    "--no-file-parallelism",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T19:46:52.539137+00:00",
+  "finishedAt": "2026-10-09T19:49:40.137249+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 167.59627133404138,
+  "logSha256": "509c9db01758a2336d560835ea8f07ae02ecfb4641430c3ded8675390dcfa04e"
+}

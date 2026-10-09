@@ -1,0 +1,159 @@
+{
+  "surface": "browser",
+  "mode": "non-fixture",
+  "witnesses": {
+    "groupId": "grp-59a8d5e8-6",
+    "accountIds": [
+      "acct-59a8d5e8-10",
+      "acct-59a8d5e8-13"
+    ]
+  },
+  "domainResponsesReplaced": false,
+  "manualAccountsIdentityVerified": false,
+  "realWechatCalled": false,
+  "bindingStarts": 0,
+  "observations": [
+    {
+      "accountId": "acct-59a8d5e8-10",
+      "platform": "wechatVideo",
+      "externalAccountId": null,
+      "before": {
+        "items": [],
+        "nextCursor": null,
+        "total": 0
+      },
+      "after": {
+        "items": [],
+        "nextCursor": null,
+        "total": 0
+      },
+      "refusal": {
+        "httpStatus": 400,
+        "code": "SCOPE_MISSING"
+      },
+      "refresh": true,
+      "repeat": true,
+      "back": true
+    },
+    {
+      "accountId": "acct-59a8d5e8-13",
+      "platform": "wechatOfficial",
+      "externalAccountId": null,
+      "before": {
+        "items": [],
+        "nextCursor": null,
+        "total": 0
+      },
+      "after": {
+        "items": [],
+        "nextCursor": null,
+        "total": 0
+      },
+      "refusal": {
+        "httpStatus": 400,
+        "code": "SCOPE_MISSING"
+      },
+      "refresh": true,
+      "repeat": true,
+      "back": true
+    }
+  ],
+  "captures": [
+    {
+      "name": "wechatVideo-empty-1366",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "返回账号\n中性视频号账号的作品与数据\n\n视频号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n尚无后台报表。同步后可查看当前账号数据。",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ]
+    },
+    {
+      "name": "wechatVideo-empty-900",
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "text": "返回账号\n中性视频号账号的作品与数据\n\n视频号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n尚无后台报表。同步后可查看当前账号数据。",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ]
+    },
+    {
+      "name": "wechatVideo-empty-390",
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "text": "返回账号\n中性视频号账号的作品与数据\n\n视频号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n尚无后台报表。同步后可查看当前账号数据。",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ]
+    },
+    {
+      "name": "wechatVideo-identity-required",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "返回账号\n中性视频号账号的作品与数据\n\n视频号 · 后台原生报表\n\n最近采集：尚未采集\n\n扫码绑定账号\n\n请先扫码绑定这个账号，再同步数据。\n\n尚无后台报表。完成扫码后，可同步当前账号数据。",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ]
+    },
+    {
+      "name": "wechatOfficial-empty-1366",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "返回账号\n中性公众号账号的作品与数据\n\n公众号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n尚无后台报表。同步后可查看当前账号数据。",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ]
+    },
+    {
+      "name": "wechatOfficial-empty-900",
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "text": "返回账号\n中性公众号账号的作品与数据\n\n公众号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n尚无后台报表。同步后可查看当前账号数据。",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ]
+    },
+    {
+      "name": "wechatOfficial-empty-390",
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "text": "返回账号\n中性公众号账号的作品与数据\n\n公众号 · 后台原生报表\n\n最近采集：尚未采集\n\n同步数据\n\n尚无后台报表。同步后可查看当前账号数据。",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ]
+    },
+    {
+      "name": "wechatOfficial-identity-required",
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "返回账号\n中性公众号账号的作品与数据\n\n公众号 · 后台原生报表\n\n最近采集：尚未采集\n\n扫码绑定账号\n\n请先扫码绑定这个账号，再同步数据。\n\n尚无后台报表。完成扫码后，可同步当前账号数据。",
+      "check_ids": [
+        "AC-REPORT-ENTRY",
+        "AC-UI"
+      ]
+    }
+  ]
+}

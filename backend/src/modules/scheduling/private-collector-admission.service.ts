@@ -8,7 +8,7 @@ import {aiTasks} from '../../schema/ai';
 import {assertFrozenWorkspaceMembership,type FrozenWorkspace,type MembershipTransaction} from '../platform-account/membership-lock.service';
 export const PRIVATE_COLLECTION_SOURCE_KINDS:ReadonlySet<string>=new Set(['self.metrics','self.traffic','comments','self.detail']);
 /** SEMANTIC_BOUNDARY_ALLOW: 平台协议能力准入，不做内容或创作选择。 */
-export function supportsPrivateCollection(platform:string,sourceKind:string){return platform==='douyin'?PRIVATE_COLLECTION_SOURCE_KINDS.has(sourceKind):(platform==='kuaishou'||platform==='xiaohongshu')&&sourceKind==='self.metrics';}
+export function supportsPrivateCollection(platform:string,sourceKind:string){return platform==='douyin'?PRIVATE_COLLECTION_SOURCE_KINDS.has(sourceKind):['kuaishou','xiaohongshu','wechatVideo','wechatOfficial'].includes(platform)&&sourceKind==='self.metrics';}
 /** 内部调度口：只验证实际账号私有采集job/成员，不授予组内容创作写权。调用者先持同一account/member锁。 */
 export async function assertPrivateCollectorJob(db:Db,ctx:RequestContext,jobId:string,sourceKind?:string){
  if(!ctx.accountId||!ctx.groupId)throw new OwnershipError('私有采集缺少真实账号组');

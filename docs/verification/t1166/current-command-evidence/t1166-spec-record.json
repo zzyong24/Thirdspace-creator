@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/reviewctl.mjs",
+    "record",
+    "T-1166",
+    "--spec",
+    "docs/features/t1166-report-journey-outer-budget.md",
+    "--constitution",
+    "docs/产品定位.md",
+    "--input",
+    "docs/features/t1166-report-journey-outer-budget.review-input.json",
+    "--review",
+    "docs/features/t1166-report-journey-outer-budget.review.md",
+    "--backlog",
+    "BACKLOG.md",
+    "--review-mode",
+    "independent",
+    "--model",
+    "codex-inherited"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T20:05:58.333971+00:00",
+  "finishedAt": "2026-10-09T20:05:58.485227+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.15100812498712912,
+  "logSha256": "8eee7b084e062c5ca29f012c5ea35ef238272f0b1b540b94d1414254e61775fd"
+}

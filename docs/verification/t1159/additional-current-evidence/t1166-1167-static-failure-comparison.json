@@ -1,0 +1,32 @@
+{
+  "observedAt": "2026-10-09T20:18:00.939438+00:00",
+  "currentLogSha256": "74d8120246b458e676ab5978ec26f6f294004f5949fff0330884dbc7430246aa",
+  "failureCount": 27,
+  "exactOriginalMatches": [
+    {
+      "path": "docs/verification/t1149/t1149-current-timeout-policy.log",
+      "sha256": "0ae5c891c2b998b54dabb16bb305bffe2d2620197626ca3d8454ecfbdc8af258",
+      "failureCount": 27
+    },
+    {
+      "path": "docs/verification/t1140/t1140-t1141-t1145-timeout.log",
+      "sha256": "68efcc7e643508da9eee192d755dde7107c7701274128cc5a1ea90a254e68881",
+      "failureCount": 27
+    },
+    {
+      "path": "docs/verification/t1101/timeout-policy.log",
+      "sha256": "5f664ea5e66f352206f792a5aac1fe88e655f433a24cb9087b2b9a8b0b94251c",
+      "failureCount": 27
+    },
+    {
+      "path": "docs/verification/t1101/timeout-policy-final.log",
+      "sha256": "0a0a32550b67948a1cc7794854fdb8b93dc1abbc3d35cec01bb5599c1bf02fd0",
+      "failureCount": 27
+    },
+    {
+      "path": "docs/verification/t1080/post-package-timeout-policy-actual.log",
+      "sha256": "40c4168afe80d84f30c52a805b37fc1fd012406825278c0ab77112de25d0773d",
+      "failureCount": 27
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/frontend-validation.mjs",
+    "validate",
+    "--report",
+    "docs/verification/t1149/FRONTEND_VALIDATION_REPORT.md",
+    "--task",
+    "T-1149"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T19:18:04.800923+00:00",
+  "finishedAt": "2026-10-09T19:18:04.919133+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 0.11792612500721589,
+  "logSha256": "db3cec4c3acff6b8f4e9ab04bd9ad382d2e69fd71fef107271cdc1ad9edd7562"
+}

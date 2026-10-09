@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/app/api/v1/dispatch/route.test.ts",
+    "src/lib/http-transport.test.ts",
+    "src/features/platform-account/native-report-panel.test.tsx",
+    "--retry=0",
+    "--no-file-parallelism",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T20:03:31.181328+00:00",
+  "finishedAt": "2026-10-09T20:04:41.127043+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 69.94472654204583,
+  "logSha256": "d2c3f7bc6cd4a58f9ce6f5073a58b220a4bfd9022a446ac729fda8764c66dd66"
+}

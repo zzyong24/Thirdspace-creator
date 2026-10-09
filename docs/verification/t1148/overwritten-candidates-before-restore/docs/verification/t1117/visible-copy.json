@@ -1,0 +1,51 @@
+{
+  "schema": "frontend-visible-copy/v1",
+  "task_id": "T-1117",
+  "commit_sha": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "captures": [
+    {
+      "checkpoint": "error-normal",
+      "check_ids": [
+        "AC-ERROR"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "网络连接不稳定,请检查网络后重试。"
+    },
+    {
+      "checkpoint": "error-narrow",
+      "check_ids": [
+        "AC-ERROR"
+      ],
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "text": "网络连接不稳定,请检查网络后重试。"
+    },
+    {
+      "checkpoint": "preview-normal",
+      "check_ids": [
+        "AC-PREVIEW"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "参考图片\n\n已选素材\n参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    },
+    {
+      "checkpoint": "preview-narrow",
+      "check_ids": [
+        "AC-PREVIEW"
+      ],
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "text": "参考图片\n\n已选素材\n参考图片\n\n素材库图片 · 先预览，再选用\n\n全部\n图片\n\n已选，可预览后使用\n\n取消\n使用此素材\n关闭"
+    }
+  ]
+}

@@ -3,6 +3,13 @@ import { ENDPOINTS } from "../src/endpoints";
 
 // The authoritative SPEC §13 surface — every "METHOD /path" line, verbatim.
 const SPEC_13: ReadonlyArray<[string, string]> = [
+  // T-1074正式服务契约：候选由用户采纳，来源/账号归属仍由backend验证。
+  ["POST", "/ai/assistant-actions/adopt"],
+  ["GET", "/ai/assistant-actions/receipt"],
+  ["POST", "/canvases/create/adopt"],
+  ["POST", "/canvases/:canvasId/nodes/:nodeId/confirm"],
+  // T-1114已审owner-only摘要；不开放原参数正文或模型任意工具调用。
+  ["GET", "/workbench/tasks/:taskId/model-calls/summary"],
   // T-1062封闭冻结来源：T-993画布、T-1021模板/物料、T-850/T-1046编辑、T-937项目升级、T-962独立密钥。
   // 对应既有approved行为与30实际operation逐项证据见本任务verification记录；不是注册表自动白名单。
   ["POST", "/canvases/:canvasId/material/adopt"],
@@ -459,6 +466,8 @@ const SPEC_13: ReadonlyArray<[string, string]> = [
   ["POST", "/accounts/:accountId/collections/:attemptId/cancel"],
   ["GET", "/accounts/:accountId/platform-works"],
   ["GET", "/accounts/:accountId/platform-metrics"],
+  // T-1110已评审原生报表读取契约。
+  ["GET", "/accounts/:accountId/platform-reports"],
   // T-1023 项目公众号文章、候选采纳与历史素材文件预览。
   ["GET", "/outputs/:outputId/article"],
   ["GET", "/outputs/:outputId/article/versions/:versionId"],

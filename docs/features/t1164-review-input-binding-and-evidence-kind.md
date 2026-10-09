@@ -1,0 +1,5 @@
+# T1164 核对独立审核输入绑定与证据字段
+
+两项实际控制问题：T1161独立CONCERNS报告的packet将evidence_kind写为source-inspection，正式record于19:52:12Z真实exit1拒绝，未生成审核事件；T1159独立初审原报告SPEC SHA db8cf482与正式record时实际b95d6954不同，root校准contract测试include路径期间独立读集不同，不能声称该原报告绑定现字节。原报告、packet及全部正式成功/失败均保留，不修改审核验证器或伪改SHA。
+
+本诊断产品/测试/runner写集为空。由同一独立执行者现在重新读取当前T1161（已澄清折叠区入口并不修改产品）并产生合法typed初审packet；重新读当前T1159 SPEC/该模块/PAGE/来源清单并产生当前正式recheck。原旧报告是历史事实，新增当前报告说明实际时点而不是补拍旧审核。原reviewctl分别实际成功与audit为局部验证；无模型/真人/安装/功能PASS。SOURCE_MANIFEST的原冻结字节不改，研究family两实验预算不变。

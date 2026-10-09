@@ -9,6 +9,7 @@ import {createDouyinAccountBindingStage,createLocalPlatformAccountBindingStage} 
 import {createAccountBindingService,createAccountBindingTransport} from "@creatoros/backend/modules/platform-account";
 import {createUnassignedDraftRetainer} from "@creatoros/backend/application/publishing-retain-unassigned";
 import {createMembershipLockService} from "@creatoros/backend/modules/platform-account";
+import {createWechatNativeCollector} from "@creatoros/backend/application/collection/wechat-native-collector";
 import {createGroupWorkspaceApplication} from "@creatoros/backend/application/queries/group-workspace";
 import {createWorkspaceBlobService} from "@creatoros/backend/modules/assets";
 import { createProjectScriptSource } from "@creatoros/backend/application/project-script-source";
@@ -4600,8 +4601,13 @@ dispatchIntelligenceRun});
   const accountGroupService = createAccountGroupService({db, now: deps.now, nextId: deps.nextId});
   const accountGroup = createAccountGroupTransport(()=>accountGroupService,()=>createGroupMigrationService({db,...deps}),()=>createGroupResourceAccessService({db,now:deps.now}));
   const localBindingStages:NonNullable<Parameters<typeof createAccountBindingService>[0]["localStages"]>={};
+  const wechatWitnesses=(await import('@creatoros/ai-worker/platform/wechat-dom-witness')).createVerifiedWechatDomWitnesses();
+  // 本机开发排障可选配置；图像仅由worker保存在受信私有/tmp目录，默认关闭。
+  const privateFailureImageDir=process.env.NODE_ENV==='development'?process.env.CREATOROS_WECHAT_PRIVATE_FAILURE_IMAGE_DIR:undefined;
+  const wechatSource=(await import('@creatoros/ai-worker/platform/wechat-browser-source')).createWechatBrowserSource({...wechatWitnesses,...(privateFailureImageDir?{privateFailureImageDir}:{})});
+  const localBindingAvailable=(platform:string)=>['xiaohongshu','kuaishou','wechatVideo','wechatOfficial'].includes(platform)&&!!localBindingStages[platform as keyof typeof localBindingStages];
   const platformAccountService = createPlatformAccountService({
-    bindingCapabilities:async()=>["douyin","kuaishou","wechatVideo","wechatOfficial","xiaohongshu"].map(platform=>({platform:platform as import("@creatoros/contract").PlatformAccountCapabilitiesResource["platform"],bind:(platform==="douyin"||((platform==="xiaohongshu"||platform==="kuaishou")&&!!localBindingStages[platform]))?{available:true,reason:"已接入平台登录与真实身份读取",method:"qr" as const}:{available:false,reason:"尚未接入该平台身份绑定",method:"none" as const},collect:{available:platform==="douyin"||((platform==="xiaohongshu"||platform==="kuaishou")&&!!localBindingStages[platform]),reason:(platform==="douyin"||((platform==="xiaohongshu"||platform==="kuaishou")&&!!localBindingStages[platform]))?"已接入作品与明细采集":"尚未接入该平台自动采集"},publish:{available:false,reason:"尚未接入自动发布"},draft:{available:false,reason:"尚未接入平台草稿保存"},manual:{available:true,reason:"可登记账号、导出物料与录入真实发布记录"}})),
+    bindingCapabilities:async()=>["douyin","kuaishou","wechatVideo","wechatOfficial","xiaohongshu"].map(platform=>({platform:platform as import("@creatoros/contract").PlatformAccountCapabilitiesResource["platform"],bind:(platform==="douyin"||localBindingAvailable(platform))?{available:true,reason:"已接入平台登录与真实身份读取",method:"qr" as const}:{available:false,reason:"尚未接入该平台身份绑定",method:"none" as const},collect:{available:platform==="douyin"||localBindingAvailable(platform),reason:(platform==="douyin"||localBindingAvailable(platform))?(platform==="wechatVideo"||platform==="wechatOfficial"?"已接入后台原生报表采集":"已接入作品与明细采集"):"尚未接入该平台自动采集"},publish:{available:false,reason:"尚未接入自动发布"},draft:{available:false,reason:"尚未接入平台草稿保存"},manual:{available:true,reason:"可登记账号、导出物料与录入真实发布记录"}})),
     db,
     now: deps.now,
     nextId: deps.nextId,
@@ -4625,12 +4631,15 @@ dispatchIntelligenceRun});
     authState: "pending" as const, runtimeState: "ready" as const,
     reasonCode: null, lastVerifiedAt: null,
   }));
+  const nativeReportMembership=createMembershipLockService(db);
+  const wechatNativeCapabilities=(platform:'wechatOfficial'|'wechatVideo')=>wechatSource.configured?(['bind','nativeReports'] as const).map(capability=>({platform,capability,supported:true,authState:'pending' as const,runtimeState:'ready' as const,reasonCode:null,lastVerifiedAt:null})):[];
   const platformCollectionService = createPlatformCollectionService({
     db,
     readScheduledOwner: (ctx, taskId, accountId) => aiService.readScheduledCollectionOwner(ctx, taskId, accountId),
     now: deps.now,
     nextId: deps.nextId,
-    sourceAdapters: { xiaohongshu: xhsReady, kuaishou: kuaishouReady },
+    nativeReportOwnership:{freeze:(tx,c,accountId)=>nativeReportMembership.lock(tx,{...c,accountId}),assert:(tx,frozen)=>nativeReportMembership.assertFrozen(tx,frozen)},
+    sourceAdapters: { xiaohongshu: xhsReady, kuaishou: kuaishouReady, wechatOfficial:wechatNativeCapabilities('wechatOfficial'),wechatVideo:wechatNativeCapabilities('wechatVideo') },
     metricDictionary: { xiaohongshu: {
       view_count: { metricKey: "view_count", unit: "count" },
       likes: { metricKey: "like_count", unit: "count" },
@@ -4675,6 +4684,24 @@ dispatchIntelligenceRun});
       }
     },
   });
+  const pendingWechatStops=new Map<string,()=>Promise<void>>();
+  const executeWechatNative=createWechatNativeCollector({
+    workerId:deps.nextId('wechat-native-worker'),now:()=>Date.parse(deps.now()),
+    claimLease:(attemptId,workerId)=>platformCollectionService.claim(attemptId,workerId),
+    renewLease:(attemptId,generation,leaseToken)=>platformCollectionService.renewLease(attemptId,generation,leaseToken),
+    commitPage:page=>platformCollectionService.commitPage(page),
+    failRun:(attemptId,generation,leaseToken,status,reason)=>platformCollectionService.failRun(attemptId,generation,leaseToken,status,reason),
+    authorizeProfile:async(c,lease,signal)=>{signal.throwIfAborted();return profileAuthority.authorizeBindingTarget(c,lease.accountId,(scope,id)=>platformAccountService.getAccount(scope,id));},
+    acquireProfile:(authDir,signal)=>hostProfileLifecycle.acquire(authDir,signal),
+    parseReport:async input=>(await import('@creatoros/ai-worker/platform/wechat-native-report-parser')).parseWechatNativeReport(input),
+    collectReports:async options=>{await wechatSource.collectNativeReports(options.platform,options.directory,options.expectedPlatformIdentity,{signal:options.signal,deadlineAt:new Date(options.deadlineAt).toISOString(),onStopped:options.onStopped,onStopUnconfirmed:options.onStopUnconfirmed,onDiagnostic:event=>console.warn('[wechat-native-report]',event)},report=>options.onReport({...report,platform:options.platform}));},
+    onStopUnconfirmed:(attemptId,retry)=>{pendingWechatStops.set(attemptId,retry);hostBrowserShutdownScope.register(async()=>{await retry();pendingWechatStops.delete(attemptId);});},
+  });
+  const executeWechatCollection=async(c:RequestContext,run:CollectionRunResource,signal?:AbortSignal)=>{
+    if(run.status==='partial'&&run.reasonCode==='TASK_TIMEOUT')return;
+    const retry=pendingWechatStops.get(run.attemptId);if(retry){await retry();pendingWechatStops.delete(run.attemptId);}
+    await executeWechatNative(c,run,signal);
+  };
   const activeXhsCollections = new Map<string, Promise<void>>();
   const enqueuePlatformCollection=createAccountCollectionQueue();
   const executeKuaishouCollection = async (ctx: RequestContext, run: CollectionRunResource, signal?:AbortSignal) => {
@@ -4863,7 +4890,7 @@ dispatchIntelligenceRun});
     const task = enqueuePlatformCollection(scoped,async () => {
       signal?.throwIfAborted();
       const account = await platformAccountService.getAccount(scoped, run.accountId);
-      return account.platform === "kuaishou" ? executeKuaishouCollection(scoped, run,signal) : executeXhsCollection(scoped, run,signal);
+      return account.platform==='wechatOfficial'||account.platform==='wechatVideo'?executeWechatCollection(scoped,run,signal):account.platform === "kuaishou" ? executeKuaishouCollection(scoped, run,signal) : executeXhsCollection(scoped, run,signal);
     },signal).finally(() => {
       activeXhsCollections.delete(run.attemptId);
     });
@@ -4938,6 +4965,7 @@ dispatchIntelligenceRun});
   });
   const periodicPlatformCollection = createPeriodicPlatformCollection({
     recoveryOnly:true,
+    contextForAccount:async(c,account)=>{if(account.platform!=='wechatVideo'&&account.platform!=='wechatOfficial')return {...c,accountId:account.id};const member=await accountGroupService.forAccount({...c,accountId:account.id},account.id);return {...c,accountId:account.id,groupId:member.groupId,membershipVersion:member.version};},
     listAccounts: (ctx, query) => platformAccountService.listAccounts(ctx, query),
     latestRun: (ctx, accountId, capability) => platformCollectionService.latestRun(ctx, accountId, capability),
     start: (ctx, input) => platformCollectionService.start(ctx, input),
@@ -4950,6 +4978,12 @@ dispatchIntelligenceRun});
 
   localBindingStages.xiaohongshu=createLocalPlatformAccountBindingStage({db,...deps,authority:profileAuthority,lifecycle:hostProfileLifecycle,platform:'xiaohongshu',scopes:['workCatalog','workMetrics'],loadLogin:async()=>{const source=await import('@creatoros/ai-worker/platform/xhs-browser-source');return (directory,controls)=>source.loginXhsCreator(directory,controls.signal,controls);},commitAuthorization:async(tx,c,accountId,identity)=>{if(!identity.collectionProof)throw Error('平台身份证明尚未读取');await platformCollectionService.commitVerifiedBinding(tx,c,{accountId,platform:'xiaohongshu',platformIdentity:identity.externalAccountId,...identity.collectionProof});}});
   localBindingStages.kuaishou=createLocalPlatformAccountBindingStage({db,...deps,authority:profileAuthority,lifecycle:hostProfileLifecycle,platform:'kuaishou',scopes:['accountOverview','workCatalog','workMetrics'],loadLogin:async()=>{const source=await import('@creatoros/ai-worker/platform/kuaishou-browser-source');return (directory,controls)=>source.loginKuaishouCreator(directory,controls);},commitAuthorization:async(tx,c,accountId,identity)=>{if(!identity.collectionProof)throw Error('平台身份证明尚未读取');await platformCollectionService.commitVerifiedBinding(tx,c,{accountId,platform:'kuaishou',platformIdentity:identity.externalAccountId,...identity.collectionProof});}});
+  if(wechatSource.configured)for(const platform of ['wechatOfficial','wechatVideo'] as const){
+    localBindingStages[platform]=createLocalPlatformAccountBindingStage({db,...deps,authority:profileAuthority,lifecycle:hostProfileLifecycle,platform,scopes:['nativeReports'],loadLogin:async()=>((directory,controls)=>wechatSource.login(platform,directory,{...controls,onDiagnostic:event=>console.warn('[wechat-binding]',event)})),commitAuthorization:async(tx,c,accountId,identity)=>{
+      if(!identity.collectionProof)throw Error('平台身份证明尚未读取');
+      await platformCollectionService.commitVerifiedBinding(tx,c,{accountId,platform,platformIdentity:identity.externalAccountId,...identity.collectionProof});
+    }});
+  }
   const accountBindingService=createAccountBindingService({db,...deps,localStages:localBindingStages,
     stage:createDouyinAccountBindingStage({db,base:douyinAuthDirBase,authority:profileAuthority,lifecycle:hostProfileLifecycle,...deps,loadCdp:loadDouyinCdp}),
     capabilities:ctx=>platformAccountService.getBindingCapabilities(ctx),
@@ -4959,7 +4993,7 @@ dispatchIntelligenceRun});
       if(!await accountGroupService.hasVerifiedBinding(c,accountId))throw new Error('绑定成功回执尚未完成，请保留原扫码任务');
       const member=await accountGroupService.forAccount(c,accountId);
       const account=await platformAccountService.getAccount(c,accountId),frozen={...c,accountId,groupId:member.groupId,membershipVersion:member.version,source:'ingestion' as const};
-      if(['douyin','xiaohongshu','kuaishou'].includes(account.platform))await bootstrapDouyinOnBind(frozen);
+      if(['douyin','xiaohongshu','kuaishou','wechatVideo','wechatOfficial'].includes(account.platform))await bootstrapDouyinOnBind(frozen);
     },
     onBoundError:()=>console.warn('[account-binding] 账号已绑定，默认采集计划补齐未完成，下次启动会按真实账号重试'),
   });

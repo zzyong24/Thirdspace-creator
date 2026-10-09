@@ -9,9 +9,23 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1170 | 无损归档原浏览器失败上下文并恢复提交检查 | 🔨 待办 | — | — | [实际失败](docs/features/t1170-raw-browser-evidence-storage.md) | 新增原PW上下文摘录含三行尾空格使staged diff真实exit2；原字节/SHA私有加gzip无损保留，不改原manifest/失败或Git检查；产品写集为空。 |
+| T-1169 | 修复账号转组弹窗关闭后焦点丢失 | 🔨 待办 | PASS[REV:6b4388bed640] | — | [实际走查与SPEC](docs/features/t1169-account-transfer-focus-return.md) | 独立Cua确认丢焦并正式审/start；真实6RED含三转组，最终51组件PASS、原Chrome六次Esc回焦、切组/脱离DOM守卫和174LED通过；独立局部PASS，最终Gate/安装待验。 |
+| T-1168 | 统一原生报表身份恢复态的提示与主操作 | 🔨 待办 | PASS[REV:5d38b98b8f17] | — | [实际视觉与SPEC](docs/features/t1168-native-report-recovery-actions.md) | 原冲突提示/红次级恢复与32px保留证据，正式审/start后恢复态和cap优先RED；最终51组件、Chrome24px/一致主动作与0副作用、174LED及独立局部PASS；最终Gate/真人待验。 |
+| T-1167 | 修复采集终态等待在途续租无法返回 | 🔨 待办 | PASS[REV:40609910e1a7] | — | [独立反例与SPEC](docs/features/t1167-collector-pending-renewal-finalization.md) | 原finally等pending心跳已按独评6RED/原63GREEN修复，当前原execute终态不等失控续租且晚结果守卫保留；全timeout仅旧27静态失败/运行时166PASS，当前窄复核PASS，不代签其它端口或真人。 |
+| T-1166 | 校正新报告旅程有限串行外层预算 | 🔨 待办 | PASS[REV:04e1fdc238d0] | — | [独立预算检查与SPEC](docs/features/t1166-report-journey-outer-budget.md) | 新case25,200,000ms/runner26,400,000ms覆盖有限串行加清理，内层120秒/0retry不变；61路径冻结当前Chrome79秒exit0，独立预算复核PASS；旧27静态欠债仍exit1。 |
+| T-1165 | 修复平台身份拒绝在正式HTTP链路丢失错误码与扫码恢复 | 🔨 待办 | PASS[REV:e2674ba1ac3b] | — | [实际缺陷与SPEC](docs/features/t1165-platform-scope-error-envelope.md) | 保原Chrome52秒400string失败和trace，固定已有SCOPE_MISSING原400进入合同；正式独评/真实RED→69GREEN，当前Chrome原链恢复可见/0副作用，窄复核PASS；最终Gate与真人待验。 |
+| T-1164 | 校正独立审核输入绑定与证据字段 | 🔨 待办 | — | — | [实际诊断](docs/features/t1164-review-input-binding-and-evidence-kind.md) | 保原非法packet拒绝/不同SPEC读集；独立现字节重读正规record0，原verifyReviewReceipt核当前六份PASS，完整audit原23历史错误保留；未改门/产品，最终canonical待验。 |
+| T-1163 | 校正迁移原测试所需的隔离PostgreSQL角色 | ✅ 待办 | — | — | [实际诊断](docs/features/t1163-isolated-postgres-test-role.md) | 原backend109例105PASS/4FAIL，原硬编码55422/zyongzhu角色不存在；只核本会话隔离cluster后补测试LOGIN CREATEDB角色，原迁移/恢复断言不删，不改用户库或产品。 |
+| T-1162 | 核对注册表预期缺失的当前五个公开操作 | ✅ 待办 | PASS[REV:122abbd28afd] | — | [实际缺陷与SPEC](docs/features/t1162-registry-approved-route-expectation.md) | 当前contract12例11PASS/1FAIL，缺5旧operation预期；核实际已审出处后只固定补清单，原extra拒绝保留，不自动白名单或改产品。 |
+| T-1161 | 核对微信账号转组与隐藏管理入口 | 🔨 待办 | PASS[REV:22a46ffc1285] | — | [SPEC](docs/features/t1161-preserve-wechat-account-management.md) | 原截断diff误读已澄清，无凭误读改产品；独立Cua实际展开及Chrome六窗口转组入口确认，另发现真实丢焦交T1169修；原CONCERNS保留，真人转组/扫码未执行。 |
+| T-1160 | 校正独立审核报告提前占用正式输出路径 | ✅ 待办 | — | — | [实际诊断](docs/features/t1160-spec-review-report-path-collision.md) | T1159独评PASS，但root误放手工报告到reviewctl输出路径，原record真实exit1拒绝legacy覆盖；只保原件后让原工具生成，不改验证器/旧审核或产品。 |
+| T-1159 | 在当前main整合微信原生报表、绑定归属与调度闭包 | 🔨 待办 | PASS[REV:914cad514a19] | 待验 | [SPEC](docs/features/t1159-current-wechat-native-report-integration.md) · [验收合同](docs/verification/t1159/PAGE_SPEC.md) | T1124剩余56路径，来源293d统计页导航UNKNOWN/0报告/两实验用尽；独评后冻结语义移植、当前隔离公共链验收，保纯组/保存/调度与原研究暂停，不代签真人微信或安装。 |
+| T-1158 | 核对微信来源研究暂停对当前源码整合的准入 | ✅ 待办 | — | — | [实际诊断](docs/features/t1158-wechat-source-research-admission.md) | 来源最新视频号同步0报告、统计页导航未知、两实验用尽；原研究卡保留，独立核冻结移植/当前门，不换ID重置预算或冒称微信已跑通。 |
+| T-1157 | 校正验收报告运行时字段混入夹具声明 | ✅ 待办 | — | — | [实际诊断](docs/features/t1157-frontend-runtime-report-field.md) | 原Chrome两PASS但正式报告校验exit1，runtime混入fixture；保原FAIL，仅准确分离运行时与数据声明，不改验证器/产品或冒称全验收。 |
 | T-1156 | 补齐画幅截图前参考缩略图加载观察 | ✅ 待办 | — | — | [实际观察](docs/features/t1156-aspect-reference-capture-readiness.md) | 原Chrome2PASS/exit0但根看900修改前图参考未加载；保原8图，采证前等具体真实PNG解码再原读写旅程，不改产品或代签视觉。 |
 | T-1154 | 核对原生画幅选项被禁用观察读取成父控件 | ✅ 待办 | — | — | [实际诊断](docs/features/t1154-native-option-disabled-observation.md) | 原Chrome1PASS/1FAIL，240次option实际disabled但matcher读enabled；保原失败，核实际follow-label及同构控件，仅校准原生属性观察，不改产品/删禁用要求。 |
-| T-1155 | 核对浏览器导航时本地服务连接中断日志 | 🔨 待办 | — | — | [实际诊断](docs/features/t1155-browser-navigation-connection-abort.md) | 当前三轮原日志aborted/ECONNRESET及uncaughtException，主要断言失败另有原因；保原日志，核请求/进程与后续公开操作，不猜根因或屏蔽错误。 |
+| T-1155 | 核对浏览器导航时本地服务连接中断日志 | ⏸️ 待办 | — | — | [实际诊断](docs/features/t1155-browser-navigation-connection-abort.md) | 当前三轮原日志aborted/ECONNRESET及uncaughtException，主要断言失败另有原因；保原日志，核请求/进程与后续公开操作，不猜根因或屏蔽错误。 |
 | T-1153 | 校正画幅浏览器业务alert与路由播报重复定位 | ✅ 待办 | — | — | [实际诊断](docs/features/t1153-current-browser-alert-scope.md) | 当前Chrome1PASS/1FAIL，实际模式拒绝和引用保留已走过，alert命中业务与Next播报器两项；保FAIL，限定真实main，不first/force/删中文断言。 |
 | T-1152 | 修正画幅浏览器准备使用不存在模板ID | ✅ 待办 | — | — | [实际诊断](docs/features/t1152-current-browser-template-identity.md) | 当前Chrome初始save两404，trace明确模板快照不存在；保原日志，仅读公开真实模板ID/version准备，不改权限/产品或删除快照断言。 |
 | T-1151 | 校正新画幅浏览器能力响应缺两种模式 | ✅ 待办 | — | — | [实际诊断](docs/features/t1151-current-browser-capability-fixture.md) | 独立静态复核IMP-001，未启动Chrome；原两项fixture违反四项schema，保原件，仅补不可用视频模式并原schema校验，不改产品或断言。 |

@@ -14,20 +14,27 @@ export function createPlatformMetricsCollector(ports:{
  return async(ctx:RequestContext,taskId:string,signal?:AbortSignal):Promise<CollectResult>=>{
   if(!ctx.accountId)throw Error('平台采集缺少真实账号');
   const account=await ports.account(ctx,ctx.accountId);
-  if(account.platform!=='kuaishou'&&account.platform!=='xiaohongshu')throw Error('该平台尚未接入作品数据同步');
+  if(!['kuaishou','xiaohongshu','wechatVideo','wechatOfficial'].includes(account.platform))throw Error('该平台尚未接入作品数据同步');
   const pending:CollectResult={itemsNew:0,itemsUpdated:0,continueCollection:true,retryAfterMs:60_000,message:'原平台采集尚未完成，将沿原任务继续'};
   const collect=async(capability:Capability,key:string)=>{
    signal?.throwIfAborted();
    let run:CollectionRunResource;try{run=await ports.start(ctx,{accountId:ctx.accountId!,capability,clientRequestId:key});
    if(run.status==='needsAuth')await ports.resumeAuthorization?.(ctx,ctx.accountId!,run.attemptId,taskId);
    if(run.status==='needsAuth')run=await ports.status(ctx,ctx.accountId!,run.attemptId);
+   if(run.capability==='nativeReports'&&run.status==='partial'&&run.reasonCode==='TASK_TIMEOUT')throw Error('本次数据同步等待结束，已取得数据保留');
    await ports.schedule(ctx,run,signal);signal?.throwIfAborted();
    const state=await ports.status(ctx,ctx.accountId!,run.attemptId);
+   if(state.capability==='nativeReports'&&state.status==='partial'&&state.reasonCode==='TASK_TIMEOUT')throw Error('本次数据同步等待结束，已取得数据保留');
    if(state.status==='needsAuth')throw new PlatformCollectionNeedsAuthError('请到账号管理重新扫码绑定该平台账号');
    if(state.status==='failed'||state.status==='cancelled')throw Error(`平台采集未完成：${state.reasonCode??state.status}`);
    return state;
    }catch(error){if(signal?.aborted)throw error;if(error&&typeof error==='object'&&'code' in error){if(error.code==='LEASE_EXPIRED')return null;if(error.code==='SCOPE_MISSING'||error.code==='LOGIN_REQUIRED')throw new PlatformCollectionNeedsAuthError('该平台账号需要重新扫码核验');}throw error;}
   };
+  if(account.platform==='wechatVideo'||account.platform==='wechatOfficial'){
+   const reports=await collect('nativeReports',`scheduled-${taskId}-reports`);
+   if(reports?.status!=='complete')return pending;
+   return {itemsNew:0,itemsUpdated:0,message:'原生后台报表已同步，可在该账号的数据页查看日期和原始字段'};
+  }
   const catalog=await collect('workCatalog',`scheduled-${taskId}-catalog`);
   if(catalog?.status!=='complete')return pending;
   // catalog消费者可能已创建这些子任务；原目录attempt键保证重复读取不会新建。

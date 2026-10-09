@@ -1,0 +1,14 @@
+{
+  "kind": "lossless-raw-context-storage-map",
+  "storedAt": "2026-10-09T20:41:25.994099+00:00",
+  "originalLogicalPath": "error-context.md",
+  "originalRawSha256": "ccbdd8678d0cbc8153506e88c4498db5c66a6ee35f3d067ba0c749d7503550bd",
+  "currentRawArtifact": "error-context.md.gz",
+  "currentArtifactSha256": "ad1c46fdfcdb4cac0b0ee77b04b2fcdf2a8aad6861236e9b60398a8955ffc579",
+  "privateOriginalPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1170-original-context/error-context.md",
+  "gzipDecodedEqualOriginal": true,
+  "originalManifestAndReviewsUnchanged": true,
+  "rawTextEdited": false,
+  "originalGitCheckExit": 2,
+  "task": "T-1170"
+}

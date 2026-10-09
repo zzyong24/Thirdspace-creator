@@ -1,0 +1,30 @@
+{
+  "actualVisualCheck": "CURRENT_ROOT_VISUAL_CHECK.json",
+  "actualVisualCheckSha256": "14d198ad51ffe522cc2df13153c334d1b5868b24b2143955ee7d2279db169317",
+  "actualVisualCheckedAt": "2026-10-09T19:06:33.434Z",
+  "originalVisualHead": "2af9cab4c4cff2677f470ee096e4f2a2e98fca40",
+  "currentBrowserHead": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "currentBrowser": "current-journey.json",
+  "currentBrowserSha256": "0e8a16162ca1b5a68d63e6bd9ade97fe06e2c304d066e81c6233591fb5275018",
+  "watchedSourceSame": true,
+  "originalSourceHash": {
+    "frontend/src/features/creative-canvas/cover-aspect-ratio-labels.ts": "e78d44f0850bfc3b212804763fb0537713286cd790e63fff399f8170fcb5d408",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "d67ba3e119fc7aa8dc18c2b83a295befdecd710915fccf34d8bc45716780cec9",
+    "frontend/src/features/creative-canvas/canvas-template-library.tsx": "296211da8ab736533477714310744e14ce7ee17e11e230976fee0ec59f8b8899",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "50636caf2a006875d4b2b9d040645a2018a032f6dd94ff436367481998db5b5f",
+    "frontend/src/features/creative-canvas/canvas-template-library.test.tsx": "585702fbe59bccc81ff8f0b1d4517edf5b0c1172930f08fc37ed3998b73b3dff",
+    "frontend/tests/e2e/t1149-cover-aspect-group.spec.ts": "4f4740185171f9d0b51b60602b09899ad00bfb67c38d036c9933a7d5f3ffbf2d",
+    "docs/verification/t1149/run-aspect-journey.mjs": "0efbbc6192d11a805c92ef1689ba60d213dd43b0c663d81247f597ae785ce40a"
+  },
+  "currentSourceHash": {
+    "frontend/src/features/creative-canvas/cover-aspect-ratio-labels.ts": "e78d44f0850bfc3b212804763fb0537713286cd790e63fff399f8170fcb5d408",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "d67ba3e119fc7aa8dc18c2b83a295befdecd710915fccf34d8bc45716780cec9",
+    "frontend/src/features/creative-canvas/canvas-template-library.tsx": "296211da8ab736533477714310744e14ce7ee17e11e230976fee0ec59f8b8899",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "50636caf2a006875d4b2b9d040645a2018a032f6dd94ff436367481998db5b5f",
+    "frontend/src/features/creative-canvas/canvas-template-library.test.tsx": "585702fbe59bccc81ff8f0b1d4517edf5b0c1172930f08fc37ed3998b73b3dff",
+    "frontend/tests/e2e/t1149-cover-aspect-group.spec.ts": "4f4740185171f9d0b51b60602b09899ad00bfb67c38d036c9933a7d5f3ffbf2d",
+    "docs/verification/t1149/run-aspect-journey.mjs": "0efbbc6192d11a805c92ef1689ba60d213dd43b0c663d81247f597ae785ce40a"
+  },
+  "historicalRecordRewritten": false,
+  "basis": "提交只固化相同受测字节，复用已实际看过的八图局部自检，不补拍原生/键盘/模型；原记录不改。"
+}

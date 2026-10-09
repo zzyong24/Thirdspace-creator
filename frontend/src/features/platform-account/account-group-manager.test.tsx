@@ -1,6 +1,6 @@
 import * as React from "react";
 import type {AccountGroupResource} from "@creatoros/contract";
-import { cleanup, fireEvent, render, screen, within, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const router={refresh:vi.fn()};
 const api=vi.hoisted(()=>({listAccountGroups:vi.fn(),listAccounts:vi.fn(),createAccountGroup:vi.fn(),getAccountGroup:vi.fn(),updateAccountGroup:vi.fn(),archiveAccountGroup:vi.fn(),restoreAccountGroup:vi.fn(),previewAccountGroupTransfer:vi.fn(),transferAccountGroupMember:vi.fn(),createAccount:vi.fn(),getAccount:vi.fn(),archiveAccount:vi.fn(),updateAccount:vi.fn(),loginDouyin:vi.fn(),listProjects:vi.fn(),listKnowledge:vi.fn(),listConversations:vi.fn(),getPlatformAccountCapabilities:vi.fn()}));
@@ -8,6 +8,7 @@ vi.mock("next/navigation",()=>({useRouter:()=>router}));
 vi.mock("@/lib/contract-client",()=>({client:api}));
 import { AccountManagerView } from "./account-manager-view";
 import { CURRENT_GROUP_KEY } from "@/lib/http-transport";
+import { notifyAccountsChanged } from "@/lib/account-events";
 const member={id:"m",accountId:"a",groupId:"g",platform:"douyin" as const,accountHandle:"真实账号",status:"active" as const,version:2,joinedAt:"2026-10-01T00:00:00.000Z",leftAt:null};
 const group=(id="g",name="创作者",members=id==="g"?[member]:[])=>({id,userId:"u",name,status:"active" as const,version:1,createdAt:"2026-10-01T00:00:00.000Z",updatedAt:"2026-10-01T00:00:00.000Z",members});
 const renderManager=()=>render(<AccountManagerView viewModel={{accounts:[],groups:[group(),group("h","另一组")]}}/>);
@@ -48,4 +49,32 @@ it("首个空组创建读回后选择新组并清空名称，不能被自动选�
 
 it('三平台扫码入口在能力表内，删除常驻刷新及重复扫码框',async()=>{
  const row=(platform:string)=>({platform,bind:{available:true,reason:'已接入',method:'qr'},collect:{available:true,reason:'真实采集'},publish:{available:false,reason:'尚未接入'},draft:{available:false,reason:'尚未接入'},manual:{available:true,reason:'可登记'}});api.getPlatformAccountCapabilities.mockResolvedValue(['douyin','kuaishou','xiaohongshu'].map(row));renderManager();const table=await screen.findByRole('table',{name:'各平台能力'});await waitFor(()=>expect(within(table).getByRole('button',{name:'扫码绑定快手账号'})).toBeEnabled());expect(within(table).getByRole('button',{name:'扫码绑定抖音账号'})).toBeEnabled();expect(within(table).getByRole('button',{name:'扫码绑定小红书账号'})).toBeEnabled();expect(screen.queryByRole('button',{name:'重新读取平台能力'})).toBeNull();expect(screen.queryByText('兼容扫码入口')).toBeNull();fireEvent.click(within(table).getByRole('button',{name:'扫码绑定快手账号'}));expect(await screen.findByRole('dialog')).toHaveTextContent('扫码绑定快手账号');expect(api.loginDouyin).not.toHaveBeenCalled();
+});
+
+it.each([['wechatOfficial','公众号'],['wechatVideo','视频号']] as const)('T1110 %s真实扫码按钮在能力表中，组成员链接带显式accountId',async(platform,label)=>{const own={...member,platform,accountId:'wechat-real',accountHandle:'本人微信账号'};api.listAccountGroups.mockResolvedValue([{...group(),members:[own]}]);api.getPlatformAccountCapabilities.mockResolvedValue([{platform,bind:{available:true,reason:'真实端口已装配',method:'qr'},collect:{available:true,reason:'原生报表'},publish:{available:false,reason:'未接入'},draft:{available:false,reason:'未接入'},manual:{available:true,reason:'可登记'}}]);render(<AccountManagerView viewModel={{accounts:[],groups:[{...group(),members:[own]}]}}/>);const table=await screen.findByRole('table',{name:'各平台能力'});const trigger=await within(table).findByRole('button',{name:`扫码绑定${label}账号`});expect(trigger).toBeEnabled();expect(screen.getByRole('link',{name:'查看本人微信账号的数据'})).toHaveAttribute('href','/accounts/works?accountId=wechat-real');fireEvent.click(trigger);expect(await screen.findByRole('dialog')).toHaveTextContent(`扫码绑定${label}账号`);expect(api.loginDouyin).not.toHaveBeenCalled();});
+
+it.each(['douyin','wechatVideo','wechatOfficial'] as const)('T1169 %s转组Esc和取消均回原按钮，重复打开不预览或提交',async platform=>{
+ const own={...member,platform};const groups=[{...group(),members:[own]},group('h','另一组')];api.listAccountGroups.mockResolvedValue(groups);
+ render(<AccountManagerView viewModel={{accounts:[],groups}}/>);await screen.findByLabelText('登记平台',{}, {timeout:120000});
+ if(platform!=='douyin')fireEvent.click(screen.getByText('账号管理与能力'));
+ const trigger=screen.getByRole('button',{name:'转组'});
+ for(const close of ['escape','cancel']){
+  trigger.focus();fireEvent.click(trigger);const dialog=await screen.findByRole('dialog',{}, {timeout:120000});expect(within(dialog).getByLabelText('目标账号组')).toHaveValue('h');
+  await act(async()=>{if(close==='escape')fireEvent.keyDown(document,{key:'Escape',code:'Escape'});else fireEvent.click(within(dialog).getByRole('button',{name:'取消'}));});
+  await act(async()=>{await new Promise(resolve=>setTimeout(resolve,0));});expect(screen.queryByRole('dialog')).toBeNull();expect(trigger).toHaveFocus();
+ }
+ expect(api.previewAccountGroupTransfer).not.toHaveBeenCalled();expect(api.transferAccountGroupMember).not.toHaveBeenCalled();
+});
+
+it('T1169切组后保留旧表面也不对旧工作区触发器回焦',async()=>{
+ renderManager();await screen.findByLabelText('登记平台',{}, {timeout:120000});const trigger=screen.getByRole('button',{name:'转组'});trigger.focus();fireEvent.click(trigger);await screen.findByRole('dialog',{}, {timeout:120000});const focused=vi.spyOn(trigger,'focus');
+ localStorage.setItem(CURRENT_GROUP_KEY,'h');await act(async()=>{fireEvent.keyDown(document,{key:'Escape',code:'Escape'});});await act(async()=>{await new Promise(resolve=>setTimeout(resolve,0));});
+ expect(trigger.isConnected).toBe(true);expect(focused).not.toHaveBeenCalled();expect(screen.queryByRole('dialog')).toBeNull();expect(api.previewAccountGroupTransfer).not.toHaveBeenCalled();expect(api.transferAccountGroupMember).not.toHaveBeenCalled();focused.mockRestore();
+});
+it('T1169真实成员回读移除触发器后关闭不对脱离DOM的按钮回焦',async()=>{
+ renderManager();await screen.findByLabelText('登记平台',{}, {timeout:120000});const trigger=screen.getByRole('button',{name:'转组'});trigger.focus();fireEvent.click(trigger);await screen.findByRole('dialog',{}, {timeout:120000});const focused=vi.spyOn(trigger,'focus');
+ api.listAccountGroups.mockResolvedValue([group('g','创作者',[]),group('h','另一组')]);await act(async()=>{notifyAccountsChanged({source:'account-management',groupId:'g',routeRefreshScheduled:true});});
+ await waitFor(()=>expect(screen.queryByRole('button',{name:'转组'})).toBeNull(),{timeout:120000});expect(trigger.isConnected).toBe(false);
+ await act(async()=>{fireEvent.keyDown(document,{key:'Escape',code:'Escape'});});await act(async()=>{await new Promise(resolve=>setTimeout(resolve,0));});
+ expect(focused).not.toHaveBeenCalled();expect(screen.queryByRole('dialog')).toBeNull();expect(api.previewAccountGroupTransfer).not.toHaveBeenCalled();expect(api.transferAccountGroupMember).not.toHaveBeenCalled();focused.mockRestore();
 });

@@ -1,12 +1,12 @@
 import {createHash} from 'node:crypto';
 import {and,eq,inArray,executionTasks,type Db} from '@creatoros/backend';
 import {accountGroupCommands} from '../../schema/account-groups';
-import {ENDPOINTS,type RequestContext} from '@creatoros/contract';
+import {ENDPOINTS,type RequestContext,type CollectionRunResource} from '@creatoros/contract';
 import {createPersistentTaskService,createExecutionLeaseService,type PersistentTaskClaim} from '../execution';
 import {lockWorkspaceMembership} from './membership-lock.service';
 import {OwnershipError,ConflictError,ValidationError} from './platform-account.errors';
 export type BindingTransaction=Parameters<Parameters<Db['transaction']>[0]>[0];
-export interface BindingIdentity {externalAccountId:string;accountHandle:string;followerBaseline?:number;collectionProof?:{proofSource:string;scopes:("accountOverview"|"workCatalog"|"workMetrics")[];verifiedAt:string;expiresAt:string|null};}
+export interface BindingIdentity {externalAccountId:string;accountHandle:string;followerBaseline?:number;collectionProof?:{proofSource:string;scopes:CollectionRunResource["capability"][];verifiedAt:string;expiresAt:string|null};}
 export interface AccountBindingStagePort {
  createStaging(ctx:RequestContext,runId:string):Promise<{stagingKey:string}>;
  login(ctx:RequestContext,input:{stagingKey:string;signal:AbortSignal}):Promise<boolean>;
@@ -18,7 +18,7 @@ export interface AccountBindingStagePort {
  /** 和run成功状态共用tx；FS adopt须可回滚，保留并恢复原目标profile。 */
  commit(ctx:RequestContext,input:{stagingKey:string;identity:BindingIdentity;signal:AbortSignal},tx:BindingTransaction):Promise<{accountId:string;rollbackProfile?:()=>Promise<void>;finalizeProfile?:()=>Promise<void>}>;
 }
-export interface AccountBindingDeps {db:Db;now:()=>string;nextId:(prefix:string)=>string;stage:AccountBindingStagePort;localStages?:Partial<Record<"xiaohongshu"|"kuaishou",AccountBindingStagePort>>;capabilities:(ctx:RequestContext)=>Promise<Array<{platform:string;bind:{available:boolean;reason:string;method:string}}>>;wake?:()=>void;onProfileCleanupError?:(error:unknown,runId:string)=>void;
+export interface AccountBindingDeps {db:Db;now:()=>string;nextId:(prefix:string)=>string;stage:AccountBindingStagePort;localStages?:Partial<Record<"xiaohongshu"|"kuaishou"|"wechatOfficial"|"wechatVideo",AccountBindingStagePort>>;capabilities:(ctx:RequestContext)=>Promise<Array<{platform:string;bind:{available:boolean;reason:string;method:string}}>>;wake?:()=>void;onProfileCleanupError?:(error:unknown,runId:string)=>void;
  /** 成功提交之后的默认任务补齐；失败不回滚身份或改变已成功回执。仅内部组合根。 */
  onBound?:(ctx:RequestContext,accountId:string,runId:string)=>Promise<void>;
  onBoundError?:(error:unknown,runId:string)=>void;}
@@ -44,7 +44,7 @@ export function createAccountBindingService(deps:AccountBindingDeps){
  const workerId=deps.nextId('account-binding-worker');
  function stageFor(platform:string):AccountBindingStagePort{
   if(platform==='douyin')return deps.stage;
-  if(platform==='xiaohongshu'||platform==='kuaishou'){const selected=deps.localStages?.[platform];if(selected)return selected;}
+  if(platform==='xiaohongshu'||platform==='kuaishou'||platform==='wechatOfficial'||platform==='wechatVideo'){const selected=deps.localStages?.[platform];if(selected)return selected;}
   throw new ValidationError('此平台未提供真实扫码绑定端口');
  }
  const active=new Map<string,{controller:AbortController;promise:Promise<void>;kind:"run"|"cleanup"}>();

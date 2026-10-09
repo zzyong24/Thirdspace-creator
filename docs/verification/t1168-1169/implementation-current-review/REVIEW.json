@@ -1,0 +1,548 @@
+{
+  "schema": "creatoros-implementation-independent-review/v1",
+  "taskIds": [
+    "T-1168",
+    "T-1169"
+  ],
+  "reviewKind": "bounded-current-implementation",
+  "verdict": "PASS_BOUNDED",
+  "reviewedAt": "2026-10-09T20:36:19.261242+00:00",
+  "repository": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "actualHead": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "gitState": "aa7de1e9基点上的dirty冻结字节；评审者未改仓库",
+  "summary": "PASS：两项实施符合已独立PASS的精确SPEC。身份恢复页头唯一主操作、能力优先空态、24px标题，以及原转组触发器关闭回焦与失效/切组保护，有真实RED/GREEN、当前冻结Chrome与零副作用证据。仅签这两项局部修复。",
+  "findings": [],
+  "scope": {
+    "productPaths": [
+      "frontend/src/features/platform-account/native-report-panel.tsx",
+      "frontend/src/features/platform-account/account-group-manager.tsx"
+    ],
+    "testPaths": [
+      "frontend/src/features/platform-account/account-group-manager.test.tsx",
+      "frontend/src/features/platform-account/native-report-panel.test.tsx",
+      "frontend/tests/e2e/t1159-wechat-native-report.spec.ts"
+    ],
+    "testsOrBusinessExecutedByReviewer": false,
+    "repositoryModifiedByReviewer": false,
+    "taskStatusModifiedByReviewer": false,
+    "liveBrowserOperatedByReviewer": false,
+    "artifactScreenshotsReadByReviewer": [
+      "docs/verification/t1168-1169/fixed-current/screenshots/wechatVideo-identity-required.png",
+      "docs/verification/t1168-1169/fixed-current/screenshots/wechatOfficial-empty-390.png"
+    ],
+    "writesOnly": [
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-implementation-review/REVIEW.md",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-implementation-review/REVIEW.json"
+    ]
+  },
+  "conclusions": [
+    {
+      "taskId": "T-1168",
+      "verdict": "PASS_BOUNDED",
+      "details": "bindingRequired/真实needsAuth时仅页头原恢复Button为主操作，错误文字和原取消/核对保留；原Dialog/AccountBindingPanel及原key恢复链未新增执行。!canCollect先于恢复空态，disabled门保持；正常/恢复/能力关闭文案无冲突。h1 text-xl由未改tokens映射24px，六次Chrome computed style实断言24px。"
+    },
+    {
+      "taskId": "T-1169",
+      "verdict": "PASS_BOUNDED",
+      "details": "两个现转组按钮共用openTransfer，记录原DOM、selectedGroupId和真实workspaceGroupId；关闭时清ref并检查alive/isConnected/所选组/当前workspace后才focus。Esc/取消重复打开及0preview/commit、旧表面切组不回焦、回读移除DOM不回焦均有当前全套51项组件证据；原两微信账号六视口Chrome均实断言Esc回原按钮。绑定Dialog不在此产品修复。"
+    }
+  ],
+  "currentReadSha256": {
+    "frontend/src/features/platform-account/account-group-manager.test.tsx": "e6256d79b570a6078a307fd0804a8d0cd72d4f709c99d0e7142d34495a6cacd7",
+    "frontend/src/features/platform-account/account-group-manager.tsx": "2f03585d319e21cb24f850dc22aba80f45ed1a3761a4734bfed6e831fdeb67b2",
+    "frontend/src/features/platform-account/native-report-panel.test.tsx": "b8717bb3e466d4c6c8ea11d234113c3709b156a29dffa3bad763ce0095541e6d",
+    "frontend/src/features/platform-account/native-report-panel.tsx": "5a28c3e89a1ce62d00e8f16c53228f97548946f4e09446e6c0d4fc0c171ad4b4",
+    "frontend/tests/e2e/t1159-wechat-native-report.spec.ts": "df40efd73678a1d7d36d251ebe17164a5d57f9affde00d7b9396f0e0c554a200",
+    "docs/features/t1168-native-report-recovery-actions.md": "7da66499530d7ad4b82b3302272eafcb2dae028a723e8f7e1905c1008297ad7c",
+    "docs/features/t1169-account-transfer-focus-return.md": "1dcc665eabff281ded9c8c91be135a3eed10745d75a10c60d1be557c4e45a4fe",
+    "docs/features/t1168-native-report-recovery-actions.review.md": "839d4948204e941380c615338f21ee6704267920d5563aac6262efc52cf0c47f",
+    "docs/features/t1169-account-transfer-focus-return.review.md": "e5ad871e325d897903e027fd6605efff26d8b198a9a387fa424a62056900d432",
+    "frontend/src/styles/tokens.css": "9a61b49eee0c84da8c820b7d9175afa0a9350edf603aa584eb5dfafe4c6af675",
+    "frontend/src/app/globals.css": "89a8702d4958e924039f9e59838312267631b51e0434d8b8a29d3786e0bbf15c",
+    "docs/verification/t1159/run-report-journey.mjs": "8c2ca0103be7c954043db4ae1e88f9385c5d6f3ae0802b8076857456e31ce98f"
+  },
+  "sourceFreeze": {
+    "currentJourneyPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/current-journey.json",
+    "currentJourneySha256": "82201ff09f45af4f87599fcae94fa21b81205c22281f3eb1bbede6243e970c5b",
+    "pathCount": 61,
+    "beforeAfterCurrentAllEqual": true,
+    "previousJourneyPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/fixed-beforecommit/current-journey.json",
+    "previousJourneySha256": "4dec1b4a3db407c63bef50cbec1eec7516464ec27bdff291d9d1e3d848c94131",
+    "samePathSet": true,
+    "changedPathsFromPrevious": [
+      "frontend/src/features/platform-account/account-group-manager.test.tsx",
+      "frontend/src/features/platform-account/account-group-manager.tsx",
+      "frontend/src/features/platform-account/native-report-panel.test.tsx",
+      "frontend/src/features/platform-account/native-report-panel.tsx",
+      "frontend/tests/e2e/t1159-wechat-native-report.spec.ts"
+    ],
+    "unchangedPathsCount": 56,
+    "note": "仅所记录61路径内比较；不宣称整个dirty仓库只有5文件改动。后台、合同、绑定组件及原runner在这56不变路径内。"
+  },
+  "actualCommandEvidence": [
+    {
+      "name": "t1168-1169-original-behavior-red",
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-original-behavior-red.json",
+      "receiptSha256": "489bfb5e156ffc35fb0d1e841f9501404666388f50f9f32eb1d1df59b21108b6",
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-original-behavior-red.log",
+      "logSha256": "39dc1ab7635c85ab29c9be76fc7495da0f99f9b44fc603ddf062bcf662469533",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/platform-account/native-report-panel.test.tsx",
+        "src/features/platform-account/account-group-manager.test.tsx",
+        "-t",
+        "T1168|T1169",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=120000",
+        "--hookTimeout=120000"
+      ],
+      "exitCode": 1,
+      "elapsedSeconds": 4.375576374994125,
+      "observedResult": "真实行为6 FAIL，过滤器使43旧测试跳过；非全套结果",
+      "archiveReceiptPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-original-behavior-red.json",
+      "archiveReceiptSha256": "489bfb5e156ffc35fb0d1e841f9501404666388f50f9f32eb1d1df59b21108b6",
+      "archiveLogGzipPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-original-behavior-red.log.gz",
+      "archiveLogGzipSha256": "fb4b4ab3db3f8f77033704d27bb659f1bbd913fe0b754f6df19b6f92a77fcf35"
+    },
+    {
+      "name": "t1168-1169-original-panel-green",
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-original-panel-green.json",
+      "receiptSha256": "41e2c852b04b4f886684aefdb83ee69726bb9069e3c71e917059ae5cde753dce",
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-original-panel-green.log",
+      "logSha256": "1c78f6a41e7b5146801641446572ce85688cab27d94bb4a4425f8be8b08e956a",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/platform-account/native-report-panel.test.tsx",
+        "src/features/platform-account/account-group-manager.test.tsx",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=120000",
+        "--hookTimeout=120000"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 5.696852250024676,
+      "observedResult": "原两组件49 PASS，无skip",
+      "archiveReceiptPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-original-panel-green.json",
+      "archiveReceiptSha256": "41e2c852b04b4f886684aefdb83ee69726bb9069e3c71e917059ae5cde753dce",
+      "archiveLogGzipPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-original-panel-green.log.gz",
+      "archiveLogGzipSha256": "b24e9817e4f28099ebd335cc2ffecd2deb25d2531a45492b0d18b4e60123e3c5"
+    },
+    {
+      "name": "t1168-capability-priority-red",
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-capability-priority-red.json",
+      "receiptSha256": "5f439a076fb4db327ca9cd33ec9e5adea3d2f9bea8d217d9d86262f5d6f3e916",
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-capability-priority-red.log",
+      "logSha256": "f5cb283d58e0692b9be775854d9c35f6f3c04b8be1f88f8a3b12eaca3d56a44c",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/platform-account/native-report-panel.test.tsx",
+        "-t",
+        "缺少绑定后的采集能力关闭",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=120000",
+        "--hookTimeout=120000"
+      ],
+      "exitCode": 1,
+      "elapsedSeconds": 2.8019665839965455,
+      "observedResult": "能力关闭优先文案1 FAIL，过滤器使27项跳过",
+      "archiveReceiptPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-capability-priority-red.json",
+      "archiveReceiptSha256": "5f439a076fb4db327ca9cd33ec9e5adea3d2f9bea8d217d9d86262f5d6f3e916",
+      "archiveLogGzipPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-capability-priority-red.log.gz",
+      "archiveLogGzipSha256": "3ce5e48d44d199d5c39f47d59c569a9b9f11f0b071907a44ef46ec08242ebd74"
+    },
+    {
+      "name": "t1168-1169-final-panel-green",
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-final-panel-green.json",
+      "receiptSha256": "abb841361bd61dc2ab91c40cfe56574f87b4a2d113c9361faad2b4bf49568e7f",
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-final-panel-green.log",
+      "logSha256": "a90afaa0243acb10afe550f1b5a5f8f6d18d1ea90e27ce6d1d1941fb7c22af63",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/platform-account/native-report-panel.test.tsx",
+        "src/features/platform-account/account-group-manager.test.tsx",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=120000",
+        "--hookTimeout=120000"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 5.309379958023783,
+      "observedResult": "最终原两组件51 PASS，无skip",
+      "archiveReceiptPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-final-panel-green.json",
+      "archiveReceiptSha256": "abb841361bd61dc2ab91c40cfe56574f87b4a2d113c9361faad2b4bf49568e7f",
+      "archiveLogGzipPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-final-panel-green.log.gz",
+      "archiveLogGzipSha256": "56991d03c14e1d1524adc9c0e6dc0dbce7b8468f550c16174ef187e426c64268"
+    },
+    {
+      "name": "t1168-1169-current-frontend-type",
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-current-frontend-type.json",
+      "receiptSha256": "618f33342acfd4351bc715f384f632946b0326025d99db637ab444007beb2a30",
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-current-frontend-type.log",
+      "logSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 9.640812333032954,
+      "observedResult": "exit 0，9.640812333秒",
+      "archiveReceiptPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-current-frontend-type.json",
+      "archiveReceiptSha256": "618f33342acfd4351bc715f384f632946b0326025d99db637ab444007beb2a30",
+      "archiveLogGzipPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-current-frontend-type.log.gz",
+      "archiveLogGzipSha256": "bb162b147fd26db931f8bf6e5f441deae134a10b66a85ae5fd79392bbbbb5c7c"
+    },
+    {
+      "name": "t1168-1169-current-led047",
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-current-led047.json",
+      "receiptSha256": "c3089be47b71681dbd3c77e93aaec656e163fd2996cf5593d1e657522d49f37a",
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-current-led047.log",
+      "logSha256": "6263c556d836d0235bf5be41c68cd2dc7a117dc5639b4558ca99432718798c2b",
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/copilot/ai-copilot-interactions.test.tsx",
+        "src/features/knowledge/knowledge-dump-zone.test.tsx",
+        "src/features/topics/topics-interactions.test.tsx",
+        "src/components/overlays/overlay-routing.test.tsx",
+        "src/lib/copilot-navigation.test.ts",
+        "src/features/copilot/chat-tool-trace.test.tsx",
+        "src/features/automations/run-controls.test.tsx",
+        "src/features/automations/cadence.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=120000",
+        "--hookTimeout=120000"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 20.16349683300359,
+      "observedResult": "原8文件174 PASS，无skip",
+      "archiveReceiptPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-current-led047.json",
+      "archiveReceiptSha256": "c3089be47b71681dbd3c77e93aaec656e163fd2996cf5593d1e657522d49f37a",
+      "archiveLogGzipPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-current-led047.log.gz",
+      "archiveLogGzipSha256": "480ac81968cd679c7a14df1f121b547bec2b8747f7941f1fb4c7eb60e2698dfc"
+    },
+    {
+      "name": "t1168-1169-boundary",
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-boundary.json",
+      "receiptSha256": "86b3a7a17ce014e91f656aa26e81bca48585a0d0d65c0c165199c8d5865aa080",
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-boundary.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "argv": [
+        "node",
+        "orchestrator/process/boundary-scan.mjs",
+        "--quiet"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.5695632080314681,
+      "observedResult": "exit 0",
+      "archiveReceiptPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-boundary.json",
+      "archiveReceiptSha256": "86b3a7a17ce014e91f656aa26e81bca48585a0d0d65c0c165199c8d5865aa080",
+      "archiveLogGzipPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-boundary.log.gz",
+      "archiveLogGzipSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+    },
+    {
+      "name": "t1168-1169-semantic",
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-semantic.json",
+      "receiptSha256": "aba551220721b28038ada7fb1c0980ce1cf2a95c33f9ade4627b41ca68803eee",
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-semantic.log",
+      "logSha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+      "argv": [
+        "node",
+        "orchestrator/process/semantic-boundary-scan.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.39968162501463667,
+      "observedResult": "exit 0",
+      "archiveReceiptPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-semantic.json",
+      "archiveReceiptSha256": "aba551220721b28038ada7fb1c0980ce1cf2a95c33f9ade4627b41ca68803eee",
+      "archiveLogGzipPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-semantic.log.gz",
+      "archiveLogGzipSha256": "e072a2bbe761c672af0fefcbe0551666845af536ea3fd654ad866bc6507c1ebb"
+    },
+    {
+      "name": "t1168-1169-orphan",
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-orphan.json",
+      "receiptSha256": "a02890a4bb66235ed65a294fa570c93488c60c0ab39d054e841e7e2bf00b0ed7",
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-orphan.log",
+      "logSha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "argv": [
+        "node",
+        "orchestrator/process/orphan-scan.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.14295233401935548,
+      "observedResult": "exit 0，0 error / 100 warning",
+      "archiveReceiptPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-orphan.json",
+      "archiveReceiptSha256": "a02890a4bb66235ed65a294fa570c93488c60c0ab39d054e841e7e2bf00b0ed7",
+      "archiveLogGzipPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-orphan.log.gz",
+      "archiveLogGzipSha256": "3f97d9436f7cc5b05bd288981f31306c4990129c3f272bc4975e42446090d153"
+    },
+    {
+      "name": "t1168-1169-current-normal-browser",
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-current-normal-browser.json",
+      "receiptSha256": "77219af7001d38e88deb643668d3e788d3794bb91379a547cf535e4a05cee105",
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-1169-current-normal-browser.log",
+      "logSha256": "8611410fa10383298f3173634fa9f5aee54ff5f0e4fdc3410678e99bf7d62e70",
+      "argv": [
+        "node",
+        "docs/verification/t1159/run-report-journey.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 79.36260295799002,
+      "observedResult": "外层exit 0，79.362602958秒；内层1 PASS，0retry",
+      "archiveReceiptPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-current-normal-browser.json",
+      "archiveReceiptSha256": "77219af7001d38e88deb643668d3e788d3794bb91379a547cf535e4a05cee105",
+      "archiveLogGzipPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/t1168-1169-current-normal-browser.log.gz",
+      "archiveLogGzipSha256": "7d49ae3875b78b587217b55c64d29f31889e62fbdf500e53b2c7360dcad9e208"
+    }
+  ],
+  "browserEvidence": {
+    "innerExitCode": 0,
+    "innerElapsedSeconds": 78.378165125,
+    "rawLogPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1159-18QBV9/native-report-journey-raw.log",
+    "rawLogSha256": "3843b0aaa098da1897b3c5bf335d26cf0604d0eb93fd4bb12d4a037c1cd57b89",
+    "innerTestResult": "1 PASS",
+    "retries": 0,
+    "sourceEvidenceSha256": {
+      "docs/verification/t1168-1169/fixed-current/current-journey.json": "82201ff09f45af4f87599fcae94fa21b81205c22281f3eb1bbede6243e970c5b",
+      "docs/verification/t1168-1169/fixed-current/public-read-observation.json": "1cb8ee7494430f10a4875385a72880fc6b5a9ab4894731476293898ce52d3b23",
+      "docs/verification/t1168-1169/fixed-current/post-stop-side-effect-observation.json": "55dd25add876eb74ef85d8be959bb4b0ecdf3e164907b7f29e4ef5a4171808b1"
+    },
+    "platforms": [
+      "wechatVideo",
+      "wechatOfficial"
+    ],
+    "normalViewports": [
+      1366,
+      900,
+      390
+    ],
+    "transferFocusAssertions": 6,
+    "recoveryDialogOpenEscapeFocusAssertions": 2,
+    "computed24pxAssertions": 6,
+    "observations": [
+      {
+        "accountId": "acct-59a8d5e8-10",
+        "platform": "wechatVideo",
+        "externalAccountId": null,
+        "before": {
+          "items": [],
+          "nextCursor": null,
+          "total": 0
+        },
+        "after": {
+          "items": [],
+          "nextCursor": null,
+          "total": 0
+        },
+        "refusal": {
+          "httpStatus": 400,
+          "code": "SCOPE_MISSING"
+        },
+        "refresh": true,
+        "repeat": true,
+        "back": true
+      },
+      {
+        "accountId": "acct-59a8d5e8-13",
+        "platform": "wechatOfficial",
+        "externalAccountId": null,
+        "before": {
+          "items": [],
+          "nextCursor": null,
+          "total": 0
+        },
+        "after": {
+          "items": [],
+          "nextCursor": null,
+          "total": 0
+        },
+        "refusal": {
+          "httpStatus": 400,
+          "code": "SCOPE_MISSING"
+        },
+        "refresh": true,
+        "repeat": true,
+        "back": true
+      }
+    ],
+    "bindingStarts": 0,
+    "domainResponsesReplaced": false,
+    "postStopSameFreshDatabase": {
+      "source": "same fresh PGlite after original test server stopped",
+      "accountIds": [
+        "acct-59a8d5e8-10",
+        "acct-59a8d5e8-13"
+      ],
+      "counts": {
+        "platform_collection_runs": 0,
+        "platform_native_reports": 0,
+        "platform_bind_attempts": 0
+      },
+      "wechatProfileFiles": 0,
+      "domainWrites": false,
+      "realUserDataTouched": false
+    },
+    "reviewerActuallyViewedScreenshotSha256": {
+      "docs/verification/t1168-1169/fixed-current/screenshots/wechatVideo-identity-required.png": "0cb0821ea5330a2df32c7fec6f370a87bf44fb237a398e247f8bdd7d57da9daa",
+      "docs/verification/t1168-1169/fixed-current/screenshots/wechatOfficial-empty-390.png": "24c2e566d6234b401260faf3c26a1d3ffd606d83b665cfec3b04b0f07e1ee699"
+    },
+    "archivedRawLogPath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1168-1169/fixed-current/current-journey.log.gz",
+    "archivedRawLogGzipSha256": "49e4e790e60b3d3fd72cc0f043f40a61d1173cf8923a3e3542f3cbe56f6d6581",
+    "archiveNote": "全部当前证据已归档；JSON/截图与本评审实读字节相同，逐份解压日志SHA匹配原receipt/raw log。boundary/semantic/orphan使用确切原命令文件名，没有伪补current前缀。"
+  },
+  "historicalReportsRetainedSha256": {
+    "docs/verification/t1159/current-visual-review/REVIEW.md": "bd15629d479bec3a90d496159698ad1e840430ab59441075a580246849d85dc6",
+    "docs/verification/t1159/current-visual-review/REVIEW.json": "d08f4d598cbb295a12495a79feb6e0cd906e53c0c33f966d76e5685fae4a763b",
+    "docs/verification/t1159/independent-task-walk/REPORT.md": "ea891017403bcf694c7f0b779e5f325c71cb4c3be821a89beec5c3b4cf1bd7c5",
+    "docs/verification/t1159/independent-task-walk/REPORT.json": "e89b724489288910d287cb18ddef63806ad8ed881db1a2ac9df4efe7717d0984"
+  },
+  "limits": [
+    "SPEC formal PASS与原视觉/任务walk FAIL未修改；它们是历史诊断，不由本次结论覆盖。",
+    "原25,200,000ms测试/26,400,000ms runner、120,000ms内层与0retry保留；本次未改变执行/合同/owner/真实ID/原key/持久期限。",
+    "仅手动登记且未核身份的fresh公共Chrome局部旅程；真人微信/真实采集报告/扫码登录/转组提交/安装/完整Gate未签。",
+    "T1159来源family研究pause、2实验耗尽/剩余0保留；全局旧27静态超时失败与审核漂移不由本报告销账。"
+  ],
+  "currentArchiveByteEvidence": {
+    "docs/verification/t1168-1169/fixed-current/MANIFEST.json": {
+      "sha256": "77c1e759c33185d3f36acabdb21d03cc7b0bb003811c2edd54554d38ebbce675"
+    },
+    "docs/verification/t1168-1169/fixed-current/current-journey.json": {
+      "sha256": "82201ff09f45af4f87599fcae94fa21b81205c22281f3eb1bbede6243e970c5b"
+    },
+    "docs/verification/t1168-1169/fixed-current/current-journey.log.gz": {
+      "sha256": "49e4e790e60b3d3fd72cc0f043f40a61d1173cf8923a3e3542f3cbe56f6d6581",
+      "uncompressedSha256": "3843b0aaa098da1897b3c5bf335d26cf0604d0eb93fd4bb12d4a037c1cd57b89"
+    },
+    "docs/verification/t1168-1169/fixed-current/post-stop-side-effect-observation.json": {
+      "sha256": "55dd25add876eb74ef85d8be959bb4b0ecdf3e164907b7f29e4ef5a4171808b1"
+    },
+    "docs/verification/t1168-1169/fixed-current/public-read-observation.json": {
+      "sha256": "1cb8ee7494430f10a4875385a72880fc6b5a9ab4894731476293898ce52d3b23"
+    },
+    "docs/verification/t1168-1169/fixed-current/screenshots/wechatOfficial-empty-1366.png": {
+      "sha256": "aeaf9ffa98edb576f66b3236ca8c44e8e978f8bafb181ed8a2f69765ff7e708c"
+    },
+    "docs/verification/t1168-1169/fixed-current/screenshots/wechatOfficial-empty-390.png": {
+      "sha256": "24c2e566d6234b401260faf3c26a1d3ffd606d83b665cfec3b04b0f07e1ee699"
+    },
+    "docs/verification/t1168-1169/fixed-current/screenshots/wechatOfficial-empty-900.png": {
+      "sha256": "428f540bb0329d19e4dcbd82f1cd94e4d190851a5384553c279802303963b4b7"
+    },
+    "docs/verification/t1168-1169/fixed-current/screenshots/wechatOfficial-identity-required.png": {
+      "sha256": "f2451217dbe79653491cfe69df4ffadc5a94121b62eb09997a009fee1952305e"
+    },
+    "docs/verification/t1168-1169/fixed-current/screenshots/wechatVideo-empty-1366.png": {
+      "sha256": "4f2fe204b60c195d546968f0a052abe5584183d95356844956d4670a9090eba6"
+    },
+    "docs/verification/t1168-1169/fixed-current/screenshots/wechatVideo-empty-390.png": {
+      "sha256": "5cc4f4ba010ce15409b0a0dfa26f9ce294eda485bab5898a6351edf3fac05acd"
+    },
+    "docs/verification/t1168-1169/fixed-current/screenshots/wechatVideo-empty-900.png": {
+      "sha256": "34e6c11d169e0645073557631ce382ceae0b1efaea08601e04da7013b4c9ee91"
+    },
+    "docs/verification/t1168-1169/fixed-current/screenshots/wechatVideo-identity-required.png": {
+      "sha256": "0cb0821ea5330a2df32c7fec6f370a87bf44fb237a398e247f8bdd7d57da9daa"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-boundary.json": {
+      "sha256": "86b3a7a17ce014e91f656aa26e81bca48585a0d0d65c0c165199c8d5865aa080"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-boundary.log.gz": {
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "uncompressedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-current-frontend-type.json": {
+      "sha256": "618f33342acfd4351bc715f384f632946b0326025d99db637ab444007beb2a30"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-current-frontend-type.log.gz": {
+      "sha256": "bb162b147fd26db931f8bf6e5f441deae134a10b66a85ae5fd79392bbbbb5c7c",
+      "uncompressedSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-current-led047.json": {
+      "sha256": "c3089be47b71681dbd3c77e93aaec656e163fd2996cf5593d1e657522d49f37a"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-current-led047.log.gz": {
+      "sha256": "480ac81968cd679c7a14df1f121b547bec2b8747f7941f1fb4c7eb60e2698dfc",
+      "uncompressedSha256": "6263c556d836d0235bf5be41c68cd2dc7a117dc5639b4558ca99432718798c2b"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-current-normal-browser.json": {
+      "sha256": "77219af7001d38e88deb643668d3e788d3794bb91379a547cf535e4a05cee105"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-current-normal-browser.log.gz": {
+      "sha256": "7d49ae3875b78b587217b55c64d29f31889e62fbdf500e53b2c7360dcad9e208",
+      "uncompressedSha256": "8611410fa10383298f3173634fa9f5aee54ff5f0e4fdc3410678e99bf7d62e70"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-final-panel-green.json": {
+      "sha256": "abb841361bd61dc2ab91c40cfe56574f87b4a2d113c9361faad2b4bf49568e7f"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-final-panel-green.log.gz": {
+      "sha256": "56991d03c14e1d1524adc9c0e6dc0dbce7b8468f550c16174ef187e426c64268",
+      "uncompressedSha256": "a90afaa0243acb10afe550f1b5a5f8f6d18d1ea90e27ce6d1d1941fb7c22af63"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-original-behavior-red.json": {
+      "sha256": "489bfb5e156ffc35fb0d1e841f9501404666388f50f9f32eb1d1df59b21108b6"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-original-behavior-red.log.gz": {
+      "sha256": "fb4b4ab3db3f8f77033704d27bb659f1bbd913fe0b754f6df19b6f92a77fcf35",
+      "uncompressedSha256": "39dc1ab7635c85ab29c9be76fc7495da0f99f9b44fc603ddf062bcf662469533"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-original-panel-green.json": {
+      "sha256": "41e2c852b04b4f886684aefdb83ee69726bb9069e3c71e917059ae5cde753dce"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-original-panel-green.log.gz": {
+      "sha256": "b24e9817e4f28099ebd335cc2ffecd2deb25d2531a45492b0d18b4e60123e3c5",
+      "uncompressedSha256": "1c78f6a41e7b5146801641446572ce85688cab27d94bb4a4425f8be8b08e956a"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-orphan.json": {
+      "sha256": "a02890a4bb66235ed65a294fa570c93488c60c0ab39d054e841e7e2bf00b0ed7"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-orphan.log.gz": {
+      "sha256": "3f97d9436f7cc5b05bd288981f31306c4990129c3f272bc4975e42446090d153",
+      "uncompressedSha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-semantic.json": {
+      "sha256": "aba551220721b28038ada7fb1c0980ce1cf2a95c33f9ade4627b41ca68803eee"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-1169-semantic.log.gz": {
+      "sha256": "e072a2bbe761c672af0fefcbe0551666845af536ea3fd654ad866bc6507c1ebb",
+      "uncompressedSha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-capability-priority-red.json": {
+      "sha256": "5f439a076fb4db327ca9cd33ec9e5adea3d2f9bea8d217d9d86262f5d6f3e916"
+    },
+    "docs/verification/t1168-1169/fixed-current/t1168-capability-priority-red.log.gz": {
+      "sha256": "3ce5e48d44d199d5c39f47d59c569a9b9f11f0b071907a44ef46ec08242ebd74",
+      "uncompressedSha256": "f5cb283d58e0692b9be775854d9c35f6f3c04b8be1f88f8a3b12eaca3d56a44c"
+    },
+    "docs/verification/t1168-1169/fixed-current/visible-copy.json": {
+      "sha256": "fc79ffde3e3cbebf13ab99b105fd3179053988c4f67c26e8c0aa51a637cc8df4"
+    }
+  }
+}

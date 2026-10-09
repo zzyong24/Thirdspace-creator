@@ -1,3 +1,4 @@
+import {platformCollectionRuns} from "../../schema/platform-collection";
 import {ingestionRuns} from "../../schema/ingestion";
 import {and,eq,isNull,sql} from 'drizzle-orm';
 import type {Db} from '../../db';
@@ -51,12 +52,13 @@ export async function assertFrozenWorkspaceMembership(tx:MembershipTransaction,f
 
 /** 调用者已通过上述平台账号/member锁；转组不能与创建新在途任务交错。 */
 export async function activeAccountTaskCount(tx:MembershipTransaction,userId:string,accountId:string):Promise<number>{
- const [ai,execution,runs,ingestions]=await Promise.all([
+ const [ai,execution,runs,ingestions,nativeCollections]=await Promise.all([
   tx.select({count:sql<number>`count(*)::int`}).from(aiTasks).where(and(eq(aiTasks.userId,userId),eq(aiTasks.accountId,accountId),sql`${aiTasks.status} NOT IN ('succeeded','failed','cancelled') AND NOT EXISTS (SELECT 1 FROM execution_tasks e WHERE e.id=${aiTasks.executionTaskId} AND e.status NOT IN ('succeeded','failed','cancelled','partial'))`)),
   tx.select({count:sql<number>`count(*)::int`}).from(executionTasks).where(and(eq(executionTasks.userId,userId),eq(executionTasks.accountId,accountId),sql`${executionTasks.status} NOT IN ('succeeded','failed','cancelled','partial')`)),
   tx.select({count:sql<number>`count(*)::int`}).from(jobRuns).innerJoin(scheduledJobs,eq(jobRuns.jobId,scheduledJobs.id)).where(and(eq(scheduledJobs.userId,userId),eq(scheduledJobs.accountId,accountId),sql`${jobRuns.status} IN ('queued','running') AND NOT EXISTS (SELECT 1 FROM ai_tasks a WHERE a.id=${jobRuns.aiTaskId} AND a.status NOT IN ('succeeded','failed','cancelled'))`)),
   tx.select({count:sql<number>`count(*)::int`}).from(ingestionRuns).where(and(eq(ingestionRuns.userId,userId),eq(ingestionRuns.accountId,accountId),sql`${ingestionRuns.status} IN ('pending','running')`)),
- ]);return (ai[0]?.count??0)+(execution[0]?.count??0)+(runs[0]?.count??0)+(ingestions[0]?.count??0);
+  tx.select({count:sql<number>`count(*)::int`}).from(platformCollectionRuns).where(and(eq(platformCollectionRuns.userId,userId),eq(platformCollectionRuns.accountId,accountId),eq(platformCollectionRuns.capability,'nativeReports'),sql`${platformCollectionRuns.status} IN ('queued','running')`)),
+ ]);return (ai[0]?.count??0)+(execution[0]?.count??0)+(runs[0]?.count??0)+(ingestions[0]?.count??0)+(nativeCollections[0]?.count??0);
 }
 export function createMembershipLockService(db:Db){return {
  withLock:<T>(ctx:RequestContext,body:(tx:MembershipTransaction,frozen:FrozenWorkspace)=>Promise<T>)=>db.transaction(async tx=>body(tx,await lockWorkspaceMembership(tx,ctx))),

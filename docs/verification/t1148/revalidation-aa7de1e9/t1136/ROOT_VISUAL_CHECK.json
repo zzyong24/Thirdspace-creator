@@ -1,0 +1,69 @@
+{
+  "head": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "sourceSha256": {
+    "frontend/src/components/ui/dialog.tsx": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+    "frontend/src/features/content-calendar/group-calendar-planning-control.tsx": "fc077641187ad628fea074927919bccbb8bfe0908a3280dbd73bb1bfb6da4377",
+    "frontend/src/features/content-calendar/content-calendar-view.tsx": "c15aef1a2b92412f1755216deab8c302ba18da0b0b5d30dbc262246ce2ce270e",
+    "frontend/src/components/media/asset-picker.tsx": "236d01545bcddac731f2cccc2cf2ce454ac653aed682b7df390e92cacdc5f14e",
+    "frontend/src/components/shell/issue-feedback-dialog.tsx": "f624b1f8c7e3b6fe1d85d02aae1f34e9f50698ae550d4a73e270a67485dd03cc",
+    "frontend/tests/e2e/t1136-calendar-dialog-layout.spec.ts": "c528fa43b3787159e773df78ba8a423e11ff4554386ed1049f7863dade87807c",
+    "docs/verification/t1136/run-layout-journey.mjs": "7ca45b600d3524aea867a36990bde258f7b9a7a70cd1b65bf1a7fcb322ca561c"
+  },
+  "observedAt": "2026-10-09T19:24:53.384766+00:00",
+  "rootActuallyViewed": [
+    {
+      "file": "screenshots/calendar-long-1366.png",
+      "sha256": "5f5db05bdd853db6a76712e3a2bdcbee699471cd18bac56adbcc1e684bc3ea4f"
+    },
+    {
+      "file": "screenshots/calendar-long-900.png",
+      "sha256": "5fbe8c9647a130ce165cae0e92386cfe93cbddc30a07d346fe7cbd4438e92046"
+    },
+    {
+      "file": "screenshots/calendar-long-683.png",
+      "sha256": "1f79ecf51e369449d4bf8d0f6edc8ad5c68d306494037411adc313887a714109"
+    },
+    {
+      "file": "screenshots/calendar-long-390.png",
+      "sha256": "7cfead9f2de109b93cd54f6e48560e8ae0dedeee297e6a08147bd4ba249eb0b4"
+    },
+    {
+      "file": "screenshots/calendar-empty-target-900.png",
+      "sha256": "2f9718a5c54011dfc9bd167171940320c9967c912e1bf74ca88c1e35a664db46"
+    },
+    {
+      "file": "screenshots/calendar-loading-900.png",
+      "sha256": "a9e99743bb167f3c4c5e3c76d3e7c314d61e0670208ef96b52c2972c8435689e"
+    },
+    {
+      "file": "screenshots/calendar-save-error-900.png",
+      "sha256": "12d719a30f81ffafd602ca3054f1f43ad91840d5ac02a89e1be279323bb4aa0b"
+    },
+    {
+      "file": "screenshots/shared-asset-picker-1366.png",
+      "sha256": "5d3133562021884a233e710f641b97545f7dcf7b10b39700da65b9fee5b4bcf7"
+    },
+    {
+      "file": "screenshots/shared-asset-picker-900.png",
+      "sha256": "9717469b6ea1a6d7750d833231fc117b488b69bd995a5790a6abb15d2e93a60f"
+    },
+    {
+      "file": "screenshots/shared-asset-picker-683.png",
+      "sha256": "b1d1ccbe9e6ca4399388af48ceab8e62194051e78561f38b0af5d646d3703b06"
+    },
+    {
+      "file": "screenshots/shared-feedback-1366.png",
+      "sha256": "f174d95e058464d0b2a47c475e1aba4d75dafffa25587e320b546c88e6441a40"
+    },
+    {
+      "file": "screenshots/shared-feedback-900.png",
+      "sha256": "684ce84b09a673f8727b19066203534116d7ee0bcc5ef7ffb9b3cb435c32799e"
+    }
+  ],
+  "finding": "限定本任务状态：中文可读、弹层在窗口内，预览完整且无卡片重叠；低高主体允许滚动，操作固定或可返回。",
+  "independentVisualReview": false,
+  "nativeApp": false,
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "humanAcceptance": false
+}

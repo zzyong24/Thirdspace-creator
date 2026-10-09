@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "node",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1164-current-receipts-probe.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T20:17:14.580784+00:00",
+  "finishedAt": "2026-10-09T20:17:14.808963+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.22790033399360254,
+  "logSha256": "63398baddf333bf32fa1579c090875b4d7d5f997340c6f3a6f07219d0b634571"
+}

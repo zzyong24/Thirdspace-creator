@@ -154,6 +154,7 @@ const READ_OPERATIONS = [
   "platforms.capabilities.list",
   "platforms.collections.get",
   "platforms.metrics.read",
+  "platforms.reports.list",
   "platforms.works.list",
   "pages.dashboard.get",
   "pages.groupOverview.get",

@@ -1,0 +1,1109 @@
+{
+  "schema": "creatoros-implementation-independent-review/v1",
+  "taskId": "T-1159",
+  "reviewKind": "bounded-implementation",
+  "verdict": "FAIL_BOUNDED",
+  "reviewedAt": "2026-10-09T20:06:31.580251+00:00",
+  "repository": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "actualHead": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "originalMainBaseline": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "frozenSource": "293d4e98d2cedbd04eebce16a62f921711ee8079",
+  "commonBase": "d35f7d57ff952d306071eb40d34127956b067906",
+  "gitState": "已冻结基点上的未提交实施；当前另外T1165窄错误码修复由根会话串行，不纳入T1159移植的独立实施签名",
+  "scope": {
+    "manifestPaths": 56,
+    "currentSourceExact": 51,
+    "semanticPreservedProducts": 3,
+    "separatelyReviewedRegistryExpectation": 1,
+    "addedVerificationPaths": 3,
+    "writesOnly": [
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-implementation-review/REVIEW.md",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-implementation-review/REVIEW.json"
+    ],
+    "noTestsOrBusinessExecutedByReviewer": true,
+    "noRepositoryWrites": true
+  },
+  "sourceHashes": {
+    "ai-worker/package.json": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460",
+    "ai-worker/smoke/t1110-native-report-private-files.ts": "2e07339356687513222e3de122f3c88d64ee51c7016d55893095af265c743c08",
+    "ai-worker/src/runtime/platform/wechat-browser-source.test.ts": "5ebd88a30eec2b59b799fe138661533695afd8a1019c456d9239bb27e13a9bd1",
+    "ai-worker/src/runtime/platform/wechat-browser-source.ts": "ec7c53bc4c83bb57b8f707acd2ba1602f6722f9626c6a3843f8b3031814df19a",
+    "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts": "d7f8451b1a175acd554cbad680cd2c3a396696a35de75e93d31c50a8513dcc89",
+    "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "039dc9abc6716b1efbbc0f60e3e4895da16a9318a973a7fbb3bfaf198dda26c7",
+    "ai-worker/src/runtime/platform/wechat-native-report-parser.test.ts": "e8ae028592658a9a7e00c5290d1e764a62db66442d5618404f1fe2b7c1cd1404",
+    "ai-worker/src/runtime/platform/wechat-native-report-parser.ts": "7244f11d1d46c0edd4aeb190217d23b85dd8738a4cd578083c36f3202a8b9d07",
+    "backend/drizzle/0131_platform_native_reports.sql": "36a411fb6ee7a77923090fa346ed768365fa548746fa62d4735f561bf0a5e84f",
+    "backend/drizzle/meta/_journal.json": "8200bd9de4229786c48cc0fd90359de6512410267bc70504ce0177fd86b3fbfc",
+    "backend/src/application/collection/wechat-native-collector.test.ts": "98ecd05334b1d2c82c10f9c7cfd6d9858c74899de08aef9dcc925e4d4b19f385",
+    "backend/src/application/collection/wechat-native-collector.ts": "c09b829dc9ecf0b19b8b89ffa901a732f68500018d94b32d20d11d0a93f02dd9",
+    "backend/src/application/platform-collection/periodic.test.ts": "de0d13f8cc1c9d0b885172e14fc635503ee5cc129c611fdff849458cfcc116cc",
+    "backend/src/application/platform-collection/periodic.ts": "303cc7cfe430a790b642fc119097d750a05c9d2f74eb308d1758a901477c2d40",
+    "backend/src/application/scheduling/platform-collector.test.ts": "173fee62762fe266b45e468bc34165885baa32e0494d5bb391b9ff43d6028074",
+    "backend/src/application/scheduling/platform-collector.ts": "55560f2a87a8c2720bc29a5cd5067ed978f98ebeae673ea57f0fe23fbe9c7364",
+    "backend/src/application/workspace/startup.test.ts": "eac60fbf09b3e74ecbc6cfcb56c5ba5b0baae6ae0451f1988b4d1e0c0e1813d6",
+    "backend/src/application/workspace/startup.ts": "9e2bc08d1547e70ca065f93a145db55540fb256af95bf83205cb3437729f9317",
+    "backend/src/migration-convergence.test.ts": "41e7590192b7813808b4866413151de9cca8147f87014f718c6f5172093bb2e7",
+    "backend/src/migration-convergence.ts": "f6c0324f6a6d2add206251d166c839a34aa097e9c9f31d50dfe2eeea50f8cbcb",
+    "backend/src/modules/ai-runtime/collection-bootstrap.test.ts": "6e18e55cbd337e897d9f97fd0f799518bb6faa0fb370a61dbc90e33130bb27d8",
+    "backend/src/modules/ai-runtime/collection-bootstrap.ts": "c39edc58f3a88ea47c22db9d4a5b2828e80192517d50e30247f55e6631fe9a39",
+    "backend/src/modules/platform-account/account-binding.service.ts": "870a6540551955fd0f783110bee63f8dfa35cc52264ec3e6eee55fc38162aa4f",
+    "backend/src/modules/platform-account/browser-profile-authority.service.ts": "0364271422f15ed4eafa75e9aa5a77ac2245cb02a88f8ed2833ce9ae156eb22b",
+    "backend/src/modules/platform-account/index.ts": "949e192e779c24167558266b63e3d03fe71b670c84dff094c979d7dac890f210",
+    "backend/src/modules/platform-account/local-platform-binding-stage.ts": "f5cc1e3f9c994aabfe07627c49d15fdfee4f82ee16ec77aefb16a091a2ab9c49",
+    "backend/src/modules/platform-account/membership-lock.service.ts": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5",
+    "backend/src/modules/platform-collection/platform-collection.service.ts": "1c234861a4316a6bd6e9d375c6af4af43447b7c8f7131c5950d3d456a2f35ef9",
+    "backend/src/modules/platform-collection/platform-collection.transport.integration.test.ts": "ffaeb65a3dd79baab3d94647218ecc42225fb5b5a901801dba32d473bbb134d9",
+    "backend/src/modules/platform-collection/platform-collection.transport.ts": "bc4c854d56f02bf4acafb1a494a3f621dd0f8a9c9f551c5c6ec19a4a6083aff2",
+    "backend/src/modules/platform-collection/platform-native-reports.integration.test.ts": "cbf66ca352f23820c0af37a7baf444e36388e549bfbad1e9569d931ff0c8ecfa",
+    "backend/src/modules/scheduling/private-collector-admission.service.ts": "ae5f92c8d2987819fb02d62d808c44d4aa5746a891e446910533ee81d2f6559d",
+    "backend/src/modules/scheduling/private-collector-wechat-admission.test.ts": "ba49b4fc4e2eae47a1f2507b2768b08103f9f0995444aa053393cdda19775ff6",
+    "backend/src/schema/platform-collection.ts": "2ee39aba4369892075c7c23d154f6f6c3fc0bc01d5b56743400b8a1c9a83a74e",
+    "contract/src/cli-policy.ts": "b4e17c4cbe46e7a111781c0a02bd774660ad9a71a62e189e04f3c9f452f6ada9",
+    "contract/src/index.ts": "f8e56beed1c8731140a42db2d969c639262b1345d883a8668a5ecb53846ed77e",
+    "contract/src/operations/platform-collection.ts": "6d77eacf587b7abe1710e75e5c99bd834e59a130d1aacc3aab8826433539f136",
+    "contract/src/resources/platform-capabilities.ts": "03edd7caae0890c465139c30b4a6bd21b812bde9a0cd2e11d0c8fcb82bd3f133",
+    "contract/src/resources/platform-native-reports.ts": "077fc070629dab475a2257aea907215a1b83a575983e33afb5d3aced19576c53",
+    "contract/src/workspace-operation-scope.ts": "fe0ed477bce71d5faa759cfa3b72fdfe40ef3f29ce13472194ede5a792747e39",
+    "contract/tests/platform-native-reports.test.ts": "ae1301a706008c914d9f5d555e6001eef11e316f16a0cfed834787fb88f01dca",
+    "contract/tests/registry.test.ts": "a33328805e4ee0fd7f466c6e2d0e2a7a2b0f9f769e37d034f20f4c708898e280",
+    "frontend/src/app/(creator)/accounts/works/page.tsx": "fa750bc21592955476a057496ddaa394c7426da76c3f7135a4f41073b124813b",
+    "frontend/src/features/platform-account/account-binding-panel.test.tsx": "94d1848b57ad889d1da37ec696937f6db26face86fdea2cd4ce9f89ae0ebcc4c",
+    "frontend/src/features/platform-account/account-binding-panel.tsx": "eb3bab8297d784b9715c1d8bfdbcd9ec1564261712a5aa32a7e6c241bf1c6ee2",
+    "frontend/src/features/platform-account/account-group-manager.test.tsx": "6d096c4410a259edb8c1d63f5f1848f03cdd7f5832cb80593b24a0a97c20eccd",
+    "frontend/src/features/platform-account/account-group-manager.tsx": "c0f3bc1a27a64ee7c4500b31d311e854e32464260b5ca50535d4ddbf653235a2",
+    "frontend/src/features/platform-account/native-report-page.test.tsx": "a187154b2b62fb80cb1f7d71708f7be070097c7354aae5ee2ebcccb5015caf07",
+    "frontend/src/features/platform-account/native-report-panel.test.tsx": "02bce911e5b4ec7d19296565a861d22195fcd7a2f984a5d7ed28cb5b394a84a7",
+    "frontend/src/features/platform-account/native-report-panel.tsx": "c79e758d4821cfb1e01f407999e83d75f84c71ac234e85b08853ee52764d2bec",
+    "frontend/src/features/platform-account/platform-account-labels.ts": "bc20a8d1e914a1025d5f664d00cfe5392b55e7aaa83913958bcfb532561e3b55",
+    "frontend/src/server/__module_integration__/local-platform-binding.persistence-client.test.ts": "e6dc33564e80d15df75677587ba533ea37d989fee1c08feb226231c039139242",
+    "frontend/src/server/ingestion/account-binding-stage.integration.test.ts": "92d147d2c2fd241ce027346766519e2ef280d62e568a67fc8bc231ba10e35bf8",
+    "frontend/src/server/ingestion/account-binding-stage.ts": "d7e517b273132150d5144fd0f32bf8eea83ad61823c56649f7d67d417a199f00",
+    "frontend/src/server/persistence-client.ts": "ab11053526e4f2a4f71b45fad6e012b5215a1502d4d5124a8e4db4b5d0457dd8",
+    "pnpm-lock.yaml": "45d6fbab2ef7750e563c571b36fc005d6287478c49769613b005abd0f1c8e4d6",
+    "contract/tests/current-wechat-integration.test.ts": "c681ba3262a680a5d514729613c405d9aa58c438e4526b9b53bf832ef93ac920",
+    "frontend/tests/e2e/t1159-wechat-native-report.spec.ts": "0ef12c19cd0c5357099c2559ca50c7fa9e656c69a956aa4e42a63bda3c2a6213",
+    "docs/verification/t1159/run-report-journey.mjs": "8c2ca0103be7c954043db4ae1e88f9385c5d6f3ae0802b8076857456e31ce98f"
+  },
+  "contextHashes": {
+    "docs/features/t1159-current-wechat-native-report-integration.md": "b95d6954c52e5251f3b4b430ae6af2fb6e4a571c3839e0f9230ee33abae59073",
+    "docs/verification/t1159/PAGE_SPEC.md": "4f003ececceea68aa7cb89ed5eac12e4e20acde2d01398edd407bdff900f0a37",
+    "docs/verification/t1159/SOURCE_MANIFEST.json": "ce24cfa9ef39fa568a4d395638a572e319f49724aaa27675c89df95f7ac2f83a",
+    "docs/verification/t1159/PORT_MANIFEST.json": "ec905c36a9a0e63b10aebaf607659189e0687200a53011e014132e524ef9b8bc",
+    "backend/drizzle/0130_legacy_source_ownership.sql": "cc25f17ac270d230b82f1697bd20c674931877459cc0a70f667cab3461a3fc70",
+    "frontend/src/lib/http-transport.ts": "3c89798b49c372bdb60be1cb255fe1b85ea9449752c97d7bdb4bdad1bff79302",
+    "frontend/src/app/api/v1/dispatch/route.ts": "f45afbdb5429e7953081b50d0abf4e8045ac17cc4e1883e3519c9d4d55333816",
+    "contract/src/envelope.ts": "8fa72b5982906f1c637a05bf10d262385adb0eb0e0f43e826b69f119e8b2b429",
+    "orchestrator/SYSTEM_ARCHITECTURE.md": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+    "orchestrator/process/.skill-version": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+    "AGENTS.md": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+    "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/SKILL.md": "5796cf1b3b9f3de2d45c8e754e3df2146735aa14b266b7c32e2cb4c8638f4c1f"
+  },
+  "sourceDispositions": [
+    {
+      "path": "ai-worker/package.json",
+      "actualSha256": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460",
+      "frozenSourceSha256": "32e308c8c360d036b2c7afa0dcfa6f9b51d6d441f356a3a71957ca8c341ed460",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "ai-worker/smoke/t1110-native-report-private-files.ts",
+      "actualSha256": "2e07339356687513222e3de122f3c88d64ee51c7016d55893095af265c743c08",
+      "frozenSourceSha256": "2e07339356687513222e3de122f3c88d64ee51c7016d55893095af265c743c08",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-browser-source.test.ts",
+      "actualSha256": "5ebd88a30eec2b59b799fe138661533695afd8a1019c456d9239bb27e13a9bd1",
+      "frozenSourceSha256": "5ebd88a30eec2b59b799fe138661533695afd8a1019c456d9239bb27e13a9bd1",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+      "actualSha256": "ec7c53bc4c83bb57b8f707acd2ba1602f6722f9626c6a3843f8b3031814df19a",
+      "frozenSourceSha256": "ec7c53bc4c83bb57b8f707acd2ba1602f6722f9626c6a3843f8b3031814df19a",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts",
+      "actualSha256": "d7f8451b1a175acd554cbad680cd2c3a396696a35de75e93d31c50a8513dcc89",
+      "frozenSourceSha256": "d7f8451b1a175acd554cbad680cd2c3a396696a35de75e93d31c50a8513dcc89",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+      "actualSha256": "039dc9abc6716b1efbbc0f60e3e4895da16a9318a973a7fbb3bfaf198dda26c7",
+      "frozenSourceSha256": "039dc9abc6716b1efbbc0f60e3e4895da16a9318a973a7fbb3bfaf198dda26c7",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-native-report-parser.test.ts",
+      "actualSha256": "e8ae028592658a9a7e00c5290d1e764a62db66442d5618404f1fe2b7c1cd1404",
+      "frozenSourceSha256": "e8ae028592658a9a7e00c5290d1e764a62db66442d5618404f1fe2b7c1cd1404",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-native-report-parser.ts",
+      "actualSha256": "7244f11d1d46c0edd4aeb190217d23b85dd8738a4cd578083c36f3202a8b9d07",
+      "frozenSourceSha256": "7244f11d1d46c0edd4aeb190217d23b85dd8738a4cd578083c36f3202a8b9d07",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/drizzle/0131_platform_native_reports.sql",
+      "actualSha256": "36a411fb6ee7a77923090fa346ed768365fa548746fa62d4735f561bf0a5e84f",
+      "frozenSourceSha256": "36a411fb6ee7a77923090fa346ed768365fa548746fa62d4735f561bf0a5e84f",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/drizzle/meta/_journal.json",
+      "actualSha256": "8200bd9de4229786c48cc0fd90359de6512410267bc70504ce0177fd86b3fbfc",
+      "frozenSourceSha256": "8200bd9de4229786c48cc0fd90359de6512410267bc70504ce0177fd86b3fbfc",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/application/collection/wechat-native-collector.test.ts",
+      "actualSha256": "98ecd05334b1d2c82c10f9c7cfd6d9858c74899de08aef9dcc925e4d4b19f385",
+      "frozenSourceSha256": "eddb707930046b1f10d8cf2a4ae60801ca756a9d3424926f44058d120ff978ea",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": false
+    },
+    {
+      "path": "backend/src/application/collection/wechat-native-collector.ts",
+      "actualSha256": "c09b829dc9ecf0b19b8b89ffa901a732f68500018d94b32d20d11d0a93f02dd9",
+      "frozenSourceSha256": "c09b829dc9ecf0b19b8b89ffa901a732f68500018d94b32d20d11d0a93f02dd9",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/application/platform-collection/periodic.test.ts",
+      "actualSha256": "de0d13f8cc1c9d0b885172e14fc635503ee5cc129c611fdff849458cfcc116cc",
+      "frozenSourceSha256": "de0d13f8cc1c9d0b885172e14fc635503ee5cc129c611fdff849458cfcc116cc",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/application/platform-collection/periodic.ts",
+      "actualSha256": "303cc7cfe430a790b642fc119097d750a05c9d2f74eb308d1758a901477c2d40",
+      "frozenSourceSha256": "303cc7cfe430a790b642fc119097d750a05c9d2f74eb308d1758a901477c2d40",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/application/scheduling/platform-collector.test.ts",
+      "actualSha256": "173fee62762fe266b45e468bc34165885baa32e0494d5bb391b9ff43d6028074",
+      "frozenSourceSha256": "173fee62762fe266b45e468bc34165885baa32e0494d5bb391b9ff43d6028074",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/application/scheduling/platform-collector.ts",
+      "actualSha256": "55560f2a87a8c2720bc29a5cd5067ed978f98ebeae673ea57f0fe23fbe9c7364",
+      "frozenSourceSha256": "55560f2a87a8c2720bc29a5cd5067ed978f98ebeae673ea57f0fe23fbe9c7364",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/application/workspace/startup.test.ts",
+      "actualSha256": "eac60fbf09b3e74ecbc6cfcb56c5ba5b0baae6ae0451f1988b4d1e0c0e1813d6",
+      "frozenSourceSha256": "eac60fbf09b3e74ecbc6cfcb56c5ba5b0baae6ae0451f1988b4d1e0c0e1813d6",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/application/workspace/startup.ts",
+      "actualSha256": "9e2bc08d1547e70ca065f93a145db55540fb256af95bf83205cb3437729f9317",
+      "frozenSourceSha256": "9e2bc08d1547e70ca065f93a145db55540fb256af95bf83205cb3437729f9317",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/migration-convergence.test.ts",
+      "actualSha256": "41e7590192b7813808b4866413151de9cca8147f87014f718c6f5172093bb2e7",
+      "frozenSourceSha256": "41e7590192b7813808b4866413151de9cca8147f87014f718c6f5172093bb2e7",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/migration-convergence.ts",
+      "actualSha256": "f6c0324f6a6d2add206251d166c839a34aa097e9c9f31d50dfe2eeea50f8cbcb",
+      "frozenSourceSha256": "f6c0324f6a6d2add206251d166c839a34aa097e9c9f31d50dfe2eeea50f8cbcb",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/collection-bootstrap.test.ts",
+      "actualSha256": "6e18e55cbd337e897d9f97fd0f799518bb6faa0fb370a61dbc90e33130bb27d8",
+      "frozenSourceSha256": "6e18e55cbd337e897d9f97fd0f799518bb6faa0fb370a61dbc90e33130bb27d8",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/collection-bootstrap.ts",
+      "actualSha256": "c39edc58f3a88ea47c22db9d4a5b2828e80192517d50e30247f55e6631fe9a39",
+      "frozenSourceSha256": "c39edc58f3a88ea47c22db9d4a5b2828e80192517d50e30247f55e6631fe9a39",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-binding.service.ts",
+      "actualSha256": "870a6540551955fd0f783110bee63f8dfa35cc52264ec3e6eee55fc38162aa4f",
+      "frozenSourceSha256": "870a6540551955fd0f783110bee63f8dfa35cc52264ec3e6eee55fc38162aa4f",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/modules/platform-account/browser-profile-authority.service.ts",
+      "actualSha256": "0364271422f15ed4eafa75e9aa5a77ac2245cb02a88f8ed2833ce9ae156eb22b",
+      "frozenSourceSha256": "0364271422f15ed4eafa75e9aa5a77ac2245cb02a88f8ed2833ce9ae156eb22b",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/modules/platform-account/index.ts",
+      "actualSha256": "949e192e779c24167558266b63e3d03fe71b670c84dff094c979d7dac890f210",
+      "frozenSourceSha256": "949e192e779c24167558266b63e3d03fe71b670c84dff094c979d7dac890f210",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/modules/platform-account/local-platform-binding-stage.ts",
+      "actualSha256": "f5cc1e3f9c994aabfe07627c49d15fdfee4f82ee16ec77aefb16a091a2ab9c49",
+      "frozenSourceSha256": "f5cc1e3f9c994aabfe07627c49d15fdfee4f82ee16ec77aefb16a091a2ab9c49",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/modules/platform-account/membership-lock.service.ts",
+      "actualSha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5",
+      "frozenSourceSha256": "020fffdcc4223e1362f9aab808fa564b314ba4281f556a8c38fd514ab00a2d48",
+      "mode": "native-task-count-only-current-frozen-membership-preserved",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/modules/platform-collection/platform-collection.service.ts",
+      "actualSha256": "1c234861a4316a6bd6e9d375c6af4af43447b7c8f7131c5950d3d456a2f35ef9",
+      "frozenSourceSha256": "1c234861a4316a6bd6e9d375c6af4af43447b7c8f7131c5950d3d456a2f35ef9",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/modules/platform-collection/platform-collection.transport.integration.test.ts",
+      "actualSha256": "ffaeb65a3dd79baab3d94647218ecc42225fb5b5a901801dba32d473bbb134d9",
+      "frozenSourceSha256": "ffaeb65a3dd79baab3d94647218ecc42225fb5b5a901801dba32d473bbb134d9",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/modules/platform-collection/platform-collection.transport.ts",
+      "actualSha256": "bc4c854d56f02bf4acafb1a494a3f621dd0f8a9c9f551c5c6ec19a4a6083aff2",
+      "frozenSourceSha256": "bc4c854d56f02bf4acafb1a494a3f621dd0f8a9c9f551c5c6ec19a4a6083aff2",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/modules/platform-collection/platform-native-reports.integration.test.ts",
+      "actualSha256": "cbf66ca352f23820c0af37a7baf444e36388e549bfbad1e9569d931ff0c8ecfa",
+      "frozenSourceSha256": "cbf66ca352f23820c0af37a7baf444e36388e549bfbad1e9569d931ff0c8ecfa",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/modules/scheduling/private-collector-admission.service.ts",
+      "actualSha256": "ae5f92c8d2987819fb02d62d808c44d4aa5746a891e446910533ee81d2f6559d",
+      "frozenSourceSha256": "ae5f92c8d2987819fb02d62d808c44d4aa5746a891e446910533ee81d2f6559d",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/modules/scheduling/private-collector-wechat-admission.test.ts",
+      "actualSha256": "ba49b4fc4e2eae47a1f2507b2768b08103f9f0995444aa053393cdda19775ff6",
+      "frozenSourceSha256": "ba49b4fc4e2eae47a1f2507b2768b08103f9f0995444aa053393cdda19775ff6",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "backend/src/schema/platform-collection.ts",
+      "actualSha256": "2ee39aba4369892075c7c23d154f6f6c3fc0bc01d5b56743400b8a1c9a83a74e",
+      "frozenSourceSha256": "2ee39aba4369892075c7c23d154f6f6c3fc0bc01d5b56743400b8a1c9a83a74e",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "contract/src/cli-policy.ts",
+      "actualSha256": "b4e17c4cbe46e7a111781c0a02bd774660ad9a71a62e189e04f3c9f452f6ada9",
+      "frozenSourceSha256": "ecd017f26c568d1eb6f7726266d5d718652e9b7cc24774df588f992125b4b028",
+      "mode": "three-way-preserve-current-contract-increments",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "contract/src/index.ts",
+      "actualSha256": "f8e56beed1c8731140a42db2d969c639262b1345d883a8668a5ecb53846ed77e",
+      "frozenSourceSha256": "f8e56beed1c8731140a42db2d969c639262b1345d883a8668a5ecb53846ed77e",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "contract/src/operations/platform-collection.ts",
+      "actualSha256": "6d77eacf587b7abe1710e75e5c99bd834e59a130d1aacc3aab8826433539f136",
+      "frozenSourceSha256": "6d77eacf587b7abe1710e75e5c99bd834e59a130d1aacc3aab8826433539f136",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "contract/src/resources/platform-capabilities.ts",
+      "actualSha256": "03edd7caae0890c465139c30b4a6bd21b812bde9a0cd2e11d0c8fcb82bd3f133",
+      "frozenSourceSha256": "03edd7caae0890c465139c30b4a6bd21b812bde9a0cd2e11d0c8fcb82bd3f133",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "contract/src/resources/platform-native-reports.ts",
+      "actualSha256": "077fc070629dab475a2257aea907215a1b83a575983e33afb5d3aced19576c53",
+      "frozenSourceSha256": "077fc070629dab475a2257aea907215a1b83a575983e33afb5d3aced19576c53",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "contract/src/workspace-operation-scope.ts",
+      "actualSha256": "fe0ed477bce71d5faa759cfa3b72fdfe40ef3f29ce13472194ede5a792747e39",
+      "frozenSourceSha256": "219144862877d49f14115129b77bf29542a185af2144765bb9b72a7a08aff70d",
+      "mode": "three-way-preserve-current-contract-increments",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "contract/tests/platform-native-reports.test.ts",
+      "actualSha256": "ae1301a706008c914d9f5d555e6001eef11e316f16a0cfed834787fb88f01dca",
+      "frozenSourceSha256": "ae1301a706008c914d9f5d555e6001eef11e316f16a0cfed834787fb88f01dca",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "contract/tests/registry.test.ts",
+      "actualSha256": "a33328805e4ee0fd7f466c6e2d0e2a7a2b0f9f769e37d034f20f4c708898e280",
+      "frozenSourceSha256": "4a0a8ae95c464c010215b8ae5ce9a6636d64208eacaa1ab12f6f780c82b82f2b",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": false
+    },
+    {
+      "path": "frontend/src/app/(creator)/accounts/works/page.tsx",
+      "actualSha256": "fa750bc21592955476a057496ddaa394c7426da76c3f7135a4f41073b124813b",
+      "frozenSourceSha256": "fa750bc21592955476a057496ddaa394c7426da76c3f7135a4f41073b124813b",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-binding-panel.test.tsx",
+      "actualSha256": "94d1848b57ad889d1da37ec696937f6db26face86fdea2cd4ce9f89ae0ebcc4c",
+      "frozenSourceSha256": "94d1848b57ad889d1da37ec696937f6db26face86fdea2cd4ce9f89ae0ebcc4c",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-binding-panel.tsx",
+      "actualSha256": "eb3bab8297d784b9715c1d8bfdbcd9ec1564261712a5aa32a7e6c241bf1c6ee2",
+      "frozenSourceSha256": "eb3bab8297d784b9715c1d8bfdbcd9ec1564261712a5aa32a7e6c241bf1c6ee2",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.test.tsx",
+      "actualSha256": "6d096c4410a259edb8c1d63f5f1848f03cdd7f5832cb80593b24a0a97c20eccd",
+      "frozenSourceSha256": "6d096c4410a259edb8c1d63f5f1848f03cdd7f5832cb80593b24a0a97c20eccd",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.tsx",
+      "actualSha256": "c0f3bc1a27a64ee7c4500b31d311e854e32464260b5ca50535d4ddbf653235a2",
+      "frozenSourceSha256": "c0f3bc1a27a64ee7c4500b31d311e854e32464260b5ca50535d4ddbf653235a2",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "frontend/src/features/platform-account/native-report-page.test.tsx",
+      "actualSha256": "a187154b2b62fb80cb1f7d71708f7be070097c7354aae5ee2ebcccb5015caf07",
+      "frozenSourceSha256": "a187154b2b62fb80cb1f7d71708f7be070097c7354aae5ee2ebcccb5015caf07",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "frontend/src/features/platform-account/native-report-panel.test.tsx",
+      "actualSha256": "02bce911e5b4ec7d19296565a861d22195fcd7a2f984a5d7ed28cb5b394a84a7",
+      "frozenSourceSha256": "02bce911e5b4ec7d19296565a861d22195fcd7a2f984a5d7ed28cb5b394a84a7",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "frontend/src/features/platform-account/native-report-panel.tsx",
+      "actualSha256": "c79e758d4821cfb1e01f407999e83d75f84c71ac234e85b08853ee52764d2bec",
+      "frozenSourceSha256": "c79e758d4821cfb1e01f407999e83d75f84c71ac234e85b08853ee52764d2bec",
+      "mode": "frozen-source-new",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "frontend/src/features/platform-account/platform-account-labels.ts",
+      "actualSha256": "bc20a8d1e914a1025d5f664d00cfe5392b55e7aaa83913958bcfb532561e3b55",
+      "frozenSourceSha256": "bc20a8d1e914a1025d5f664d00cfe5392b55e7aaa83913958bcfb532561e3b55",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+      "actualSha256": "e6dc33564e80d15df75677587ba533ea37d989fee1c08feb226231c039139242",
+      "frozenSourceSha256": "e6dc33564e80d15df75677587ba533ea37d989fee1c08feb226231c039139242",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "frontend/src/server/ingestion/account-binding-stage.integration.test.ts",
+      "actualSha256": "92d147d2c2fd241ce027346766519e2ef280d62e568a67fc8bc231ba10e35bf8",
+      "frozenSourceSha256": "92d147d2c2fd241ce027346766519e2ef280d62e568a67fc8bc231ba10e35bf8",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "frontend/src/server/ingestion/account-binding-stage.ts",
+      "actualSha256": "d7e517b273132150d5144fd0f32bf8eea83ad61823c56649f7d67d417a199f00",
+      "frozenSourceSha256": "d7e517b273132150d5144fd0f32bf8eea83ad61823c56649f7d67d417a199f00",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "actualSha256": "ab11053526e4f2a4f71b45fad6e012b5215a1502d4d5124a8e4db4b5d0457dd8",
+      "frozenSourceSha256": "ab11053526e4f2a4f71b45fad6e012b5215a1502d4d5124a8e4db4b5d0457dd8",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    },
+    {
+      "path": "pnpm-lock.yaml",
+      "actualSha256": "45d6fbab2ef7750e563c571b36fc005d6287478c49769613b005abd0f1c8e4d6",
+      "frozenSourceSha256": "45d6fbab2ef7750e563c571b36fc005d6287478c49769613b005abd0f1c8e4d6",
+      "mode": "reviewed-source-on-unchanged-base",
+      "matchesPortAfter": true
+    }
+  ],
+  "excludedMainPreservation": [
+    {
+      "path": "backend/src/modules/platform-account/legacy-task-membership.integration.test.ts",
+      "currentExists": false,
+      "mainBaselineExists": false,
+      "unchanged": true,
+      "sha256": null
+    },
+    {
+      "path": "frontend/src/features/intelligence/intelligence-display.ts",
+      "currentExists": true,
+      "mainBaselineExists": true,
+      "unchanged": true,
+      "sha256": "2dc036e287f5f7e01ae306ac8a11ec9dc59b1677a872a2a18b6b53a307bbeced"
+    },
+    {
+      "path": "frontend/src/features/intelligence/intelligence-workbench.test.tsx",
+      "currentExists": true,
+      "mainBaselineExists": true,
+      "unchanged": true,
+      "sha256": "2a4ede5bb92779fac92a4b3d993cbe4bf3eb008e67b7af6f26263da295efd1d7"
+    },
+    {
+      "path": "frontend/src/features/intelligence/intelligence-workbench.tsx",
+      "currentExists": true,
+      "mainBaselineExists": true,
+      "unchanged": true,
+      "sha256": "aa86f1de97244dacfccea88ab4c2f689446833251dae06eb450fb6fed2576359"
+    },
+    {
+      "path": "frontend/src/features/intelligence/use-project-upgrade-queue.test.tsx",
+      "currentExists": true,
+      "mainBaselineExists": true,
+      "unchanged": true,
+      "sha256": "5b45851e235cf774b8fec46626ed620eaa2406ac485e705317cf4670dfba86d3"
+    },
+    {
+      "path": "frontend/src/features/intelligence/use-project-upgrade-queue.ts",
+      "currentExists": true,
+      "mainBaselineExists": true,
+      "unchanged": true,
+      "sha256": "6db2e4ac3f1dd25acb1a9519fe5803e9e012ed22d2cc10bcb0ea4826d546d733"
+    }
+  ],
+  "journalProof": {
+    "oldCount": 105,
+    "newCount": 106,
+    "oldPrefixEqual": true,
+    "newEntry": {
+      "idx": 105,
+      "version": "7",
+      "when": 1791043200004,
+      "tag": "0131_platform_native_reports",
+      "breakpoints": true
+    }
+  },
+  "findings": [
+    {
+      "id": "T1159-I001",
+      "severity": "high",
+      "status": "FAIL_PUBLIC_EVIDENCE_RECHECK_REQUIRED",
+      "title": "正式身份拒绝丢失协议码，扫码恢复入口不可达",
+      "locations": [
+        {
+          "path": "frontend/src/app/api/v1/dispatch/route.ts",
+          "line": 306
+        },
+        {
+          "path": "frontend/src/lib/http-transport.ts",
+          "line": 180
+        },
+        {
+          "path": "frontend/src/features/platform-account/native-report-panel.tsx",
+          "line": 95
+        },
+        {
+          "path": "frontend/tests/e2e/t1159-wechat-native-report.spec.ts",
+          "line": 75
+        }
+      ],
+      "evidenceKind": "实际公共Chrome失败＋真实错误链源码＋实际查看失败截图",
+      "description": "首轮HTTP400返回字符串error，客户端code=null，组件进入OTHER而不展示扫码恢复。原Chrome实际exit1/52.602101秒，未走完第二账号及停止后0副作用断言。组件测试直接构造带码HttpTransportError，没有覆盖正式dispatch。",
+      "sourceChangeObserved": "读取结束时contract/src/envelope.ts已由独立T1165加入ScopeMissing（当前上下文SHA已绑定）；本报告不评审该外部任务实现，不以此抹掉首轮失败或提前签当前Chrome。",
+      "requiredDisposition": "沿已登记T1165固定错误码链闭环，原Chrome断言与未知/5xx语义保持；同旅程真实重跑后再做限定证据复查。"
+    },
+    {
+      "id": "T1159-I002",
+      "severity": "high",
+      "status": "FAIL_STATIC_COUNTEREXAMPLE_RUNTIME_NOT_RUN",
+      "title": "在途续租Promise可以阻止原绝对deadline返回",
+      "locations": [
+        {
+          "path": "backend/src/application/collection/wechat-native-collector.ts",
+          "line": 108
+        },
+        {
+          "path": "backend/src/application/collection/wechat-native-collector.ts",
+          "line": 239
+        },
+        {
+          "path": "backend/src/application/collection/wechat-native-collector.test.ts",
+          "line": 210
+        }
+      ],
+      "evidenceKind": "当前源码的确定性Promise控制流；未执行新增探针，也未观察真人故障",
+      "description": "deadline只使driver的race结束；finally仍无条件await renewalInFlight。一次20秒续租在截止前开始且Promise持续pending时，即使failRun已返回，execute仍不兑现TASK_TIMEOUT结果；同样可拖住取消返回。现续租串行用例显式resolve第一笔后才结束，close挂起deadline用例续租是立即resolve，交叉族未覆盖。生产renewLease是无AbortSignal参数的事务端口，本层没有剩余期限的等候上限。",
+      "minimalVerification": "复用原collector窄端口fixture，run保留原startedAt/剩余1分钟；renewLease返回deferred且不resolve，driver等待abort；推进到20秒确认仅1续租，再到原60秒deadline，要求原attempt TASK_TIMEOUT/stopUnconfirmed兑现且晚续租/晚report不再写。这是建议的真实RED，当前未执行，不能记已发生。",
+      "requiredDisposition": "先向根会话提交这个精确在途续租族；仅按已准入deadline/资源安全语义修等待与晚回调，不新建attempt、不续期限、不冒充浏览器已停。原移植来源也有此await，不代表当前实现已通过。"
+    },
+    {
+      "id": "T1159-I003",
+      "severity": "medium",
+      "status": "FAIL_STATIC_BUDGET_COVERAGE",
+      "title": "新公共旅程的外层不足以覆盖配置的串行等待",
+      "locations": [
+        {
+          "path": "frontend/tests/e2e/t1159-wechat-native-report.spec.ts",
+          "line": 23
+        },
+        {
+          "path": "docs/verification/t1159/run-report-journey.mjs",
+          "line": 18
+        }
+      ],
+      "evidenceKind": "精确新测试/runner预算与串行消费者读取；不是当前52秒失败的归因",
+      "description": "单例外层1500000ms。两账号×三视口仅goto、reload、正式read、返回click四个串行消费者，每项120000ms，已合计2880000ms，尚未算建组/账号、管理弹窗、身份拒绝回读等。runner3300000ms仅包spawn阶段，注释不能证明覆盖修正后完整单例、冷启动及停止后隔离观察。",
+      "requiredDisposition": "只校准本新单例和新runner的有限外层与完整串行闭包；不缩120秒正观察、不修改旧case/业务deadline。此项未声称现场发生外层timeout。"
+    }
+  ],
+  "checks": [
+    {
+      "id": "source-port",
+      "verdict": "PASS",
+      "detail": "56路径当前51条与冻结来源逐字一致；3产品为已审当前语义保留，registry固定清单由独立T1162修正。其余PORT after逐字匹配。來源等价仅作来源证据，不代运行PASS。"
+    },
+    {
+      "id": "main-preservation",
+      "verdict": "PASS",
+      "detail": "SOURCE_MANIFEST中当前main相对共同基点的产品增量仅cli-policy/workspace-scope；当前三方保留两者纯组增量。6 superseded路径保持main（其中legacy测试两侧均不存在）；成员assertFrozen原函数与锁顺序未搬入来源legacy变化，只追加native queued/running计数。"
+    },
+    {
+      "id": "migration",
+      "verdict": "PASS",
+      "detail": "0130 SHA cc25f17ac270d230b82f1697bd20c674931877459cc0a70f667cab3461a3fc70与main字节相同；journal原105条逐字保留，唯一追加idx105/0131。0131报告唯一键带user/group/account/platform/kind/sha/selection_key，完整冻结行保留；convergence固定身份/前缀/未知严格拒绝。"
+    },
+    {
+      "id": "owner-and-lease",
+      "verdict": "PASS_STATIC_AND_ISOLATED",
+      "detail": "start/claim/cancel/commit真实account/member锁及冻结membership重验，组转移原锁序保留；commit原事务校验identity、scope、generation、leaseToken/expiry及page账本，再写原组报告。原旧报告不改归属。不得把schema迁移PG通过当成真人同步或所有跨连接转组族已验证。"
+    },
+    {
+      "id": "native-data-boundary",
+      "verdict": "PASS_STATIC_AND_ISOLATED",
+      "detail": "nativeReports合同强制works/accountMetrics/workMetrics为空，末页后实停才完成；五种原生payload/raw/date/单位/0/null/负关注/行列与字节限制明确；实际bytes SHA与机械selection组成去重键，不凭标题拼接作品，不伪装平台作品总目录或终身累计。"
+    },
+    {
+      "id": "scheduler-and-original-task",
+      "verdict": "PASS_STATIC_AND_ISOLATED",
+      "detail": "已存在custom/disabled同sourceKind job复用，默认错峰仅缺失任务；原scheduled owner/admission冻结与恢复维持，TIMEOUT partial不会自动重领或新建task；生产manual queue复用attempt和唯一account队列，页面未知结果保留原key。"
+    },
+    {
+      "id": "private-browser-stage",
+      "verdict": "PASS_STATIC_WITH_DEADLINE_FINDING",
+      "detail": "实际stable identity、同官方origin/path/DOM/日期下载witness；后台窄端口编排与worker浏览器分离。onStopped拥有实际profile释放证明，无法确认停止保留pending stop；默认无私密失败图。绝对deadline存在，但在途renew finally缺口见I002，不能整体判期限通过。"
+    },
+    {
+      "id": "worker-supplychain",
+      "verdict": "PASS_STATIC_UNKNOWN_PACKAGE",
+      "detail": "仅新增SheetJS官方0.20.3精确tarball/integrity，原Pi/worker exports/既有补丁未改；当前worker108测试及type通过。不签安装版依赖、当前打包产物或真人平台支持。"
+    },
+    {
+      "id": "ui-state-and-polling",
+      "verdict": "PASS_ISOLATED_FAIL_PUBLIC_RECOVERY",
+      "detail": "原成员AccountRow/转组/隐藏保留，native分支严格account/member/group，无报表真实空态，表格按需展开，单在途读取/epoch/卸载防旧回写、未知同key及超时显式新意图。76组件/装配测试通过；首Chrome扫码恢复失败见I001；截图实际查看仅事实状态，不是独立新视觉方向评审。"
+    },
+    {
+      "id": "public-chrome",
+      "verdict": "FAIL",
+      "detail": "首轮52.602101秒exit1；三视频号空态视口截图已产生，不等于完整两账号旅程通过。0run/0report/0binding/profile停后同库证明尚未执行到，不能因逻辑预期当实际PASS。"
+    },
+    {
+      "id": "full-gates-installed-live",
+      "verdict": "UNKNOWN",
+      "detail": "本次未运行全量reconcile/新安装/真人微信；没有把52exact、108/76/109/12及四types代签全部Gate。原家族researching、2实验已耗尽、剩余0、navigationCause UNKNOWN、0报告、liveExecutionPaused保持。"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-current-contract-red.json",
+      "sha256": "71bd254d629ec10a239df7124911b79c317c0e6c7e6dfe731d242282c411e78d",
+      "receipt": {
+        "argv": [
+          "pnpm",
+          "--dir",
+          "contract",
+          "exec",
+          "vitest",
+          "run",
+          "tests/current-wechat-integration.test.ts",
+          "--retry=0",
+          "--no-file-parallelism",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T19:45:48.755048+00:00",
+        "finishedAt": "2026-10-09T19:45:50.238002+00:00",
+        "exitCode": 1,
+        "elapsedSeconds": 1.4827798749902286,
+        "logSha256": "955c8b323995ce03022e72d805312219a01a49d1c82bf7f1b1e86d91d5eed189"
+      },
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-current-contract-red.log",
+      "actualLogSha256": "955c8b323995ce03022e72d805312219a01a49d1c82bf7f1b1e86d91d5eed189",
+      "receiptLogMatches": true,
+      "summaryLines": [
+        "⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯",
+        " Test Files  1 failed (1)",
+        "      Tests  2 failed | 1 passed (3)",
+        "   Duration  774ms (transform 394ms, setup 0ms, import 617ms, tests 7ms, environment 0ms)"
+      ]
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-suite-contract.json",
+      "sha256": "f5c577eb85b3328938e10d81664e87fd1c422ba13ad5f38723d900654015df74",
+      "receipt": {
+        "argv": [
+          "pnpm",
+          "--dir",
+          "contract",
+          "exec",
+          "vitest",
+          "run",
+          "tests/platform-native-reports.test.ts",
+          "tests/registry.test.ts",
+          "tests/current-wechat-integration.test.ts",
+          "--retry=0",
+          "--no-file-parallelism",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T19:46:52.539053+00:00",
+        "finishedAt": "2026-10-09T19:46:56.453222+00:00",
+        "exitCode": 1,
+        "elapsedSeconds": 3.913414041046053,
+        "logSha256": "f7f0a4d64348030e5beeb98bf922eae01232ca06b98d483bc04ab02ec6d84b81"
+      },
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-suite-contract.log",
+      "actualLogSha256": "f7f0a4d64348030e5beeb98bf922eae01232ca06b98d483bc04ab02ec6d84b81",
+      "receiptLogMatches": true,
+      "summaryLines": [
+        "⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯",
+        " Test Files  1 failed | 2 passed (3)",
+        "      Tests  1 failed | 11 passed (12)",
+        "   Duration  1.85s (transform 688ms, setup 0ms, import 1.32s, tests 71ms, environment 2ms)"
+      ]
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-suite-worker.json",
+      "sha256": "ec63dbf9e20df6ff5132100481fcaff7603ce727d85059012a06d05ed8682717",
+      "receipt": {
+        "argv": [
+          "pnpm",
+          "--dir",
+          "ai-worker",
+          "exec",
+          "vitest",
+          "run",
+          "src/runtime/platform/wechat-browser-source.test.ts",
+          "src/runtime/platform/wechat-dom-witness.test.ts",
+          "src/runtime/platform/wechat-native-report-parser.test.ts",
+          "--retry=0",
+          "--no-file-parallelism",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T19:46:52.539068+00:00",
+        "finishedAt": "2026-10-09T19:47:02.242346+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 9.702469540992752,
+        "logSha256": "7d6ca68869abf49e9da254e36e64844d30380e7ad9d6c66e3ac3814a275351f1"
+      },
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-suite-worker.log",
+      "actualLogSha256": "7d6ca68869abf49e9da254e36e64844d30380e7ad9d6c66e3ac3814a275351f1",
+      "receiptLogMatches": true,
+      "summaryLines": [
+        " Test Files  3 passed (3)",
+        "      Tests  108 passed (108)",
+        "   Duration  6.95s (transform 672ms, setup 0ms, import 2.02s, tests 4.46s, environment 0ms)"
+      ]
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-suite-frontend.json",
+      "sha256": "eddb166662f42cb470dd9a5e1532d72f9dec8ba4176a9fb0e69ebfff56bb438f",
+      "receipt": {
+        "argv": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "exec",
+          "vitest",
+          "run",
+          "src/features/platform-account/account-binding-panel.test.tsx",
+          "src/features/platform-account/account-group-manager.test.tsx",
+          "src/features/platform-account/native-report-page.test.tsx",
+          "src/features/platform-account/native-report-panel.test.tsx",
+          "src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+          "src/server/ingestion/account-binding-stage.integration.test.ts",
+          "--retry=0",
+          "--no-file-parallelism",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T19:46:52.539184+00:00",
+        "finishedAt": "2026-10-09T19:48:11.684957+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 79.14494283299427,
+        "logSha256": "2f494c19e8826516204c8ea1336db7017c0f1043849776aa1908cc9715c50eeb"
+      },
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-suite-frontend.log",
+      "actualLogSha256": "2f494c19e8826516204c8ea1336db7017c0f1043849776aa1908cc9715c50eeb",
+      "receiptLogMatches": true,
+      "summaryLines": [
+        " Test Files  6 passed (6)",
+        "      Tests  76 passed (76)",
+        "   Duration  76.50s (transform 7.73s, setup 776ms, import 12.15s, tests 59.88s, environment 2.81s)"
+      ]
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-suite-backend.json",
+      "sha256": "b65b5106efcbefd9880b4bbaba82ea197d77265357b3eb8f724cd64391462b6b",
+      "receipt": {
+        "argv": [
+          "pnpm",
+          "--dir",
+          "backend",
+          "exec",
+          "vitest",
+          "run",
+          "src/application/collection/wechat-native-collector.test.ts",
+          "src/application/platform-collection/periodic.test.ts",
+          "src/application/scheduling/platform-collector.test.ts",
+          "src/application/workspace/startup.test.ts",
+          "src/migration-convergence.test.ts",
+          "src/modules/ai-runtime/collection-bootstrap.test.ts",
+          "src/modules/platform-collection/platform-collection.transport.integration.test.ts",
+          "src/modules/platform-collection/platform-native-reports.integration.test.ts",
+          "src/modules/scheduling/private-collector-wechat-admission.test.ts",
+          "--retry=0",
+          "--no-file-parallelism",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T19:46:52.539137+00:00",
+        "finishedAt": "2026-10-09T19:49:40.137249+00:00",
+        "exitCode": 1,
+        "elapsedSeconds": 167.59627133404138,
+        "logSha256": "509c9db01758a2336d560835ea8f07ae02ecfb4641430c3ded8675390dcfa04e"
+      },
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-suite-backend.log",
+      "actualLogSha256": "509c9db01758a2336d560835ea8f07ae02ecfb4641430c3ded8675390dcfa04e",
+      "receiptLogMatches": true,
+      "summaryLines": [
+        "⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯",
+        " Test Files  1 failed | 8 passed (9)",
+        "      Tests  4 failed | 105 passed (109)",
+        "   Duration  165.71s (transform 2.58s, setup 0ms, import 6.82s, tests 157.67s, environment 1ms)"
+      ]
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1162-contract-green.json",
+      "sha256": "f6588b31bd85b29c2482de5284bd2914fe73bfd408d0c57235e5be649dadae36",
+      "receipt": {
+        "argv": [
+          "pnpm",
+          "--dir",
+          "contract",
+          "exec",
+          "vitest",
+          "run",
+          "tests/registry.test.ts",
+          "tests/platform-native-reports.test.ts",
+          "tests/current-wechat-integration.test.ts",
+          "--retry=0",
+          "--no-file-parallelism",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T19:52:36.328438+00:00",
+        "finishedAt": "2026-10-09T19:52:39.678321+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 3.3495984590263106,
+        "logSha256": "b599e4fb1cd9ce3ddf02c2a6d02f5004699fe41f3845814b8a2662c36c01c223"
+      },
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1162-contract-green.log",
+      "actualLogSha256": "b599e4fb1cd9ce3ddf02c2a6d02f5004699fe41f3845814b8a2662c36c01c223",
+      "receiptLogMatches": true,
+      "summaryLines": [
+        " Test Files  3 passed (3)",
+        "      Tests  12 passed (12)",
+        "   Duration  2.41s (transform 1.14s, setup 0ms, import 1.79s, tests 66ms, environment 0ms)"
+      ]
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1163-original-backend-green.json",
+      "sha256": "63b26a6b6e4523ca5a3136ff4b80ada0bb434d7d8365b9316ae68c730182a6b6",
+      "receipt": {
+        "argv": [
+          "pnpm",
+          "--dir",
+          "backend",
+          "exec",
+          "vitest",
+          "run",
+          "src/application/collection/wechat-native-collector.test.ts",
+          "src/application/platform-collection/periodic.test.ts",
+          "src/application/scheduling/platform-collector.test.ts",
+          "src/application/workspace/startup.test.ts",
+          "src/migration-convergence.test.ts",
+          "src/modules/ai-runtime/collection-bootstrap.test.ts",
+          "src/modules/platform-collection/platform-collection.transport.integration.test.ts",
+          "src/modules/platform-collection/platform-native-reports.integration.test.ts",
+          "src/modules/scheduling/private-collector-wechat-admission.test.ts",
+          "--retry=0",
+          "--no-file-parallelism",
+          "--testTimeout=120000",
+          "--hookTimeout=120000"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T19:52:53.155540+00:00",
+        "finishedAt": "2026-10-09T19:56:08.383125+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 195.22545587498462,
+        "logSha256": "f14d1b8ee7d68969f71c2877009ffd1fa1dcc90edf6debbc71e08243555d33c1"
+      },
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1163-original-backend-green.log",
+      "actualLogSha256": "f14d1b8ee7d68969f71c2877009ffd1fa1dcc90edf6debbc71e08243555d33c1",
+      "receiptLogMatches": true,
+      "summaryLines": [
+        " Test Files  9 passed (9)",
+        "      Tests  109 passed (109)",
+        "   Duration  194.63s (transform 3.09s, setup 0ms, import 7.84s, tests 185.53s, environment 1ms)"
+      ]
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-type-backend.json",
+      "sha256": "86927f5ec6ecfb06eda124930e6c53f53b45a7bc955540e0a79164bb73fabb15",
+      "receipt": {
+        "argv": [
+          "pnpm",
+          "--dir",
+          "backend",
+          "typecheck"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T19:54:50.850116+00:00",
+        "finishedAt": "2026-10-09T19:55:40.229055+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 49.37821187503869,
+        "logSha256": "931327292db1bbff62320abd8dd57032ae19ad39b9e012d04233dc49d716637b"
+      },
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-type-backend.log",
+      "actualLogSha256": "931327292db1bbff62320abd8dd57032ae19ad39b9e012d04233dc49d716637b",
+      "receiptLogMatches": true,
+      "summaryLines": []
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-type-ai-worker.json",
+      "sha256": "3e4871ce12bf511e9076cff81b1c858cf921a634bb6533316ebf4c72db7ea8d8",
+      "receipt": {
+        "argv": [
+          "pnpm",
+          "--dir",
+          "ai-worker",
+          "typecheck"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T19:54:50.849542+00:00",
+        "finishedAt": "2026-10-09T19:55:04.774800+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 13.925028250028845,
+        "logSha256": "f7e0274cdcecda48497f193a594347fce2e14a12f0cadab4ba3a707690fa4ead"
+      },
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-type-ai-worker.log",
+      "actualLogSha256": "f7e0274cdcecda48497f193a594347fce2e14a12f0cadab4ba3a707690fa4ead",
+      "receiptLogMatches": true,
+      "summaryLines": []
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-type-frontend.json",
+      "sha256": "aa0f512ff202566998fb1eb073ec051a510db059162e4aa041bbdaeee14711c9",
+      "receipt": {
+        "argv": [
+          "pnpm",
+          "--dir",
+          "frontend",
+          "typecheck"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T19:54:50.845078+00:00",
+        "finishedAt": "2026-10-09T19:55:46.948346+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 56.10262025002157,
+        "logSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035"
+      },
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-type-frontend.log",
+      "actualLogSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035",
+      "receiptLogMatches": true,
+      "summaryLines": []
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-type-contract.json",
+      "sha256": "14e8bbdb74d53ea32ccea95b3d3ef54d5d0d1b10764793be495b26fc7d9cbb0f",
+      "receipt": {
+        "argv": [
+          "pnpm",
+          "--dir",
+          "contract",
+          "typecheck"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T19:54:50.852933+00:00",
+        "finishedAt": "2026-10-09T19:55:00.471771+00:00",
+        "exitCode": 0,
+        "elapsedSeconds": 9.618499749980401,
+        "logSha256": "d819a6e1f78b2951433132e182dffbbd1eaa881e6c535db02871314377997331"
+      },
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-type-contract.log",
+      "actualLogSha256": "d819a6e1f78b2951433132e182dffbbd1eaa881e6c535db02871314377997331",
+      "receiptLogMatches": true,
+      "summaryLines": []
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-precommit-normal-browser.json",
+      "sha256": "4432d390da64f3a51875336f225259d8218871f624edb3a68ef3b2153ec5d339",
+      "receipt": {
+        "argv": [
+          "node",
+          "docs/verification/t1159/run-report-journey.mjs"
+        ],
+        "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "startedAt": "2026-10-09T19:57:07.786506+00:00",
+        "finishedAt": "2026-10-09T19:58:00.389136+00:00",
+        "exitCode": 1,
+        "elapsedSeconds": 52.60210100002587,
+        "logSha256": "3539bacc1b22833a9ba2fddbd027697b2a249223fd3252b23fd3596caa41506c"
+      },
+      "logPath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1159-precommit-normal-browser.log",
+      "actualLogSha256": "3539bacc1b22833a9ba2fddbd027697b2a249223fd3252b23fd3596caa41506c",
+      "receiptLogMatches": true,
+      "summaryLines": []
+    }
+  ],
+  "additionalEvidence": [
+    {
+      "path": "docs/verification/t1165/original-browser-failure/actual-refusal.json",
+      "sha256": "1c2ecfeb1aab3c8de64d8c4e355b16a12bce1f6dbda53da7e491bc5b3be4f615"
+    },
+    {
+      "path": "docs/verification/t1165/original-browser-failure/MANIFEST.json",
+      "sha256": "6dc4f1bf11f25811019793b1a7896fb933bd9e704c58696520a6f15ff6f13ca2"
+    },
+    {
+      "path": "docs/verification/t1165/original-browser-failure/current-journey.json",
+      "sha256": "62ee6b4401a5f3e0b3a314bd4dd0e2e66a31fdcfbe9c573e60da2b6b60c13cd8"
+    },
+    {
+      "path": "docs/verification/t1159/current-journey.json",
+      "sha256": "62ee6b4401a5f3e0b3a314bd4dd0e2e66a31fdcfbe9c573e60da2b6b60c13cd8"
+    },
+    {
+      "path": "docs/verification/t1159/current-journey.log",
+      "sha256": "80d39db4176244e0915790478816d5724fc47e99dce608ab5561787019c9df76"
+    },
+    {
+      "path": "docs/features/t1165-platform-scope-error-envelope.md",
+      "sha256": "f31799ea20ba4d68356c85783a4eb18899c2c81c3a3cc7f62870f5391f982663"
+    }
+  ],
+  "screenshotsActuallyViewed": [
+    {
+      "path": "docs/verification/t1165/original-browser-failure/test-failed-1.png",
+      "sha256": "e198b3dbebd16587d83f5bcb2071ccafe42b939c544d9aedd82a2db2ba47de77",
+      "actuallyViewed": true
+    },
+    {
+      "path": "docs/verification/t1159/screenshots/wechatVideo-empty-390.png",
+      "sha256": "b74e95cfdf1297c8cdf09ef9380f8e5f5cdf7fdcad4e73531bed2896ae9dd172",
+      "actuallyViewed": true
+    }
+  ],
+  "sourceResearch": {
+    "family": "wechat-statistics-visible-section",
+    "status": "researching",
+    "consumedExperiments": 2,
+    "remainingExperiments": 0,
+    "videoBound": true,
+    "officialBound": false,
+    "reports": 0,
+    "navigationCause": "UNKNOWN",
+    "liveExecutionPaused": true
+  },
+  "limits": [
+    "纯只读源码/历史及本轮实际日志核对；没有复跑测试/Next/DB/业务/模型/CLI/App/进程。",
+    "I002为明确源码控制流反例，未执行新增RED；不可冒称已复現生产卡顿或整个冷慢根因。",
+    "I003为配置闭包不匹配，不是已发生Chrome失败的解释。",
+    "T1165之后当前公共GREEN待真实证据；本报告不签其正式SPEC或实施。",
+    "未签新视觉方向、安装版、真人微信binding/sync/scheduler/启动触发、全功能或task complete。",
+    "任何受审sourceHashes改变需重新绑定并仅复核实际改动。"
+  ]
+}

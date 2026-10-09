@@ -1,0 +1,77 @@
+{
+  "head": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "sourceSha256": {
+    "frontend/src/components/media/asset-picker.tsx": "236d01545bcddac731f2cccc2cf2ce454ac653aed682b7df390e92cacdc5f14e",
+    "frontend/src/components/media/asset-media-preview.tsx": "7ca28b2d737331713413d1b2d2ae7b22d2e43db1fc47cc084581aa6eedd2489d",
+    "frontend/src/components/media/use-asset-picker-source.ts": "a9339c94712d97b477b91015dbde2e9bc30a81e1eb16fc97eac3dc106bc28f07",
+    "frontend/src/features/creative-canvas/canvas-asset-picker.tsx": "8780dbace3bcfed9c3bdfc0dacd63e6414ec2ec8d97ecd585f133bc2f3e6ad55",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "d67ba3e119fc7aa8dc18c2b83a295befdecd710915fccf34d8bc45716780cec9",
+    "frontend/tests/e2e/t1140-picker-low-height.spec.ts": "7e83385dce28ed66077b8632833ab927c2cf03a424d637b434b51f60a855212d",
+    "docs/verification/t1140/run-picker-journey.mjs": "e1ab3359fc4e32a085eeacd40bfe626c75cf1287eebd587627d2317972989470"
+  },
+  "observedAt": "2026-10-09T19:24:53.408234+00:00",
+  "rootActuallyViewed": [
+    {
+      "file": "screenshots/portrait-1366x900.png",
+      "sha256": "8c2c4afdfc192bc471038f66f2e299b3dff0df80250e00bccf8593f4ee4f47cb"
+    },
+    {
+      "file": "screenshots/portrait-1024x680.png",
+      "sha256": "0d1f3fb59585c80a8a34000a8db59e1a6e1368083983d18b83990bc1ba586fe5"
+    },
+    {
+      "file": "screenshots/portrait-683x450.png",
+      "sha256": "8bfe8c411a72cd4cfacf1ef3037fae307e392552188bfeabe681bf0628938090"
+    },
+    {
+      "file": "screenshots/portrait-390x900.png",
+      "sha256": "e0aa560ac4eaf18abe03775f87b5bfaf76ad6eabcb5673e6944f6a48e45547ea"
+    },
+    {
+      "file": "screenshots/portrait-390x450.png",
+      "sha256": "f4e49ada17ada3ab4473d82096d1108d7246001322f14f22ec0ddfdf09dc825a"
+    },
+    {
+      "file": "screenshots/portrait-512x340.png",
+      "sha256": "f8629ff2feed8b49776e5ecfb5819b69eda534a38dd8d5a77ff0852e5839bc0b"
+    },
+    {
+      "file": "screenshots/gallery-preview-1366x900.png",
+      "sha256": "96099c1aa5c171ee2efa452089673c31755fb3c7ca0f718b39ebe8d35cb09daa"
+    },
+    {
+      "file": "screenshots/gallery-preview-1024x680.png",
+      "sha256": "4d66ba067e408af377a402ceedffa3c57f3429bb6410b1f3d4fc1b8705e3653a"
+    },
+    {
+      "file": "screenshots/gallery-preview-683x450.png",
+      "sha256": "14ad02f0cc6b829d7011a3bed474cd9b615d2d225e3c8abe3f83d4d5690b05a5"
+    },
+    {
+      "file": "screenshots/gallery-preview-390x900.png",
+      "sha256": "4058da18c10f0c2f98067047c45c213168e35781af05b18ff571540c81009ff1"
+    },
+    {
+      "file": "screenshots/gallery-preview-390x450.png",
+      "sha256": "cfb523f6e04ed72d0da2b70bcd82797988c1f16a4d08f46640ed3aa97c5970c1"
+    },
+    {
+      "file": "screenshots/gallery-preview-512x340.png",
+      "sha256": "e2314376031f46654770d7e000259b1a660cc81a9c713a631c406e84237be483"
+    },
+    {
+      "file": "screenshots/exact-before-confirm.png",
+      "sha256": "e3d3b6faf8b222377b48752950b2d4c8a975ffdca6ad9b075227212a75d156d8"
+    },
+    {
+      "file": "screenshots/read-error.png",
+      "sha256": "626792ef85e4e53a0eeff6e06696e3ac40fbfcaba075111c0381da7b371333ac"
+    }
+  ],
+  "finding": "限定本任务状态：中文可读、弹层在窗口内，预览完整且无卡片重叠；低高主体允许滚动，操作固定或可返回。",
+  "independentVisualReview": false,
+  "nativeApp": false,
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "humanAcceptance": false
+}

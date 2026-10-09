@@ -7967,6 +7967,439 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1159": {
+      "task_id": "T-1159",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1159-current-wechat-native-report-integration.md",
+        "docs/verification/t1159/SOURCE_MANIFEST.json",
+        "docs/verification/t1158/ADMISSION_REVIEW.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        ".agents/skills/oil-ui-pro/SKILL.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "ai-worker/package.json",
+        "ai-worker/smoke/t1110-native-report-private-files.ts",
+        "ai-worker/src/runtime/platform/wechat-browser-source.test.ts",
+        "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+        "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts",
+        "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+        "ai-worker/src/runtime/platform/wechat-native-report-parser.test.ts",
+        "ai-worker/src/runtime/platform/wechat-native-report-parser.ts",
+        "backend/drizzle/0131_platform_native_reports.sql",
+        "backend/drizzle/meta/_journal.json",
+        "backend/src/application/collection/wechat-native-collector.test.ts",
+        "backend/src/application/collection/wechat-native-collector.ts",
+        "backend/src/application/platform-collection/periodic.test.ts",
+        "backend/src/application/platform-collection/periodic.ts",
+        "backend/src/application/scheduling/platform-collector.test.ts",
+        "backend/src/application/scheduling/platform-collector.ts",
+        "backend/src/application/workspace/startup.test.ts",
+        "backend/src/application/workspace/startup.ts",
+        "backend/src/migration-convergence.test.ts",
+        "backend/src/migration-convergence.ts",
+        "backend/src/modules/ai-runtime/collection-bootstrap.test.ts",
+        "backend/src/modules/ai-runtime/collection-bootstrap.ts",
+        "backend/src/modules/platform-account/account-binding.service.ts",
+        "backend/src/modules/platform-account/browser-profile-authority.service.ts",
+        "backend/src/modules/platform-account/index.ts",
+        "backend/src/modules/platform-account/local-platform-binding-stage.ts",
+        "backend/src/modules/platform-account/membership-lock.service.ts",
+        "backend/src/modules/platform-collection/platform-collection.service.ts",
+        "backend/src/modules/platform-collection/platform-collection.transport.integration.test.ts",
+        "backend/src/modules/platform-collection/platform-collection.transport.ts",
+        "backend/src/modules/platform-collection/platform-native-reports.integration.test.ts",
+        "backend/src/modules/scheduling/private-collector-admission.service.ts",
+        "backend/src/modules/scheduling/private-collector-wechat-admission.test.ts",
+        "backend/src/schema/platform-collection.ts",
+        "contract/src/cli-policy.ts",
+        "contract/src/index.ts",
+        "contract/src/operations/platform-collection.ts",
+        "contract/src/resources/platform-capabilities.ts",
+        "contract/src/resources/platform-native-reports.ts",
+        "contract/src/workspace-operation-scope.ts",
+        "contract/tests/platform-native-reports.test.ts",
+        "contract/tests/registry.test.ts",
+        "frontend/src/app/(creator)/accounts/works/page.tsx",
+        "frontend/src/features/platform-account/account-binding-panel.test.tsx",
+        "frontend/src/features/platform-account/account-binding-panel.tsx",
+        "frontend/src/features/platform-account/account-group-manager.test.tsx",
+        "frontend/src/features/platform-account/account-group-manager.tsx",
+        "frontend/src/features/platform-account/native-report-page.test.tsx",
+        "frontend/src/features/platform-account/native-report-panel.test.tsx",
+        "frontend/src/features/platform-account/native-report-panel.tsx",
+        "frontend/src/features/platform-account/platform-account-labels.ts",
+        "frontend/src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+        "frontend/src/server/ingestion/account-binding-stage.integration.test.ts",
+        "frontend/src/server/ingestion/account-binding-stage.ts",
+        "frontend/src/server/persistence-client.ts",
+        "pnpm-lock.yaml"
+      ],
+      "write_set": [
+        "ai-worker/package.json",
+        "ai-worker/smoke/t1110-native-report-private-files.ts",
+        "ai-worker/src/runtime/platform/wechat-browser-source.test.ts",
+        "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+        "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts",
+        "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+        "ai-worker/src/runtime/platform/wechat-native-report-parser.test.ts",
+        "ai-worker/src/runtime/platform/wechat-native-report-parser.ts",
+        "backend/drizzle/0131_platform_native_reports.sql",
+        "backend/drizzle/meta/_journal.json",
+        "backend/src/application/collection/wechat-native-collector.test.ts",
+        "backend/src/application/collection/wechat-native-collector.ts",
+        "backend/src/application/platform-collection/periodic.test.ts",
+        "backend/src/application/platform-collection/periodic.ts",
+        "backend/src/application/scheduling/platform-collector.test.ts",
+        "backend/src/application/scheduling/platform-collector.ts",
+        "backend/src/application/workspace/startup.test.ts",
+        "backend/src/application/workspace/startup.ts",
+        "backend/src/migration-convergence.test.ts",
+        "backend/src/migration-convergence.ts",
+        "backend/src/modules/ai-runtime/collection-bootstrap.test.ts",
+        "backend/src/modules/ai-runtime/collection-bootstrap.ts",
+        "backend/src/modules/platform-account/account-binding.service.ts",
+        "backend/src/modules/platform-account/browser-profile-authority.service.ts",
+        "backend/src/modules/platform-account/index.ts",
+        "backend/src/modules/platform-account/local-platform-binding-stage.ts",
+        "backend/src/modules/platform-account/membership-lock.service.ts",
+        "backend/src/modules/platform-collection/platform-collection.service.ts",
+        "backend/src/modules/platform-collection/platform-collection.transport.integration.test.ts",
+        "backend/src/modules/platform-collection/platform-collection.transport.ts",
+        "backend/src/modules/platform-collection/platform-native-reports.integration.test.ts",
+        "backend/src/modules/scheduling/private-collector-admission.service.ts",
+        "backend/src/modules/scheduling/private-collector-wechat-admission.test.ts",
+        "backend/src/schema/platform-collection.ts",
+        "contract/src/cli-policy.ts",
+        "contract/src/index.ts",
+        "contract/src/operations/platform-collection.ts",
+        "contract/src/resources/platform-capabilities.ts",
+        "contract/src/resources/platform-native-reports.ts",
+        "contract/src/workspace-operation-scope.ts",
+        "contract/tests/platform-native-reports.test.ts",
+        "contract/tests/registry.test.ts",
+        "frontend/src/app/(creator)/accounts/works/page.tsx",
+        "frontend/src/features/platform-account/account-binding-panel.test.tsx",
+        "frontend/src/features/platform-account/account-binding-panel.tsx",
+        "frontend/src/features/platform-account/account-group-manager.test.tsx",
+        "frontend/src/features/platform-account/account-group-manager.tsx",
+        "frontend/src/features/platform-account/native-report-page.test.tsx",
+        "frontend/src/features/platform-account/native-report-panel.test.tsx",
+        "frontend/src/features/platform-account/native-report-panel.tsx",
+        "frontend/src/features/platform-account/platform-account-labels.ts",
+        "frontend/src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+        "frontend/src/server/ingestion/account-binding-stage.integration.test.ts",
+        "frontend/src/server/ingestion/account-binding-stage.ts",
+        "frontend/src/server/persistence-client.ts",
+        "pnpm-lock.yaml",
+        "contract/tests/current-wechat-integration.test.ts",
+        "frontend/tests/e2e/t1159-wechat-native-report.spec.ts",
+        "docs/features/t1159-current-wechat-native-report-integration.md",
+        "docs/features/t1159-current-wechat-native-report-integration.review.md",
+        "docs/features/t1159-current-wechat-native-report-integration.review-input.json",
+        "docs/verification/t1159/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/process/reconcile.config.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm install --frozen-lockfile --ignore-scripts",
+          "pnpm --dir contract exec vitest run tests/platform-native-reports.test.ts tests/registry.test.ts tests/current-wechat-integration.test.ts --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir backend exec vitest run src/application/collection/wechat-native-collector.test.ts src/application/platform-collection/periodic.test.ts src/application/scheduling/platform-collector.test.ts src/application/workspace/startup.test.ts src/migration-convergence.test.ts src/modules/ai-runtime/collection-bootstrap.test.ts src/modules/platform-collection/platform-collection.transport.integration.test.ts src/modules/platform-collection/platform-native-reports.integration.test.ts src/modules/scheduling/private-collector-wechat-admission.test.ts --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir ai-worker exec vitest run src/runtime/platform/wechat-browser-source.test.ts src/runtime/platform/wechat-dom-witness.test.ts src/runtime/platform/wechat-native-report-parser.test.ts --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir frontend exec vitest run src/features/platform-account/account-binding-panel.test.tsx src/features/platform-account/account-group-manager.test.tsx src/features/platform-account/native-report-page.test.tsx src/features/platform-account/native-report-panel.test.tsx src/server/__module_integration__/local-platform-binding.persistence-client.test.ts src/server/ingestion/account-binding-stage.integration.test.ts --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir contract typecheck",
+          "pnpm --dir backend typecheck",
+          "pnpm --dir ai-worker typecheck",
+          "pnpm --dir frontend typecheck",
+          "pnpm --dir ai-worker build",
+          "node docs/verification/t1159/run-report-journey.mjs",
+          "node docs/verification/t1101/run-journey.mjs",
+          "node docs/verification/t1136/run-layout-journey.mjs",
+          "node docs/verification/t1140/run-picker-journey.mjs",
+          "pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-interactions.test.tsx src/features/knowledge/knowledge-dump-zone.test.tsx src/features/topics/topics-interactions.test.tsx src/components/overlays/overlay-routing.test.tsx src/lib/copilot-navigation.test.ts src/features/copilot/chat-tool-trace.test.tsx src/features/automations/run-controls.test.tsx src/features/automations/cadence.test.ts --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "git diff --check",
+          "node orchestrator/process/pmem.mjs sync",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
+    },
+    "T-1161": {
+      "task_id": "T-1161",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1161-preserve-wechat-account-management.md",
+        "docs/features/t1159-current-wechat-native-report-integration.md",
+        ".agents/skills/oil-ui-pro/SKILL.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md"
+      ],
+      "write_set": [
+        "docs/features/t1161-preserve-wechat-account-management.md",
+        "docs/features/t1161-preserve-wechat-account-management.review.md",
+        "docs/features/t1161-preserve-wechat-account-management.review-input.json",
+        "docs/verification/t1161/**",
+        "BACKLOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "PROJECT.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/features/platform-account/account-group-manager.test.tsx src/features/platform-account/account-binding-panel.test.tsx src/features/platform-account/native-report-panel.test.tsx src/features/platform-account/account-manager-interactions.test.tsx --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "node docs/verification/t1159/run-report-journey.mjs",
+          "git diff --check"
+        ]
+      }
+    },
+    "T-1162": {
+      "task_id": "T-1162",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1162-registry-approved-route-expectation.md",
+        "contract/src/endpoints.ts"
+      ],
+      "write_set": [
+        "contract/tests/registry.test.ts",
+        "docs/features/t1162-registry-approved-route-expectation.md",
+        "docs/features/t1162-registry-approved-route-expectation.review.md",
+        "docs/features/t1162-registry-approved-route-expectation.review-input.json",
+        "docs/verification/t1162/**",
+        "BACKLOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "PROJECT.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir contract exec vitest run tests/registry.test.ts tests/platform-native-reports.test.ts tests/current-wechat-integration.test.ts --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir contract typecheck",
+          "git diff --check"
+        ]
+      }
+    },
+    "T-1165": {
+      "task_id": "T-1165",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1165-platform-scope-error-envelope.md",
+        "docs/features/t1020-service-contract-review.md",
+        "docs/features/t1159-current-wechat-native-report-integration.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "contract/src/envelope.ts",
+        "frontend/src/app/api/v1/dispatch/route.test.ts",
+        "docs/features/t1165-platform-scope-error-envelope.md",
+        "docs/features/t1165-platform-scope-error-envelope.review.md",
+        "docs/features/t1165-platform-scope-error-envelope.review-input.json",
+        "docs/verification/t1165/**",
+        "BACKLOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "PROJECT.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/app/api/v1/dispatch/route.test.ts src/lib/http-transport.test.ts src/features/platform-account/native-report-panel.test.tsx --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir contract typecheck",
+          "pnpm --dir frontend typecheck",
+          "node docs/verification/t1159/run-report-journey.mjs",
+          "git diff --check"
+        ]
+      }
+    },
+    "T-1166": {
+      "task_id": "T-1166",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1166-report-journey-outer-budget.md",
+        "docs/features/t1159-current-wechat-native-report-integration.md",
+        "docs/engineering/timeout-policy.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/t1159-wechat-native-report.spec.ts",
+        "docs/verification/t1159/run-report-journey.mjs",
+        "docs/features/t1166-report-journey-outer-budget.md",
+        "docs/features/t1166-report-journey-outer-budget.review.md",
+        "docs/features/t1166-report-journey-outer-budget.review-input.json",
+        "docs/verification/t1166/**",
+        "BACKLOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/DECISION_LOG.md",
+        "PROJECT.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "node --check docs/verification/t1159/run-report-journey.mjs",
+          "node docs/verification/t1159/run-report-journey.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "git diff --check"
+        ]
+      }
+    },
+    "T-1167": {
+      "task_id": "T-1167",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1167-collector-pending-renewal-finalization.md",
+        "docs/features/t1159-current-wechat-native-report-integration.md",
+        "docs/engineering/timeout-policy.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "backend/src/application/collection/wechat-native-collector.ts",
+        "backend/src/application/collection/wechat-native-collector.test.ts",
+        "docs/features/t1167-collector-pending-renewal-finalization.md",
+        "docs/features/t1167-collector-pending-renewal-finalization.review.md",
+        "docs/features/t1167-collector-pending-renewal-finalization.review-input.json",
+        "docs/verification/t1167/**",
+        "BACKLOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/DECISION_LOG.md",
+        "PROJECT.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir backend exec vitest run src/application/collection/wechat-native-collector.test.ts src/modules/platform-collection/platform-native-reports.integration.test.ts src/modules/platform-collection/platform-collection.transport.integration.test.ts src/modules/ai-runtime/collection-bootstrap.test.ts --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir backend typecheck",
+          "pnpm --dir ai-worker typecheck",
+          "node tools/timeout-policy/verify.mjs",
+          "git diff --check"
+        ]
+      }
+    },
+    "T-1168": {
+      "task_id": "T-1168",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1168-native-report-recovery-actions.md",
+        "docs/features/t1159-current-wechat-native-report-integration.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/src/features/platform-account/native-report-panel.tsx",
+        "frontend/src/features/platform-account/native-report-panel.test.tsx",
+        "frontend/tests/e2e/t1159-wechat-native-report.spec.ts",
+        "docs/features/t1168-native-report-recovery-actions.md",
+        "docs/features/t1168-native-report-recovery-actions.review.md",
+        "docs/features/t1168-native-report-recovery-actions.review-input.json",
+        "docs/verification/t1168/**",
+        "BACKLOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "PROJECT.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/features/platform-account/native-report-panel.test.tsx --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir frontend typecheck",
+          "node docs/verification/t1159/run-report-journey.mjs",
+          "git diff --check"
+        ]
+      }
+    },
+    "T-1169": {
+      "task_id": "T-1169",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1169-account-transfer-focus-return.md",
+        "docs/features/t1159-current-wechat-native-report-integration.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/src/features/platform-account/account-group-manager.tsx",
+        "frontend/src/features/platform-account/account-group-manager.test.tsx",
+        "frontend/tests/e2e/t1159-wechat-native-report.spec.ts",
+        "docs/features/t1169-account-transfer-focus-return.md",
+        "docs/features/t1169-account-transfer-focus-return.review.md",
+        "docs/features/t1169-account-transfer-focus-return.review-input.json",
+        "docs/verification/t1169/**",
+        "BACKLOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "PROJECT.md"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/features/platform-account/account-group-manager.test.tsx --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir frontend typecheck",
+          "node docs/verification/t1159/run-report-journey.mjs",
+          "git diff --check"
+        ]
+      }
     }
   }
 }

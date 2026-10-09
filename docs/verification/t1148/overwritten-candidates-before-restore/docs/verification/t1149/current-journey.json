@@ -1,0 +1,51 @@
+{
+  "schema": "creatoros-browser-journey/v1",
+  "task_id": "T-1149",
+  "head": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "surface": "browser",
+  "mode": "non-fixture",
+  "input": "fresh public synthetic group/project/canvas records and uploaded built-in illustrative images; declared capability and one save-error response fixtures",
+  "startedAt": "2026-10-09T19:09:11.568Z",
+  "finishedAt": "2026-10-09T19:10:27.075Z",
+  "elapsedSeconds": 75.50366991599999,
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "playwright",
+    "test",
+    "tests/e2e/t1149-cover-aspect-group.spec.ts",
+    "--project=e2e",
+    "--retries=0"
+  ],
+  "exitCode": 0,
+  "signal": null,
+  "error": null,
+  "logSha256": "b422f24b9ac66af33fb7d6f06e05b992e4a726d76997a2c90754f5365492bc48",
+  "rawLogSha256": "1db192f74078ec7f8626a512560f8d2bd5ab99c61f5def8b08d4796e7cb407e3",
+  "rawLogPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1149-k8xUrm/aspect-journey-raw.log",
+  "sourceSha256": {
+    "frontend/src/features/creative-canvas/cover-aspect-ratio-labels.ts": "e78d44f0850bfc3b212804763fb0537713286cd790e63fff399f8170fcb5d408",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "d67ba3e119fc7aa8dc18c2b83a295befdecd710915fccf34d8bc45716780cec9",
+    "frontend/src/features/creative-canvas/canvas-template-library.tsx": "296211da8ab736533477714310744e14ce7ee17e11e230976fee0ec59f8b8899",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "50636caf2a006875d4b2b9d040645a2018a032f6dd94ff436367481998db5b5f",
+    "frontend/src/features/creative-canvas/canvas-template-library.test.tsx": "585702fbe59bccc81ff8f0b1d4517edf5b0c1172930f08fc37ed3998b73b3dff",
+    "frontend/tests/e2e/t1149-cover-aspect-group.spec.ts": "4f4740185171f9d0b51b60602b09899ad00bfb67c38d036c9933a7d5f3ffbf2d",
+    "docs/verification/t1149/run-aspect-journey.mjs": "0efbbc6192d11a805c92ef1689ba60d213dd43b0c663d81247f597ae785ce40a"
+  },
+  "sourceAfter": {
+    "frontend/src/features/creative-canvas/cover-aspect-ratio-labels.ts": "e78d44f0850bfc3b212804763fb0537713286cd790e63fff399f8170fcb5d408",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "d67ba3e119fc7aa8dc18c2b83a295befdecd710915fccf34d8bc45716780cec9",
+    "frontend/src/features/creative-canvas/canvas-template-library.tsx": "296211da8ab736533477714310744e14ce7ee17e11e230976fee0ec59f8b8899",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "50636caf2a006875d4b2b9d040645a2018a032f6dd94ff436367481998db5b5f",
+    "frontend/src/features/creative-canvas/canvas-template-library.test.tsx": "585702fbe59bccc81ff8f0b1d4517edf5b0c1172930f08fc37ed3998b73b3dff",
+    "frontend/tests/e2e/t1149-cover-aspect-group.spec.ts": "4f4740185171f9d0b51b60602b09899ad00bfb67c38d036c9933a7d5f3ffbf2d",
+    "docs/verification/t1149/run-aspect-journey.mjs": "0efbbc6192d11a805c92ef1689ba60d213dd43b0c663d81247f597ae785ce40a"
+  },
+  "retries": 0,
+  "nativeApp": false,
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "humanViewed": false
+}

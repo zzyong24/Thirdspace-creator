@@ -1,0 +1,162 @@
+Browser tab: 52369429, Title: "CreatorOS", URL: "http://127.0.0.1:31469/accounts".
+0 AXWebArea CreatorOS, URL: 127.0.0.1:31469/accounts
+	1 container
+		4 container 主侧栏
+			5 checkbox Description: 展开侧栏, Value: 1
+			6 container 主要导航
+				7 link Description: 首页, Value: 127.0.0.1:31469/
+				8 link Description: 创作者总览, Value: 127.0.0.1:31469/overview
+				9 link Description: 定位中心, Value: 127.0.0.1:31469/positioning
+				10 link Description: 内容雷达, Value: 127.0.0.1:31469/intelligence
+				11 link Description: 选题, Value: 127.0.0.1:31469/topics
+				12 link Description: 项目, Value: 127.0.0.1:31469/projects
+				13 link Description: 知识库, Value: 127.0.0.1:31469/knowledge
+				14 link Description: 素材中心, Value: 127.0.0.1:31469/assets
+				15 link Description: 创作画布, Value: 127.0.0.1:31469/canvases
+				16 link Description: 发布中心, Value: 127.0.0.1:31469/publishing
+				17 link Description: 运营分析, Value: 127.0.0.1:31469/daily-report
+				18 link Description: 自动化, Value: 127.0.0.1:31469/automations
+				19 link Description: 设置, Value: 127.0.0.1:31469/settings
+			20 pop up button (collapsed) Description: 帮助与反馈, Secondary Actions: Expand
+			21 pop up button (collapsed) Description: 当前账号组：微信报表入口验收, Help: 微信报表入口验收, ID: radix-_R_bqp9eslb_, Secondary Actions: Expand
+			22 container 创作者
+				23 text ?
+		24 container
+			25 container
+				26 text 账号组与绑定账号 管理创作者工作区和各平台账号
+			27 container
+				28 heading 账号组与绑定账号, Value: 1
+					29 text 账号组与绑定账号
+				30 text 同一创作者的内容在一个工作区管理，平台账号分别绑定与分发。
+				31 container 账号组
+					32 text 账号组
+					33 checkbox (settable, integer) Description: 显示已归档组, Value: 0
+					34 content list
+						35 checkbox 微信报表入口验收 2 个平台账号, Value: 1
+						36 checkbox 管理操作验收目标组 0 个平台账号, Value: 0
+					37 text 新账号组名称
+					38 text field (settable) 新账号组名称, ID: new-group-name
+					39 button (disabled) 创建账号组
+				40 container 微信报表入口验收
+					41 text 微信报表入口验收
+					42 text 账号组名称
+					43 text field (settable) 账号组名称, Value: 微信报表入口验收, ID: group-name
+					44 button (disabled) 保存名称
+					45 button 进入此账号组
+					46 button (collapsed) 管理账号组, Secondary Actions: Expand
+						47 text 管理账号组
+					48 link Description: 继续创作 →, Value: 127.0.0.1:31469/projects
+				49 container 组内平台账号
+					50 text 组内平台账号
+					51 text 同平台可以登记多个账号，发布时选择具体目标。
+					52 content list
+						53 container
+							54 text 中性视频号账号 视频号  ·  身份未验证 · 未自动采集
+							55 button (collapsed) 账号管理与能力, Secondary Actions: Expand
+								56 text 账号管理与能力
+						57 container
+							58 text 中性公众号账号 公众号  ·  身份未验证 · 未自动采集
+							59 button (collapsed) 账号管理与能力, Secondary Actions: Expand
+								60 text 账号管理与能力
+				61 container 平台能力
+					62 text 平台能力
+					63 text 能力来自当前已装配的服务。可用不代表账号已登录，采集结果以真实任务为准。
+					64 text 正在读取平台能力…
+					65 table 各平台能力
+						66 row
+							67 cell
+								68 text 平台
+							69 cell
+								70 text 扫码绑定
+							71 cell
+								72 text 自动采集
+							73 cell
+								74 text 自动发布
+							75 cell
+								76 text 平台草稿
+							77 cell
+								78 text 手动登记
+						79 row
+							80 cell
+								81 text 抖音
+							82 cell
+								83 text 未读取
+							84 cell
+								85 text 未读取
+							86 cell
+								87 text 未读取
+							88 cell
+								89 text 未读取
+							90 cell
+								91 text 未读取
+						92 row
+							93 cell
+								94 text 快手
+							95 cell
+								96 text 未读取
+							97 cell
+								98 text 未读取
+							99 cell
+								100 text 未读取
+							101 cell
+								102 text 未读取
+							103 cell
+								104 text 未读取
+						105 row
+							106 cell
+								107 text 视频号
+							108 cell
+								109 text 未读取
+							110 cell
+								111 text 未读取
+							112 cell
+								113 text 未读取
+							114 cell
+								115 text 未读取
+							116 cell
+								117 text 未读取
+						118 row
+							119 cell
+								120 text 公众号
+							121 cell
+								122 text 未读取
+							123 cell
+								124 text 未读取
+							125 cell
+								126 text 未读取
+							127 cell
+								128 text 未读取
+							129 cell
+								130 text 未读取
+						131 row
+							132 cell
+								133 text 小红书
+							134 cell
+								135 text 未读取
+							136 cell
+								137 text 未读取
+							138 cell
+								139 text 未读取
+							140 cell
+								141 text 未读取
+							142 cell
+								143 text 未读取
+					144 text 先进入此账号组，再扫码绑定。
+				145 container 手动登记平台账号
+					146 text 手动登记平台账号
+					147 text 目标账号组：微信报表入口验收
+					148 text 先进入此账号组，再绑定或登记账号。
+				149 container 共享资源
+					150 text 共享资源
+					151 text 资料保留在原组，目标组通过授权继续引用。
+					152 checkbox (settable, integer) Description: 显示已撤销授权, Value: 0
+					153 button (disabled) 重新读取
+					154 text 正在读取共享资源…
+				155 container 整理历史资料
+					156 text 整理历史资料
+					157 text 把历史项目与内容归入另一个账号组，先预览完整影响。
+					158 text 先进入此账号组，再查看和整理历史资料。
+		2 pop up button (collapsed) Description: Open Next.js Dev Tools, ID: next-logo, Secondary Actions: Expand
+			3 image
+
+The focused UI element is 0 AXWebArea CreatorOS, URL: 127.0.0.1:31469/accounts

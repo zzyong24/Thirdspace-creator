@@ -1,0 +1,29 @@
+{
+  "head": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "observedAt": "2026-10-09T19:26:22.270860+00:00",
+  "rootActuallyViewed": [
+    {
+      "file": "screenshots/t1117-error-narrow.png",
+      "sha256": "b61640a36e5bafc7405a3d631798f53989597b66e9135196ba9d49e679182576"
+    },
+    {
+      "file": "screenshots/t1117-error-normal.png",
+      "sha256": "7c5dc3a6716ba966f03f87fa49b3ee68bca983f5ca094663ecdc093e93d64809"
+    },
+    {
+      "file": "screenshots/t1117-preview-narrow.png",
+      "sha256": "843b295a4b36b6c9a99554001bcd7dbf27c363c54cb66114107503516ee48b59"
+    },
+    {
+      "file": "screenshots/t1117-preview-normal.png",
+      "sha256": "9080ef27de2b9d0224bb9d903aa08226a07cc7418720852755e43af23589b222"
+    }
+  ],
+  "finding": "限定合同：中文网络错误可读，旧连线恢复动作可见，参考卡和弹层仅预览不展示文件名；缩略图及右预览均已加载。",
+  "expectedDevelopmentError": "原测试明确route.abort(failed)，开发portal1 Issue保留；不签系统无错误。",
+  "independentVisualReview": false,
+  "nativeApp": false,
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "humanAcceptance": false
+}

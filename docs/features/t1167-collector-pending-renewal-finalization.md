@@ -1,0 +1,9 @@
+# T1167 修复采集结束被在途续租无限拖住
+
+独立实现只读复核发现 backend/src/application/collection/wechat-native-collector.ts finally 无条件 await renewalInFlight。浏览器等待虽受原deadline/取消限制，但续租端口Promise未返回时整个execute无法交付终态；目前测试只验证续租最终resolve，缺deadline/取消/正常完成与pending心跳交叉。现为可构造反例，未作真人实验，不冒称已实测产品FAIL。
+
+阶段4-build维护，精确产品写集仅该collector.ts的结束路径；测试写集仅同目录wechat-native-collector.test.ts，新增原公开execute组合下受控deferred续租与三终态交叉。先独立SPEC审查/start，未改产品取得实际RED。确认后finally不等待不能取消的心跳Promise；renew自有try/catch仍接收晚拒绝，active=false及controller原截止阻止晚结果续心跳、回写执行状态/提交报表。保原attempt/30分钟绝对期限/单心跳在途/失败归属/用户取消/原保存数据；不自行释放浏览器profile，实停仍只有onStopped证明，未实停返回stopUnconfirmed。不能force退出、伪complete、添加新attempt/续期或弱化lease/owner边界。
+
+新增测试在未完成续租时分别核原deadline返回partial TASK_TIMEOUT、父取消返回cancelled CANCELLED、真实全部报告+实停正常complete；都核原attempt/已保报表、无假释放/无新claim。再resolve/reject晚心跳和真实stop，核无新增续租/报表/失败写以及late report拒绝；finally只清测试deferred，不能在断言前resolve来洗绿。原collector全测试与nativeReports service/transport/collection bootstrap、backend/worker类型、timeout/LED047公共回归以及diff保留。合成窄端口不真人扫码/下载、不读真实用户库、不重置来源research budget。
+
+控制/证据写集仅本任务文档/审核/当前证据与BACKLOG/modules/DECISION_LOG及真实事件、生成PROJECT。没有数据归属或服务合同变化；独评后RED若未确认则不改产品，保真实观察。

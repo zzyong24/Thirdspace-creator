@@ -348,3 +348,5 @@ export * from "./resources/production-native-document";
 export * from "./resources/work-editor";
 export * from "./resources/work-creation";
 export * from "./resources/ai-public-message";
+
+export * from "./resources/platform-native-reports";

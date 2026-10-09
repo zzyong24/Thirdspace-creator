@@ -1,0 +1,438 @@
+{
+  "task": "T1159 独立真实任务走查",
+  "reviewType": "oil-ui-pro真实任务走查，不作审美评分",
+  "status": "核心报告导航完成；转组Esc焦点返回有缺口；未验证项明确保留",
+  "startedAt": "2026-10-09T20:17:03.554Z",
+  "finishedAt": "2026-10-09T20:21:25.860Z",
+  "environment": {
+    "entry": "http://127.0.0.1:31469/accounts",
+    "browser": "Chrome 1，Cua AX点击与键盘",
+    "tabId": "52369429",
+    "version": "当前31469隔离实例；未读取源码或版本号",
+    "testData": "微信报表入口验收组；中性视频号账号、中性公众号账号；身份未验证、未自动采集、无后台报表",
+    "viewportReset": true
+  },
+  "scope": {
+    "readOnly": true,
+    "sourceCodeRead": false,
+    "playwrightActionUsed": false,
+    "arbitraryEvaluationUsed": false,
+    "syncClicked": false,
+    "scanStarted": false,
+    "collectionOrModelCalled": false,
+    "transferCommitted": false,
+    "hiddenOrArchived": false,
+    "repositoryModified": false,
+    "serverRestartedOrStopped": false
+  },
+  "results": [
+    {
+      "task": "查看视频号真实数据并返回、再进入",
+      "outcome": "完成",
+      "evidenceSteps": [
+        "S01",
+        "S02",
+        "S03",
+        "S05",
+        "S06",
+        "S07",
+        "S19",
+        "S20"
+      ],
+      "observed": "账号行直接查看数据→对应视频号后台原生报表；尚未采集、尚无后台报表；二次Enter进入一致；390宽度主流程闭合"
+    },
+    {
+      "task": "查看公众号真实数据并返回、再进入",
+      "outcome": "完成",
+      "evidenceSteps": [
+        "S08",
+        "S09",
+        "S10",
+        "S11"
+      ],
+      "observed": "键盘Tab/Enter进入对应公众号后台原生报表；空状态一致；二次进入仍对应同账号"
+    },
+    {
+      "task": "找到管理、转组和隐藏，仅打开弹窗后退出",
+      "outcome": "动作完成，焦点返回未通过",
+      "evidenceSteps": [
+        "S12",
+        "S13",
+        "S14",
+        "S15",
+        "S16",
+        "S17"
+      ],
+      "observed": "两个账号均能展开管理看到转组和隐藏。转组初始焦点目标账号组，Esc关闭成功；关闭后焦点页面根节点，没有恢复触发按钮"
+    },
+    {
+      "task": "纯选择绑定弹窗Esc",
+      "outcome": "未执行",
+      "observed": "当前完整AX未见通用绑定账号或纯选择入口；平台能力表控件直接名为扫码绑定视频号账号/扫码绑定公众号账号，与禁止最终扫码动作同名，因此未点击，不对弹窗焦点作失败推断"
+    }
+  ],
+  "findings": [
+    {
+      "id": "F01",
+      "severity": "可用性缺口",
+      "type": "弹窗焦点返回",
+      "location": "中性视频号与公众号账号转组弹窗",
+      "expected": "UI_RULES要求Esc与焦点返回；关闭后回到发起转组按钮",
+      "actual": "视频号S14、公众号S17的AX焦点均为0 AXWebArea CreatorOS；视频号截图后复读完整AX仍为根节点",
+      "impact": "键盘用户退出后没有明确的原操作焦点",
+      "evidenceSteps": [
+        "S13",
+        "S14",
+        "S16",
+        "S17"
+      ],
+      "screenshots": [
+        "05-transfer-dialog.jpg",
+        "06-transfer-esc.jpg",
+        "08-publication-transfer-900.jpg"
+      ],
+      "recommendation": "弹窗关闭时恢复到对应账号转组触发器，并在两平台Esc后实测焦点"
+    },
+    {
+      "id": "F02",
+      "severity": "操作成本",
+      "type": "返回后再次进入",
+      "location": "两平台报告返回账号列表",
+      "expected": "再次使用相同账号数据入口",
+      "actual": "路由返回后AX焦点根节点；第一Tab到显示已归档组，视频号需8次Tab、公众号需10次Tab到对应数据链接；Enter可进入",
+      "impact": "报告导航可完成，重复键盘使用需要经过组管理控件",
+      "evidenceSteps": [
+        "S03",
+        "S04",
+        "S05",
+        "S08",
+        "S10",
+        "S11"
+      ],
+      "screenshots": [
+        "03-video-keyboard-focus.jpg"
+      ],
+      "recommendation": "由主任务按合同决定是否优化返回位置；本报告不宣称路由必须恢复成员链接焦点或属于违约"
+    }
+  ],
+  "counts": {
+    "blocked": 0,
+    "wrongTurn": 0,
+    "hesitation": 0,
+    "focusIssues": 1,
+    "routeKeyboardCost": 1
+  },
+  "notPerformed": [
+    "未重复同步身份拒绝验证；父任务已说明单次正式Chrome验证，本次不引用为本轮证据",
+    "未人为制造失败、断网、慢响应，因为本轮禁止触发同步、采集、扫码等执行动作；失败恢复不标为通过",
+    "未执行转组、隐藏、归档、查看转组影响、保存或重新登记",
+    "未打开纯选择绑定弹窗，未点任何扫码绑定控件",
+    "未验证200%缩放、1280×800、reduce-motion、持久保存、发布回执",
+    "未核取CSS标题字号；实际图可读但不能据截图精确确认24px要求",
+    "900×900只检查账号入口/管理/转组，未在该视口进入报告；390×900只复走视频号主流程，未复走公众号完整窄屏流程"
+  ],
+  "steps": [
+    {
+      "id": "S01",
+      "at": "2026-10-09T20:17:03.554Z",
+      "action": "选择微信报表入口验收组",
+      "result": "当前工作区包含中性视频号账号与中性公众号账号，各有查看数据链接；身份未验证、未自动采集",
+      "classification": "完成"
+    },
+    {
+      "id": "S02",
+      "at": "2026-10-09T20:17:13.019Z",
+      "action": "点击中性视频号账号的查看数据入口",
+      "result": "报告识别为视频号·后台原生报表；最近采集尚未采集、尚无后台报表，未显示伪造指标",
+      "classification": "完成"
+    },
+    {
+      "id": "S03",
+      "at": "2026-10-09T20:17:30.674Z",
+      "action": "使用报告页的返回账号链接",
+      "result": "返回后AX焦点为页面根节点；首个Tab进入显示已归档组，未回到原账号的数据入口",
+      "classification": "操作成本"
+    },
+    {
+      "id": "S04",
+      "at": "2026-10-09T20:17:36.118Z",
+      "action": "返回后按Tab检查焦点",
+      "result": "第1次Tab焦点为显示已归档组",
+      "classification": "观察"
+    },
+    {
+      "id": "S05",
+      "at": "2026-10-09T20:17:47.888Z",
+      "action": "从返回后的起点再按7次Tab，共8次Tab",
+      "result": "焦点到达查看中性视频号账号的数据；焦点环可见",
+      "classification": "操作成本"
+    },
+    {
+      "id": "S06",
+      "at": "2026-10-09T20:17:52.244Z",
+      "action": "在视频号查看数据链接上按Enter",
+      "result": "第二次进入相同视频号报告；无额外弹窗与采集动作",
+      "classification": "完成"
+    },
+    {
+      "id": "S07",
+      "at": "2026-10-09T20:18:05.922Z",
+      "action": "第二次报告内Tab一次到返回账号，再Enter",
+      "result": "返回列表；纯键盘可返回",
+      "classification": "完成"
+    },
+    {
+      "id": "S08",
+      "at": "2026-10-09T20:18:10.385Z",
+      "action": "从返回后的起点按10次Tab",
+      "result": "第10次Tab到达查看中性公众号账号的数据",
+      "classification": "操作成本"
+    },
+    {
+      "id": "S09",
+      "at": "2026-10-09T20:18:16.244Z",
+      "action": "公众号查看数据入口按Enter",
+      "result": "进入公众号后台原生报表空状态",
+      "classification": "完成"
+    },
+    {
+      "id": "S10",
+      "at": "2026-10-09T20:18:25.290Z",
+      "action": "公众号报告返回账号",
+      "result": "返回账号列表，焦点根节点",
+      "classification": "完成"
+    },
+    {
+      "id": "S11",
+      "at": "2026-10-09T20:18:33.836Z",
+      "action": "返回后Tab10次再Enter",
+      "result": "第二次进入相同公众号原生报表空状态",
+      "classification": "完成"
+    },
+    {
+      "id": "S12",
+      "at": "2026-10-09T20:18:40.130Z",
+      "action": "展开中性视频号账号的账号管理与能力",
+      "result": "展开后可见转组与隐藏；未执行管理变更",
+      "classification": "完成"
+    },
+    {
+      "id": "S13",
+      "at": "2026-10-09T20:18:44.203Z",
+      "action": "打开中性视频号账号转组弹窗",
+      "result": "打开后焦点在目标账号组；Esc关闭后焦点结果见S14",
+      "classification": "完成"
+    },
+    {
+      "id": "S14",
+      "at": "2026-10-09T20:18:52.106Z",
+      "action": "转组弹窗按Esc退出",
+      "result": "Esc关闭成功；关闭后AX焦点为页面根节点，未回到转组按钮。截图后再次完整AX仍为根节点",
+      "classification": "焦点问题"
+    },
+    {
+      "id": "S15",
+      "at": "2026-10-09T20:19:10.249Z",
+      "action": "900×900下展开公众号账号管理",
+      "result": "900宽度侧栏折叠，公众号转组与隐藏可见",
+      "classification": "完成"
+    },
+    {
+      "id": "S16",
+      "at": "2026-10-09T20:19:23.909Z",
+      "action": "900宽度打开公众号转组弹窗",
+      "result": "公众号身份与目标组可读，初始焦点目标账号组",
+      "classification": "完成"
+    },
+    {
+      "id": "S17",
+      "at": "2026-10-09T20:19:33.912Z",
+      "action": "公众号转组弹窗按Esc",
+      "result": "Esc关闭；AX焦点页面根节点，未回到转组按钮",
+      "classification": "焦点问题"
+    },
+    {
+      "id": "S18",
+      "at": "2026-10-09T20:19:43.663Z",
+      "action": "切换390×900并回到账号页顶部",
+      "result": "390宽度视频号查看数据入口可见；组名输入内容被窄窗裁切，但旁边完整组名仍可见",
+      "classification": "完成"
+    },
+    {
+      "id": "S19",
+      "at": "2026-10-09T20:19:52.877Z",
+      "action": "390宽度点击视频号查看数据",
+      "result": "进入视频号报告空状态",
+      "classification": "完成"
+    },
+    {
+      "id": "S20",
+      "at": "2026-10-09T20:20:23.870Z",
+      "action": "390宽度报告返回账号",
+      "result": "返回账号列表；窄屏主任务闭合",
+      "classification": "完成"
+    }
+  ],
+  "captures": [
+    {
+      "file": "01-accounts-desktop.jpg",
+      "capturedAt": "2026-10-09T20:17:03.554Z",
+      "requestedViewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "page": "/accounts",
+      "state": "微信报表入口验收组，两个中性账号的查看数据入口",
+      "actualImageSize": {
+        "width": 1366,
+        "height": 900
+      },
+      "dimensionVerification": "sips读取已保存JPEG像素尺寸；与文档支持的viewport override一致",
+      "actuallyViewed": true
+    },
+    {
+      "file": "02-video-report-desktop.jpg",
+      "capturedAt": "2026-10-09T20:17:20.014Z",
+      "requestedViewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "page": "/accounts/works?accountId=acct-61c1e07d-10",
+      "state": "视频号后台原生报表，尚无后台报表",
+      "actualImageSize": {
+        "width": 1366,
+        "height": 900
+      },
+      "dimensionVerification": "sips读取已保存JPEG像素尺寸；与文档支持的viewport override一致",
+      "actuallyViewed": true
+    },
+    {
+      "file": "03-video-keyboard-focus.jpg",
+      "capturedAt": "2026-10-09T20:17:47.888Z",
+      "requestedViewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "page": "/accounts",
+      "state": "返回后第8次Tab到达视频号查看数据入口，紫色焦点环可见",
+      "actualImageSize": {
+        "width": 1366,
+        "height": 900
+      },
+      "dimensionVerification": "sips读取已保存JPEG像素尺寸；与文档支持的viewport override一致",
+      "actuallyViewed": true
+    },
+    {
+      "file": "04-publication-report-desktop.jpg",
+      "capturedAt": "2026-10-09T20:18:21.590Z",
+      "requestedViewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "page": "/accounts/works?accountId=acct-61c1e07d-13",
+      "state": "公众号后台原生报表，尚无后台报表",
+      "actualImageSize": {
+        "width": 1366,
+        "height": 900
+      },
+      "dimensionVerification": "sips读取已保存JPEG像素尺寸；与文档支持的viewport override一致",
+      "actuallyViewed": true
+    },
+    {
+      "file": "05-transfer-dialog.jpg",
+      "capturedAt": "2026-10-09T20:18:47.657Z",
+      "requestedViewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "page": "/accounts",
+      "state": "中性视频号账号转组弹窗；焦点在目标账号组，未查看影响或确认",
+      "actualImageSize": {
+        "width": 1366,
+        "height": 900
+      },
+      "dimensionVerification": "sips读取已保存JPEG像素尺寸；与文档支持的viewport override一致",
+      "actuallyViewed": true
+    },
+    {
+      "file": "06-transfer-esc.jpg",
+      "capturedAt": "2026-10-09T20:19:00.301Z",
+      "requestedViewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "page": "/accounts",
+      "state": "转组弹窗Esc后，管理仍展开；AX焦点为页面根节点",
+      "actualImageSize": {
+        "width": 1366,
+        "height": 900
+      },
+      "dimensionVerification": "sips读取已保存JPEG像素尺寸；与文档支持的viewport override一致",
+      "actuallyViewed": true
+    },
+    {
+      "file": "07-accounts-900.jpg",
+      "capturedAt": "2026-10-09T20:19:14.485Z",
+      "requestedViewport": {
+        "width": 900,
+        "height": 900
+      },
+      "page": "/accounts",
+      "state": "900宽度侧栏折叠；公众号管理展开",
+      "actualImageSize": {
+        "width": 900,
+        "height": 900
+      },
+      "dimensionVerification": "sips读取已保存JPEG像素尺寸；与文档支持的viewport override一致",
+      "actuallyViewed": true
+    },
+    {
+      "file": "08-publication-transfer-900.jpg",
+      "capturedAt": "2026-10-09T20:19:28.682Z",
+      "requestedViewport": {
+        "width": 900,
+        "height": 900
+      },
+      "page": "/accounts",
+      "state": "公众号转组弹窗，初始焦点目标组",
+      "actualImageSize": {
+        "width": 900,
+        "height": 900
+      },
+      "dimensionVerification": "sips读取已保存JPEG像素尺寸；与文档支持的viewport override一致",
+      "actuallyViewed": true
+    },
+    {
+      "file": "09-accounts-390-top.jpg",
+      "capturedAt": "2026-10-09T20:19:47.205Z",
+      "requestedViewport": {
+        "width": 390,
+        "height": 900
+      },
+      "page": "/accounts",
+      "state": "390宽度账号页顶部",
+      "actualImageSize": {
+        "width": 390,
+        "height": 900
+      },
+      "dimensionVerification": "sips读取已保存JPEG像素尺寸；与文档支持的viewport override一致",
+      "actuallyViewed": true
+    },
+    {
+      "file": "10-video-report-390.jpg",
+      "capturedAt": "2026-10-09T20:19:56.867Z",
+      "requestedViewport": {
+        "width": 390,
+        "height": 900
+      },
+      "page": "/accounts/works?accountId=acct-61c1e07d-10",
+      "state": "390宽度视频号报告，标题多行与空状态可读",
+      "actualImageSize": {
+        "width": 390,
+        "height": 900
+      },
+      "dimensionVerification": "sips读取已保存JPEG像素尺寸；与文档支持的viewport override一致",
+      "actuallyViewed": true
+    }
+  ]
+}

@@ -1,0 +1,290 @@
+{
+  "schema": "creatoros-existing-ui-review/v1",
+  "task_id": "T-1159",
+  "reviewed_at_utc": "2026-10-09T20:19:19.699950+00:00",
+  "evidence_head": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "skill": {
+    "name": "oil-ui-pro",
+    "version": "0.10.0",
+    "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/SKILL.md",
+    "protocol": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/visual-review.md",
+    "mode": "给已有界面评审",
+    "round": 1,
+    "score": null
+  },
+  "standards": [
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1022-account-group-workspace/UI_RULES.md",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/visual-language.md"
+  ],
+  "independence": {
+    "independent_current_context": true,
+    "implementation_source_read": false,
+    "prior_review_read": false,
+    "production_history_read": false,
+    "browser_started": false,
+    "tests_started": false,
+    "additional_agents_started": false,
+    "repository_modified": false
+  },
+  "scope": "组内微信账号的数据／原生报表详情页：视频号与公众号，尚未采集及身份失败恢复状态；保留既有紫色品牌与总体布局。",
+  "result": "一轮评审完成，存在可观察状态文案及动作层级问题；不构成入口、扫码或真实报表的交互通过证据。",
+  "screenshots": [
+    {
+      "checkpoint": "wechatVideo-empty-1366",
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/fixed-beforecommit/screenshots/wechatVideo-empty-1366.png",
+      "sha256": "7d1097537441a9e203827eafa9713b02db828b40e35ac47ac5f3e30388a1b003",
+      "logical_viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "image_pixels": {
+        "width": 1366,
+        "height": 900
+      },
+      "state": "not_collected_empty",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "observation": "视频号账号全名、平台与尚未采集可见；同步为紫色主按钮；未展示虚假指标或曲线。"
+    },
+    {
+      "checkpoint": "wechatOfficial-empty-1366",
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/fixed-beforecommit/screenshots/wechatOfficial-empty-1366.png",
+      "sha256": "f6c238c4d623b2fc2789eb4e208b6e97df6f188d5ddb17d7e922e0aa7a6b6694",
+      "logical_viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "image_pixels": {
+        "width": 1366,
+        "height": 900
+      },
+      "state": "not_collected_empty",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "observation": "公众号与视频号空态结构、间距和动作样式一致；账号全名可见。"
+    },
+    {
+      "checkpoint": "wechatVideo-identity-required",
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/fixed-beforecommit/screenshots/wechatVideo-identity-required.png",
+      "sha256": "54d4a5fabb618061cd7b4d34ec98c739828e2a542ccd16add517c78206178685",
+      "logical_viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "image_pixels": {
+        "width": 1366,
+        "height": 900
+      },
+      "state": "identity_required",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "observation": "先扫码绑定的红色说明与红色描边恢复按钮可见；下方空态仍提示点击同步，顶部同步呈淡紫色。"
+    },
+    {
+      "checkpoint": "wechatOfficial-identity-required",
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/fixed-beforecommit/screenshots/wechatOfficial-identity-required.png",
+      "sha256": "17769353058b4fa52a451fd9cc35b5b3883404d98a64b5afb07654b59309b91d",
+      "logical_viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "image_pixels": {
+        "width": 1366,
+        "height": 900
+      },
+      "state": "identity_required",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "observation": "身份失败说明、恢复按钮和矛盾空态文案与视频号一致。"
+    },
+    {
+      "checkpoint": "wechatVideo-empty-900",
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/fixed-beforecommit/screenshots/wechatVideo-empty-900.png",
+      "sha256": "3f0776c64b35e22dd9eeaba4cd7dc17a6ba4d0bd48396406bd90e09881b5cc47",
+      "logical_viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "image_pixels": {
+        "width": 900,
+        "height": 900
+      },
+      "state": "not_collected_empty",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "observation": "侧栏折叠；账号标题、平台、采集状态和同步按钮均完整；组名在画面中不可见。"
+    },
+    {
+      "checkpoint": "wechatOfficial-empty-900",
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/fixed-beforecommit/screenshots/wechatOfficial-empty-900.png",
+      "sha256": "88cf86cbc25fb5d12a786c93761ffb2746730407d65b9a46ddffa76b0a66ac9c",
+      "logical_viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "image_pixels": {
+        "width": 900,
+        "height": 900
+      },
+      "state": "not_collected_empty",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "observation": "公众号空态保持相同折叠侧栏与完整主要内容；组名在画面中不可见。"
+    },
+    {
+      "checkpoint": "wechatVideo-empty-390",
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/fixed-beforecommit/screenshots/wechatVideo-empty-390.png",
+      "sha256": "b74e95cfdf1297c8cdf09ef9380f8e5f5cdf7fdcad4e73531bed2896ae9dd172",
+      "logical_viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "image_pixels": {
+        "width": 390,
+        "height": 900
+      },
+      "state": "not_collected_empty",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "observation": "标题两行、同步按钮下移；关键内容无可见横向裁切；空态“读取”断为“读／取”。"
+    },
+    {
+      "checkpoint": "wechatOfficial-empty-390",
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/fixed-beforecommit/screenshots/wechatOfficial-empty-390.png",
+      "sha256": "6f59282fa083a1463733f831da0dac9df749347085fba37cfc16ff9c7d595dbd",
+      "logical_viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "image_pixels": {
+        "width": 390,
+        "height": 900
+      },
+      "state": "not_collected_empty",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "observation": "公众号标题两行；同步与空态完整可见；同样存在“读取”跨行。"
+    }
+  ],
+  "findings": [
+    {
+      "id": "VR-01",
+      "severity": "中",
+      "type": "可观察状态缺陷",
+      "position": "视频号、公众号的 identity-required 状态：错误说明下方的空态框",
+      "evidence": [
+        "wechatVideo-identity-required",
+        "wechatOfficial-identity-required"
+      ],
+      "observation": "上方写“请先扫码绑定这个账号，再同步数据”，下方仍写“尚无后台报表，可点击‘同步数据’读取当前账号数据”。顶部同步按钮呈淡紫色。",
+      "impact": "同一状态给出两个不同的下一步顺序，用户可能重新尝试同步而忽略恢复。",
+      "recommendation": "身份失败时移除空态中的同步指令，只保留“尚无后台报表”，或改为“完成账号绑定后即可同步报表”。保留错误原因和当前账号；正常空态保留同步动作。",
+      "verification": "在同一身份失败状态检查整个内容区只指向先绑定；绑定结束后再确认同步成为可用的下一步。后者需要真实操作，本轮未验证。",
+      "preference": false,
+      "requires_new_component_or_token": false
+    },
+    {
+      "id": "VR-02",
+      "severity": "中",
+      "type": "规范内的动作层级问题",
+      "position": "视频号、公众号的 identity-required 状态：顶部同步按钮与“扫码绑定账号”",
+      "evidence": [
+        "wechatVideo-identity-required",
+        "wechatOfficial-identity-required"
+      ],
+      "observation": "恢复动作以红字、浅色描边的小按钮显示；顶部同步仍保持实心按钮轮廓，只降低了紫色强调。可见错误说明和按钮能被找到，但有效下一步的强调不足。",
+      "impact": "用户需要比较两处动作才能确定现在该做什么；红色恢复按钮更接近警告或危险操作的视觉语法。",
+      "recommendation": "用现有 Button 主样式让“扫码绑定账号”成为身份失败状态唯一品牌主动作；红色保留给错误说明。同步若保留，使用清楚的不可用或次级状态，并关联绑定原因。恢复后沿用原同步位置与正常样式。",
+      "verification": "在1366与窄屏身份失败画面检查恢复动作第一眼可识别且仅一个主动作；键盘焦点和点击结果须另做真实走查。",
+      "preference": false,
+      "requires_new_component_or_token": false
+    },
+    {
+      "id": "VR-03",
+      "severity": "低",
+      "type": "待样式复核的规范偏离候选",
+      "position": "全部画面的页面标题，390px尤其明显",
+      "evidence": [
+        "wechatVideo-empty-1366",
+        "wechatOfficial-empty-1366",
+        "wechatVideo-identity-required",
+        "wechatOfficial-identity-required",
+        "wechatVideo-empty-900",
+        "wechatOfficial-empty-900",
+        "wechatVideo-empty-390",
+        "wechatOfficial-empty-390"
+      ],
+      "observation": "标题在截图中呈现约32px级视觉尺度，字面高度接近30px；390px占两行，明显高于规范24px页面标题的密度。截图不能确认CSS字号或实际字体。",
+      "impact": "空态页的首屏重心主要落在标题，采集状态与动作相对次要。",
+      "recommendation": "主Agent复核实际字号；若不是24px，统一已有页面标题变量到规范值，保留账号完整名称和语义换行，不换字体、不改变页面骨架。若本就24px则关闭此候选，不凭截图强改。",
+      "verification": "复核实际样式，并以同状态、同视口检查名称、状态和按钮仍完整可读。",
+      "preference": false,
+      "requires_new_component_or_token": false
+    },
+    {
+      "id": "VR-04",
+      "severity": "低",
+      "type": "可观察文字细节",
+      "position": "390px两种平台的正常空态正文",
+      "evidence": [
+        "wechatVideo-empty-390",
+        "wechatOfficial-empty-390"
+      ],
+      "observation": "“读取当前账号数据”在“读／取”之间跨行。",
+      "impact": "窄屏阅读被词内断行打断，且正文重复描述顶部按钮。",
+      "recommendation": "正常空态简化为“尚无后台报表。同步后可查看当前账号数据。”；也可用现有文字排版规则保持“读取”不拆分。",
+      "verification": "390px实际阅读尺寸检查词内断行、行高与容器高度，保持14–16px正文。",
+      "preference": false,
+      "requires_new_component_or_token": false
+    }
+  ],
+  "retained_tradeoffs": [
+    "保持现有紫色品牌、浅灰画布、固定／折叠侧栏与详情页骨架。",
+    "未采集显示真实缺失状态，不为了丰富画面补曲线、比例或假指标。",
+    "保留账号全名、平台、最近采集和错误原因；不删账号归属信息。",
+    "两个平台继续使用同一套状态和控件语法。",
+    "建议均可使用已有Button、文字变量和状态tokens；无需新主题或总体布局。"
+  ],
+  "delete_copy": [
+    {
+      "state": "identity_required",
+      "text": "可点击“同步数据”读取当前账号数据",
+      "reason": "身份尚未绑定时与有效恢复顺序冲突。"
+    },
+    {
+      "state": "normal_empty",
+      "text": "可点击“同步数据”读取当前账号数据",
+      "reason": "可缩为“同步后可查看当前账号数据”，顶部已有明确动作；“尚无后台报表”保留。"
+    }
+  ],
+  "detail_observations": [
+    "390px没有可见的主要文字／按钮横向裁切；标题语义可读。",
+    "两种平台正常空态与错误状态的控件、正文基线和空态容器外观一致，未看到明显对齐碰撞。",
+    "左下角黑色N圆形浮标遮住部分个人身份图标，归为取证遮挡；未根据此断言生产界面缺陷。"
+  ],
+  "unverified": [
+    "从账号组／账号列表找到数据入口：本批截图已位于详情页，未提供入口页或过程帧。",
+    "真实原生报告的内容、口径、坐标、数据表和更新时间：本批只有尚未采集空态，未展示成功报告。",
+    "真实0与未知值的区分：本批没有数值指标；只能确认未用虚构数字或曲线填空。",
+    "点击同步、点击恢复、扫码、真人平台账号匹配和恢复后的重新读取：本轮无可操作走查；current-journey.json注明 realPlatformCalled=false、nativeApp=false。",
+    "账号／组归属隔离、切换后的旧数据清理：画面能识别账号和平台，但静态图不能证明后台归属；折叠侧栏的组选择可访问名也未验证。",
+    "首页原丰富工作台、五指标和六卡是否保留：未提供首页截图。",
+    "1280×800、1024、宽屏、200%缩放、长账号名、窄屏身份失败、加载与部分平台失败：未提供对应状态图。",
+    "Tab／Enter／Esc、焦点返回、禁用语义、处理中稳定性、响应速度与动效：静态图无法证明。"
+  ],
+  "task_walkthrough": {
+    "performed": false,
+    "reason": "任务限定只读当前静态图，不启动浏览器或测试。",
+    "pass": null
+  },
+  "editing": {
+    "copy_deleted": false,
+    "details_fixed": false,
+    "reason": "本轮仅评审，未修改界面。"
+  },
+  "memory_moment_reviewed": false,
+  "cross_direction_review": {
+    "performed": false,
+    "reason": "已有方向单轮评审，没有多个候选方向。"
+  }
+}

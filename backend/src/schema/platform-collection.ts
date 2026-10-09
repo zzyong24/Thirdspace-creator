@@ -1,6 +1,8 @@
 import { pgTable, text, integer, jsonb, doublePrecision, uniqueIndex, index } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
+import type {NativeReportPayload} from "@creatoros/contract";
+
 // T-1020: local, account-owned collection facts. Only backend service ports write these tables.
 export const platformCollectionBindings = pgTable("platform_collection_bindings", {
   accountId: text("account_id").primaryKey(),
@@ -38,6 +40,9 @@ export const platformBindAttempts = pgTable("platform_bind_attempts", {
 ]);
 
 export const platformCollectionRuns = pgTable("platform_collection_runs", {
+  groupId: text("group_id"),
+  groupVersion: integer("group_version"),
+  membershipVersion: integer("membership_version"),
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
   accountId: text("account_id").notNull(),
@@ -166,3 +171,10 @@ export const platformWorkMetricSnapshots = pgTable("platform_work_metric_snapsho
 }, table => [
   uniqueIndex("platform_work_metrics_evidence_ux").on(table.userId, table.accountId, table.platformWorkId, table.metricKey, table.windowKey, table.source, table.observedAt, table.sourceSnapshotKeyIndex),
 ]);
+
+// T-1110: native source facts retain their collection-time workspace. No catalog projection.
+export const platformNativeReports = pgTable("platform_native_reports", {
+ id:text("id").primaryKey(),userId:text("user_id").notNull(),groupId:text("group_id").notNull(),accountId:text("account_id").notNull(),
+ membershipVersion:integer("membership_version").notNull(),platform:text("platform").notNull(),kind:text("kind").notNull(),sha256:text("sha256").notNull(),selectionKey:text("selection_key").notNull(),
+ payload:jsonb("payload").$type<NativeReportPayload>().notNull(),observedAt:text("observed_at").notNull(),ingestedAt:text("ingested_at").notNull(),
+},t=>[uniqueIndex("platform_native_reports_evidence_ux").on(t.userId,t.groupId,t.accountId,t.platform,t.kind,t.sha256,t.selectionKey),index("platform_native_reports_scope_ix").on(t.userId,t.groupId,t.accountId,t.observedAt)]);

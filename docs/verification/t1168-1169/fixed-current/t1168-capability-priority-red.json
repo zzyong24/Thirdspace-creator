@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/features/platform-account/native-report-panel.test.tsx",
+    "-t",
+    "缺少绑定后的采集能力关闭",
+    "--retry=0",
+    "--no-file-parallelism",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T20:28:56.879317+00:00",
+  "finishedAt": "2026-10-09T20:28:59.681575+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 2.8019665839965455,
+  "logSha256": "f5cb283d58e0692b9be775854d9c35f6f3c04b8be1f88f8a3b12eaca3d56a44c"
+}

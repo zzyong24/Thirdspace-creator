@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { id, iso8601, platformId } from "../primitives";
+import {platformNativeReportPayload} from "./platform-native-reports";
 
 // T-1020: contract-only surface. Runtime endpoints are registered after the
 // service-contract review and backend ownership checks are implemented.
@@ -11,11 +12,12 @@ export const platformCapability = z.enum([
   "accountOverview",
   "workCatalog",
   "workMetrics",
+  "nativeReports",
   "publishDraft",
   "publish",
   "comments",
 ]);
-export const collectionCapability = z.enum(["accountOverview", "workCatalog", "workMetrics"]);
+export const collectionCapability = z.enum(["accountOverview", "workCatalog", "workMetrics", "nativeReports"]);
 export const platformAuthState = z.enum([
   "notRequired",
   "pending",
@@ -231,6 +233,7 @@ const collectionPageBase = z.strictObject({
   observedAt: iso8601,
 });
 export const collectionPageCommit = z.discriminatedUnion("capability", [
+  collectionPageBase.safeExtend({capability:z.literal("nativeReports"),works:z.tuple([]),accountMetrics:z.tuple([]),workMetrics:z.tuple([]),nativeReports:z.array(platformNativeReportPayload).min(1).max(5)}),
   collectionPageBase.safeExtend({
     capability: z.literal("workCatalog"),
     works: z.array(sourceWorkRecord),

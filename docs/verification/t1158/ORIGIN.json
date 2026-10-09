@@ -1,0 +1,46 @@
+{
+  "observedAt": "2026-10-09T19:29:34.929884+00:00",
+  "files": [
+    {
+      "sourceCommit": "293d4e98d2cedbd04eebce16a62f921711ee8079",
+      "path": "docs/features/t1110-wechat-browser-collection.md",
+      "sha256": "cc4c7976146dadb0aafe264780344dfcf509c78cb5ff4c35d02c2a687f46996d"
+    },
+    {
+      "sourceCommit": "293d4e98d2cedbd04eebce16a62f921711ee8079",
+      "path": "docs/research/t1110-wechat-statistics-visible-section.md",
+      "sha256": "765b315a2bf30fd2bd1dab7e274ce2854d430df4c6934a2ba9489ee875dae305"
+    },
+    {
+      "sourceCommit": "293d4e98d2cedbd04eebce16a62f921711ee8079",
+      "path": "docs/verification/t1110/section-results-independent-review.md",
+      "sha256": "f580582895969096db09235345dc2b90864c782ab1d0300d0f5787c24b334ba0"
+    },
+    {
+      "sourceCommit": "293d4e98d2cedbd04eebce16a62f921711ee8079",
+      "path": "docs/verification/t1110/section-exp1-result.json",
+      "sha256": "af4786a97ecf132c6d00d2848f9e378c88aa96286aec760c03a335b17e9e99a6"
+    },
+    {
+      "sourceCommit": "293d4e98d2cedbd04eebce16a62f921711ee8079",
+      "path": "docs/verification/t1110/section-exp2-result.json",
+      "sha256": "9f00dbc0a846e2ccb8acacf4da7f0059a132d488570bac9b2afcfc18b11e8bb5"
+    },
+    {
+      "sourceCommit": "293d4e98d2cedbd04eebce16a62f921711ee8079",
+      "path": "docs/verification/t1110/section-research-cleanup-20261010.json",
+      "sha256": "47c687f85238a3c29658143e2bb6a9dd5ddaa94e91f36fc46ca4d21953d5ffec"
+    },
+    {
+      "sourceCommit": "293d4e98d2cedbd04eebce16a62f921711ee8079",
+      "path": "docs/verification/t1110/product-live-status-20261009.json",
+      "sha256": "e6cdc9aa4464db872d635d14fc14d710f7330de2075fb403da4311746de46471"
+    },
+    {
+      "sourceCommit": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+      "path": "docs/verification/t1124/T1124_SOURCE_INTEGRATION_REVIEW.md",
+      "sha256": "ec76da5dd2f6f3dda9319b4e168c7c0d8f336418b4be56398b879f32abed5af8"
+    }
+  ],
+  "userDataCopied": false
+}

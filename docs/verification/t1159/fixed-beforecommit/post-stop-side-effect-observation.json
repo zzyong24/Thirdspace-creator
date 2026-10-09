@@ -1,0 +1,15 @@
+{
+  "source": "same fresh PGlite after original test server stopped",
+  "accountIds": [
+    "acct-61c1e07d-10",
+    "acct-61c1e07d-13"
+  ],
+  "counts": {
+    "platform_collection_runs": 0,
+    "platform_native_reports": 0,
+    "platform_bind_attempts": 0
+  },
+  "wechatProfileFiles": 0,
+  "domainWrites": false,
+  "realUserDataTouched": false
+}

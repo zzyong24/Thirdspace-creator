@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：独立Cua操作S14/S17显示两平台转组Dialog按Esc关闭后AX焦点落页面根，当前两类转组触发器仅改状态且Dialog无returnFocus处理，与UI_RULES及产品a11y焦点恢复要求一致。仅记录现触发器和原所选组并在关闭时核仍连接/同上下文后回焦，旧元素或切组不抢焦点，可复用现Dialog onCloseAutoFocus实践；不改preview/commit、membership、busy、绑定或路由。先组件Esc/取消RED，再原管理测试及两账号六窗口真实Chrome回焦，保0数据/原身份拒绝和零副作用；未确认的绑定焦点不纳入修复。",
+  "findings": []
+}

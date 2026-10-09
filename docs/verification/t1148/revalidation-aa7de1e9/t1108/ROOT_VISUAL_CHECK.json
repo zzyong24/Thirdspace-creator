@@ -1,0 +1,25 @@
+{
+  "head": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "observedAt": "2026-10-09T19:26:22.266767+00:00",
+  "rootActuallyViewed": [
+    {
+      "file": "screenshots/t1108-interrupted-save.png",
+      "sha256": "01aac081a2f449eb8ccdaade6c1d2a279c9caf44a7af067fa8fa173a3ecc6e23"
+    },
+    {
+      "file": "screenshots/t1108-legacy-narrow.png",
+      "sha256": "6a78bd82677646677552f8f1ac8c65338faa92da155273eb4be33ee334322c4d"
+    },
+    {
+      "file": "screenshots/t1108-legacy-normal.png",
+      "sha256": "5490c4f47d04ebb059191abde31fab12b4ede769db169074f4e9f9679972ef6c"
+    }
+  ],
+  "finding": "限定合同：中文网络错误可读，旧连线恢复动作可见，参考卡和弹层仅预览不展示文件名；缩略图及右预览均已加载。",
+  "expectedDevelopmentError": "原测试明确route.abort(failed)，开发portal1 Issue保留；不签系统无错误。",
+  "independentVisualReview": false,
+  "nativeApp": false,
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "humanAcceptance": false
+}

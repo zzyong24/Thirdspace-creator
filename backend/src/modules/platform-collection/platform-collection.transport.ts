@@ -5,7 +5,7 @@ import type { createPlatformCollectionService } from "./platform-collection.serv
 export const PLATFORM_COLLECTION_OP_IDS = [
   "platforms.capabilities.list", "platforms.bind.begin", "platforms.bind.confirm",
   "platforms.bind.cancel", "platforms.collections.start", "platforms.collections.get",
-  "platforms.collections.cancel", "platforms.works.list", "platforms.metrics.read",
+  "platforms.collections.cancel", "platforms.works.list", "platforms.metrics.read", "platforms.reports.list",
 ] as const;
 
 type PlatformCollectionService = ReturnType<typeof createPlatformCollectionService>;
@@ -57,6 +57,9 @@ export function createPlatformCollectionTransport(serviceFactory: () => Platform
           break;
         case "platforms.collections.cancel":
           data = await service.cancel(ctx, p.accountId ?? "", p.attemptId ?? "");
+          break;
+        case "platforms.reports.list":
+          data=await service.listNativeReports(ctx,{accountId:p.accountId,cursor:q.cursor??null,pageSize:q.pageSize??20});
           break;
         case "platforms.works.list":
           data = await service.listWorks(ctx, { accountId: p.accountId, cursor: q.cursor ?? null,

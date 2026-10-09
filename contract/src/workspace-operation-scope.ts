@@ -450,6 +450,7 @@ export const WORKSPACE_OPERATION_SCOPES = {
   "platforms.collections.cancel": "platform-account",
   "platforms.works.list": "platform-account",
   "platforms.metrics.read": "platform-account",
+  "platforms.reports.list": "platform-account",
   "assets.visualTemplates.list": "group",
   "assets.visualTemplates.save": "group",
   "assets.visualTemplates.remove": "group",

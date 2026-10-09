@@ -70,8 +70,15 @@ export const DAILY_COLLECTION_JOB_DEFAULTS: readonly CollectionJobDefault[] = [
 /** T1101：平台协议能力决定模板；只对缺失任务应用默认错峰，不重写用户计划。 */
 export function collectionJobDefaultsForPlatform(platform:string):readonly CollectionJobDefault[]{
  if(platform==='douyin')return DAILY_COLLECTION_JOB_DEFAULTS;
- if(platform!=='kuaishou'&&platform!=='xiaohongshu')return [];
- return [{sourceKind:'self.metrics',name:platform==='kuaishou'?'快手作品数据同步':'小红书作品数据同步',prompt:'同步已绑定账号的作品目录与真实指标',schedule:platform==='kuaishou'?'5 */2 * * *':'10 */2 * * *',enabledByDefault:true},...DAILY_COLLECTION_JOB_DEFAULTS.filter(t=>t.sourceKind==='topic.daily'||t.sourceKind==='intelligence.sync')];
+ // SEMANTIC_BOUNDARY_ALLOW: 只装配已支持平台的协议任务与时刻，不判断创作内容。
+ const templates:Record<string,{name:string;minute:number}>= {
+  xiaohongshu:{name:'小红书作品数据同步',minute:5},
+  kuaishou:{name:'快手作品数据同步',minute:10},
+  wechatVideo:{name:'视频号后台数据同步',minute:15},
+  wechatOfficial:{name:'公众号后台数据同步',minute:20},
+ };
+ const template=templates[platform];if(!template)return [];
+ return [{sourceKind:'self.metrics',name:template.name,prompt:platform==='wechatVideo'||platform==='wechatOfficial'?'同步已绑定账号的原生后台报表':'同步已绑定账号的作品目录与真实指标',schedule:`${template.minute} */2 * * *`,enabledByDefault:true},...DAILY_COLLECTION_JOB_DEFAULTS.filter(t=>t.sourceKind==='topic.daily'||t.sourceKind==='intelligence.sync')];
 }
 
 // [T-433 S3] 跨账号错峰窗口(分钟):per-account 偏移打散范围。基准 9:00–9:50 + 偏移 [0,180) →

@@ -13,7 +13,8 @@ import {
   validateCliInvocation,
   POST,
 } from "./route";
-import { ENDPOINTS } from "@creatoros/contract";
+import { ENDPOINTS, errorEnvelope } from "@creatoros/contract";
+import { createHttpTransport, HttpTransportError } from "@/lib/http-transport";
 import { resetStore } from "@/server/mock-backend/index";
 import { __resetPersistenceForTests, compositeTransport } from "@/server/persistence-client";
 import { ConflictError as PublishingConflictError } from "@creatoros/backend/modules/publishing";
@@ -34,6 +35,29 @@ vi.mock("@creatoros/backend", async (load) => {
 // 走 T-046 单机免登录:不带 cookie → 本机主用户(= seed canonical user-zyongzhu)直通,
 // dispatch 照旧解析到规范租户,无需 mint 会话。
 const SESSION_COOKIE = "";
+
+it("T1165 平台身份拒绝经正式dispatch和HttpTransport保留固定码及原400", async () => {
+  const response = dispatchErrorResponse(Object.assign(new Error("此账号需要重新完成平台身份核验"), {
+    code: "SCOPE_MISSING",
+    details: {},
+  }));
+  expect(response.status).toBe(400);
+  const body = errorEnvelope.parse(await response.clone().json());
+  expect(body.error).toEqual({ code: "SCOPE_MISSING", message: "此账号需要重新完成平台身份核验", details: {} });
+  const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(response);
+  try {
+    const caught = await createHttpTransport("/api/v1", { groupId: "owned-group", accountId: "owned-account" })
+      .request(ENDPOINTS.startCollection, { params: { accountId: "owned-account" }, query: undefined, body: { capability: "nativeReports", clientRequestId: "original-intent" } })
+      .then(() => null, (error: unknown) => error);
+    expect(caught).toBeInstanceOf(HttpTransportError);
+    expect(caught).toMatchObject({ status: 400, code: "SCOPE_MISSING", details: {} });
+    expect((caught as HttpTransportError).message).toContain(body.error.message);
+    expect(fetchMock).toHaveBeenCalledOnce();
+  } finally { fetchMock.mockRestore(); }
+  const unknown = dispatchErrorResponse(Object.assign(new Error("原未知错误"), { code: "UNREGISTERED_PLATFORM_CODE" }));
+  expect(unknown.status).toBe(400);
+  expect(await unknown.json()).toEqual({ error: "原未知错误" });
+});
 
 it("T-1024 only queues unexpected dispatch failures, never consent recursion or ordinary client errors",()=>{
   expect(shouldCaptureDispatchFailure("projects.get",{code:"OwnershipError"})).toBe(false);

@@ -7,15 +7,16 @@ import {resolveDouyinProfileIdentity} from '@creatoros/ai-worker/browser/profile
 /** 宿主账号目录归属：真实账号查当前登记；尚未完成绑定的目录必须由当前请求显式登记。 */
 export function createBrowserProfileAuthority(db:Db,base:string,options?:{localPlatformRoot?:string}){
  const temporaryOwners=new Map<string,string>();
- type LocalPlatform='xiaohongshu'|'kuaishou';
+ type LocalPlatform='xiaohongshu'|'kuaishou'|'wechatOfficial'|'wechatVideo';
+ const localDomains:Record<LocalPlatform,string>={xiaohongshu:'creator.xiaohongshu.com',kuaishou:'cp.kuaishou.com',wechatOfficial:'mp.weixin.qq.com',wechatVideo:'channels.weixin.qq.com'};
  type LocalOwner={userId:string;groupId:string|null;platform:LocalPlatform;segment:string;runId?:string;accountId?:string;externalAccountId?:string};
  const localOwners=new Map<string,LocalOwner>();
  const hash=(value:string)=>createHash('sha256').update(value).digest('hex');
- const isLocal=(value:unknown):value is LocalPlatform=>value==='xiaohongshu'||value==='kuaishou';
+ const isLocal=(value:unknown):value is LocalPlatform=>value==='xiaohongshu'||value==='kuaishou'||value==='wechatOfficial'||value==='wechatVideo';
  async function localIdentity(owner:LocalOwner,signal?:AbortSignal){
   if(!options?.localPlatformRoot)throw Error('本地平台登录目录未配置');
   const root=path.join(options.localPlatformRoot,owner.platform,hash(owner.userId),'accounts');
-  return {...await resolveDouyinProfileIdentity(root,owner.segment,signal),userId:owner.userId,domain:owner.platform==='xiaohongshu'?'creator.xiaohongshu.com':'cp.kuaishou.com'};
+  return {...await resolveDouyinProfileIdentity(root,owner.segment,signal),userId:owner.userId,domain:localDomains[owner.platform]};
  }
  async function registerLocal(owner:LocalOwner){const identity=await localIdentity(owner);localOwners.set(identity.authDir,owner);return identity;}
  async function authorizeTemporary(userId:string,segment:string){

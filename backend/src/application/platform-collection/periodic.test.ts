@@ -71,3 +71,21 @@ it('T1101旧周期入口只恢复原目录/指标/快手概览，不再新建任
  await createPeriodicPlatformCollection({recoveryOnly:true,listAccounts:async()=>({rows:[{id:'ks',platform:'kuaishou',status:'active'},{id:'xhs',platform:'xiaohongshu',status:'active'}]}),latestRun:async(_c,id,capability)=>({...run(id,'partial'),capability}),start,resume,onError:vi.fn(),now:()=>time})(ctx);
  expect(start).not.toHaveBeenCalled();expect(resume.mock.calls.map(([,r])=>r.capability)).toEqual(['workCatalog','workMetrics','accountOverview','workCatalog','workMetrics']);
 });
+
+it('T1110恢复入口只读微信原报表任务并解析当前成员scope，不产生第二周期',async()=>{
+ const start=vi.fn(async()=>run('new','queued')),resume=vi.fn(),latestRun=vi.fn(async(_c:RequestContext,id:string,capability:CollectionRunResource['capability'])=>({...run(id,'partial'),capability}));
+ const contextForAccount=vi.fn(async(c:RequestContext,a:{id:string})=>({...c,accountId:a.id,groupId:'group-'+a.id,membershipVersion:7}));
+ await createPeriodicPlatformCollection({recoveryOnly:true,contextForAccount,listAccounts:async()=>({rows:[{id:'video',platform:'wechatVideo',status:'active'},{id:'official',platform:'wechatOfficial',status:'active'}]}),latestRun,start,resume,onError:vi.fn(),now:()=>time})(ctx);
+ expect(start).not.toHaveBeenCalled();expect(resume.mock.calls.map(([c,r])=>[c.accountId,c.groupId,c.membershipVersion,r.capability,r.attemptId])).toEqual([['video','group-video',7,'nativeReports','run-video'],['official','group-official',7,'nativeReports','run-official']]);expect(latestRun).toHaveBeenCalledTimes(2);
+});
+it('T1110旧producer模式不会因微信平台枚举新增而创建workCatalog',async()=>{
+ const start=vi.fn(async()=>run('new','queued')),latestRun=vi.fn(async()=>null);
+ await createPeriodicPlatformCollection({listAccounts:async()=>({rows:[{id:'video',platform:'wechatVideo',status:'active'}]}),latestRun,start,resume:vi.fn(),onError:vi.fn(),now:()=>time})(ctx);expect(start).not.toHaveBeenCalled();expect(latestRun).not.toHaveBeenCalled();
+});
+
+it('T1110恢复扫描不会反复领取已真实TASK_TIMEOUT的微信原run，其余partial仍沿原ID恢复',async()=>{
+ const start=vi.fn(async()=>run('new','queued')),resume=vi.fn();
+ const rows=[{id:'expired',platform:'wechatVideo',status:'active'},{id:'partial',platform:'wechatOfficial',status:'active'}];
+ const tick=createPeriodicPlatformCollection({recoveryOnly:true,listAccounts:async()=>({rows}),latestRun:async(_c,id,capability)=>({...run(id,'partial'),capability,reasonCode:id==='expired'?'TASK_TIMEOUT':'DOWNLOAD_INTERRUPTED'}),start,resume,onError:vi.fn(),now:()=>time});
+ await tick(ctx);await tick(ctx);expect(start).not.toHaveBeenCalled();expect(resume.mock.calls.map(([,r])=>r.attemptId)).toEqual(['run-partial','run-partial']);
+});

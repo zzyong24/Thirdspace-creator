@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "/opt/homebrew/bin/codegraph",
+    "index",
+    "--force",
+    "--quiet",
+    "."
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T19:27:16.180841+00:00",
+  "finishedAt": "2026-10-09T19:29:03.023557+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 106.84153333300492,
+  "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

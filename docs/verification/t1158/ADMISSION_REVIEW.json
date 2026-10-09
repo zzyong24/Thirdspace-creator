@@ -1,0 +1,61 @@
+{
+  "schema": "creatoros-source-research-admission-review/v1",
+  "taskId": "T-1158",
+  "reviewedAt": "2026-10-10T03:29:57+08:00",
+  "head": "aa7de1e91183ec0236a82cd954a4f4bf9bb1aeb1",
+  "verdict": "ADMISSION_WITH_MANDATORY_RESEARCH_PAUSE",
+  "inputHashes": {
+    "spec": "f6c48edc58ccd0043bcfc8ee68756a90c55b382ba0efef40fbbe2e36d54b6b26",
+    "sourceIntegrationReview": "ec76da5dd2f6f3dda9319b4e168c7c0d8f336418b4be56398b879f32abed5af8",
+    "receiptDriftReview": "59c28d7071cfe4ee922460938de9e138504c59fe06a5d02412e529f81997d020",
+    "origin": "f61e2241541fe17060f983bb28a1506575bc5e423e82e66e70a2d075513ecefc",
+    "sourceResearchCard": "765b315a2bf30fd2bd1dab7e274ce2854d430df4c6934a2ba9489ee875dae305",
+    "sourceCommit": "293d4e98d2cedbd04eebce16a62f921711ee8079"
+  },
+  "findings": [
+    {
+      "id": "ADM-001",
+      "severity": "major",
+      "status": "constraint",
+      "title": "冻结生产闭包可移植，但真人执行面必须继续暂停",
+      "requirement": "新current-main整合SPEC独评后，可逐段移植冻结的contract/migration/service/worker/frontend/调度闭包并用隔离fixture与公开组合验收；不得在研究恢复前对真实微信profile运行binding、nativeReports collection、自动scheduler或安装启动触发这些执行。离线构建/包内容核验可继续。",
+      "evidence": "来源研究卡paused_actions包含further-production-changes、broadened-workaround、repeated-full-system-runs；EXP-1/2已用尽且0报告，homepage机制UNKNOWN。",
+      "resolution": "正式整合SPEC将source research pause列为发布/真机执行Gate，并证明打包/启动阶段不会触发真实微信collection；若产品字节本身包含原调度，安装启动前必须先满足原研究resume criteria。不得通过隐藏按钮或删功能规避。"
+    },
+    {
+      "id": "ADM-002",
+      "severity": "major",
+      "status": "constraint",
+      "title": "研究family与预算必须原样继承",
+      "requirement": "当前main任务ID用于整合审计，不得把同名main T1110或新ID当作新实验预算。所有研究记录必须绑定 sourceCommit 293d4e98、failure_family wechat-statistics-visible-section、EXP-1/EXP-2已消费、remaining=0。",
+      "evidence": "来源卡research_task_id=T-1110、max_experiments=2，两次均已执行；source/main的T1110含义不同。",
+      "resolution": "当前SPEC以不可变source family引用承接研究状态；不得复制来源BACKLOG/events/review-events或重放research gate。只有原浏览器空间由用户交回后，按卡内recommendation进行一次只读菜单入口核对，才可评估resume；该核对不启动采集/下载/新任务，也不能改称第三实验。"
+    },
+    {
+      "id": "ADM-003",
+      "severity": "major",
+      "status": "constraint",
+      "title": "T1148 receipt只能在剩余共享写集冻结后最终签署",
+      "requirement": "微信整合SPEC先给出当前main精确共享写集并完成实施；若触碰任一旧PAGE_SPEC watched path，相关任务继续保持block。全部相关源码冻结后分别跑原allowlist、生成最终HEAD报告并taskctl resume/complete。",
+      "evidence": "T1148 PROC-001/002；来源整合跨16新路径+34共享路径，当前尚无精确current-main整合SPEC。",
+      "resolution": "在整合SPEC和最终source manifest证明后续不再触碰旧watched paths前，现有T1148报告只作候选，不能最终签。"
+    }
+  ],
+  "independentlyVerifiable": [
+    "contract严格DTO、operation/registry与CLI policy",
+    "隔离迁移/journal/convergence及真实PGlite owner、lease、group/user/account归属",
+    "公开reports.list分页、跨user/group拒绝、转组历史边界与幂等/冲突",
+    "解析器对脱敏/合成XLS/CSV/HTML fixture的字段、单位、0/null/负值及限额",
+    "页面对隔离公共service数据的0/unknown/loading/error/cancel/stale响应与无假按钮",
+    "scheduler/job默认键、disabled/custom cron保留、单在途/恢复原ID，以mock adapter和隔离clock验收",
+    "打包供应链、XLSX tarball integrity、worker bundle/sidecar静态装配"
+  ],
+  "notVerifiableWithoutResearchResume": [
+    "真人公众号/视频号稳定身份绑定",
+    "从官方首页安全进入真实统计页的机制",
+    "真实日期窗口表格就绪、原生下载与五类报告成功",
+    "真实profile scheduler执行、needsAuth判断及现场0→报告写回",
+    "真人扫码、Cookie/session有效性与平台页面变化"
+  ],
+  "t1148Decision": "DEFER_FINAL_RECEIPTS_UNTIL_CURRENT_INTEGRATION_WRITESET_AND_FINAL_HEAD_FREEZE"
+}
