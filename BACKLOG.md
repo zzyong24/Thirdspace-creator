@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1126 | 核对安装版粗剪导出确认409与AI工具入口指引 | ✅ 待办 | — | — | [实际诊断](docs/features/t1126-installed-render-confirm-routing.md) | d712新安装版65原读回一致；同一已采纳r7粗剪导出task317待确认，ai.tasks.confirm显式同组仍409 execution_manifest未实现；先核结果/真实执行ID与正确公开入口，不改归属/不猜ID/不重提导出或模型。具体是调用选择或产品指引缺口待证。 |
 | T-1125 | 修正本机出包冻结辅助检查把脱敏测试夹具误报为真实密钥 | ✅ 待办 | PASS[REV:d9e25d4f31e7] | — | [SPEC](docs/features/t1125-package-private-preflight-fixture.md) | ec5冻结全扫描321秒exit1，三Rust测试模块4类命中皆脱敏合成夹具；保原RED并先独评仅准确path/sourceSHA/逐值SHA分类，未知仍拒，原规则全扫描不删。只改私有helper，不改vendor/build；当前45基本PASS不代签出包。 |
 | T-1124 | 核对本轮新增来源分支未合入main的源码并闭合整合 | 🔨 待办 | — | — | [实际诊断](docs/features/t1124-current-worktree-source-gap.md) | T1080删除前只读再盘点：canvas来源17条源码/测试路径main缺失，chart来源1条缺失，其它58条不同不能直接算遗漏；保留来源与活跃树，逐项核main替代及新增SPEC/独评，禁止ours丢源码或代签全合并。先交付当前已复核包继续验收，本轮新增功能不冒称已入包。 |
 | T-1117 | 修复画布保存英文反馈与参考选择器名称展示遗漏 | ✅ 待办 | PASS[REV:161a32c6331a] | PASS:6a950246d095 | [SPEC](docs/features/t1117-canvas-error-reference-preview.md) | 当前main两条Chrome流程通过，但实际截图保存错误裸英文，参考已选卡仍长文件名；复用原中文反馈并闭合showIdentity=false全选择流程，精确file/保存/owner不变。独評、实际RED/GREEN及浏览器证据后修复；不代签模型或旧失败。 |

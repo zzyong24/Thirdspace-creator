@@ -1,0 +1,84 @@
+{
+  "schema": "creatoros-installed-diagnostic-closure-review/v1",
+  "task": "T1126",
+  "reviewedAt": "2026-10-09T12:44:11Z",
+  "verdict": "PASS_LIMITED_T1126_CALLER_DIAGNOSIS_AND_INSTALLED_RENDER_CHAIN",
+  "findings": [],
+  "sourceHead": "d712130f9a02887ee60c092f9263a6da56a941fe",
+  "evidenceHashes": {
+    "artifact-proof.json": "ed33d3ed4bd516e902d84dd468fc0f2c77edd83de3612c2a3907f84437db6445",
+    "installed-app-identity.json": "0ead6f1e0ba118bf65d97c17df86cf4ba447ef6ef5b54b2dacdea61ec39854fe",
+    "installed-startup-summary.json": "e24d28329a5495c52478de4306b1f5cb009bf026a53e94c5eae9516c56af3491",
+    "installed-post-package-baseline.json": "93619d6afd01c2a90df3de1f4395ed48862f27cc785d53d6883b2e4e28ddaa57",
+    "installed-render-validation-summary.json": "5b5e2b01097372deed06b5ad25c3ecbf2936ee2154aef4fac71ac4b90dd1eb77",
+    "post-render-approved-confirm.json": "8254751313c03a64aca3d4b52a571314c5ddb4855b06cef769dd4d4bcec6b74e",
+    "post-render-execution-list.json": "b03539bcda75c4cec9755de9a5dfad542cac6baa67c689f20397448a1741dcde",
+    "post-render-native-confirm.json": "cffa595ceb1273d2e9d1541f5219164edf4e327b751f7aba99680aaaf7a7d95f",
+    "post-render-final-native-get.json": "04346cb4bf3d4194baf360456a46626ab0be937628d69c1c162cbb9c11b9ce15",
+    "post-render-final-renders-list.json": "0d5531c6c109c6a789f9bbf2a7f995ace06ec85a10c129c321bdf8b461d89650",
+    "post-render-asset-get.json": "a698cad7ec303bd06d7b4f0a138133b62396b22e049583a685e348b5cbb41bb3",
+    "post-render-editor-unchanged.json": "85739602f32833d09eef8f1c455c0a17355c4b8dcdd34d03abf72df188842378"
+  },
+  "packageAndInstall": {
+    "artifactSha256": "7e0d60c1a55e3443b5903d5bc1d2d304c21dfbb9e6b74e84fd707e934d889982",
+    "artifactBytes": 838211171,
+    "imageVerifyExit": 0,
+    "codesignExit": 0,
+    "signature": "ad-hoc",
+    "sourceTrackedCount": 13098,
+    "installedBinarySha256": "acfec3e9b648396793b1f8ba3c5e9cb982b82f93b0603b1395d5bfabca89ceac",
+    "installedSidecarSha256": "8288886e315d4c53dcc76661177199b2ff5f8b12d1f39248040cfef39ea4f710",
+    "newPid": 1909,
+    "publicConnected": true,
+    "baselineReads": 65,
+    "baselineUnchanged": 65
+  },
+  "renderChain": {
+    "originalTask": "ai-task-69d4c1de-317",
+    "originalRevision": 7,
+    "renderRequestId": "t1117-d712130f-new-installed-approved-video119-rev7",
+    "genericConfirm": {
+      "operation": "ai.tasks.confirm",
+      "exitCode": 4,
+      "preserved": true,
+      "classification": "caller chose unsupported execution_manifest confirmation path; not a product fix"
+    },
+    "discovery": [
+      "ai.results.list",
+      "execution.tasks.get"
+    ],
+    "correctConfirm": {
+      "operation": "execution.tasks.confirm",
+      "exitCode": 0,
+      "sameOriginalTaskId": true
+    },
+    "result": {
+      "taskStatus": "succeeded",
+      "assetId": "asset-69d4c1de-367",
+      "assetFileId": "afile-69d4c1de-368",
+      "renderCountBefore": 4,
+      "renderCountAfter": 5,
+      "width": 640,
+      "height": 360,
+      "durationMs": 8167,
+      "fileSize": 199098,
+      "mimeType": "video/mp4",
+      "editorDtoUnchanged": true
+    },
+    "newModelCalls": 0,
+    "resubmissions": 0,
+    "privateApiOrDb": false
+  },
+  "conclusion": [
+    "公开receipt链支持把失败归因于验收caller选择了ai.tasks.confirm，而正确原生执行任务采用入口为execution.tasks.confirm。",
+    "错误调用的exit4与日志保留；没有据此修改产品或重写失败。",
+    "正确链沿原task/revision/request读取、确认、回读，渲染4→5且request关联明确，采用资产与文件身份固定，editor DTO不变。",
+    "安装前后65项基线全部相同；本轮明确的一次采用是已授权r7结果，不是新模型或重提。"
+  ],
+  "limitations": [
+    "未独立下载后完整解码新文件；只核公开媒体metadata和既有199098字节身份。",
+    "未进行原生窗口/播放器人工眼验；用户optional体验问题未回答。",
+    "不签全功能、真实模型、扫码、T1103或其它任务。",
+    "ad-hoc签名不等于Apple notarization。"
+  ]
+}
