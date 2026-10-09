@@ -9,6 +9,7 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1139 | 核对素材选择器切换视口后的即时尺寸失败 | 🔨 待办 | — | — | [实际诊断](docs/features/t1139-picker-viewport-observation.md) | 当前Chrome2PASS/1FAIL，900即时x=-30但随后实际截图x约16；保原失败并有限120秒观察原边界，不猜根因或删断言。 |
 | T-1138 | 核对共享素材弹窗走查未命中原生模式选择控件 | 🔨 待办 | — | — | [实际诊断](docs/features/t1138-calendar-shared-picker-test-selector.md) | 原Chrome2PASS/1FAIL，模式combobox确实存在；仅校准测试可访问名定位，保原日志/120秒/0retry并真实进入图库，不改产品洗绿。 |
 | T-1137 | 核对排期弹窗关闭后键盘焦点丢失 | 🔨 待办 | — | — | [实际缺陷](docs/features/t1137-calendar-focus-return.md) | T1136原Chrome Esc已关但120秒触发器inactive；原缺DialogTrigger，保失败并由T1136同路径明确扩展独评后修复，不删焦点断言。 |
 | T-1136 | 在当前main修复长项目与平台账号撑宽排期弹窗 | 🔨 待办 | PASS[REV:db7fe4526b24] | 待验 | [SPEC](docs/features/t1136-calendar-dialog-current-integration.md) | T1124来源两条布局缺失；仅共享Dialog单列收缩与排期断点及必要select收缩，先独评/当前Chrome真实尺寸RED，再原公共选择保存回读和相邻消费者验证；不签旧来源或全功能。 |

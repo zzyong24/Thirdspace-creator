@@ -1,0 +1,52 @@
+{
+  "schema": "creatoros-browser-journey/v1",
+  "task_id": "T-1136",
+  "head": "f7331d3765f81240ff7ad962f827fceba478774f",
+  "phase": "current",
+  "surface": "browser",
+  "mode": "non-fixture",
+  "input": "fresh public synthetic group/project/account records",
+  "startedAt": "2026-10-09T16:02:00.248Z",
+  "finishedAt": "2026-10-09T16:03:47.557Z",
+  "elapsedSeconds": 107.302398708,
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "playwright",
+    "test",
+    "tests/e2e/t1136-calendar-dialog-layout.spec.ts",
+    "--project=e2e",
+    "--retries=0"
+  ],
+  "exitCode": 1,
+  "signal": null,
+  "error": null,
+  "logSha256": "d10fdfb47af27e8838f5220073a936f175567ffc4aae459a9b31c226e9d32cc0",
+  "rawLogSha256": "8b4ad63211e30c668dea5b775ce2f8f5847dcdb2e560826b6a7f1c0f8d9bf53d",
+  "rawLogPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1136-XSsQ06/current-journey-raw.log",
+  "sourceSha256": {
+    "frontend/src/components/ui/dialog.tsx": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+    "frontend/src/features/content-calendar/group-calendar-planning-control.tsx": "fc077641187ad628fea074927919bccbb8bfe0908a3280dbd73bb1bfb6da4377",
+    "frontend/src/features/content-calendar/content-calendar-view.tsx": "c15aef1a2b92412f1755216deab8c302ba18da0b0b5d30dbc262246ce2ce270e",
+    "frontend/src/components/media/asset-picker.tsx": "ab1b7323dc1947c6352b0ead2a0e2747b9d371406c30a641b4fbceaf831c04f3",
+    "frontend/src/components/shell/issue-feedback-dialog.tsx": "f624b1f8c7e3b6fe1d85d02aae1f34e9f50698ae550d4a73e270a67485dd03cc",
+    "frontend/tests/e2e/t1136-calendar-dialog-layout.spec.ts": "abc8d128bdc00cddc7151d8e5a04cbe7e34263a2ec05c5a2e6a69b8108e9dbcc",
+    "docs/verification/t1136/run-layout-journey.mjs": "7ca45b600d3524aea867a36990bde258f7b9a7a70cd1b65bf1a7fcb322ca561c"
+  },
+  "sourceAfter": {
+    "frontend/src/components/ui/dialog.tsx": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+    "frontend/src/features/content-calendar/group-calendar-planning-control.tsx": "fc077641187ad628fea074927919bccbb8bfe0908a3280dbd73bb1bfb6da4377",
+    "frontend/src/features/content-calendar/content-calendar-view.tsx": "c15aef1a2b92412f1755216deab8c302ba18da0b0b5d30dbc262246ce2ce270e",
+    "frontend/src/components/media/asset-picker.tsx": "ab1b7323dc1947c6352b0ead2a0e2747b9d371406c30a641b4fbceaf831c04f3",
+    "frontend/src/components/shell/issue-feedback-dialog.tsx": "f624b1f8c7e3b6fe1d85d02aae1f34e9f50698ae550d4a73e270a67485dd03cc",
+    "frontend/tests/e2e/t1136-calendar-dialog-layout.spec.ts": "abc8d128bdc00cddc7151d8e5a04cbe7e34263a2ec05c5a2e6a69b8108e9dbcc",
+    "docs/verification/t1136/run-layout-journey.mjs": "7ca45b600d3524aea867a36990bde258f7b9a7a70cd1b65bf1a7fcb322ca561c"
+  },
+  "retries": 0,
+  "nativeApp": false,
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "humanViewed": false
+}

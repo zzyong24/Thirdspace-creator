@@ -180,6 +180,8 @@ test("T-1136 读取中及共享反馈、参考素材弹窗仍可操作",async({p
  await page.getByRole("button",{name:"编导与详情",exact:true}).click(wait);
  const inspector=page.locator("aside").filter({has:page.getByRole("heading",{name:"节点设置",exact:true})});
  await inspector.getByRole("combobox",{name:"模式",exact:true}).selectOption("image_to_image",wait);
+ await expect(page.getByText("已保存",{exact:true})).toBeVisible(wait);
+ const beforePicker=await dispatch<{revision:number;document:unknown}>(page,"canvas.get",{params:{canvasId:canvas.id}},{groupId:group.id});
  const field=inspector.getByRole("button",{name:"参考图片",exact:true});await field.click(wait);
  dialog=page.getByRole("dialog",{name:"参考图片",exact:true});
  const preview=dialog.getByRole("button",{name:"预览 "+name,exact:true});await preview.click(wait);
@@ -187,7 +189,12 @@ test("T-1136 读取中及共享反馈、参考素材弹窗仍可操作",async({p
  await expect.poll(()=>large.evaluate((node:HTMLImageElement)=>node.complete&&node.naturalWidth>0),wait).toBe(true);
  await expect.poll(()=>preview.getByRole("img").evaluate((node:HTMLImageElement)=>node.complete&&node.naturalWidth>0),wait).toBe(true);
  for(const vp of [{width:1366,height:900},{width:900,height:900},{width:683,height:450}]){
-  await page.setViewportSize(vp);const box=await dialog.boundingBox();expect(box).not.toBeNull();
+  await page.setViewportSize(vp);
+  await expect.poll(async()=>{
+   const box=await dialog.boundingBox(),confirm=await dialog.getByRole("button",{name:"使用此素材",exact:true}).boundingBox();
+   return Boolean(box&&confirm&&box.x>=15&&box.x+box.width<=vp.width-15&&confirm.y>=0&&confirm.y+confirm.height<=vp.height);
+  },wait).toBe(true);
+  const box=await dialog.boundingBox();expect(box).not.toBeNull();
   expect(box!.x).toBeGreaterThanOrEqual(15);expect(box!.x+box!.width).toBeLessThanOrEqual(vp.width-15);
   const confirm=await dialog.getByRole("button",{name:"使用此素材",exact:true}).boundingBox();expect(confirm).not.toBeNull();
   expect(confirm!.y).toBeGreaterThanOrEqual(0);expect(confirm!.y+confirm!.height).toBeLessThanOrEqual(vp.height);
@@ -195,7 +202,8 @@ test("T-1136 读取中及共享反馈、参考素材弹窗仍可操作",async({p
  }
  await dialog.getByRole("button",{name:"取消",exact:true}).click(wait);await expect(dialog).toBeHidden(wait);
  await expect(field).toBeFocused(wait);
- const saved=await dispatch<{document:{nodes:Array<{referenceAssetId?:string}>}}>(page,"canvas.get",{params:{canvasId:canvas.id}},{groupId:group.id});
+ const saved=await dispatch<{revision:number;document:{nodes:Array<{referenceAssetId?:string}>}}>(page,"canvas.get",{params:{canvasId:canvas.id}},{groupId:group.id});
+ expect(saved.revision).toBe(beforePicker.revision);expect(saved.document).toEqual(beforePicker.document);
  expect(saved.document.nodes.every(node=>node.referenceAssetId!==asset.id)).toBe(true);
- writeFileSync(resolve(evidence,"shared-consumer-observation.json"),JSON.stringify({surface:"browser",loadingFixture:"once held real accountGroups.get; original response retained",feedbackSubmitted:false,modelCalled:false,assetId:asset.id,canvasId:canvas.id,captures},null,2));
+ writeFileSync(resolve(evidence,"shared-consumer-observation.json"),JSON.stringify({surface:"browser",loadingFixture:"once held real accountGroups.get; original response retained",feedbackSubmitted:false,modelCalled:false,assetId:asset.id,canvasId:canvas.id,cancelBeforeRevision:beforePicker.revision,cancelAfterRevision:saved.revision,cancelDocumentUnchanged:true,captures},null,2));
 });

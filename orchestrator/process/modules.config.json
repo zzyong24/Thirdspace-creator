@@ -7574,6 +7574,37 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1139": {
+      "task_id": "T-1139",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "diagnosis"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1139-picker-viewport-observation.md",
+        "frontend/tests/e2e/t1136-calendar-dialog-layout.spec.ts",
+        "docs/verification/t1139/original-journey.json"
+      ],
+      "write_set": [
+        "docs/features/t1139-picker-viewport-observation.md",
+        "docs/verification/t1139/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json"
+      ],
+      "verify_commands": {
+        "diagnosis": [
+          "node docs/verification/t1136/run-layout-journey.mjs",
+          "git diff --check",
+          "node orchestrator/process/pmem.mjs sync",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

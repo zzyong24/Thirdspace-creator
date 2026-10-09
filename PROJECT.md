@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ de7bc56e
+LAST_SYNCED: main @ f7331d37
 
 ## 这是什么(定位)
 
@@ -23,6 +23,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-1139 核对素材选择器切换视口后的即时尺寸失败
 - [wip] T-1138 核对共享素材弹窗走查未命中原生模式选择控件
 - [wip] T-1137 核对排期弹窗关闭后键盘焦点丢失
 - [wip] T-1136 在当前main修复长项目与平台账号撑宽排期弹窗
