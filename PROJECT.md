@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ d712130f
+LAST_SYNCED: main @ 6c35033e
 
 ## 这是什么(定位)
 
@@ -23,6 +23,9 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-1132 核对完整对账新增资源生命周期回归失败
+- [wip] T-1131 核对完整对账新增渲染模块解析消费门失败
+- [wip] T-1127 在当前main整合实测样本、错过计划保护与图表孤立点修复
 - [wip] T-1124 核对本轮新增来源分支未合入main的源码并闭合整合
 - [open] T-1118 核对本机验收原始日志目录消失
 - [wip] T-1116 核对稿件并发保存回归在本轮完整对账中的再次失败

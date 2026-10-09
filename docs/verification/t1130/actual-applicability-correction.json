@@ -1,0 +1,17 @@
+{
+  "ts": "2026-10-09T13:37:29.389721+00:00",
+  "actor": "root",
+  "action": "acceptance_applicability_corrected",
+  "task": "T-1127",
+  "diagnosticTask": "T-1130",
+  "before": "待验",
+  "after": "—",
+  "meaning": "formal journey not applicable; all approved component/visual/backend/global verification retained",
+  "rowShaBefore": "a36535b9225ef10916cfe3f026ac2d4ef22802b6d0f592b5d93b045aec8bd6e2",
+  "rowShaAfter": "fbdd476a5de8e29997d279d5f7cc7492981e37599b8fd55a21620c0c93646621",
+  "independentReviewSha256": "3571881e10b707f81f3814c3da84c082e258472180406e172d4c0e7b6bd9db3c",
+  "sourcePathsChanged": false,
+  "specChanged": false,
+  "verifyCommandsChanged": false,
+  "statusChanged": false
+}

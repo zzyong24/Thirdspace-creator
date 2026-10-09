@@ -30,7 +30,7 @@ describe("真实图表坐标", () => {
   });
   it("单次采集只显示点位，不画线段", () => {
     const { container } = render(<ChartFrame title="播放趋势" summary="单次采集" trend={[{ label: "10/01", value: 120 }]} />);
-    expect(container.querySelector('[data-slot="chart-frame-svg"] circle')).not.toBeNull();
+    expect(container.querySelector('[data-slot="chart-data-point"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="chart-frame-svg"] path')).toBeNull();
     expect(screen.getByText(/需多次采集/)).toBeVisible();
   });
@@ -65,7 +65,7 @@ describe("真实图表坐标", () => {
     const line = container.querySelector('[data-slot="chart-frame-svg"] path[fill="none"]');
     expect(line?.getAttribute("d")).not.toContain("L");
     expect(line?.getAttribute("d")?.match(/M/g)).toHaveLength(2);
-    expect(container.querySelectorAll('[data-slot="chart-frame-svg"] circle')).toHaveLength(2);
+    expect(container.querySelectorAll('[data-slot="chart-data-point"]')).toHaveLength(2);
     expect(screen.getByText("10/02")).toBeVisible();
   });
   it("负向数据修正保留负数及零基线", () => {
@@ -84,4 +84,16 @@ describe("真实图表坐标", () => {
     expect(option.series[0].connectNulls).toBe(false);
     expect(option.series[0].data).toEqual([12, null, 42]);
   });
+});
+
+// T-1106：SVG非等比拉伸后，点位必须仍用固定像素圆形端帽。
+it("孤立实测点使用不缩放的圆形端帽，不被宽卡片拉成椭圆", () => {
+  const { container } = render(<ChartFrame title="播放趋势" summary="中间缺失" trend={[{label:"10/01",value:12},{label:"10/02",value:null},{label:"10/03",value:24}]} />);
+  const points=container.querySelectorAll('[data-slot="chart-data-point"]');
+  expect(points).toHaveLength(2);
+  for(const point of points){
+    expect(point.getAttribute("vector-effect")).toBe("non-scaling-stroke");
+    expect(point.getAttribute("stroke-linecap")).toBe("round");
+    expect(point.getAttribute("stroke-width")).toBe("6");
+  }
 });

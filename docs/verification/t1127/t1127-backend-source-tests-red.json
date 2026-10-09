@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/analytics/analytics.repository.integration.test.ts",
+    "src/modules/analytics/sync-policy.test.ts",
+    "src/modules/analytics/sync-state.service.test.ts",
+    "src/modules/ai-runtime/automation-driver.test.ts",
+    "src/modules/ingestion/ingestion.import.integration.test.ts",
+    "src/application/collection/self.test.ts",
+    "--maxWorkers=1",
+    "--testTimeout=120000",
+    "--hookTimeout=120000",
+    "--retry=0"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T12:58:47.539999+00:00",
+  "finishedAt": "2026-10-09T13:00:38.801534+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 111.26027783402242,
+  "logSha256": "242ad46015e84731eedb60eab6b259cb9d740e580db8127e1885ac34835fe4d4"
+}

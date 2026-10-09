@@ -1,0 +1,58 @@
+{
+  "schema": "creatoros-scoped-gate-independent-review/v1",
+  "task": "T1127",
+  "reviewedAt": "2026-10-09T13:07:42Z",
+  "sourceManifestSha256": "1c592dd5751c0d70758ab39d6355deb7f9fc173207bf5ada6dc102545366e40c",
+  "runnerSha256": "50558af498e93b14cd79f7d2eede24a5d5a99e30b0f1a7e537f2ce6f6a9a0281",
+  "specSha256": "8e856198c20eea876da52401c2179d3c1b29ea8c261bf57815f35e20eaea0234",
+  "modulesSha256": "6d4ca5a4a00b3fcdaeb269a7c422286213c0ebca7711ff2a587acbeba5fcb074",
+  "verdict": "PASS_SCOPED_T1127_SOURCE_AND_FOCUSED_GATES_PENDING_GLOBAL_RECONCILE",
+  "findings": [],
+  "sourcePaths": {
+    "count": 12,
+    "unchangedSinceStaticReview": true,
+    "exactReviewedSource": true
+  },
+  "evidenceHashes": {
+    "backend57": "8ec7503039c23a2de217801c2e32557e4f8070c752b46e07609c97d4d9bad44c",
+    "chart10": "96d864b99d13e88bf2d3cad04e3a37f4d02b9e391086ee45707cc97aa8704155",
+    "backendType": "924cfc81dd134e2bd18991a70922fe9170d727c05fdf804702959819200c2e49",
+    "frontendType": "6f359e7d97f16399f6c7765ce5a3073497cb5e74df5dc8a5c2443765fa48cf9a",
+    "led047": "fb4629cefb9295b8a005276483afced779a100f30ade98871c1d88bca4edda9b",
+    "schedulerAssembly": "d160ec1cf618706b28c8e461d44fef1cbadbd4f945a499f0e8c2a65e059f5be3",
+    "timeoutPolicy": "7f87d8d9ff8bb122990b73e61482f7cd95e4c71b875a04a17634601d5644282a",
+    "orphanScan": "57848fc8432d1a4ec96848af2f2b9799c5507f58cd293b33b09c3e92ac76aef4",
+    "visualCheck": "a7c36c5bc515466ae15885aed81e18825eb573ab9b8e66cad03ceb12107a05b0",
+    "timeoutStatic": "d814c2aec67bc6e547a3ded93178d53d07accf408538e2e9e55ad66d733bece0",
+    "timeoutComparison": "27798a19631d9f236ef7ea7e12528e41149e93e7a1b9bbace13d7ea6b8428dbf"
+  },
+  "results": {
+    "backendFocused": "57 PASS",
+    "chartFocused": "10 PASS",
+    "schedulerAssembly": "2 files / 6 PASS",
+    "backendType": "exit0",
+    "frontendType": "exit0",
+    "LED047": "174 PASS",
+    "boundary": "exit0",
+    "semantic": "exit0",
+    "diff": "exit0",
+    "orphan": "exit0 / 0 errors / 100 pre-existing warnings",
+    "visual": "before/after Chrome exit0; root viewed four images; after 1366/900 core pixels 5x5",
+    "timeoutPolicy": "exit1 only for retained static 27; all subsequent consumers passed"
+  },
+  "timeoutBoundary": {
+    "staticFailures": 27,
+    "affectedFiles": 13,
+    "allAffectedSourcesByteIdenticalToPrePortHead": true,
+    "rawHistoricalRowsNotInvented": true,
+    "newTimeoutRegression": false
+  },
+  "pending": [
+    "full canonical reconcile terminal result and exact retained-error comparison",
+    "final source freeze/commit/packaging follow-up"
+  ],
+  "nonClaims": [
+    "不签global Gate、task complete、package/install",
+    "不签真人平台采集或来源历史PASS"
+  ]
+}

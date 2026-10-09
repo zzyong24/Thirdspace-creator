@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "REV-001已销账：正式命令现绑定当前main专用ChartFrame真实Chrome视觉回放，使用实际构建CSS、同输入1366/900 PNG与像素读取，保留人工看图为独立humanViewed=false边界。T1128仅记录首个PIL依赖缺失；改用Chrome原生离屏canvas读取同PNG后的baseline exit0，不是产品RED或after实现PASS。产品仍未修改。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:40:ab9f72636b02ca5f",
+        "quote": "保留现有oil-ui-pro0.10.0、账号组UI_RULES和ChartFrame/tokens基线；取当前旧/新同数据1366和900宽度实际画面，主Agent实际看图，验证点像素、坐标、null断开与原摘要。不签来源图或未看截图。"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:45:f31a536f5149900f",
+        "quote": "必须当前独立实施复核绑定最终SHA，当前公共浏览器或组件回放及实际视觉证据；控制面状态只taskctl。pmem sync后运行完整reconcile，保原41逐字对照。"
+      },
+      "where": "orchestrator/process/modules.config.json 的 T-1127.verify_commands.implementation",
+      "failure_mode": "SPEC要求当前1366/900实际画面、主Agent看图以及公共浏览器或组件回放，但正式verify_commands只有chart组件单测和通用LED-047，没有T1127当前数据的浏览器/视觉采证入口。实现可能只靠来源截图或组件断言通过全部正式命令，仍缺当前main的像素、null断开、摘要和响应式证据。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:0c320dd33f576b26f343c0a5d618c039107bd329a1c725de09fb2f6b28b621fa:orchestrator/process/modules.config.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "不扩大产品写集；在docs/verification/t1127下增加当前main专用的无模型/无平台写浏览器或确定性组件回放入口，正式命令生成同数据1366/900证据并绑定主Agent实际看图、source SHA和0retry。保留现有chart单测、LED-047、类型、边界、timeout和reconcile。",
+      "resolution_evidence": "当前 modules.config SHA256 2df37e77ace806181eaa42bae794fca7a0f5b87fa274494d8a879d9d99c21cbb 在frontend typecheck后绑定 node docs/verification/t1127/run-chart-visual.mjs；runner SHA256 50558af498e93b14cd79f7d2eede24a5d5a99e30b0f1a7e537f2ce6f6a9a0281，导入当前ChartFrame、唯一实际构建CSS，以同一合成输入在真实Chrome 1366/900生成PNG并读取PNG像素，断言轴/日期/null不连线/summary、源码前后SHA、0retry/0平台/0模型/0DB，humanViewed=false。baseline native-decode实际exit0 11.480秒，result SHA256 5ffd9f1c2cae8ec52528b5d784a39c76db1ec5f1999e833501b0e12acdcb09d5、log SHA256 788736bc112df3c8f034e82c5ac68406efe25fd9e8a74675f30716d8980fe710；人工看图仍由root另记。",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

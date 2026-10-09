@@ -1,0 +1,55 @@
+{
+  "schema": "creatoros-independent-source-admission-review/v1",
+  "reviewedAt": "2026-10-09T13:24:38Z",
+  "mainHead": "6c35033e66be24c618426dd0cb84569572e75023",
+  "inventorySha256": "378059fcafeee6e7e4c1625c27121b21acd8c99c75f33528a8244aac7cd733bf",
+  "verdict": "ADMISSIBLE_AS_TWO_SEPARATE_CURRENT_MAIN_SPEC_REVIEWS_WITH_REQUIRED_FIXES_AND_FRESH_EVIDENCE",
+  "notAuthorized": [
+    "direct source application",
+    "SPEC PASS",
+    "test or browser PASS",
+    "inheritance of source-branch receipts",
+    "claim that the current package contains these changes"
+  ],
+  "t1106": {
+    "paths": [
+      {"path":"frontend/src/features/creative-canvas/cover-aspect-ratio-labels.ts","mainSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","candidateSha256":"5b12d8e1f31eef9f38b4f9c3d56b5f2912165d173d85c1be6a8440df926c978a"},
+      {"path":"frontend/src/features/creative-canvas/canvas-editor.test.tsx","mainSha256":"1d655252b89a812d57090af4263ace3cbc3da6ee4c4b64325aed42321c3a8824","candidateSha256":"440a8e2b51b57a0b2680ee61242b9ac19ef6267bd11d950eb7ff98b4a1b98f27"},
+      {"path":"frontend/src/features/creative-canvas/canvas-editor.tsx","mainSha256":"ad8b4d076954ae6b7272e0acc948e0e6f1d62b208242a2fabec42ac4c5729cac","candidateSha256":"562c7e0c5fed7f1a1dc7ac101de23f903e361553cccd9abb23a3eeb382fece0d"},
+      {"path":"frontend/src/features/creative-canvas/canvas-template-library.tsx","mainSha256":"6059d81f6166a93c570c2ae3340ee23f4c0c655d7f7889d44daa4600ea742b2c","candidateSha256":"458bc5d80ac8c8e2d4885f952882dcefeb7efd6d7539bae9454211d1527489da"}
+    ],
+    "preservedCurrentMainBehaviors": [
+      "reference memory advances only after successful save receipt",
+      "legacy reference recovery remains explicit",
+      "T1117 Chinese error mapping remains present",
+      "reference AssetPicker keeps showIdentity=false and exact file identity"
+    ],
+    "blockingDraftDefect": {
+      "id": "T1124-COVER-TEST-001",
+      "status": "open_before_formal_implementation",
+      "detail": "The appended test calls f.capabilities.mockResolvedValue, but the current fixture has no capabilities spy and mocks getCanvasGenerationCapabilities with a fixed async value.",
+      "requiredResolution": "Introduce a configurable capability spy with the current default and per-test reset; retain all existing assertions."
+    },
+    "requiredClarification": "Define that the synchronized visual-group family is image-generation pages, or add explicit semantics and tests before admitting video nodes.",
+    "sourceBrowserEvidenceReusableAsPass": false
+  },
+  "t1107": {
+    "paths": [
+      {"path":"frontend/src/components/ui/dialog.tsx","mainSha256":"05ef54740d8ebb6dc0628bb1a35caabc4445717dab8e6bf73ad1bff87323d21b","candidateSha256":"ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5"},
+      {"path":"frontend/src/features/content-calendar/group-calendar-planning-control.tsx","mainSha256":"d0c060754341568d99f9671dadd785c033e24c2c8c1b81008d8f8c528a8d91e4","candidateSha256":"57930ac9516db9a2ca90db126662c12e5a55770436dee28e8b46a7ee49079ffc"}
+    ],
+    "assessment": "The two CSS changes are coherent: grid-cols-1 constrains long grid children and sm:max-w-md overrides the shared sm:max-w-sm breakpoint. Business behavior is untouched.",
+    "requiredCurrentMainEvidence": [
+      "create and retarget calendar dialogs with long Chinese project/account text",
+      "representative shared Dialog consumers for overflow, focus, footer and close behavior",
+      "390/900/1366 current-main visual and keyboard evidence",
+      "LED-047 and existing component regressions"
+    ],
+    "sourceBrowserEvidenceReusableAsPass": false
+  },
+  "findings": [
+    {"id":"T1124-COVER-TEST-001","severity":"blocking_for_direct_application","status":"open","summary":"T1106 private test draft references a capability spy absent from the current fixture."},
+    {"id":"T1124-SOURCE-EVIDENCE-002","severity":"constraint","status":"open_until_new_task_validation","summary":"Old isolated-ID/Ego browser runners and receipts are provenance only and cannot certify current main."},
+    {"id":"T1124-DIALOG-BLAST-003","severity":"constraint","status":"open_until_new_task_validation","summary":"The shared Dialog CSS change requires representative current-main consumer and long-text responsive coverage."}
+  ]
+}

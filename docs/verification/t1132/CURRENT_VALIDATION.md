@@ -1,0 +1,3 @@
+# T1132 当前诊断
+
+原完整canonical43失败与本新增保留，根因UNKNOWN。原完整资源生命周期五组26文件352PASS均实际exit0，产品未改、0retry，真实收据在本目录，原始日志私有保存。reconcile实际execSync无timeout且stdio ignore，无法从全局报告复原内层断言；不猜成超时或负载，不把此分段结果算作产品已修或global PASS。继续按原检查同序采集真实内层日志。

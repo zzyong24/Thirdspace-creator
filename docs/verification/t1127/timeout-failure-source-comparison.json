@@ -1,0 +1,74 @@
+{
+  "task": "T1127",
+  "currentFailureCount": 27,
+  "failurePaths": [
+    {
+      "path": "ai-worker/src/execution/codex-acp-worker-run.ts",
+      "unchangedFromPrePortHead": true,
+      "sha256": "65a79c7461bf43396341b38945d99a7964501364f75aecab797030e94f69e986"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server-protocol.ts",
+      "unchangedFromPrePortHead": true,
+      "sha256": "64950294d748300bdf9c8235c3d2988ae23288862b889a26f3307ab87c5e2e88"
+    },
+    {
+      "path": "ai-worker/src/execution/codex-app-server.ts",
+      "unchangedFromPrePortHead": true,
+      "sha256": "8c12e5cdd41dd3db175e3dd01cf0cd2c77b12302226edf38b23cc327e076e7c7"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/local-codex-status.service.ts",
+      "unchangedFromPrePortHead": true,
+      "sha256": "72561068bfef0eb9d06b671dfb53076de55a1973a6cce6f66733707eb7d59b57"
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/native/chunks/codemirror-C3tEDw1q.js",
+      "unchangedFromPrePortHead": true,
+      "sha256": "d95348207c70e7067e2111e70831323b054063a72f1fff28006875b320eb3e00"
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-codemirror-CzoyEQLj.js",
+      "unchangedFromPrePortHead": true,
+      "sha256": "2459be44482e57531dc4be8d0d51275d8025d27d51048cff14664d6444576536"
+    },
+    {
+      "path": "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js",
+      "unchangedFromPrePortHead": true,
+      "sha256": "5b601c49f654a23b1d116180ba47145edbe71129c9173e274d389956c26e5315"
+    },
+    {
+      "path": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "unchangedFromPrePortHead": true,
+      "sha256": "a95f1a410d9e534c33900f53439da21d22f42eebcd982c5e52cc04ea0fcc576c"
+    },
+    {
+      "path": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "unchangedFromPrePortHead": true,
+      "sha256": "f67b3668caee708e44cf22b50181ebd1a74ee602c2872a9d46e3acc7a5e975a2"
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "unchangedFromPrePortHead": true,
+      "sha256": "fc881cfe39b9d2eba198f3712d3ababdd61122698e13f9ad4a3f383e841b78ff"
+    },
+    {
+      "path": "frontend/src/server/workbench-artifact-render.ts",
+      "unchangedFromPrePortHead": true,
+      "sha256": "d6fa9a3dc8c9086e2bc80bf436d87a6448642708836d9a8e3b9ae7a1866af124"
+    },
+    {
+      "path": "frontend/src/server/workbench-browser-host.ts",
+      "unchangedFromPrePortHead": true,
+      "sha256": "fe1fe8d382804282900113b88113fe6dab739e9721e6b68e44000829dfc5f903"
+    },
+    {
+      "path": "frontend/src/server/workbench-native-client.ts",
+      "unchangedFromPrePortHead": true,
+      "sha256": "7328a49d2823930dd2497bc3b882a9e59e8c4c6617732577a8efb01174c840bc"
+    }
+  ],
+  "newFailurePathsWithinPort": [],
+  "original27RowsNotReconstructed": true,
+  "history": "T1109 current-evidence records same original count; current27 exact files are all unchanged versus pre-port6c HEAD; this does not replace a fresh old-root full scan"
+}

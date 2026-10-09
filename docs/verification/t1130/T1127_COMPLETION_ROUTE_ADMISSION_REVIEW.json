@@ -1,0 +1,40 @@
+{
+  "schema": "creatoros-completion-route-admission-review/v1",
+  "task": "T1127",
+  "reviewedAt": "2026-10-09T13:29:04Z",
+  "mainHead": "6c35033e66be24c618426dd0cb84569572e75023",
+  "sourceHashes": {
+    "docs/features/t1127-main-analytics-integration.md": "8e856198c20eea876da52401c2179d3c1b29ea8c261bf57815f35e20eaea0234",
+    "orchestrator/process/taskctl.mjs": "f5d9660c87023b1320ba3703bd3b7ef6df9044356b271f6751d0343ea366e65d",
+    "orchestrator/process/frontend-validation.mjs": "47c79d66e687b913d3d9a848dda50429f551bae071646d5efbed9263e1c38727",
+    "orchestrator/process/modules.config.json": "6d4ca5a4a00b3fcdaeb269a7c422286213c0ebca7711ff2a587acbeba5fcb074",
+    "docs/verification/t1127/run-chart-visual.mjs": "50558af498e93b14cd79f7d2eede24a5d5a99e30b0f1a7e537f2ce6f6a9a0281",
+    "docs/verification/t1127/ROOT_VISUAL_CHECK.md": "a7c36c5bc515466ae15885aed81e18825eb573ab9b8e66cad03ceb12107a05b0"
+  },
+  "verdict": "ROUTE_B_METADATA_CORRECTION_ADMISSIBLE_WITH_AUDIT_AND_RETAINED_VISUAL_GATES",
+  "routeA": {
+    "requiredByCurrentSpec": false,
+    "reason": "The approved scope requires a deterministic current-main component replay and two viewport visual review, not a server-backed navigation journey. The formal validator requires non-fixture data and logic/surface/journey levels that the current synthetic chart evidence cannot honestly claim.",
+    "wouldRequire": "A separately reviewed scope expansion with representative server data and a frontend-journey contract."
+  },
+  "routeB": {
+    "admissible": true,
+    "classification": "mechanical correction of acceptance applicability",
+    "newAcceptance": "—",
+    "meaning": "formal frontend journey contract is not applicable; current component and visual acceptance remains mandatory",
+    "conditions": [
+      "record an explicit DEC/control-plane rationale before task completion",
+      "retain all T1127 component, visual, backend, type, LED-047, static and reconcile requirements",
+      "do not relabel synthetic data as non-fixture",
+      "do not invent refresh/back or a server journey",
+      "cite final runner, visual, source and reconcile receipts in task completion evidence",
+      "do not reuse this correction for future tasks that add real page journeys"
+    ]
+  },
+  "findings": [],
+  "limitations": [
+    "No metadata or repository file was modified.",
+    "This is not T1127 completion approval.",
+    "The running full reconcile was not treated as completed."
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "node",
+    "--test",
+    "tools/windows-closure-rat/build-memory.test.mjs",
+    "tools/windows-closure-rat/build-production-closure.test.mjs",
+    "tools/windows-closure-rat/creatoros-cli-runtime.test.mjs",
+    "tools/windows-closure-rat/package-build-only.test.mjs",
+    "tools/windows-closure-rat/render-probe-policy.test.mjs",
+    "tools/windows-closure-rat/runtime-diagnostics.test.mjs",
+    "tools/windows-closure-rat/stage-layered-workers.test.mjs",
+    "tools/windows-closure-rat/traced-asset-policy.test.mjs",
+    "tools/windows-closure-rat/verify-package-brand-closure.test.mjs",
+    "tools/windows-closure-rat/worker-smoke.test.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T13:36:39.218182+00:00",
+  "finishedAt": "2026-10-09T13:36:41.850089+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 2.6314163340139203,
+  "logSha256": "d9b2ab5d2919137e3f79bd139d9796ebbe68b90d29d8292e82d3e900228c2c9e"
+}

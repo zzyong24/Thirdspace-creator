@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1130",
+    "--evidence",
+    "docs/verification/t1130/actual-applicability-correction.json; 独立路径B准入与实际单格校正，原SPEC/source12/验证命令/任务状态不变；不签T1127或43错误全局"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T13:37:29.664004+00:00",
+  "finishedAt": "2026-10-09T13:37:29.834502+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.1703814580105245,
+  "logSha256": "47bde4734d07a5a6b04dda52cd9723a5c0df6096bc6fcdef3156aa39fbba4b99"
+}

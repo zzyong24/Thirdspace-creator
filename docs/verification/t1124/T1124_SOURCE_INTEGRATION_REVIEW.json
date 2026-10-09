@@ -1,0 +1,229 @@
+{
+  "schema": "creatoros-source-integration-review/v1",
+  "task": "T1124",
+  "reviewedAt": "2026-10-09T12:10:00+08:00",
+  "verdict": "INTEGRATION_REQUIRED_WITH_SCOPED_REBASE_NO_DIRECT_MERGE",
+  "currentMain": "7de72c56a3016bc9d1128fd26655a4d5c9200334",
+  "mergeBase": "d35f7d57ff952d306071eb40d34127956b067906",
+  "inputs": {
+    "spec": {
+      "path": "docs/features/t1124-current-worktree-source-gap.md",
+      "sha256": "27275c901393f75bad922877ad69a1e7bbcf76507523faceb66fc39df7753b7d"
+    },
+    "gapEvidence": {
+      "path": "docs/verification/t1124/current-source-gap.json",
+      "sha256": "ddfa36f284d72e41f8992b6f6113af56b63ccbc479d810861f40ae569abb3b0b"
+    },
+    "sourceBranches": [
+      {
+        "branch": "codex/t1101-canvas-binding",
+        "head": "b1f0cc5462285e59531a329a42340abe84c8d0ac",
+        "t1110SpecSha256": "cc4c7976146dadb0aafe264780344dfcf509c78cb5ff4c35d02c2a687f46996d",
+        "implementationReviewSha256": "a90a015af37a6216d81125189b304ad94eb94df29835aff3b967207e69539549"
+      },
+      {
+        "branch": "codex/t1106-chart-cover-labels",
+        "head": "454e9241a2adb107f3beb224914bc3273c063bee",
+        "t1106SpecSha256": "ebdec1e9d70f62b81a35959bd1e7cb0b8ecaa8c5b35407910536d19063a8a6a8",
+        "implementationReviewSha256": "f3469c6d6a7045fbffa6a10acf352ca9a5d7a5a97ae4bb5ea8d13530705f0e1d",
+        "t1107SpecSha256": "afb6a5e932202e7e5a36b860f78d3d8c4a8744cebb40b221a61a28abb5cdb0ba"
+      }
+    ],
+    "priorMainIntegration": {
+      "source": "f97a80da002db91dcdeac464203828dd9268cbd3",
+      "bindingSha256": "eaa0df4463d73b226a07e81e9154b16aa587b04a5f420ec54e0150ebf8ffbd3c"
+    }
+  },
+  "classifications": [
+    {
+      "source": "b1f0cc5462285e59531a329a42340abe84c8d0ac",
+      "function": "T1101既有画布/平台绑定与intelligence历史",
+      "classification": "ALREADY_SUPERSEDED_BY_MAIN",
+      "paths": [
+        "backend/src/modules/platform-account/legacy-task-membership.integration.test.ts",
+        "frontend/src/features/intelligence/intelligence-display.ts",
+        "frontend/src/features/intelligence/intelligence-workbench.test.tsx",
+        "frontend/src/features/intelligence/intelligence-workbench.tsx",
+        "frontend/src/features/intelligence/use-project-upgrade-queue.test.tsx",
+        "frontend/src/features/intelligence/use-project-upgrade-queue.ts"
+      ],
+      "reason": "这些路径不在b1f0cc54最新T1110产品提交中，来自该分支更早的T1101提交；main已有f97a80da受控整合和后续修复。不得从旧分支覆盖。"
+    },
+    {
+      "source": "b1f0cc5462285e59531a329a42340abe84c8d0ac",
+      "function": "T1110微信后台原生报表新链",
+      "classification": "GENUINELY_NEW_BUT_REQUIRES_CURRENT_MAIN_SPEC_REBASE",
+      "newPaths": [
+        "ai-worker/smoke/t1110-native-report-private-files.ts",
+        "ai-worker/src/runtime/platform/wechat-browser-source.test.ts",
+        "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+        "ai-worker/src/runtime/platform/wechat-native-report-parser.test.ts",
+        "ai-worker/src/runtime/platform/wechat-native-report-parser.ts",
+        "backend/drizzle/0131_platform_native_reports.sql",
+        "backend/src/application/collection/wechat-native-collector.test.ts",
+        "backend/src/application/collection/wechat-native-collector.ts",
+        "backend/src/modules/platform-account/local-platform-binding-stage.ts",
+        "backend/src/modules/platform-collection/platform-native-reports.integration.test.ts",
+        "backend/src/modules/scheduling/private-collector-wechat-admission.test.ts",
+        "contract/src/resources/platform-native-reports.ts",
+        "contract/tests/platform-native-reports.test.ts",
+        "frontend/src/features/platform-account/native-report-page.test.tsx",
+        "frontend/src/features/platform-account/native-report-panel.test.tsx",
+        "frontend/src/features/platform-account/native-report-panel.tsx"
+      ],
+      "sharedPathsRequiringSemanticPort": [
+        "ai-worker/package.json",
+        "backend/drizzle/meta/_journal.json",
+        "backend/src/application/platform-collection/periodic.test.ts",
+        "backend/src/application/platform-collection/periodic.ts",
+        "backend/src/application/scheduling/platform-collector.test.ts",
+        "backend/src/application/scheduling/platform-collector.ts",
+        "backend/src/application/workspace/startup.test.ts",
+        "backend/src/application/workspace/startup.ts",
+        "backend/src/migration-convergence.test.ts",
+        "backend/src/migration-convergence.ts",
+        "backend/src/modules/ai-runtime/collection-bootstrap.test.ts",
+        "backend/src/modules/ai-runtime/collection-bootstrap.ts",
+        "backend/src/modules/platform-account/account-binding.service.ts",
+        "backend/src/modules/platform-account/browser-profile-authority.service.ts",
+        "backend/src/modules/platform-account/index.ts",
+        "backend/src/modules/platform-account/membership-lock.service.ts",
+        "backend/src/modules/platform-collection/platform-collection.service.ts",
+        "backend/src/modules/platform-collection/platform-collection.transport.integration.test.ts",
+        "backend/src/modules/platform-collection/platform-collection.transport.ts",
+        "backend/src/modules/scheduling/private-collector-admission.service.ts",
+        "backend/src/schema/platform-collection.ts",
+        "contract/src/cli-policy.ts",
+        "contract/src/index.ts",
+        "contract/src/operations/platform-collection.ts",
+        "contract/src/resources/platform-capabilities.ts",
+        "contract/src/workspace-operation-scope.ts",
+        "contract/tests/registry.test.ts",
+        "frontend/src/app/(creator)/accounts/works/page.tsx",
+        "frontend/src/features/platform-account/account-binding-panel.test.tsx",
+        "frontend/src/features/platform-account/account-binding-panel.tsx",
+        "frontend/src/features/platform-account/account-group-manager.test.tsx",
+        "frontend/src/features/platform-account/account-group-manager.tsx",
+        "frontend/src/features/platform-account/platform-account-labels.ts",
+        "frontend/src/server/ingestion/account-binding-stage.integration.test.ts",
+        "frontend/src/server/ingestion/account-binding-stage.ts",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "reason": "main未发现nativeReports资源、0131迁移、worker浏览器源/解析器、collector或面板。16个新路径只是闭包的一部分；34个当前共享路径同时承载主线后续归属、超时和能力修复，不能直接取分支字节。来源复核仍明确真人扫码、稳定身份/date/total witness、实际下载与页面Gate未完成。"
+    },
+    {
+      "source": "454e9241a2adb107f3beb224914bc3273c063bee",
+      "function": "T1106真实采样/趋势/调度与图表点位",
+      "classification": "GENUINELY_NEW_PENDING_INTEGRATION",
+      "paths": [
+        "backend/src/application/collection/self.test.ts",
+        "backend/src/modules/ai-runtime/automation-driver.test.ts",
+        "backend/src/modules/ai-runtime/automation-driver.ts",
+        "backend/src/modules/analytics/analytics.repository.integration.test.ts",
+        "backend/src/modules/analytics/analytics.repository.ts",
+        "backend/src/modules/analytics/sync-policy.test.ts",
+        "backend/src/modules/analytics/sync-policy.ts",
+        "backend/src/modules/analytics/sync-state.service.test.ts",
+        "backend/src/modules/analytics/sync-state.service.ts",
+        "backend/src/modules/ingestion/ingestion.import.integration.test.ts",
+        "frontend/src/components/analytics/chart-coordinates.test.tsx",
+        "frontend/src/components/analytics/chart-frame.tsx"
+      ],
+      "reason": "这些路径相对共同基点的T1106语义在main没有等价改动；来源有隔离回归证据，但当前main必须重新移植并复跑当前组合链。"
+    },
+    {
+      "source": "454e9241a2adb107f3beb224914bc3273c063bee",
+      "function": "T1106封面比例用途与同组画幅一致性",
+      "classification": "GENUINELY_NEW_WITH_MAIN_CONFLICT",
+      "paths": [
+        "frontend/src/features/creative-canvas/cover-aspect-ratio-labels.ts",
+        "frontend/src/features/creative-canvas/canvas-editor.test.tsx",
+        "frontend/src/features/creative-canvas/canvas-editor.tsx",
+        "frontend/src/features/creative-canvas/canvas-template-library.tsx"
+      ],
+      "reason": "唯一新增helper在main缺失，main画布编辑器已因T1117/T1122等后续修复偏离共同基点。应在当前canvas-editor和template-library上手工重放比例说明/一致性，保留当前错误文案、参考图身份、缩略图与采证修复。"
+    },
+    {
+      "source": "454e9241a2adb107f3beb224914bc3273c063bee",
+      "function": "T1107排期弹窗布局",
+      "classification": "SEPARATE_FEATURE_REQUIRING_OWN_CURRENT_MAIN_ADMISSION",
+      "paths": [
+        "frontend/src/components/ui/dialog.tsx",
+        "frontend/src/features/content-calendar/group-calendar-planning-control.tsx"
+      ],
+      "reason": "它来自T1107独立提交，不属于T1106最小闭包。main没有等价基点改动，但不能随T1106顺带合入；需按T1107现有SPEC在当前main单独准入和验收。"
+    }
+  ],
+  "recommendation": {
+    "strategy": "禁止直接merge/cherry-pick两个branch HEAD；按功能建立当前main任务包后做语义移植。",
+    "minimalSlices": [
+      {
+        "id": "A",
+        "scope": "T1110 native reports",
+        "pathsCount": 52,
+        "requirements": [
+          "以current main为基底新增16个真正新路径",
+          "仅把34个共享路径中T1110所需增量逐段移植",
+          "重新分配迁移序号/校验journal与convergence",
+          "重新审contract registry、workspace scope、纯组/账号归属、worker依赖和scheduler",
+          "保留真人扫码/实际下载/稳定witness为待验，不继承来源PASS"
+        ]
+      },
+      {
+        "id": "B",
+        "scope": "T1106 analytics/chart",
+        "pathsCount": 12,
+        "requirements": [
+          "移植采样身份、缺日与有限数值规则、cron补偿和chart孤点",
+          "以当前main tests/types/collection组合重新验证"
+        ]
+      },
+      {
+        "id": "C",
+        "scope": "T1106 cover labels",
+        "pathsCount": 4,
+        "requirements": [
+          "新增helper并在当前canvas文件做最小语义补丁",
+          "保留T1117/T1120/T1122现有行为和断言",
+          "重新取得当前main组件与视觉证据"
+        ]
+      },
+      {
+        "id": "D",
+        "scope": "T1107 calendar layout",
+        "pathsCount": 2,
+        "requirements": [
+          "与T1106拆开",
+          "复用原T1107 SPEC但建立当前main审计/验证链"
+        ]
+      }
+    ],
+    "controlPlaneRules": [
+      "来源SPEC、review与日志逐字归档并保持Git可达",
+      "不得拼接或重哈希来源events.ndjson/review-events.ndjson",
+      "不得复制来源BACKLOG完成状态、task receipt或PASS为main当前证据",
+      "同ID控制面以main为真相；来源仅作provenance",
+      "当前7de72c56包不包含上述T1110/T1106/T1107新增源码"
+    ]
+  },
+  "findings": [
+    {
+      "id": "INT-001",
+      "severity": "blocking-for-direct-merge",
+      "status": "open",
+      "summary": "b1f0cc54的T1110需要16个新路径和34个共享路径的整体当前主线移植；仅复制17个缺失文件会留下未注册contract、迁移、装配和UI依赖。"
+    },
+    {
+      "id": "INT-002",
+      "severity": "blocking-for-direct-merge",
+      "status": "open",
+      "summary": "454e9241包含T1106和独立T1107，且canvas共享文件已被main后续修复；整branch合入会覆盖已验收行为。"
+    }
+  ],
+  "nonClaims": [
+    "未运行测试、构建、模型、数据库、App或安装",
+    "未改仓库、未提交、未删除worktree",
+    "未证明当前包含来源新增功能",
+    "未签来源真实平台扫码/下载或当前main全局PASS"
+  ]
+}

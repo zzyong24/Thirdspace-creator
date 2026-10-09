@@ -274,6 +274,68 @@ describe("analytics repository (user+account-scoped, append-idempotent)", () => 
   });
 
   // [T-332 S2] 采集 stamp(strict):appendSnapshot 的 accountId 必填 → metric_snapshots /
+  it("T1106 最后快照在列表与明细间轮换时仍使用两日共同的实测系列", async () => {
+    const repo = makeRepo(db, "series");
+    await repo.seedSnapshots([
+      snapshotRow({id:"series-v1",userId:"user-a",source:"ingestion",capturedAt:"2026-06-19T10:00:00Z",rawMetrics:{views:100}}),
+      snapshotRow({id:"series-p1",userId:"user-a",source:"ingestion",capturedAt:"2026-06-19T10:00:00.001Z",rawMetrics:{plays:101}}),
+      snapshotRow({id:"series-v2",userId:"user-a",source:"ingestion",capturedAt:"2026-06-20T10:00:00Z",rawMetrics:{views:150}}),
+    ]);
+    expect(await repo.getDailyPlayTrend("user-a",ACCT,undefined,7)).toEqual([{day:"2026-06-20",plays:50}]);
+  });
+
+  it("T1106 JSON窗口结构相同可比，平台、来源、键和窗口不一致保持未知",async()=>{
+    const repo=makeRepo(db,"window");
+    const cases=[
+      {id:"same",a:{views:100,metric_window:{from:1,to:2}},b:{views:120,metric_window:{to:2,from:1}},source:"platform_api",expected:20},
+      {id:"window",a:{views:100,metric_window:{from:1}},b:{views:120,metric_window:{from:2}},source:"platform_api",expected:null},
+      {id:"platform",a:{views:100,_platform:"douyin"},b:{views:120,_platform:"bilibili"},source:"platform_api",expected:null},
+      {id:"source",a:{views:100},b:{views:120},source:"ingestion",expected:null},
+      {id:"key",a:{views:100},b:{plays:120},source:"platform_api",expected:null},
+    ];
+    for(const c of cases){await repo.seedSnapshots([
+      snapshotRow({id:c.id+"-a",publicationId:c.id,userId:"user-a",capturedAt:"2026-06-19T10:00:00Z",rawMetrics:c.a}),
+      snapshotRow({id:c.id+"-b",publicationId:c.id,userId:"user-a",capturedAt:"2026-06-20T10:00:00Z",source:c.source,rawMetrics:c.b}),
+    ]);expect((await repo.getDailyPlayTrend("user-a",ACCT,[c.id],7))[0]?.plays).toBe(c.expected);}
+  });
+
+  it("T1106 缺失日不压缩日期，也不跨空档把多日累计当当日新增",async()=>{
+    const repo=makeRepo(db,"calendar");
+    for(const [day,views] of [[19,100],[20,150],[22,200]] as const)await repo.seedSnapshots([
+      snapshotRow({id:"calendar-"+day,userId:"user-a",capturedAt:`2026-06-${day}T10:00:00Z`,rawMetrics:{views}}),
+    ]);
+    expect(await repo.getDailyPlayTrend("user-a",ACCT,undefined,2)).toEqual([
+      {day:"2026-06-20",plays:50},
+      {day:"2026-06-21",plays:null,complete:false,sampleCount:0,correction:null},
+      {day:"2026-06-22",plays:null,complete:false,sampleCount:0,correction:null},
+    ]);
+  });
+
+  it("T1106 同刻不同快照的差分冲突与新增作品无基线均不显示部分总量",async()=>{
+    const repo=makeRepo(db,"coverage");
+    for(const [source,last] of [["ingestion",120],["platform_api",130]] as const)await repo.seedSnapshots([
+      snapshotRow({id:source+"-a",publicationId:"conflict",userId:"user-a",source,capturedAt:"2026-06-19T10:00:00Z",rawMetrics:{views:100}}),
+      snapshotRow({id:source+"-b",publicationId:"conflict",userId:"user-a",source,capturedAt:"2026-06-20T10:00:00Z",rawMetrics:{views:last}}),
+    ]);
+    expect((await repo.getDailyPlayTrend("user-a",ACCT,["conflict"],7))[0]?.plays).toBeNull();
+    await repo.seedSnapshots([
+      snapshotRow({id:"old-a",publicationId:"old",userId:"user-a",capturedAt:"2026-06-19T10:00:00Z",rawMetrics:{views:100}}),
+      snapshotRow({id:"old-b",publicationId:"old",userId:"user-a",capturedAt:"2026-06-20T10:00:00Z",rawMetrics:{views:120}}),
+      snapshotRow({id:"new-b",publicationId:"new",userId:"user-a",capturedAt:"2026-06-20T10:00:00Z",rawMetrics:{views:500}}),
+    ]);
+    expect(await repo.getDailyPlayTrend("user-a",ACCT,["old","new"],7)).toEqual([{day:"2026-06-20",plays:null,complete:false,sampleCount:1,correction:null}]);
+  });
+
+  it("T1106 同日无效快照不盖掉有效plays，非有限views回落真实plays",async()=>{
+    const repo=makeRepo(db,"valid-series");
+    await repo.seedSnapshots([
+      snapshotRow({id:"valid-a",userId:"user-a",capturedAt:"2026-06-19T10:00:00Z",rawMetrics:{plays:100}}),
+      snapshotRow({id:"null-a",userId:"user-a",capturedAt:"2026-06-19T11:00:00Z",rawMetrics:{plays:null}}),
+      snapshotRow({id:"valid-b",userId:"user-a",capturedAt:"2026-06-20T10:00:00Z",rawMetrics:{views:"1e309",plays:150}}),
+    ]);
+    expect(await repo.getDailyPlayTrend("user-a",ACCT,undefined,7)).toEqual([{day:"2026-06-20",plays:50}]);
+  });
+
   //   metric_values 出生即归号,不存在「无号落 NULL」写路径(schema 已 NOT NULL)。
   it("appendSnapshot stamps account_id onto snapshot and its metric_values (strict)", async () => {
     const repo = makeRepo(db);

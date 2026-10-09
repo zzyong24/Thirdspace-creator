@@ -1,0 +1,65 @@
+{
+  "schema": "creatoros-implementation-independent-review/v1",
+  "task": "T1127",
+  "reviewedAt": "2026-10-09T13:02:51Z",
+  "verdict": "STATIC_PASS_PENDING_REQUIRED_GATES",
+  "findings": [],
+  "hashes": {
+    "spec": "8e856198c20eea876da52401c2179d3c1b29ea8c261bf57815f35e20eaea0234",
+    "runner": "50558af498e93b14cd79f7d2eede24a5d5a99e30b0f1a7e537f2ce6f6a9a0281",
+    "sourcePortManifest": "1c592dd5751c0d70758ab39d6355deb7f9fc173207bf5ada6dc102545366e40c",
+    "backendRed": "a8c2047164181c5bddc1efa512b2b126c5cdfe3ec64525f12a61e97b11070736",
+    "chartRed": "755ded1fee8b740bd6cbca09c58ef46a48c8b722e79801529eab5c584103c67f",
+    "chartGreen": "96d864b99d13e88bf2d3cad04e3a37f4d02b9e391086ee45707cc97aa8704155",
+    "backendTypes": "924cfc81dd134e2bd18991a70922fe9170d727c05fdf804702959819200c2e49",
+    "led047": "fb4629cefb9295b8a005276483afced779a100f30ade98871c1d88bca4edda9b"
+  },
+  "sourceReview": {
+    "paths": 12,
+    "exactSourceMatches": 12,
+    "baseMatchesBefore": 12,
+    "products": 5,
+    "tests": 7,
+    "branchHeadMerged": false
+  },
+  "conclusions": [
+    "12路径均从main==共同基点状态逐文件移植，当前SHA与454e9241已审核源码逐一相同；没有merge/cherry-pick branch HEAD。",
+    "automation只扩self.metrics简单literal/步长小时最近slot；同周期lastRun防重同时覆盖精确分钟和补跑，原persistent owner/claim/lease/attempt/idempotency及startup intelligence分支未改。",
+    "analytics按publication/day/source/platform/definition/window/metricKey分系列，SQL有限数值校验、views优先含0；同latest冲突unknown、相同delta一次、日历空日不跨差、样本/负修正保持。workspace factFilter与publication IDs归属边界未改。",
+    "sync policy只为metrics且24小时档使用北京时间自然日，retryAt优先；2/6小时、其它capability、externalId状态隔离与settle路径不变。",
+    "ChartFrame仅把孤立circle换为零长度round line+non-scaling stroke，null path、坐标、tokens、summary和title保持；测试中的两个旧circle locator改为新稳定data-slot，原断言语义未删，并新增固定像素属性。",
+    "无迁移、新runtime、新timer、模型、真实历史写或外部平台操作。"
+  ],
+  "evidenceState": {
+    "credibleRed": {
+      "backend": "57 tests: 20 fail / 37 pass",
+      "chart": "10 tests: 3 fail / 7 pass"
+    },
+    "finishedGreen": {
+      "chart": "10 PASS",
+      "backendType": "exit0",
+      "LED047": "exit0"
+    },
+    "visual": {
+      "beforeExit0": true,
+      "afterExit0": true,
+      "rootViewedFourImages": true,
+      "automatedHumanViewedFlag": false,
+      "afterCorePixels": "5x5 at 1366 and 900; SVG stroke 6"
+    },
+    "pending": [
+      "backend six-file GREEN final receipt",
+      "scheduler/public assembly regression",
+      "frontend typecheck",
+      "remaining boundary/semantic/orphan/timeout/diff",
+      "complete reconcile and original 41 comparison",
+      "final frozen source hashes and independent closure"
+    ]
+  },
+  "limitations": [
+    "不签完整实施PASS或任务完成",
+    "不继承来源T1106验收为main Gate",
+    "视觉为隔离组件和实际构建CSS，不是生产页面/安装App",
+    "外部平台采集仍为替身，不签真人采集或历史回填"
+  ]
+}

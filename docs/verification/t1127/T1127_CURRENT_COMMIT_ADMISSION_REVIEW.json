@@ -1,0 +1,48 @@
+{
+  "schema": "creatoros-current-commit-admission-review/v1",
+  "task": "T1127",
+  "reviewedAt": "2026-10-09T13:44:23Z",
+  "baseHead": "6c35033e66be24c618426dd0cb84569572e75023",
+  "verdict": "PASS_LIMITED_COMMIT_ADMISSION_SOURCE_AND_EVIDENCE_ONLY",
+  "sourceFreeze": {
+    "manifest": "docs/verification/t1127/source-port-sha256.json",
+    "sha256": "1c592dd5751c0d70758ab39d6355deb7f9fc173207bf5ada6dc102545366e40c",
+    "pathCount": 12,
+    "currentDrift": []
+  },
+  "canonicalReconcile": {
+    "resultSha256": "4f3efab1d78f92a694d68b322bbe02ce8cdf07059ebabec6bcd9da93e15cf5ff",
+    "logSha256": "6020cc05940bd4eb1ace7d6c06d242832905b8bafca2f3cb8c98cff1227789a0",
+    "exitCode": 1,
+    "elapsedSeconds": 1612.7785226249835,
+    "errors": 43,
+    "warnings": 0,
+    "retainedErrors": 41,
+    "addedErrors": ["LED-031", "LED-061"],
+    "removedErrors": [],
+    "comparisonSha256": "c389690c49d444f53d4d210e590580cae1fab78fec1930eb6706090a7291e163"
+  },
+  "focusedRechecks": [
+    {"gate":"LED-031-backend","resultSha256":"e594ef2288d38a696c8c75b7dada2c46f91e7b7faf0eb79872b50d4b9cddbaa4","logSha256":"6b7d78872819f02ee9b9f3c849008df8543d9682224c95d56cc757f63848a230","files":2,"tests":30,"exitCode":0},
+    {"gate":"LED-031-RAT","resultSha256":"18aa8eaf63ddb3f82358df88809a82342a8faab36f9c05fc673bcf763f2d881e","logSha256":"d9b2ab5d2919137e3f79bd139d9796ebbe68b90d29d8292e82d3e900228c2c9e","tests":67,"exitCode":0},
+    {"gate":"LED-061","resultSha256":"b26a2824b978e6e95d7750cb8b8a0464868453fcef80b5911e99689d623a5ed1","logSha256":"564dc6eab0e9b614cbf137f857ca09bbf6089084acfd2ca665571ff371add701","files":26,"groupTestCounts":[7,113,72,132,28],"tests":352,"exitCode":0}
+  ],
+  "diagnosticTasks": {
+    "T1131": {"status":"started_unknown_root_cause","specSha256":"2f2528f75c47e534a9ffd25a65d8ec08eb576bbac44ef9becc8a0019202e8c1d"},
+    "T1132": {"status":"started_unknown_root_cause","specSha256":"9e6bf2b370b78b493784718843701b1f5f8fac80c5d862827df5165a817ab73e"}
+  },
+  "allowed": [
+    "commit the exact reviewed 12 T1127 source paths",
+    "commit T1127 specifications, reviews and truthful verification evidence",
+    "commit directly related T1128-T1132 control and diagnosis records after exact path review"
+  ],
+  "notAllowed": [
+    "T1127 task completion",
+    "global gate PASS",
+    "classification of LED-031 or LED-061 as out-of-scope",
+    "claim that T1131 or T1132 has a known cause or fix",
+    "package or installed acceptance PASS",
+    "blanket approval of all dirty or untracked worktree files"
+  ],
+  "findings": []
+}

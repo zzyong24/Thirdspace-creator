@@ -69,6 +69,60 @@ function taskFixture() {
 }
 
 describe("T-517 automation driver", () => {
+  it.each([
+    ["10 */2 * * *","2026-09-12T16:05:00Z","2026-09-12T14:10:00.000Z"],
+    ["10 */5 * * *","2026-09-12T16:05:00Z","2026-09-12T12:10:00.000Z"],
+    ["10 */5 * * *","2026-09-13T02:05:00Z","2026-09-12T21:10:00.000Z"],
+    ["10 */24 * * *","2026-09-13T16:05:00Z","2026-09-12T16:10:00.000Z"],
+    ["10 */48 * * *","2026-09-13T16:05:00Z","2026-09-12T16:10:00.000Z"],
+  ])("T1106 步长%s每日重置且跨午夜取最近slot",async(schedule,now,anchor)=>{
+    const enqueue=vi.fn(async()=>taskFixture().task);
+    const tasks={recoverExpiredLeases:async()=>({requeued:0,failed:0,paused:0,cancelled:0}),enqueue,claimNext:async()=>null} as unknown as PersistentTaskService;
+    await runAutomationDriverTick({ctx,tasks,registry:createAutomationHandlerRegistry().register("scheduled_collection",async()=>{}).seal(),listRunnableJobs:async()=>[{...dueJob,schedule,target:{scheduleTimezone:"Asia/Shanghai"}}],now:()=>now,workerId:"t1106",cron:{validate:()=>true},recoverMissedDailyRuns:true});
+    expect(enqueue).toHaveBeenCalledWith(expect.anything(),expect.objectContaining({idempotencyKey:`scheduled-job:job-1:${anchor}`}));
+  });
+
+  it("T1106 精确cron分钟已有实际尝试也不能创建新自动任务",async()=>{
+    const enqueue=vi.fn(async()=>taskFixture().task);
+    const tasks={recoverExpiredLeases:async()=>({requeued:0,failed:0,paused:0,cancelled:0}),enqueue,claimNext:async()=>null} as unknown as PersistentTaskService;
+    const now="2026-09-13T02:00:30Z";
+    await runAutomationDriverTick({ctx,tasks,registry:createAutomationHandlerRegistry().register("scheduled_collection",async()=>{}).seal(),listRunnableJobs:async()=>[{...dueJob,schedule:"0 */2 * * *",lastRunStartedAt:"2026-09-13T02:00:10Z",target:{scheduleTimezone:"Asia/Shanghai"}}],now:()=>now,workerId:"t1106",cron:{validate:()=>true},recoverMissedDailyRuns:true});
+    expect(enqueue).not.toHaveBeenCalled();
+  });
+
+  it("T1106 漏跑恢复先结算原在途任务，owner防重不创建第二份",async()=>{
+    const f=await createDb();try{
+      const now=()=>"2026-09-13T02:07:00Z",tasks=createPersistentTaskService(f.db,{now});
+      const job={...dueJob,schedule:"0 */2 * * *",target:{scheduleTimezone:"Asia/Shanghai"}};
+      const original=await tasks.enqueue(ctx,{kind:"automation_sync",ownerType:"scheduled_job",ownerId:job.id,idempotencyKey:"t1106-existing",payload:{handler:"scheduled_collection",job,scheduledFor:"2026-09-13T00:00:00Z"},maxAttempts:3});
+      const handler=vi.fn(async()=>{});
+      const result=await runAutomationDriverTick({ctx,tasks,registry:createAutomationHandlerRegistry().register("scheduled_collection",handler).seal(),listRunnableJobs:async()=>[job],now,workerId:"t1106",cron:{validate:()=>true},recoverMissedDailyRuns:true});
+      expect(result).toMatchObject({overlapped:1,enqueued:0,succeeded:1});
+      expect(await tasks.get(ctx,original.id)).toMatchObject({id:original.id,attempt:1,status:"succeeded"});expect((await tasks.list(ctx,{kind:"automation_sync"})).total).toBe(1);
+    }finally{await f.client.close();}
+  });
+
+  it("T1106 默认两小时错过一分钟后补最近slot，持久幂等及已尝试防重保留",async()=>{
+    const f=await createDb();try{
+      let now="2026-09-13T02:07:20Z";
+      let job:AutomationDriverJob={...dueJob,schedule:"0 */2 * * *",target:{scheduleTimezone:"Asia/Shanghai"}};
+      const tasks=createPersistentTaskService(f.db,{now:()=>now});
+      const handler=vi.fn(async()=>{job={...job,lastRunStartedAt:now};});
+      const registry=createAutomationHandlerRegistry().register("scheduled_collection",handler).seal();
+      const tick=()=>runAutomationDriverTick({ctx,tasks,registry,listRunnableJobs:async()=>[job],now:()=>now,workerId:"t1106-worker",cron:{validate:()=>true},recoverMissedDailyRuns:true});
+      expect(await tick()).toMatchObject({enqueued:1,succeeded:1});
+      const {rows}=await tasks.list(ctx,{kind:"automation_sync"});
+      expect(rows).toHaveLength(1);expect(rows[0]).toMatchObject({attempt:1,idempotencyKey:"scheduled-job:job-1:2026-09-13T02:00:00.000Z"});
+      now="2026-09-13T02:08:20Z";expect(await tick()).toMatchObject({enqueued:0});expect(handler).toHaveBeenCalledTimes(1);
+      job={...job,lastRunStartedAt:null};await tick();expect(handler).toHaveBeenCalledTimes(1);
+      expect((await tasks.list(ctx,{kind:"automation_sync"})).rows[0]?.id).toBe(rows[0]?.id);
+      // 10点错过后已手动/失败尝试也不能再次补；停用与非metrics不扩大。
+      job={...job,lastRunStartedAt:"2026-09-13T02:01:00Z"};expect(await tick()).toMatchObject({enqueued:0});
+      job={...job,lastRunStartedAt:null,enabled:false};expect(await tick()).toMatchObject({enqueued:0});
+      job={...job,enabled:true,sourceKind:"comments"};expect(await tick()).toMatchObject({enqueued:0});
+    }finally{await f.client.close();}
+  });
+
   it("registry seal 后不可追加 handler，未知 handler 诚实拒绝", () => {
     const registry = createAutomationHandlerRegistry();
     registry.register("scheduled_collection", async () => undefined);

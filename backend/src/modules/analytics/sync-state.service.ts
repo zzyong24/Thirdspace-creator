@@ -19,7 +19,7 @@ export function createPublicationSyncService(db:Db,ports:{now:()=>string;assertP
 
    return count;
   },
-  async due(ctx:RequestContext,id:string,capability:SyncCapability){const pub=await ports.assertPublication(ctx,id);const state=await read(ctx,id,capability);return isSyncDue({publishedAt:pub.publishedAt,...(state?.externalId===pub.externalId?state:{})},ports.now());},
+  async due(ctx:RequestContext,id:string,capability:SyncCapability){const pub=await ports.assertPublication(ctx,id);const state=await read(ctx,id,capability);return isSyncDue({publishedAt:pub.publishedAt,...(state?.externalId===pub.externalId?state:{})},ports.now(),capability);},
   async settle(ctx:RequestContext,id:string,capability:SyncCapability,result:{success:true}|{success:false;error:string}){
    const pub=await ports.assertPublication(ctx,id);const stamp=ports.now();const old=await read(ctx,id,capability);const same=old?.externalId===pub.externalId;
    const failures=result.success?0:(same?old?.failures??0:0)+1;

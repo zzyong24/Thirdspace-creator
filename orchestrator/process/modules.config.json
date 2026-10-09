@@ -7321,6 +7321,82 @@
           "git diff --check"
         ]
       }
+    },
+    "T-1127": {
+      "task_id": "T-1127",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1127-main-analytics-integration.md",
+        "docs/verification/t1124/T1124_SOURCE_INTEGRATION_REVIEW.json",
+        "docs/verification/t1127/current-source-path-comparison.json",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        ".agents/skills/oil-ui-pro/SKILL.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "backend/src/application/collection/self.test.ts",
+        "backend/src/modules/ai-runtime/automation-driver.test.ts",
+        "backend/src/modules/ai-runtime/automation-driver.ts",
+        "backend/src/modules/analytics/analytics.repository.integration.test.ts",
+        "backend/src/modules/analytics/analytics.repository.ts",
+        "backend/src/modules/analytics/sync-policy.test.ts",
+        "backend/src/modules/analytics/sync-policy.ts",
+        "backend/src/modules/analytics/sync-state.service.test.ts",
+        "backend/src/modules/analytics/sync-state.service.ts",
+        "backend/src/modules/ingestion/ingestion.import.integration.test.ts",
+        "frontend/src/components/analytics/chart-coordinates.test.tsx",
+        "frontend/src/components/analytics/chart-frame.tsx"
+      ],
+      "write_set": [
+        "backend/src/application/collection/self.test.ts",
+        "backend/src/modules/ai-runtime/automation-driver.test.ts",
+        "backend/src/modules/ai-runtime/automation-driver.ts",
+        "backend/src/modules/analytics/analytics.repository.integration.test.ts",
+        "backend/src/modules/analytics/analytics.repository.ts",
+        "backend/src/modules/analytics/sync-policy.test.ts",
+        "backend/src/modules/analytics/sync-policy.ts",
+        "backend/src/modules/analytics/sync-state.service.test.ts",
+        "backend/src/modules/analytics/sync-state.service.ts",
+        "backend/src/modules/ingestion/ingestion.import.integration.test.ts",
+        "frontend/src/components/analytics/chart-coordinates.test.tsx",
+        "frontend/src/components/analytics/chart-frame.tsx",
+        "docs/features/t1127-main-analytics-integration.md",
+        "docs/features/t1127-main-analytics-integration.review.md",
+        "docs/features/t1127-main-analytics-integration.review-input.json",
+        "docs/verification/t1127/**",
+        "docs/verification/t1124/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir backend exec vitest run src/modules/analytics/analytics.repository.integration.test.ts src/modules/analytics/sync-policy.test.ts src/modules/analytics/sync-state.service.test.ts src/modules/ai-runtime/automation-driver.test.ts src/modules/ingestion/ingestion.import.integration.test.ts src/application/collection/self.test.ts --maxWorkers=1 --testTimeout=120000 --hookTimeout=120000 --retry=0",
+          "pnpm --dir backend exec vitest run src/application/scheduling/automation.test.ts src/application/platform-collection/periodic.integration.test.ts --maxWorkers=1 --testTimeout=120000 --hookTimeout=120000 --retry=0",
+          "pnpm --dir frontend exec vitest run src/components/analytics/chart-coordinates.test.tsx --testTimeout=120000 --hookTimeout=120000 --retry=0",
+          "pnpm --dir backend exec tsc --noEmit",
+          "pnpm --dir frontend typecheck",
+          "node docs/verification/t1127/run-chart-visual.mjs",
+          "pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-interactions.test.tsx src/features/knowledge/knowledge-dump-zone.test.tsx src/features/topics/topics-interactions.test.tsx src/components/overlays/overlay-routing.test.tsx src/lib/copilot-navigation.test.ts src/features/copilot/chat-tool-trace.test.tsx src/features/automations/run-controls.test.tsx src/features/automations/cadence.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "git diff --check",
+          "node orchestrator/process/pmem.mjs sync",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

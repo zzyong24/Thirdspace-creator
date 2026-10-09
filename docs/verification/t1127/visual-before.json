@@ -1,0 +1,109 @@
+{
+  "schema": "creatoros-chart-component-visual/v1",
+  "phase": "before",
+  "capturedAt": "2026-10-09T12:57:28.042Z",
+  "commit": "6c35033e66be24c618426dd0cb84569572e75023",
+  "sourceSha256": {
+    "frontend/src/components/analytics/chart-frame.tsx": "1ca9a45a0adca9d7b7557b55609722457225178c1786749a8e44199a3f302560",
+    "frontend/src/components/project/section-card.tsx": "0041ac94cb73144f6f99d093e70cd693775771ddd41e4a522c1bb6c8ca4636ca",
+    "frontend/src/components/ui/card.tsx": "d8113cbf964f8d1aadf2649d2944d8bbc6e3cfd49d36746f76868cbc4dde3cfe",
+    "frontend/src/styles/tokens.css": "9a61b49eee0c84da8c820b7d9175afa0a9350edf603aa584eb5dfafe4c6af675"
+  },
+  "css": {
+    "path": "frontend/.next/static/chunks/2urhglc3rai20.css",
+    "sha256": "3cffad6026e5cdbac5e321acf92a0de6a548d3f348eacb45c91c3750eaae26b0"
+  },
+  "input": {
+    "kind": "synthetic-isolated-component",
+    "trend": [
+      {
+        "label": "2026-10-01",
+        "value": null
+      },
+      {
+        "label": "2026-10-02",
+        "value": null
+      },
+      {
+        "label": "2026-10-03",
+        "value": 379
+      },
+      {
+        "label": "2026-10-04",
+        "value": null
+      },
+      {
+        "label": "2026-10-05",
+        "value": null
+      }
+    ]
+  },
+  "retries": 0,
+  "modelCalls": 0,
+  "platformOperations": 0,
+  "databaseWrites": 0,
+  "claims": {
+    "componentReplay": true,
+    "productionPage": false,
+    "nativeApp": false,
+    "humanViewed": false
+  },
+  "captures": [
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "screenshot": "docs/verification/t1127/screenshots/before-1366.png",
+      "screenshotSha256": "efcf804f43755b1054cb12b6c5b931f23ccd1e1cc71148ff182ba26fac345a32",
+      "geometry": {
+        "tag": "circle",
+        "center": {
+          "x": 715.5,
+          "y": 164.02188110351562
+        },
+        "svg": {
+          "width": 572,
+          "height": 240
+        },
+        "strokeWidth": null,
+        "linecap": null,
+        "vectorEffect": null,
+        "title": ""
+      },
+      "pixels": {
+        "width": 17,
+        "height": 7,
+        "count": 85
+      }
+    },
+    {
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "screenshot": "docs/verification/t1127/screenshots/before-900.png",
+      "screenshotSha256": "e322883a1faf402d7a3393c71a90bdc5969c28618733513fb8ee595721c881da",
+      "geometry": {
+        "tag": "circle",
+        "center": {
+          "x": 482.5,
+          "y": 164.02188110351562
+        },
+        "svg": {
+          "width": 292,
+          "height": 240
+        },
+        "strokeWidth": null,
+        "linecap": null,
+        "vectorEffect": null,
+        "title": ""
+      },
+      "pixels": {
+        "width": 9,
+        "height": 7,
+        "count": 43
+      }
+    }
+  ]
+}

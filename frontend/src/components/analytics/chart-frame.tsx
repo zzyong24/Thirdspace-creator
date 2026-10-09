@@ -88,7 +88,7 @@ export function ChartFrame({ title, summary, trend, description, height = 160, c
               if (typeof point.value !== "number" || !Number.isFinite(point.value)) return null;
               const previous = trend[index - 1]?.value, next = trend[index + 1]?.value;
               const isolated = !(typeof previous === "number" && Number.isFinite(previous)) && !(typeof next === "number" && Number.isFinite(next));
-              return isolated ? <circle key={index} cx={x(index)} cy={y(point.value)} r="1.5" fill="var(--color-brand)" /> : null;
+              return isolated ? <line data-slot="chart-data-point" key={index} x1={x(index)} x2={x(index)} y1={y(point.value)} y2={y(point.value)} stroke="var(--color-brand)" strokeWidth="6" strokeLinecap="round" vectorEffect="non-scaling-stroke"><title>{`${point.label}：${point.value.toLocaleString("zh-CN")} ${unit}`}</title></line> : null;
             })}
           </svg>
         </div>

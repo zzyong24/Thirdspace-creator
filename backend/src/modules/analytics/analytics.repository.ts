@@ -343,29 +343,49 @@ export function createAnalyticsRepository(
       const scope=and(eq(metricSnapshots.userId,userId),factFilter(metricSnapshots,accountId),publicationIds?inArray(metricSnapshots.publicationId,[...publicationIds]):undefined);
       const dayKey=sql<string>`to_char(${metricSnapshots.capturedAt}::timestamptz AT TIME ZONE 'Asia/Shanghai','YYYY-MM-DD')`;
       const recentDays=db.selectDistinct({day:dayKey.as("day")}).from(metricSnapshots).where(scope).orderBy(desc(dayKey)).limit(Math.max(1,days)+1);
-      const rows=await db.selectDistinctOn([metricSnapshots.publicationId,dayKey],{publicationId:metricSnapshots.publicationId,capturedAt:metricSnapshots.capturedAt,day:dayKey,source:metricSnapshots.source,rawMetrics:sql<Record<string,unknown>>`jsonb_build_object('views',${metricSnapshots.rawMetrics}->'views','plays',${metricSnapshots.rawMetrics}->'plays','_platform',COALESCE(to_jsonb(${metricSnapshots.nativePlatform}),${metricSnapshots.rawMetrics}->'_platform'),'metric_definition',${metricSnapshots.rawMetrics}->'metric_definition','metric_window',${metricSnapshots.rawMetrics}->'metric_window')`})
-        .from(metricSnapshots).where(and(scope,inArray(dayKey,recentDays))).orderBy(asc(metricSnapshots.publicationId),asc(dayKey),desc(sql`${metricSnapshots.capturedAt}::timestamptz`),desc(metricSnapshots.id));
-      const byDay=new Map<string,Map<string,typeof rows[number]>>();
-      for(const row of rows){let group=byDay.get(row.day);if(!group)byDay.set(row.day,group=new Map());group.set(row.publicationId,row);}
+      // SQL的JSONB文本给结构相同的窗口同一身份；同一快照沿用views优先（含真实0）。
+      // PG16 / PGlite的软输入校验避免溢出字符串在SQL选中后被JS当Infinity丢弃。
+      const validMetric=(key:ReturnType<typeof sql>)=>sql`jsonb_typeof(${metricSnapshots.rawMetrics}->${key}) IN ('number','string') AND (${metricSnapshots.rawMetrics}->>${key}) ~ '^[[:space:]]*[+-]?([0-9]+([.][0-9]*)?|[.][0-9]+)([eE][+-]?[0-9]+)?[[:space:]]*$' AND pg_input_is_valid(${metricSnapshots.rawMetrics}->>${key},'double precision')`;
+      const metricKey=sql<string>`CASE WHEN ${validMetric(sql`'views'`)} THEN 'views' WHEN ${validMetric(sql`'plays'`)} THEN 'plays' ELSE 'unknown' END`;
+
+      const platform=sql`COALESCE(to_jsonb(${metricSnapshots.nativePlatform}),${metricSnapshots.rawMetrics}->'_platform')`;
+      const series=sql<string>`jsonb_build_array(${metricSnapshots.source},${platform},${metricSnapshots.rawMetrics}->'metric_definition',${metricSnapshots.rawMetrics}->'metric_window',${metricKey})::text`;
+      const rows=await db.selectDistinctOn([metricSnapshots.publicationId,dayKey,series],{
+        publicationId:metricSnapshots.publicationId,capturedAt:metricSnapshots.capturedAt,day:dayKey,series,metricKey,
+        rawMetrics:sql<Record<string,unknown>>`jsonb_build_object('views',${metricSnapshots.rawMetrics}->'views','plays',${metricSnapshots.rawMetrics}->'plays','_platform',${platform})`,
+      }).from(metricSnapshots).where(and(scope,inArray(dayKey,recentDays)))
+        .orderBy(asc(metricSnapshots.publicationId),asc(dayKey),asc(series),desc(sql`${metricSnapshots.capturedAt}::timestamptz`),desc(metricSnapshots.id));
+      type Sample=typeof rows[number];
+      const byDay=new Map<string,Map<string,Map<string,Sample>>>();
+      for(const row of rows){
+        let group=byDay.get(row.day);if(!group)byDay.set(row.day,group=new Map());
+        let samples=group.get(row.publicationId);if(!samples)group.set(row.publicationId,samples=new Map());
+        samples.set(row.series,row);
+      }
       const ordered=[...byDay.keys()].sort(),points:DailyPlayPoint[]=[];
-      for(let i=1;i<ordered.length;i++){
-        const day=ordered[i]!,previousDay=new Date(Date.parse(day+'T00:00:00Z')-86400000).toISOString().slice(0,10);
-        const current=byDay.get(day)!,previous=byDay.get(previousDay);
+      if(ordered.length<2)return points;
+      const end=Date.parse(ordered[ordered.length-1]!+'T00:00:00Z');
+      for(let time=Date.parse(ordered[1]!+'T00:00:00Z');time<=end;time+=86400000){
+        const day=new Date(time).toISOString().slice(0,10),previousDay=new Date(time-86400000).toISOString().slice(0,10);
+        const current=byDay.get(day),previous=byDay.get(previousDay);
         let growth=0,correction=0,samples=0;
-        for(const [id,row] of current){const old=previous?.get(id);if(!old||old.source!==row.source)continue;
-          const raw=row.rawMetrics as Record<string,unknown>,prior=old.rawMetrics as Record<string,unknown>;
-          if(raw._platform==='wechatOfficial'||prior._platform==='wechatOfficial')continue;
-          const key=metricNumber(raw,'views')!==null?'views':'plays';
-          const value=metricNumber(raw,key),baseline=metricNumber(prior,key);
-          if(value===null||baseline===null||raw.metric_definition!==prior.metric_definition||raw.metric_window!==prior.metric_window)continue;
-          samples++;const delta=value-baseline;if(delta<0)correction+=delta;else growth+=delta;
+        for(const [id,versions] of current??[]){
+          const candidates:Array<{delta:number;at:number;key:string}>=[];
+          for(const [identity,row] of versions){
+            const old=previous?.get(id)?.get(identity);if(!old||row.rawMetrics._platform==='wechatOfficial')continue;
+            const value=metricNumber(row.rawMetrics,row.metricKey),baseline=metricNumber(old.rawMetrics,row.metricKey);
+            if(value!==null&&baseline!==null)candidates.push({delta:value-baseline,at:Date.parse(row.capturedAt),key:row.metricKey});
+          }
+          candidates.sort((a,b)=>b.at-a.at||Number(b.key==='views')-Number(a.key==='views'));
+          const latest=candidates[0];if(!latest||candidates.some(c=>c.at===latest.at&&c.delta!==latest.delta))continue;
+          samples++;if(latest.delta<0)correction+=latest.delta;else growth+=latest.delta;
         }
-        const point:DailyPlayPoint={day,plays:samples&&correction===0?growth:null};
-        const complete=!!previous&&samples===current.size&&samples===previous.size;
+        const complete=!!current&&!!previous&&samples===current.size&&samples===previous.size;
+        const point:DailyPlayPoint={day,plays:complete&&samples>0&&correction===0?growth:null};
         if(!complete||correction<0){point.complete=complete;point.sampleCount=samples;point.correction=correction<0?correction:null;}
         points.push(point);
       }
-      return points.slice(-Math.max(1,days));
+      return points;
     },
 
     async getDashboardRollup(userId,accountId,publicationIds){

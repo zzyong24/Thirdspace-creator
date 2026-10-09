@@ -170,6 +170,18 @@ describe("数据底座 T-001 — refreshDouyin 未知作品导入为历史项目
     await seedDouyinSource(db);
   });
 
+  it("T1106 正式ingestion与analytics公共服务保留两日共同列表系列，不被较晚明细遮掉",async()=>{
+    const records:MetricRecord[]=[{...work("t1106-real-chain","列表明细联合回归",100),capturedAt:"2026-06-29T00:00:00Z"}];
+    const {ingestionService,analyticsService}=wire(db,records);
+    await ingestionService.refreshDouyin(ctx,{externalSourceId:"src-douyin",capturedAt:records[0]!.capturedAt});
+    const detail=await ingestionService.createRun(ctx,{externalSourceId:"src-douyin",runType:"douyin_detail",idempotencyKey:"t1106-detail"});
+    await ingestionService.ingestMetrics(ctx,{runId:detail.id,records:[{...records[0]!,capturedAt:"2026-06-29T00:00:00.001Z",metrics:{plays:101}}]});
+    await ingestionService.completeRun(ctx,{runId:detail.id});
+    records[0]={...records[0]!,capturedAt:"2026-06-30T00:00:00Z",metrics:{views:150}};
+    await ingestionService.refreshDouyin(ctx,{externalSourceId:"src-douyin",capturedAt:records[0]!.capturedAt});
+    expect(await analyticsService.getDailyPlayTrend(ctx,{days:7})).toEqual([{day:"2026-06-30",plays:50}]);
+  });
+
   it("未知作品不再 reject:建 imported 项目 + publication + 落 metrics,run completed", async () => {
     const { ingestionService, projectsService, publishingService } = wire(db, [
       work("7400", "AI 工作流四步法", 128000),

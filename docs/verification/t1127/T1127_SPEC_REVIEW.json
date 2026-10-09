@@ -1,0 +1,70 @@
+{
+  "schema": "creatoros-spec-independent-review/v1",
+  "task": "T1127",
+  "reviewedAt": "2026-10-09T12:53:54Z",
+  "verdict": "CONCERNS",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:40:ab9f72636b02ca5f",
+        "quote": "保留现有oil-ui-pro0.10.0、账号组UI_RULES和ChartFrame/tokens基线；取当前旧/新同数据1366和900宽度实际画面，主Agent实际看图，验证点像素、坐标、null断开与原摘要。不签来源图或未看截图。"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:45:f31a536f5149900f",
+        "quote": "必须当前独立实施复核绑定最终SHA，当前公共浏览器或组件回放及实际视觉证据；控制面状态只taskctl。pmem sync后运行完整reconcile，保原41逐字对照。"
+      },
+      "where": "orchestrator/process/modules.config.json 的 T-1127.verify_commands.implementation",
+      "failure_mode": "SPEC要求当前1366/900实际画面、主Agent看图以及公共浏览器或组件回放，但正式verify_commands只有chart组件单测和通用LED-047，没有T1127当前数据的浏览器/视觉采证入口。实现可能只靠来源截图或组件断言通过全部正式命令，仍缺当前main的像素、null断开、摘要和响应式证据。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:0c320dd33f576b26f343c0a5d618c039107bd329a1c725de09fb2f6b28b621fa:orchestrator/process/modules.config.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "suggestion": "不扩大产品写集；在docs/verification/t1127下增加当前main专用的无模型/无平台写浏览器或确定性组件回放入口，正式命令生成同数据1366/900证据并绑定主Agent实际看图、source SHA和0retry。保留现有chart单测、LED-047、类型、边界、timeout和reconcile。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ],
+  "hashes": {
+    "spec": "8e856198c20eea876da52401c2179d3c1b29ea8c261bf57815f35e20eaea0234",
+    "constitution": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+    "modules": "0c320dd33f576b26f343c0a5d618c039107bd329a1c725de09fb2f6b28b621fa",
+    "comparison": "140df16ddaa84be21143d18a38592f313be46a0e03ede4b6ad0389eec4362c25",
+    "t1124Audit": "b97f43c0ad9b1dbd58bfd121547d5d26a608ce046ba208150b9d84277eca0afa"
+  },
+  "scopeAssessment": {
+    "paths": 12,
+    "tests": 7,
+    "products": 5,
+    "allMainEqualMergeBase": true,
+    "sourceDifferent": true,
+    "excluded": [
+      "T1106封面比例",
+      "T1107排期布局",
+      "T1110微信原生报表"
+    ],
+    "provenanceOnly": true
+  },
+  "acceptedBoundaries": [
+    "analytics系列、有限数值、缺日、冲突与unknown规则边界明确",
+    "cron只self.metrics简单计划，最近slot、防重复、原owner/lease/idempotency保留",
+    "24小时metrics使用北京时间自然日，2/6小时及其它能力保留旧规则",
+    "6个后端当前组合、正式ingestion/self collector、原调度装配、类型、LED-047与静态门已列",
+    "新test/hook至少120秒且保更长预算",
+    "来源T1106 SPEC/review不继承为main PASS；完整reconcile原41如实保留"
+  ],
+  "nonClaims": [
+    "未授权实施",
+    "未运行测试/浏览器/数据库/模型",
+    "未签来源或当前main PASS",
+    "未改仓库"
+  ]
+}

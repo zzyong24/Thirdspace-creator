@@ -1,0 +1,24 @@
+{
+  "schema": "creatoros-diagnostic-closure-review/v1",
+  "task": "T1129",
+  "reviewedAt": "2026-10-09T13:07:42Z",
+  "verdict": "PASS_T1129_CALLER_DIAGNOSTIC_CLOSED",
+  "findings": [],
+  "hashes": {
+    "spec": "f835c4fc18d568f4f395665b8c94b404d922a62f1d66aa2e28d409d7807964cd",
+    "validation": "c90ec61aa2f8dd31068a592f604bbf24173324e228c3d44529f73aae8469245b",
+    "modules": "6d4ca5a4a00b3fcdaeb269a7c422286213c0ebca7711ff2a587acbeba5fcb074",
+    "actualOrphanReceipt": "57848fc8432d1a4ec96848af2f2b9799c5507f58cd293b33b09c3e92ac76aef4"
+  },
+  "facts": [
+    "原T1127 static失败为modules命令写了不存在的orphan-check.mjs，Node MODULE_NOT_FOUND；扫描没有执行，原失败保留。",
+    "仓库正式入口是orchestrator/process/orphan-scan.mjs；modules只机械替换这一条命令，产品、测试、预算、SPEC与扫描规则均未改。",
+    "修正入口实际exit0，0 error、100既有warning；没有删除扫描、忽略warning或借旧PASS。"
+  ],
+  "classification": "verification-caller-error-not-product-red",
+  "nonClaims": [
+    "不签T1127整体或全局reconcile",
+    "不消除100 warnings",
+    "未修改产品"
+  ]
+}

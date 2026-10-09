@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/components/analytics/chart-coordinates.test.tsx",
+    "--testTimeout=120000",
+    "--hookTimeout=120000",
+    "--retry=0"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T12:58:48.759814+00:00",
+  "finishedAt": "2026-10-09T12:58:50.763087+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 2.003109625016805,
+  "logSha256": "2a897a55d7af1ac9d82aace4ddc163876f65b39d57cdbc770f06b41e55b3ac9c"
+}

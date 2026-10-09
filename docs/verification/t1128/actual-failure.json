@@ -1,0 +1,12 @@
+{
+  "schema": "creatoros-actual-verification-failure/v1",
+  "task": "T1128",
+  "command": "node docs/verification/t1127/run-chart-visual.mjs --baseline",
+  "observedSessionId": 48631,
+  "exitCode": 1,
+  "actualError": "ModuleNotFoundError: No module named PIL",
+  "productEdited": false,
+  "screenshotCompleted": "before-1366.png",
+  "scope": "verification-helper-dependency",
+  "notTargetProductRed": true
+}

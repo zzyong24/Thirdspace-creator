@@ -15,7 +15,7 @@ export interface AutomationDriverJob {
   target: Record<string, unknown>;
   schedule: string;
   enabled: boolean;
-  /** 最近一次真实 job_run 的开始时间；用于判断每日作品同步是否已经尝试过。 */
+  /** 最近一次真实 job_run 的开始时间；用于判断最近计划周期是否已经尝试过。 */
   lastRunStartedAt?: string | null;
 }
 
@@ -80,7 +80,7 @@ export interface AutomationDriverTickDeps {
   leaseSeconds?: number;
   /** 启动恢复只对声明 missed-run=once 的系统聚合作业生效。 */
   startupRecovery?: boolean;
-  /** 每次分钟 tick 检查一次每日作品任务是否已错过，错过且尚未尝试时补跑。 */
+  /** 每次分钟 tick 检查一次作品指标计划是否已错过，错过且尚未尝试时补跑。 */
   recoverMissedDailyRuns?: boolean;
   /** 复用唯一分钟 tick 清理无活跃执行的僵尸 job_run；不得另起第二个 timer。 */
   sweepStaleJobRuns?: () => Promise<number>;
@@ -106,38 +106,31 @@ function minuteAnchor(iso: string): string {
 }
 
 /**
- * `self.metrics` 的每日自定义计划在 CreatorOS 关闭或事件循环阻塞时可能错过
- * 精确 cron 分钟；此处把简单的 `M H * * *` 计划按其时区还原为当天时间锚。当天计划之后
- * 已经出现过任意 run（成功/失败/手动初始化均算一次尝试）就不再自动补，避免分钟级重试。
+ * SEMANTIC_BOUNDARY_ALLOW: 仅还原用户指定cron的最近时间锚，不做创作选择。
+ * self.metrics简单每日/步长小时计划错过精确分钟后补最近一次；原run与持久幂等阻止重发。
  */
-function missedDailyRunAnchor(
-  job: AutomationDriverJob,
-  now: Date,
-): string | null {
-  if (job.sourceKind !== "self.metrics") return null;
-  const match = job.schedule.trim().match(/^(\d{1,2})\s+(\d{1,2})\s+\*\s+\*\s+\*$/);
-  if (!match) return null;
-  const minute = Number(match[1]);
-  const hour = Number(match[2]);
-  if (minute < 0 || minute > 59 || hour < 0 || hour > 23) return null;
-
-  const scheduled = new Date(now);
-  if (job.target.scheduleTimezone === "Asia/Shanghai") {
-    // 与精确 cron 匹配使用同一时区，不能由本机日期提前补跑。
-    const beijing = new Date(now.getTime() + 8 * 60 * 60 * 1_000);
-    scheduled.setTime(Date.UTC(beijing.getUTCFullYear(), beijing.getUTCMonth(), beijing.getUTCDate(), hour - 8, minute));
-  } else {
-    scheduled.setHours(hour, minute, 0, 0);
+function missedDailyRunAnchor(job:AutomationDriverJob,now:Date):string|null{
+  if(job.sourceKind!=="self.metrics")return null;
+  const match=job.schedule.trim().match(/^(\d{1,2})\s+(\d{1,2}|\*\/\d+)\s+\*\s+\*\s+\*$/);
+  if(!match)return null;
+  const minute=Number(match[1]),stepped=match[2]!.startsWith("*/"),hour=stepped?Math.min(Number(match[2]!.slice(2)),24):Number(match[2]);
+  if(minute>59||(!stepped&&hour>23)||(stepped&&hour<1))return null;
+  const beijing=job.target.scheduleTimezone==="Asia/Shanghai";
+  const local=new Date(now.getTime()+(beijing?8*3600000:0));
+  const currentHour=beijing?local.getUTCHours():local.getHours();
+  const scheduled=new Date(now);
+  const setAnchor=(h:number,dayOffset=0)=>{
+    if(beijing)scheduled.setTime(Date.UTC(local.getUTCFullYear(),local.getUTCMonth(),local.getUTCDate()+dayOffset,h-8,minute));
+    else {scheduled.setFullYear(local.getFullYear(),local.getMonth(),local.getDate()+dayOffset);scheduled.setHours(h,minute,0,0);}
+  };
+  setAnchor(stepped?Math.floor(currentHour/hour)*hour:hour);
+  if(now.getTime()<scheduled.getTime()){
+    if(!stepped)return null;
+    const priorHour=(beijing?local.getUTCHours():local.getHours())-1;
+    setAnchor(priorHour<0?Math.floor(23/hour)*hour:Math.floor(priorHour/hour)*hour,priorHour<0?-1:0);
   }
-  if (now.getTime() < scheduled.getTime()) return null;
-
-  if (job.lastRunStartedAt) {
-    const lastRunMs = new Date(job.lastRunStartedAt).getTime();
-    if (Number.isFinite(lastRunMs) && lastRunMs >= scheduled.getTime()) {
-      return null;
-    }
-  }
-  return scheduled.toISOString();
+  const last=Date.parse(job.lastRunStartedAt??'');
+  return Number.isFinite(last)&&last>=scheduled.getTime()?null:scheduled.toISOString();
 }
 
 function errorMessageOf(error: unknown): string {
@@ -221,16 +214,15 @@ export async function runAutomationDriverTick(
     const startupRecovery =
       deps.startupRecovery === true &&
       job.sourceKind === "intelligence.sync";
-    const missedDailyAnchor =
+    const latestMetricsAnchor =
       deps.recoverMissedDailyRuns === true && validSchedule
-        ? missedDailyRunAnchor(job, now)
+        ? missedDailyRunAnchor({...job,lastRunStartedAt:null}, now)
         : null;
-    if (
-      !job.enabled ||
-      (!scheduleMatches && !startupRecovery && !missedDailyAnchor)
-    ) {
-      continue;
-    }
+    const lastAttempt=Date.parse(job.lastRunStartedAt??'');
+    const alreadyAttempted=!!latestMetricsAnchor&&Number.isFinite(lastAttempt)&&lastAttempt>=Date.parse(latestMetricsAnchor);
+    const missedDailyAnchor=alreadyAttempted?null:latestMetricsAnchor;
+    if (!job.enabled || alreadyAttempted || (!scheduleMatches && !startupRecovery && !missedDailyAnchor)) continue;
+
     const triggerAnchor = missedDailyAnchor ?? scheduledFor;
     if (missedDailyAnchor && !scheduleMatches) {
       console.log(

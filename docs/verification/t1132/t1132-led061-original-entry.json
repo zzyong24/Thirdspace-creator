@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "env",
+    "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+    "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+    "node",
+    "docs/verification/t1073/verify-resource-lifecycle.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T13:36:07.000741+00:00",
+  "finishedAt": "2026-10-09T13:38:24.753947+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 137.75183016603114,
+  "logSha256": "564dc6eab0e9b614cbf137f857ca09bbf6089084acfd2ca665571ff371add701"
+}

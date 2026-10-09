@@ -1,0 +1,109 @@
+{
+  "schema": "creatoros-chart-component-visual/v1",
+  "phase": "after",
+  "capturedAt": "2026-10-09T13:01:36.848Z",
+  "commit": "6c35033e66be24c618426dd0cb84569572e75023",
+  "sourceSha256": {
+    "frontend/src/components/analytics/chart-frame.tsx": "e3012abd91b9bdb628a1c7cf1aa08ac9327d5bba6c8cb9c6157da9d240c22e16",
+    "frontend/src/components/project/section-card.tsx": "0041ac94cb73144f6f99d093e70cd693775771ddd41e4a522c1bb6c8ca4636ca",
+    "frontend/src/components/ui/card.tsx": "d8113cbf964f8d1aadf2649d2944d8bbc6e3cfd49d36746f76868cbc4dde3cfe",
+    "frontend/src/styles/tokens.css": "9a61b49eee0c84da8c820b7d9175afa0a9350edf603aa584eb5dfafe4c6af675"
+  },
+  "css": {
+    "path": "frontend/.next/static/chunks/2urhglc3rai20.css",
+    "sha256": "3cffad6026e5cdbac5e321acf92a0de6a548d3f348eacb45c91c3750eaae26b0"
+  },
+  "input": {
+    "kind": "synthetic-isolated-component",
+    "trend": [
+      {
+        "label": "2026-10-01",
+        "value": null
+      },
+      {
+        "label": "2026-10-02",
+        "value": null
+      },
+      {
+        "label": "2026-10-03",
+        "value": 379
+      },
+      {
+        "label": "2026-10-04",
+        "value": null
+      },
+      {
+        "label": "2026-10-05",
+        "value": null
+      }
+    ]
+  },
+  "retries": 0,
+  "modelCalls": 0,
+  "platformOperations": 0,
+  "databaseWrites": 0,
+  "claims": {
+    "componentReplay": true,
+    "productionPage": false,
+    "nativeApp": false,
+    "humanViewed": false
+  },
+  "captures": [
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "screenshot": "docs/verification/t1127/screenshots/after-1366.png",
+      "screenshotSha256": "d843fa7916de8f1b0553e917f6f9ed6c0bcf1db9e71cfb3268edf92a083fad47",
+      "geometry": {
+        "tag": "line",
+        "center": {
+          "x": 715.5,
+          "y": 164.02188110351562
+        },
+        "svg": {
+          "width": 572,
+          "height": 240
+        },
+        "strokeWidth": "6",
+        "linecap": "round",
+        "vectorEffect": "non-scaling-stroke",
+        "title": "2026-10-03：379 次"
+      },
+      "pixels": {
+        "width": 5,
+        "height": 5,
+        "count": 21
+      }
+    },
+    {
+      "viewport": {
+        "width": 900,
+        "height": 900
+      },
+      "screenshot": "docs/verification/t1127/screenshots/after-900.png",
+      "screenshotSha256": "4ace592ca7406e8ad82129660166568cdae167a3e6b524c307a9f42c448c4207",
+      "geometry": {
+        "tag": "line",
+        "center": {
+          "x": 482.5,
+          "y": 164.02188110351562
+        },
+        "svg": {
+          "width": 292,
+          "height": 240
+        },
+        "strokeWidth": "6",
+        "linecap": "round",
+        "vectorEffect": "non-scaling-stroke",
+        "title": "2026-10-03：379 次"
+      },
+      "pixels": {
+        "width": 5,
+        "height": 5,
+        "count": 21
+      }
+    }
+  ]
+}
