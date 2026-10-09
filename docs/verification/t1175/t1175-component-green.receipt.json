@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "pnpm",
+    "-C",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/components/shell/workspace-initialization.test.tsx",
+    "src/lib/ai-error-humanize.test.ts"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T21:46:22.637522+00:00",
+  "finishedAt": "2026-10-09T21:46:25.642250+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 3.0044150419998914,
+  "logSha256": "29de4e84639fbb2fe35f3696927afa9343210d9a1ac2954318114f8bda0a2d92"
+}

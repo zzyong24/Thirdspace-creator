@@ -1,0 +1,28 @@
+{
+  "head": "d414dcb34aa88fa032fd302b6d1030ec720e5aa4",
+  "readAt": "2026-10-09T21:36:24.642039+00:00",
+  "actualFiles": [
+    {
+      "path": "ai-worker/src/runtime/browser/browser-launch.ts",
+      "sha256": "d177e5a5e1a8f5b7efdf1418c99861c7187ae2b3d500f47dd5dde2f7b228c3f7"
+    },
+    {
+      "path": "frontend/scripts/desktop/build-sidecar.mjs",
+      "sha256": "07c50a94e1d23e3ce2f601c19255071049ca3d4b31c4bca3b2bb12d5639ed112"
+    },
+    {
+      "path": "frontend/scripts/desktop/obfuscate.mjs",
+      "sha256": "1c403a8c0fa6bd9b1e59f22f02c48850d258b78b882706611363e1ffcd7195ba"
+    },
+    {
+      "path": "node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/browsers.json",
+      "sha256": "af53e32ffe35a024ddb34563700956b01ada00ac7e9270ba5df0604ec57e38e1"
+    }
+  ],
+  "bundledBrowserDirectory": "chromium-1223",
+  "headlessShellBundled": false,
+  "sdkDefaultHeadlessRevision": "1223",
+  "productionBrowserChoice": "生产统一resolver确定性读取full Chromium；运行时fallback传executablePath，不依赖默认headless shell。",
+  "rootValidationFailure": "根私有驱动将SDK默认无channel launch的浏览器缓存改指仅含full Chromium的目录，目标不一致。",
+  "productChanged": false
+}

@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/d414-packaged-runtime-smoke.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T21:33:45.006306+00:00",
+  "finishedAt": "2026-10-09T21:34:10.812551+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 25.805688291962724,
+  "logSha256": "14cf977336c57af6c166029c333df65326e8f0254ddaa5f67900baa9fe94f154"
+}

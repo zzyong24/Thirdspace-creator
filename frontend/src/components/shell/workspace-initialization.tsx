@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { describeUserError } from "@/lib/ai-error-humanize";
 import { readCreationScope, creationScopeKey, type CreationScope } from "@/lib/creation-workspace-scope";
 
 export interface WorkspaceInitialization {
@@ -70,7 +71,7 @@ export function WorkspaceInitializationBoundary({ children, surface = "page", al
   if (surface === "overlay") return null;
   if (initialization.phase === "error") return <section role="alert" data-testid="workspace-initialization-error" className="flex min-h-64 flex-col items-start gap-4 rounded-panel border border-border bg-surface p-6">
     <p className="text-sm text-foreground">工作区暂时未能打开。</p>
-    <p className="text-sm text-muted-foreground">{initialization.error}</p>
+    <p className="text-sm text-muted-foreground">{describeUserError(initialization.error, "工作区页面暂不可用，请重试。")}</p>
     <div className="flex flex-wrap gap-3"><Button onClick={initialization.retry}>重试打开工作区</Button><Button variant="outline" asChild><Link href="/accounts">账号组与绑定账号</Link></Button><Button variant="outline" asChild><Link href="/settings">设置</Link></Button></div>
   </section>;
   return <section role="status" aria-label="正在打开工作区" data-testid="workspace-initialization-loading" className="flex min-h-64 flex-1 flex-col gap-5 p-6">

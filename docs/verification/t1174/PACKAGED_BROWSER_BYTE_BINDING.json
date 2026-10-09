@@ -1,0 +1,12 @@
+{
+  "head": "d414dcb34aa88fa032fd302b6d1030ec720e5aa4",
+  "artifactSha256": "65c944c244cdcc1b1e879d40165488529c6d088f2e31c2eea2a6f8645f62e9a7",
+  "runtimeTarSha256": "fb44edca0f1ed535fee155999d47e13a12b495fdd1c11d5d3a79b7be0fc51aa7",
+  "selectedExecutable": {
+    "path": "frontend/browsers/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+    "sha256": "2447c7bdea8e8ad38b52594f1ba53e18821c05445e8a07ad1cf3b0f23931d89d",
+    "bytes": 68624
+  },
+  "matchesActualLaunchedBinary": true,
+  "recordedAt": "2026-10-09T21:47:41.916263+00:00"
+}

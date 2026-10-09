@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1174-original-smoke-correct-context.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T21:37:17.363627+00:00",
+  "finishedAt": "2026-10-09T21:37:34.689436+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 17.325356042012572,
+  "logSha256": "24e3557ff918e3ee142035074950d898f5065a4fa1b200e5f6f2dd954ebe4508"
+}

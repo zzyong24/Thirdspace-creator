@@ -1,0 +1,20 @@
+{
+  "head": "d414dcb34aa88fa032fd302b6d1030ec720e5aa4",
+  "startedAt": "2026-10-09T21:37:18.042Z",
+  "finishedAt": "2026-10-09T21:37:34.623Z",
+  "result": {
+    "ready": true,
+    "rootStatus": 200,
+    "renderedStatus": 200,
+    "dispatchStatus": 403,
+    "browserHydrated": true
+  },
+  "nodeExecutable": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+  "isolationRoot": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/d414-runtime-isolation-PsqhNq",
+  "realUserAppDataUsed": false,
+  "nativeApp": false,
+  "userActivatedHomepage": false,
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "scope": "原冒烟函数，实际随包Node，原函数默认宿主缓存headless shell1223；不冒称随包浏览器；fresh数据库与auth，原build_smoke端口绑定签名。HTTP/SSR/hydration验证，不代签用户激活首页、模型功能或原生壳。"
+}

@@ -1,0 +1,29 @@
+{
+  "head": "d414dcb34aa88fa032fd302b6d1030ec720e5aa4",
+  "startedAt": "2026-10-09T21:41:00.431Z",
+  "finishedAt": "2026-10-09T21:41:17.334Z",
+  "observed": {
+    "httpStatus": 200,
+    "renderedUrl": "http://127.0.0.1:57804/",
+    "executablePath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/browsers/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+    "executableSha256": "2447c7bdea8e8ad38b52594f1ba53e18821c05445e8a07ad1cf3b0f23931d89d",
+    "workspaceErrorCount": 0,
+    "browserHydrated": true,
+    "pageErrorCount": 0,
+    "browserVersion": "148.0.7778.96",
+    "pageTextSha256": "64df1c0292503c79fdabf965c32c1302e3dfd788c873c1a6be497b201c503b22",
+    "dispatchStatus": 404,
+    "masterKeyDevelopmentFallback": false,
+    "sidecarExit": {
+      "code": 143,
+      "signal": null
+    }
+  },
+  "nodeExecutable": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+  "isolationRoot": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1174-full-browser-isolation-ZycBXj",
+  "nativeApp": false,
+  "realUserDataUsed": false,
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "scope": "补充实际随包full Chromium1223；生产resolver读当前真实随包路径，实际Node/HTTP/SSR/hydration/原dispatch边界断言，不改变原smoke函数或其失败记录；同Rust现有init_script格式注入新随机握手，读真实隔离工作区；不签真实用户激活/原生App/全功能。"
+}

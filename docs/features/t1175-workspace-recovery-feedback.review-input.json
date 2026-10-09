@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS：实际1280×720原图与现WorkspaceInitializationBoundary直接渲染initialization.error一致，英文forbidden反馈缺陷成立；这不证明App启动失败，原403安全拒绝必须保留。仅在workspace-initialization.tsx展示处复用现describeUserError，测试仅同名.test.tsx；共享helper、原错误状态、ready/同根、初始化/分页/超时/Abort/epoch/重试和所有处理器不变。现helper已支持权限/网络、未知中文fallback及安全中文短句；SPEC要求真实HTTP403 envelope的组件RED、无英文、原重试公共list成功才开放、未知技术错误与中文保留和原全部回归，覆盖此展示写集足够。当前仅SPEC初审；GREEN、窄源复核及同1280×720真实恢复页中文/重试证据尚待，不签安全全验、包/安装、真人微信研究或全局失败闭合。",
+  "findings": []
+}

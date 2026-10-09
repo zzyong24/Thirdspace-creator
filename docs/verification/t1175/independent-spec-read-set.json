@@ -1,0 +1,184 @@
+{
+  "schema": "independent-spec-read-set/v1",
+  "task_id": "T-1175",
+  "review_kind": "initial",
+  "reviewer": "/root/t1159_fix_recheck_recovery",
+  "reviewed_at_utc": "2026-10-09T21:44:03.763187+00:00",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "d414dcb34aa88fa032fd302b6d1030ec720e5aa4",
+  "stage": "4-build",
+  "decision": "PASS",
+  "spec_sha256": "b269630e67711f1c1b7f69b3b25d9f895a60fa111498959b4c23b62e31ffa013",
+  "scope": {
+    "product_write_set": [
+      "frontend/src/components/shell/workspace-initialization.tsx"
+    ],
+    "test_write_set": [
+      "frontend/src/components/shell/workspace-initialization.test.tsx"
+    ],
+    "private_output_set": [
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1175-independent-spec-review/REVIEW.md",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1175-independent-spec-review/input.json",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1175-independent-spec-review/READ_SET.json"
+    ],
+    "forbidden_changes": [
+      "共享ai-error-humanize.ts",
+      "AccountSwitcher及公共list/transport",
+      "provider状态、安全拒绝、ready/fail-open/同根保护",
+      "timeout/Abort/epoch/重试和按钮处理器",
+      "backend/握手/owner/模型/任务API",
+      "验证器/消费者/任务状态/旧失败及d414包"
+    ],
+    "not_performed": [
+      "未运行测试或验证器",
+      "未运行产品CLI/服务/DB/模型/扫码/采集",
+      "未启动浏览器或App",
+      "未改仓库源码/控制文件",
+      "未代签实施或当前视觉/交互验收"
+    ]
+  },
+  "screenshot": {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1175/workspace-permission-feedback-before.png",
+    "sha256": "6a94edcc36920f89f226344c19fb54620d2b93405d13a026a32c9b714177b562",
+    "width": 1280,
+    "height": 720,
+    "visually_inspected": true,
+    "observation": "恢复卡片中文概述下直接显示 forbidden: request must originate from the local application；原重试、账号组与绑定账号、设置入口可见。",
+    "limit": "截图只证明英文展示；403及宿主握手缺失为SPEC记录的隔离负向上下文，本审未重跑或追加安全诊断。"
+  },
+  "reads": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "e094046e7e9a78c2b1ca7dacb37d3d6d68044dcc4a5c5e49d083bd063eda5432",
+      "bytes": 60146,
+      "inspection": "任务真相；顶部T1175登记与现状"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1175-workspace-recovery-feedback.md",
+      "sha256": "b269630e67711f1c1b7f69b3b25d9f895a60fa111498959b4c23b62e31ffa013",
+      "bytes": 2248,
+      "inspection": "完整SPEC初审"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT.md",
+      "sha256": "4558b9fc24354493e67d058c14ddd090eb8c33f31875e726959fe44f0d7851f9",
+      "bytes": 17250,
+      "inspection": "项目记忆定位、当前开放任务；仅上下文，不代替任务真相"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT_CONTEXT.md",
+      "sha256": "a74ec6498a8e06fe574f86ec96c51a99076672b717d103b26b25578bd2a1ed3c",
+      "bytes": 1316,
+      "inspection": "完整固定约定与阶段路由"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819,
+      "inspection": "适用维护、独立审核、中文反馈与安全边界规范"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/SKILL.md",
+      "sha256": "5796cf1b3b9f3de2d45c8e754e3df2146735aa14b266b7c32e2cb4c8638f4c1f",
+      "bytes": 4021,
+      "inspection": "完整产品流程技能"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/VERSION",
+      "sha256": "db8c5f26ffadff528c3c988af09e26339ee629b449372f4a62f0c357f7329dfc",
+      "bytes": 7,
+      "inspection": "实际安装技能版本"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/stage-router.md",
+      "sha256": "dd656d4b0d886aee9fafa10b61a1db9554e1d424c533dd79693f28ff7447cf1e",
+      "bytes": 1339,
+      "inspection": "完整阶段路由"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "bytes": 84,
+      "inspection": "项目技能版本绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "bytes": 8130,
+      "inspection": "物理边界、安全与归属职责"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3",
+      "bytes": 50753,
+      "inspection": "project.current_stage/frontier及4-build/5-ship阶段"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/SKILL.md",
+      "sha256": "a623059117b5afdeaf437a6ac0944040ba666b0847e520cfe4fa42cc1ea1cec2",
+      "bytes": 14717,
+      "inspection": "完整Oil 0.10.0技能；适用已有方向局部文案修正"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/interaction-and-state.md",
+      "sha256": "34e8961d11f70522e3b10d18f2f59263a3e9eaf4662a3940dcef3ea7ba6f7915",
+      "bytes": 10790,
+      "inspection": "局部失败反馈、动作层级、恢复及完成语义"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/existing-project.md",
+      "sha256": "82a39fe64cb7fc183e1b3349d1829f6e163aee214c268ce2b921fd30c7f74aed",
+      "bytes": 5835,
+      "inspection": "基线保留、局部精修、同状态同视口复验"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1022-account-group-workspace/UI_RULES.md",
+      "sha256": "a19d209281fe1a51463c7c2b8a063c3fa117d53679762f33d8c9637004bc8d76",
+      "bytes": 5803,
+      "inspection": "当前方向、现组件/tokens、错误与恢复、实际截图验证"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143,
+      "inspection": "现产品定位；P-02/P-03/P-05、R-IDENTITY、R-DESKTOP、NFR-SECURITY及失败反馈规范"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/shell/workspace-initialization.tsx",
+      "sha256": "4f251797b3b01cfacdf2a7bd6c072953f6d58c6c24e973d09b6df349cfb7f2a4",
+      "bytes": 5081,
+      "inspection": "完整现产品源；provider原安全/ready/同根状态与Boundary裸error展示"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/shell/workspace-initialization.test.tsx",
+      "sha256": "9ffb9c23d8d8e765a80b2c6ccc42977e0f0bc4198711d1fe70fe862c54e03d38",
+      "bytes": 19535,
+      "inspection": "完整同名现测试；公共组读取、retry、初始化/分页/超时/切组/脏稿/恢复路径回归"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/lib/ai-error-humanize.ts",
+      "sha256": "4fe33a5e977424aa07e6e4292993986e9d9b09f94bd0abbdfa0121e953b9bebb",
+      "bytes": 17636,
+      "inspection": "完整共享helper；describeUserError、STRUCTURED_ERROR_RULES、安全中文与fallback"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/shell/account-switcher.tsx",
+      "sha256": "701fff5fbbb54378b9cdc8d9f695a649807cf6fb6ca1a0a873be5efe7d257aee",
+      "bytes": 15030,
+      "inspection": "完整实际公共list/HttpTransportError/fail/registerRetry/complete调用链"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1175/workspace-permission-feedback-before.png",
+      "sha256": "6a94edcc36920f89f226344c19fb54620d2b93405d13a026a32c9b714177b562",
+      "bytes": 59172,
+      "inspection": "实际view_image查看原图；只证明展示缺陷，不能单图证明HTTP状态或App启动失败"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1168-spec-review/packet.json",
+      "sha256": "81eaf36ec0c7f0a8739974bc9e4e6b6f6c49f68e84a04dffe66fb1ecbe2a32c6",
+      "bytes": 681,
+      "inspection": "仅作原spec-review-round/v2输入schema示例；不沿用旧任务PASS"
+    }
+  ],
+  "findings": []
+}

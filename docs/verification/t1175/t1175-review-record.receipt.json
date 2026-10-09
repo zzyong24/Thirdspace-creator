@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/reviewctl.mjs",
+    "record",
+    "T-1175",
+    "--spec",
+    "docs/features/t1175-workspace-recovery-feedback.md",
+    "--constitution",
+    "docs/产品定位.md",
+    "--input",
+    "docs/features/t1175-workspace-recovery-feedback.review-input.json",
+    "--review",
+    "docs/features/t1175-workspace-recovery-feedback.review.md",
+    "--backlog",
+    "BACKLOG.md",
+    "--review-mode",
+    "independent",
+    "--model",
+    "codex-inherited"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T21:45:44.262846+00:00",
+  "finishedAt": "2026-10-09T21:45:44.401011+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 0.13793837500270456,
+  "logSha256": "58e5ec4c6ba98c5469cc8ad600a7de2cc6b5367b985cbbcc100d8fa24e71cbf7"
+}

@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1174",
+    "--evidence",
+    "docs/verification/t1174/VERIFICATION.md：原exit1保留；原smoke正确父缓存17.325秒exit0，明确宿主浏览器；实际随包Node/Chromium及真实格式随机握手隔离主页17.887秒exit0/error0/pageerror0，浏览器SHA与实际DMG tar匹配。不代签原生App/用户激活/真人微信/全功能；原canonical40项范围外失败保留。"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T21:48:18.991373+00:00",
+  "finishedAt": "2026-10-09T21:48:19.114683+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.12315629201475531,
+  "logSha256": "53a4b879b063bc83724e2dab596088bef6b0c1a7c2ef9352be5b8769d1acb2dc"
+}

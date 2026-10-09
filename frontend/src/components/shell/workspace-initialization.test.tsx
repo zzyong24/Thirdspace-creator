@@ -21,6 +21,35 @@ function mount(scope:CreationScope={groupId:null,accountId:null},strict=false){c
 beforeEach(()=>{vi.clearAllMocks();vi.stubGlobal("fetch",async(...args:Parameters<typeof fetch>)=>{const response=await fetcher(...args);return response.clone();});localStorage.clear();document.cookie=`${CURRENT_GROUP_COOKIE}=; Path=/; Max-Age=0`;document.cookie=`${CURRENT_ACCOUNT_COOKIE}=; Path=/; Max-Age=0`;route.path="/projects/p/article";mounts=0;unmounts=0;fetcher.mockReset();});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();vi.useRealTimers();});
 describe("真实Shell首载范围就绪",()=>{
+ it.each(["forbidden: request must originate from the local application",{code:"FORBIDDEN",message:"forbidden: request must originate from the local application"}])("公共403恢复态给中文反馈，原重试读取成功才开放 %j",async error=>{
+  fetcher.mockResolvedValueOnce(new Response(JSON.stringify({error}),{status:403})).mockResolvedValueOnce(envelope([group("a")]));
+  mount();
+  const recovery=await screen.findByTestId("workspace-initialization-error");
+  expect(recovery).toHaveTextContent("登录状态已失效或没有权限,请重新登录后再试。");
+  expect(recovery).not.toHaveTextContent("forbidden");
+  expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();
+  expect(fetcher).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("button",{name:"重试打开工作区"}));
+  await screen.findByRole("button",{name:"创建调用"});
+  expect(fetcher).toHaveBeenCalledTimes(2);
+  expect(JSON.parse(fetcher.mock.calls[1][1].body).id).toBe("accountGroups.list");
+  expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("a");
+  expect(screen.queryByTestId("workspace-initialization-error")).toBeNull();
+ });
+ it("未知技术错误显示工作区中文兜底且保留恢复入口",async()=>{
+  fetcher.mockRejectedValueOnce(new Error("ERR_WORKSPACE_INTERNAL_DETAIL"));mount();
+  const recovery=await screen.findByTestId("workspace-initialization-error");
+  expect(recovery).toHaveTextContent("工作区页面暂不可用，请重试。");
+  expect(recovery).not.toHaveTextContent("ERR_WORKSPACE_INTERNAL_DETAIL");
+  expect(screen.getByRole("button",{name:"重试打开工作区"})).toBeEnabled();
+  expect(screen.getByRole("link",{name:"账号组与绑定账号"})).toHaveAttribute("href","/accounts");
+  expect(screen.getByRole("link",{name:"设置"})).toHaveAttribute("href","/settings");
+ });
+ it("已可读的中文业务反馈保留原文",async()=>{
+  fetcher.mockRejectedValueOnce(new Error("账号组列表未完整返回，请重试。"));mount();
+  expect(await screen.findByTestId("workspace-initialization-error")).toHaveTextContent("账号组列表未完整返回，请重试。");
+  expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();
+ });
  it("延迟公共组读取期间没有页面/Copilot/modal创建，完成真实归一后才开放",async()=>{let resolve!:(r:Response)=>void;fetcher.mockImplementationOnce(()=>new Promise(r=>{resolve=r;})).mockResolvedValue(outputResponse());mount();expect(screen.queryByRole("button",{name:"创建调用"})).toBeNull();expect(screen.queryByRole("button",{name:"Copilot创建"})).toBeNull();expect(screen.queryByRole("button",{name:"modal创建"})).toBeNull();expect(mounts).toBe(0);await act(async()=>resolve(envelope([group("a")])));await screen.findByRole("button",{name:"创建调用"});expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("a");fireEvent.click(screen.getByRole("button",{name:"创建调用"}));await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(2));expect(JSON.parse(fetcher.mock.calls[1][1].body).id).toBe("projects.outputs.create");expect(new Headers(fetcher.mock.calls[1][1].headers).get("x-group-id")).toBe("a");});
  it("按actual total读完100+1分页而非首100猜归属",async()=>{localStorage.setItem(CURRENT_ACCOUNT_KEY,"old");fetcher.mockResolvedValueOnce(envelope(Array.from({length:100},(_,i)=>group(`x${i}`)),101)).mockResolvedValueOnce(envelope([group("real","old")],101,2));mount({groupId:null,accountId:"old"});await screen.findByRole("button",{name:"创建调用"});expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe("real");expect(fetcher).toHaveBeenCalledTimes(2);});
  it.each([{groupId:"a",accountId:null},{groupId:null,accountId:"old"}])("真实错误沿认证会话冻结同根意图fail-open并保有效retry %j",async scope=>{if(scope.groupId)localStorage.setItem(CURRENT_GROUP_KEY,scope.groupId);else localStorage.setItem(CURRENT_ACCOUNT_KEY,scope.accountId!);fetcher.mockRejectedValueOnce(new Error("offline")).mockResolvedValue(envelope([group("different")]));mount(scope);await screen.findByRole("button",{name:"创建调用"});const node=screen.getByTestId("native-instance");fireEvent.change(screen.getByLabelText("脏稿"),{target:{value:"保留"}});fireEvent.click(screen.getByRole("button",{name:"重试"}));await waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(2));expect(screen.getByTestId("native-instance")).toBe(node);expect(unmounts).toBe(0);expect(localStorage.getItem(CURRENT_GROUP_KEY)).toBe(scope.groupId);expect(localStorage.getItem(CURRENT_ACCOUNT_KEY)).toBe(scope.accountId);});
