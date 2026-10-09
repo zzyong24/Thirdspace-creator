@@ -8,7 +8,7 @@ const here=dirname(fileURLToPath(import.meta.url)),repo=resolve(process.env.T111
 const witnessPath=process.env.T1110_REPORT_WITNESS;
 if(!witnessPath||!existsSync(witnessPath))throw Error('须显式提供root已脱敏实报表投影，不读取原私人文件');
 const witness=normalizeWitness(witnessPath,{observedAt:process.env.T1110_REPORT_OBSERVED_AT});
-const shadowFile=execFileSync(process.execPath,[join(here,'prepare-next.mjs')],{cwd:repo,env:{PATH:process.env.PATH,TMPDIR:process.env.TMPDIR,T1110_REPO_ROOT:repo},encoding:'utf8',timeout:180000,maxBuffer:16*1024*1024}).trim();
+const shadowFile=execFileSync(process.execPath,[join(here,'prepare-next.mjs')],{cwd:repo,env:{PATH:process.env.PATH,TMPDIR:process.env.TMPDIR,T1110_REPO_ROOT:repo},encoding:'utf8',timeout:960000,maxBuffer:16*1024*1024}).trim();
 const shadow=JSON.parse(readFileSync(shadowFile,'utf8'));
 const port=Number(process.env.T1110_TEST_PORT??31411);if(!Number.isInteger(port)||port<1024||port>65535||port===31410)throw Error('必须使用与root 31410真人隔离产品服务不同的测试端口');
 // 原有loopback guard接受IPv6；使用::1隔开root 127.0.0.1的选择cookie与测试localStorage，不改安全守卫。

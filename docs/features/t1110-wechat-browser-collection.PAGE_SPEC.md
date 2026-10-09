@@ -82,6 +82,7 @@ flowchart LR
     "backend/src/modules/platform-account/membership-lock.service.ts",
     "contract/src/resources/platform-native-reports.ts",
     "docs/verification/t1110/browser/prepare-next.mjs",
+    "docs/verification/t1110/browser/materialize-shadow-dependencies.mjs",
     "docs/verification/t1110/browser/normalize-witness.mjs",
     "docs/verification/t1110/browser/start-shadow-next.mjs",
     "docs/verification/t1110/browser/service-fixture.ts",

@@ -1,0 +1,22 @@
+{
+  "scope": "新增内部binding诊断装配；外部浏览器读数合成，真实组合事务；不代表真人公众号绑定",
+  "outputs": [
+    {
+      "path": "docs/verification/t1110/binding-diagnostic-composition.log",
+      "sha256": "fdaf9412794a8a9fd266e356808fed1ab5e928fef359777a6779ce0ea875ce92",
+      "toolExitCode": 0,
+      "passedTests": 7
+    },
+    {
+      "path": "docs/verification/t1110/binding-diagnostic-frontend-type.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "toolExitCode": 0
+    }
+  ],
+  "qaScriptSyntaxChecks": {
+    "files": 3,
+    "toolExitCode": 0
+  },
+  "dependencyCloneExecuted": false,
+  "browserJourneyExecuted": false
+}

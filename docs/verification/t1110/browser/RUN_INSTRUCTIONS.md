@@ -16,7 +16,7 @@ root先完成既有context/Gate控制路由并冻结实际源码。当前root在
 
 ## 影子Next窄端口
 
-prepare-next.mjs仅git archive当前已冻结HEAD到/tmp/creatoros-t1110-shadow-*，重用安装好的依赖并把@creatoros工作区包指回影子包。唯一产品副本注入点是persistence-client中的createPlatformCollectionTransport工厂：仍创建真实PlatformCollectionService，但factory在这个影子实例返回spread包装的service。listNativeReports先调用原service，执行真正账号/组/frozen membership guard；接着投影root代表报表给真实临时成员。start/status/cancel执行fixture原attempt/key映射，不插入platformCollectionBindings或verifiedAt/identity；afterCollectionStart/Get在副本禁用，防止fixture状态触发真实collector。所有注入、前后SHA和禁用hook写shadow-manifest。正式产品树没有测试flag或新HTTP端点。
+prepare-next.mjs仅git archive当前已冻结HEAD到/tmp/creatoros-t1110-shadow-*，使用materialize-shadow-dependencies.mjs在macOS独立复制本机.pnpm与四包必要依赖，保留相对链接并校验所有真实目标位于影子根、regular副本inode独立、workspace指向影子包、Next版本/SHA一致。五次cp各120秒，准备外层960秒；.bin原路径只在副本重写，原安装/sourceWitness/HEAD首末不变。不扩大turbopack.root，不install。唯一产品副本注入点是persistence-client中的createPlatformCollectionTransport工厂：仍创建真实PlatformCollectionService，但factory在这个影子实例返回spread包装的service。listNativeReports先调用原service，执行真正账号/组/frozen membership guard；接着投影root代表报表给真实临时成员。start/status/cancel执行fixture原attempt/key映射，不插入platformCollectionBindings或verifiedAt/identity；afterCollectionStart/Get在副本禁用，防止fixture状态触发真实collector。所有注入、前后SHA和禁用hook写shadow-manifest。正式产品树没有测试flag或新HTTP端点。
 
 NativeReportPayload来自private-witness-projection.json的reports数组，纯格式适配normalize-witness；受实际contract严格schema解析。observedAt可由root显式环境提供真实报表观察时间。未提供时使用pack mtime，仅“测试回读时间”，不能把UI“采集于”时间当原平台采集证明。sourcePath是公开后台路由枚举，未读私人文件路径。fixture canCollect readiness只测试现有disabled保护，不冒称无identity witness的产品ready。
 
@@ -26,13 +26,13 @@ NativeReportPayload来自private-witness-projection.json的reports数组，纯�
 
 ```bash
 cd /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator
-T1110_REPORT_WITNESS=/tmp/t1110-browser-audit/private-witness-projection.json T1110_TEST_PORT=31411 node /tmp/t1110-browser-audit/start-shadow-next.mjs
+T1110_REPORT_WITNESS=/tmp/t1110-browser-audit/private-witness-projection.json T1110_TEST_PORT=31411 node docs/verification/t1110/browser/start-shadow-next.mjs
 ```
 
 启动器只打印真实ego-server-state.json绝对路径。冷启动总预算480秒，单fetch120秒，失败保next.log。这个子步骤没有浏览器。root随后在**已有空间20**明确分配一个空白Agent测试Page并取得label；不要传真人微信p1，不创建第二空间，不profile选择/claim。候选会拒绝不是about:blank/本次影子产品origin的Page。
 
 ```bash
-T1110_EGO_SERVER_STATE=/tmp/creatoros-t1110-shadow-<本次后缀>/ego-server-state.json T1110_EGO_PAGE_LABEL=<root实际测试页label> ego-browser nodejs < /tmp/t1110-browser-audit/run-ego-journey.mjs
+T1110_EGO_SERVER_STATE=/tmp/creatoros-t1110-shadow-<本次后缀>/ego-server-state.json T1110_EGO_PAGE_LABEL=<root实际测试页label> ego-browser nodejs < docs/verification/t1110/browser/run-ego-journey.mjs
 ```
 
 同空间不关闭平台页/整个目标。脚本用TaskSpace(20)、page.goto/reload/click/focus/press/keyboard/snapshot/screenshot/evaluate/cdp/events；Ego未提供viewport wrapper，因此以Page Emulation.setDeviceMetricsOverride设1366×900和1024×800。Ego无goBack wrapper，以Page JS history.back做实际历史后退。没有locator/getByRole/expect/context/route等Playwright推断方法。API等待均120秒；外层执行预算保留完整串行/启动/清理余量。终态观察跨原2秒轮询周期，2500ms是观察窗口，不是请求执行上限。
@@ -58,5 +58,5 @@ PAGE_SPEC.machine-candidate.md包含唯一JSON区块候选及建议正式路径�
 root完成实际复核/Gate重跑后，可用本次state调用stop-shadow-next.mjs；它先用ps核PID命令含本次影子源码与pnpm才停止该进程组，不删除证据，不关闭Ego目标。
 
 ```bash
-T1110_EGO_SERVER_STATE=/tmp/creatoros-t1110-shadow-<本次后缀>/ego-server-state.json node /tmp/t1110-browser-audit/stop-shadow-next.mjs
+T1110_EGO_SERVER_STATE=/tmp/creatoros-t1110-shadow-<本次后缀>/ego-server-state.json node docs/verification/t1110/browser/stop-shadow-next.mjs
 ```
