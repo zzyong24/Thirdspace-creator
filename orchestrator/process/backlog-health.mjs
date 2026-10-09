@@ -67,6 +67,31 @@ if (!existsSync(BACKLOG)) {
 }
 
 const src = readFileSync(BACKLOG, "utf8");
+const ARCHIVE = path.join(path.dirname(BACKLOG), "BACKLOG-archive.md");
+
+function taskIds(text) {
+  const ids = [];
+  for (const line of text.split("\n")) {
+    if (!line.startsWith("|")) continue;
+    const id = line.split("|").slice(1, -1).map((cell) => cell.trim()).find((cell) => /^T-[A-Za-z0-9 -]+$/.test(cell));
+    if (id && id !== "T-") ids.push(id);
+  }
+  return ids;
+}
+
+const activeIds = taskIds(src);
+const archivedIds = existsSync(ARCHIVE) ? taskIds(readFileSync(ARCHIVE, "utf8")) : [];
+const activeCounts = new Map();
+for (const id of activeIds) activeCounts.set(id, (activeCounts.get(id) ?? 0) + 1);
+const archiveCounts = new Map();
+for (const id of archivedIds) archiveCounts.set(id, (archiveCounts.get(id) ?? 0) + 1);
+const activeDuplicates = [...activeCounts].filter(([, count]) => count > 1).map(([id]) => id);
+const reusedArchived = [...activeCounts.keys()].filter((id) => archiveCounts.has(id));
+const archiveDuplicates = [...archiveCounts].filter(([, count]) => count > 1).map(([id]) => id);
+if (activeDuplicates.length) err(`执行看板存在重复 ID:${activeDuplicates.join(",")}`);
+if (reusedArchived.length) err(`执行看板复用了归档 ID:${reusedArchived.join(",")}`);
+if (archiveDuplicates.length) warn(`归档内部保留 ${archiveDuplicates.length} 个历史撞号:${archiveDuplicates.join(",")}`);
+if (!activeDuplicates.length && !reusedArchived.length) ok("执行任务 ID 唯一且未复用归档 ID。");
 
 // ① 文件体积
 const bytes = Buffer.byteLength(src, "utf8");
