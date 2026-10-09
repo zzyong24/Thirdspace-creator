@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/application/chat/assistant-system-root.integration.test.ts",
+    "--retry=0",
+    "--no-file-parallelism",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T17:22:11.922348+00:00",
+  "finishedAt": "2026-10-09T17:22:47.290249+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 35.36735408299137,
+  "logSha256": "4f47b4911d4a412896875add531f8fbed3774621d92bea11c72a735583101a12"
+}

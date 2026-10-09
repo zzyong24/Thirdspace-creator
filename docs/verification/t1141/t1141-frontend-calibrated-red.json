@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/features/creative-canvas/canvas-editor.test.tsx",
+    "-t",
+    "T1141",
+    "--retry=0",
+    "--no-file-parallelism",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T17:19:01.626308+00:00",
+  "finishedAt": "2026-10-09T17:23:04.582529+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 242.95412866701372,
+  "logSha256": "6226d7fb4790979015c0513dfe2c28b8d4ff3d28d36ccafbb0c3d25300504a86"
+}

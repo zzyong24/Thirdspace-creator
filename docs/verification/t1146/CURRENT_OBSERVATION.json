@@ -1,0 +1,10 @@
+{
+  "recordedAt": "2026-10-09T17:47:03.225054+00:00",
+  "task": "T-1146",
+  "result": "PASS_LIMITED_OBSERVATION",
+  "explanation": "当前每次重开等本次真实search与busy=false后左右完整图及原动作全通过；原DOM移除失败保留，不宣称修改产品",
+  "receipt": "docs/verification/t1140/t1147-calibrated-cleanup-observation.json",
+  "originalsRetained": true,
+  "productChange": false,
+  "notNativeOrModel": true
+}

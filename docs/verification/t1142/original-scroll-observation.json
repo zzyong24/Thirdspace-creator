@@ -1,0 +1,10 @@
+{
+  "observedAt": "2026-10-09T16:56:20.350964+00:00",
+  "head": "8368a6b0aacabbc7ebdcab38ec7c869472d5ded6",
+  "firstTestFailure": "Expected scrolling elements length 1, received 0",
+  "wholeRunStatus": "登记时尚未读取最终收据；上一工具观察为running。后续收据实际16:55:43结束exit1，见first-browser-command.json",
+  "wholeMediaAssertions": "passed before scroll-count assertion at 683x450",
+  "screenshotSha256": "6f1ec2801e1d663688b1397667ca47fc7b114872b0bc3575bc78af107792dc32",
+  "cause": "test counted only actual overflowing elements; requirement is one allowed scroll owner, not forced overflow",
+  "productChangedAfterObservation": false
+}

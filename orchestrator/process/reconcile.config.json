@@ -371,7 +371,8 @@
     "ai-nonblocking-recovery:e2e": "CREATOROS_TEST_PORT=3442 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-nonblocking-recovery.spec.ts --project=e2e",
     "canvas-binding-collection:e2e": "node docs/verification/t1101/run-journey.mjs",
     "shared-resource-lifecycle:e2e": "node docs/verification/t1105/run-journey.mjs",
-    "calendar-dialog-layout:e2e": "node docs/verification/t1136/run-layout-journey.mjs"
+    "calendar-dialog-layout:e2e": "node docs/verification/t1136/run-layout-journey.mjs",
+    "picker-low-height:e2e": "node docs/verification/t1140/run-picker-journey.mjs"
   },
   "research_verify_commands": {
     "t987-baseline-timing": "node docs/research/t987/verify-baseline.mjs timing",

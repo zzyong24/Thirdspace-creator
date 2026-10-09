@@ -1,0 +1,10 @@
+{
+  "recordedAt": "2026-10-09T17:47:03.224701+00:00",
+  "task": "T-1142",
+  "result": "PASS_LIMITED_OBSERVATION",
+  "explanation": "当前six-window实际检查唯一正文滚动责任；内容未溢出时0实际scroll可成立，不造溢出，保原媒体边界",
+  "receipt": "docs/verification/t1140/t1147-calibrated-cleanup-observation.json",
+  "originalsRetained": true,
+  "productChange": false,
+  "notNativeOrModel": true
+}

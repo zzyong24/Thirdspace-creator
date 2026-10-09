@@ -7672,7 +7672,7 @@
         "orchestration"
       ],
       "tasks": [
-        "diagnosis"
+        "implementation"
       ],
       "depends_on": [],
       "read_set": [
@@ -7680,7 +7680,11 @@
         "backend/src/modules/creative-canvas/creative-canvas.service.ts",
         "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
         "backend/src/db.ts",
-        "contract/src/resources/creative-canvas.ts"
+        "contract/src/resources/creative-canvas.ts",
+        "backend/src/application/generation/creative-canvas-root.ts",
+        "backend/src/application/chat/assistant-system-root.ts",
+        "frontend/src/features/creative-canvas/canvas-editor.tsx",
+        "frontend/src/features/creative-canvas/canvas-editor.test.tsx"
       ],
       "write_set": [
         "docs/features/t1141-legacy-group-generation-ratio.md",
@@ -7688,13 +7692,218 @@
         "BACKLOG.md",
         "PROJECT.md",
         "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+        "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+        "frontend/src/features/creative-canvas/canvas-editor.tsx",
+        "frontend/src/features/creative-canvas/canvas-editor.test.tsx",
+        "docs/features/t1141-legacy-group-generation-ratio.review.md",
+        "docs/features/t1141-legacy-group-generation-ratio.review-input.json",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/review-events.ndjson"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir backend exec vitest run src/modules/creative-canvas/creative-canvas.service.test.ts src/application/chat/assistant-system-root.integration.test.ts --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir frontend exec vitest run src/features/creative-canvas/canvas-editor.test.tsx --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir frontend typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "git diff --check",
+          "node orchestrator/process/pmem.mjs sync",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
+    },
+    "T-1142": {
+      "task_id": "T-1142",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "diagnosis"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1142-picker-scroll-owner-observation.md",
+        "frontend/tests/e2e/t1140-picker-low-height.spec.ts",
+        "frontend/src/components/media/asset-picker.tsx"
+      ],
+      "write_set": [
+        "docs/features/t1142-picker-scroll-owner-observation.md",
+        "docs/verification/t1142/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/events.ndjson",
         "orchestrator/process/modules.config.json"
       ],
       "verify_commands": {
         "diagnosis": [
+          "git diff --check"
+        ]
+      }
+    },
+    "T-1143": {
+      "task_id": "T-1143",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "diagnosis"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1143-canvas-selection-inspector-observation.md",
+        "frontend/tests/e2e/t1140-picker-low-height.spec.ts",
+        "frontend/src/features/creative-canvas/canvas-editor.tsx",
+        "frontend/src/features/creative-canvas/infinite-canvas-node.tsx"
+      ],
+      "write_set": [
+        "docs/features/t1143-canvas-selection-inspector-observation.md",
+        "docs/verification/t1143/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json"
+      ],
+      "verify_commands": {
+        "diagnosis": [
+          "git diff --check"
+        ]
+      }
+    },
+    "T-1144": {
+      "task_id": "T-1144",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "diagnosis"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1144-picker-worker-cleanup.md",
+        "frontend/tests/e2e/t1140-picker-low-height.spec.ts",
+        "docs/verification/t1140/run-picker-journey.mjs",
+        "frontend/src/components/media/asset-picker.tsx",
+        "frontend/src/features/creative-canvas/canvas-asset-picker.tsx"
+      ],
+      "write_set": [
+        "docs/features/t1144-picker-worker-cleanup.md",
+        "docs/verification/t1144/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json"
+      ],
+      "verify_commands": {
+        "diagnosis": [
+          "git diff --check"
+        ]
+      }
+    },
+    "T-1145": {
+      "task_id": "T-1145",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1145-gallery-preview-overlap.md",
+        "frontend/tests/e2e/t1140-picker-low-height.spec.ts",
+        "docs/verification/t1140/run-picker-journey.mjs",
+        "frontend/src/components/media/asset-picker.tsx",
+        "frontend/src/features/creative-canvas/canvas-asset-picker.tsx"
+      ],
+      "write_set": [
+        "docs/features/t1145-gallery-preview-overlap.md",
+        "docs/verification/t1145/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "frontend/src/components/media/asset-picker.tsx",
+        "frontend/tests/e2e/t1140-picker-low-height.spec.ts",
+        "docs/verification/t1140/run-picker-journey.mjs",
+        "docs/features/t1145-gallery-preview-overlap.review.md",
+        "docs/features/t1145-gallery-preview-overlap.review-input.json",
+        "orchestrator/review-events.ndjson",
+        "frontend/src/features/creative-canvas/canvas-asset-picker.tsx"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "node docs/verification/t1140/run-picker-journey.mjs",
+          "pnpm --dir frontend exec vitest run src/components/media/asset-picker.test.tsx src/components/media/use-asset-picker-source.test.tsx src/components/media/asset-media-preview.test.tsx --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-interactions.test.tsx src/features/knowledge/knowledge-dump-zone.test.tsx src/features/topics/topics-interactions.test.tsx src/components/overlays/overlay-routing.test.tsx src/lib/copilot-navigation.test.ts src/features/copilot/chat-tool-trace.test.tsx src/features/automations/run-controls.test.tsx src/features/automations/cadence.test.ts --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir frontend typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node tools/timeout-policy/verify.mjs",
           "git diff --check",
           "node orchestrator/process/pmem.mjs sync",
           "node orchestrator/process/reconcile.mjs"
+        ]
+      }
+    },
+    "T-1146": {
+      "task_id": "T-1146",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "diagnosis"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1146-picker-reopen-detached-observation.md",
+        "frontend/src/components/media/use-asset-picker-source.ts",
+        "frontend/tests/e2e/t1140-picker-low-height.spec.ts"
+      ],
+      "write_set": [
+        "docs/features/t1146-picker-reopen-detached-observation.md",
+        "docs/verification/t1146/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json"
+      ],
+      "verify_commands": {
+        "diagnosis": [
+          "git diff --check"
+        ]
+      }
+    },
+    "T-1147": {
+      "task_id": "T-1147",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "diagnosis"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1147-fixed-drawer-clip-observation.md",
+        "frontend/tests/e2e/t1140-picker-low-height.spec.ts",
+        "frontend/src/features/creative-canvas/canvas-asset-picker.tsx"
+      ],
+      "write_set": [
+        "docs/features/t1147-fixed-drawer-clip-observation.md",
+        "docs/verification/t1147/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json"
+      ],
+      "verify_commands": {
+        "diagnosis": [
+          "git diff --check"
         ]
       }
     }

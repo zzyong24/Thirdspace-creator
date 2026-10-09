@@ -1,0 +1,32 @@
+{
+  "schema": "creatoros-independent-implementation-review/v1",
+  "task": "T-1141",
+  "reviewedAt": "2026-10-09T17:37:58.023Z",
+  "verdict": "PASS_LIMITED_T1141_IMPLEMENTATION",
+  "findings": [],
+  "sourceHashes": {
+    "backend/src/modules/creative-canvas/creative-canvas.service.ts": "eb04ec3e219b5ec07aae15fb2fd7c416bf521b3495b38916a2e860da582ecebd",
+    "backend/src/modules/creative-canvas/creative-canvas.service.test.ts": "1690eb7a6dc6ff4adb20444dccd3dda3d4b3a8c31e0115d28f5ffa8cb11a8553",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "aa3fd8ec1dfa523e1ca6688c5074c669df18436d93e9a5a9ed7a7be0f4e32da6",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "eb7d14e0e87b53e5444f4d67b6934693c725f7f522e7a895d8e414ea9518b819",
+    "docs/verification/t1141/run-public-ratio.mts": "65fc787035ae131295e6c967794112d679c09cfafdc777613f58b8edb247684b"
+  },
+  "controlHashes": {
+    "spec": "63dc15b1ccaa83255ab6cae57f4863dbb6822ecf030de0fc48a778f3b26b6e54",
+    "modules": "4ca68523a96efc8ac45dcf5ee55da2d6000f59cb2fab0dcb390a5c64679cbb9a"
+  },
+  "evidence": {
+    "backendService": {"tests": 25, "skipped": 0, "exitCode": 0, "logSha256": "7703d81c6b0d9d7f6211d12b1e61f40846ff7e763ce61490c884dec03b43110b"},
+    "frontendComponent": {"tests": 27, "skipped": 0, "exitCode": 0, "logSha256": "3f3a8fc9181a02fb10a64fe32cf309193d01ba2a98661f3a21a5b4c71d72dd20"},
+    "adoptionRegression": {"passed": 72, "skipped": 3, "exitCode": 0, "logSha256": "4f47b4911d4a412896875add531f8fbed3774621d92bea11c72a735583101a12"},
+    "publicTransport": {"exitCode": 0, "logSha256": "bf7e35c7ab0b28cbe32011c2781c80224f4cd89ead27f4e5141655d3137121bc", "newRatio": "3:4", "legacyRatio": null, "modelCalled": false, "userDatabase": false}
+  },
+  "verifiedBoundaries": [
+    "new image requests use node ratio or saved group ratio consistently for capability, frozen input, and digest",
+    "legacy reservations replay original input, digest, attempt, task, ownership, snapshot, and deadline semantics",
+    "unreserved legacy candidates require fresh preparation",
+    "unsupported inherited ratio creates no reservation or task",
+    "failed-page effective ratio comparison does not reinterpret legacy null"
+  ],
+  "notApproved": ["browser pass", "real model pass", "native application pass", "installation pass", "full canonical pass", "task completion"]
+}

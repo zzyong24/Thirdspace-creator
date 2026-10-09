@@ -1,0 +1,70 @@
+{
+  "observedAt": "2026-10-09T17:03:38.064027+00:00",
+  "rootPid": 65289,
+  "processes": [
+    {
+      "pid": 65289,
+      "ppid": 65281,
+      "elapsed": "05:56",
+      "cpu": "0.0",
+      "state": "S",
+      "name": "node"
+    },
+    {
+      "pid": 65290,
+      "ppid": 65289,
+      "elapsed": "05:56",
+      "cpu": "0.0",
+      "state": "S",
+      "name": "node"
+    },
+    {
+      "pid": 65291,
+      "ppid": 65290,
+      "elapsed": "05:56",
+      "cpu": "0.0",
+      "state": "S",
+      "name": "node"
+    },
+    {
+      "pid": 65297,
+      "ppid": 65291,
+      "elapsed": "05:55",
+      "cpu": "0.0",
+      "state": "Ss",
+      "name": "node"
+    },
+    {
+      "pid": 65323,
+      "ppid": 65297,
+      "elapsed": "05:54",
+      "cpu": "0.0",
+      "state": "S",
+      "name": "node"
+    },
+    {
+      "pid": 65329,
+      "ppid": 65323,
+      "elapsed": "05:54",
+      "cpu": "2.4",
+      "state": "S",
+      "name": "next-server (v16.2.9)"
+    },
+    {
+      "pid": 65335,
+      "ppid": 65329,
+      "elapsed": "05:51",
+      "cpu": "0.0",
+      "state": "S",
+      "name": "node"
+    },
+    {
+      "pid": 65427,
+      "ppid": 65291,
+      "elapsed": "05:31",
+      "cpu": "0.0",
+      "state": "S",
+      "name": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node"
+    }
+  ]
+}

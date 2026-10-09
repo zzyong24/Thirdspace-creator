@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-10-09T17:31:44.260100+00:00",
+  "sourceSha256": {
+    "backend/src/modules/creative-canvas/creative-canvas.service.ts": "eb04ec3e219b5ec07aae15fb2fd7c416bf521b3495b38916a2e860da582ecebd",
+    "backend/src/modules/creative-canvas/creative-canvas.service.test.ts": "1690eb7a6dc6ff4adb20444dccd3dda3d4b3a8c31e0115d28f5ffa8cb11a8553",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "aa3fd8ec1dfa523e1ca6688c5074c669df18436d93e9a5a9ed7a7be0f4e32da6",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "eb7d14e0e87b53e5444f4d67b6934693c725f7f522e7a895d8e414ea9518b819",
+    "docs/verification/t1141/run-public-ratio.mts": "65fc787035ae131295e6c967794112d679c09cfafdc777613f58b8edb247684b"
+  },
+  "commands": [
+    "t1141-calibrated-backend-red",
+    "t1141-frontend-direct-red",
+    "t1141-service-pg-green",
+    "t1141-frontend-green",
+    "t1141-adoption-regression",
+    "t1141-public-root-corrected"
+  ],
+  "surface": "service/component/backend-root-transport",
+  "browserGeneration": false,
+  "modelCalled": false,
+  "nativeApp": false
+}

@@ -117,11 +117,12 @@ export function createCreativeCanvasService(db:Db,deps:{
   }
   return doc;
  }
- async function prepareGenerationInput(ctx:RequestContext,canvas:CanvasRow,nodeId:string,store:Db,attemptId?:string,proposal=false):Promise<CanvasTaskInput>{
+ async function prepareGenerationInput(ctx:RequestContext,canvas:CanvasRow,nodeId:string,store:Db,attemptId?:string,proposal=false,options:{preserveLegacyImageRatio?:boolean}={}):Promise<CanvasTaskInput>{
   const doc=canvasDocumentSchema.parse(canvas.documentJson),node=doc.nodes.find(value=>value.id===nodeId);
   if(!node || (node.type!=="image_generation"&&node.type!=="video_generation"))throw new OwnershipError("生成节点不存在");
-  const config=node as GenerationNode;
   const group=doc.visualGroups?.find(group=>group.pageOrder.includes(nodeId));
+  // SEMANTIC_BOUNDARY_ALLOW: 新图片请求只落实用户已保存的页组画幅；可信旧预约保留原缺省参数，不做创作选择。
+  const config:GenerationNode=node.type==="image_generation"&&!options.preserveLegacyImageRatio?{...node,aspectRatio:node.aspectRatio??group?.aspectRatio}:node;
   if(!proposal&&group&&group.generationAttempts[nodeId]!==attemptId)throw new CanvasConflictError("请先保存当前页的生成尝试再提交");
   if((await requiresIdentity(ctx,config,group?.templateSnapshot,store))&&(config.mode!=="image_to_image"||!config.referenceAssetId))throw new CanvasConflictError("真人身份需要参考图，不允许降级文生图");
   if(!config.prompt.trim())throw new CanvasConflictError("请先填写生成描述");
@@ -224,13 +225,15 @@ export function createCreativeCanvasService(db:Db,deps:{
    if(!canvas||canvas.projectId!==before.projectId||canvas.revision!==input.expectedRevision)throw new CanvasConflictError('画布在提交生成前已更新，请重新读取后再生成');
    const admission=input.proposalAdmission?canvasProposalAdmissionSchema.parse(input.proposalAdmission):undefined;
    if(admission&&(!input.snapshot||input.attemptId!==`canvas-proposal:${admission.source.callId}`))throw new CanvasConflictError('确认预约必须使用真实来源的稳定尝试');
-   const taskInput=await prepareGenerationInput(originalContext,canvas,nodeId,transaction,input.attemptId,Boolean(admission));
+   const [existing]=await transaction.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.attemptId,input.attemptId));
+   if(existing&&(!rowOwned(ctx,existing)||existing.canvasId!==canvasId||existing.nodeId!==nodeId))throw new CanvasConflictError('原生成尝试与本次确认不符');
+   const originalInput=existing?frozenInput(existing):undefined;
+   const taskInput=await prepareGenerationInput(originalContext,canvas,nodeId,transaction,input.attemptId,Boolean(admission),{preserveLegacyImageRatio:originalInput?.kind==='image'&&!originalInput.aspectRatio});
    if(taskInput.canvasOwner.groupId){taskInput.canvasOwner.groupVersion=freeze.groupVersion;taskInput.canvasOwner.membershipVersion=freeze.membershipVersion;}
    taskInput.canvasOwner.inputDigest=canvasInputDigest(canvas.revision,nodeId,taskInput);
    if(input.snapshot&&(input.snapshot.inputRevision!==canvas.revision||input.snapshot.inputDigest!==taskInput.canvasOwner.inputDigest||!isDeepStrictEqual(input.snapshot.inputData,taskInput)))throw new CanvasConflictError('保存节点或参考图片已改变，请重新准备生成候选');
    if(admission){if(Date.parse(now())>=Date.parse(admission.deadlineAt))throw new CanvasConflictError('原生成确认期限已耗尽');taskInput.canvasOwner.proposalAdmission=admission;taskInput.canvasOwner.inputDigest=canvasInputDigest(canvas.revision,nodeId,taskInput);}
-   const [existing]=await transaction.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.attemptId,input.attemptId));
-   if(existing){if(!rowOwned(ctx,existing)||existing.canvasId!==canvasId||existing.nodeId!==nodeId||!isDeepStrictEqual(frozenInput(existing),taskInput))throw new CanvasConflictError('原生成尝试与本次确认不符');return {link:link(existing),inputData:frozenInput(existing),context:sourceContext(ctx,existing)};}
+   if(existing){if(!isDeepStrictEqual(originalInput,taskInput))throw new CanvasConflictError('原生成尝试与本次确认不符');return {link:link(existing),inputData:frozenInput(existing),context:sourceContext(ctx,existing)};}
    // 同一canvas行锁串行预约：不同attempt不可绕过原任务在途/未知状态；原attempt仍由上方回读。
    const previous=await transaction.select().from(canvasGenerationLinks).where(and(eq(canvasGenerationLinks.canvasId,canvasId),eq(canvasGenerationLinks.nodeId,nodeId),eq(canvasGenerationLinks.userId,ctx.userId),workspaceFilter(canvasGenerationLinks,ctx)));
    for(const pending of previous){

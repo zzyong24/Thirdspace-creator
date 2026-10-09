@@ -1,0 +1,70 @@
+{
+  "schema": "creatoros-current-fix-candidate/v1",
+  "recordedAt": "2026-10-09T17:47:03.223470+00:00",
+  "taskIds": [
+    "T-1140",
+    "T-1141",
+    "T-1145"
+  ],
+  "headBeforeSourceCommit": "8368a6b0aacabbc7ebdcab38ec7c869472d5ded6",
+  "status": "当前局部候选验证通过，full canonical和严格前端正式再执行仍待运行；不是任务完成/安装验收",
+  "sourceSha256": {
+    "frontend/src/components/media/asset-picker.tsx": "236d01545bcddac731f2cccc2cf2ce454ac653aed682b7df390e92cacdc5f14e",
+    "frontend/src/components/media/asset-media-preview.tsx": "7ca28b2d737331713413d1b2d2ae7b22d2e43db1fc47cc084581aa6eedd2489d",
+    "frontend/src/components/media/use-asset-picker-source.ts": "a9339c94712d97b477b91015dbde2e9bc30a81e1eb16fc97eac3dc106bc28f07",
+    "frontend/src/features/creative-canvas/canvas-asset-picker.tsx": "8780dbace3bcfed9c3bdfc0dacd63e6414ec2ec8d97ecd585f133bc2f3e6ad55",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "aa3fd8ec1dfa523e1ca6688c5074c669df18436d93e9a5a9ed7a7be0f4e32da6",
+    "frontend/tests/e2e/t1140-picker-low-height.spec.ts": "7e83385dce28ed66077b8632833ab927c2cf03a424d637b434b51f60a855212d",
+    "docs/verification/t1140/run-picker-journey.mjs": "e1ab3359fc4e32a085eeacd40bfe626c75cf1287eebd587627d2317972989470"
+  },
+  "backendTaskScope": "新的有效组比例；旧冻结参数不变",
+  "focusedResults": {
+    "frontendMediaCanvas": {
+      "passed": 37,
+      "skipped": 0
+    },
+    "backendServiceIsolatedPG": {
+      "passed": 25,
+      "skipped": 0
+    },
+    "adoption": {
+      "passed": 72,
+      "existingSkips": 3
+    },
+    "publicTransport": "new3:4 /legacy null /same-attempt same task+digest /foreign rejected",
+    "led047": {
+      "passed": 174
+    },
+    "frontendType": 0,
+    "backendType": 0,
+    "staticBoundarySemanticOrphanDiff": 0,
+    "timeoutStatic": "27原项完全相同，公共消费者PASS，完整verify exit1"
+  },
+  "browser": {
+    "passedJourneys": 2,
+    "exitCode": 0,
+    "seconds": 80.1218219170114,
+    "retry": 0,
+    "allSevenStable": true,
+    "viewports": [
+      "1366x900",
+      "1024x680",
+      "683x450",
+      "390x900",
+      "390x450",
+      "512x340"
+    ],
+    "publicWriteRead": true,
+    "cancelUnchanged": true,
+    "readErrorAndRetry": true,
+    "modelCalled": false,
+    "nativeApp": false
+  },
+  "independentImplementation": "T1141和T1140/T1145/T1147分别有限PASS，findings=[]",
+  "remaining": [
+    "T1144原successful流程worker停止300秒原因UNKNOWN；当前成功流程正常清理，不能声称根因修复",
+    "当前全局对账尚未运行",
+    "当前新包尚未构建，T1124剩余来源整合未完成",
+    "不签扫码、模型成图、视频导入性能、原生zoom或全功能"
+  ]
+}

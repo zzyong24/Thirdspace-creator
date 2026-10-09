@@ -1,0 +1,10 @@
+{
+  "recordedAt": "2026-10-09T17:47:03.224885+00:00",
+  "task": "T-1143",
+  "result": "PASS_LIMITED_OBSERVATION",
+  "explanation": "当前用户正常顺序先选节点再打开详情成功，正式error/retry和取消回读通过；旧先打开后被挡原机制UNKNOWN，不宣称产品改动",
+  "receipt": "docs/verification/t1140/t1147-calibrated-cleanup-observation.json",
+  "originalsRetained": true,
+  "productChange": false,
+  "notNativeOrModel": true
+}

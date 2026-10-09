@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "./frontend/node_modules/.bin/tsx",
+    "docs/verification/t1141/run-public-ratio.mts"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T17:21:25.575828+00:00",
+  "finishedAt": "2026-10-09T17:21:28.194192+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 2.6180984170059673,
+  "logSha256": "4324f92cce45570cec5308457e3c1ddbb56f9acc05a21ddcde4fb4186b654572"
+}

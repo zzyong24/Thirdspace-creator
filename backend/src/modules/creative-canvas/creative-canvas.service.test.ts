@@ -268,3 +268,57 @@ it('同节点任务运行或提交未知时拒绝新attempt，原attempt仍可�
  const first=await s.generate(c,created.id,'node',{expectedRevision:saved.revision,attemptId:'first-active-attempt'});await expect(s.generate(c,created.id,'node',{expectedRevision:saved.revision,attemptId:'duplicate-new-attempt'})).rejects.toThrow('仍在生成');expect((await s.listTasks(c,created.id))).toHaveLength(1);expect(await s.generate(c,created.id,'node',{expectedRevision:saved.revision,attemptId:'first-active-attempt'})).toMatchObject({taskId:first.taskId});expect(submit).toHaveBeenCalledOnce();
  states.set(first.taskId!,'awaiting_confirmation');await expect(s.generate(c,created.id,'node',{expectedRevision:saved.revision,attemptId:'explicit-regenerate-attempt'})).resolves.toBeTruthy();expect(submit).toHaveBeenCalledTimes(2);
 });
+
+it('T1141 旧页节点缺省的新候选与手工生成都继承明确组画幅，保持文档和exact参考',async()=>{
+ const c=ctx('account-a'),s=service(),created=await s.create(c,{title:'旧页组比例'});
+ const node={...imageNode('ratio-implicit','image_to_image'),referenceFileId:'file-1'};
+ const saved=await s.save(c,created.id,{expectedRevision:1,document:{...doc([node]),visualGroups:[{...visualGroup([node.id]),generationAttempts:{[node.id]:'ratio-implicit-attempt'}}]}});
+ const candidate=await s.prepareGenerateProposal(c,created.id,{baseRevision:saved.revision,nodeId:node.id});
+ expect(candidate.inputData).toMatchObject({aspectRatio:'3:4',referenceAssetId:'image-1',referenceFileId:'file-1',referenceChecksum:checksum});
+ expect(await s.get(c,created.id)).toMatchObject({revision:saved.revision,document:saved.document});expect(await s.listTasks(c,created.id)).toEqual([]);
+ submit.mockClear();await s.generate(c,created.id,node.id,{expectedRevision:saved.revision,attemptId:'ratio-implicit-attempt'});
+ expect(submit).toHaveBeenCalledOnce();expect(submit.mock.calls[0]![1].inputData).toMatchObject({aspectRatio:'3:4',referenceFileId:'file-1'});
+ expect((await s.get(c,created.id)).document).toEqual(saved.document);
+ await expect(s.prepareGenerateProposal(ctx('account-b'),created.id,{baseRevision:saved.revision,nodeId:node.id})).rejects.toThrow('画布不存在');
+});
+
+it('T1141 继承画幅必须经过同一模型能力校验，不支持时不产生预约或任务',async()=>{
+ // 显式能力夹具：OpenAI图片参数检查不支持21:9，不调用外部模型。
+ const c=ctx('account-a'),s=service({resolveCapability:async()=>({provider:'openai',model:'gpt-image-1'})}),created=await s.create(c,{title:'组画幅能力'});
+ const saved=await s.save(c,created.id,{expectedRevision:1,document:{...doc([imageNode('ratio-unsupported')]),visualGroups:[{...visualGroup(['ratio-unsupported']),aspectRatio:'21:9',generationAttempts:{'ratio-unsupported':'ratio-unsupported-attempt'}}]}});
+ submit.mockClear();
+ await expect(s.prepareGenerateProposal(c,created.id,{baseRevision:saved.revision,nodeId:'ratio-unsupported'})).rejects.toThrow('不支持该画幅');
+ await expect(s.generate(c,created.id,'ratio-unsupported',{expectedRevision:saved.revision,attemptId:'ratio-unsupported-attempt'})).rejects.toThrow('不支持该画幅');
+ expect(submit).not.toHaveBeenCalled();expect(await s.listTasks(c,created.id)).toEqual([]);expect((await s.get(c,created.id)).document).toEqual(saved.document);
+});
+
+it('T1141 有组显式画幅和独立节点缺省保留原语义，已知缺模型不阻断保存',async()=>{
+ const c=ctx('account-a'),s=service(),created=await s.create(c,{title:'比例输入族'});
+ const saved=await s.save(c,created.id,{expectedRevision:1,document:{...doc([{...imageNode('explicit-ratio'),aspectRatio:'3:4'},imageNode('standalone-default'),videoNode('video-first-frame')]),visualGroups:[visualGroup(['explicit-ratio'])]}});
+ expect((await s.prepareGenerateProposal(c,created.id,{baseRevision:saved.revision,nodeId:'explicit-ratio'})).inputData.aspectRatio).toBe('3:4');
+ expect((await s.prepareGenerateProposal(c,created.id,{baseRevision:saved.revision,nodeId:'standalone-default'})).inputData).not.toHaveProperty('aspectRatio');
+ expect((await s.prepareGenerateProposal(c,created.id,{baseRevision:saved.revision,nodeId:'video-first-frame'})).inputData).not.toHaveProperty('aspectRatio');
+ const unavailable=service({resolveCapability:undefined});const preserved=await unavailable.save(c,created.id,{expectedRevision:saved.revision,document:saved.document});expect(preserved.document).toEqual(saved.document);
+ await expect(unavailable.prepareGenerateProposal(c,created.id,{baseRevision:preserved.revision,nodeId:'explicit-ratio'})).rejects.toThrow('生成模型尚未配置');
+});
+
+it('T1141 已存在省略比例的旧预约仍严格回放原输入，未采用旧候选必须重准备',async()=>{
+ const {eq}=await import('drizzle-orm');const c=ctx('account-a'),s=service(),created=await s.create(c,{title:'旧比例回放'});
+ const saved=await s.save(c,created.id,{expectedRevision:1,document:{...doc([imageNode('legacy-ratio')]),visualGroups:[{...visualGroup(['legacy-ratio']),generationAttempts:{'legacy-ratio':'legacy-ratio-attempt'}}]}});
+ const candidate=await s.prepareGenerateProposal(c,created.id,{baseRevision:saved.revision,nodeId:'legacy-ratio'});
+ // 明示历史fixture：重建已省略比例的旧冻结形状，摘要采用原规范，测试不连接用户库。
+ const {aspectRatio:_ratio,...legacy}=candidate.inputData;
+ const digest=createHash('sha256').update(JSON.stringify([saved.revision,'legacy-ratio',{...legacy,canvasOwner:{...legacy.canvasOwner,inputDigest:''}}])).digest('hex');
+ legacy.canvasOwner={...legacy.canvasOwner,inputDigest:digest};const oldSnapshot={inputRevision:saved.revision,inputDigest:digest,inputData:legacy};
+ // 新请求无旧预约时不得悄悄改变候选的省略比例。
+ await expect(db.transaction(tx=>s.reserveGenerationInTransaction(c,created.id,'legacy-ratio',{expectedRevision:saved.revision,attemptId:'legacy-ratio-attempt',snapshot:oldSnapshot},tx as unknown as Db))).rejects.toThrow('重新准备生成候选');
+ const stamp='2026-09-28T00:00:00.000Z';
+ await db.insert(canvasGenerationLinks).values({id:'legacy-ratio-link',userId:c.userId,accountId:c.accountId!,canvasId:created.id,nodeId:'legacy-ratio',attemptId:'legacy-ratio-attempt',inputRevision:saved.revision,inputDigest:digest,inputJson:legacy,taskId:null,referenceFileId:null,referenceChecksum:null,createdAt:stamp,updatedAt:stamp});
+ const before=await db.query.canvasGenerationLinks.findFirst({where:(row,{eq})=>eq(row.id,'legacy-ratio-link')});
+ const replay=await db.transaction(tx=>s.reserveGenerationInTransaction(c,created.id,'legacy-ratio',{expectedRevision:saved.revision,attemptId:'legacy-ratio-attempt',snapshot:oldSnapshot},tx as unknown as Db));
+ expect(replay.inputData).toEqual(legacy);expect(replay.inputData).not.toHaveProperty('aspectRatio');expect(await db.query.canvasGenerationLinks.findFirst({where:(row,{eq})=>eq(row.id,'legacy-ratio-link')})).toEqual(before);
+ await expect(db.transaction(tx=>s.reserveGenerationInTransaction(ctx('account-b'),created.id,'legacy-ratio',{expectedRevision:saved.revision,attemptId:'legacy-ratio-attempt',snapshot:oldSnapshot},tx as unknown as Db))).rejects.toThrow();
+ const changed=await s.save(c,created.id,{expectedRevision:saved.revision,document:{...saved.document,nodes:[{...imageNode('legacy-ratio'),prompt:'明确修改后的新描述'}]}});
+ await expect(db.transaction(tx=>s.reserveGenerationInTransaction(c,created.id,'legacy-ratio',{expectedRevision:changed.revision,attemptId:'legacy-ratio-attempt',snapshot:oldSnapshot},tx as unknown as Db))).rejects.toThrow('重新准备生成候选');
+ expect((await db.select().from(canvasGenerationLinks).where(eq(canvasGenerationLinks.id,'legacy-ratio-link')))[0]).toEqual(before);
+});

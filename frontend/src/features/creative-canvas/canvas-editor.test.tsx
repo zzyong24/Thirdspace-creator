@@ -108,6 +108,35 @@ it('素材卡以真实currentFileId读取exact预览，插入仍返回同一冻�
 });
 
 const runningLink=()=>({id:'link-a',canvasId:'canvas-a',nodeId:'generate-node',attemptId:origin.attemptId,taskId:'task-a',mediaKind:'image',inputRevision:2,resultAssetId:null,createdAt:'2026-10-02T00:00:00Z'});
+function ratioFailureCanvas(groupRatio:string,taskRatio:string|null){
+ const base=canvas(),group={id:'ratio-group',name:'画幅恢复组',libraryKind:'xhs',aspectRatio:groupRatio,caption:'原配文',pageOrder:['generate-node'],templateSnapshot:{id:'ratio-template',name:'原风格',version:1,prompt:'原描述',visualMode:'graphic',requiredIdentity:false},generationAttempts:{'generate-node':origin.attemptId}};
+ let persisted={...base,document:{...base.document,visualGroups:[group]}};
+ f.read.mockImplementation(async()=>persisted);f.save.mockImplementation(async request=>{persisted={...persisted,revision:persisted.revision+1,document:request.body.document};return persisted;});
+ f.tasks.mockResolvedValue([runningLink()]);f.getTask.mockResolvedValue({status:'failed',errorMessage:'原生成失败',inputData:{prompt:'原描述',mode:'text_to_image',...(taskRatio?{aspectRatio:taskRatio}:{})}});
+ f.selector.mockResolvedValue({status:'not_ready',reason:'生成失败',canvasId:origin.canvasId,generationLinkId:origin.generationLinkId,nodeId:origin.nodeId,attemptId:origin.attemptId,inputRevision:origin.inputRevision,inputDigest:origin.inputDigest,taskId:origin.taskId});f.generate.mockResolvedValue({...runningLink(),id:'new-ratio-link',taskId:'new-ratio-task'});
+ return {before:persisted,read:()=>persisted};
+}
+it('T1141 旧节点失败页按当前明确组画幅比较，相同新输入可单页重试',async()=>{
+ ratioFailureCanvas('3:4','3:4');render(<CanvasEditor canvasId='canvas-a'/>);fireEvent.click(await screen.findByRole('button',{name:/^图文与发布/},{timeout:120000}));
+ fireEvent.click(await screen.findByRole('button',{name:'只重试这一页'},{timeout:120000}));
+ await waitFor(()=>expect(f.generate.mock.calls.length>0||Boolean(screen.queryByText('这一页的内容已修改。请用节点上的“生成”明确再创作，失败恢复只使用原内容。'))).toBe(true),{timeout:120000});
+ expect(f.generate).toHaveBeenCalledOnce();
+ expect(f.generate.mock.calls[0]![0].body).toMatchObject({expectedRevision:3});expect(f.generate.mock.calls[0]![0].body.attemptId).not.toBe(origin.attemptId);
+ expect(f.save.mock.calls[0]![0].body.document.nodes[0]).not.toHaveProperty('aspectRatio');expect(f.confirm).not.toHaveBeenCalled();
+},120000);
+it('T1141 组画幅已修改时保留失败原任务，不悄悄再次生成',async()=>{
+ const state=ratioFailureCanvas('16:9','3:4');render(<CanvasEditor canvasId='canvas-a'/>);fireEvent.click(await screen.findByRole('button',{name:/^图文与发布/},{timeout:120000}));
+ fireEvent.click(await screen.findByRole('button',{name:'只重试这一页'},{timeout:120000}));
+ await screen.findByText('这一页的内容已修改。请用节点上的“生成”明确再创作，失败恢复只使用原内容。',{}, {timeout:120000});
+ expect(f.generate).not.toHaveBeenCalled();expect(f.save).not.toHaveBeenCalled();expect(state.read()).toEqual(state.before);
+},120000);
+it('T1141 原失败输入未保存比例时明确再创作，不能把旧null视为当前组比例',async()=>{
+ const state=ratioFailureCanvas('3:4',null);render(<CanvasEditor canvasId='canvas-a'/>);fireEvent.click(await screen.findByRole('button',{name:/^图文与发布/},{timeout:120000}));
+ fireEvent.click(await screen.findByRole('button',{name:'只重试这一页'},{timeout:120000}));
+ await waitFor(()=>expect(f.generate.mock.calls.length>0||Boolean(screen.queryByText('原任务未保存页组画幅，请用节点上的生成按当前画幅重新创作'))).toBe(true),{timeout:120000});
+ expect(screen.getByText('原任务未保存页组画幅，请用节点上的生成按当前画幅重新创作')).toBeInTheDocument();
+ expect(f.generate).not.toHaveBeenCalled();expect(f.save).not.toHaveBeenCalled();expect(state.read()).toEqual(state.before);expect(f.confirm).not.toHaveBeenCalled();
+},120000);
 it('生成任务排队及运行时锁定按钮，读取失败也不能再次提交',async()=>{
  f.tasks.mockResolvedValue([runningLink()]);f.getTask.mockResolvedValue({status:'running',inputData:{}});f.selector.mockResolvedValue({status:'unavailable',reason:'生成尚未完成',...origin});
  render(<CanvasEditor canvasId="canvas-a"/>);await waitFor(()=>expect(screen.getByRole('button',{name:'生成中…'})).toBeDisabled());fireEvent.click(screen.getByRole('button',{name:'生成中…'}));expect(f.generate).not.toHaveBeenCalled();

@@ -1,0 +1,30 @@
+{
+  "task": "T-1141",
+  "surface": "backend-root-transport",
+  "observedAt": "2026-10-09T17:22:20.579Z",
+  "sourceSha256": "eb04ec3e219b5ec07aae15fb2fd7c416bf521b3495b38916a2e860da582ecebd",
+  "sourceAfter": "eb04ec3e219b5ec07aae15fb2fd7c416bf521b3495b38916a2e860da582ecebd",
+  "modelCapabilityFixture": true,
+  "wakeClosed": true,
+  "modelCalled": false,
+  "userDatabase": false,
+  "newTask": {
+    "id": "ai-task-f490c1c1-8c5f-4fbc-b33d-c2738fdee16c",
+    "attemptId": "ratio-public-new-16628ce9-78c3-42b2-aeea-db7c5f9ff3b4",
+    "status": "queued",
+    "ratio": "3:4",
+    "publicReplaySame": true,
+    "documentUnchanged": true,
+    "foreignRejected": true
+  },
+  "legacyTask": {
+    "id": "ai-task-b44ee8f1-caa4-4390-aaf2-0d8b8d6dbdcb",
+    "attemptId": "ratio-public-legacy-d73f7eda-e093-45b0-8bbe-73bbf2fb6e56",
+    "status": "queued",
+    "ratio": null,
+    "reservationSame": true,
+    "taskSame": true,
+    "inputDigestSame": true
+  },
+  "links": 2
+}

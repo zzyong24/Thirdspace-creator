@@ -1,0 +1,7 @@
+{
+  "observedAt": "2026-10-09T17:19:01.125316+00:00",
+  "ownedPid": 73728,
+  "validatedCommand": "73728 73726 node ./node_modules/.bin/../../../node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/vitest.mjs run src/features/creative-canvas/canvas-editor.test.tsx -t T1141",
+  "signal": "SIGTERM",
+  "reason": "只读确认目标按钮可访问名含真实页组计数1；新增测试用exact无计数名称，尚未进入恢复逻辑，停止本轮调用错误，不冒充产品RED"
+}

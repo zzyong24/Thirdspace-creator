@@ -1,0 +1,10 @@
+{
+  "recordedAt": "2026-10-09T17:47:03.225260+00:00",
+  "task": "T-1147",
+  "result": "PASS_LIMITED_OBSERVATION",
+  "explanation": "当场computed style证实fixed以上12层均不建立包含块，普通overflow跨过；390450/512340完整图片true、drawer/viewport/内侧clip保留",
+  "receipt": "docs/verification/t1140/t1147-calibrated-cleanup-observation.json",
+  "originalsRetained": true,
+  "productChange": false,
+  "notNativeOrModel": true
+}

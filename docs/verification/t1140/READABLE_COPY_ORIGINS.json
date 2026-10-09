@@ -1,0 +1,79 @@
+[
+  {
+    "repositoryPath": "docs/verification/t1145/low-height-failure-error-context.md",
+    "original": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/markdown-originals/docs/verification/t1145/low-height-failure-error-context.md",
+    "originalSha256": "6f9719db25f089acae619acaca74cbaacf58094a6d3fa057c2c6f3d298d3f9bc",
+    "repositoryCopySha256": "8993044814150e076977370ddd142c4f4e41c32e237470db59cb9ff6dff4d50d",
+    "copyOnly": "仅移除额外EOF空行；独立评审原件不变，不改变内容/原结论或签名"
+  },
+  {
+    "repositoryPath": "docs/verification/t1145/initial-SPEC_REVIEW.md",
+    "original": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/markdown-originals/docs/verification/t1145/initial-SPEC_REVIEW.md",
+    "originalSha256": "a311f63f6a58dfc345014bf45926071fc41d79994b4a97fb1120cea78cb49ef3",
+    "repositoryCopySha256": "c092018a578d3b1310dcc8374303796f3f65b92daa4a71b3d990ab76d3c88f9a",
+    "copyOnly": "仅移除额外EOF空行；独立评审原件不变，不改变内容/原结论或签名"
+  },
+  {
+    "repositoryPath": "docs/verification/t1145/SPEC_REVIEW.md",
+    "original": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/markdown-originals/docs/verification/t1145/SPEC_REVIEW.md",
+    "originalSha256": "4b7595663dc45011f4c665ef5614cf7fdc0027d009f5ce8015f9c7bfc7027134",
+    "repositoryCopySha256": "6be38096d24c704fa6e56606154a377dbd7870ed6286350b911f3fe158529e5f",
+    "copyOnly": "仅移除额外EOF空行；独立评审原件不变，不改变内容/原结论或签名"
+  },
+  {
+    "repositoryPath": "docs/verification/t1145/first-recheck-SPEC_REVIEW.md",
+    "original": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/markdown-originals/docs/verification/t1145/first-recheck-SPEC_REVIEW.md",
+    "originalSha256": "a12ace97b0e9abec498ab95ab973c715e8c4fea07f998a66d2918c8a8752b038",
+    "repositoryCopySha256": "a7c7e6652c300845165b489be0684fb122d38696f32db24dae1974f0b81e6577",
+    "copyOnly": "仅移除额外EOF空行；独立评审原件不变，不改变内容/原结论或签名"
+  },
+  {
+    "repositoryPath": "docs/verification/t1146/original-error-context.md",
+    "original": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/markdown-originals/docs/verification/t1146/original-error-context.md",
+    "originalSha256": "f93838973694e681833ac7e029da2335d2b5f2abe4056089e732a7d9c1b3f087",
+    "repositoryCopySha256": "f85f9d92e85fe38b9ab15189a76da3c877340bec09a749590808aa30cdaa5b4a",
+    "copyOnly": "仅移除额外EOF空行；独立评审原件不变，不改变内容/原结论或签名"
+  },
+  {
+    "repositoryPath": "docs/verification/t1141/SPEC_REVIEW.md",
+    "original": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/markdown-originals/docs/verification/t1141/SPEC_REVIEW.md",
+    "originalSha256": "9fe65cca193de88e3ee03229ac6e5b11f2e488577d464e454644b30421c5a972",
+    "repositoryCopySha256": "d029c6f66067b71a594a44fd2d36754908d955ddf280d7c2eec1cab25d3917fb",
+    "copyOnly": "仅移除额外EOF空行；独立评审原件不变，不改变内容/原结论或签名"
+  },
+  {
+    "repositoryPath": "docs/verification/t1141/T1141_IMPLEMENTATION_REVIEW.md",
+    "original": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/markdown-originals/docs/verification/t1141/T1141_IMPLEMENTATION_REVIEW.md",
+    "originalSha256": "79a2b9e0a989dbee5f530d865f77706fb8a0a05c7d38b88bd8aae1733a088f64",
+    "repositoryCopySha256": "a0a9b9dd5688d6631269d24c4e2fc8b2242641c8a34ff4130e4c33fdb23c7c33",
+    "copyOnly": "仅移除额外EOF空行；独立评审原件不变，不改变内容/原结论或签名"
+  },
+  {
+    "repositoryPath": "docs/verification/t1147/original-error-context.md",
+    "original": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/markdown-originals/docs/verification/t1147/original-error-context.md",
+    "originalSha256": "0e588f0d1f4c005d1bb52013a7481e2e56528726562701dab7fb9021fbb32103",
+    "repositoryCopySha256": "9c8146c6d2937ea3681989150d9c27720c9f4fb8201d6232a286063ecf0fbc7a",
+    "copyOnly": "仅移除额外EOF空行；独立评审原件不变，不改变内容/原结论或签名"
+  },
+  {
+    "repositoryPath": "docs/verification/t1145/low-height-failure-error-context.md",
+    "original": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/line-whitespace-originals/docs/verification/t1145/low-height-failure-error-context.md",
+    "originalSha256": "8993044814150e076977370ddd142c4f4e41c32e237470db59cb9ff6dff4d50d",
+    "repositoryCopySha256": "6f1b713cbfe35f39084c542c4a0cea92ff312ac1768e75f7443f8c7e277cf46e",
+    "copyOnly": "仅规范可读副本行尾空白；原Playwright错误日志、trace、图和源码私有原件不变；原非零退出保留"
+  },
+  {
+    "repositoryPath": "docs/verification/t1146/original-error-context.md",
+    "original": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/line-whitespace-originals/docs/verification/t1146/original-error-context.md",
+    "originalSha256": "f85f9d92e85fe38b9ab15189a76da3c877340bec09a749590808aa30cdaa5b4a",
+    "repositoryCopySha256": "be2ec1b813c93823fc9f771185fa0eea1ecf7b92ee92971f21b185f18b130cf4",
+    "copyOnly": "仅规范可读副本行尾空白；原Playwright错误日志、trace、图和源码私有原件不变；原非零退出保留"
+  },
+  {
+    "repositoryPath": "docs/verification/t1147/original-error-context.md",
+    "original": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/line-whitespace-originals/docs/verification/t1147/original-error-context.md",
+    "originalSha256": "9c8146c6d2937ea3681989150d9c27720c9f4fb8201d6232a286063ecf0fbc7a",
+    "repositoryCopySha256": "5c3d216f4ba60be46c0bb33fc3d51187c20ebc1ca069a7c9c259f45b3ca5a6e4",
+    "copyOnly": "仅规范可读副本行尾空白；原Playwright错误日志、trace、图和源码私有原件不变；原非零退出保留"
+  }
+]

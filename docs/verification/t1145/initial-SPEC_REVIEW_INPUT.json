@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "CONCERNS：实际原图确认gallery预览与卡片发生物理覆盖，AssetPicker gallery根和预览aside增加shrink-0、由现有drawer外层滚动承接，是不改契约/归属/选择语义的合理最小方案；page消费者仍需真实复核。正式modules目前只运行git diff --check，且把证据路径误写为docs/verification/1145/**，无法兑现SPEC要求的Chrome、组件、LED047、type、static、timeout和reconcile，也不允许真实t1145证据落盘。修正正式模块后可recheck；当前不授权实施。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:24:ea45f54824f4a3c8",
+        "quote": "允许测试/runner为frontend/tests/e2e/t1140-picker-low-height.spec.ts与docs/verification/t1140/run-picker-journey.mjs，图/报告保在docs/verification/t1145/**；最终浏览器证据同时标明T1140 field与T1145 gallery的适用范围，原第二轮失败和原图保留。最终独立实施复核绑定源码SHA与实际查看图。与T1140同一共享文件顺序修改、最终统一冻结运行，不用旧图签新字节。"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:22:f2ed5b3d68bb162f",
+        "quote": "真实Chrome原T1140公开旅程继续覆盖field六视口与exact选用/保存回读，并扩展gallery在1366×900、1024×680、683×450、390×900、390×450、512×340的实际盒边界：搜索/筛选、素材卡及预览按文档流排序，不重叠；低高度滚动后完整预览可见，关闭预览后卡仍可操作，关闭图库后document/revision不变。至少两种已通过正式上传的中性尺寸图片，0retry，动作/有限观察120秒，未确认不调用模型。已有AssetPicker/media/source用例、LED047、type和static/timeout公共链继续运行。"
+      },
+      "where": "orchestrator/process/modules.config.json 的 T-1145 write_set 与 verify_commands.implementation",
+      "failure_mode": "正式模块只执行git diff --check，未绑定SPEC要求的真实Chrome、受影响组件/来源回归、LED047、type、static、timeout、pmem和reconcile；同时证据路径误写为docs/verification/1145/**而不是docs/verification/t1145/**。布局仍覆盖、page消费者被裁切或选择/保存回读退化时，当前Gate仍可通过，真实证据也不在允许写集。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:e1367d3eed6a49fb616e63ab6fce6be8baf4eab288a9c244216c037805e98aaf:orchestrator/process/modules.config.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:22:f2ed5b3d68bb162f",
+      "suggestion": "实施前将证据写集改为docs/verification/t1145/**，并在T-1145正式implementation命令中精确加入现有T1140 runner的六视口gallery/field旅程（0retry与既定预算）、受影响AssetPicker/media/source回归、LED-047、frontend typecheck、boundary/semantic/orphan、timeout、diff、pmem及reconcile；不得用旧PASS或原图代替新源码验证。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

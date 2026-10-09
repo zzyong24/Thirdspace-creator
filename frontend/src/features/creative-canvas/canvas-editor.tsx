@@ -255,7 +255,8 @@ function ScopedCanvasEditor({canvasId}:{canvasId:string}){
    if(generationState(node.id))continue;
    if(task?.status==="failed"){
     if(!onlyNodeId)continue;
-    if(task.prompt!==node.prompt||task.mode!==node.mode||task.aspectRatio!==(node.aspectRatio??null)||task.referenceAssetId!==(node.referenceAssetId??null)||Boolean(node.referenceFileId&&task.referenceFileId!==node.referenceFileId)){setError("这一页的内容已修改。请用节点上的“生成”明确再创作，失败恢复只使用原内容。");return;}
+    if(task.aspectRatio===null&&!node.aspectRatio){setError("原任务未保存页组画幅，请用节点上的生成按当前画幅重新创作");return;}
+    if(task.prompt!==node.prompt||task.mode!==node.mode||task.aspectRatio!==(node.aspectRatio??group.aspectRatio)||task.referenceAssetId!==(node.referenceAssetId??null)||Boolean(node.referenceFileId&&task.referenceFileId!==node.referenceFileId)){setError("这一页的内容已修改。请用节点上的“生成”明确再创作，失败恢复只使用原内容。");return;}
     attempts[node.id]=crypto.randomUUID();
    }
    attempts[node.id]??=crypto.randomUUID();pending.push(node);

@@ -1,0 +1,9 @@
+{
+  "previousFailures": 27,
+  "currentFailures": 27,
+  "failuresIdentical": true,
+  "scannedFiles": 2702,
+  "currentExit": 1,
+  "publicConsumers": "当前原日志全部公共消费者PASS；静态检查exit1保留，不称全绿",
+  "comparedAt": "2026-10-09T17:42:27.157345+00:00"
+}
