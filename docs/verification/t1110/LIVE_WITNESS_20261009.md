@@ -120,3 +120,21 @@ localhost修正已提交9b0b1d14，新隔离72Dfef服务实际准备成功，正
 私有失败截图候选先在root树tests-only actual3FAIL/104SKIP/107（retry0），尚未应用生产。独立实现审查发现unlink吞非ENOENT错误且无重试这一具体缺口，作者只/tmp修正中；原候选不签PASS，原RED保留。
 
 私图清理修正在root当场先应用旧能真实截图的实现，再加入EIO例；正确筛选actual1FAIL/107SKIP/108，直接显示合成随机PNG残留。第一次错误filter全108SKIP另标invalid，不当RED/PASS。最多三次顺序unlink且ENOENT成功后，完整三文件108PASS，整worker及frontend类型exit0。独评复核修正无新增阻断，永久OS故障残留仍交root本次私目录最终删除，不引入清理定时器/生产者或公共路径。薄composition仅development读取显式env传worker私参，默认关闭；尚无真实截图或native采集PASS。
+
+## 2026-10-10 · 重复统计页失败进入研究门
+
+69ac739d当场实际新intent collection-35c561b7-54于16:36:10.068Z→16:38:31.910Z failed/EXPORT_FAILED/0页；prepare/channelsDaily仍REPORT_SECTION_MISSING，五字段0/0/false/complete/162。显式dev私图配置后目录0PNG/0part，跳过原因未知。后续公开status/list再次核实原54failed0、公众号56failed/nullaccount、reports.list 0份；已知受管Chrome0。绑定composition当场7PASS、timeout-policy实际exit1保原27静态失败、boundary无新增5基线、semantic通过、orphan0ERROR/100WARN的工具事实见section-failure-20261010.json；不引用不同旧log代签。
+
+按skill重复失败规则，先实际taskctl block暂停T1110；遵用户唯一状态入口，用真实actor只登记OPEN后运行官方observe的已有OPEN分支actualexit2，BACKLOG SHA前后相同；官方audit actualexit0只证明有效暂停，不是研究validated或产品PASS。登记当时root串行、独立agent均只写/tmp，未用state-lock；不补拍锁证据，后续登记必须读现态并用原锁。研究卡最多120分钟/2次区分实验，当前仅准备实验1、未执行，shared worker源码69未改。
+
+原已准备bqAkiI影子QA服务已按归属正式停止；其浏览器旅程未运行，clone转研究用途故prepared69状态撤销，不能日后直接当当前UI证据。原31410Next也确认所有已知任务终态后归属SIGTERM；不停止安装软件/外部Chrome，不takeOver用户Ego空间。
+
+## 2026-10-10 两次窄研究实验与诊断清理（未恢复实现）
+
+以上“实验尚未执行”是当时记录。本次已实际执行两次，完整安全摘要分别为 [EXP-1](section-exp1-result.json) 和 [EXP-2](section-exp2-result.json)。EXP-1在诊断后仍running，root只经公开cancel取消本次研究intent，不能称自然终态或正式停止收据已核；EXP-2经原profile正常checkout后自然failed/EXPORT_FAILED，均0报告，任何下载/提交前停止。首轮SKIPPED_CURRENT_PATH不能区分截图前后，先前口述“未执行截图”过早；只有第二轮同一拒绝快照证明本轮是截图前。
+
+EXP-2实际一次快照为officialOriginMatch=true、reportPathMatch=false、pathCategory=homepage、hashReportPathMatch=false、snapshotPoint=beforeCapture；同轮prepare/channelsDaily仍REPORT_SECTION_MISSING，五字段0/0/false/complete/162。可确认当场未停留统计页，不能推断为什么回首页、Cookie过期或其他hash路由不可能。该结果淘汰此轮截图/保存故障解释，但尚未闭合实际进入机制。原54 failed/0、公众号56 failed/null、公开reports.list 0份都再次保留；不把独立研究导出代签产品结果。
+
+第二候选Next在确认终态后，经state PID/PGID/精确命令归属核验SIGTERM；当场已知候选Next0、受管Chrome应用0。三个私图目录均实际为空，经uid/0700/canonical path核验后rmdir删除，私有日志保留；详见 [清理证据](section-research-cleanup-20261010.json)。生产69的worker源码/测试/composition摘要不变，研究候选未合入；不停止安装App或用户浏览器，不改profile/身份或手工释放租约。
+
+研究卡仍researching，OPEN仍有效，最多两次实验已经用尽；无现场research_verify_commands，未恢复、未validated、未T1110 PASS。Ego空间20实际仍agentDelegatedToUser，root未takeOver或调用Page；已请求用户交回同空间后只读核对当前后台入口。旧QA clone已转研究，prepared69仍撤销，当前1366/1024产品UI旅程继续待验。

@@ -81,11 +81,46 @@
           "bodyTextLength": 162
         }
       }
+    },
+    {
+      "name": "default-off-private-image-explicitly-configured",
+      "http": 200,
+      "attemptId": "collection-35c561b7-54",
+      "accountId": "acct-3eba3525-70",
+      "capability": "nativeReports",
+      "status": "failed",
+      "generation": 2,
+      "committedPages": 0,
+      "completeCatalogGeneration": null,
+      "reasonCode": "EXPORT_FAILED",
+      "startedAt": "2026-10-09T16:36:10.068Z",
+      "updatedAt": "2026-10-09T16:38:31.910Z",
+      "diagnostic": {
+        "platform": "wechatVideo",
+        "stage": "prepare",
+        "kind": "channelsDaily",
+        "code": "REPORT_SECTION_MISSING",
+        "exceptionName": "WechatBrowserSourceError",
+        "observation": {
+          "exactTabCount": 0,
+          "visibleTabCount": 0,
+          "frameElementVisible": false,
+          "documentReadyState": "complete",
+          "bodyTextLength": 162
+        }
+      },
+      "privateImage": {
+        "configured": true,
+        "pngCount": 0,
+        "partCount": 0,
+        "skipReason": "unknown",
+        "screenshotWitness": false
+      }
     }
   ],
   "allReportsSaved": false,
   "officialProductBinding": "not-yet-succeeded",
-  "browserJourney": "actual-accounts1366-rendered-then-failed-devresource-origin-blocked-no-interaction-pass",
+  "browserJourney": "待验；最后prepared69未运行，因研究复用clone已停止且prepared状态撤销，仍无当前真实页面操作PASS",
   "officialAttempts": [
     {
       "runId": "execution-task-34ba48c1-61",
@@ -132,5 +167,57 @@
   "identityPhaseTests": {
     "passed": 80,
     "browserProof": false
-  }
+  },
+  "research": {
+    "state": "open-paused",
+    "card": "docs/research/t1110-wechat-statistics-visible-section.md",
+    "failureFamily": "wechat-statistics-visible-section",
+    "experimentsRun": 2,
+    "maxExperiments": 2,
+    "experimentResults": [
+      {
+        "id": "EXP-1",
+        "artifact": "docs/verification/t1110/section-exp1-result.json",
+        "status": "cancelled",
+        "committedPages": 0
+      },
+      {
+        "id": "EXP-2",
+        "artifact": "docs/verification/t1110/section-exp2-result.json",
+        "status": "failed",
+        "reasonCode": "EXPORT_FAILED",
+        "committedPages": 0
+      }
+    ],
+    "currentFinding": "official homepage before capture; report route did not remain selected",
+    "navigationCause": "unverified",
+    "cardValidated": false,
+    "researchVerifyCommandsExecuted": false,
+    "productionCandidateApplied": false,
+    "cleanupEvidence": "docs/verification/t1110/section-research-cleanup-20261010.json",
+    "diagnosticServiceRunning": false,
+    "originalBrowserSpaceOwnership": "agentDelegatedToUser; waiting for explicit handback",
+    "researchGateAudit": {
+      "command": "node orchestrator/process/research-gate.mjs audit",
+      "actualExitCode": 0,
+      "actualToolChunk": "a75c4f",
+      "output": "研究门有效暂停: T-1110",
+      "meaning": "仅确认有效暂停，不是validated或产品PASS"
+    },
+    "verifyKeyConfiguration": {
+      "file": "orchestrator/process/reconcile.config.json",
+      "actualToolChunk": "a4933f",
+      "mechanismCommandPresent": false,
+      "boundaryCommandPresent": false,
+      "commandsExecuted": false
+    },
+    "independentEvidenceReview": {
+      "artifact": "docs/verification/t1110/section-results-independent-review.md",
+      "sha256": "f580582895969096db09235345dc2b90864c782ab1d0300d0f5787c24b334ba0",
+      "result": "文档、真实终态和摘要一致；不签validated、真实采集或UI通过",
+      "productionApproval": false
+    }
+  },
+  "latestPublicReportsCount": 0,
+  "lastPublicResultObservedAt": "2026-10-09T17:23:42Z"
 }

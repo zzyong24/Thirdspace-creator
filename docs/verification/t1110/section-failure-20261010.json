@@ -1,0 +1,67 @@
+{
+  "scope": "隔离产品公开任务链；真实失败记录，仅脱敏固定字段。不复制研究Cookie、原始报表或页面内容。",
+  "sourceCommit": "69ac739d8e355037eb7e3a8a9e3eb1249dfd0361",
+  "attempt": {
+    "attemptId": "collection-35c561b7-54",
+    "accountId": "acct-3eba3525-70",
+    "capability": "nativeReports",
+    "status": "failed",
+    "generation": 2,
+    "committedPages": 0,
+    "completeCatalogGeneration": null,
+    "reasonCode": "EXPORT_FAILED",
+    "startedAt": "2026-10-09T16:36:10.068Z",
+    "updatedAt": "2026-10-09T16:38:31.910Z"
+  },
+  "diagnostic": {
+    "platform": "wechatVideo",
+    "stage": "prepare",
+    "kind": "channelsDaily",
+    "code": "REPORT_SECTION_MISSING",
+    "exceptionName": "WechatBrowserSourceError",
+    "observation": {
+      "exactTabCount": 0,
+      "visibleTabCount": 0,
+      "frameElementVisible": false,
+      "documentReadyState": "complete",
+      "bodyTextLength": 162
+    }
+  },
+  "privateImage": {
+    "configured": true,
+    "pngCount": 0,
+    "partCount": 0,
+    "skipReason": "unknown",
+    "screenshotWitness": false
+  },
+  "interpretation": "统计页标签缺失的症状重复；无原始页面证据，尚未证明登录、跳转、截图或保存哪一步造成缺口。不能称Cookie失效、采集通过或截图能力通过。",
+  "verificationHistory": [
+    {
+      "sessionId": 99479,
+      "exitCode": 0,
+      "result": "绑定公共composition 7PASS",
+      "scope": "合成隔离回归，不代签微信真人链路"
+    },
+    {
+      "sessionId": 17984,
+      "exitCode": 1,
+      "result": "timeout-policy只保留原27静态失败，动态通过",
+      "scope": "不宣称全局PASS"
+    },
+    {
+      "sessionId": 9629,
+      "exitCode": 0,
+      "result": "boundary无新增，原5基线"
+    },
+    {
+      "sessionId": 63038,
+      "exitCode": 0,
+      "result": "semantic通过"
+    },
+    {
+      "exitCode": 0,
+      "result": "orphan 0ERROR/100WARNING",
+      "scope": "实际直接exec，历史工具记录保留；不是UI门"
+    }
+  ]
+}

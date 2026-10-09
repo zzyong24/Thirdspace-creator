@@ -1,0 +1,66 @@
+{
+  "schema": "t1110-research-experiment-result/v1",
+  "experiment": "EXP-2",
+  "sourceCommit": "69ac739d8e355037eb7e3a8a9e3eb1249dfd0361",
+  "instrumentedSha256": "4c0343030348f5aa350c6ded4043827c8e8787b2dbb1e0cc0c13a39b0355cd30",
+  "actualPublicTerminal": {
+    "http": 200,
+    "attemptId": "collection-e8d9ed60-48",
+    "accountId": "acct-3eba3525-70",
+    "capability": "nativeReports",
+    "status": "failed",
+    "generation": 2,
+    "committedPages": 0,
+    "completeCatalogGeneration": null,
+    "reasonCode": "EXPORT_FAILED",
+    "startedAt": "2026-10-09T17:14:58.774Z",
+    "updatedAt": "2026-10-09T17:17:15.983Z"
+  },
+  "rejectedSnapshot": {
+    "officialOriginMatch": true,
+    "reportPathMatch": false,
+    "pathCategory": "homepage",
+    "hashReportPathMatch": false,
+    "snapshotPoint": "beforeCapture"
+  },
+  "snapshotCount": 1,
+  "diagnostic": {
+    "platform": "wechatVideo",
+    "stage": "prepare",
+    "kind": "channelsDaily",
+    "code": "REPORT_SECTION_MISSING",
+    "exceptionName": "WechatBrowserSourceError",
+    "observation": {
+      "exactTabCount": 0,
+      "visibleTabCount": 0,
+      "frameElementVisible": false,
+      "documentReadyState": "complete",
+      "bodyTextLength": 162
+    },
+    "privateImageStatus": "SKIPPED_CURRENT_PATH"
+  },
+  "readyMarkerObserved": false,
+  "pngCount": 0,
+  "partCount": 0,
+  "ownedProfileChromeApplicationCount": 0,
+  "formalCheckoutObservation": "已实际进入identity之后的prepare并正常failed/EXPORT_FAILED；未绕过原profile service、未手动释放或强抢锁。未额外输出receipt ID。",
+  "interpretation": "在截图前的同一拒绝快照：仍官方origin，实际页类为首页，目标报表pathname不匹配；精确固定hash也不匹配。这解释当场缺标签及私图前置skip，不证明为何导航落到首页或Cookie过期。",
+  "limitations": [
+    "hash=false仅否定本次精确固定hash，不否定其他hash路由",
+    "不把独立研究页面成功代签产品数据同步",
+    "无实际报告下载或写回，正常失败不是数据采集PASS"
+  ],
+  "originalTaskPreserved": {
+    "attemptId": "collection-35c561b7-54",
+    "status": "failed",
+    "committedPages": 0,
+    "reasonCode": "EXPORT_FAILED"
+  },
+  "officialBinding": {
+    "runId": "execution-task-b8119204-56",
+    "status": "failed",
+    "accountId": null
+  },
+  "publicReportsCount": 0,
+  "productionApplied": false
+}
