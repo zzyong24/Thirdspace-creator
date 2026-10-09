@@ -1,11 +1,18 @@
 import { it, expect, vi } from "vitest";
 import type { Db } from "@creatoros/backend";
-const fixture = vi.hoisted(() => ({ db: undefined as Db | undefined }));
+const fixture = vi.hoisted(() => ({ db: undefined as Db | undefined, webRead: undefined as Parameters<typeof import("@creatoros/backend/modules/ai-runtime").composeChatProduction>[1]["webRead"] | undefined }));
 vi.mock("@creatoros/backend", async original => {
   const actual = await original<typeof import("@creatoros/backend")>();
   return { ...actual, createConfiguredDb: async (...args: Parameters<typeof actual.createConfiguredDb>) => {
     const result = await actual.createConfiguredDb(...args); fixture.db = result.db; return result;
   } };
+});
+// 捕获真实持久服务装配端口并原样调用；不伪造浏览器会话/素材服务。
+vi.mock("@creatoros/backend/modules/ai-runtime",async original=>{
+ const actual=await original<typeof import("@creatoros/backend/modules/ai-runtime")>();
+ return {...actual,composeChatProduction:(...args:Parameters<typeof actual.composeChatProduction>)=>{
+  fixture.webRead=args[1].webRead;return actual.composeChatProduction(...args);
+ }};
 });
 import {workerSkillSnapshotSchema} from "@creatoros/contract/execution-worker";
 import type { Endpoint, RequestContext } from "@creatoros/contract";
@@ -126,7 +133,7 @@ it("正式Worker经动态工具工厂读取真实项目，下一轮供应商请�
 
 it("完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选",async()=>{
  const {loadPositioningWorksBrief}=await import("../../../backend/src/modules/ai-runtime/creative-context");
- const {prepareDurableChatTurn,createChatTaskToolHost}=await import("@creatoros/backend/modules/ai-runtime");
+ const {prepareDurableChatTurn,createChatTaskToolHost,createChatIngestionTaskToolHost,requiredSkillIdsForTask}=await import("@creatoros/backend/modules/ai-runtime");
  const {createChatWorkerDispatcher}=await import("../../../backend/src/modules/execution/model-worker-dispatcher");
  const {createSettingsRepository}=await import("@creatoros/backend/modules/settings");
  const {executionTasks,aiMessages,executionCalls,eq}=await import("@creatoros/backend");
@@ -136,8 +143,14 @@ it("完整真实聊天装配经持久提交后，Worker 读取项目并生成开
  const requests:Record<string,unknown>[]=[];
  const server=createServer(async(req,res)=>{
   let body="";for await(const chunk of req)body+=chunk.toString();const input=JSON.parse(body);requests.push(input);
-  if(!input.stream){res.writeHead(200,{"content-type":"application/json"});res.end(JSON.stringify({id:"child",object:"chat.completion",created:1,model:"fixture",choices:[{index:0,message:{role:"assistant",content:'[{"text":"已生成真实开场候选","angle":"场景"}]'},finish_reason:"stop"}],usage:{prompt_tokens:4,completion_tokens:3,total_tokens:7}}));return;}
-  const roots=requests.filter(request=>request.stream).length;
+  const isRoot=(request:Record<string,unknown>)=>Array.isArray(request.tools)&&request.tools.length>0;
+  // 真实子调用也使用 SSE；按工具定义区分父轮，不能把 stream 当父任务身份。
+  if(!isRoot(input)){
+   const content='[{"text":"已生成真实开场候选","angle":"场景"}]';
+   const chunks=[{choices:[{index:0,delta:{content},finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:"stop"}],usage:{prompt_tokens:4,completion_tokens:3,total_tokens:7}}];
+   res.writeHead(200,{"content-type":"text/event-stream"});res.end(chunks.map(chunk=>`data: ${JSON.stringify({id:"child",object:"chat.completion.chunk",created:1,model:"fixture",...chunk})}\n\n`).join("")+"data: [DONE]\n\n");return;
+  }
+  const roots=requests.filter(isRoot).length;
   const name=roots===1?"context_projects":roots===2?"script_hooks":null;
   const delta=name?{tool_calls:[{index:0,id:`tool-${roots}`,type:"function",function:{name,arguments:"{}"}}]}:{content:"项目已读取，开场候选已准备好"};
   const chunks=[{choices:[{index:0,delta,finish_reason:null}]},{choices:[{index:0,delta:{},finish_reason:name?"tool_calls":"stop"}],usage:{prompt_tokens:2,completion_tokens:3,total_tokens:5}}];
@@ -156,12 +169,12 @@ it("完整真实聊天装配经持久提交后，Worker 读取项目并生成开
   const source=await repo.createMessage(conversation.id,{role:"user",content:"读取我的项目，再为选题生成开场",attachments:[],modelMetadata:{}});
   const resolveCredential=vi.fn(runtime.resolveModelSpec);
   const submitted=await createChatTurnSubmissionService(db,{assemble:async(context,snapshot)=>{
-   const skills=workerSkillSnapshotSchema.parse(await runtime.resolveEffectiveSkillSnapshot(context,["chatbox.topic","creatoros.guide","topic.enrich","positioning.generate"]));
+   const skills=workerSkillSnapshotSchema.parse(await runtime.resolveEffectiveSkillSnapshot(context,[...requiredSkillIdsForTask("chat.sync",{surface:"topics"}),"topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.insights","knowledge.distill"]));
    expect(skills.skills.find(skill=>skill.skillId==="chatbox.topic")!.overlayRevision).toBe(1);
    const prepared=await prepareDurableChatTurn(context,{
     messages:snapshot.messages.map(message=>({id:message.id,role:message.role as "user"|"assistant",parts:[{type:"text" as const,text:message.content}]})),
     chatContext:{surface:"topics",selection:{kind:"candidate",ids:[],label:"用户选中的主题"}},
-   },{...runtime.context,contextReaders:runtime.contextReaders,searchWeb:runtime.searchWeb,humanizeError:()=>null},skills,{workerResearch:true,scriptHooksGeneration:{version:1,maxOutputTokens:2048},structuredGeneration:{version:1,maxOutputTokens:2048}});
+   },{...runtime.context,contextReaders:runtime.contextReaders,searchWeb:runtime.searchWeb,humanizeError:()=>null},skills,{workerScriptDraft:true,workerWebRead:true,workerResearch:true,atomicCoverGenerate:true,atomicAgenticResearch:true,atomicMaterialGenerate:true,atomicScriptReview:true,atomicPublishPackage:true,scriptHooksGeneration:{version:1,maxOutputTokens:2048},structuredGeneration:{version:1,maxOutputTokens:2048}});
    expect(prepared.hostContext.scriptHooksContext!.selectionTitle).toBe("用户选中的主题");
    // Skill 工具是优先顺序；完整场景清单不能为了测试通过而裁掉。
    expect(prepared.toolDefinitions.map(tool=>tool.name)).toEqual(expect.arrayContaining(["context.projects","script.hooks","topic.generate","brief.fill"]));
@@ -169,16 +182,33 @@ it("完整真实聊天装配经持久提交后，Worker 读取项目并生成开
   }}).submit(ctx,{conversationId:conversation.id,sourceMessageId:source.id});
   expect(resolveCredential).not.toHaveBeenCalled();expect(requests).toHaveLength(0);
   const missingTools:string[]=[];let factoryFailure="";
-  const resolveTools=createChatTaskToolHost(createChatHostContextReader(db),runtime.contextReaders,{localRead:{readLocalFile:runtime.readLocalFile,decideLocalReadAccess:runtime.decideLocalReadAccess},research:true,planning:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatPlanningTask},local:{detectTools:runtime.detectTools,listAuthorizedDirs:runtime.listAuthorizedDirs},structured:{readWorks:(context,limit)=>loadPositioningWorksBrief(context,runtime.context.positioningWorks,limit),getPositioningDiscovery:runtime.getPositioningDiscovery}});
-  host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"assembled-chat",budget:{maxCalls:12,maxTokens:300000,deadlineMs:60000},modelConcurrency:1,pollMs:100,resolveTools:async(...args)=>{try{const tools=await resolveTools(...args);missingTools.push(...args[1].tools.filter(tool=>!Object.hasOwn(tools,tool.name)).map(tool=>tool.name));return tools;}catch(error){factoryFailure=error instanceof Error?error.message:String(error);throw error;}},resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
+  const hostReader=createChatHostContextReader(db);
+  const taskTools=createChatTaskToolHost(hostReader,runtime.contextReaders,{
+   webRead:true,research:true,
+   cover:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatCoverTask},
+   agenticResearch:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatResearchTask},
+   planning:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatPlanningTask},
+   material:{prepareTaskCommit:runtime.ai.prepareTaskCommit,wakeTask:runtime.wakeChatMaterialTask},
+   publish:{preparePublish:runtime.prepareChatPublishTask,wakeTask:runtime.wakeChatPublishTask},
+   review:{prepareReview:runtime.prepareChatScriptReviewTask,wakeTask:runtime.wakeChatScriptReviewTask},
+   scriptDraft:{readCurrentScript:runtime.readCurrentScript,prepareDraft:runtime.prepareChatScriptDraftTask,wakeTask:runtime.wakeChatScriptDraftTask},
+   scriptPatch:{resolveSelection:(context,input)=>runtime.resolveCurrentScriptSelection!(context,input)},
+   videoEdit:{prepareVideoEdit:runtime.prepareVideoEdit},
+   localRead:{readLocalFile:runtime.readLocalFile,decideLocalReadAccess:runtime.decideLocalReadAccess},
+   local:{detectTools:runtime.detectTools,listAuthorizedDirs:runtime.listAuthorizedDirs},
+   structured:{readCurrentScript:runtime.readCurrentScript,readWorks:(context,limit)=>loadPositioningWorksBrief(context,runtime.context.positioningWorks,limit),getPositioningDiscovery:runtime.getPositioningDiscovery},
+  });
+  const ingestionTools=createChatIngestionTaskToolHost(hostReader,runtime);
+  const resolveTools:typeof taskTools=async(...args)=>Object.assign({},await taskTools(...args),await ingestionTools(...args));
+  host=createChatWorkerDispatcher(db,{entryPath:resolve("../ai-worker/dist/execution-worker.cjs"),workerId:"assembled-chat",webRead:fixture.webRead,budget:{maxCalls:12,maxTokens:300000,deadlineMs:60000},modelConcurrency:1,pollMs:100,resolveTools:async(...args)=>{try{const tools=await resolveTools(...args);missingTools.push(...args[1].tools.filter(tool=>!Object.hasOwn(tools,tool.name)).map(tool=>tool.name));return tools;}catch(error){factoryFailure=error instanceof Error?error.message:String(error);throw error;}},resolveModelCredential:async()=>({apiFormat:"openai_chat",baseUrl:`http://127.0.0.1:${(server.address() as {port:number}).port}/v1`,model:"fixture",token:"fixture"})});
   host.start();
   await vi.waitFor(async()=>{const [task]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));expect(["queued","running"]).not.toContain(task!.status);},{timeout:15000});
   const [finished]=await db.select().from(executionTasks).where(eq(executionTasks.id,submitted.executionTaskId));
   expect(finished!.status,`任务错误=${finished!.lastErrorCode}; 模型请求=${requests.length}; 工厂错误=${factoryFailure}; 未接工具=${missingTools.join(",")}`).toBe("succeeded");
   expect(requests).toHaveLength(4);
-  const roots=requests.filter(request=>request.stream);
+  const roots=requests.filter(request=>Array.isArray(request.tools)&&request.tools.length>0);
   expect(JSON.stringify(roots[1])).toContain("装配账号a项目");expect(JSON.stringify(roots[1])).not.toContain("装配账号b项目");
-  expect(JSON.stringify(requests.find(request=>!request.stream))).toContain("用户选中的主题");
+  expect(JSON.stringify(requests.find(request=>!Array.isArray(request.tools)||request.tools.length===0))).toContain("用户选中的主题");
   expect(JSON.stringify(roots[2])).toContain("已生成真实开场候选");
   const messages=await db.select().from(aiMessages).where(eq(aiMessages.conversationId,conversation.id));
   expect(messages).toHaveLength(2);expect(messages.find(message=>message.role==="assistant")!.content).toBe("项目已读取，开场候选已准备好");

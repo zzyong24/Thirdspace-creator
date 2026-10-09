@@ -4,7 +4,7 @@
 
 生产仅3文件：generated-asset-candidate.service 复用写入端已有workspaceObjectIdentity和owner/workspaceFilter，保持legacy键及原operation/回执深相等/原文件/状态/事务；script-draft-target.service 同事务向Artifacts注入Projects既有真实锁端口；persistence-client.ts两事务回调返回同tx Projects真实row，保素材和研究knowledge采纳的现组父对象guard。未改schema/wire/业务shape、未新增generation key、未修改guard或新增groupVersion逐值拒绝。
 
-独立只读规范边界报告由现t173 reviewer产于Growth completion目录：creator-group-candidate-independent-review.md、creator-materiallinks-composition-independent-review.md；不把旧source/search评审当本次实现复核。源码提交后还需其独立实现复核。
+独立只读规范边界报告由现t173 reviewer产于Growth completion目录：creator-group-candidate-independent-review.md、creator-materiallinks-composition-independent-review.md；不把旧source/search评审当本次实现复核。3a551fb5提交后真实独立实现复核已完成，creator-group-generation-implementation-review.md明确三生产文件未发现新增具体guard blocker；不批准其它范围或正式审核。
 
 真实日志：frontend-chat-worker-group-green.log 4/10 RED；frontend-chat-script-group-diagnostic.log明确整稿项目端口缺失；frontend-chat-worker-group-repaired-green.log 12/2（素材候选成功但采纳失败）；frontend-chat-worker-group-composition-green.log 14/14 GREEN。backend-group-generation-repaired-green.log4文件82/82，含原调用/失败恢复/并发采纳/原子回滚/原文件篡改等；backend-group-legacy-alias-boundary-green.log15/15，补正常公开组、不同owner/group拒绝、legacy别名原键。
 
@@ -12,4 +12,4 @@
 
 研究knowledge组合根直接真实事务：frontend-materiallinks-research-composition-green.log1/1，正常公开组/项目/知识创建、相同实际callback、新组链接、跨owner/group/缺项目拒绝、写后异常知识与链接同时回滚。factory只捕获真实端口且返回原服务；这不是绕AI/admission的完整研究模型调用验收。素材完整Worker14覆盖两次confirm，不产生第二链接/任务或供应商调用；后台既有采纳并发/失败回滚保。
 
-全前端最终整套正在运行，T1072正式安装/OS凭据journal/双机仍待验；母聊天提案未批准未实现。
+全前端首次最终整套实际2失败/3608通过，最后两项test装配修复后准备重跑，T1072正式安装/OS凭据journal/双机仍待验；母聊天提案未批准未实现。

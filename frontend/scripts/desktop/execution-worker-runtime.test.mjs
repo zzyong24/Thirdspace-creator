@@ -1,4 +1,4 @@
-import { mkdtempSync,rmSync,mkdirSync,writeFileSync,readFileSync,copyFileSync } from "node:fs";
+import { mkdtempSync,rmSync,mkdirSync,writeFileSync,readFileSync,copyFileSync,cpSync,symlinkSync } from "node:fs";
 import { join,resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fork } from "node:child_process";
@@ -10,11 +10,16 @@ describe("随包Worker入口资源",()=>{
     const root=mkdtempSync(join(tmpdir(),"worker-runtime-"));let child;
     try{
       expect(()=>assertExecutionWorkerRuntime(root)).toThrow();
-      const entry=stageExecutionWorkerRuntime({repoRoot:resolve(".."),runtimeRoot:root});
+      // 每个 fixture 使用真实独立源码与构建产物，避免并发构建改写共享 dist。
+      const sourceRepo=join(root,"source-repo"),workerSource=join(sourceRepo,"ai-worker");
+      mkdirSync(workerSource,{recursive:true});
+      for(const name of ["src","scripts","package.json"])cpSync(resolve("../ai-worker",name),join(workerSource,name),{recursive:true});
+      symlinkSync(resolve("../ai-worker/node_modules"),join(workerSource,"node_modules"),process.platform==="win32"?"junction":"dir");
+      const entry=stageExecutionWorkerRuntime({repoRoot:sourceRepo,runtimeRoot:root});
       expect(entry).toBe(join(root,"frontend/runtime/execution-worker.cjs"));
-      for(const filename of ["execution-worker.cjs","agentic-worker.cjs"])expect(readFileSync(join(root,"frontend/runtime",filename))).toEqual(readFileSync(resolve("../ai-worker/dist",filename)));
+      for(const filename of ["execution-worker.cjs","agentic-worker.cjs"])expect(readFileSync(join(root,"frontend/runtime",filename))).toEqual(readFileSync(join(workerSource,"dist",filename)));
       // Worker研究工具有顶层Playwright导入，隔离启动fixture需装配真实声明依赖。
-      stageMissingDependencies({from:resolve("../ai-worker"),vendorRoot:join(root,"frontend/node_modules"),packages:["@playwright/test"]});
+      stageMissingDependencies({from:workerSource,vendorRoot:join(root,"frontend/node_modules"),packages:["@playwright/test"]});
       child=fork(entry,[],{cwd:root,execArgv:[],stdio:["ignore","ignore","ignore","ipc"],env:{PATH:process.env.PATH}});
       const message=await new Promise((ok,bad)=>{const timer=setTimeout(()=>bad(new Error("WORKER_START_TIMEOUT")),10000);child.once("message",value=>{clearTimeout(timer);ok(value);});child.once("error",bad);child.once("exit",()=>{clearTimeout(timer);bad(new Error("WORKER_EARLY_EXIT"));});});
       expect(message).toMatchObject({type:"ready",capabilities:expect.arrayContaining(["model.generate","model.structured"])});
