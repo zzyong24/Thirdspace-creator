@@ -1,0 +1,18 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: portrait: 主时间线长度不正确
+
+15.34 !== 15
+
+    at file:///Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/.t1072-baseline-diagnostic/orchestrator/process/verify-t794-motion-card-preview.mjs:50:12 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 15.34,
+  expected: 15,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v25.9.0

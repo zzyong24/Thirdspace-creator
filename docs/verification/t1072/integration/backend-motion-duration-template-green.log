@@ -1,0 +1,45 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/video-render/template.test.ts (88 tests | 1 failed) 152ms
+     × [T-290] 竖版整体输出快照锚定(改竖版布局需显式重锚) 35ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/video-render/template.test.ts > generateVideoRenderHtml > [T-290] 竖版整体输出快照锚定(改竖版布局需显式重锚)
+Error: Snapshot `generateVideoRenderHtml > [T-290] 竖版整体输出快照锚定(改竖版布局需显式重锚) 1` mismatched
+
+- Expected
++ Received
+
+@@ -58,12 +58,10 @@
+  tl.to("#th",{left:54,top:1188,width:264,height:469,borderRadius:24,duration:.34,ease:"power3.inOut"},31.00);
+  tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:.34,ease:"power3.inOut"},38.00);
+  tl.set("#th",{zIndex:900},38.34);
+  tl.set("#th",{zIndex:945},53.00);
+  tl.to("#th",{left:54,top:1188,width:264,height:469,borderRadius:24,duration:.34,ease:"power3.inOut"},53.00);
+- tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:.34,ease:"power3.inOut"},60.00);
+- tl.set("#th",{zIndex:900},60.00);
+  tl.fromTo("#c10",{autoAlpha:0,scale:1.02},{autoAlpha:1,scale:1,duration:.4,ease:"power3.out"},2.00);
+  tl.fromTo("#c10 > *:not(.ovl)",{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.35,stagger:.08,ease:"power2.out"},2.00);
+  tl.to("#c10",{autoAlpha:0,duration:.3},7.70);
+  tl.set("#c10",{autoAlpha:0},8.00);
+  tl.fromTo("#br13clear",{autoAlpha:0,y:0,scale:1},{autoAlpha:1,y:0,scale:1,duration:.2,ease:"power1.out"},9.00);
+
+ ❯ src/modules/execution/video-render/template.test.ts:157:18
+    155|       delivery: { width: 1080, height: 1920, fps: 30 },
+    156|     });
+    157|     expect(html).toMatchSnapshot();
+       |                  ^
+    158|   });
+    159|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+  Snapshots  1 failed
+ Test Files  1 failed (1)
+      Tests  1 failed | 87 passed (88)
+   Start at  17:54:33
+   Duration  2.37s (transform 1.18s, setup 0ms, import 1.81s, tests 152ms, environment 1ms)
+

@@ -1,0 +1,211 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/.t1072-baseline-diagnostic/backend
+
+ ❯ src/modules/execution/video-render/template.test.ts (88 tests | 5 failed | 80 skipped) 56ms
+     × 辅助覆盖口播15时，终点不新增尾部人物tween 31ms
+     × 辅助覆盖口播15.019时，终点不新增尾部人物tween 5ms
+     × 辅助覆盖口播15.001时，终点不新增尾部人物tween 2ms
+     × 剩余窗口 15/14.9 在原终点内精确回位 7ms
+     × 剩余窗口 15.019/14.999 在原终点内精确回位 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/video-render/template.test.ts > [T794/T902] 人物 transition 不越过原口播终点 > 辅助覆盖口播15时，终点不新增尾部人物tween
+ FAIL  src/modules/execution/video-render/template.test.ts > [T794/T902] 人物 transition 不越过原口播终点 > 辅助覆盖口播15.001时，终点不新增尾部人物tween
+AssertionError: expected '<!doctype html><html><head><meta char…' not to contain 'duration:.34,ease:"power3.inOut"},15.…'
+
+- Expected
++ Received
+
+- duration:.34,ease:"power3.inOut"},15.00)
++ <!doctype html><html><head><meta charset="utf-8"><script src="gsap.min.js"></script>
++ <style>
++ *{margin:0;padding:0;box-sizing:border-box}
++ html,body{width:1080px;height:1920px;background:#08090a;overflow:hidden;font-family:"Inter","PingFang SC","Microsoft YaHei",sans-serif}
++ #root{position:relative;width:1080px;height:1920px;background:#08090a}
++ .clip{position:absolute}
++ </style></head><body>
++ <div id="root" data-composition-id="main" data-start="0" data-duration="15.00" data-width="1080" data-height="1920">
++ <div id="bg" class="clip" data-start="0.00" data-duration="15.00" data-track-index="0" style="position:absolute;inset:0;background:#08090a;"></div>
++ <div id="grid" class="clip" data-start="0.00" data-duration="15.00" data-track-index="1" style="position:absolute;inset:0;opacity:.9;background-image:url(data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2248%22%20height=%2248%22%20viewBox=%220%200%2048%2048%22%3E%3Cpath%20d=%22M48%200H0V48%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.14%22%20stroke-width=%221%22%20stroke-dasharray=%223%207%22/%3E%3C/svg%3E);background-size:48px 48px;"></div>
++ <div id="glow" class="clip" data-start="0.00" data-duration="15.00" data-track-index="2" style="position:absolute;inset:0;background:radial-gradient(900px 520px at 24% 36%,#5e6ad222,transparent 60%);"></div>
++ <video id="th" class="clip" src="media/speaker.mp4" preload="auto" data-has-audio="true" data-start="0" data-duration="15.00" data-track-index="900" style="position:absolute;left:0px;top:0px;width:1080px;height:1920px;border-radius:0px;object-fit:contain;background:#08090a;z-index:900;border:0;box-shadow:none;"></video>
++ <div id="c10stage" class="clip portrait-card-stage-ambient-static" data-start="0.00" data-duration="15.00" data-track-index="11" style="position:absolute;left:0;top:0;z-index:940;width:1080px;height:1920px;background:radial-gradient(ellipse at 50% 36%,rgba(94,106,210,.30) 0%,rgba(23,27,48,.88) 48%,#11131f 100%),#11131f;"></div>
++ <div id="c10" class="clip" data-start="0.00" data-duration="15.00" data-track-index="12" style="position:absolute;left:60px;top:580px;width:1000px;height:420px;z-index:942;transform:scale(1);transform-origin:center center;background:linear-gradient(135deg,#191a1b,#8a8f9814);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:42px 54px;box-shadow:rgba(0,0,0,.42) 0 18px 60px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;"><span aria-hidden="true" style="position:absolute;right:34px;top:-28px;color:#8a8f9828;font-family:Georgia,serif;font-size:190px;line-height:1">“</span><span style="position:relative;display:block;color:#f7f8f8;font-size:52px;line-height:1.22;font-weight:800;letter-spacing:-.025em">辅助真人</span><span class="ovl" style="position:relative;display:block;width:118px;height:7px;border-radius:4px;background:#8a8f98;margin-top:24px"></span></div>
++ <div id="pbar" class="clip" data-start="0.00" data-duration="15.00" data-track-index="961" style="position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,0.05);"><div id="pbarf" style="position:absolute;left:0;top:0;height:100%;width:0;background:#5e6ad2"></div></div>
++ </div>
++ <script>
++ const tl = gsap.timeline({paused:true});
++ tl.set("#th",{zIndex:945},0.00);
++ tl.to("#th",{left:54,top:1188,width:264,height:469,borderRadius:24,duration:.34,ease:"power3.inOut"},0.00);
++ tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:.34,ease:"power3.inOut"},15.00);
++ tl.set("#th",{zIndex:900},15.00);
++ tl.fromTo("#c10",{autoAlpha:0,scale:1.02},{autoAlpha:1,scale:1,duration:.4,ease:"power3.out"},0.00);
++ tl.fromTo("#c10 > *:not(.ovl)",{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.35,stagger:.08,ease:"power2.out"},0.00);
++ tl.to("#c10",{autoAlpha:0,duration:.3},14.70);
++ tl.set("#c10",{autoAlpha:0},15.00);
++ tl.fromTo("#pbarf",{width:"0%"},{width:"100%",ease:"none",duration:15.00},0);
++ window.__timelines = window.__timelines || {};
++ window.__timelines["main"] = tl;
++ </script></body></html>
+
+ ❯ src/modules/execution/video-render/template.test.ts:1915:22
+    1913|     const html=generateVideoRenderHtml(portrait(duration,duration));
+    1914|     const end=Math.floor(duration*100)/100;
+    1915|     expect(html).not.toContain(`duration:.34,ease:"power3.inOut"},${en…
+       |                      ^
+    1916|     expect(html.match(/tl\.to\("#th",\{[^}]*duration:[^}]*\},[\d.]+\);…
+    1917|     expect(html).not.toMatch(/(?:to|set)\("#th",\{[^}]*autoAlpha:0/);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/modules/execution/video-render/template.test.ts > [T794/T902] 人物 transition 不越过原口播终点 > 辅助覆盖口播15.019时，终点不新增尾部人物tween
+AssertionError: expected '<!doctype html><html><head><meta char…' not to contain 'duration:.34,ease:"power3.inOut"},15.…'
+
+- Expected
++ Received
+
+- duration:.34,ease:"power3.inOut"},15.01)
++ <!doctype html><html><head><meta charset="utf-8"><script src="gsap.min.js"></script>
++ <style>
++ *{margin:0;padding:0;box-sizing:border-box}
++ html,body{width:1080px;height:1920px;background:#08090a;overflow:hidden;font-family:"Inter","PingFang SC","Microsoft YaHei",sans-serif}
++ #root{position:relative;width:1080px;height:1920px;background:#08090a}
++ .clip{position:absolute}
++ </style></head><body>
++ <div id="root" data-composition-id="main" data-start="0" data-duration="15.01" data-width="1080" data-height="1920">
++ <div id="bg" class="clip" data-start="0.00" data-duration="15.01" data-track-index="0" style="position:absolute;inset:0;background:#08090a;"></div>
++ <div id="grid" class="clip" data-start="0.00" data-duration="15.01" data-track-index="1" style="position:absolute;inset:0;opacity:.9;background-image:url(data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2248%22%20height=%2248%22%20viewBox=%220%200%2048%2048%22%3E%3Cpath%20d=%22M48%200H0V48%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.14%22%20stroke-width=%221%22%20stroke-dasharray=%223%207%22/%3E%3C/svg%3E);background-size:48px 48px;"></div>
++ <div id="glow" class="clip" data-start="0.00" data-duration="15.01" data-track-index="2" style="position:absolute;inset:0;background:radial-gradient(900px 520px at 24% 36%,#5e6ad222,transparent 60%);"></div>
++ <video id="th" class="clip" src="media/speaker.mp4" preload="auto" data-has-audio="true" data-start="0" data-duration="15.01" data-track-index="900" style="position:absolute;left:0px;top:0px;width:1080px;height:1920px;border-radius:0px;object-fit:contain;background:#08090a;z-index:900;border:0;box-shadow:none;"></video>
++ <div id="c10stage" class="clip portrait-card-stage-ambient-static" data-start="0.00" data-duration="15.01" data-track-index="11" style="position:absolute;left:0;top:0;z-index:940;width:1080px;height:1920px;background:radial-gradient(ellipse at 50% 36%,rgba(94,106,210,.30) 0%,rgba(23,27,48,.88) 48%,#11131f 100%),#11131f;"></div>
++ <div id="c10" class="clip" data-start="0.00" data-duration="15.01" data-track-index="12" style="position:absolute;left:60px;top:580px;width:1000px;height:420px;z-index:942;transform:scale(1);transform-origin:center center;background:linear-gradient(135deg,#191a1b,#8a8f9814);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:42px 54px;box-shadow:rgba(0,0,0,.42) 0 18px 60px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;"><span aria-hidden="true" style="position:absolute;right:34px;top:-28px;color:#8a8f9828;font-family:Georgia,serif;font-size:190px;line-height:1">“</span><span style="position:relative;display:block;color:#f7f8f8;font-size:52px;line-height:1.22;font-weight:800;letter-spacing:-.025em">辅助真人</span><span class="ovl" style="position:relative;display:block;width:118px;height:7px;border-radius:4px;background:#8a8f98;margin-top:24px"></span></div>
++ <div id="pbar" class="clip" data-start="0.00" data-duration="15.01" data-track-index="961" style="position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,0.05);"><div id="pbarf" style="position:absolute;left:0;top:0;height:100%;width:0;background:#5e6ad2"></div></div>
++ </div>
++ <script>
++ const tl = gsap.timeline({paused:true});
++ tl.set("#th",{zIndex:945},0.00);
++ tl.to("#th",{left:54,top:1188,width:264,height:469,borderRadius:24,duration:.34,ease:"power3.inOut"},0.00);
++ tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:.34,ease:"power3.inOut"},15.01);
++ tl.set("#th",{zIndex:900},15.01);
++ tl.fromTo("#c10",{autoAlpha:0,scale:1.02},{autoAlpha:1,scale:1,duration:.4,ease:"power3.out"},0.00);
++ tl.fromTo("#c10 > *:not(.ovl)",{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.35,stagger:.08,ease:"power2.out"},0.00);
++ tl.to("#c10",{autoAlpha:0,duration:.3},14.71);
++ tl.set("#c10",{autoAlpha:0},15.01);
++ tl.fromTo("#pbarf",{width:"0%"},{width:"100%",ease:"none",duration:15.01},0);
++ window.__timelines = window.__timelines || {};
++ window.__timelines["main"] = tl;
++ </script></body></html>
+
+ ❯ src/modules/execution/video-render/template.test.ts:1915:22
+    1913|     const html=generateVideoRenderHtml(portrait(duration,duration));
+    1914|     const end=Math.floor(duration*100)/100;
+    1915|     expect(html).not.toContain(`duration:.34,ease:"power3.inOut"},${en…
+       |                      ^
+    1916|     expect(html.match(/tl\.to\("#th",\{[^}]*duration:[^}]*\},[\d.]+\);…
+    1917|     expect(html).not.toMatch(/(?:to|set)\("#th",\{[^}]*autoAlpha:0/);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/modules/execution/video-render/template.test.ts > [T794/T902] 人物 transition 不越过原口播终点 > 剩余窗口 15/14.9 在原终点内精确回位
+AssertionError: expected '<!doctype html><html><head><meta char…' to contain 'tl.to("#th",{left:0,top:0,width:1080,…'
+
+- Expected
++ Received
+
+- tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:0.10,ease:"power3.inOut"},14.90);
++ <!doctype html><html><head><meta charset="utf-8"><script src="gsap.min.js"></script>
++ <style>
++ *{margin:0;padding:0;box-sizing:border-box}
++ html,body{width:1080px;height:1920px;background:#08090a;overflow:hidden;font-family:"Inter","PingFang SC","Microsoft YaHei",sans-serif}
++ #root{position:relative;width:1080px;height:1920px;background:#08090a}
++ .clip{position:absolute}
++ </style></head><body>
++ <div id="root" data-composition-id="main" data-start="0" data-duration="15.00" data-width="1080" data-height="1920">
++ <div id="bg" class="clip" data-start="0.00" data-duration="15.00" data-track-index="0" style="position:absolute;inset:0;background:#08090a;"></div>
++ <div id="grid" class="clip" data-start="0.00" data-duration="15.00" data-track-index="1" style="position:absolute;inset:0;opacity:.9;background-image:url(data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2248%22%20height=%2248%22%20viewBox=%220%200%2048%2048%22%3E%3Cpath%20d=%22M48%200H0V48%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.14%22%20stroke-width=%221%22%20stroke-dasharray=%223%207%22/%3E%3C/svg%3E);background-size:48px 48px;"></div>
++ <div id="glow" class="clip" data-start="0.00" data-duration="15.00" data-track-index="2" style="position:absolute;inset:0;background:radial-gradient(900px 520px at 24% 36%,#5e6ad222,transparent 60%);"></div>
++ <video id="th" class="clip" src="media/speaker.mp4" preload="auto" data-has-audio="true" data-start="0" data-duration="15.00" data-track-index="900" style="position:absolute;left:0px;top:0px;width:1080px;height:1920px;border-radius:0px;object-fit:contain;background:#08090a;z-index:900;border:0;box-shadow:none;"></video>
++ <div id="c10stage" class="clip portrait-card-stage-ambient-static" data-start="0.00" data-duration="14.90" data-track-index="11" style="position:absolute;left:0;top:0;z-index:940;width:1080px;height:1920px;background:radial-gradient(ellipse at 50% 36%,rgba(94,106,210,.30) 0%,rgba(23,27,48,.88) 48%,#11131f 100%),#11131f;"></div>
++ <div id="c10" class="clip" data-start="0.00" data-duration="14.90" data-track-index="12" style="position:absolute;left:60px;top:580px;width:1000px;height:420px;z-index:942;transform:scale(1);transform-origin:center center;background:linear-gradient(135deg,#191a1b,#8a8f9814);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:42px 54px;box-shadow:rgba(0,0,0,.42) 0 18px 60px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;"><span aria-hidden="true" style="position:absolute;right:34px;top:-28px;color:#8a8f9828;font-family:Georgia,serif;font-size:190px;line-height:1">“</span><span style="position:relative;display:block;color:#f7f8f8;font-size:52px;line-height:1.22;font-weight:800;letter-spacing:-.025em">辅助真人</span><span class="ovl" style="position:relative;display:block;width:118px;height:7px;border-radius:4px;background:#8a8f98;margin-top:24px"></span></div>
++ <div id="pbar" class="clip" data-start="0.00" data-duration="15.00" data-track-index="961" style="position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,0.05);"><div id="pbarf" style="position:absolute;left:0;top:0;height:100%;width:0;background:#5e6ad2"></div></div>
++ </div>
++ <script>
++ const tl = gsap.timeline({paused:true});
++ tl.set("#th",{zIndex:945},0.00);
++ tl.to("#th",{left:54,top:1188,width:264,height:469,borderRadius:24,duration:.34,ease:"power3.inOut"},0.00);
++ tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:.34,ease:"power3.inOut"},14.90);
++ tl.set("#th",{zIndex:900},15.00);
++ tl.fromTo("#c10",{autoAlpha:0,scale:1.02},{autoAlpha:1,scale:1,duration:.4,ease:"power3.out"},0.00);
++ tl.fromTo("#c10 > *:not(.ovl)",{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.35,stagger:.08,ease:"power2.out"},0.00);
++ tl.to("#c10",{autoAlpha:0,duration:.3},14.60);
++ tl.set("#c10",{autoAlpha:0},14.90);
++ tl.fromTo("#pbarf",{width:"0%"},{width:"100%",ease:"none",duration:15.00},0);
++ window.__timelines = window.__timelines || {};
++ window.__timelines["main"] = tl;
++ </script></body></html>
+
+ ❯ src/modules/execution/video-render/template.test.ts:1922:18
+    1920|     const html=generateVideoRenderHtml(portrait(duration,end));
+    1921|     const start=(Math.floor(end*100)/100).toFixed(2);
+    1922|     expect(html).toContain(`tl.to("#th",{left:0,top:0,width:1080,heigh…
+       |                  ^
+    1923|     expect(html).toContain(`tl.set("#th",{zIndex:900},${layer});`);
+    1924|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/modules/execution/video-render/template.test.ts > [T794/T902] 人物 transition 不越过原口播终点 > 剩余窗口 15.019/14.999 在原终点内精确回位
+AssertionError: expected '<!doctype html><html><head><meta char…' to contain 'tl.to("#th",{left:0,top:0,width:1080,…'
+
+- Expected
++ Received
+
+- tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:0.02,ease:"power3.inOut"},14.99);
++ <!doctype html><html><head><meta charset="utf-8"><script src="gsap.min.js"></script>
++ <style>
++ *{margin:0;padding:0;box-sizing:border-box}
++ html,body{width:1080px;height:1920px;background:#08090a;overflow:hidden;font-family:"Inter","PingFang SC","Microsoft YaHei",sans-serif}
++ #root{position:relative;width:1080px;height:1920px;background:#08090a}
++ .clip{position:absolute}
++ </style></head><body>
++ <div id="root" data-composition-id="main" data-start="0" data-duration="15.01" data-width="1080" data-height="1920">
++ <div id="bg" class="clip" data-start="0.00" data-duration="15.01" data-track-index="0" style="position:absolute;inset:0;background:#08090a;"></div>
++ <div id="grid" class="clip" data-start="0.00" data-duration="15.01" data-track-index="1" style="position:absolute;inset:0;opacity:.9;background-image:url(data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2248%22%20height=%2248%22%20viewBox=%220%200%2048%2048%22%3E%3Cpath%20d=%22M48%200H0V48%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.14%22%20stroke-width=%221%22%20stroke-dasharray=%223%207%22/%3E%3C/svg%3E);background-size:48px 48px;"></div>
++ <div id="glow" class="clip" data-start="0.00" data-duration="15.01" data-track-index="2" style="position:absolute;inset:0;background:radial-gradient(900px 520px at 24% 36%,#5e6ad222,transparent 60%);"></div>
++ <video id="th" class="clip" src="media/speaker.mp4" preload="auto" data-has-audio="true" data-start="0" data-duration="15.01" data-track-index="900" style="position:absolute;left:0px;top:0px;width:1080px;height:1920px;border-radius:0px;object-fit:contain;background:#08090a;z-index:900;border:0;box-shadow:none;"></video>
++ <div id="c10stage" class="clip portrait-card-stage-ambient-static" data-start="0.00" data-duration="14.99" data-track-index="11" style="position:absolute;left:0;top:0;z-index:940;width:1080px;height:1920px;background:radial-gradient(ellipse at 50% 36%,rgba(94,106,210,.30) 0%,rgba(23,27,48,.88) 48%,#11131f 100%),#11131f;"></div>
++ <div id="c10" class="clip" data-start="0.00" data-duration="14.99" data-track-index="12" style="position:absolute;left:60px;top:580px;width:1000px;height:420px;z-index:942;transform:scale(1);transform-origin:center center;background:linear-gradient(135deg,#191a1b,#8a8f9814);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:42px 54px;box-shadow:rgba(0,0,0,.42) 0 18px 60px;overflow:hidden;display:flex;flex-direction:column;justify-content:center;"><span aria-hidden="true" style="position:absolute;right:34px;top:-28px;color:#8a8f9828;font-family:Georgia,serif;font-size:190px;line-height:1">“</span><span style="position:relative;display:block;color:#f7f8f8;font-size:52px;line-height:1.22;font-weight:800;letter-spacing:-.025em">辅助真人</span><span class="ovl" style="position:relative;display:block;width:118px;height:7px;border-radius:4px;background:#8a8f98;margin-top:24px"></span></div>
++ <div id="pbar" class="clip" data-start="0.00" data-duration="15.01" data-track-index="961" style="position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,0.05);"><div id="pbarf" style="position:absolute;left:0;top:0;height:100%;width:0;background:#5e6ad2"></div></div>
++ </div>
++ <script>
++ const tl = gsap.timeline({paused:true});
++ tl.set("#th",{zIndex:945},0.00);
++ tl.to("#th",{left:54,top:1188,width:264,height:469,borderRadius:24,duration:.34,ease:"power3.inOut"},0.00);
++ tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:.34,ease:"power3.inOut"},14.99);
++ tl.set("#th",{zIndex:900},15.01);
++ tl.fromTo("#c10",{autoAlpha:0,scale:1.02},{autoAlpha:1,scale:1,duration:.4,ease:"power3.out"},0.00);
++ tl.fromTo("#c10 > *:not(.ovl)",{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.35,stagger:.08,ease:"power2.out"},0.00);
++ tl.to("#c10",{autoAlpha:0,duration:.3},14.69);
++ tl.set("#c10",{autoAlpha:0},14.99);
++ tl.fromTo("#pbarf",{width:"0%"},{width:"100%",ease:"none",duration:15.01},0);
++ window.__timelines = window.__timelines || {};
++ window.__timelines["main"] = tl;
++ </script></body></html>
+
+ ❯ src/modules/execution/video-render/template.test.ts:1922:18
+    1920|     const html=generateVideoRenderHtml(portrait(duration,end));
+    1921|     const start=(Math.floor(end*100)/100).toFixed(2);
+    1922|     expect(html).toContain(`tl.to("#th",{left:0,top:0,width:1080,heigh…
+       |                  ^
+    1923|     expect(html).toContain(`tl.set("#th",{zIndex:900},${layer});`);
+    1924|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 3 passed | 80 skipped (88)
+   Start at  17:55:50
+   Duration  2.43s (transform 1.42s, setup 0ms, import 2.11s, tests 56ms, environment 0ms)
+

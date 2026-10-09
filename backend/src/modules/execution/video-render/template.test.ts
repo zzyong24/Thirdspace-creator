@@ -1904,3 +1904,36 @@ describe("generateVideoRenderHtml · 图片 B-roll", () => {
     expect(html).toMatch(/src="media\/portrait\.png"[^>]+width:416px;height:740px/);
   });
 });
+
+
+describe("[T794/T902] 人物 transition 不越过原口播终点",()=>{
+  function portrait(durationSec:number,endSec:number){
+    return videoRenderProps.parse({meta:{title:"时长守卫"},delivery:{width:1080,height:1920,fps:30},talkingHead:{file:"speaker.mp4",durationSec},captions:[],broll:[],scenes:[{id:"support",label:"辅助",title:"辅助",startSec:0,endSec,role:"body" as const,cards:[{kind:"quote" as const,at:0,text:"辅助真人"}]}]});
+  }
+  it.each([15,15.019,15.001])("辅助覆盖口播%d时，终点不新增尾部人物tween",duration=>{
+    const html=generateVideoRenderHtml(portrait(duration,duration));
+    const end=Math.floor(duration*100)/100;
+    expect(html).not.toContain(`duration:.34,ease:"power3.inOut"},${end.toFixed(2)})`);
+    expect(html.match(/tl\.to\("#th",\{[^}]*duration:[^}]*\},[\d.]+\);/g)).toHaveLength(1);
+    expect(html).not.toMatch(/(?:to|set)\("#th",\{[^}]*autoAlpha:0/);
+  });
+  it.each([{duration:15,end:14,transition:".34",layer:"14.34"},{duration:15,end:14.9,transition:"0.10",layer:"15.00"},{duration:15.019,end:14.999,transition:"0.02",layer:"15.01"}])("剩余窗口 $duration/$end 在原终点内精确回位",({duration,end,transition,layer})=>{
+    const html=generateVideoRenderHtml(portrait(duration,end));
+    const start=(Math.floor(end*100)/100).toFixed(2);
+    expect(html).toContain(`tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:${transition},ease:"power3.inOut"},${start});`);
+    expect(html).toContain(`tl.set("#th",{zIndex:900},${layer});`);
+  });
+  it("连续辅助仅收缩一次，尾部talking-head仍回同一全幅",()=>{
+    const props=portrait(15,14);props.scenes[0]!.cards.push({kind:"quote",at:7,text:"相邻辅助",tone:"accent"});
+    const html=generateVideoRenderHtml(props);
+    expect(html.match(/tl\.set\("#th",\{zIndex:945\}/g)).toHaveLength(1);
+    expect(html).toContain('left:0,top:0,width:1080,height:1920,borderRadius:0,duration:.34');
+  });
+  it("横版与visualOnly不取得竖屏人物调度",()=>{
+    const props=portrait(15,15);
+    for(const html of [generateVideoRenderHtml({...props,delivery:{width:1920,height:1080,fps:30}}),generateVideoRenderHtml(props,{visualOnly:true})]){
+      expect(html).not.toContain('tl.set("#th",{zIndex:945}');
+      expect(html).not.toMatch(/tl\.to\("#th",\{[^}]*duration:[^}]*\},15\.00\);/);
+    }
+  });
+});
