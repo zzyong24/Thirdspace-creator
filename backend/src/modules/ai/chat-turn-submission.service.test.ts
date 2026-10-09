@@ -47,6 +47,18 @@ it("同源消息并发提交只产生一个完整绑定，冻结真实历史且�
   const [saved]=await db.select().from(aiMessages).where(eq(aiMessages.id,f.source.id));expect(saved!.modelMetadata).toEqual({existing:"保留",chatTaskId:a.taskId});
   const count=f.assemble.mock.calls.length;expect(await f.service.submit(f.ctx,f.request)).toMatchObject({...a,replayed:true});expect(f.assemble).toHaveBeenCalledTimes(count);
 });
+it("新提交冻结具体纠错格式；旧绑定回放不补标记或改变任何冻结字节",async()=>{
+  const f=await fixture(),created=await f.service.submit(f.ctx,f.request);
+  const first=(await f.rows()).executions[0]!;
+  expect(first.payload).toMatchObject({toolValidationRecoveryVersion:1});
+  // 只在隔离库构造已存在的旧格式；没有模型或工具调用，不迁移实际用户任务。
+  const legacy={...(first.payload as Record<string,unknown>)};delete legacy.toolValidationRecoveryVersion;
+  await db.update(executionTasks).set({payload:legacy}).where(eq(executionTasks.id,created.executionTaskId));
+  const before=JSON.stringify(await f.rows()),count=f.assemble.mock.calls.length;
+  expect(await f.service.submit(f.ctx,f.request)).toEqual({...created,replayed:true});
+  expect(f.assemble).toHaveBeenCalledTimes(count);
+  expect(JSON.stringify(await f.rows())).toBe(before);
+});
 it("跨账号、别的会话消息和非用户源消息在装配前拒绝",async()=>{
   const f=await fixture(),other=await fixture();
   await expect(f.service.submit({...f.ctx,accountId:other.ctx.accountId},f.request)).rejects.toThrow();

@@ -3,6 +3,7 @@ import {z} from "zod";
 import type {executionCalls,executionTasks} from "@creatoros/backend";
 import {agenticToolOutcomeSchema,checkpointToolCallSchema,chatWorkerInputSchema,chatToolProviderName,type ExecutionRef} from "@creatoros/contract/execution-worker";
 import {ConflictError} from "./execution.errors";
+import {explainToolParameterIssues} from "./tool-parameter-recovery";
 type Call=typeof executionCalls.$inferSelect;
 type Task=typeof executionTasks.$inferSelect;
 type ToolOutcome=z.infer<typeof agenticToolOutcomeSchema>;
@@ -44,10 +45,16 @@ export function createAgenticToolBinding(tools:Record<string,AgenticBackendTool>
   const jsonInput=z.json().safeParse(raw);
   if(!jsonInput.success)jsonError=true;
   const checked=jsonError?null:definition.parameters.safeParse(raw);
+  // 错误文本参与原调用摘要；只有后端新提交冻结的格式标记启用具体解释，旧任务字节不变。
+  const detailedRecovery=chat.success && (task.payload as Record<string,unknown>).toolValidationRecoveryVersion===1;
+  const parameterIssues=checked && !checked.success
+   ? detailedRecovery ? explainToolParameterIssues(definitions[0] && "parameters" in definitions[0] ? definitions[0].parameters : undefined,raw,checked.error.issues)
+    : checked.error.issues.slice(0,20).map(issue=>`${issue.path.map(String).join(".").slice(0,160) || "根参数"} (${issue.code})`).join("；")
+   : "参数格式错误";
   // SEMANTIC_BOUNDARY_ALLOW: 供应商 length 是协议截断事实，不能把表面合法的半成品当作执行授权。
   const validationOutcome:ToolOutcome|undefined=truncated || jsonError || !checked?.success ? agenticToolOutcomeSchema.parse({
    status:"error",summary:truncated?"模型输出达到长度上限，工具提案未执行":"工具参数不符合定义，本次没有执行操作",evidence:[],
-   error:{code:"invalid_input",retryable:false,recovery:truncated?"本次截断提案没有执行。请根据已结算结果生成完整参数并发起新调用，不重复已成功操作。":jsonError?"请生成合法JSON参数，修正后发起新的工具调用。":`请按工具schema修正参数后发起新调用：${checked && !checked.success?checked.error.issues.slice(0,20).map(issue=>`${issue.path.map(String).join(".").slice(0,160) || "根参数"} (${issue.code})`).join("；"):"参数格式错误"}`},
+   error:{code:"invalid_input",retryable:false,recovery:truncated?"本次截断提案没有执行。请根据已结算结果生成完整参数并发起新调用，不重复已成功操作。":jsonError?"请生成合法JSON参数，修正后发起新的工具调用。":`请按工具schema修正参数后发起新调用：${parameterIssues}`},
    continuation:null,sideEffect:"none",
   }):undefined;
   const input=z.json().parse(checked?.success?checked.data:jsonInput.success?jsonInput.data:proposed.input);

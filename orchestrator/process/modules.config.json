@@ -6413,6 +6413,68 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1095": {
+      "task_id": "T-1095",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1095-tool-parameter-recovery.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/ai-runtime/**",
+        "backend/src/modules/execution/**",
+        "backend/src/integration/chat-workbench-plan.integration.test.ts",
+        "ai-worker/src/**",
+        "contract/src/**",
+        "docs/verification/t1093/**",
+        "docs/verification/t1094/**"
+      ],
+      "write_set": [
+        "backend/src/modules/ai/chat-turn-submission.service.ts",
+        "backend/src/modules/execution/agentic-tool-binding.ts",
+        "backend/src/modules/execution/tool-parameter-recovery.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.test.ts",
+        "backend/src/modules/execution/tool-parameter-recovery.test.ts",
+        "backend/src/integration/tool-parameter-recovery.integration.test.ts",
+        "docs/features/t1095-tool-parameter-recovery.md",
+        "docs/features/t1095-tool-parameter-recovery.review.md",
+        "docs/features/t1095-tool-parameter-recovery.review-input.json",
+        "docs/features/t1095-tool-parameter-recovery.independent-review.md",
+        "docs/verification/t1095/**",
+        "docs/verification/t1093/**",
+        "docs/verification/t1094/**",
+        "docs/verification/t1062/assistant-fixes-20261009.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/.lessons-stats.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm -C ai-worker build",
+          "pnpm -C backend exec vitest run src/modules/execution/tool-parameter-recovery.test.ts src/integration/tool-parameter-recovery.integration.test.ts src/modules/ai/chat-turn-submission.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/execution/execution-agentic-tool-ports.service.test.ts src/modules/execution/execution-agentic-tool-host.test.ts src/integration/chat-workbench-plan.integration.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C backend typecheck",
+          "pnpm -C ai-worker typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }
