@@ -1,0 +1,13 @@
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/topics/topics-interactions.test.tsx
+  31:6   warning  '_i' is defined but never used  @typescript-eslint/no-unused-vars
+  35:6   warning  '_i' is defined but never used  @typescript-eslint/no-unused-vars
+  37:23  warning  '_i' is defined but never used  @typescript-eslint/no-unused-vars
+  40:6   warning  '_i' is defined but never used  @typescript-eslint/no-unused-vars
+  43:30  warning  '_i' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/topics/topics-page.tsx
+  23:10  warning  'client' import from '@/lib/contract-client.server' is restricted. `client` is the canonical-ctx singleton (SSR/test seam only) and leaks the canonical tenant's data. Derive the request ctx and use `createServerClient(session.ctx)` instead. See contract-client.server.ts  no-restricted-imports
+
+✖ 6 problems (0 errors, 6 warnings)
+

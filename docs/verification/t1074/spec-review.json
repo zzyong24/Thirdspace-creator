@@ -1,0 +1,34 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "独立只读核查T-1074、原T-1019说明及真实生成调用链。界面退役与历史数据保留范围合理，但仅隐藏入口无法退役普通生成默认使用双九宫格的行为；当前SPEC缺少该消费链与公共路径回归约束，存在一项major待收敛。未执行产品代码修改或真实供应商验收。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "T-1074-USER",
+        "quote": "用户2026-10-09明确要求“选题里的九宫格选题还是去掉吧”。优先于T-1019原有双九宫格方向。"
+      },
+      "acceptance_anchor": {
+        "id": "T-1074-AC",
+        "quote": "真实页面不出现九宫格入口；普通候选与助手入口保留"
+      },
+      "where": "docs/features/t1074-remove-topic-grid.md:7,11；ai-worker/src/prompt/templates/topic-generate.ts:75,86；backend/src/modules/ai-runtime/topic-business-adapter.ts:88；backend/src/modules/ai-runtime/chat-business-generation-preparation.ts:27；ai-worker/src/execution/topic-worker-pipeline.ts:45,132；backend/src/modules/candidate/audience-task-assessment.ts:11",
+      "failure_mode": "按当前SPEC仅移除AudienceTaskWorkspace的页面入口后，新普通选题请求仍无条件读取历史工作区，聊天、手动持久生成和每日供给继续消费双九宫格。默认模板明确要求普通请求使用已保存网格、每条带gridVersion与两侧cellIds；后端对有双网格但缺当前配对的结果降为research。因此用户已经去掉的功能仍会在看不见、无法编辑的情况下约束新生成，页面验收无法发现这一残留。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "原docs/features/audience-task-topics/README.md明确topic.generate/scheduled.topic.daily读取workspace。现代码prepareTopicGenerateContext在deps.topicWorkspace存在时无条件getContext；chat准备和worker模板facet沿用该上下文；assessAudienceTask仍执行gridVersion/cellIds/gridRelationReason规则。所有证据来自只读源码，不是模型效果或供应商调用结果。",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:7:06e38059ed867b7a",
+      "suggestion": "SPEC补充最小退役契约：新普通聊天、手动topic.generate与每日供给不默认读取/注入九宫格工作区，不执行观众网格公开查询规划，也不把gridVersion/cellIds配对作为新普通候选推荐或采纳门槛；内置默认选题模板移除默认双九宫格要求。保持定位、真实评论/雷达/知识依据可用，并保留已有拒绝反馈的正常归属范围。历史工作区和兼容接口不删，已有候选audienceTask、旧持久任务已冻结上下文及其归属/版本防伪规则保持可读与兼容，不改写旧结果、不重发任务。增加真实公共准备/投影调用链回归：已有非空双网格账号的新聊天/手动/每日任务不再含网格约束且可产普通候选；历史候选仍可看和沿原路径处理。若采用保留非网格材料或反馈的投影方案，应明确字段清单与不再执行旧网格门槛的边界。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

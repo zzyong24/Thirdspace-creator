@@ -67,12 +67,12 @@ export const TOPIC_GENERATE_TEMPLATE: PromptTemplate = {
   // topic-daily-collector / chat-runner)按各依据源**真实数据**算质量画像注入;模板指引按画像
   // 动态定权(评论样本少噪声高→降权只取强信号;定位完整→当骨架),每条候选 reason 注明主要
   // 依据+权重理由。非硬性打分表 = 画像(确定性可测)+ AI 判断(灵活)。
-  version: "v7",
+  version: "v8",
   outputSchema: topicArraySchema,
   tools: [],
   system:
     "你是这位创作者的「选题会 agent」,像专业自媒体编导那样按依据产高潜力选题。",
-  template: `当账号双九宫格已配置，普通选题请求默认使用已保存中心、外围格与语义配对，不要求重复访谈或重建。策略认可不证明需求或工具效果。每条 audienceTask 必须带当前 gridVersion、观众与行业两侧 cellIds 和非空 gridRelationReason：说明这个方法如何完成这件具体的事；不要按词重合机械配对。无当前配对保留研究，不进入已审读推荐。
+  template: `普通选题依据当前定位、用户原话与真实资料生成，无需填写九宫格。未提供观众任务工作区时，不要求网格版本、格子ID或任务配对，也不因缺少这些材料降低候选可用性。仅在旧任务已冻结并明确提供观众任务工作区时，沿用其保存的中心、外围格与语义配对。旧工作区的策略认可不证明需求或工具效果。仅上述旧工作区任务的每条 audienceTask 必须带当前 gridVersion、观众与行业两侧 cellIds 和非空 gridRelationReason：说明这个方法如何完成这件具体的事；不要按词重合机械配对。无当前配对保留研究，不进入已审读推荐。
 
 【创作者定位】
 {{positioning}}

@@ -85,7 +85,7 @@ export async function prepareTopicGenerateContext(
   }
   return topicGenerateFrozenSchema.parse({
     version: 1,
-    ...(deps.topicWorkspace ? {audienceTaskContext:await deps.topicWorkspace.getContext(ctx,projectId)} : {}),
+    // T-1074：新任务不再默认消费退役的网格；旧冻结输入仍由既有投影兼容。
     ...(options.mode ? {mode:options.mode} : {}),
     basis,
     projectId,

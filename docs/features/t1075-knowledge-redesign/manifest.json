@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "project": "CreatorOS 知识库重新设计",
+  "brief": "先能存、能找、能读，再用到写稿。A/B是隔离数据下的布局探索，未选定；B只实现标题查找，完整AI问答待设计。",
+  "round": "01",
+  "candidates": [
+    {
+      "kind": "image",
+      "typography": "沿用CreatorOS Noto Sans SC，标题24px，正文14–16px",
+      "palette": [
+        "#6d4aff",
+        "#f8f9fc",
+        "#171a25"
+      ],
+      "id": "baseline",
+      "name": "目前知识库",
+      "concept": "当前首屏默认关系图，录入与多个知识视图同屏",
+      "traits": [
+        "关系图优先",
+        "录入和统计常驻"
+      ],
+      "source": "images/baseline.png",
+      "baseline": true
+    },
+    {
+      "kind": "image",
+      "typography": "沿用CreatorOS Noto Sans SC，标题24px，正文14–16px",
+      "palette": [
+        "#6d4aff",
+        "#f8f9fc",
+        "#171a25"
+      ],
+      "id": "library",
+      "name": "资料书架（推荐）",
+      "concept": "先找到资料，再读原文，最后引用到写稿",
+      "traits": [
+        "分类、列表与阅读三栏",
+        "原文是主角"
+      ],
+      "source": "images/a.png"
+    },
+    {
+      "kind": "image",
+      "typography": "沿用CreatorOS Noto Sans SC，标题24px，正文14–16px",
+      "palette": [
+        "#6d4aff",
+        "#f8f9fc",
+        "#171a25"
+      ],
+      "id": "research",
+      "name": "研究桌",
+      "concept": "围绕本次创作先找参考资料，保留原文阅读",
+      "traits": [
+        "大搜索区",
+        "资料与阅读两栏"
+      ],
+      "source": "images/b.png"
+    }
+  ]
+}
