@@ -4,7 +4,7 @@ import type {
 
 export type WechatNativeReportInput = Pick<
   NativeReportPayload, "platform" | "kind" | "filename" | "sourcePath" | "selection"
-> & { bytes: Uint8Array };
+> & { bytes: Uint8Array; expectedRows?: number };
 export type WechatNativeCollectionLease = Pick<CollectionPageCommit,
   "attemptId" | "accountId" | "platform" | "capability" | "expectedPlatformIdentity" | "generation" | "leaseToken"
 > & { leaseExpiresAt: string };
@@ -60,7 +60,7 @@ function reasonOf(error: unknown): Reason {
   const value = error as { code?: unknown; message?: unknown } | null;
   const code = typeof value?.code === "string" ? value.code : value?.message;
   if (REASONS.includes(code as Reason)) return code as Reason;
-  if (["REPORT_FORMAT", "REPORT_SCHEMA", "REPORT_DATE_RANGE"].includes(String(code))) return "REPORT_PARSE_FAILED";
+  if (["REPORT_FORMAT", "REPORT_SCHEMA", "REPORT_DATE_RANGE", "REPORT_ROW_COUNT_MISMATCH"].includes(String(code))) return "REPORT_PARSE_FAILED";
   return "EXPORT_FAILED";
 }
 

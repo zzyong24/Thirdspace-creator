@@ -58,3 +58,49 @@ flowchart LR
 候选behavior tests覆盖五平台错峰、关闭/自定义保留、startup凭据准入、微信原nativeReports task键、扫码平台/成员链接、显式组/账号读取、真实状态取消、在途去重、未知响应重试、终态停止、卸载/切组竞态、报表按需渲染与0/null/率/秒/ID。新增页面需真实Chrome在1366×900与1024×800走入口、同步/状态、报表展开、取消、普通错误、真实登录恢复及Tab/Esc回焦，检查中文长文本、表格局部滚动和无页面水平溢出。截图必须实际查看后才登记结果。
 
 本候选没有整合创作者总览publication累计指标，也没有真实扫码/profile/browser导出证据；原生报表不应加入现“文章累计阅读（次）”或平台作品累计比較。缺真人稳定identity witness时不得标记能力ready或任务完成。服务端按实际nativeReports capability装配状态设置同步可用性；未就绪时“同步数据”禁用，仍可展开已有报表，显示“当前平台的数据同步暂不可用，已有报表仍可查看。”
+
+## 当场页面旅程的机器契约
+
+报表代表数据与执行状态夹具只核页面交互，不代签真人扫码或真实平台采集。完整Next原路由和账号组服务、当前归属守卫实际执行；没有绕过已批准SPEC的身份与落库验收。
+
+```frontend-journey-contract
+{
+  "schema":"frontend-journey-contract/v2",
+  "task_id":"T-1110",
+  "copy_guard":{"forbid_internal_ids":true},
+  "watched_paths":[
+    "frontend/src/features/platform-account/account-group-manager.tsx",
+    "frontend/src/features/platform-account/account-binding-panel.tsx",
+    "frontend/src/features/platform-account/native-report-panel.tsx",
+    "frontend/src/app/(creator)/accounts/works/page.tsx",
+    "frontend/src/server/persistence-client.ts",
+    "frontend/src/components/shell/account-switcher.tsx",
+    "frontend/src/lib/http-transport.ts",
+    "frontend/src/app/globals.css",
+    "frontend/src/styles/tokens.css",
+    "backend/src/modules/platform-collection",
+    "backend/src/modules/platform-account/membership-lock.service.ts",
+    "contract/src/resources/platform-native-reports.ts",
+    "docs/verification/t1110/browser/prepare-next.mjs",
+    "docs/verification/t1110/browser/normalize-witness.mjs",
+    "docs/verification/t1110/browser/start-shadow-next.mjs",
+    "docs/verification/t1110/browser/service-fixture.ts",
+    "docs/verification/t1110/browser/run-ego-journey.mjs",
+    "docs/verification/t1110/browser/execute-ego-journey.mjs"
+  ],
+  "required_checks":[
+    {"id":"AC-WECHAT-ENTRY","test_id":"TEST-T1110-NEXT-EGO"},
+    {"id":"AC-WECHAT-REPORT","test_id":"TEST-T1110-NEXT-EGO"},
+    {"id":"AC-WECHAT-STATE","test_id":"TEST-T1110-NEXT-EGO"},
+    {"id":"AC-WECHAT-SCOPE","test_id":"TEST-T1110-NEXT-EGO"}
+  ],
+  "required_conditions":["loading","refresh","repeat","back","empty","error","cancel","group-switch"],
+  "viewports":[{"width":1366,"height":900},{"width":1024,"height":800}],
+  "coherence_groups":[]
+}
+```
+
+- AC-WECHAT-ENTRY：实际装配的扫码能力为qr才操作原表格按钮；Esc关闭后仍可操作并回焦。能力不可用要如实登记，不能拿报告fixture readiness造扫码入口。两平台实际不可用时，界面行为可测但绑定链待验。
+- AC-WECHAT-REPORT：成员真实链接与显式账号scope经Next SSR读取五份脱敏代表报表；原日期、原列名/单位/全部raw、真实0/null保留；首屏不挂完整表格，展开后可聚焦局部横滚；返回和历史后退/刷新仍同账号。
+- AC-WECHAT-STATE：执行fixture走真实公开start/get/cancel：开始一次、在途禁重、刷新原ID、取消同ID、complete停止轮询；502结果未知沿同key、普通partial继续同key、TASK_TIMEOUT仅显式用户新intent；needsAuth打开原弹窗/Esc回焦，未扫码成功不得签真实认证恢复；未就绪禁提交但仍可看已取得报告。
+- AC-WECHAT-SCOPE：真实公开组/成员与归属守卫；旧A读请求在途时切B，A迟到响应不能覆盖B，B上下文读取A账号被真实404拒绝。没有将A的真实平台归属搬到B，测试报表按fixture投影到各自的测试成员，不冒称迁移历史报告。

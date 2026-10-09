@@ -1,0 +1,95 @@
+{
+  "scope": "本轮root实际执行及tool退出值；原失败保留，真人/视觉尚待验",
+  "executions": [
+    {
+      "path": "docs/verification/t1110/worker-complete-current.log",
+      "exitCode": 0,
+      "passedTests": 37,
+      "sha256": "02ec452dc3fd9fa8353d79f8a51c020420bcfadaf776fd8d7ed9589545f3b21a"
+    },
+    {
+      "path": "docs/verification/t1110/composition-bind-red.log",
+      "exitCode": 1,
+      "passedTests": 0,
+      "sha256": "00c6a88a74f10a796a7525ad061fc5a1722fa0d04bf54fd4a04333b6e59c2d29"
+    },
+    {
+      "path": "docs/verification/t1110/composition-bind-final.log",
+      "exitCode": 0,
+      "passedTests": 7,
+      "sha256": "94b74080355da3632533260dc8b6f8c693558b12823155b519c2fd2d3b973df9"
+    },
+    {
+      "path": "docs/verification/t1110/nested-login-red.log",
+      "exitCode": 1,
+      "passedTests": 0,
+      "sha256": "59b7c3446e92ffb040211ee908585a0444688303a8e5db8c399157cb229fff40"
+    },
+    {
+      "path": "docs/verification/t1110/ui-logic-complete-current.log",
+      "exitCode": 0,
+      "passedTests": 57,
+      "sha256": "0f06fcd960b8d24d4bdc0b3ade49701d328c32e2f0e47c4e0a11caa003a61a35"
+    },
+    {
+      "path": "docs/verification/t1110/frontend-type-latest.log",
+      "exitCode": 0,
+      "passedTests": null,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/verification/t1110/worker-type-latest.log",
+      "exitCode": 0,
+      "passedTests": null,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "docs/verification/t1110/current-backend-type.log",
+      "exitCode": 0,
+      "passedTests": null,
+      "sha256": "bd43cdc1fea6d34f59c91ccabb017a0d493d878613f593e969cd2d0b503b6cdc"
+    },
+    {
+      "path": "docs/verification/t1110/real-protocol-public-chain-final.log",
+      "exitCode": 0,
+      "passedTests": 32,
+      "sha256": "8066b49d6c708501790c3c3d0fba05ea2fa945bc5ef165508cd3f7778dd13a80"
+    },
+    {
+      "path": "docs/verification/t1110/led047-current.log",
+      "exitCode": 1,
+      "passedTests": 173,
+      "sha256": "c3251713b6bdf4470b5c3945c3d38a1c937111ab6d7976ef7dcadf9586945b77"
+    },
+    {
+      "path": "docs/verification/t1110/led047-single-worker-current.log",
+      "exitCode": 0,
+      "passedTests": 174,
+      "sha256": "a2a1dc18c924b2f080763a3ae83a52085eebdc132058ed021cc4c3ea9b469aa5"
+    },
+    {
+      "path": "docs/verification/t1110/current-timeout.log",
+      "exitCode": 1,
+      "passedTests": null,
+      "sha256": "fb4b8b40cabf93dbf25c74e8febad61e34d4d83769fc202931de5fa3ebe1ed5b"
+    },
+    {
+      "path": "docs/verification/t1110/final-boundary.log",
+      "exitCode": 0,
+      "passedTests": null,
+      "sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24"
+    },
+    {
+      "path": "docs/verification/t1110/final-orphan.log",
+      "exitCode": 0,
+      "passedTests": null,
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    {
+      "path": "docs/verification/t1110/final-semantic.log",
+      "exitCode": 0,
+      "passedTests": null,
+      "sha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923"
+    }
+  ]
+}

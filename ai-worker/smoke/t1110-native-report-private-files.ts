@@ -15,7 +15,7 @@ type Witness = { kind: WechatNativeReportInput["kind"]; directory: number; filen
   bytes: number; sha256: string; rowCounts: number[]; range: readonly [string, string] };
 const witnesses: Witness[] = [
   { kind: "officialContent", directory: 0, filename: "公众号-内容分析数据.xls", bytes: 45056,
-    sha256: "3eb0c69ff39436218960cb93f31bb90414f2d5659f340e03d5f7f1c7440cffa9",
+    sha256: "a329b9d2d882e82496c653b4fe618a546ec4743ad010f69dba0b5b0e503cfd65",
     rowCounts: [240, 30, 60], range: ["2026-09-09", "2026-10-08"] },
   { kind: "officialFollowers", directory: 0, filename: "公众号-用户增长数据.xls", bytes: 7401,
     sha256: "8b0b502db829d7cf653edd5eab7e55a7856c6b303c672b491e50841d8fb62098",
@@ -27,8 +27,8 @@ const witnesses: Witness[] = [
     sha256: "6733792b2d42a34387826280098024b2817dee66c971379485bf59788f4ec3ad",
     rowCounts: [30], range: ["2026-09-09", "2026-10-08"] },
   { kind: "channelsWorks", directory: 1, filename: "视频号-单篇视频数据.csv", bytes: 5102,
-    sha256: "dddc5af37a11792c59acecdfa0a1a324817067d494cea3bc1da01086d3f246eb",
-    rowCounts: [13], range: ["2026-09-09", "2026-10-08"] },
+    sha256: "66911f04bb4ae68db62536e28bda793b773e81d74773b12dcbca466fba4ef6d1",
+    rowCounts: [13], range: ["2026-09-10", "2026-10-09"] },
 ];
 let failures = 0;
 for (const witness of witnesses) {
@@ -42,7 +42,7 @@ for (const witness of witnesses) {
   try {
     const work = witness.kind === "channelsWorks", official = witness.kind.startsWith("official");
     const report = parseWechatNativeReport({
-      kind: witness.kind, bytes, platform: official ? "wechatOfficial" : "wechatVideo",
+      kind: witness.kind, bytes, platform: official ? "wechatOfficial" : "wechatVideo", ...(work ? {expectedRows:13} : {}),
       filename: witness.filename, sourcePath: witness.kind === "officialContent" ? "/misc/appmsganalysis"
         : witness.kind === "officialFollowers" ? "/misc/useranalysis"
           : witness.kind === "channelsFollowers" ? "/platform/statistic/follower" : "/platform/statistic/post",

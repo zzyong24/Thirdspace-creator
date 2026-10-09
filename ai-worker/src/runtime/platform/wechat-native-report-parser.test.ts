@@ -38,7 +38,7 @@ const html = (extra = "") => encode("<!doctype html><html><body>" + extra +
   "<th>取消关注人数</th><th>净增关注人数</th><th>累积关注人数</th></tr>" +
   "<tr></tr><tr><td>2026-10-01</td><td>0</td><td>2</td><td>-2</td><td>10</td></tr>" +
   "<tr></tr><tr><td>2026-10-02</td><td>1</td><td>1</td><td>0</td><td>10</td></tr></table></body></html>");
-function biff(options: { drift?: boolean } = {}): Uint8Array {
+function biff(options: { drift?: boolean; compactDate?: string } = {}): Uint8Array {
   const grid: (string | number)[][] = Array.from({ length: 7 }, () => Array<string | number>(16).fill(""));
   grid[0]![1] = "合成公众号内容分析";
   [
@@ -57,6 +57,7 @@ function biff(options: { drift?: boolean } = {}): Uint8Array {
     ["合成渠道甲", "2026-09-01", "旧发表内容在当前统计窗口仍有阅读", 2, 0.25],
     ["合成渠道乙", "2026-09-02", "合成旧内容乙", 3, 0.75],
   ].forEach((values, r) => values.forEach((value, c) => { grid[r + 3]![c + 11] = value; }));
+  if (options.compactDate) grid[3]![12] = options.compactDate;
   if (options.drift) grid[2]![4] = "未经核实新增列";
   const sheet = XLSX.utils.aoa_to_sheet(grid);
   sheet.P4!.z = "0.0%"; sheet.P5!.z = "0.0%";
@@ -65,6 +66,17 @@ function biff(options: { drift?: boolean } = {}): Uint8Array {
 }
 
 describe("微信原生报表有限协议解析", () => {
+  it("公众号BIFF阅读来源实测八位发表日期保留raw；无效日期仍拒绝", () => {
+    const report = parseWechatNativeReport(input("officialContent", biff({compactDate:"20260917"})));
+    expect(report.tables[2]!.rows[0]![1]).toEqual({raw:"20260917",value:"2026-09-17"});
+    expect(() => parseWechatNativeReport(input("officialContent", biff({compactDate:"20260230"})))).toThrow("REPORT_DATE_RANGE");
+  });
+  it("单篇总数13与CSV完整行数核对，10/14行不冒充成功；真实空窗口可成功", () => {
+    expect(parseWechatNativeReport({...input("channelsWorks",works(13)),expectedRows:13}).tables[0]!.rows).toHaveLength(13);
+    for(const count of [10,14]) expect(()=>parseWechatNativeReport({...input("channelsWorks",works(count)),expectedRows:13})).toThrow("REPORT_ROW_COUNT_MISMATCH");
+    expect(parseWechatNativeReport({...input("channelsWorks",works(0)),expectedRows:0}).tables[0]!.rows).toEqual([]);
+    expect(()=>parseWechatNativeReport({...input("channelsWorks",works(13)),expectedRows:-1})).toThrow("REPORT_ROW_COUNT_MISMATCH");
+  });
   it("账号每日CSV区分推荐/喜欢、真实0/未知，包含原始字节摘要且保留BOM原文件字节", () => {
     const bytes = daily(), report = parseWechatNativeReport(input("channelsDaily", bytes));
     expect(report).toMatchObject({ scope: "accountDaily", accumulation: "daily", receivedBytes: bytes.byteLength,

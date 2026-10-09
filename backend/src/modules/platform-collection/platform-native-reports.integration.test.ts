@@ -114,6 +114,19 @@ it('T1110第三报表坏格式经真实解析器失败，已提交两份可公�
   const read:any=await f.request(platformCollectionOperations.listNativeReports,{params:{accountId:'a'},query:{pageSize:20,cursor:null}});expect(read.items).toHaveLength(2);expect(await f.db.select().from(platformCatalogs)).toHaveLength(0);
  }finally{await f.client.close();}
 },180000);
+it('T1110第三报表页面总数13而CSV仅第一页10条，真实解析后拒绝并保原两份报告',async()=>{
+ const f=await fixture({claim:false});try{
+  const files=sourceFiles('wechatVideo'),work=files[2]!,table=parseWechatNativeReport(work).tables[0]!;
+  const field=(value:string)=>/[",\r\n]/.test(value)?'"'+value.replaceAll('"','""')+'"':value;
+  const rows=[table.columns.map(c=>c.label),...Array.from({length:10},(_,i)=>table.rows[0]!.map((cell,c)=>c===1?'synthetic_truncated_'+i:cell.raw))];
+  const truncated={...work,expectedRows:13,bytes:new TextEncoder().encode(rows.map(row=>row.map(field).join(',')).join('\r\n'))};
+  const execution=nativeExecutor(f,async o=>{for(const input of [files[0]!,files[1]!,truncated])await o.onReport(input);});
+  expect(await execution.execute(f.ctx,f.run)).toMatchObject({status:'partial',committedReports:2,reasonCode:'REPORT_PARSE_FAILED'});
+  expect(await f.service.status(f.ctx,'a',f.run.attemptId)).toMatchObject({status:'partial',reasonCode:'REPORT_PARSE_FAILED'});
+  const read:any=await f.request(platformCollectionOperations.listNativeReports,{params:{accountId:'a'},query:{pageSize:20,cursor:null}});
+  expect(read.items).toHaveLength(2);expect(read.items.map((r:any)=>r.kind)).not.toContain('channelsWorks');
+ }finally{await f.client.close();}
+},180000);
 it('T1110终页已接受但响应丢失，公开核对原ID/key显示complete，不再下载或开新任务',async()=>{
  const f=await fixture({claim:false});try{
   const execution=nativeExecutor(f,async o=>{for(const input of sourceFiles('wechatVideo'))await o.onReport(input);},true);

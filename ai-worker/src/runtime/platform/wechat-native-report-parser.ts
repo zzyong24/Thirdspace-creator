@@ -9,10 +9,10 @@ import {
 
 export type WechatNativeReportInput = Pick<
   NativeReportPayload, "platform" | "kind" | "filename" | "sourcePath" | "selection"
-> & { bytes: Uint8Array };
+> & { bytes: Uint8Array; expectedRows?: number };
 
 export class WechatNativeReportError extends Error {
-  constructor(readonly code: "REPORT_TOO_LARGE" | "REPORT_FORMAT" | "REPORT_SCHEMA" | "REPORT_DATE_RANGE") {
+  constructor(readonly code: "REPORT_TOO_LARGE" | "REPORT_FORMAT" | "REPORT_SCHEMA" | "REPORT_DATE_RANGE" | "REPORT_ROW_COUNT_MISMATCH") {
     super(code);
     this.name = "WechatNativeReportError";
   }
@@ -209,6 +209,10 @@ function workbookCell(sheet: XLSX.WorkSheet, row: number, column: number, unit?:
   const raw = value.w ?? String(value.v ?? "");
   const numeric = value.t === "n" && typeof value.v === "number" ? value.v : undefined;
   let serialDate: string | undefined;
+  // SEMANTIC_BOUNDARY_ALLOW: 原生BIFF发表日期实测YYYYMMDD；仅解码日期协议，保留raw。
+  if (unit === "date" && value.t === "s" && /^\d{8}$/.test(raw)) {
+    serialDate = datePart(raw.slice(0,4)+"-"+raw.slice(4,6)+"-"+raw.slice(6,8));
+  }
   if (unit === "date" && numeric !== undefined) {
     const date = XLSX.SSF.parse_date_code(numeric);
     if (!date) fail("REPORT_DATE_RANGE");
@@ -298,6 +302,8 @@ export function parseWechatNativeReport(input: WechatNativeReportInput): NativeR
       }
     }
     if (tables.reduce((count, current) => count + current.rows.length, 0) > MAX_ROWS) fail("REPORT_TOO_LARGE");
+    if (input.expectedRows !== undefined && (!work || !Number.isSafeInteger(input.expectedRows) ||
+        input.expectedRows < 0 || tables.length !== 1 || tables[0]!.rows.length !== input.expectedRows)) fail("REPORT_ROW_COUNT_MISMATCH");
     validateWindow(statistical, input.selection, !work);
     const payload = {
       platform: input.platform, kind: input.kind, scope: work ? "workSelection" : "accountDaily",

@@ -9,7 +9,7 @@ import {launchWithBrowser} from '../browser/browser-launch';
 
 export type WechatCreatorPlatform='wechatOfficial'|'wechatVideo';
 export type WechatBrowserControls={signal?:AbortSignal;deadlineAt?:string|null;timeoutMs?:number;onStopped?:()=>Promise<void>;onStopUnconfirmed?:(retry:()=>Promise<void>)=>void};
-export type WechatNativeDownload={kind:NativeReportKind;bytes:Uint8Array;filename:string;sourcePath:NativeReportPayload['sourcePath'];selection:NativeReportPayload['selection']};
+export type WechatNativeDownload={kind:NativeReportKind;bytes:Uint8Array;filename:string;sourcePath:NativeReportPayload['sourcePath'];selection:NativeReportPayload['selection'];expectedRows?:number};
 export type WechatCreatorIdentity={platformIdentity:string;displayName:string;source:string};
 export class WechatBrowserSourceError extends Error{
  constructor(readonly code:string,message:string){super(message);this.name='WechatBrowserSourceError';}
@@ -20,8 +20,7 @@ const kinds:Record<WechatCreatorPlatform,readonly NativeReportKind[]>={wechatOff
 const MAX_BYTES=25*1024*1024;
 export interface WechatOperationControls{signal:AbortSignal;timeoutMs(requested?:number):number}
 /** 内部受信端口：只能读取普通账号信息页真实stable ID，不接受公开调用者assert的ID。
- * UNKNOWN: 目前研究只核实导出，尚缺两平台账号信息页面的稳定字段/DOM标签witness。
- * 宿主取得实际witness后装配此reader；默认缺失必须失败，不猜uin/finder/session或昵称。
+ * 宿主装配已实测的普通页reader；默认缺失仍失败，不猜uin/session或昵称。
  */
 export interface WechatIdentityWitness{
  read(page:Page,platform:WechatCreatorPlatform,controls:WechatOperationControls):Promise<{platform:WechatCreatorPlatform;platformIdentity:string;displayName:string;sourcePath:string}|null>;
@@ -32,10 +31,12 @@ export interface WechatReportPageState{
  selection:NativeReportPayload['selection'];
  /** 日报须实际表格出现完整日期；选项标签本身不构成数据ready证明。 */
  dates:readonly string[];
+ /** 公众号图表/分页页：实际可见输入与当前原生href独立核对的日期，不是假造表格日期。 */
+ windowEvidence?:{kind:'nativeDateInputs';startDate:string;endDate:string};
  /** 单篇须实际选中本窗口且页面总数已更新；不是第一页可见行数。 */
  selectedWindow?:boolean;reportedRows?:number;visibleRows?:number;
 }
-export interface WechatPreparedReport{scope:Page|Frame;download:Locator;state:WechatReportPageState}
+export interface WechatPreparedReport{scope:Page|Frame;download:Locator;state:WechatReportPageState;verify?:()=>Promise<void>}
 export interface WechatReportWitness{
  prepare(page:Page,platform:WechatCreatorPlatform,kind:NativeReportKind,controls:WechatOperationControls):Promise<WechatPreparedReport>;
 }
@@ -71,6 +72,8 @@ function assertReady(kind:NativeReportKind,state:WechatReportPageState){
  const expected=datesBetween(selected.startDate,selected.endDate);
  if(work){
   if(!state.selectedWindow||!Number.isSafeInteger(state.reportedRows)||state.reportedRows!<0||!Number.isSafeInteger(state.visibleRows)||state.visibleRows!<0||state.visibleRows!>state.reportedRows!)return fail('REPORT_NOT_READY','单篇视频窗口与页面总数尚未就绪');
+ }else if(kind.startsWith('official')&&state.windowEvidence?.kind==='nativeDateInputs'){
+  if(state.windowEvidence.startDate!==selected.startDate||state.windowEvidence.endDate!==selected.endDate||state.dates.some(day=>!expected.includes(day)))return fail('REPORT_NOT_READY','原生下载日期尚未对应当前选择');
  }else{
   const actual=[...new Set(state.dates)].sort();
   if(actual.length!==expected.length||actual.some((v,i)=>v!==expected[i]))return fail('REPORT_NOT_READY','报表表格日期尚未更新完整');
@@ -115,6 +118,7 @@ async function bytesFromDownload(download:Download,controls:WechatOperationContr
 }
 async function receiveReport(context:BrowserContext,page:Page,platform:WechatCreatorPlatform,kind:NativeReportKind,prepared:WechatPreparedReport,controls:WechatOperationControls):Promise<WechatNativeDownload>{
  officialUrl(prepared.scope.url(),origins[platform],platform);assertReady(kind,prepared.state);
+ await prepared.verify?.();controls.signal.throwIfAborted();
  // 监听先于点击；公众号短暂popup无download时，仅回退当前DOM真实原生href。
  const href=await prepared.download.getAttribute('href',{timeout:controls.timeoutMs()});
  if(href&&/^(?:https?:)?\/\//i.test(href))officialUrl(href,prepared.scope.url(),platform);
@@ -138,7 +142,7 @@ async function receiveReport(context:BrowserContext,page:Page,platform:WechatCre
   }finally{await response.dispose();}
  }
  // 只返回官方pathname/basename；含会话参数的URL不进入回执、日志或service DTO。
- return {kind,bytes,filename:name,sourcePath:paths[kind],selection:{...prepared.state.selection}};
+ return {kind,bytes,filename:name,sourcePath:paths[kind],selection:{...prepared.state.selection},...(kind==='channelsWorks'?{expectedRows:prepared.state.reportedRows}: {})};
 }
 export function createWechatBrowserSource(deps:{identityWitness?:WechatIdentityWitness;reportWitness?:WechatReportWitness;openProfile?:typeof open;now?:()=>number}={}){
  const now=deps.now??Date.now;
@@ -202,8 +206,7 @@ export function createWechatBrowserSource(deps:{identityWitness?:WechatIdentityW
  };
 }
 /** 原生DOM操作层。selectionReader必须从实际日期/行数读取；不能用标签文本代签ready。
- * UNKNOWN: 研究未保存普通账号页身份字段、可移植的日期控件/单篇总数定位协议。
- * 此端口仅接受宿主内置witness，公开API不得注入selector、链接或身份。
+ * 通用内部端口；正式宿主装配wechat-dom-witness，公开API不得注入selector、链接或身份。
  */
 export function createWechatNativeDomReportWitness(selectionReader:(scope:Page|Frame,kind:NativeReportKind,controls:WechatOperationControls)=>Promise<WechatReportPageState|null>,options:{now?:()=>number}={}):WechatReportWitness{
  return {async prepare(page,platform,kind,controls){
@@ -229,13 +232,13 @@ export function createWechatNativeDomReportWitness(selectionReader:(scope:Page|F
   if(platform==='wechatVideo'){
    const section=kind==='channelsDaily'?'全部视频':kind==='channelsWorks'?'单篇视频':'关注者增长';
    const tab=scope.getByText(section,{exact:true}).filter({visible:true});if(await tab.count())await tab.first().click({timeout:controls.timeoutMs()});
-   const thirtyDays=scope.getByText('近30天',{exact:true}).filter({visible:true});if(!await thirtyDays.count())return fail('REPORT_WINDOW_MISSING','未找到实际可见的近30天控件');await thirtyDays.first().click({timeout:controls.timeoutMs()});
+   const thirtyDays=scope.locator('.filter-row:has(.filter-extra) label:has(input[value="2"])').filter({visible:true});if(await thirtyDays.count()!==1)return fail('REPORT_WINDOW_MISSING','未找到唯一可见的详情近30天控件');await thirtyDays.click({timeout:controls.timeoutMs()});
   }
   const readyEnd=Date.now()+controls.timeoutMs();
   for(;;){
    controls.signal.throwIfAborted();const state=await selectionReader(scope,kind,controls);
    if(state){try{
-    if(platform==='wechatVideo'&&(state.selection.startDate!==expectedStart||state.selection.endDate!==expectedEnd))return fail('REPORT_NOT_READY','近30天表格尚未更新到实际目标窗口');
+    if(platform==='wechatVideo'&&kind!=='channelsWorks'&&(state.selection.startDate!==expectedStart||state.selection.endDate!==expectedEnd))return fail('REPORT_NOT_READY','近30天表格尚未更新到实际目标窗口');
     assertReady(kind,state);return {scope,download:scope.getByText(label,{exact:true}).filter({visible:true}).first(),state};}catch(error){if(!(error instanceof WechatBrowserSourceError)||error.code!=='REPORT_NOT_READY')throw error;}}
    if(Date.now()>=readyEnd)return fail('REPORT_NOT_READY','实际报表日期和页面行数尚未就绪');await delay(250,undefined,{signal:controls.signal});
   }

@@ -63,6 +63,7 @@ describe('T1110 微信受管browser source（明确浏览器fixture）',()=>{
   const result=await f.source.collectNativeReports(platform,'/fixture-profile','fixture-platform-id',f.controls,async report=>{received.push(report.kind);f.order.push('commit:'+report.kind);expect(report.bytes).toEqual(f.bytes.get(report.kind));});
   const expected=platform==='wechatOfficial'?['officialContent','officialFollowers']:['channelsDaily','channelsFollowers','channelsWorks'];
   expect(result.map(report=>report.kind)).toEqual(expected);expect(received).toEqual(expected);expect(result.map(report=>report.selection.meaning)).toEqual(expected.map(kind=>kind==='channelsWorks'?'publishedDates':'statisticsDates'));
+  if(platform==='wechatVideo')expect(result.find(report=>report.kind==='channelsWorks')?.expectedRows).toBe(13);
   for(const [index,kind] of expected.entries()){
    expect(f.order.indexOf('listen:'+kind)).toBeLessThan(f.order.indexOf('click:'+kind));
    if(index+1<expected.length)expect(f.order.indexOf('commit:'+kind)).toBeLessThan(f.order.indexOf('prepare:'+expected[index+1]));
@@ -113,7 +114,7 @@ describe('T1110 微信受管browser source（明确浏览器fixture）',()=>{
   // 同源iframe/可见控件是明确fixture；selectionReader先真实报告旧7天，再报告新30天。
   const start='2026-09-09',end='2026-10-08',dates=Array.from({length:30},(_,i)=>new Date(Date.parse(start+'T00:00:00Z')+i*86400000).toISOString().slice(0,10));
   const locator={filter:()=>locator,first:()=>locator,count:async()=>1,click:vi.fn(async()=>{}),evaluateAll:async()=>[]} as unknown as Locator;
-  const frame={url:()=>origins.wechatVideo+'/fixture-analysis',getByText:()=>locator} as unknown as Frame;
+  const frame={url:()=>origins.wechatVideo+'/fixture-analysis',getByText:()=>locator,locator:()=>locator} as unknown as Frame;
   const page={url:()=>origins.wechatVideo+'/',locator:()=>locator,frames:()=>[frame],goto:vi.fn(async()=>{})} as unknown as Page;
   const reader=vi.fn(async()=>({selection:{...selection,startDate:start,endDate:end},dates}));
   reader.mockResolvedValueOnce({selection:{...selection,startDate:'2026-10-02',endDate:end},dates:dates.slice(-7)});

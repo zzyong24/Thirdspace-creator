@@ -61,10 +61,14 @@ flowchart LR
 
 context绑定实际被旧T1026 write_set非法glob阻断，沿已登记T1083；没有手改进度或伪造context包。当前完整reconcile实际exit1、46 ERROR/0 WARNING，详见GLOBAL_GATES.md和reconcile-findings.json。23旧review、2旧frontend、1看板、19实际lesson仍失败；新增1项为本次membership-lock改动使T1106旧watched_paths收据不能绑定，已登记T1110-related-gates，未重哈希旧报告。LED052本轮缺隔离PG配置，独立原命令探针同样真实拒绝；LED055本轮未触发，不用它抵消其他ERROR。
 
-## 尚未验收与唯一下一步
+## b1f0cc54时未验收与停止事实（历史记录）
 
 `createWechatBrowserSource()`当前无实际stable identity和日期/总数读取witness，`configured=false`，两微信平台绑定/采集能力因此保持暂不可用；页面已有报表可以展开。没有用昵称、token、人工ID、研究Cookie或浏览器默认profile充当授权。
 
 本轮私人五个原始导出文件路径实际已不存在，smoke五项均FILE_UNAVAILABLE。历史T1108/T1109确有导出，但不能把历史元数据代签当前解析器的实文件结果。1366/1024真实Chrome旅程、真人隔离profile扫码与下载、普通账号页稳定字段仍未验证。
 
 研究浏览器空间20已被用户接管/结束。本轮一次只读恢复被明确停止，之后未重试、未新建空间绕过。已发起用户继续操作问题，尚无答复；须获明确继续后再认领同一空间，核稳定身份/日期字段、重新取得五报表，再用产品独立profile进行真人扫码与真实页面验收。依据[ego-browser技能](/Users/zyongzhu/.agents/skills/ego-browser/SKILL.md:418)："Stop when the user takes control or the space is inactive or unassigned. Do not retry or route around the stop." 此控制要求来自技能，并非要求用户重新确认已授权实现方向。
+
+## 用户允许恢复后的当前状态
+
+用户2026-10-09明确答复“允许的”，成功恢复原空间并由taskctl resume。当前普通身份字段、详情日期/原生总数和五份实文件已实际核验，正式composition已装配内置reader；原缺witness段落只描述b1f0cc54当时状态。恢复中发现BIFF八位日期兼容和单篇与日报窗口差异并据实修复，见[LIVE_WITNESS_20261009.md](LIVE_WITNESS_20261009.md)。原文件缺失、读数失败、TDD RED及全局失败均未抹去。用户已在产品独立Chrome扫码；原任务实际因正式sourceAdapters漏bind登记而failed/null，原失败保留。已据此补两平台公开composition行为RED并修同源bind/nativeReports配置；真人重新绑定/完整采集/双视口UI尚未验收，不能完成任务。

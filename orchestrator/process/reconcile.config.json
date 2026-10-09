@@ -370,7 +370,8 @@
     "account-group-workspace:e2e": "node docs/verification/t1022/run-journey.mjs",
     "ai-nonblocking-recovery:e2e": "CREATOROS_TEST_PORT=3442 CREATOROS_PLAYWRIGHT_BROWSER_CHANNEL=chrome pnpm --dir frontend exec playwright test tests/e2e/ai-nonblocking-recovery.spec.ts --project=e2e",
     "canvas-binding-collection:e2e": "node docs/verification/t1101/run-journey.mjs",
-    "radar-auth-owner:e2e": "node docs/verification/t1106/run-journey.mjs"
+    "radar-auth-owner:e2e": "node docs/verification/t1106/run-journey.mjs",
+    "wechat-native-report:e2e": "node docs/verification/t1110/browser/execute-ego-journey.mjs"
   },
   "research_verify_commands": {
     "t987-baseline-timing": "node docs/research/t987/verify-baseline.mjs timing",

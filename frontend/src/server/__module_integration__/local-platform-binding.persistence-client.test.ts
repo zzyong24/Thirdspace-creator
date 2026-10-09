@@ -70,10 +70,22 @@ vi.mock("@creatoros/ai-worker/platform/kuaishou-browser-source", () => ({
   },
 }));
 
+// 仅替换外部浏览器读数，绑定事务、身份proof、profile采纳、组成员和状态均走实际composition。
+vi.mock("@creatoros/ai-worker/platform/wechat-browser-source", async importOriginal => {
+ const actual=await importOriginal<typeof import('@creatoros/ai-worker/platform/wechat-browser-source')>();
+ return {...actual,createWechatBrowserSource:()=>({configured:true,
+  login:async(platform:string,directory:string,controls:{onStopped?:()=>Promise<void>})=>{
+   const {mkdir}=await import('node:fs/promises');await mkdir(directory,{recursive:true});await controls.onStopped?.();
+   return {platformIdentity:platform==='wechatOfficial'?'wxsynthetic-composition-identity':'synthetic-composition-channels',displayName:'合成微信账号',source:platform+':'+(platform==='wechatOfficial'?'/cgi-bin/settingpage':'/platform')};
+  },
+  collectNativeReports:async(_platform:string,_directory:string,_identity:string,controls:{onStopped?:()=>Promise<void>})=>{await controls.onStopped?.();return [];},
+ })};
+});
+
 import { compositeTransport, __resetPersistenceForTests } from "@/server/persistence-client";
 const ctx: RequestContext = { userId: canonicalDataset.user.id, requestId: "platform-test", source: "user" };
 beforeEach(() => { vi.stubEnv("CREATOROS_WEB_AUTH_DIR",join(stub.root,"web")); __resetPersistenceForTests(); stub.sequence = 0; stub.repeatXhsIdentity = false; });
-afterAll(async () => { await rm(stub.root, { recursive: true, force: true });vi.unstubAllEnvs(); });
+afterAll(async () => { __resetPersistenceForTests();await rm(stub.root, { recursive: true, force: true });vi.unstubAllEnvs(); });
 
 async function readWorks(accountId: string) {
   const result = await compositeTransport.request(ENDPOINTS.listWorks, {
@@ -174,9 +186,27 @@ it.each(['xiaohongshu','kuaishou'] as const)('T1069 %s公开持久任务绑定�
  const owned={...frozen,accountId:result.data.accountId!};
  let jobs:{data:Array<{id:string;schedule:string;accountId:string;sourceKind:string}>};const jobsUntil=Date.now()+120_000;
  do{jobs=await compositeTransport.request(ENDPOINTS.listScheduledJobs,{params:undefined,query:{sourceKind:'self.metrics',page:1,pageSize:100},body:undefined},owned) as typeof jobs;if(jobs.data.length)break;await new Promise(resolve=>setTimeout(resolve,100));}while(Date.now()<jobsUntil);
- expect(jobs.data).toHaveLength(1);const job=jobs.data[0]!;expect(job.schedule).toBe(platform==='kuaishou'?'5 */2 * * *':'10 */2 * * *');expect(job.accountId).toBe(owned.accountId);
+ expect(jobs.data).toHaveLength(1);const job=jobs.data[0]!;expect(job.schedule).toBe(platform==='kuaishou'?'10 */2 * * *':'5 */2 * * *');expect(job.accountId).toBe(owned.accountId);
  const invoked=await compositeTransport.request(ENDPOINTS.runScheduledJobNow,{params:{jobId:job.id},query:undefined,body:{}},owned) as {data:{aiTaskId:string;jobRunId:string}};
  let task:{data:{status:string;errorMessage:string|null}}|undefined;const deadline=Date.now()+120_000;
  do{task=await compositeTransport.request(ENDPOINTS.getTask,{params:{taskId:invoked.data.aiTaskId},query:undefined,body:undefined},owned) as typeof task;if(['succeeded','failed','cancelled'].includes(task!.data.status))break;await new Promise(resolve=>setTimeout(resolve,100));}while(Date.now()<deadline);
  expect(task!.data.status,task!.data.errorMessage??'原任务尚未终态').toBe('succeeded');
+});
+
+it.each(['wechatOfficial','wechatVideo'] as const)('T1110 %s真实装配的公开扫码任务保存身份与成员，不被缺bind能力拒绝',{timeout:180000,retry:0},async platform=>{
+ const created=await compositeTransport.request(ENDPOINTS.createAccountGroup,{params:undefined,query:undefined,body:{name:'微信公开绑定回归组',idempotencyKey:`wechat-group-${platform}`}},ctx) as {data:{id:string;version:number}};
+ const frozen={...ctx,accountId:null,groupId:created.data.id};
+ const capability=await compositeTransport.request(ENDPOINTS.getPlatformAccountCapabilities,{params:undefined,query:undefined,body:undefined},frozen) as {data:Array<{platform:string;bind:{available:boolean;method:string}}>};
+ expect(capability.data.find(row=>row.platform===platform)?.bind).toMatchObject({available:true,method:'qr'});
+ const run=await compositeTransport.request(ENDPOINTS.startAccountBinding,{params:undefined,query:undefined,body:{groupId:created.data.id,platform,expectedGroupVersion:created.data.version,idempotencyKey:`wechat-original-${platform}`}},frozen) as {data:{runId:string;status:string;accountId:string|null;errorMessage?:string;failureReason?:string}};
+ let result=run;const until=Date.now()+120000;
+ while(Date.now()<until&&!['succeeded','failed','cancelled'].includes(result.data.status)){
+  await new Promise(resolve=>setTimeout(resolve,100));
+  result=await compositeTransport.request(ENDPOINTS.getAccountBinding,{params:{runId:run.data.runId},query:undefined,body:undefined},frozen) as typeof run;
+ }
+ expect(result.data).toMatchObject({status:'succeeded',accountId:expect.any(String)});
+ const account=await compositeTransport.request(ENDPOINTS.getAccount,{params:{accountId:result.data.accountId!},query:undefined,body:undefined},frozen) as {data:{platform:string}};
+ expect(account.data.platform).toBe(platform);
+ const group=await compositeTransport.request(ENDPOINTS.getAccountGroup,{params:{groupId:created.data.id},query:undefined,body:undefined},frozen) as {data:{members:Array<{accountId:string}>}};
+ expect(group.data.members.map(member=>member.accountId)).toEqual([result.data.accountId]);
 });

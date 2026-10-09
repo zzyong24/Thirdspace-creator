@@ -4601,7 +4601,8 @@ dispatchIntelligenceRun});
   const accountGroupService = createAccountGroupService({db, now: deps.now, nextId: deps.nextId});
   const accountGroup = createAccountGroupTransport(()=>accountGroupService,()=>createGroupMigrationService({db,...deps}),()=>createGroupResourceAccessService({db,now:deps.now}));
   const localBindingStages:NonNullable<Parameters<typeof createAccountBindingService>[0]["localStages"]>={};
-  const wechatSource=(await import('@creatoros/ai-worker/platform/wechat-browser-source')).createWechatBrowserSource();
+  const wechatWitnesses=(await import('@creatoros/ai-worker/platform/wechat-dom-witness')).createVerifiedWechatDomWitnesses();
+  const wechatSource=(await import('@creatoros/ai-worker/platform/wechat-browser-source')).createWechatBrowserSource(wechatWitnesses);
   const localBindingAvailable=(platform:string)=>['xiaohongshu','kuaishou','wechatVideo','wechatOfficial'].includes(platform)&&!!localBindingStages[platform as keyof typeof localBindingStages];
   const platformAccountService = createPlatformAccountService({
     bindingCapabilities:async()=>["douyin","kuaishou","wechatVideo","wechatOfficial","xiaohongshu"].map(platform=>({platform:platform as import("@creatoros/contract").PlatformAccountCapabilitiesResource["platform"],bind:(platform==="douyin"||localBindingAvailable(platform))?{available:true,reason:"已接入平台登录与真实身份读取",method:"qr" as const}:{available:false,reason:"尚未接入该平台身份绑定",method:"none" as const},collect:{available:platform==="douyin"||localBindingAvailable(platform),reason:(platform==="douyin"||localBindingAvailable(platform))?(platform==="wechatVideo"||platform==="wechatOfficial"?"已接入后台原生报表采集":"已接入作品与明细采集"):"尚未接入该平台自动采集"},publish:{available:false,reason:"尚未接入自动发布"},draft:{available:false,reason:"尚未接入平台草稿保存"},manual:{available:true,reason:"可登记账号、导出物料与录入真实发布记录"}})),
@@ -4629,7 +4630,7 @@ dispatchIntelligenceRun});
     reasonCode: null, lastVerifiedAt: null,
   }));
   const nativeReportMembership=createMembershipLockService(db);
-  const wechatNativeCapabilities=(platform:'wechatOfficial'|'wechatVideo')=>wechatSource.configured?[{platform,capability:'nativeReports' as const,supported:true,authState:'pending' as const,runtimeState:'ready' as const,reasonCode:null,lastVerifiedAt:null}]:[];
+  const wechatNativeCapabilities=(platform:'wechatOfficial'|'wechatVideo')=>wechatSource.configured?(['bind','nativeReports'] as const).map(capability=>({platform,capability,supported:true,authState:'pending' as const,runtimeState:'ready' as const,reasonCode:null,lastVerifiedAt:null})):[];
   const platformCollectionService = createPlatformCollectionService({
     db,
     readScheduledOwner: (ctx, taskId, accountId) => aiService.readScheduledCollectionOwner(ctx, taskId, accountId),
