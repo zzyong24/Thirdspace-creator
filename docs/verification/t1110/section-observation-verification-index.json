@@ -27,6 +27,12 @@
       "path": "docs/verification/t1110/section-independent-review.md",
       "sha256": "3bcbaeb487fc12b9272640c61af5b1750d8460a7471f74b2de8afa0d39b5c8ab",
       "scope": "独立增量源码审查；不代签实际平台或完整共享guard生命周期"
+    },
+    {
+      "path": "docs/verification/t1110/section-observation-root-timeout.log",
+      "sha256": "990b4daeebfdf5f82875037594087424e3bac3be923e04c4fff35b4b7f1c52bd",
+      "toolExitCode": 1,
+      "scope": "既有27静态短预算及账本fixture 10s hook超时失败保留；不称全局通过"
     }
   ],
   "red": {

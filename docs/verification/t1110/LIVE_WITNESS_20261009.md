@@ -92,3 +92,9 @@ root在正式树先仅加入测试，新增靶向实际7FAIL/60SKIP（67例、re
 新的公众号原扫码任务`execution-task-a1e2c022-51`收到用户“已扫码并选择公众号”后，实际readIdentity/IDENTITY_MISSING，仍未有绑定账号。该证据只说明普通稳定身份未读到，没有登录过期证据；不重写原failed任务，不自动把研究身份传给产品。
 
 隔离QA准备实际成功于HEAD`88b663a6`：106220个regular文件、4986个链接，source/clone首末摘要一致、0共享inode/逃根/broken链接，Next16.2.9实际解析位于影子根；独评再次逐个核验，页面编译也已实际HTTP200。但首次旅程未进入页面：Ego服务进程没有收到shell自定义环境变量，先在参数检查失败；原server state另有spread覆盖schema的静态缺陷。这两处修复、准备预算按独评扩至1440秒（覆盖4git+archive/tar+5cp+收尾）。原服务经PID归属核对后停止，失败文件和日志保留；必须在新冻结源码上重跑，不能把准备成功当页面PASS。
+
+下一次真实视频号intent`collection-b33854fc-50`仍failed/0。此次五字段实际为exactTabCount=0、visibleTabCount=0、frameElementVisible=false、documentReadyState=complete、bodyTextLength=162；只证明匹配统计frame隐藏且无标签，不据此断定Cookie或隐藏原因。普通身份核验通过后才进入prepare。后续须核顶层真实UI及实际导航，不强制显示隐藏frame或放松身份/窗口/完整性判断。
+
+HEAD`72e207b2`的隔离页面也实际启动HTTP200，下一次旅程在进入页面前被Ego不支持Browser.getVersion阻断。失败另存，改为读取实际页navigator.userAgent并明确证据来源；真实Emulation/Network/Runtime API在空白Agent p5已调用成功，页尺寸1366×900，UA声明Chrome/152.0.0.0。该API烟测没有页面/扫码/报表PASS，原临时服务实际按归属PID停止，下一次仍从冻结代码准备。
+
+新增timeout-policy完整命令实际exit1：原27静态短预算保留，本次账本组beforeAll另被既有10000ms hook上限拒绝，25例未执行、另10例通过。准备使用180000ms hook/test预算和单worker针对同组复验，原失败不改写，不以无断言运行称通过。

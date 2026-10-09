@@ -55,11 +55,37 @@
         "kind": "channelsDaily",
         "code": "REPORT_SECTION_MISSING"
       }
+    },
+    {
+      "name": "fixed-five-field-observation",
+      "http": 200,
+      "attemptId": "collection-b33854fc-50",
+      "accountId": "acct-3eba3525-70",
+      "capability": "nativeReports",
+      "status": "failed",
+      "generation": 2,
+      "committedPages": 0,
+      "completeCatalogGeneration": null,
+      "reasonCode": "EXPORT_FAILED",
+      "startedAt": "2026-10-09T15:45:20.782Z",
+      "updatedAt": "2026-10-09T15:47:45.773Z",
+      "diagnostic": {
+        "stage": "prepare",
+        "kind": "channelsDaily",
+        "code": "REPORT_SECTION_MISSING",
+        "observation": {
+          "exactTabCount": 0,
+          "visibleTabCount": 0,
+          "frameElementVisible": false,
+          "documentReadyState": "complete",
+          "bodyTextLength": 162
+        }
+      }
     }
   ],
   "allReportsSaved": false,
   "officialProductBinding": "not-yet-succeeded",
-  "browserJourney": "not-yet-entered-page-shell-environment-not-forwarded",
+  "browserJourney": "two-runner-prepage-failures-retained-version-witness-changed-to-actual-UA",
   "officialAttempts": [
     {
       "runId": "execution-task-34ba48c1-61",

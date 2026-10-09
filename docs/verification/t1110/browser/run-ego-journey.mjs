@@ -11,7 +11,8 @@ assert.ok(path.basename(server.root).startsWith('creatoros-t1110-shadow-'));asse
 server.output=path.join(server.output,`run-${Date.now()}-${crypto.randomUUID().slice(0,8)}`);await fs.mkdir(path.join(server.output,'screenshots'),{recursive:true});
 const task=await taskSpace(20);assert.equal(task.spaceId,20);const page=task.page(label);
 const previousUrl=await page.url();if(previousUrl!=='about:blank'&&new URL(previousUrl).origin!==server.origin)throw Error('指定Page不是空白/本次影子产品页；停止，不能覆盖真人后台或其它页面');
-const version=await task.cdp('Browser.getVersion',{}, {timeout:120000});
+// 当前Ego会话不开放Browser.getVersion；记录实际页UA及其证据来源，不伪称取得Browser域版本。
+const version=await page.evaluate(()=>({source:'navigator.userAgent',userAgent:navigator.userAgent}));
 const witness=JSON.parse(await fs.readFile(server.normalizedWitness,'utf8'));
 const startedAt=new Date().toISOString(),captures=[],steps=[],browserErrors=[],external=[],requestLog=[];
 let outcome='not-run',groups,controls={defaultMode:'running',accounts:{}};
