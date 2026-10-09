@@ -1,0 +1,44 @@
+{
+  "schema": "creatoros-readable-evidence-origin/v1",
+  "at": "2026-10-09T18:15:36.189426+00:00",
+  "originalSanitizedLogSha256": "e9eab73bfe7a1547702f1128ee0240760c73e921368170b1c8fae6395435c648",
+  "originalArchive": "docs/verification/t1140/current-journey-original.log.gz",
+  "archiveSha256": "3114205c90510377af19898ff1ff4519303c334fa2423e989cf9889f4a50e0d5",
+  "privateActualRawLogPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1140-0aLtZS/current-journey-raw.log",
+  "privateRawLogSha256": "89d38bc51f53e9dbd3f02c2fd08b616767f174a3ea4a2f94fb19337aba14d822",
+  "readableCopy": "docs/verification/t1140/current-journey.log",
+  "readableCopySha256": "39a253464f5126891d9511931619db9d7cc65ca5548548845cbb1339982f34d3",
+  "transform": "只删除可读日志每行末尾空白；原输出逐字压缩保留，原收据/命令/时间/exit/source/result与原始私有日志不变",
+  "priorFormatReceipt": {
+    "argv": [
+      "git",
+      "diff",
+      "--cached",
+      "--check"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T18:14:43.567708+00:00",
+    "finishedAt": "2026-10-09T18:14:43.632306+00:00",
+    "exitCode": 2,
+    "elapsedSeconds": 0.0642939159879461,
+    "logSha256": "cd995ffd930eeeaa57ddccee5c13269d76e3d8444d4f402c4054996706001838"
+  },
+  "executionMistake": "上一轮diff--cached--check exit2之后仍提交a10c4496；本记录保存真实失败并修正可读副本，不把格式失败说成PASS或产品RED",
+  "formatFailureLogOriginalArchive": "docs/verification/t1140/closure-format-original.log.gz",
+  "formatFailureLogOriginalSha256": "cd995ffd930eeeaa57ddccee5c13269d76e3d8444d4f402c4054996706001838",
+  "formatFailureLogReadableSha256": "fdd62bcec8a4c424da7061efab90ac308f710ff171ac38388c975bf4a51f2388",
+  "secondFormattingCheck": {
+    "argv": [
+      "git",
+      "diff",
+      "--cached",
+      "--check"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T18:15:36.810490+00:00",
+    "finishedAt": "2026-10-09T18:15:36.859306+00:00",
+    "exitCode": 2,
+    "elapsedSeconds": 0.048681417014449835,
+    "logSha256": "e04eb4e40e8bbbd58465e0b21eadb94e7e6585c15f8d258bc5b6b7f2087500f1"
+  }
+}

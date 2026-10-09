@@ -1,19 +1,19 @@
 [playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1140-0aLtZS
 [playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
-[WebServer] 
+[WebServer]
 [WebServer] > creatoros-frontend@1.2.0 predev /Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend
 [WebServer] > node ../ai-worker/scripts/build.mjs
-[WebServer] 
-[WebServer] 
+[WebServer]
+[WebServer]
 [WebServer] > creatoros-frontend@1.2.0 dev /Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend
 [WebServer] > next dev --hostname 127.0.0.1 --port 31440
-[WebServer] 
+[WebServer]
 [WebServer] [1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
 [WebServer] - Local:         http://127.0.0.1:31440
 [WebServer] - Network:       http://127.0.0.1:31440
 [WebServer] [32m[1m✓[22m[39m Ready in 481ms
 [WebServer] [CreatorOS] SIDECAR_STARTUP_VERIFIED
-[WebServer] 
+[WebServer]
 [WebServer]  GET / [32m200[39m in 18.7s[2m (next.js: 1313ms, proxy.ts: 164ms, application-code: 17.2s)[22m
 
 Running 2 tests using 1 worker
@@ -293,85 +293,85 @@ Running 2 tests using 1 worker
 
   2 passed (1.3m)
 [WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
-[WebServer] 
+[WebServer]
 [WebServer]     ../ai-worker/src/execution/codex-app-server.ts:47:76:
 [WebServer]       47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
 [WebServer]          ╵                                                     ~~~~~~~~~~~
-[WebServer] 
+[WebServer]
 [WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
-[WebServer] 
+[WebServer]
 [WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
-[WebServer] 
+[WebServer]
 [WebServer]     ../ai-worker/src/execution/codex-acp-host.ts:11:88:
 [WebServer]       11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
 [WebServer]          ╵                                                    ~~~~~~~~~~~
-[WebServer] 
+[WebServer]
 [WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
-[WebServer] 
+[WebServer]
 [WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
-[WebServer] 
+[WebServer]
 [WebServer]     ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
 [WebServer]       319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
 [WebServer]           ╵                                           ~~~~~~~~~~~
-[WebServer] 
+[WebServer]
 [WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
-[WebServer] 
+[WebServer]
 [WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
-[WebServer] 
+[WebServer]
 [WebServer]     ../ai-worker/vendor/acpx/src/version.ts:6:90:
 [WebServer]       6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 [WebServer]         ╵                                                     ~~~~~~~~~~~
-[WebServer] 
+[WebServer]
 [WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
-[WebServer] 
+[WebServer]
 [WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
-[WebServer] 
+[WebServer]
 [WebServer]     ../ai-worker/src/execution/codex-acp-host.ts:11:88:
 [WebServer]       11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
 [WebServer]          ╵                                                    ~~~~~~~~~~~
-[WebServer] 
+[WebServer]
 [WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
-[WebServer] 
+[WebServer]
 [WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
-[WebServer] 
+[WebServer]
 [WebServer]     ../ai-worker/src/execution/codex-app-server.ts:47:76:
 [WebServer]       47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
 [WebServer]          ╵                                                     ~~~~~~~~~~~
-[WebServer] 
+[WebServer]
 [WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
-[WebServer] 
+[WebServer]
 [WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
-[WebServer] 
+[WebServer]
 [WebServer]     ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
 [WebServer]       319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
 [WebServer]           ╵                                           ~~~~~~~~~~~
-[WebServer] 
+[WebServer]
 [WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
-[WebServer] 
+[WebServer]
 [WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
-[WebServer] 
+[WebServer]
 [WebServer]     ../ai-worker/vendor/acpx/src/version.ts:6:90:
 [WebServer]       6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 [WebServer]         ╵                                                     ~~~~~~~~~~~
-[WebServer] 
+[WebServer]
 [WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
-[WebServer] 
+[WebServer]
 [WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
-[WebServer] 
+[WebServer]
 [WebServer]     ../ai-worker/vendor/codex-acp/src/CodexJsonRpcConnection.ts:27:93:
 [WebServer]       27 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
 [WebServer]          ╵                              ~~~~~~~~~~~
-[WebServer] 
+[WebServer]
 [WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
-[WebServer] 
+[WebServer]
 [WebServer] ▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
-[WebServer] 
+[WebServer]
 [WebServer]     ../ai-worker/vendor/codex-acp/src/CodexCli.ts:29:89:
 [WebServer]       29 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
 [WebServer]          ╵                              ~~~~~~~~~~~
-[WebServer] 
+[WebServer]
 [WebServer]   You need to set the output format to "esm" for "import.meta" to work correctly.
-[WebServer] 
+[WebServer]
 [WebServer] [secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
 [WebServer] [persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
 [WebServer] [31m[1m⨯[22m[39m Error: aborted
