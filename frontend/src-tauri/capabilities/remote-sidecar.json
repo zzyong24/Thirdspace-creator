@@ -18,6 +18,7 @@
     "allow-entitlement-claim-start",
     "allow-entitlement-claim-poll",
     "allow-entitlement-claim-resume",
+    "allow-owned-devices",
     "allow-license-last-decision",
     "allow-license-latest-version",
     "allow-cli-access-status",
