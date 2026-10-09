@@ -6328,6 +6328,91 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1094": {
+      "task_id": "T-1094",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1094-public-partial-task-status.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/**",
+        "backend/src/modules/ai/**",
+        "backend/src/modules/articles/**",
+        "frontend/src/components/ai/**",
+        "frontend/src/features/copilot/**",
+        "frontend/src/features/article/**",
+        "frontend/src/features/knowledge/**",
+        "frontend/src/features/daily-report/**",
+        "frontend/src/lib/ai-task-runtime.ts",
+        "frontend/src/server/**",
+        "mcp-server/src/**",
+        "backend/src/modules/production/production-sources.ts"
+      ],
+      "write_set": [
+        "contract/src/primitives.ts",
+        "backend/src/modules/articles/articles.service.ts",
+        "backend/src/modules/production/production-sources.ts",
+        "frontend/src/components/ai/task-partial-notice.tsx",
+        "frontend/src/components/ai/adopt-candidate-card.tsx",
+        "frontend/src/features/copilot/ai-copilot-content.tsx",
+        "frontend/src/features/copilot/execution-task-card.tsx",
+        "frontend/src/features/copilot/chat-thesis-card.tsx",
+        "frontend/src/features/copilot/chat-script-draft-card.tsx",
+        "frontend/src/features/copilot/chat-publish-package-card.tsx",
+        "frontend/src/features/copilot/chat-generate-card.tsx",
+        "frontend/src/features/copilot/chat-review-report-card.tsx",
+        "frontend/src/features/copilot/chat-result-cards.tsx",
+        "frontend/src/features/article/article-workbench.tsx",
+        "frontend/src/features/knowledge/knowledge-dump-zone.tsx",
+        "frontend/src/features/daily-report/analysis-session.ts",
+        "backend/src/modules/ai/public-partial-task.integration.test.ts",
+        "frontend/src/components/ai/partial-task-consumers.test.tsx",
+        "contract/tests/primitives.test.ts",
+        "frontend/src/features/article/article-workbench.test.tsx",
+        "frontend/src/features/knowledge/knowledge-dump-zone.test.tsx",
+        "frontend/src/features/daily-report/analysis-session.test.ts",
+        "docs/features/t1094-public-partial-task-status.md",
+        "docs/features/t1094-public-partial-task-status.review.md",
+        "docs/features/t1094-public-partial-task-status.review-input.json",
+        "docs/features/t1094-public-partial-task-status.independent-review.md",
+        "docs/verification/t1094/**",
+        "docs/verification/t1093/**",
+        "docs/verification/t1091/**",
+        "docs/verification/t1062/assistant-fixes-20261009.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/.lessons-stats.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check",
+          "pnpm -C contract exec vitest run tests/primitives.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C backend exec vitest run src/modules/ai/public-partial-task.integration.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/ai/chat-turn-submission.service.test.ts src/modules/ai/ai.task-execution.integration.test.ts src/modules/ai/ai.execution-authority.integration.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C frontend exec vitest run src/components/ai/partial-task-consumers.test.tsx src/components/ai/adopt-candidate-card.test.tsx src/features/copilot/chat-thesis-card.test.tsx src/features/copilot/chat-script-draft-card.test.tsx src/features/copilot/chat-publish-package-card.test.tsx src/features/copilot/chat-generate-card.test.tsx src/features/copilot/chat-review-report-card.test.tsx src/features/copilot/execution-task-card.test.tsx src/features/copilot/task-notifications.test.ts src/features/article/article-workbench.test.tsx src/features/knowledge/knowledge-dump-zone.test.tsx src/features/daily-report/analysis-session.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C frontend exec vitest run src/features/copilot/ai-copilot-interactions.test.tsx src/features/knowledge/knowledge-dump-zone.test.tsx src/features/topics/topics-interactions.test.tsx src/components/overlays/overlay-routing.test.tsx src/lib/copilot-navigation.test.ts src/features/copilot/chat-tool-trace.test.tsx src/features/automations/run-controls.test.tsx src/features/automations/cadence.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "pnpm -C backend typecheck",
+          "pnpm -C frontend typecheck",
+          "pnpm -C contract typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "pnpm -C backend exec vitest run src/modules/production/production-asset-asr.integration.test.ts --retry=0 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

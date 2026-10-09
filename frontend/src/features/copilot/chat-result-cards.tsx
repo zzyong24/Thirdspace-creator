@@ -16,6 +16,7 @@
 
 import * as React from "react";
 import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
+import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
 import { useRouter } from "next/navigation";
 import {TaskRuntimeActions,taskRuntimeStatus,type RuntimeTask} from "@/components/ai/task-runtime-actions";
 import { client } from "@/lib/contract-client";
@@ -64,7 +65,7 @@ export interface BlindPredictLockContext {
   readonly projectTitle: string;
 }
 
-type LockPhase = "idle" | "locking" | "locked" | "error";
+type LockPhase = "idle" | "locking" | "locked" | "error" | "partial";
 
 // 轮询诊断任务的间隔(与 blind-predict-row/chat-generate-card 同款 4s;测试可 0 化去抖）。
 const DEFAULT_POLL_INTERVAL_MS = 4000;
@@ -139,6 +140,7 @@ export function ChatDiagnosisCard({
           })) as RuntimeTask;
           if (cancelledRef.current || !isCurrent()) return;
           setRuntimeTask(status);
+          if (status.status === "partial") { setPhase("partial"); return; }
           if(status.executionTaskId&&["paused","waiting_user","unknown_result","failed","cancelled","blocked"].includes(taskRuntimeStatus(status))){setPhase("error");return;}
           if (status.status === "awaiting_confirmation") {
             // confirmTask 铸 draft Prediction 但只回 task(不回 predictionId)。故 confirm 后
@@ -238,6 +240,7 @@ export function ChatDiagnosisCard({
         </p>
       ) : null}
       <TaskObservationNotice {...observation} />
+      <TaskPartialNotice visible={phase === "partial"} />
       {blindPredict ? (
         // [T-103a] 盲预测确认门:锁定前是候选(可继续追问重生);点「锁定」= immutable。
         phase === "locked" ? (
@@ -262,7 +265,7 @@ export function ChatDiagnosisCard({
               <button
                 type="button"
                 data-slot="chat-diagnosis-lock"
-                disabled={phase === "locking" || !!runtimeTask?.executionTaskId&&["paused","waiting_user","unknown_result","failed","cancelled","blocked"].includes(taskRuntimeStatus(runtimeTask))}
+                disabled={phase === "locking" || phase === "partial" || !!runtimeTask?.executionTaskId&&["paused","waiting_user","unknown_result","failed","cancelled","blocked"].includes(taskRuntimeStatus(runtimeTask))}
                 onClick={lock}
                 className="inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"
               >

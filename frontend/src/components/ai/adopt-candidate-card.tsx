@@ -27,13 +27,14 @@
 
 import * as React from "react";
 import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
+import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
 import { useRouter } from "next/navigation";
 
 import { SectionCard } from "@/components/project/section-card";
 import { client } from "@/lib/contract-client";
 import { createAiTaskAttemptId } from "@/lib/ai-task-attempt";
 
-type Phase = "idle" | "running" | "review" | "done" | "error";
+type Phase = "idle" | "running" | "review" | "done" | "error" | "partial";
 
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 75; // ~5 min — multi-angle agent work (WebSearch) can run minutes.
@@ -181,6 +182,7 @@ export function AdoptCandidateCard<T>({
           body: undefined,
         })) as { status: string };
         if (cancelledRef.current || !isCurrent()) return;
+        if (status.status === "partial") { setPhase("partial"); return; }
         if (status.status === "awaiting_confirmation") {
           await enterReview(id);
           return;
@@ -247,13 +249,15 @@ export function AdoptCandidateCard<T>({
             (projectId === undefined || t.projectId === projectId) &&
             (t.status === "queued" ||
               t.status === "running" ||
-              t.status === "awaiting_confirmation"),
+              t.status === "awaiting_confirmation" || t.status === "partial"),
         );
         if (abandoned || cancelledRef.current || claimedRef.current || !match)
           return;
         claimedRef.current = true; // hydration owns the loop now
         setTaskId(match.id);
-        if (match.status === "awaiting_confirmation") {
+        if (match.status === "partial") {
+          setPhase("partial");
+        } else if (match.status === "awaiting_confirmation") {
           await enterReview(match.id);
         } else {
           setPhase("running");
@@ -329,6 +333,7 @@ export function AdoptCandidateCard<T>({
           ) : null}
 
           <TaskObservationNotice {...observation} />
+          <TaskPartialNotice visible={phase === "partial"} />
           {phase === "running" && !observation.paused ? (
             <div data-slot="adopt-running" className="flex flex-col gap-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">

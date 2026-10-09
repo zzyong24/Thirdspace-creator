@@ -73,7 +73,7 @@ type ArticleClient = {
   listMaterialLinks(input: { params: undefined; query: { page: number; pageSize: number; projectId: string }; body: undefined }): Promise<Array<{ entityType: string; entityId: string }>>;
   getAsset(input: { params: { assetId: string }; query: undefined; body: undefined }): Promise<SourceAsset & { assetType: string; status: string; extractStatus: string | null }>;
   generateArticleCandidate(input: { params: { outputId: string }; query: undefined; body: { clientRequestId: string; brandProfileVersionId?: string; sourceAssets: Array<{assetId: string; assetFileId: string}> } }): Promise<{ taskId: string; candidateId: string; status: "queued" }>;
-  getTask(input: { params: { taskId: string }; query: undefined; body: undefined }): Promise<{ status: "queued" | "running" | "awaiting_confirmation" | "succeeded" | "failed" | "cancelled"; errorMessage: string | null }>;
+  getTask(input: { params: { taskId: string }; query: undefined; body: undefined }): Promise<Pick<Awaited<ReturnType<typeof client.getTask>>, "status" | "errorMessage">>;
   getArticleCandidate(input: { params: { candidateId: string }; query: undefined; body: undefined }): Promise<Candidate>;
   adoptArticleCandidate(input: { params: { candidateId: string }; query: undefined; body: { expectedCurrentVersionId: string; selectedSectionIds: string[]; selectedMetadataFields: ("title" | "summary" | "factItems")[]; clientRequestId: string } }): Promise<unknown>;
   createArticleVersion(input: { params: { outputId: string }; query: undefined; body: { expectedCurrentVersionId: string; document: ArticleDocument; clientRequestId: string } }): Promise<{ versionId: string; document: ArticleDocument }>;
@@ -181,6 +181,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
   const [tagsInput, setTagsInput] = React.useState("");
   const [candidate, setCandidate] = React.useState<Candidate | null>(null);
   const [pendingTaskId, setPendingTaskId] = React.useState<string | null>(null);
+  const [partialTask, setPartialTask] = React.useState(false);
   const [useBrandProfile, setUseBrandProfile] = React.useState(Boolean(activeBrandProfile));
   const [sourceAssets, setSourceAssets] = React.useState<SourceAsset[]>([]);
   const [selectedSourceIds, setSelectedSourceIds] = React.useState<string[]>([]);
@@ -232,7 +233,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
 
   const load = React.useCallback(async (id: string) => {
     const serial = ++loadSerial.current;
-    setBusy("load"); setError(null);
+    setBusy("load"); setError(null); setPartialTask(false);
     try {
       const loaded = await articleClient.getArticle({ params: { outputId: id }, query: undefined, body: undefined });
       if (serial !== loadSerial.current) return;
@@ -298,6 +299,12 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
       try {
         const task = await articleClient.getTask({ params: { taskId: pendingTaskId! }, query: undefined, body: undefined });
         if (!active) return;
+        if (task.status === "partial") {
+          setError(null);
+          setMessage(null); setPartialTask(true);
+          setPendingTaskId(null);
+          return;
+        }
         if (task.status === "awaiting_confirmation" || task.status === "succeeded") {
           const next = await articleClient.getArticleCandidate({ params: { candidateId: pendingTaskId! }, query: undefined, body: undefined });
           if (!active) return;
@@ -362,7 +369,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
     if (dirty && !(await save())) return;
     const frozen = stateRef.current;
     if (!frozen) return;
-    setBusy("generate"); setError(null); setMessage(null);
+    setBusy("generate"); setError(null); setMessage(null); setPartialTask(false);
     try {
       const brandProfileVersionId = useBrandProfile ? activeBrandProfile?.id : undefined;
       const sourceAssetsForRequest = sourceAssets.filter((asset) => selectedSourceIds.includes(asset.id))
@@ -502,6 +509,7 @@ function ArticleWorkbenchSession({ projectId, projectTitle, accountId, initialOu
       </div>
     </section>}
     {error && <p role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
+    {partialTask && <p data-slot="article-task-partial" role="status" className="rounded-md bg-warning/10 p-3 text-sm text-foreground">本次文章生成部分完成，候选尚未就绪；请查看原任务结果。</p>}
     {message && <p role="status" className="rounded-md bg-success-soft p-3 text-sm text-success">{message}</p>}
     {busy === "load" && <p className="text-sm text-muted-foreground">正在读取已保存的文章…</p>}
     {state && draft && <>

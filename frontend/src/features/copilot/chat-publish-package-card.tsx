@@ -17,6 +17,7 @@
 
 import * as React from "react";
 import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
+import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
@@ -24,7 +25,7 @@ import { client } from "@/lib/contract-client";
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 180; // 覆盖后台执行的十分钟期限与状态回读余量
 
-type Phase = "blocked" | "running" | "review" | "done" | "error";
+type Phase = "blocked" | "running" | "review" | "done" | "error" | "partial";
 
 export interface PublishPackageDraft {
   platform: string;
@@ -136,6 +137,7 @@ export function ChatPublishPackageCard({
         if(!abandoned && task.runtimeStatus==="retry_wait")setProgressText("暂时繁忙，正在等待自动重试");
         if(!abandoned && task.runtimeStatus==="cancel_requested")setProgressText("正在取消生成");
         const status = task.status;
+        if (status === "partial") { setPhase("partial"); return; }
         if (status === "succeeded") { setPhase("done"); return; }
         if (status === "awaiting_confirmation") {
           try {
@@ -218,6 +220,7 @@ export function ChatPublishPackageCard({
         </div>
       ) : null}
       <TaskObservationNotice {...observation} />
+      <TaskPartialNotice visible={phase === "partial"} />
       {phase === "running" && !observation.paused ? (
         <div
           data-slot="chat-publish-running"

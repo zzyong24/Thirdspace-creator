@@ -383,7 +383,8 @@ interface WireTask {
     | "awaiting_confirmation"
     | "succeeded"
     | "failed"
-    | "cancelled";
+    | "cancelled"
+    | "partial";
   readonly executionTaskId?:string|null;
   readonly runtimeStatus?:string|null;
   readonly inputData?: Readonly<Record<string, unknown>>;

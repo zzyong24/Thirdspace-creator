@@ -106,6 +106,7 @@ export const aiTaskStatus = z.enum([
   "succeeded",
   "failed",
   "cancelled",
+  "partial",
 ]);
 
 // ── contract v0.4 (seven-step) enums ───────────────────────────────────────

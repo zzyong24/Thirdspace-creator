@@ -45,7 +45,7 @@ export function createProductionSources(deps:{db:Db;now:()=>string;nextId:(p:str
   const saved=await row(ctx,outputId,requestId),frozen=saved.frozenInput as {projectId:string;assetId:string;assetFileId:string;fileDigest:string;sourceId:string;spec:ExecutionTaskSpec};
   const original={...ctx,userId:saved.userId,accountId:saved.accountId,groupId:saved.groupId,groupVersion:saved.groupVersion??undefined,membershipVersion:saved.membershipVersion??undefined};
   let deterministicGeneration:number|undefined;
-  let status:"reserved"|"queued"|"running"|"succeeded"|"failed"|"cancelled"="reserved",probe:null|ReturnType<typeof productionProbeResult.parse>=null,error:string|null=null;
+  let status:ExecutionTaskResource["status"]|"reserved"="reserved",probe:null|ReturnType<typeof productionProbeResult.parse>=null,error:string|null=null;
   if(saved.taskId){const task=await requirePorts().readTask(original,saved.taskId);
    if(task.projectId!==frozen.projectId||task.execType!=="media.probe"||itemDigest(task.spec)!==itemDigest(frozen.spec))throw new ConflictError("探针执行与冻结原片不一致");
    deterministicGeneration=task.deterministicGeneration ?? 0;

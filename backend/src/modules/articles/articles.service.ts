@@ -1,4 +1,5 @@
 import {aiTasks,projects as projectionProjects} from "@creatoros/backend";
+import type { z } from "zod";
 import type {WorkspaceWriteTx} from "../../workspace-write";
 import {workspaceFilter,workspaceStamp,workspaceKey} from "../../workspace-scope";
 import {withWorkspaceWrite} from "../../workspace-write";
@@ -11,7 +12,7 @@ import {
   articleCandidateEdits,type ArticleCandidateEdits,articleCandidateProposal, articleDocument, ErrorCode,
   type ArticleCandidate, type ArticleCandidateProposal, type ArticleDocument,
   type ArticleResource, type ArticleSourceRef, type ArticleWriteResult,
-  type RequestContext,
+  type RequestContext, type aiTaskStatus,
 } from "@creatoros/contract";
 import type {FrozenConversionSource} from "../creative-results/conversion-source.service";
 import type { ProjectsService } from "../projects";
@@ -20,6 +21,7 @@ import type { ArtifactsService } from "../artifacts";
 class ArticleConflict extends Error { readonly code = ErrorCode.ConflictError; }
 class ArticleValidation extends Error { readonly code = ErrorCode.ValidationError; }
 class ArticleOwnership extends Error { readonly code = ErrorCode.OwnershipError; }
+type AITaskStatus = z.infer<typeof aiTaskStatus>;
 
 export const emptyArticleDocument = (): ArticleDocument => ({
   schemaVersion: 1, title: "", titleSourceRefs: [], summary: "", summarySourceRefs: [], sections: [], factItems: [], visualBriefs: [], imageUses: [], coverImageUse: null,
@@ -65,7 +67,7 @@ export interface ArticlesService {
   saveReceipt(ctx:RequestContext,outputId:string,input:Parameters<ArticlesService["createVersion"]>[2]):Promise<WorkCommitReceipt>;
   createVersion(ctx: RequestContext, outputId: string, input: {expectedCurrentVersionId: string; document: ArticleDocument; clientRequestId: string}): Promise<ArticleWriteResult>;
   generateCandidate(ctx: RequestContext, outputId: string, clientRequestId: string, brandProfileVersionId?: string,
-    sourceAssets?: Array<{assetId: string; assetFileId: string}>,conversion?:OutputConversionContext): Promise<{taskId: string; candidateId: string; status: "queued" | "running" | "awaiting_confirmation" | "succeeded" | "failed" | "cancelled"}>;
+    sourceAssets?: Array<{assetId: string; assetFileId: string}>,conversion?:OutputConversionContext): Promise<{taskId: string; candidateId: string; status: AITaskStatus}>;
   getCandidate(ctx: RequestContext, candidateId: string): Promise<ArticleCandidate>;
   readCandidateState(ctx:RequestContext,candidateId:string):Promise<ArticleCandidateState>;
   retryFrozenCandidate(ctx:RequestContext,candidateId:string,clientRequestId:string):Promise<{candidateId:string;taskId:string;status:ArticleCandidateState["status"];baseVersionId:string;sourceRefs:ArticleSourceRef[];ruleSnapshotRef:null;appliedRules:"not_applied"}>;
@@ -254,7 +256,7 @@ export function createArticlesService(db: Db, deps: ArticlePeerPorts & {now: () 
         const result=(task:{id:string;status:string;inputData:Record<string,unknown>})=>{
           if(task.inputData.outputId!==outputId || !isDeepStrictEqual(task.inputData.conversion,conversion))
             throw new ArticleConflict("同请求已对应另一转换意图");
-          return {taskId:task.id,candidateId:task.id,status:task.status as "queued"|"running"|"awaiting_confirmation"|"succeeded"|"failed"|"cancelled"};
+          return {taskId:task.id,candidateId:task.id,status:task.status as AITaskStatus};
         };
         const prior=await deps.findGenerationByAttempt(ctx,clientRequestId);if(prior)return result(prior);
         const targetPlatform=output.targetPlatform??null;
@@ -276,7 +278,7 @@ export function createArticlesService(db: Db, deps: ArticlePeerPorts & {now: () 
         let task:{id:string;status:string};
         try{task=await deps.submitGeneration(ctx,{attemptId:clientRequestId,projectId:row.projectId,inputData:taskInput});}
         catch(error){const winner=await deps.findGenerationByAttempt(ctx,clientRequestId);if(winner)return result(winner);throw error;}
-        return {taskId:task.id,candidateId:task.id,status:task.status as "queued"|"running"|"awaiting_confirmation"|"succeeded"|"failed"|"cancelled"};
+        return {taskId:task.id,candidateId:task.id,status:task.status as AITaskStatus};
       }
       const generationIntent = {outputId, brandProfileVersionId: brandProfileVersionId ?? null, sourceAssets};
       const priorTask = await deps.findGenerationByAttempt?.(ctx, clientRequestId);
@@ -285,7 +287,7 @@ export function createArticlesService(db: Db, deps: ArticlePeerPorts & {now: () 
         const originalIntent = input.generationIntent ?? {outputId: input.outputId, brandProfileVersionId: input.brandProfileVersionId ?? null,
           sourceAssets: ((input.sourceMaterials ?? []) as Array<{ref:{kind:string;id:string;versionId:string}}>).filter(source => source.ref.kind === "asset").map(source => ({assetId:source.ref.id,assetFileId:source.ref.versionId}))};
         if (input.conversion || !isDeepStrictEqual(originalIntent, generationIntent)) throw new ArticleConflict("同请求已对应另一文章或资料选择");
-        return {taskId: priorTask.id, candidateId: priorTask.id, status: priorTask.status as "queued" | "running" | "awaiting_confirmation" | "succeeded" | "failed" | "cancelled"};
+        return {taskId: priorTask.id, candidateId: priorTask.id, status: priorTask.status as AITaskStatus};
       }
       const current = await documentFor(ctx, outputId);
       const project = await deps.projects(db).getProject(ctx, row.projectId);
@@ -318,7 +320,7 @@ export function createArticlesService(db: Db, deps: ArticlePeerPorts & {now: () 
         sourceMaterials: [{ref: sourceRef, label: "当前项目 Brief", text: sourceText}, ...selectedSources],
         brandProfileVersionId: brandProfile?.versionId ?? null, brandProfile,
       }});
-      return {taskId: task.id, candidateId: task.id, status: task.status as "queued" | "running" | "awaiting_confirmation" | "succeeded" | "failed" | "cancelled"};
+      return {taskId: task.id, candidateId: task.id, status: task.status as AITaskStatus};
     },
     async getCandidate(ctx, candidateId) {
       const owner = scope(ctx);

@@ -16,6 +16,7 @@
 
 import * as React from "react";
 import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
+import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
@@ -24,7 +25,7 @@ import { resolveAssetPreviewUrl } from "@/components/resources/asset-preview-url
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 90; // ~6 分钟 —— 视频异步生成可达分钟级
 
-type Phase = "running" | "review" | "done" | "error";
+type Phase = "running" | "review" | "done" | "error" | "partial";
 
 // [T-271] 结构化封面方案(cover-runner recordCandidate 写的 resultData.coverPlan 形状)。封面文案
 // 已过诚实门(headline/subheadline/keyPoints 里未溯源的具体数字已带⚠️标注)。
@@ -218,6 +219,7 @@ export function ChatGenerateCard({
         } catch {
           continue; // 单次拉取失败不终止(下轮再试)
         }
+        if (status === "partial") { setPhase("partial"); return; }
         if (status === "awaiting_confirmation") {
           try {
             const results = (await client.listTaskResults({
@@ -314,6 +316,7 @@ export function ChatGenerateCard({
       </span>
 
       <TaskObservationNotice {...observation} />
+      <TaskPartialNotice visible={phase === "partial"} />
       {phase === "running" && !observation.paused ? (
         <div
           data-slot="chat-generate-running"

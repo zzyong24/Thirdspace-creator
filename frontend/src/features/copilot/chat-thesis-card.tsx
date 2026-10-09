@@ -18,6 +18,7 @@
 
 import * as React from "react";
 import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
+import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
@@ -25,7 +26,7 @@ import { client } from "@/lib/contract-client";
 const POLL_INTERVAL_MS = 4000;
 const MAX_POLLS = 90; // ~6 分钟 —— 论点树生成可达分钟级(弱模型更慢)
 
-type Phase = "running" | "review" | "done" | "error";
+type Phase = "running" | "review" | "done" | "error" | "partial";
 
 // 论点树列(与 thesis-skeleton-panel / planning-runner 的 writer↔reader 契约一致)。
 type ThesisColumn = "core" | "support" | "evidence" | "counter";
@@ -118,6 +119,7 @@ export function ChatThesisCard({
         } catch {
           continue; // 单次拉取失败不终止(下轮再试)
         }
+        if (status === "partial") { setPhase("partial"); return; }
         if (status === "succeeded") { setPhase("done"); return; }
         if (status === "awaiting_confirmation") {
           try {
@@ -181,6 +183,7 @@ export function ChatThesisCard({
       </span>
 
       <TaskObservationNotice {...observation} />
+      <TaskPartialNotice visible={phase === "partial"} />
       {phase === "running" && !observation.paused ? (
         <div
           data-slot="chat-thesis-running"

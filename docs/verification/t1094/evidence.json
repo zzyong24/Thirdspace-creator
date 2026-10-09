@@ -1,0 +1,628 @@
+{
+  "task": "T-1094",
+  "recordedAt": "2026-10-09T00:40:40.539008+00:00",
+  "baseSha": "77003717de03a141d16b7af6301ab6cfe4635564",
+  "specReviewReceipt": "5d2c91b81b45",
+  "specSha256": "de0680b5b89438ce332aebcce15560e14c22ff32b51de5825f0c6685d42fabf3",
+  "independentImplementationRecheck": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1094/IMPLEMENTATION_RECHECK.md",
+    "sha256": "8b42cd966bbd57e73d34153e2ae536142afca0eb7fecef177385ea0e341020f9",
+    "result": "PASS_LOCAL_IMPLEMENTATION, not complete Gate"
+  },
+  "productFilesSha256": {
+    "contract/src/primitives.ts": "23ee12e08ebe60e826172b5211a3a12be613119ebce1ea466caa79caa0d0b4c8",
+    "backend/src/modules/articles/articles.service.ts": "edd2ab1793d000897e71c0ce36976cb778082768be2517373839ce2aeff9c81c",
+    "backend/src/modules/production/production-sources.ts": "0ee643a8483ad9987362ddb26f3d8e2ad5c257fc8491257bf8e32690b7ab97bf",
+    "frontend/src/components/ai/task-partial-notice.tsx": "eb87f63c14a2da1268521a3728f4475f7546fcc742a404589db9146336f3e38b",
+    "frontend/src/components/ai/adopt-candidate-card.tsx": "2d10e0a4d2816a08dff786785c822ab64f4c8a3235c3020ad0c75fbd0e1e2d2d",
+    "frontend/src/features/copilot/ai-copilot-content.tsx": "2db7debaf1fea381f88e18d74bbef747904c78587427e4e2048266d252a4469a",
+    "frontend/src/features/copilot/execution-task-card.tsx": "2ad79e823f92e4ddb080fb933e31bdccd597a54716de1a4acea02197b6d8ce2c",
+    "frontend/src/features/copilot/chat-thesis-card.tsx": "6ed6cbb1a85fb4789744d92b43d781653650839d6ff2e8e8e7f172850a9d1b57",
+    "frontend/src/features/copilot/chat-script-draft-card.tsx": "dd4a932b12a1066ff463db8e2d1578e6b9b5722db46ff0ef2d2c90b218d67efa",
+    "frontend/src/features/copilot/chat-publish-package-card.tsx": "533bab232b78553f20b6b05ceb30ea6cf897aa6327c458199bf50d596000af10",
+    "frontend/src/features/copilot/chat-generate-card.tsx": "34b21d2d8701d6258f89582fa4513c237b9282076b6a04e81002f9fc2a6773f4",
+    "frontend/src/features/copilot/chat-review-report-card.tsx": "c78f71e2ddc0982e070c2460bfb701dcbae1fc1e6ab6fe3076c9649dbb363326",
+    "frontend/src/features/copilot/chat-result-cards.tsx": "75f58cf8609e3e309f56286c5413533706d097e563b168c6f44acdac450101c6",
+    "frontend/src/features/article/article-workbench.tsx": "8c8cbeec1a9712249892d2fc6be3856a2c0cd53c549bcea7945ba7bd91102af6",
+    "frontend/src/features/knowledge/knowledge-dump-zone.tsx": "d7431fe081014007760ddebe7efcad43047afceed144b9b2170b755253741658",
+    "frontend/src/features/daily-report/analysis-session.ts": "cc7f72e03c550286833448defb7bbccb14ec8e081d7ce85fb84983cacc2567ce"
+  },
+  "commands": {
+    "red-public-partial-final-fixture": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/modules/ai/public-partial-task.integration.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:15:21.278373+00:00",
+      "finishedAt": "2026-10-09T00:15:31.255913+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 9.977149292011745,
+      "logSha256": "f3935034cca3577b8dba64898cb0d558db1304c510f7f6eb898335abb60809e1"
+    },
+    "red-partial-consumers-final-fixture": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/components/ai/partial-task-consumers.test.tsx",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:15:21.277986+00:00",
+      "finishedAt": "2026-10-09T00:15:23.890330+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 2.612253083003452,
+      "logSha256": "df61fbb7f73f0478cc98dbdb19fd2e4c5c18e401bdcaa33daa7aa7d7fc36116e"
+    },
+    "red-hydrated-consumer": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/components/ai/partial-task-consumers.test.tsx",
+        "--testNamePattern",
+        "重新打开保留原partial",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:16:54.370038+00:00",
+      "finishedAt": "2026-10-09T00:16:56.555508+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 2.185359499999322,
+      "logSha256": "3a279266b711e60dc8269823a43f1714a87708bb05b6484e09d9da3dcce36966"
+    },
+    "red-page-consumers": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/article/article-workbench.test.tsx",
+        "src/features/knowledge/knowledge-dump-zone.test.tsx",
+        "src/features/daily-report/analysis-session.test.ts",
+        "--testNamePattern",
+        "部分完成|解析partial",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:16:14.740006+00:00",
+      "finishedAt": "2026-10-09T00:16:18.772018+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 4.031875082990155,
+      "logSha256": "ceeddb0ee40b8e31fa00d99f83b61bda333a5363dc58e91ab6a5360533e15b76"
+    },
+    "public-partial-final-typed": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/modules/ai/public-partial-task.integration.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:23:22.364258+00:00",
+      "finishedAt": "2026-10-09T00:23:38.096102+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 15.731577750004362,
+      "logSha256": "5d403321d2a5e3ee769be21d4efc65bc354e309855a7d86954d88e193f3cb255"
+    },
+    "green-focused-consumers": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/components/ai/partial-task-consumers.test.tsx",
+        "src/features/article/article-workbench.test.tsx",
+        "src/features/knowledge/knowledge-dump-zone.test.tsx",
+        "src/features/daily-report/analysis-session.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:18:39.015269+00:00",
+      "finishedAt": "2026-10-09T00:18:52.271939+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 13.256467750004958,
+      "logSha256": "232c5d67ed1ed0bba97f60dc28f5281758b1a91a0021558458625a28205bc7a3"
+    },
+    "green-primitives": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "contract",
+        "exec",
+        "vitest",
+        "run",
+        "tests/primitives.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:18:39.015804+00:00",
+      "finishedAt": "2026-10-09T00:18:39.773842+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.7578971250040922,
+      "logSha256": "36cbaa54d2be0fe3a375e560d2915990a47fef45e681e21659ec42d83a9ae8cc"
+    },
+    "gate-2": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/modules/ai/public-partial-task.integration.test.ts",
+        "src/modules/ai/chat-turn-completion.service.test.ts",
+        "src/modules/ai/chat-turn-submission.service.test.ts",
+        "src/modules/ai/ai.task-execution.integration.test.ts",
+        "src/modules/ai/ai.execution-authority.integration.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:18:53.147862+00:00",
+      "finishedAt": "2026-10-09T00:20:38.285745+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 105.13716962499893,
+      "logSha256": "f366285922fe75c67b3f89dbefdc521551e7c8f964ffc1b047d120495ed5027b"
+    },
+    "gate-3": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/components/ai/partial-task-consumers.test.tsx",
+        "src/components/ai/adopt-candidate-card.test.tsx",
+        "src/features/copilot/chat-thesis-card.test.tsx",
+        "src/features/copilot/chat-script-draft-card.test.tsx",
+        "src/features/copilot/chat-publish-package-card.test.tsx",
+        "src/features/copilot/chat-generate-card.test.tsx",
+        "src/features/copilot/chat-review-report-card.test.tsx",
+        "src/features/copilot/execution-task-card.test.tsx",
+        "src/features/copilot/task-notifications.test.ts",
+        "src/features/article/article-workbench.test.tsx",
+        "src/features/knowledge/knowledge-dump-zone.test.tsx",
+        "src/features/daily-report/analysis-session.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:18:53.144516+00:00",
+      "finishedAt": "2026-10-09T00:19:21.962999+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 28.818022332998225,
+      "logSha256": "f49f5a342fa5ee3ddf67ede9eb295ef5a4c03ee926891439e2a2f8b81ed62e5c"
+    },
+    "gate-4": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/copilot/ai-copilot-interactions.test.tsx",
+        "src/features/knowledge/knowledge-dump-zone.test.tsx",
+        "src/features/topics/topics-interactions.test.tsx",
+        "src/components/overlays/overlay-routing.test.tsx",
+        "src/lib/copilot-navigation.test.ts",
+        "src/features/copilot/chat-tool-trace.test.tsx",
+        "src/features/automations/run-controls.test.tsx",
+        "src/features/automations/cadence.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:18:53.122093+00:00",
+      "finishedAt": "2026-10-09T00:19:27.689388+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 34.567000584007474,
+      "logSha256": "e670b81a00031000f5df28af8676f758dae707967a17f3c42f734cf762b97e5a"
+    },
+    "types-backend-final": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "typecheck"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:23:22.366802+00:00",
+      "finishedAt": "2026-10-09T00:24:17.160529+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 54.79332370898919,
+      "logSha256": "931327292db1bbff62320abd8dd57032ae19ad39b9e012d04233dc49d716637b"
+    },
+    "types-frontend-final": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "typecheck"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:23:22.360658+00:00",
+      "finishedAt": "2026-10-09T00:24:23.203644+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 60.84255537498393,
+      "logSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035"
+    },
+    "gate-7": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "contract",
+        "typecheck"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:18:53.142682+00:00",
+      "finishedAt": "2026-10-09T00:19:00.660438+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 7.517574500001501,
+      "logSha256": "d819a6e1f78b2951433132e182dffbbd1eaa881e6c535db02871314377997331"
+    },
+    "boundary-current": {
+      "argv": [
+        "node",
+        "orchestrator/process/boundary-scan.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:18:39.016236+00:00",
+      "finishedAt": "2026-10-09T00:18:39.518329+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.5018310840241611,
+      "logSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24"
+    },
+    "gate-9": {
+      "argv": [
+        "node",
+        "orchestrator/process/semantic-boundary-scan.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:18:53.123828+00:00",
+      "finishedAt": "2026-10-09T00:18:54.228943+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 1.1042883330082987,
+      "logSha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923"
+    },
+    "gate-10": {
+      "argv": [
+        "node",
+        "orchestrator/process/orphan-scan.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:18:53.143596+00:00",
+      "finishedAt": "2026-10-09T00:18:53.280578+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.13679379201494157,
+      "logSha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+    },
+    "probe-regression": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/modules/production/production-asset-asr.integration.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:23:22.363669+00:00",
+      "finishedAt": "2026-10-09T00:24:08.768057+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 46.40405354098766,
+      "logSha256": "4ab25d14f5f014ce478f52294e468f555b759b6ee40b5cc30e05f246f8419854"
+    },
+    "probe-pg-only": {
+      "argv": [
+        "env",
+        "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "pnpm",
+        "-C",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/modules/production/production-asset-asr.integration.test.ts",
+        "--testNamePattern=T1062真实PG同组不同父Source",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:30:58.288492+00:00",
+      "finishedAt": "2026-10-09T00:31:09.602493+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 11.313762583013158,
+      "logSha256": "5e75b7120930343434328b664660077fb48e797fd14642e29887d7b568ee19b1"
+    },
+    "article-original-770037-baseline": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/article/article-workbench.test.tsx",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1094/baseline-770037",
+      "startedAt": "2026-10-09T00:21:08.779061+00:00",
+      "finishedAt": "2026-10-09T00:21:19.310287+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 10.531013542000437,
+      "logSha256": "66c7a5eee950c93c9126576d5044c4313dfc70fdfb2ea986e5f8d5c22749d4fe"
+    },
+    "task-execution-original-770037-baseline": {
+      "argv": [
+        "pnpm",
+        "-C",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/modules/ai/ai.task-execution.integration.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=180000",
+        "--hookTimeout=180000"
+      ],
+      "cwd": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1094/baseline-770037",
+      "startedAt": "2026-10-09T00:22:54.503716+00:00",
+      "finishedAt": "2026-10-09T00:24:00.400347+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 65.89626245800173,
+      "logSha256": "9a3b28136d5a0a7b1cabef56c05abc63d160ec9167363142b670898bc29d2a1b"
+    },
+    "spec-review-closure": {
+      "argv": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-1094",
+        "--spec",
+        "docs/features/t1094-public-partial-task-status.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/features/t1094-public-partial-task-status.review-input.json",
+        "--review",
+        "docs/features/t1094-public-partial-task-status.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "independent",
+        "--model",
+        "gpt-6"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:23:00.762542+00:00",
+      "finishedAt": "2026-10-09T00:23:00.944821+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.1821428750117775,
+      "logSha256": "67aaebb20a048e457520f530164f19e199e306daacc919707cc169368dd0281a"
+    },
+    "installed-before-task": {
+      "argv": [
+        "creatoros",
+        "call",
+        "ai.tasks.get",
+        "--group",
+        "grp-58776bff-101",
+        "--input",
+        "{\"params\":{\"taskId\":\"ai-task-434be109-200\"}}"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:30:41.062209+00:00",
+      "finishedAt": "2026-10-09T00:30:42.227121+00:00",
+      "exitCode": 4,
+      "elapsedSeconds": 1.1646420000179205,
+      "logSha256": "9efee948c2215d2c3060b2c28e2481ea22ac052f1c4e5b4e7dcaf0f0f7432d3e"
+    },
+    "installed-before-tasks": {
+      "argv": [
+        "creatoros",
+        "call",
+        "ai.tasks.list",
+        "--group",
+        "grp-58776bff-101",
+        "--input",
+        "{\"query\":{\"page\":1,\"pageSize\":100,\"projectId\":\"project-58776bff-104\"}}"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:30:41.062502+00:00",
+      "finishedAt": "2026-10-09T00:30:42.335715+00:00",
+      "exitCode": 4,
+      "elapsedSeconds": 1.2725351669942029,
+      "logSha256": "988a1912461a8bf5dc4c34ebeec148b97892f8249d449e3e0aa325ca6ca84b08"
+    },
+    "installed-before-results": {
+      "argv": [
+        "creatoros",
+        "call",
+        "ai.tasks.results.list",
+        "--group",
+        "grp-58776bff-101",
+        "--input",
+        "{\"params\":{\"taskId\":\"ai-task-434be109-200\"}}"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:30:41.062213+00:00",
+      "finishedAt": "2026-10-09T00:30:42.354389+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 1.292000374989584,
+      "logSha256": "638b1a1b98898236dc3afb96ac35b0cfa8fb070216d14d84f34b56a3e8afd01f"
+    },
+    "installed-before-messages": {
+      "argv": [
+        "creatoros",
+        "call",
+        "ai.conversations.messages.list",
+        "--group",
+        "grp-58776bff-101",
+        "--input",
+        "{\"params\":{\"conversationId\":\"ai-conv-434be109-196\"}}"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:30:41.062255+00:00",
+      "finishedAt": "2026-10-09T00:30:42.372676+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 1.3101948749972507,
+      "logSha256": "8572bc431dc7c83465b77e1c98b028bd58eb11f68323911024e61b30d669156e"
+    },
+    "full-reconcile": {
+      "argv": [
+        "env",
+        "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "node",
+        "orchestrator/process/reconcile.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:23:43.809249+00:00",
+      "finishedAt": "2026-10-09T00:40:03.979077+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 980.1620769999863,
+      "logSha256": "5a7dc597bbef244902c857fc708f2a8e4fbfe10583fb9d46624d709b7079ea5a"
+    },
+    "pmem-sync": {
+      "argv": [
+        "node",
+        "orchestrator/process/pmem.mjs",
+        "sync"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T00:37:23.021837+00:00",
+      "finishedAt": "2026-10-09T00:37:25.111155+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 2.089158791000955,
+      "logSha256": "b5ac1679d0cd4b2cc51bf585e19ea3873e57bb5a3ec456fb9f5763a40e45710f"
+    }
+  },
+  "actualTdd": {
+    "publicPartial": {
+      "redFailed": 1,
+      "redPassed": 1,
+      "greenPassed": 2
+    },
+    "newCards": {
+      "redFailed": 9,
+      "redPassed": 1,
+      "hydratedRedFailed": 1,
+      "greenPassed": 11
+    },
+    "newPageConsumers": {
+      "redFailed": 3,
+      "greenPassed": 3
+    },
+    "fixtureWiringFailuresRetained": true
+  },
+  "relatedGateFailures": {
+    "frontend": 9,
+    "backend": 6,
+    "exactOriginalBaselineReproduced": true,
+    "comparisonSha256": "e11af88b63867dc4b67b28e6cbd11e56e9cada6360bf8fe92e6a30b516070326",
+    "rootCauseTask": "T-1096",
+    "gateExitCodesRemainFailed": true,
+    "causeComparisonSha256": "6f86892472b6fd31fabc55250e33f4d5c4846c7644f76001779124a25e6b46e8"
+  },
+  "productionProbe": {
+    "nonPgPassed": 8,
+    "pgTargetPassed": 1,
+    "pgTargetOtherEightFilteredSkipped": true,
+    "realModel": false
+  },
+  "visual": {
+    "proofPath": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1094/ui-render-proof.json",
+    "sha256": "de6e2b123f6e243285bfc4920501e27d40b7c8f84f3a2c2b838e98eda59a55e5",
+    "actualScreenshotsViewed": true,
+    "nativeInstalledGui": false
+  },
+  "fullReconcile": {
+    "status": "finished",
+    "exitCode": 1,
+    "errors": 42,
+    "warnings": 0,
+    "addedErrors": [],
+    "logsByteIdenticalToT1091": true,
+    "comparisonSha256": "494d3363aa12d1cfa6bc51c0515937b3c3851231704895a6d52ad2ecd0186af0",
+    "boundaryFixtureIntroducedErrorsFromT1093Removed": 2,
+    "notPass": true
+  },
+  "installedBefore": {
+    "sourceSha": "77003717de03a141d16b7af6301ab6cfe4635564",
+    "taskGet": "HTTP400",
+    "taskList": "HTTP400",
+    "messages": 2,
+    "results": 1,
+    "originalTaskId": "ai-task-434be109-200",
+    "newTaskSent": false
+  },
+  "newPackage": "not-built-yet",
+  "taskCompleted": false,
+  "prefreezeIndependentReview": {
+    "path": "/Users/zyongzhu/CreatorOS-local-acceptance/main-installed-20261008/t1094/PREFREEZE_RECHECK.md",
+    "sha256": "70108bf92239ea803e62e78852f23b75c54cc7638862df651e2c9ecc56d82a55",
+    "localCommitConditionalOnFinalReconcile": true
+  },
+  "reviewedProductSourceNoDrift": true
+}

@@ -19,6 +19,7 @@
 
 import * as React from "react";
 import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
+import { TaskPartialNotice } from "@/components/ai/task-partial-notice";
 import { useRouter } from "next/navigation";
 
 import { client } from "@/lib/contract-client";
@@ -47,7 +48,7 @@ const VERDICT_META: Record<
   },
 };
 
-type Phase = "running" | "ready" | "error";
+type Phase = "running" | "ready" | "error" | "partial";
 
 export function ChatReviewReportCard({
   taskId,
@@ -99,6 +100,7 @@ export function ChatReviewReportCard({
             body: undefined,
           })) as { status: string };
           if (cancelledRef.current || !isCurrent()) return;
+          if (status.status === "partial") { setPhase("partial"); return; }
           if (status.status === "succeeded") {
             const latest = await fetchLatest(projectId);
             if (cancelledRef.current || !isCurrent()) return;
@@ -143,6 +145,7 @@ export function ChatReviewReportCard({
       </span>
 
       <TaskObservationNotice {...observation} />
+      <TaskPartialNotice visible={phase === "partial"} />
       {phase === "running" && !observation.paused ? (
         <div
           data-slot="chat-review-running"

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -43,6 +43,28 @@ beforeEach(() => {
   mocks.adoptArticleCandidate.mockResolvedValue({ versionId: "v2", document: empty });
 });
 afterEach(() => { cleanup(); sessionStorage.clear(); vi.unstubAllGlobals(); });
+
+it("部分完成保留原任务键，刷新只读原任务，不查询或采用未就绪候选", async () => {
+  vi.useFakeTimers();
+  try {
+    const key = "creatoros:article-task:output-a";
+    sessionStorage.setItem(key, "original-partial");
+    mocks.getTask.mockResolvedValue({ id: "original-partial", status: "partial", runtimeStatus: "partial", errorMessage: null });
+    const props = { projectId: "project-a", projectTitle: "原文章", initialOutputs: [{ id: "output-a", title: "文章" }] };
+    const first = render(<ArticleWorkbench {...props}/>);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1200000); });
+    expect(mocks.getTask).toHaveBeenCalledTimes(1);
+    expect(first.container.textContent).toContain("部分完成");
+    expect(sessionStorage.getItem(key)).toBe("original-partial");
+    first.unmount();
+    const reopened = render(<ArticleWorkbench {...props}/>);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1200000); });
+    expect(mocks.getTask).toHaveBeenCalledTimes(2);
+    expect(reopened.container.textContent).toContain("部分完成");
+    expect(mocks.getTask.mock.calls.every(([input]) => input.params.taskId === "original-partial")).toBe(true);
+    for (const fn of [mocks.generateArticleCandidate, mocks.getArticleCandidate, mocks.adoptArticleCandidate, mocks.createArticleVersion]) expect(fn).not.toHaveBeenCalled();
+  } finally { vi.useRealTimers(); }
+});
 
 describe("公众号文章工作台", () => {
   it("衍生稿不重复页头小字，正文与段落标题跟脚本使用同一字号", async () => {

@@ -119,6 +119,9 @@ async function waitForExtractedText(
       errorMessage?: string | null;
     };
     if (!isAlive()) return null;
+    if (task.status === "partial") {
+      throw new Error("正文解析部分完成；原文件已保存在素材库，未加入知识库。");
+    }
     if (task.status === "failed" || task.status === "cancelled") {
       throw new Error(
         task.errorMessage?.trim() ||

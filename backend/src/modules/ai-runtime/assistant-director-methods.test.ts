@@ -2,9 +2,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { workEditorNativeEdit, workCreationReadInput, workEditorTarget, workCreationTarget, type RequestContext } from '@creatoros/contract';
 import { chatWorkerInputSchema } from '@creatoros/contract/execution-worker';
 import { registerAllTemplates } from '@creatoros/ai-worker';
-import { createDb, aiTasks, executionTasks, eq, type Db } from '@creatoros/backend';
-import { createAiRepository } from '../ai/ai.repository';
-import { createProjectsService, createProjectRepository } from '../projects';
+import { createDb, aiTasks, executionTasks, projects, and, eq, type Db } from '@creatoros/backend';
+import { createAiService } from '../ai';
 import { chatInputDigest, createChatTurnSubmissionService, type ChatTurnSnapshot, type ChatTurnAssembly } from '../ai/chat-turn-submission.service';
 import { prepareChatTurn } from './chat-turn-preparation';
 import type { AssembleChatDeps } from './chat-assembly-types';
@@ -64,11 +63,13 @@ describe('T1093 实际装配与原提交冻结链（隔离PGlite，无模型执�
 
   it.each(['editor', 'creation'] as const)('%s 方法进入实际system及持久modelInput，同源重放不重新装配或改冻结字节', async family => {
     const ctx = { userId: 'director-method-user', accountId: nextId('account'), requestId: 'test', source: 'user' as const };
-    const projects = createProjectsService(createProjectRepository(db), { now, nextId });
-    const project = await projects.createProject(ctx, { title: '隔离编导方法冻结验收' });
-    const repo = createAiRepository(db, { userId: ctx.userId, accountId: ctx.accountId, now, nextId });
-    const conversation = await repo.createConversation({ title: '方法冻结', projectId: project.id, scope: `project:${project.id}` });
-    const source = await repo.createMessage(conversation.id, { role: 'user', content: '只提出候选，尚未采用', attachments: [], modelMetadata: {} });
+    const project = { id: nextId('project') }, stamp = now();
+    // 仅隔离库声明项目父夹具；跨模块会话/消息写入经正式AiService，不调用其它模块仓库。
+    await db.insert(projects).values({ id: project.id, userId: ctx.userId, accountId: ctx.accountId, title: '隔离编导方法冻结验收', creationMode: 'manual', status: 'active', currentStage: 'script', startedAt: stamp, createdAt: stamp, updatedAt: stamp });
+    const forbidden = async () => { throw Error('冻结夹具不得执行候选采用或模型'); };
+    const ai = createAiService({ db, now, nextId, artifacts: { createVersion: forbidden }, knowledge: { createKnowledge: forbidden }, positioning: { upsertProfile: forbidden, createStatementVersion: forbidden }, candidate: { createFromAIResult: forbidden, enrichCard: forbidden }, learnings: { createLearning: forbidden }, publishing: { createPublicationFromDraft: forbidden }, materialLinks: { link: forbidden }, calibration: { createDraftPrediction: forbidden } });
+    const conversation = await ai.createConversation(ctx, { title: '方法冻结', projectId: project.id, scope: `project:${project.id}` });
+    const source = await ai.createMessage(ctx, conversation.id, { content: '只提出候选，尚未采用', attachments: [] });
     const editorTarget = workEditorTarget.parse({ schemaVersion: 1, projectId: project.id, outputId: 'neutral-video', owner: 'production', contentType: 'video', savedBase: { kind: 'production', productionId: 'neutral-production', revision: 1 }, documentDigest: `sha256:${'a'.repeat(64)}`, selection: { kind: 'native_scene', sceneId: 'scene', elementRefs: [], playheadTick: 0, contextEpoch: 1, editorGeneration: 'test-generation' } });
     const creationTarget = workCreationTarget.parse({ schemaVersion: 1, clientRequestId: 'director-method-freeze', projectId: project.id, compositionId: 'neutral-composition', compositionRevision: 1, scriptSourceRef: { kind: 'project_script', id: 'script', versionId: 'script-version' }, scriptConfirmation: { confirmedBy: 'user', source: 'public-request' }, articleMember: { kind: 'article', outputId: 'article', artifactId: 'article-artifact', baseVersionId: 'article-version' }, graphicMember: { kind: 'image', outputId: 'graphic', artifactId: 'graphic-artifact', baseVersionId: 'graphic-version' } });
     // 目标reader是显式准备夹具；此测试证明真实装配→原提交冻结，不代替领域归属或真实Pi。
@@ -81,7 +82,11 @@ describe('T1093 实际装配与原提交冻结链（隔离PGlite，无模型执�
       expect(prepared.toolDefinitions.map(t => t.name)).toEqual(expect.arrayContaining(family === 'editor' ? editorTools : creationTools));
       return { capability: prepared.assembly.capability, system: prepared.assembly.system, messages: chatWorkerInputSchema.shape.messages.parse(prepared.modelMessages), tools: prepared.toolDefinitions, maxSteps: 6, maxOutputTokens: 32768 };
     });
-    const service = createChatTurnSubmissionService(db, { now, nextId, assemble, assertProject: (owner, projectId) => projects.getProject(owner, projectId) });
+    const service = createChatTurnSubmissionService(db, { now, nextId, assemble, assertProject: async (owner, projectId) => {
+      // 显式隔离父夹具端口，仅核本测试的父ID和归属；不声称领域项目服务已验收。
+      const [parent] = await db.select().from(projects).where(and(eq(projects.id, projectId), eq(projects.userId, owner.userId), eq(projects.accountId, owner.accountId!)));
+      if (!parent) throw Error('隔离项目父夹具不存在或归属不符');
+    } });
     const request = { conversationId: conversation.id, sourceMessageId: source.id };
     const submitted = await service.submit(ctx, request);
     const readFrozen = async () => {
