@@ -1,0 +1,61 @@
+{
+  "schema": "creatoros-current-limited-closure-independent-review/v1",
+  "reviewedAt": "2026-10-09T15:14:39Z",
+  "head": "703669796b2d9fbf61ced8dcba3145be2c61ba1f",
+  "verdicts": {
+    "T1133": "PASS_LIMITED_TASK_COMPLETION_ADMISSIBLE",
+    "T1127": "PASS_LIMITED_TASK_COMPLETION_ADMISSIBLE",
+    "T1131": "PASS_DIAGNOSTIC_CLOSURE_CURRENTLY_NOT_REPRODUCIBLE",
+    "T1132": "PASS_DIAGNOSTIC_CLOSURE_CURRENTLY_NOT_REPRODUCIBLE",
+    "T1135": "REMAINS_ACTIVE_NOT_REVIEWED_FOR_CLOSURE"
+  },
+  "canonical": {
+    "exitCode": 1,
+    "errors": 39,
+    "warnings": 0,
+    "elapsedSeconds": 1693.530284959008,
+    "logSha256": "7015fc99b4232a35b42ea959a7bc1f2de90c613267ea47330f34b47d6ad96498",
+    "addedComparedTo43": [],
+    "removedComparedTo43": ["LED-032", "LED-040", "LED-031", "LED-061"],
+    "addedComparedToOriginal41": [],
+    "removedComparedToOriginal41": ["LED-032", "LED-040"],
+    "fullGatePass": false
+  },
+  "evidenceSha256": {
+    "docs/verification/t1133/full-reconcile-canonical.json": "1062c6cc8312379be5cf46d3518dbf76ba84fa08d4b7743eab7d51cd0261c489",
+    "docs/verification/t1133/canonical-comparison.json": "dd5b94421f672a2b3567797ba47160bef98b86da28d4d33412987baebdcf57d8",
+    "docs/verification/t1133/canonical-source-freeze.json": "22fe047b4d63f473e173b78a197756afa7565e7551e27e02962e0ce4850d40a5",
+    "docs/verification/t1133/CURRENT_VALIDATION.md": "cbf8a0b11fb36e3ddc2d0c0d793345db0d95f97299a43f84eda09a35f3247e17",
+    "docs/verification/t1133/current-test-source-sha256.json": "06dc579da49481b82f52eee7677df151f326f2414262abde63c9b0841cd19ba8",
+    "docs/verification/t1127/source-port-sha256.json": "1c592dd5751c0d70758ab39d6355deb7f9fc173207bf5ada6dc102545366e40c",
+    "docs/features/t1127-main-analytics-integration.md": "8e856198c20eea876da52401c2179d3c1b29ea8c261bf57815f35e20eaea0234",
+    "docs/verification/t1131/CURRENT_VALIDATION.md": "1f491c77c8fef9f3ae2e1d7164f54ad4613b2e14c69c1bfef7a8ff50269179a3",
+    "docs/verification/t1132/CURRENT_VALIDATION.md": "badc356cecba96dfb45fc6da1a7f9d0eae6cfb7e3554e4f69b3c3db06136af19",
+    "original-sequence/LED-031.log": "3214a8b9b71b3f809af29d5e21567282137f32b14e334010b3c2df6acd7bd90b",
+    "original-sequence/LED-061.log": "5a3d3ebfc6af948b9b6effbdfe1781719eee2bf48992696c64bff82fc0acb05d"
+  },
+  "findings": [],
+  "closureConditions": {
+    "retainOriginalFailures": true,
+    "retain39GlobalErrors": true,
+    "doNotClaimRootCauseForT1131T1132": true,
+    "doNotClaimProductFixForT1131T1132": true,
+    "keepT1135SeparateAndActive": true
+  },
+  "nonClaims": [
+    "global reconcile PASS",
+    "package or installed acceptance",
+    "native UI or platform scan acceptance",
+    "real model or combined candidate acceptance",
+    "T1135 color fidelity closure",
+    "all functions available"
+  ],
+  "execution": {
+    "tests": false,
+    "database": false,
+    "app": false,
+    "model": false,
+    "repositoryModified": false,
+    "taskStateModified": false
+  }
+}

@@ -9,14 +9,15 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1135 | 核对安装版粗剪成片解码画面比原素材偏暗 | 🔨 待办 | — | — | [实际诊断](docs/features/t1135-installed-render-color-fidelity.md) | 已批准r7中性成片正式exact-file下载/245帧解码通过，但源+6.76秒三处背景RGB17/36/57变为0/19/44；先核原工程与编码色彩/公共渲染路径，根因未知，不重提渲染或改原稿/媒体；修产品前精确SPEC独评。 |
 | T-1134 | 核对恢复素材不可用提示的读取时序 | ✅ 待办 | — | — | [实际诊断](docs/features/t1134-recovered-material-readiness.md) | T1133校准后37例36PASS/1FAIL，素材标记同步断言未等清单ready；先按原断言120秒观察实际状态，持续缺失再补产品SPEC，不猜界面缺陷或放宽为总提示。 |
-| T-1133 | 修正制作回归测试的素材选择、操作目录与结果归属漂移 | 🔨 待办 | PASS[REV:c6d0579feef6] | — | [SPEC](docs/features/t1133-production-regression-fixture-compatibility.md) | 原顺序LED032/040实际失败：退役select、目录18对32、假结果资产；先独评保原恢复/导出/归属断言，按当前选择器及真实公开资产链校准，不改产品洗绿。 |
-| T-1132 | 核对完整对账新增资源生命周期回归失败 | 🔨 待办 | — | — | [实际诊断](docs/features/t1132-resource-lifecycle-current-gate.md) | 同轮完整canonical新增LED061；先原命令分段保实际断言、作用域和sourceSHA，核释放/背压/停止及等待真值，不删历史、重发任务或用旧PASS代签。 |
-| T-1131 | 核对完整对账新增渲染模块解析消费门失败 | 🔨 待办 | — | — | [实际诊断](docs/features/t1131-render-resolver-current-gate.md) | T1127完整canonical实际43ERROR，原41保留、LED031新增；取得原公开检查内层断言后核源码/依赖/环境，尚不猜归因、不删require/NODE_OPTIONS规则或弱化真渲染。 |
+| T-1133 | 修正制作回归测试的素材选择、操作目录与结果归属漂移 | ✅ 待办 | PASS[REV:c6d0579feef6] | — | [SPEC](docs/features/t1133-production-regression-fixture-compatibility.md) | 原顺序LED032/040实际失败：退役select、目录18对32、假结果资产；先独评保原恢复/导出/归属断言，按当前选择器及真实公开资产链校准，不改产品洗绿。 |
+| T-1132 | 核对完整对账新增资源生命周期回归失败 | ✅ 待办 | — | — | [实际诊断](docs/features/t1132-resource-lifecycle-current-gate.md) | 同轮完整canonical新增LED061；先原命令分段保实际断言、作用域和sourceSHA，核释放/背压/停止及等待真值，不删历史、重发任务或用旧PASS代签。 |
+| T-1131 | 核对完整对账新增渲染模块解析消费门失败 | ✅ 待办 | — | — | [实际诊断](docs/features/t1131-render-resolver-current-gate.md) | T1127完整canonical实际43ERROR，原41保留、LED031新增；取得原公开检查内层断言后核源码/依赖/环境，尚不猜归因、不删require/NODE_OPTIONS规则或弱化真渲染。 |
 | T-1130 | 校正局部图表验证被登记为整页旅程验收 | ✅ 待办 | — | — | [实际诊断](docs/features/t1130-chart-acceptance-applicability.md) | 根登记T1127验收待验，但原已审SPEC只要求局部组件Chrome回放；正式消费者强制non-fixture及journey，不能补拍。只读独评允许仅校正适用性并保全部原验证，不改状态/验证器/产品。 |
 | T-1129 | 校正本轮验证清单的孤儿检查入口名称 | ✅ 待办 | — | — | [实际诊断](docs/features/t1129-verification-orphan-entry.md) | T1127实际组合static exit1，boundary/semantic/diff已0，根误写不存在orphan-check；真实入口为orphan-scan，只校正命令并原扫描，不删门/断言或代签旧0。 |
 | T-1128 | 修正图表采证入口依赖本机未安装图片库 | ✅ 待办 | — | — | [实际诊断](docs/features/t1128-chart-visual-dependency.md) | T1127产品未改，首次baseline截图后PIL未安装实际exit1；只用浏览器原生图片解码取同截图像素，不删圆点/坐标/0retry断言，不将环境失败冒作产品RED。 |
-| T-1127 | 在当前main整合实测样本、错过计划保护与图表孤立点修复 | 🔨 待办 | PASS[REV:d4acb71a0241] | — | [SPEC](docs/features/t1127-main-analytics-integration.md) | T1124实际发现来源T1106分析12条路径增量缺失，main逐字仍旧基点；先独评、仅测试真实RED，再整合5产品/7测试及当前组合验证，不补历史或代签来源/安装。 |
+| T-1127 | 在当前main整合实测样本、错过计划保护与图表孤立点修复 | ✅ 待办 | PASS[REV:d4acb71a0241] | — | [SPEC](docs/features/t1127-main-analytics-integration.md) | T1124实际发现来源T1106分析12条路径增量缺失，main逐字仍旧基点；先独评、仅测试真实RED，再整合5产品/7测试及当前组合验证，不补历史或代签来源/安装。 |
 | T-1126 | 核对安装版粗剪导出确认409与AI工具入口指引 | ✅ 待办 | — | — | [实际诊断](docs/features/t1126-installed-render-confirm-routing.md) | d712新安装版65原读回一致；同一已采纳r7粗剪导出task317待确认，ai.tasks.confirm显式同组仍409 execution_manifest未实现；先核结果/真实执行ID与正确公开入口，不改归属/不猜ID/不重提导出或模型。具体是调用选择或产品指引缺口待证。 |
 | T-1125 | 修正本机出包冻结辅助检查把脱敏测试夹具误报为真实密钥 | ✅ 待办 | PASS[REV:d9e25d4f31e7] | — | [SPEC](docs/features/t1125-package-private-preflight-fixture.md) | ec5冻结全扫描321秒exit1，三Rust测试模块4类命中皆脱敏合成夹具；保原RED并先独评仅准确path/sourceSHA/逐值SHA分类，未知仍拒，原规则全扫描不删。只改私有helper，不改vendor/build；当前45基本PASS不代签出包。 |
 | T-1124 | 核对本轮新增来源分支未合入main的源码并闭合整合 | 🔨 待办 | — | — | [实际诊断](docs/features/t1124-current-worktree-source-gap.md) | T1080删除前只读再盘点：canvas来源17条源码/测试路径main缺失，chart来源1条缺失，其它58条不同不能直接算遗漏；保留来源与活跃树，逐项核main替代及新增SPEC/独评，禁止ours丢源码或代签全合并。先交付当前已复核包继续验收，本轮新增功能不冒称已入包。 |

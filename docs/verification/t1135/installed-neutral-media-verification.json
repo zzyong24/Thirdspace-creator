@@ -1,0 +1,205 @@
+{
+  "startedAt": "2026-10-09T14:57:03.159483+00:00",
+  "finishedAt": "2026-10-09T14:57:03.210272+00:00",
+  "elapsedSeconds": 0.050596916989888996,
+  "sourceHead": "d712130f9a02887ee60c092f9263a6da56a941fe",
+  "groupId": "grp-58776bff-101",
+  "projectId": "project-58776bff-104",
+  "outputId": "output-58776bff-119",
+  "revision": 7,
+  "taskId": "ai-task-69d4c1de-317",
+  "assetId": "asset-69d4c1de-367",
+  "assetFileId": "afile-69d4c1de-368",
+  "fileSize": 199098,
+  "fileSha256": "a72af1826b27bc566fb7b839c4c0813aa3cc04bb0cde6164e1ec04f41f3e1558",
+  "contentType": "video/mp4",
+  "urlNotDisclosed": true,
+  "downloadStatus": 200,
+  "originOwnedByPublicAppPid": true,
+  "writesToDomain": 0,
+  "newModelCalls": 0,
+  "newRenderSubmissions": 0,
+  "claims": {
+    "decoded": true,
+    "nativePlayer": false,
+    "new703Package": false,
+    "framesHumanViewed": true
+  },
+  "verifiedAt": "2026-10-09T14:59:32.531342+00:00",
+  "durationSeconds": 8.166667,
+  "videoCodec": "h264",
+  "audioCodec": "aac",
+  "decodedVideoFrames": 245,
+  "decodedAudioFrames": 383,
+  "width": 640,
+  "height": 360,
+  "fps": "30/1",
+  "receipts": [
+    {
+      "argv": [
+        "python3",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/download-approved-neutral-media.py"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T14:57:02.957576+00:00",
+      "finishedAt": "2026-10-09T14:57:03.225050+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.2671977499849163,
+      "logSha256": "82a69d581b170aa2d2c92d11ef90a95db58066bd7488e3edd34125999e108a89"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/bin/ffprobe",
+        "-v",
+        "error",
+        "-count_frames",
+        "-show_format",
+        "-show_streams",
+        "-of",
+        "json",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/approved-neutral-cut-r7.mp4"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T14:57:43.363477+00:00",
+      "finishedAt": "2026-10-09T14:57:43.550254+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.18649450002703816,
+      "logSha256": "c36530548fdbc08f629cf7aa0ede1c5929e6a63120e8f73d306587eec9e14ab4"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-v",
+        "error",
+        "-xerror",
+        "-threads",
+        "1",
+        "-filter_threads",
+        "1",
+        "-i",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/approved-neutral-cut-r7.mp4",
+        "-f",
+        "null",
+        "-"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T14:57:43.363465+00:00",
+      "finishedAt": "2026-10-09T14:57:43.554199+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.1904456250485964,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-v",
+        "error",
+        "-threads",
+        "1",
+        "-ss",
+        "0.3",
+        "-i",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/approved-neutral-cut-r7.mp4",
+        "-frames:v",
+        "1",
+        "-threads",
+        "1",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/approved-neutral-cut-r7-start.png"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T14:59:32.006370+00:00",
+      "finishedAt": "2026-10-09T14:59:32.274962+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.26746520795859396,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-v",
+        "error",
+        "-threads",
+        "1",
+        "-ss",
+        "4.0",
+        "-i",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/approved-neutral-cut-r7.mp4",
+        "-frames:v",
+        "1",
+        "-threads",
+        "1",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/approved-neutral-cut-r7-middle.png"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T14:59:32.006969+00:00",
+      "finishedAt": "2026-10-09T14:59:32.285588+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.2778767090057954,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/bin/ffmpeg",
+        "-v",
+        "error",
+        "-threads",
+        "1",
+        "-ss",
+        "7.8",
+        "-i",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/approved-neutral-cut-r7.mp4",
+        "-frames:v",
+        "1",
+        "-threads",
+        "1",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/approved-neutral-cut-r7-end.png"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T14:59:32.008642+00:00",
+      "finishedAt": "2026-10-09T14:59:32.281561+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.27239195798756555,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "frameSha256": {
+    "start": "03648e19a5e6b054c6973a4d67b8ce076dd24618fb80d3f8e8435ee4c6c42b42",
+    "middle": "95f048ac6c3ab7f2b09a2a59cc6b227288dd5859b2bb7cc1dd3558cc4d835b9d",
+    "end": "156a0ec8652bc2d59388cdd090a5e09b8066ee81c8cbbf619de3ad8307f74217"
+  },
+  "boundary": "已安装d712包正式CLI exact file下载并完整解码；未原生播放器/新703包/供应商模型验收。第一次地址与本地metadata helper判断失败保留，未当产品缺陷。",
+  "frameComparison": [
+    {
+      "tag": "start",
+      "outputSeconds": 0.3,
+      "sourceSeconds": 7.06,
+      "sourceInSeconds": 6.76,
+      "outputPngSha256": "03648e19a5e6b054c6973a4d67b8ce076dd24618fb80d3f8e8435ee4c6c42b42",
+      "sourcePngSha256": "d0baee93d10e47e298c08f70de79d15359a570c80e84eaf6f97fd3092deff784",
+      "decodedPngBytesEqual": false
+    },
+    {
+      "tag": "middle",
+      "outputSeconds": 4.0,
+      "sourceSeconds": 10.76,
+      "sourceInSeconds": 6.76,
+      "outputPngSha256": "95f048ac6c3ab7f2b09a2a59cc6b227288dd5859b2bb7cc1dd3558cc4d835b9d",
+      "sourcePngSha256": "88aad3314ebffc4a047805f9942bea6f212c9f606777fc4fa5e1f86ed1929213",
+      "decodedPngBytesEqual": false
+    },
+    {
+      "tag": "end",
+      "outputSeconds": 7.8,
+      "sourceSeconds": 14.56,
+      "sourceInSeconds": 6.76,
+      "outputPngSha256": "156a0ec8652bc2d59388cdd090a5e09b8066ee81c8cbbf619de3ad8307f74217",
+      "sourcePngSha256": "ce33e1baa34e93787a43d8a8669c19a6e908bf75bede40d86dc48a2c4e7dc57d",
+      "decodedPngBytesEqual": false
+    }
+  ],
+  "rootFrameCheck": {
+    "checkedAt": "2026-10-09T15:01:02.561360+00:00",
+    "method": "view_image显示六张640x360解码帧，根逐张查看",
+    "observation": "中性计数板输出起始为深蓝底，中段数字2，结尾数字3；源+6.76秒对照对应三帧；不推为用户真人视频审美或原生播放器验证"
+  }
+}

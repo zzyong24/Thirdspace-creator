@@ -22,3 +22,12 @@ flowchart LR
 详细命令、真实时间、退出码、耗时及日志SHA256见actual-command-receipts.json。原始日志保留于私有验收目录t1117-20261009，不提交业务正文、URL或凭据。完整对账原stdignore没有保留内层断言。T1131分段复验原backend两文件30PASS、原RAT67PASS；T1132原完整资源生命周期五组26文件352PASS。产品12路径均未改，原完整43失败仍保留，不能用分段PASS代签全局或原首因。后续按原lesson同序采集内层日志，当前任务保持进行中。父T1124其它来源整合与T1062下一包仍未完成。
 
 T1130已独立核验适用性登记：本任务无formal journey contract，只有组件回放；验收列校正为—并保留全部原要求，不把合成数据冒作non-fixture或补拍refresh/back。DEC-T1130-01、实际单格前后SHA/控制审计及真实taskctl completion均保留。T1129孤儿命令校正也已独立复核和真实taskctl完成。
+
+## 后续当前主线完整对账
+
+70366979仅修T1133两测试协议漂移，T1127十二条源SHA未改；原规则完整canonical实际1693.530284959秒/exit1/39ERROR/0warning，日志SHA7015fc99b4232a35b42ea959a7bc1f2de90c613267ea47330f34b47d6ad96498。原41中的LED032/040在当前已修，原43新增031/061本轮未复现，新增0。其余39全局失败原字节保留，不签全绿；新T1135旧安装成片色差是独立渲染范围，不能代签本组图表或本任务完成。当前有限功能闭合准入待独评。
+
+
+## 当前限定收尾
+
+2026-10-09独立收尾复核绑定当前70366979与真实canonical终态，详见 `../t1133/CURRENT_CLOSURE_REVIEW.md/json`。taskctl实际完成收据 `limited-completion-command.json`；原失败、39项全局ERROR及安装/模型/全功能未完成边界保留。

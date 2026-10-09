@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "commit",
+    "-m",
+    "test: 校准制作恢复素材与导出归属回归并保留原失败"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T14:43:31.134395+00:00",
+  "finishedAt": "2026-10-09T14:43:31.333271+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.19801716698566452,
+  "logSha256": "ab7b551e0a1d86deab2fa2d02e99251a7e278d49bf885544eb14ebd8d2dd3f88"
+}

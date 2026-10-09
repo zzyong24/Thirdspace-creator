@@ -1,0 +1,68 @@
+[
+  {
+    "argv": [
+      "/Users/zyongzhu/.local/bin/creatoros",
+      "call",
+      "assets.get",
+      "--group",
+      "grp-58776bff-101",
+      "--input",
+      "@/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1133-installed-neutral-source-asset-input.json"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T15:00:19.742650+00:00",
+    "finishedAt": "2026-10-09T15:00:20.731791+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.9890252079931088,
+    "logSha256": "f6cb79e0e632735892660e12fac919c52244cc78bd70226fcb091ea2caa3fc89"
+  },
+  {
+    "argv": [
+      "/Users/zyongzhu/.local/bin/creatoros",
+      "call",
+      "assets.fileDownloadUrl",
+      "--group",
+      "grp-58776bff-101",
+      "--input",
+      "@/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1133-installed-neutral-source-file-input.json"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T15:00:19.742735+00:00",
+    "finishedAt": "2026-10-09T15:00:21.198893+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 1.4558665840304457,
+    "logSha256": "ec8771a3757a23ef404907217c5bd5f63d1c5a1308f148f82a131e5f833f7c38"
+  },
+  {
+    "argv": [
+      "/opt/homebrew/bin/ffprobe",
+      "-v",
+      "error",
+      "-show_streams",
+      "-show_format",
+      "-of",
+      "json",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/original-neutral-source.mp4"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T15:01:38.540991+00:00",
+    "finishedAt": "2026-10-09T15:01:38.749309+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.2080593749997206,
+    "logSha256": "3433212130c4e74817a23e6e90535328e58d2f536873549ff973b1c68b2bdfd8"
+  },
+  {
+    "argv": [
+      "node",
+      "orchestrator/process/taskctl.mjs",
+      "start",
+      "T-1135"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T15:02:42.707385+00:00",
+    "finishedAt": "2026-10-09T15:02:43.055943+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.3483560419990681,
+    "logSha256": "87521b5b6f7bff83e4166ad84b5c59d5e2dfbd5cc7cc3e3a6f98bed2bcac341a"
+  }
+]

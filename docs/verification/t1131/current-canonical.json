@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "env",
+    "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+    "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+    "node",
+    "orchestrator/process/reconcile.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T14:43:45.732222+00:00",
+  "finishedAt": "2026-10-09T15:11:59.257152+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 1693.530284959008,
+  "logSha256": "7015fc99b4232a35b42ea959a7bc1f2de90c613267ea47330f34b47d6ad96498"
+}

@@ -1,0 +1,41 @@
+[
+  {
+    "tag": "start",
+    "outputRgb": [
+      0,
+      19,
+      44
+    ],
+    "sourceRgb": [
+      17,
+      36,
+      57
+    ]
+  },
+  {
+    "tag": "middle",
+    "outputRgb": [
+      0,
+      19,
+      44
+    ],
+    "sourceRgb": [
+      17,
+      36,
+      57
+    ]
+  },
+  {
+    "tag": "end",
+    "outputRgb": [
+      0,
+      19,
+      44
+    ],
+    "sourceRgb": [
+      17,
+      36,
+      57
+    ]
+  }
+]

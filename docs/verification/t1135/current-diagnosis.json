@@ -1,0 +1,48 @@
+{
+  "planRevision": 7,
+  "sourceInSeconds": 6.76,
+  "sourceFileDigestMatchesPublicDownloadedBytes": true,
+  "overlayCounts": {
+    "broll": 0,
+    "scenes": 0,
+    "captions": 0
+  },
+  "delivery": {
+    "fps": 30,
+    "width": 640,
+    "height": 360
+  },
+  "probe": {
+    "t1133-installed-neutral-source-probe": {
+      "pix_fmt": "yuv420p",
+      "color_range": null,
+      "color_space": null,
+      "color_transfer": null,
+      "color_primaries": null,
+      "width": 640,
+      "height": 360,
+      "avg_frame_rate": "25/1"
+    },
+    "t1133-installed-neutral-probe": {
+      "pix_fmt": "yuv420p",
+      "color_range": "tv",
+      "color_space": "bt709",
+      "color_transfer": "bt709",
+      "color_primaries": "bt709",
+      "width": 640,
+      "height": 360,
+      "avg_frame_rate": "30/1"
+    }
+  },
+  "mechanism": "UNKNOWN; 未将元数据差异直接认定为根因",
+  "currentSourceSha256": {
+    "backend/src/modules/execution/video-render/executor.ts": "2e0bc1734b2a078c34733f26a1b17e5a1684ee7ce235a747e5280fe3cdf4e1ba",
+    "backend/src/modules/execution/video-render/template.ts": "2790836313a311108f9dbb40b60313c74dc1782ca5355ea74f3eb33ad4be93b4",
+    "backend/src/modules/production/production-v2-compile.ts": "899c97ad77584706ccf6bb300ebc4332cfe21be13e3740f0d099576a10b0c179"
+  },
+  "claims": {
+    "newRenderExecuted": false,
+    "sourceChanged": false,
+    "fixVerified": false
+  }
+}
