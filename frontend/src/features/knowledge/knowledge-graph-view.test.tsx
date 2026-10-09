@@ -256,7 +256,8 @@ describe("KnowledgeGraphView", () => {
         container.querySelector('[data-slot="knowledge-graph-error"]'),
       ).not.toBeNull();
     });
-    expect(getByText("无可用 LLM 凭据")).toBeTruthy();
+    expect(getByText("还没有可用的 AI 模型。完成设置后，回到这里即可继续。")).toBeTruthy();
+    expect(container.textContent).not.toContain("无可用 LLM 凭据");
   });
 
   it("[T-260b] 图面删边:「已建关联」清单点删除 → removeKnowledgeRelation(source/target/type)+ refresh", async () => {

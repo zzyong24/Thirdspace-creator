@@ -226,10 +226,10 @@ describe("T-248 — 任务编辑弹窗", () => {
     await waitFor(() =>
       expect(screen.getByText("编辑采集任务")).toBeInTheDocument(),
     );
-    // 降级提示(明示原 cron)+ 保存禁用
+    // 降级提示与恢复动作 + 保存禁用；内部 cron 不向普通操作者展示。
     const notice = screen.getByTestId("automation-cadence-unresolved");
-    expect(notice.textContent).toContain("无法反解");
-    expect(notice.textContent).toContain("0 9 * * 1,3");
+    expect(notice.textContent).toBe("当前执行计划无法在这里编辑，请重新选择执行时间后保存。");
+    expect(notice.textContent).not.toContain("0 9 * * 1,3");
     const saveBtn = screen
       .getByText("保存修改")
       .closest("button") as HTMLButtonElement;

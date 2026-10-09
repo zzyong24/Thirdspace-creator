@@ -93,6 +93,7 @@ describe("POST /api/knowledge/distill", () => {
     const res = await POST(distillReq({ content: "原文" }));
     expect(res.status).toBe(400);
     const json = (await res.json()) as { error: string };
-    expect(json.error).toContain("无可用 LLM 凭据");
+    expect(json.error).toBe("还没有可用的 AI 模型。完成设置后，回到这里即可继续。");
+    expect(json.error).not.toContain("LLM");
   });
 });

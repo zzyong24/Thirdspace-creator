@@ -1,0 +1,670 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:25597) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/settings/settings-page.test.tsx (29 tests | 1 failed) 3735ms
+     × renders the settings dialog with 6 vertical tabs in the approved order 75ms
+(node:25707) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/copilot/chat-diagnosis-card.test.tsx (5 tests | 1 failed) 1159ms
+     × 诚实:取不到 draft(如没配模型 confirm 空)→ 置 error 态,不假装锁成功 1029ms
+(node:25733) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/automations/automations-edit.test.tsx (16 tests | 1 failed) 1722ms
+     × 反解失败(手写复杂 cron)→ 诚实降级提示 + 重选频率前禁保存;重选后可保存新 cron 54ms
+(node:25868) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/features/knowledge/knowledge-graph-view.test.tsx > KnowledgeGraphView > AI 失败 → 内联错误(不静默)
+[describeUserError] Error: 无可用 LLM 凭据
+    at /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend/src/features/knowledge/knowledge-graph-view.tsx:338:15
+
+ ❯ src/features/knowledge/knowledge-graph-view.test.tsx (9 tests | 1 failed) 184ms
+     × AI 失败 → 内联错误(不静默) 21ms
+(node:25872) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/components/shell/zero-account-guidance.test.tsx (6 tests | 1 failed) 44ms
+     × 渲染绑定引导 + /accounts 深链 30ms
+(node:25876) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/app/api/knowledge/distill/route.test.ts > POST /api/knowledge/distill > runner 抛错(无凭据/产出不可用)→ 400 { error }(诚实失败,前端内联展示)
+[api/knowledge/distill] failed: Error: 无可用 LLM 凭据
+    at /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend/src/app/api/knowledge/distill/route.test.ts:92:43
+    at file:///Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64
+
+ ❯ src/app/api/knowledge/distill/route.test.ts (4 tests | 1 failed) 22ms
+     × runner 抛错(无凭据/产出不可用)→ 400 { error }(诚实失败,前端内联展示) 8ms
+(node:25898) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/test/function-key-invariant.test.ts (2 tests | 1 failed) 16ms
+     × 每个前端 functionKey 字面量都 ∈ ALL_CHAT_TOOL_NAMES(否则 forcedTool 命不中 = 死链) 7ms
+(node:26018) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/test/icons.test.ts (3 tests | 1 failed) 25ms
+     × provides frozen deterministic local platform metadata 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/test/function-key-invariant.test.ts > [T-265] functionKey ↔ ALL_CHAT_TOOL_NAMES 不变量(死链防复发) > 每个前端 functionKey 字面量都 ∈ ALL_CHAT_TOOL_NAMES(否则 forcedTool 命不中 = 死链)
+AssertionError: 以下 functionKey 不在 ALL_CHAT_TOOL_NAMES(死链,深链点了会空点/被别的工具冒充):
+  material.generate.image  ← ./src/fixtures/selectors/copilot.ts
+  material.generate.video  ← ./src/fixtures/selectors/copilot.ts: expected [ { …(2) }, { …(2) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "file": "/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend/src/fixtures/selectors/copilot.ts",
++     "key": "material.generate.image",
++   },
++   {
++     "file": "/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend/src/fixtures/selectors/copilot.ts",
++     "key": "material.generate.video",
++   },
++ ]
+
+ ❯ src/test/function-key-invariant.test.ts:73:7
+     71|         ? `以下 functionKey 不在 ALL_CHAT_TOOL_NAMES(死链,深链点了会空点/被别的工具冒充):\…
+     72|         : "",
+     73|     ).toEqual([]);
+       |       ^
+     74|   });
+     75| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  src/test/icons.test.ts > CreatorOS platform icons > provides frozen deterministic local platform metadata
+AssertionError: expected [ 'bilibili', 'douyin', …(6) ] to deeply equal [ 'bilibili', 'douyin', …(4) ]
+
+- Expected
++ Received
+
+  [
+    "bilibili",
+    "douyin",
++   "kuaishou",
++   "wechatOfficial",
+    "wechatVideo",
+    "x",
+    "xiaohongshu",
+    "youtube",
+  ]
+
+ ❯ src/test/icons.test.ts:85:47
+     83|   test("provides frozen deterministic local platform metadata", () => {
+     84|     expect(Object.isFrozen(platformIcons)).toBe(true);
+     85|     expect(Object.keys(platformIcons).sort()).toEqual(
+       |                                               ^
+     86|       Object.keys(expectedPlatforms).sort(),
+     87|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  src/components/shell/zero-account-guidance.test.tsx > ZeroAccountGuidance > 渲染绑定引导 + /accounts 深链
+TestingLibraryElementError: Unable to find an element with the text: 先绑定一个抖音号,再开始创作. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<main[39m
+      [33mclass[39m=[32m"flex min-h-[60vh] flex-col items-center justify-center gap-3 p-8 text-center"[39m
+      [33mdata-app[39m=[32m"creatoros"[39m
+      [33mdata-page[39m=[32m"zero-account-guidance"[39m
+      [33mdata-testid[39m=[32m"zero-account-guidance"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33maria-hidden[39m=[32m"true"[39m
+        [33mclass[39m=[32m"inline-flex size-12 items-center justify-center rounded-full bg-brand-soft text-xl text-brand"[39m
+      [36m>[39m
+        [0m@[0m
+      [36m</span>[39m
+      [36m<h1[39m
+        [33mclass[39m=[32m"font-heading text-xl font-semibold text-foreground"[39m
+      [36m>[39m
+        [0m先创建账号组，再开始创作[0m
+      [36m</h1>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"max-w-md text-sm text-muted-foreground"[39m
+      [36m>[39m
+        [0m每个账号组是一位创作者的工作区。先建组即可管理定位、选题、项目和素材；绑定平台账号后再采集作品与分发内容。[0m
+      [36m</p>[39m
+      [36m<a[39m
+        [33mclass[39m=[32m"mt-2 inline-flex h-10 items-center justify-center rounded-card bg-brand px-5 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand/90"[39m
+        [33mdata-testid[39m=[32m"zero-account-bind-link"[39m
+        [33mhref[39m=[32m"/accounts"[39m
+      [36m>[39m
+        [0m创建账号组与绑定账号[0m
+      [36m</a>[39m
+      [36m<a[39m
+        [33mclass[39m=[32m"text-xs font-medium text-brand underline-offset-4 hover:underline"[39m
+        [33mdata-testid[39m=[32m"zero-account-home-link"[39m
+        [33mhref[39m=[32m"/"[39m
+      [36m>[39m
+        [0m或回首页看完整上手引导[0m
+      [36m</a>[39m
+    [36m</main>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/shell/zero-account-guidance.test.tsx:55:14
+     53|     expect(screen.getByTestId("zero-account-guidance")).toBeInTheDocum…
+     54|     expect(
+     55|       screen.getByText("先绑定一个抖音号,再开始创作"),
+       |              ^
+     56|     ).toBeInTheDocument();
+     57|     expect(screen.getByTestId("zero-account-bind-link")).toHaveAttribu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  src/features/automations/automations-edit.test.tsx > T-248 — 任务编辑弹窗 > 反解失败(手写复杂 cron)→ 诚实降级提示 + 重选频率前禁保存;重选后可保存新 cron
+AssertionError: expected '当前执行计划无法在这里编辑，请重新选择执行时间后保存。' to contain '无法反解'
+
+Expected: "无法反解"
+Received: "当前执行计划无法在这里编辑，请重新选择执行时间后保存。"
+
+ ❯ src/features/automations/automations-edit.test.tsx:231:32
+    229|     // 降级提示(明示原 cron)+ 保存禁用
+    230|     const notice = screen.getByTestId("automation-cadence-unresolved");
+    231|     expect(notice.textContent).toContain("无法反解");
+       |                                ^
+    232|     expect(notice.textContent).toContain("0 9 * * 1,3");
+    233|     const saveBtn = screen
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  src/features/copilot/chat-diagnosis-card.test.tsx > ChatDiagnosisCard(盲预测确认卡,T-103a) > 诚实:取不到 draft(如没配模型 confirm 空)→ 置 error 态,不假装锁成功
+TestingLibraryElementError: Unable to find an element with the text: /锁定失败/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"[39m
+      [33mdata-blind-predict[39m=[32m"true"[39m
+      [33mdata-slot[39m=[32m"chat-diagnosis-card"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33mclass[39m=[32m"text-[10px] font-medium uppercase tracking-wide text-brand"[39m
+      [36m>[39m
+        [0mAI 编导盲预测 · 逐维度诊断[0m
+      [36m</span>[39m
+      [36m<ul[39m
+        [33maria-label[39m=[32m"维度评分"[39m
+        [33mclass[39m=[32m"flex flex-col gap-1"[39m
+      [36m>[39m
+        [36m<li[39m
+          [33mclass[39m=[32m"flex flex-col gap-0.5 rounded-control border border-border bg-surface px-2.5 py-1.5"[39m
+          [33mdata-slot[39m=[32m"chat-diagnosis-dim"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-2"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"min-w-0 flex-1 text-[13px] font-medium text-foreground"[39m
+            [36m>[39m
+              [0mhook[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"shrink-0 rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] font-medium text-brand"[39m
+            [36m>[39m
+              [0m4[0m
+              [0m / 5[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-[11px] text-text-subtle"[39m
+          [36m>[39m
+            [0m开头强[0m
+          [36m</span>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-[11px] text-muted-foreground"[39m
+          [36m>[39m
+            [0m建议：[0m
+            [0m保持[0m
+          [36m</span>[39m
+        [36m</li>[39m
+        [36m<li[39m
+          [33mclass[39m=[32m"flex flex-col gap-0.5 rounded-control border border-border bg-surface px-2.5 py-1.5"[39m
+          [33mdata-slot[39m=[32m"chat-diagnosis-dim"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-2"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"min-w-0 flex-1 text-[13px] font-medium text-foreground"[39m
+            [36m>[39m
+              [0mvalue[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"shrink-0 rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] font-medium text-brand"[39m
+            [36m>[39m
+              [0m3[0m
+              [0m / 5[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-[11px] text-text-subtle"[39m
+          [36m>[39m
+            [0m干货够[0m
+          [36m</span>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-[11px] text-muted-foreground"[39m
+          [36m>[39m
+            [0m建议：[0m
+            [0m再具体[0m
+          [36m</span>[39m
+        [36m</li>[39m
+      [36m</ul>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-[13px] font-medium text-foreground"[39m
+      [36m>[39m
+        [0m综合判断：[0m
+        [0m可发[0m
+      [36m</p>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-[11px] text-muted-foreground"[39m
+      [36m>[39m
+        [0m优先修改：[0m
+        [0m加 CTA[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-col gap-1 border-t border-border/60 pt-1.5"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"[39m
+            [33mdata-slot[39m=[32m"chat-diagnosis-lock"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [0m锁定为盲预测[0m
+          [36m</button>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-[10px] text-destructive"[39m
+          [36m>[39m
+            [0m尚未确认锁定完成，请查看原任务状态[0m
+          [36m</span>[39m
+        [36m</div>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-[9.5px] text-text-subtle"[39m
+        [36m>[39m
+          [0m锁定 = 用你的变现 rubric 铸一份发布前盲预测并定死(不可改),发布后用真实数据对照校准； 锁定前可继续追问、重新诊断。[0m
+        [36m</span>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"mt-1.5 flex flex-col gap-1.5 rounded-lg border border-brand/20 bg-surface/70 p-2"[39m
+        [33mdata-blind-predict[39m=[32m"true"[39m
+        [33mdata-slot[39m=[32m"chat-diagnosis-card"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"text-[10px] font-medium uppercase tracking-wide text-brand"[39m
+        [36m>[39m
+          [0mAI 编导盲预测 · 逐维度诊断[0m
+        [36m</span>[39m
+        [36m<ul[39m
+          [33maria-label[39m=[32m"维度评分"[39m
+          [33mclass[39m=[32m"flex flex-col gap-1"[39m
+        [36m>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"flex flex-col gap-0.5 rounded-control border border-border bg-surface px-2.5 py-1.5"[39m
+            [33mdata-slot[39m=[32m"chat-diagnosis-dim"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center gap-2"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"min-w-0 flex-1 text-[13px] font-medium text-foreground"[39m
+              [36m>[39m
+                [0mhook[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"shrink-0 rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] font-medium text-brand"[39m
+              [36m>[39m
+                [0m4[0m
+                [0m / 5[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-[11px] text-text-subtle"[39m
+            [36m>[39m
+              [0m开头强[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m建议：[0m
+              [0m保持[0m
+            [36m</span>[39m
+          [36m</li>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"flex flex-col gap-0.5 rounded-control border border-border bg-surface px-2.5 py-1.5"[39m
+            [33mdata-slot[39m=[32m"chat-diagnosis-dim"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center gap-2"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"min-w-0 flex-1 text-[13px] font-medium text-foreground"[39m
+              [36m>[39m
+                [0mvalue[0m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"shrink-0 rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] font-medium text-brand"[39m
+              [36m>[39m
+                [0m3[0m
+                [0m / 5[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-[11px] text-text-subtle"[39m
+            [36m>[39m
+              [0m干货够[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m建议：[0m
+              [0m再具体[0m
+            [36m</span>[39m
+          [36m</li>[39m
+        [36m</ul>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-[13px] font-medium text-foreground"[39m
+        [36m>[39m
+          [0m综合判断：[0m
+          [0m可发[0m
+        [36m</p>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-[11px] text-muted-foreground"[39m
+        [36m>[39m
+          [0m优先修改：[0m
+          [0m加 CTA[0m
+        [36m</p>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex flex-col gap-1 border-t border-border/60 pt-1.5"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-2"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-6 items-center rounded-control bg-brand px-2 text-[10px] font-medium text-brand-foreground hover:bg-brand/90 disabled:opacity-50"[39m
+              [33mdata-slot[39m=[32m"chat-diagnosis-lock"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m锁定为盲预测[0m
+            [36m</button>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-[10px] text-destructive"[39m
+            [36m>[39m
+              [0m尚未确认锁定完成，请查看原任务状态[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-[9.5px] text-text-subtle"[39m
+          [36m>[39m
+            [0m锁定 = 用你的变现 rubric 铸一份发布前盲预测并定死(不可改),发布后用真实数据对照校准； 锁定前可继续追问、重新诊断。[0m
+          [36m</span>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Proxy.waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/features/copilot/chat-diagnosis-card.test.tsx:207:11
+    205|     await waitFor(() => expect(confirmTask).toHaveBeenCalled());
+    206|     // 取不到 draft → 不 lockPrediction,不假装锁定,显式错误提示。
+    207|     await waitFor(() => expect(screen.getByText(/锁定失败/)).toBeTruthy());
+       |           ^
+    208|     expect(lockPrediction).not.toHaveBeenCalled();
+    209|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  src/features/knowledge/knowledge-graph-view.test.tsx > KnowledgeGraphView > AI 失败 → 内联错误(不静默)
+TestingLibraryElementError: Unable to find an element with the text: 无可用 LLM 凭据. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-label[39m=[32m"知识图谱"[39m
+      [33mclass[39m=[32m"flex h-full min-h-[520px] flex-col gap-2"[39m
+      [33mdata-slot[39m=[32m"knowledge-graph-view"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground"[39m
+        [33mdata-slot[39m=[32m"knowledge-graph-stats"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mdata-stat[39m=[32m"knowledge"[39m
+        [36m>[39m
+          [0m3[0m
+          [0m 条知识[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m·[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33mdata-stat[39m=[32m"relations"[39m
+        [36m>[39m
+          [0m1[0m
+          [0m 条关联[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m·[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33mdata-stat[39m=[32m"usages"[39m
+        [36m>[39m
+          [0m1[0m
+          [0m 条引用[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m·[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33mdata-stat[39m=[32m"isolated"[39m
+        [36m>[39m
+          [0m孤立 [0m
+          [0m1[0m
+          [0m 条[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+        [36m>[39m
+          [0m·[0m
+        [36m</span>[39m
+        [36m<span[39m
+          [33mdata-stat[39m=[32m"projects"[39m
+        [36m>[39m
+          [0m1[0m
+          [0m 个项目锚[0m
+        [36m</span>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"ml-auto inline-flex h-7 items-center rounded-md bg-brand px-2.5 text-[12px] font-medium text-brand-foreground hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-50"[39m
+          [33mdata-slot[39m=[32m"knowledge-graph-relate"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mAI 找关联[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"rounded-md border border-dashed border-border bg-surface-subtle px-2.5 py-1.5 text-[12px] text-muted-foreground"[39m
+        [33mdata-slot[39m=[32m"knowledge-graph-sparse-hint"[39m
+      [36m>[39m
+        [0m关联还比较少——继续用「AI 找关联」让编导补候选(诚实稀疏,不生成假边填场面)。[0m
+      [36m</p>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"rounded-md border border-destructive/40 bg-destructive/5 px-2.5 py-1.5 text-[12px] text-destructive"[39m
+        [33mdata-slot[39m=[32m"knowledge-graph-error"[39m
+        [33mrole[39m=[32m"alert"[39m
+      [36m>[39m
+        [0m还没有可用的 AI 模型。完成设置后，回到这里即可继续。[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"hidden min-h-[480px] flex-1 md:block"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mdata-echart-mock[39m=[32m"true"[39m
+          [33mdata-option[39m=[32m"{\"tooltip\":{\"trigger\":\"item\",\"confine\":true},\"legend\":{\"data\":[\"观点\",\"证据\",\"金句\",\"观众问题\",\"存档\",\"项目\"],\"top\":0,\"textStyle\":{\"color\":\"#6b7280\",\"fontSize\":11},\"itemWidth\":10,\"itemHeight\":10},\"color\":[\"#6d4aff\",\"#12b76a\",\"#f79009\",\"#c840d8\",\"#6b7280\",\"#4f7cff\"],\"series\":[{\"type\":\"graph\",\"layout\":\"force\",\"roam\":true,\"top\":28,\"categories\":[{\"name\":\"观点\"},{\"name\":\"证据\"},{\"name\":\"金句\"},{\"name\":\"观众问题\"},{\"name\":\"存档\"},{\"name\":\"项目\"}],\"label\":{\"show\":true,\"position\":\"right\",\"fontSize\":10,\"color\":\"#1a1a24\"},\"force\":{\"repulsion\":180,\"edgeLength\":[60,140],\"gravity\":0.08},\"emphasis\":{\"focus\":\"adjacency\"},\"lineStyle\":{\"color\":\"#e6e6ef\",\"curveness\":0.1},\"data\":[{\"id\":\"k-1\",\"name\":\"观点A\",\"category\":\"观点\",\"kind\":\"knowledge\",\"usedCount\":2,\"usedInPublished\":true,\"symbol\":\"circle\",\"symbolSize\":20,\"itemStyle\":{\"borderColor\":\"#6d4aff\",\"borderWidth\":2}},{\"id\":\"k-2\",\"name\":\"证据B\",\"category\":\"证据\",\"kind\":\"knowledge\",\"usedCount\":0,\"usedInPublished\":false,\"symbol\":\"circle\",\"symbolSize\":12},{\"id\":\"k-3\",\"name\":\"金句C\",\"category\":\"金句\",\"kind\":\"knowledge\",\"usedCount\":0,\"usedInPublished\":false,\"symbol\":\"circle\",\"symbolSize\":12},{\"id\":\"project:p-1\",\"name\":\"本地记忆一期\",\"category\":\"项目\",\"kind\":\"project\",\"usedCount\":0,\"usedInPublished\":false,\"symbol\":\"rect\",\"symbolSize\":18}],\"links\":[{\"source\":\"k-2\",\"target\":\"k-1\",\"meta\":{\"source\":\"k-2\",\"target\":\"k-1\",\"kind\":\"relation\",\"relationType\":\"supports\",\"strength\":1,\"createdByType\":\"user\"},\"lineStyle\":{\"type\":\"solid\",\"color\":\"#6d4aff\",\"width\":1.5},\"symbol\":[\"none\",\"none\"],\"symbolSize\":6},{\"source\":\"k-1\",\"target\":\"project:p-1\",\"meta\":{\"source\":\"k-1\",\"target\":\"project:p-1\",\"kind\":\"usage\",\"stage\":\"script\",\"role\":\"reference\",\"projectTitle\":\"本地记忆一期\",\"createdAt\":\"2026-07-01T00:00:00.000Z\"},\"lineStyle\":{\"type\":\"dashed\",\"color\":\"#6b7280\"},\"symbol\":[\"none\",\"arrow\"],\"symbolSize\":6}]}]}"[39m
+          [33mdata-slot[39m=[32m"echart"[39m
+          [33mdata-testid[39m=[32m"knowledge-graph-force"[39m
+          [33mstyle[39m=[32m"height: 100%; min-height: 480px;"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"rounded-md border border-border bg-surface-subtle px-2.5 py-2 text-[12px] text-muted-foreground md:hidden"[39m
+        [33mdata-slot[39m=[32m"knowledge-graph-mobile-hint"[39m
+      [36m>[39m
+        [0m力导向图请在桌面端查看;此处为统计摘要:[0m
+        [0m3[0m
+        [0m 条知识、[0m
+        [0m1[0m
+        [0m 条关联、[0m
+        [0m1[0m
+        [0m 条引用。[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-col gap-1.5 rounded-md border border-border bg-surface p-2.5"[39m
+        [33mdata-slot[39m=[32m"knowledge-graph-relations"[39m
+      [36m>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-[11px] font-medium text-muted-foreground"[39m
+        [36m>[39m
+          [0m已建关联([0m
+          [0m1[0m
+          [0m)—— 点边可选中,采纳错的可删[0m
+        [36m</p>[39m
+        [36m<ul[39m
+          [33mclass[39m=[32m"flex flex-col gap-1"[39m
+        [36m>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"flex items-center gap-1.5 rounded-md px-1.5 py-1 text-[12px] text-foreground"[39m
+            [33mdata-relation-type[39m=[32m"supports"[39m
+            [33mdata-selected[39m=[32m"false"[39m
+            [33mdata-slot[39m=[32m"knowledge-graph-relation-row"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"max-w-32 truncate font-medium"[39m
+            [36m>[39m
+              [0m证据B[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"rounded-full bg-surface-subtle px-1.5 py-0.5 text-[10px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m支撑[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"min-w-0 flex-1 truncate"[39m
+            [36m>[39m
+              [0m观点A[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"shrink-0 text-[10px] text-muted-foreground"[39m
+            [36m>[39m
+              [0muser[0m
+            [36m</span>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"shrink-0 text-[11px] text-muted-foreground hover:text-destructive hover:underline disabled:opacity-50"[39m
+              [33mdata-slot[39m=[32m"knowledge-graph-edge-delete"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0m删除[0m
+            [36m</button>[39m
+          [36m</li>[39m
+        [36m</ul>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/knowledge/knowledge-graph-view.test.tsx:259:12
+    257|       ).not.toBeNull();
+    258|     });
+    259|     expect(getByText("无可用 LLM 凭据")).toBeTruthy();
+       |            ^
+    260|   });
+    261|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  src/features/settings/settings-page.test.tsx > SettingsPage > renders the settings dialog with 6 vertical tabs in the approved order
+AssertionError: expected [ '账户', '偏好', '外观', '模型配置', …(3) ] to deeply equal [ Array(6) ]
+
+- Expected
++ Received
+
+  [
+    "账户",
+    "偏好",
+    "外观",
+    "模型配置",
++   "数据服务",
+    "技能",
+    "存储",
+  ]
+
+ ❯ src/features/settings/settings-page.test.tsx:240:22
+    238|       tabs!.querySelectorAll('[role="tab"]'),
+    239|     ).map((node) => node.textContent?.trim() ?? "");
+    240|     expect(triggers).toEqual([
+       |                      ^
+    241|       "账户",
+    242|       "偏好",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  src/app/api/knowledge/distill/route.test.ts > POST /api/knowledge/distill > runner 抛错(无凭据/产出不可用)→ 400 { error }(诚实失败,前端内联展示)
+AssertionError: expected '还没有可用的 AI 模型。完成设置后，回到这里即可继续。' to contain '无可用 LLM 凭据'
+
+Expected: "无可用 LLM 凭据"
+Received: "还没有可用的 AI 模型。完成设置后，回到这里即可继续。"
+
+ ❯ src/app/api/knowledge/distill/route.test.ts:96:24
+     94|     expect(res.status).toBe(400);
+     95|     const json = (await res.json()) as { error: string };
+     96|     expect(json.error).toContain("无可用 LLM 凭据");
+       |                        ^
+     97|   });
+     98| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  8 failed (8)
+      Tests  8 failed | 66 passed (74)
+   Start at  14:41:59
+   Duration  24.84s (transform 7.15s, setup 1.08s, import 10.66s, tests 6.91s, environment 4.64s)
+
