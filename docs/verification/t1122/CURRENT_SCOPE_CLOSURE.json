@@ -1,0 +1,13 @@
+{
+  "taskId": "T-1122",
+  "head": "7de72c56a3016bc9d1128fd26655a4d5c9200334",
+  "actualBrowser": "docs/verification/t1117/browser-final-source.json",
+  "actualType": "docs/verification/t1117/type-final-7de72c56.json",
+  "implementationReview": "docs/verification/t1117/FINAL_IMPLEMENTATION_REVIEW.json",
+  "fullReconcile": "docs/verification/t1117/full-reconcile-canonical.json",
+  "globalPassed": false,
+  "original41RetainedExactly": true,
+  "newGlobalErrors": [],
+  "sourceChangedAfterReviewedCommit": false,
+  "boundary": "仅本任务已实现范围；原失败/全局欠债/安装/模型/AI联合不代签"
+}

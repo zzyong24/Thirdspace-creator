@@ -1,0 +1,16 @@
+{
+  "schema": "frozen-source/v1",
+  "observedAt": "2026-10-09T11:11:10.457717+00:00",
+  "commit": "7de72c56a3016bc9d1128fd26655a4d5c9200334",
+  "files": {
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "ad8b4d076954ae6b7272e0acc948e0e6f1d62b208242a2fabec42ac4c5729cac",
+    "frontend/src/features/creative-canvas/infinite-canvas-node.tsx": "299315ec4f20f2228078641f7833fcdd700c7678bde7e559e43cca87d235007a",
+    "frontend/src/components/media/asset-picker.tsx": "ab1b7323dc1947c6352b0ead2a0e2747b9d371406c30a641b4fbceaf831c04f3",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "1d655252b89a812d57090af4263ace3cbc3da6ee4c4b64325aed42321c3a8824",
+    "frontend/src/features/creative-canvas/infinite-canvas-node-reference.test.tsx": "b9cd8eb947121fdb6fc1c0d66d3af74bd0bf8300091883b1ee58b9178941419c",
+    "frontend/src/components/media/asset-picker.test.tsx": "1b9b74ba4787ff841bb7eec53e88fd11926772a8fb76484a9d98a095511705cb",
+    "frontend/tests/e2e/creative-canvas.spec.ts": "a0754900b8089cc04295a3d51cc1ce733564401a30e623c00e5ea5a631fcf07e",
+    "docs/verification/t1119/generated-types-check.mjs": "b5113ef81eb326a6db656e0b46fccd3789a4db0f174983c5ef6763feab02c5ee"
+  },
+  "workingTreeClean": true
+}

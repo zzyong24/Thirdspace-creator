@@ -1,0 +1,69 @@
+{
+  "schema": "t1117-global-scope-closure-review/v1",
+  "reviewed_at": "2026-10-09T11:46:08.688858+00:00",
+  "commit": "7de72c56a3016bc9d1128fd26655a4d5c9200334",
+  "verdict": "PASS_LIMITED_SCOPE_CLOSURE_WITH_41_RETAINED_GLOBAL_ERRORS",
+  "findings": [],
+  "canonical_reconcile": {
+    "exit": 1,
+    "elapsed_seconds": 1498.4202305839863,
+    "error_count": 41,
+    "warning_count": 0,
+    "log_sha256": "bf20c0f903ee7449fb654033fa8b134ff44198027843196f783923b21a9f01bd",
+    "receipt_sha256": "567b4dd7b30238a71992d40dac6aecd31774aa50f60f2364ea68e46d448a9a79",
+    "comparison_sha256": "bd3406d6bc86dadab0894b4fb5b52c231757b8bd2b159989223fd2078045ef10",
+    "baseline_sha256": "1ee0513984b0d57b488ad8b6bf8054c9ee5a459102943d0ebeb5327134d780ad",
+    "same_original_41": true,
+    "added": [],
+    "removed": [],
+    "led052": "PASS",
+    "led027": "PASS",
+    "global_passed": false
+  },
+  "task_conclusions": {
+    "T-1117": {
+      "may_complete": true,
+      "basis": "冻结3产品+4测试、unit32、LED047 174、公共browser2、两视口视觉、最终type均已独立复核；全局无新增"
+    },
+    "T-1119": {
+      "may_complete": true,
+      "basis": "闭集helper、原字节保存、prod/dev真实再生、最终type通过；写坏源头UNKNOWN保留"
+    },
+    "T-1120": {
+      "may_complete": true,
+      "basis": "唯一domcontentloaded观察修正，原公共两条0retry通过且断言保留"
+    },
+    "T-1122": {
+      "may_complete": true,
+      "basis": "两视口左右图片加载断言真实执行，截图独立可见"
+    },
+    "T-1121": {
+      "diagnosis_may_complete": true,
+      "basis": "额外LED052由自建PG误用55423而原runner规范55422在Vitest前拒绝；规范55422原59PASS且canonical reconcile LED052 PASS，无产品/测试修复"
+    },
+    "T-1108": {
+      "frozen_frontend_acceptance_may_be_restored": true,
+      "basis": "相同冻结main公共旅程、截图、type和无新增全局错误；仍仅限前端验收"
+    },
+    "T-1123": {
+      "diagnosis_fact_only": true,
+      "basis": "原CLI漏--group导致失败；显式group纯组projects.list exit0，产品未改。原失败保留；不由本报告扩签其它操作"
+    }
+  },
+  "frozen_reports": {
+    "T-1117": {
+      "sha256": "6a950246d095eb7514daa975e230ed9444fdcecc3673ad495dbf2651a415bd4f",
+      "consistent": true
+    },
+    "T-1108": {
+      "sha256": "460e94b34934660a726b75ee0e7ac8d43599e7011c3878a2289f47e20dc2329a",
+      "consistent": true
+    }
+  },
+  "boundaries": [
+    "41条全局错误仍为真实失败，不属于本轮通过内容",
+    "T1118原raw日志丢失原因UNKNOWN",
+    "不代签安装、真实扫码、真实模型、AI联合候选、T1103 parser、原生客户端人工体验",
+    "T1123只确认验证命令身份参数错误和一次纯组read，不代签其它项目操作"
+  ]
+}

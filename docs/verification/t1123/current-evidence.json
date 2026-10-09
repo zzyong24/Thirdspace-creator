@@ -1,0 +1,71 @@
+{
+  "taskId": "T-1123",
+  "cause": "根会话验证命令遗漏真实CLI --group flag；body内的_creatoros不能代替身份Header",
+  "productChanged": false,
+  "accountGateRelaxed": false,
+  "originalFailure": {
+    "argv": [
+      "/Users/zyongzhu/.local/bin/creatoros",
+      "call",
+      "projects.list",
+      "--input",
+      "@/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/pre-projects-list-input.json"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T11:29:04.114796+00:00",
+    "finishedAt": "2026-10-09T11:29:04.915864+00:00",
+    "exitCode": 4,
+    "elapsedSeconds": 0.8007449579890817,
+    "logSha256": "5348b62e1f35c2a90264dfdfcaa1ffaf0c0a678cf1bc7712d5f2cd527a260c97"
+  },
+  "actualCurrentHelp": {
+    "argv": [
+      "/Users/zyongzhu/.local/bin/creatoros",
+      "help"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T11:31:35.596151+00:00",
+    "finishedAt": "2026-10-09T11:31:35.942114+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.34577566699590534,
+    "logSha256": "5c1eb89edfd4c73ba524c297d6eeebbefccaf7a47b98913e71a282a4edb2be84"
+  },
+  "correctedDescribe": {
+    "argv": [
+      "/Users/zyongzhu/.local/bin/creatoros",
+      "operations",
+      "describe",
+      "projects.list"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T11:31:36.061113+00:00",
+    "finishedAt": "2026-10-09T11:31:36.350575+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.28923633304657415,
+    "logSha256": "c8b038ad70bae04b08c3c6405b9aed5e76948768df2f5ea75053d3bc92bf9514"
+  },
+  "correctedRead": {
+    "argv": [
+      "/Users/zyongzhu/.local/bin/creatoros",
+      "call",
+      "projects.list",
+      "--group",
+      "grp-58776bff-101",
+      "--input",
+      "@/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/pre-projects-list-corrected-input.json"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T11:31:36.476424+00:00",
+    "finishedAt": "2026-10-09T11:31:36.867607+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.3909373329952359,
+    "logSha256": "3477291ff5ab7ca7e4e22f782466ec2d73e8d48b583db20ed3900196c6c10e11"
+  },
+  "verified": {
+    "ok": true,
+    "groupId": "grp-58776bff-101",
+    "accountId": null,
+    "projectCount": 2,
+    "selectedProjectPresent": true
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "scope": "本轮安装前正式CLI只读基线，不代表全部业务流程可用",
+  "source": "54af33d0a8fef8679eebf6a503b1b280050fd5e5",
+  "groupId": "grp-58776bff-101",
+  "projectId": "project-58776bff-104",
+  "readCount": 65,
+  "counts": {
+    "tasks": 33,
+    "outputs": 4,
+    "artifacts": 4,
+    "conversations": 17
+  },
+  "writes": 0,
+  "newModelCalls": 0,
+  "adoptions": 0,
+  "privateBaseline": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/installed-pre-package-baseline.json",
+  "privateBaselineSha256": "82700246e97210ec2377725899a17709a2c7fcaec0ef0570e7c7c9d60d2802d6",
+  "originalTask272Status": "partial",
+  "accountRequirementDiagnostic": "T-1123：原命令遗漏CLI --group，纠正后纯组projects.list正常；未改权限"
+}

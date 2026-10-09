@@ -1,0 +1,152 @@
+{
+  "sourceCommit": "7de72c56a3016bc9d1128fd26655a4d5c9200334",
+  "receipts": {
+    "complete-t1117-current": {
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "complete",
+        "T-1117",
+        "--evidence",
+        "docs/verification/t1117/FROZEN_FRONTEND_VALIDATION_REPORT.md"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T11:47:13.517270+00:00",
+      "finishedAt": "2026-10-09T11:48:37.510282+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 83.99188866699114,
+      "logSha256": "3ccc2f024c7eb43b64836a5acdba5a1821678d0c91840fd7016b2ad7f41945aa"
+    },
+    "complete-t1108-current": {
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "complete",
+        "T-1108",
+        "--evidence",
+        "docs/verification/t1108/FROZEN_FRONTEND_VALIDATION_REPORT.md"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T11:49:15.534831+00:00",
+      "finishedAt": "2026-10-09T11:50:37.663874+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 82.12804029200925,
+      "logSha256": "ef3b1a07690f50955dc215de5a9baf5c93a0d53a6aa1720e3641b0e644764f3f"
+    },
+    "complete-t-1119": {
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "complete",
+        "T-1119",
+        "--evidence",
+        "7de72c56；docs/verification/t1119/CURRENT_SCOPE_CLOSURE.json；独立限定收尾复核 docs/verification/t1117/GLOBAL_SCOPE_CLOSURE_REVIEW.md；本范围实际验证通过，完整reconcile exit1原41逐条保留/无新增，不代签全局、T1118未知、安装或AI候选"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T11:46:59.027835+00:00",
+      "finishedAt": "2026-10-09T11:46:59.168532+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.1403778750100173,
+      "logSha256": "463d72ce062e27f929dc28c9894a26845405d80eb5e3c4805e714d593953de2e"
+    },
+    "complete-t-1120": {
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "complete",
+        "T-1120",
+        "--evidence",
+        "7de72c56；docs/verification/t1120/CURRENT_SCOPE_CLOSURE.json；独立限定收尾复核 docs/verification/t1117/GLOBAL_SCOPE_CLOSURE_REVIEW.md；本范围实际验证通过，完整reconcile exit1原41逐条保留/无新增，不代签全局、T1118未知、安装或AI候选"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T11:46:59.270166+00:00",
+      "finishedAt": "2026-10-09T11:46:59.401220+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.130932959029451,
+      "logSha256": "ccae917126671bd564f88b930bff94c7087de47056225c3e890f905b742f0a7d"
+    },
+    "complete-t-1121": {
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "complete",
+        "T-1121",
+        "--evidence",
+        "7de72c56；docs/verification/t1121/full-reconcile-canonical.json；独立限定收尾复核 docs/verification/t1117/GLOBAL_SCOPE_CLOSURE_REVIEW.md；本范围实际验证通过，完整reconcile exit1原41逐条保留/无新增，不代签全局、T1118未知、安装或AI候选"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T11:46:59.755710+00:00",
+      "finishedAt": "2026-10-09T11:46:59.887697+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.13185791700379923,
+      "logSha256": "80971d1d7c48f2eeb7c9c7c20574ca3a3132c86593660e2f2515463ed77c6d53"
+    },
+    "complete-t-1122": {
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "complete",
+        "T-1122",
+        "--evidence",
+        "7de72c56；docs/verification/t1122/CURRENT_SCOPE_CLOSURE.json；独立限定收尾复核 docs/verification/t1117/GLOBAL_SCOPE_CLOSURE_REVIEW.md；本范围实际验证通过，完整reconcile exit1原41逐条保留/无新增，不代签全局、T1118未知、安装或AI候选"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T11:46:59.511611+00:00",
+      "finishedAt": "2026-10-09T11:46:59.649153+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.13744270900497213,
+      "logSha256": "d95997967bea1611c6827ce2c271de2591676afe1f2891994fd0c5b30d395718"
+    },
+    "complete-t-1123": {
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "complete",
+        "T-1123",
+        "--evidence",
+        "7de72c56；docs/verification/t1123/current-evidence.json；独立限定收尾复核 docs/verification/t1117/GLOBAL_SCOPE_CLOSURE_REVIEW.md；本范围实际验证通过，完整reconcile exit1原41逐条保留/无新增，不代签全局、T1118未知、安装或AI候选"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T11:46:59.992258+00:00",
+      "finishedAt": "2026-10-09T11:47:00.124474+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.1320668330299668,
+      "logSha256": "c886a7cb6ce551383ffe3a79eefa328c18d2819e556d97b549692e46febc8aa9"
+    },
+    "type-after-formal-completions": {
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "typecheck"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T11:51:44.050259+00:00",
+      "finishedAt": "2026-10-09T11:51:51.441297+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 7.3907007909729145,
+      "logSha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035"
+    },
+    "frontend-receipt-audit-current": {
+      "argv": [
+        "node",
+        "orchestrator/process/frontend-validation.mjs",
+        "audit",
+        "--quiet"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T11:51:44.050272+00:00",
+      "finishedAt": "2026-10-09T11:51:44.725433+00:00",
+      "exitCode": 1,
+      "elapsedSeconds": 0.6748844170360826,
+      "logSha256": "9488eb4a3fa39cd81e1701f5eeceb17de188795d0795ab04e0b4d524b7ff4814"
+    }
+  },
+  "globalPassed": false,
+  "retainedGlobalErrors": 41,
+  "receiptAuditRetainedErrors": [
+    "T-1023-agent-recovery: PASS 验收缺 taskctl completion event",
+    "T-1022-agent-recovery: PASS 验收缺 taskctl completion event"
+  ],
+  "scope": "taskctl已真实执行原浏览器入口并完成T1117及T1108，5诊断/测试任务按独评限定范围完成；未代签安装版、模型、扫码、T1118缺失原始日志或全功能"
+}

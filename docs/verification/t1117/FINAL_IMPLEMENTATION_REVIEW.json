@@ -1,0 +1,90 @@
+{
+  "schema": "t1117-final-implementation-review/v1",
+  "task_id": "T-1117",
+  "reviewed_at": "2026-10-09T11:20:03.203079+00:00",
+  "verdict": "PASS_LIMITED_T1117_T1119_T1120_T1122_SOURCE_UI_VERIFICATION",
+  "commit": "7de72c56a3016bc9d1128fd26655a4d5c9200334",
+  "findings": [],
+  "source_hashes": {
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "ad8b4d076954ae6b7272e0acc948e0e6f1d62b208242a2fabec42ac4c5729cac",
+    "frontend/src/features/creative-canvas/infinite-canvas-node.tsx": "299315ec4f20f2228078641f7833fcdd700c7678bde7e559e43cca87d235007a",
+    "frontend/src/components/media/asset-picker.tsx": "ab1b7323dc1947c6352b0ead2a0e2747b9d371406c30a641b4fbceaf831c04f3",
+    "frontend/src/features/creative-canvas/canvas-editor.test.tsx": "1d655252b89a812d57090af4263ace3cbc3da6ee4c4b64325aed42321c3a8824",
+    "frontend/src/features/creative-canvas/infinite-canvas-node-reference.test.tsx": "b9cd8eb947121fdb6fc1c0d66d3af74bd0bf8300091883b1ee58b9178941419c",
+    "frontend/src/components/media/asset-picker.test.tsx": "1b9b74ba4787ff841bb7eec53e88fd11926772a8fb76484a9d98a095511705cb",
+    "frontend/tests/e2e/creative-canvas.spec.ts": "a0754900b8089cc04295a3d51cc1ce733564401a30e623c00e5ea5a631fcf07e",
+    "docs/verification/t1119/generated-types-check.mjs": "b5113ef81eb326a6db656e0b46fccd3789a4db0f174983c5ef6763feab02c5ee"
+  },
+  "source_freeze_receipt_sha256": "c8c3a35ab9b3fb8fda2f5e18043fbf9f6bc16861bdf5fddbf5d4c71b8b4c9759",
+  "actual_results": {
+    "component": {
+      "files": 3,
+      "tests": 32,
+      "skip": 0,
+      "exit": 0,
+      "log_sha256": "cef1168af66c7b72a1252e6361b0a11e49f358a4349fa2571f10f5eafbb51596"
+    },
+    "led047": {
+      "files": 8,
+      "tests": 174,
+      "skip": 0,
+      "exit": 0,
+      "log_sha256": "8ccfcf2f12096581646841e7c8dc8c9ca8f0c1ea4f1cc404f65b415fee8e6b4a"
+    },
+    "browser_final": {
+      "tests": 2,
+      "retry": 0,
+      "exit": 0,
+      "elapsed_seconds": 124.51531658298336,
+      "log_sha256": "404cd16a076ee0f9b139351e21a74f161103e792f8a1b07a5f715e4d829de05d"
+    },
+    "frontend_type_final": {
+      "exit": 0,
+      "elapsed_seconds": 9.549459083005786,
+      "log_sha256": "4c0cd880abe2a1a1a1f20e2f9d2825951e19ae4e848a3f36d2216d3b9e20d035"
+    },
+    "t1119": {
+      "prepare_exit": 0,
+      "prepare_log_sha256": "51d62b3ebd3888581aa10dd6dde2f0fa766a610da258e883a92c983ceeacad80",
+      "production_exit": 0,
+      "production_log_sha256": "c98f4cb0a0f31df47f3a60babe3f2758ad7c62114479d7fd46af8e535546d760",
+      "development_exit": 0,
+      "development_log_sha256": "5d853dc120849967465ba530d2b4a81b26339ffb5d02c6957f88fe4a87f2b8ce"
+    }
+  },
+  "visual_review": {
+    "method": "逐张查看原分辨率截图，按既有紫色组件规范作局部状态/层级/响应式核对",
+    "images": {
+      "t1117-preview-narrow.png": "8068f1edc04c3324ae5c84846d83766a74430984955b98eca0c0aeca488955c5",
+      "t1117-error-narrow.png": "719d56a47ae29830de914941780298287ebb9f3b2c58eb80e2fa71cd2bf57b39",
+      "t1117-preview-normal.png": "b390491627814c992da3bb4eb46ae95fcf71567c1b78a3f557bc3f14efe86d44",
+      "t1117-error-normal.png": "a2b28a68fb1cffe7ba76f8a0a6ba4e8e6183d2004b0e35b82375d8db06ec9a9e"
+    },
+    "legacy_comparison": {
+      "t1108-interrupted-save.png": "da3b4146781ca12a237185d2314619850eb8265d5d772418d450ad0d332aa54e"
+    },
+    "observations": [
+      "1366与900错误态均在画布主区域显示清晰中文网络错误；产品界面无裸Failed to fetch",
+      "预览弹窗在1366与900均保留紫色选择态、明确标题/说明/取消/使用按钮和焦点层级",
+      "normal与narrow的左选中卡缩略图及右预览均实际加载；长文件名和尺寸不出现在可见摘要",
+      "窄屏弹窗仍完整容纳搜索、筛选、预览与底部操作，未见遮挡关键按钮",
+      "与T1108对照相比，错误从英文变为中文，参考卡从长身份信息改为已选素材；紫色系统和布局方向保持一致"
+    ]
+  },
+  "implementation_review": [
+    "CanvasEditor保留显式400/404/409映射，其他错误经既有describeUserError；失败不导航、不生成、不确认，重试仍携带CAS版本",
+    "showIdentity=false仅用于画布两处；共享AssetPicker默认true不变；真实asset/file身份、取消零写和用户确认保持",
+    "T1120只把首次reload等待改为domcontentloaded，原中断保存和后续保存回读断言不删",
+    "T1122只在截图前核左右图片真实加载，不用sleep或伪图片",
+    "T1119 helper只维护两份Next派生文件，拒symlink/路径漂移/未知Node或next-dev写者；保存原字节后真实prod/dev再生并由最终typecheck消费"
+  ],
+  "preserved_failures": [
+    "前三次公共browser失败及诊断保留",
+    "T1119两次类型失败保留",
+    "T1118原验收父目录消失及raw日志丢失原因UNKNOWN，不重建"
+  ],
+  "pending_boundaries": [
+    "本轮完成后的规范环境完整reconcile尚无终态，不声明最新全局PASS或41项结论",
+    "安装版、AI联合候选/T1103、真实扫码、真实模型与原生效果未由本报告验收"
+  ]
+}
