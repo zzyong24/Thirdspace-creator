@@ -1,0 +1,23 @@
+{
+  "task": "T-1140",
+  "observedAt": "2026-10-09T16:22:08.628903+00:00",
+  "head": "393ce00a0e03db4f80bdfda3102b0c990b93bf82",
+  "nativeApp": false,
+  "actualNativeMinimum": {
+    "width": 1024,
+    "height": 680,
+    "source": "frontend/src-tauri/src/lib.rs:2329"
+  },
+  "sourceSha256": {
+    "frontend/src/components/media/asset-picker.tsx": "ab1b7323dc1947c6352b0ead2a0e2747b9d371406c30a641b4fbceaf831c04f3",
+    "frontend/src/components/media/asset-media-preview.tsx": "7ca28b2d737331713413d1b2d2ae7b22d2e43db1fc47cc084581aa6eedd2489d",
+    "frontend/src/components/media/asset-identity.tsx": "7e9a4d4261ae05839072de98ef0c723b47e2f0a4678beb1fb76e37cdab06cb52",
+    "frontend/src/components/media/use-asset-picker-source.ts": "a9339c94712d97b477b91015dbde2e9bc30a81e1eb16fc97eac3dc106bc28f07",
+    "frontend/src/components/media/asset-picker.test.tsx": "1b9b74ba4787ff841bb7eec53e88fd11926772a8fb76484a9d98a095511705cb",
+    "frontend/src-tauri/src/lib.rs": "508a50632893f27970eb1fab0fef04d53c87255891b5b0bc1af4b60ab2ad2e29"
+  },
+  "baselineImage": "docs/verification/t1136/reviewed-images/shared-asset-picker-683.png",
+  "baselineImageSha256": "aa5a1eb1ef6d3eb35b52870abd4b2bc979a65f75a4e051d4919fbdb247dd17af",
+  "finding": "低高度field弹窗在md前上下双滚动区域挤压主体；正常操作及取消回读仍通过；gallery无弹窗不是此样本。",
+  "productChanged": false
+}

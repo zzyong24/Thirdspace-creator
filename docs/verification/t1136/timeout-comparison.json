@@ -1,0 +1,9 @@
+{
+  "previousFailures": 27,
+  "currentFailures": 27,
+  "failuresIdentical": true,
+  "scannedFiles": 2702,
+  "globalPassed": false,
+  "source": "实际原两次日志首个scanner JSON，不从exit冒称全绿",
+  "publicConsumers": "当前日志各消费链实际PASS，保静态退出1"
+}

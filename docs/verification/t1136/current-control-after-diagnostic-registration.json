@@ -1,0 +1,9 @@
+{
+  "recordedAt": "2026-10-09T16:42:17.566475+00:00",
+  "modulesSha256": "be32b175484a2f0da0846b7ffd018b1272dc94fb9b1acfd27996051d7236d05a",
+  "changesDuringCanonical": [
+    "T1140计划局部写集/验证命令",
+    "T1141诊断写集，无产品路径"
+  ],
+  "canonicalDoesNotValidateNewTaskCompletion": true
+}

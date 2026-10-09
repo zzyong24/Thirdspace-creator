@@ -2,27 +2,27 @@
   "surface": "browser",
   "mode": "non-fixture",
   "witnesses": {
-    "groupId": "grp-838e141c-37",
-    "projectId": "project-838e141c-51",
-    "entryId": "cal-838e141c-65"
+    "groupId": "grp-986b3311-37",
+    "projectId": "project-986b3311-51",
+    "entryId": "cal-986b3311-65"
   },
   "finalEntry": {
-    "id": "cal-838e141c-65",
-    "userId": "user-838e141c-1",
+    "id": "cal-986b3311-65",
+    "userId": "user-986b3311-1",
     "accountId": null,
-    "groupId": "grp-838e141c-37",
+    "groupId": "grp-986b3311-37",
     "membershipVersion": null,
     "targetStatus": "unassigned",
-    "projectId": "project-838e141c-51",
-    "plannedDate": "2026-10-09",
-    "plannedAt": "2026-10-09T12:00:00.000Z",
+    "projectId": "project-986b3311-51",
+    "plannedDate": "2026-10-10",
+    "plannedAt": "2026-10-10T12:00:00.000Z",
     "contentOutputId": null,
     "candidateId": null,
     "status": "planned",
     "note": "",
     "publishedAt": null,
-    "createdAt": "2026-10-09T15:53:15.426Z",
-    "updatedAt": "2026-10-09T15:53:27.967Z"
+    "createdAt": "2026-10-09T16:43:23.709Z",
+    "updatedAt": "2026-10-09T16:43:33.107Z"
   },
   "faultFixture": {
     "operation": "calendar.entries.target",

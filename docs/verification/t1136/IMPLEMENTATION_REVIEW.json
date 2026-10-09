@@ -1,0 +1,65 @@
+{
+  "schema": "creatoros-independent-implementation-review/v1",
+  "taskId": "T-1136",
+  "reviewedAt": "2026-10-09T16:19:21Z",
+  "verdict": "PASS_LIMITED_T1136_IMPLEMENTATION_PENDING_FULL_AND_STRICT",
+  "head": "393ce00a0e03db4f80bdfda3102b0c990b93bf82",
+  "specSha256": "4e772799e2fb3ac36d7b06c534c38f787f5f3e858da02f5bdc86ac4dd624a423",
+  "commits": {
+    "productAndInitialEvidence": "f7331d3765f81240ff7ad962f827fceba478774f",
+    "testEvidenceCalibration": "393ce00a0e03db4f80bdfda3102b0c990b93bf82"
+  },
+  "sourceHashes": {
+    "frontend/src/components/ui/dialog.tsx": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+    "frontend/src/features/content-calendar/group-calendar-planning-control.tsx": "fc077641187ad628fea074927919bccbb8bfe0908a3280dbd73bb1bfb6da4377",
+    "frontend/src/features/content-calendar/content-calendar-view.tsx": "c15aef1a2b92412f1755216deab8c302ba18da0b0b5d30dbc262246ce2ce270e",
+    "frontend/src/components/media/asset-picker.tsx": "ab1b7323dc1947c6352b0ead2a0e2747b9d371406c30a641b4fbceaf831c04f3",
+    "frontend/src/components/shell/issue-feedback-dialog.tsx": "f624b1f8c7e3b6fe1d85d02aae1f34e9f50698ae550d4a73e270a67485dd03cc",
+    "frontend/tests/e2e/t1136-calendar-dialog-layout.spec.ts": "c528fa43b3787159e773df78ba8a423e11ff4554386ed1049f7863dade87807c",
+    "docs/verification/t1136/run-layout-journey.mjs": "7ca45b600d3524aea867a36990bde258f7b9a7a70cd1b65bf1a7fcb322ca561c"
+  },
+  "evidenceHashes": {
+    "docs/verification/t1136/FRONTEND_VALIDATION_REPORT.md": "8c46da5df4dc588f535851eab277e627a47441f231e90062cbc8088b4ce1b33a",
+    "docs/verification/t1136/ROOT_VISUAL_CHECK.json": "6b7de326927e55c7be0c9c565eed3aaa2e4505e09216fb5067f65432faee11ca",
+    "docs/verification/t1136/final-frozen-browser-command.json": "06c5ceefc03a7049feb3169df11ab3ca70874e034948b45156bdc8ef26b3f370",
+    "docs/verification/t1136/current-journey.json": "11ca0da9d20aaa61c91c9eaf133cbe1aafa7ea6866c6eed6180bdf905daf6e48",
+    "browserLog": "12b6462822096fed4d8c9a4f7993328c17e4e1e2a6a87cdb8a7909cd41101f1a",
+    "focusedUiLog": "7cd4412b9e31a8b67bf0bfcd1e5bc6f5b9e3a693a95909bfb8574c82405e646b",
+    "calendarBackendLog": "67f7014f283f938f5f7ed39c441115ec2638e9b3cb63b71d2931a59066aa3b3f",
+    "led047Log": "a7fc27ca4ed341759f8265e75340f11e2583396f1e753973199662dd7388afe0",
+    "timeoutLog": "a8c6172170ef827f1682cf67bd84da8eba0872a9e737f280ee4299be672e8709"
+  },
+  "testResults": {
+    "browser": {"files": 1, "tests": 3, "passed": 3, "skipped": 0, "retries": 0, "exitCode": 0, "elapsedSeconds": 82.5651943749981},
+    "focusedUi": {"files": 6, "tests": 41, "passed": 41, "exitCode": 0},
+    "calendarBackend": {"files": 1, "tests": 3, "passed": 3, "exitCode": 0},
+    "led047": {"files": 8, "tests": 174, "passed": 174, "exitCode": 0},
+    "focusedTotal": {"tests": 218, "passed": 218},
+    "frontendType": {"exitCode": 0},
+    "boundary": {"exitCode": 0},
+    "semantic": {"exitCode": 0},
+    "orphan": {"exitCode": 0},
+    "timeoutPolicy": {"exitCode": 1, "staticFailures": 27, "identicalToPrevious": true, "publicConsumersPassed": true}
+  },
+  "visualReview": {
+    "imagesViewed": 8,
+    "hashesMatchRootReceipt": true,
+    "t1136LayoutAndStates": "pass",
+    "assetPickerLowHeight": "known-existing-limitation-tracked-by-T1140",
+    "nativeApp": false
+  },
+  "findings": [],
+  "pending": [
+    "current full canonical reconcile terminal result",
+    "taskctl strict execution",
+    "installation and native App verification",
+    "T1140 low-height AssetPicker visual optimization"
+  ],
+  "excludedClaims": [
+    "full reconcile passed",
+    "task complete",
+    "installation passed",
+    "AI or real-platform operations passed",
+    "all visual issues resolved"
+  ]
+}

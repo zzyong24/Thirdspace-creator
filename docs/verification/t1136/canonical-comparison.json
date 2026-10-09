@@ -1,0 +1,41 @@
+{
+  "schema": "creatoros-current-canonical-comparison/v1",
+  "task": "T-1136",
+  "head": "393ce00a0e03db4f80bdfda3102b0c990b93bf82",
+  "actualReceipt": {
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "node",
+      "orchestrator/process/reconcile.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T16:18:27.265560+00:00",
+    "finishedAt": "2026-10-09T16:39:56.199561+00:00",
+    "exitCode": 1,
+    "elapsedSeconds": 1288.923668708012,
+    "logSha256": "0beb0a580f27749084acfab128b80c5f90200ab6e06bb97ecaa42a1c39b215a6"
+  },
+  "prior39Count": 39,
+  "currentCount": 39,
+  "added": [],
+  "removed": [],
+  "sameList": true,
+  "warnings": [],
+  "watchedProductAndTestUnchanged": true,
+  "watchedSha256": {
+    "frontend/src/components/ui/dialog.tsx": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+    "frontend/src/features/content-calendar/group-calendar-planning-control.tsx": "fc077641187ad628fea074927919bccbb8bfe0908a3280dbd73bb1bfb6da4377",
+    "frontend/src/features/content-calendar/content-calendar-view.tsx": "c15aef1a2b92412f1755216deab8c302ba18da0b0b5d30dbc262246ce2ce270e",
+    "frontend/src/components/media/asset-picker.tsx": "ab1b7323dc1947c6352b0ead2a0e2747b9d371406c30a641b4fbceaf831c04f3",
+    "frontend/src/components/shell/issue-feedback-dialog.tsx": "f624b1f8c7e3b6fe1d85d02aae1f34e9f50698ae550d4a73e270a67485dd03cc",
+    "frontend/tests/e2e/t1136-calendar-dialog-layout.spec.ts": "c528fa43b3787159e773df78ba8a423e11ff4554386ed1049f7863dade87807c",
+    "docs/verification/t1136/run-layout-journey.mjs": "7ca45b600d3524aea867a36990bde258f7b9a7a70cd1b65bf1a7fcb322ca561c"
+  },
+  "registeredDuringRun": "T1140方案/SPEC独评与module、T1141诊断及私有内存service验证；这些控制增量发生在初始governance快照之后，不代签两个新任务完整对账或实现。",
+  "fullGatePass": false,
+  "nativeApp": false,
+  "allFunctionsPass": false,
+  "comparedAt": "2026-10-09T16:41:15.357631+00:00"
+}

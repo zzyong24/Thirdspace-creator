@@ -1,0 +1,63 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "PASS：首轮REV-001/002均已销账。当前modules SHA256 e554d1d3eb1d8df6264c309104b24c65176e94cfb423823176a74af9b199ed96为T1140绑定唯一AssetPicker产品路径、E2E/验证证据、11条正式命令并depends_on T1136。当前SPEC SHA256 145c2bded5d85748f30f468c7dbe202f4c42e6000e412be5b72db9178e086408新增512×340；低高度或窄宽时搜索/筛选、图库与预览进入唯一正文滚动区，只固定标题/footer，保完整object-contain预览、筛选可返回和键盘操作。产品尚未修改或测试，本PASS只允许T1136完成后的后续实施。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "resolved",
+      "severity": "major",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:17:929060977468a113",
+        "quote": "产品写集仅frontend/src/components/media/asset-picker.tsx，允许以下局部布局修正："
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:34:f0f3c8c5218e1a42",
+        "quote": "原AssetPicker/unit与source/media tests、LED047、frontend类型、boundary/semantic/orphan/diff、timeout公共链、pmem及完整reconcile均需真实结果"
+      },
+      "where": "orchestrator/process/modules.config.json",
+      "failure_mode": "当前modules.config不存在T-1140条目；SPEC声明的唯一产品路径、测试/runner证据路径与完整验证族没有机械绑定，越界实现或遗漏真实Chrome和公共回归仍可能通过当前控制面。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:d859f5d49e3330ca115e9304e1ac9f3b3e715a06ec17ddc29422054c34811ee9:orchestrator/process/modules.config.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:30:353756d11ced88bf",
+      "suggestion": "正式record/start前新增T-1140精确模块：产品只写AssetPicker；逐项列测试、runner、证据及必要控制路径；绑定真实Chrome、原组件/source/media、LED-047、frontend type、boundary/semantic/orphan/diff、timeout、pmem与reconcile命令及现有预算。",
+      "resolution_evidence": "EVIDENCE-SHA256:e554d1d3eb1d8df6264c309104b24c65176e94cfb423823176a74af9b199ed96:orchestrator/process/modules.config.json（T-1140仅一个产品写路径，绑定E2E/证据、11条验证命令并depends_on T-1136）",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "resolved",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:13:81867d273fce5f8c",
+        "quote": "已只读核验当前原生宿主最小窗口为1024×680（frontend/src-tauri/src/lib.rs的min_inner_size）；683×450是等效放大后的浏览器压力样本"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:32:00df66065a0d344e",
+        "quote": "1366×900、1024×680、683×450、390×900、390×450逐一查看左缩略图与右完整图片实际加载、媒体盒与裁切祖先边界、搜索、固定底部操作和键盘焦点"
+      },
+      "where": "docs/features/t1140-picker-low-height-preview.md 的低高度视口矩阵",
+      "failure_mode": "正式最小窗口1024×680在200%等效CSS空间约为512×340，但当前矩阵最低高度450；390×450只增加横向压力，不能发现标题、筛选、正文滚动区和footer在340高度互相遮挡或完整预览不可达。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "SPEC-LINE:13:81867d273fce5f8c",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:32:00df66065a0d344e",
+      "suggestion": "加入512×340或更严格且有等价说明的height<=340真实Chrome视口，并验证唯一正文滚动区、完整预览可达、固定标题/筛选/footer不遮挡和键盘焦点；若正式支持边界不同，须在SPEC给出真实限制依据。",
+      "resolution_evidence": "EVIDENCE-SHA256:145c2bded5d85748f30f468c7dbe202f4c42e6000e412be5b72db9178e086408:docs/features/t1140-picker-low-height-preview.md（新增512×340；低高度/窄宽使用唯一正文滚动区，固定标题/footer并保持筛选可返回、完整预览和键盘操作）",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

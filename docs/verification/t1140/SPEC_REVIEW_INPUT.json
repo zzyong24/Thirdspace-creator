@@ -1,0 +1,63 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "CHANGES_REQUIRED：T1140仅调整AssetPicker field弹窗空间，保留gallery、精确file/owner、身份、无预览合法选择、确认与取消边界，产品方向可行。但正式modules尚无T-1140写集与验证命令；且SPEC已确认宿主最小1024×680并使用200%等效压力验收，当前五视口最低高度450，没有覆盖约512×340的正式低高度边界。修订这两项前不得开始产品实现；当前无RED/GREEN、安装或全功能PASS。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:17:929060977468a113",
+        "quote": "产品写集仅frontend/src/components/media/asset-picker.tsx，允许以下局部布局修正："
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:34:f0f3c8c5218e1a42",
+        "quote": "原AssetPicker/unit与source/media tests、LED047、frontend类型、boundary/semantic/orphan/diff、timeout公共链、pmem及完整reconcile均需真实结果"
+      },
+      "where": "orchestrator/process/modules.config.json",
+      "failure_mode": "当前modules.config不存在T-1140条目；SPEC声明的唯一产品路径、测试/runner证据路径与完整验证族没有机械绑定，越界实现或遗漏真实Chrome和公共回归仍可能通过当前控制面。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:d859f5d49e3330ca115e9304e1ac9f3b3e715a06ec17ddc29422054c34811ee9:orchestrator/process/modules.config.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:30:353756d11ced88bf",
+      "suggestion": "正式record/start前新增T-1140精确模块：产品只写AssetPicker；逐项列测试、runner、证据及必要控制路径；绑定真实Chrome、原组件/source/media、LED-047、frontend type、boundary/semantic/orphan/diff、timeout、pmem与reconcile命令及现有预算。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "testability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:13:81867d273fce5f8c",
+        "quote": "已只读核验当前原生宿主最小窗口为1024×680（frontend/src-tauri/src/lib.rs的min_inner_size）；683×450是等效放大后的浏览器压力样本"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:32:00df66065a0d344e",
+        "quote": "1366×900、1024×680、683×450、390×900、390×450逐一查看左缩略图与右完整图片实际加载、媒体盒与裁切祖先边界、搜索、固定底部操作和键盘焦点"
+      },
+      "where": "docs/features/t1140-picker-low-height-preview.md 的低高度视口矩阵",
+      "failure_mode": "正式最小窗口1024×680在200%等效CSS空间约为512×340，但当前矩阵最低高度450；390×450只增加横向压力，不能发现标题、筛选、正文滚动区和footer在340高度互相遮挡或完整预览不可达。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "SPEC-LINE:13:81867d273fce5f8c",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:32:00df66065a0d344e",
+      "suggestion": "加入512×340或更严格且有等价说明的height<=340真实Chrome视口，并验证唯一正文滚动区、完整预览可达、固定标题/筛选/footer不遮挡和键盘焦点；若正式支持边界不同，须在SPEC给出真实限制依据。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

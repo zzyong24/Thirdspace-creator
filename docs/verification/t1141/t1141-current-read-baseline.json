@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "./frontend/node_modules/.bin/tsx",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1141-current-ratio-read.mts"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T16:34:05.181535+00:00",
+  "finishedAt": "2026-10-09T16:34:13.101085+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 7.919052584038582,
+  "logSha256": "4e82f2f24113a7881ce56d8a5c6a8290951832a6ee9a2d12ac0791d8b16db68f"
+}

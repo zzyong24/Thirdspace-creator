@@ -1,0 +1,51 @@
+{
+  "task": "T-1141",
+  "surface": "backend-service",
+  "scope": "实际内存持久化+正式生成候选准备端口；非HTTP/模型或原生验收",
+  "source": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/creative-canvas/creative-canvas.service.ts",
+  "sourceSha256": "b6afcef5ff51313da8c21da0bed002c86852170f4662e8b59bfd45d1ed0e6460",
+  "sourceAfter": "b6afcef5ff51313da8c21da0bed002c86852170f4662e8b59bfd45d1ed0e6460",
+  "observedAt": "2026-10-09T16:34:13.037Z",
+  "modelCapabilityFixture": true,
+  "modelCalled": false,
+  "submitCalls": 0,
+  "userDatabase": false,
+  "results": [
+    {
+      "name": "旧页缺省",
+      "inGroup": true,
+      "groupRatio": "3:4",
+      "nodeRatio": null,
+      "preparedRatio": null,
+      "hasRatio": false,
+      "documentUnchanged": true,
+      "revisionUnchanged": true,
+      "tasksUnchanged": true,
+      "foreignRejected": true
+    },
+    {
+      "name": "组内显式",
+      "inGroup": true,
+      "groupRatio": "3:4",
+      "nodeRatio": "3:4",
+      "preparedRatio": "3:4",
+      "hasRatio": true,
+      "documentUnchanged": true,
+      "revisionUnchanged": true,
+      "tasksUnchanged": true,
+      "foreignRejected": true
+    },
+    {
+      "name": "独立节点缺省",
+      "inGroup": false,
+      "groupRatio": null,
+      "nodeRatio": null,
+      "preparedRatio": null,
+      "hasRatio": false,
+      "documentUnchanged": true,
+      "revisionUnchanged": true,
+      "tasksUnchanged": true,
+      "foreignRejected": true
+    }
+  ]
+}

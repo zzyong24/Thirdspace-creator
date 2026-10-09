@@ -1,0 +1,21 @@
+{
+  "task_id": "T-1136",
+  "head": "393ce00a0e03db4f80bdfda3102b0c990b93bf82",
+  "viewedAt": "2026-10-09T16:08:50.627104+00:00",
+  "reviewer": "root",
+  "method": "tools.view_image实际逐图查看",
+  "style": "oil-ui-pro 0.10.0，局部低风险主Agent自检，保留tokens/结构/中文",
+  "nativeApp": false,
+  "images": {
+    "calendar-long-1366.png": "412e1ea64912c6d2bd49630952b733150f7595caeed634d8421549d794781ea0",
+    "calendar-long-390.png": "de6d5bc9b6e427dc162f72ef44117d3c428ccc1e9b5c8fb3feb673c896ed0b3b",
+    "calendar-long-683.png": "aca2ad687dc0c7aab54b702ec96c918770dfe1ae22fe401cf3331a31756b5c96",
+    "shared-feedback-900.png": "049b43f3366c9c72742ba4d8ca7e45bc3b30f34b123a3dedc0bfd5912f62653b",
+    "shared-asset-picker-900.png": "8dbe4d8ce6c5c34e8d5ad35b467a6fcd58704876f17ac1995e74de5a517058ec",
+    "shared-asset-picker-683.png": "aa5a1eb1ef6d3eb35b52870abd4b2bc979a65f75a4e051d4919fbdb247dd17af",
+    "calendar-save-error-900.png": "529c1631e61e2270a484212f60e2083473668ba8dc84eaf2086dc43c9572d28e",
+    "calendar-empty-target-900.png": "f58d3be4bbc3151fc12a0e6e8a1c49ad6fdb843f439f0adf0554ca854befc8f7"
+  },
+  "remaining": "独立实施复核与完整全局回归未完成，不代签安装/模型",
+  "images_directory": "docs/verification/t1136/reviewed-images"
+}
