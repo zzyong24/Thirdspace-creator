@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ 6c35033e
+LAST_SYNCED: main @ 45a52992
 
 ## 这是什么(定位)
 
@@ -23,6 +23,7 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
+- [wip] T-1133 修正制作回归测试的素材选择、操作目录与结果归属漂移
 - [wip] T-1132 核对完整对账新增资源生命周期回归失败
 - [wip] T-1131 核对完整对账新增渲染模块解析消费门失败
 - [wip] T-1127 在当前main整合实测样本、错过计划保护与图表孤立点修复

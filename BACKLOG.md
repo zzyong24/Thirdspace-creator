@@ -9,6 +9,8 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1134 | 核对恢复素材不可用提示的读取时序 | ✅ 待办 | — | — | [实际诊断](docs/features/t1134-recovered-material-readiness.md) | T1133校准后37例36PASS/1FAIL，素材标记同步断言未等清单ready；先按原断言120秒观察实际状态，持续缺失再补产品SPEC，不猜界面缺陷或放宽为总提示。 |
+| T-1133 | 修正制作回归测试的素材选择、操作目录与结果归属漂移 | 🔨 待办 | PASS[REV:c6d0579feef6] | — | [SPEC](docs/features/t1133-production-regression-fixture-compatibility.md) | 原顺序LED032/040实际失败：退役select、目录18对32、假结果资产；先独评保原恢复/导出/归属断言，按当前选择器及真实公开资产链校准，不改产品洗绿。 |
 | T-1132 | 核对完整对账新增资源生命周期回归失败 | 🔨 待办 | — | — | [实际诊断](docs/features/t1132-resource-lifecycle-current-gate.md) | 同轮完整canonical新增LED061；先原命令分段保实际断言、作用域和sourceSHA，核释放/背压/停止及等待真值，不删历史、重发任务或用旧PASS代签。 |
 | T-1131 | 核对完整对账新增渲染模块解析消费门失败 | 🔨 待办 | — | — | [实际诊断](docs/features/t1131-render-resolver-current-gate.md) | T1127完整canonical实际43ERROR，原41保留、LED031新增；取得原公开检查内层断言后核源码/依赖/环境，尚不猜归因、不删require/NODE_OPTIONS规则或弱化真渲染。 |
 | T-1130 | 校正局部图表验证被登记为整页旅程验收 | ✅ 待办 | — | — | [实际诊断](docs/features/t1130-chart-acceptance-applicability.md) | 根登记T1127验收待验，但原已审SPEC只要求局部组件Chrome回放；正式消费者强制non-fixture及journey，不能补拍。只读独评允许仅校正适用性并保全部原验证，不改状态/验证器/产品。 |

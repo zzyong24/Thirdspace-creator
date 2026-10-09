@@ -1,0 +1,68 @@
+{
+  "t1133-current-two-files-green": {
+    "argv": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "vitest",
+      "run",
+      "src/features/production/production-workbench.test.tsx",
+      "src/server/__module_integration__/production.persistence-client.test.ts",
+      "--retry=0",
+      "--no-file-parallelism",
+      "--testTimeout=120000",
+      "--hookTimeout=120000"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T14:25:34.221933+00:00",
+    "finishedAt": "2026-10-09T14:26:03.921387+00:00",
+    "exitCode": 1,
+    "elapsedSeconds": 29.698022999975365,
+    "logSha256": "70770e9061a3bcd5b7fa0e3b56f3653212d41bcb7205037c206023c6631c7ace"
+  },
+  "t1133-current-two-files-ready-green": {
+    "argv": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "vitest",
+      "run",
+      "src/features/production/production-workbench.test.tsx",
+      "src/server/__module_integration__/production.persistence-client.test.ts",
+      "--retry=0",
+      "--no-file-parallelism",
+      "--testTimeout=120000",
+      "--hookTimeout=120000"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T14:28:04.768027+00:00",
+    "finishedAt": "2026-10-09T14:28:43.523475+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 38.75490158400498,
+    "logSha256": "4453c503a498cafbf20347d645dcd34de935cc3005bdfdb85fe8363b2ba24930"
+  },
+  "t1133-final-two-files-green": {
+    "argv": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "vitest",
+      "run",
+      "src/features/production/production-workbench.test.tsx",
+      "src/server/__module_integration__/production.persistence-client.test.ts",
+      "--retry=0",
+      "--no-file-parallelism",
+      "--testTimeout=120000",
+      "--hookTimeout=120000"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T14:30:27.828988+00:00",
+    "finishedAt": "2026-10-09T14:31:17.470455+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 49.6406194579904,
+    "logSha256": "35cd3eecef33c180e42cb934b79791075b20f93fdc7ee330368fbf95b889d2b6"
+  }
+}

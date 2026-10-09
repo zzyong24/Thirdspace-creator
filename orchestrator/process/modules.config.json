@@ -7397,6 +7397,59 @@
           "node orchestrator/process/reconcile.mjs"
         ]
       }
+    },
+    "T-1133": {
+      "task_id": "T-1133",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1133-production-regression-fixture-compatibility.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/src/features/production/production-workbench.test.tsx",
+        "frontend/src/server/__module_integration__/production.persistence-client.test.ts",
+        "frontend/src/features/production/video-decision-preview.tsx",
+        "frontend/src/components/media/asset-picker.tsx",
+        "backend/src/modules/production/production.service.ts",
+        "backend/src/modules/production/production.transport.ts",
+        "contract/src/operations/production.ts",
+        "contract/src/operations/assets.ts",
+        "frontend/src/server/persistence-client.ts"
+      ],
+      "write_set": [
+        "frontend/src/features/production/production-workbench.test.tsx",
+        "frontend/src/server/__module_integration__/production.persistence-client.test.ts",
+        "docs/features/t1133-production-regression-fixture-compatibility.md",
+        "docs/features/t1133-production-regression-fixture-compatibility.review.md",
+        "docs/features/t1133-production-regression-fixture-compatibility.review-input.json",
+        "docs/verification/t1133/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/review-events.ndjson",
+        "orchestrator/process/modules.config.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/features/production/production-workbench.test.tsx src/server/__module_integration__/production.persistence-client.test.ts --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir frontend exec vitest run src/features/production/video-decision-preview.test.tsx src/components/media/asset-picker.test.tsx --retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir frontend typecheck",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node orchestrator/process/semantic-boundary-scan.mjs",
+          "node orchestrator/process/orphan-scan.mjs",
+          "git diff --check",
+          "node orchestrator/process/pmem.mjs sync",
+          "node orchestrator/process/reconcile.mjs"
+        ]
+      }
     }
   }
 }

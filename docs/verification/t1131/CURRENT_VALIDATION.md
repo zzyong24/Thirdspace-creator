@@ -1,3 +1,8 @@
 # T1131 当前诊断
 
 原完整canonical43失败与本新增保留，根因UNKNOWN。原backend30PASS与RAT67PASS均实际exit0，产品未改、0retry，真实收据在本目录，原始日志私有保存。reconcile实际execSync无timeout且stdio ignore，无法从全局报告复原内层断言；不猜成超时或负载，不把此分段结果算作产品已修或global PASS。继续按原检查同序采集真实内层日志。
+
+
+## 原顺序当前诊断（不是完整canonical）
+
+2026-10-09T13:56:47.040530+00:00至2026-10-09T13:56:54.432274+00:00，原check字符串、原顺序、同cwd/隔离环境、无新增外层timeout，实际exit 0；日志SHA 3214a8b9b71b3f809af29d5e21567282137f32b14e334010b3c2df6acd7bd90b。所有原lesson捕获已终结，12来源路径与reconcile配置前后SHA相同。此目标再次未复现，不能擦除原43ERROR、猜根因、签任务修复或当前全局PASS。

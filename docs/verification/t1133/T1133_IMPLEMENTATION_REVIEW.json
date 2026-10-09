@@ -1,0 +1,40 @@
+{
+  "schema": "creatoros-independent-implementation-review/v1",
+  "task": "T1133",
+  "reviewedAt": "2026-10-09T14:34:34Z",
+  "baseHead": "45a52992087c5e6aaa09cb1929fa8ec16d6b4c64",
+  "specSha256": "22565a09ed016972da9a5813d355e1e2b47858f5430a7799fccfae85a12a95c9",
+  "verdict": "PASS_LIMITED_IMPLEMENTATION_COMMIT_ALLOWED_CANONICAL_PENDING",
+  "sourceHashes": {
+    "frontend/src/features/production/production-workbench.test.tsx": "7bc60346c7479fbcf385fce213dfbe0b83b74ed1eb1f0e184e9511e95c80818c",
+    "frontend/src/server/__module_integration__/production.persistence-client.test.ts": "6f5efb5baa663f078f67cc8591eb80fd283eca4f77f6c6c7b45fae1a73beecd3",
+    "docs/verification/t1133/current-test-source-sha256.json": "06dc579da49481b82f52eee7677df151f326f2414262abde63c9b0841cd19ba8",
+    "docs/verification/t1133/actual-command-receipts.json": "14491252b2f5736144436cfa32177f4c775b060bd4ee82e5eae1f7c4780f4081",
+    "docs/verification/t1133/CURRENT_VALIDATION.md": "99b2fc8b20951123c615c001d4f22b4f691bd6c0b250e83517eb0eb89476c32f"
+  },
+  "validatedBehaviors": [
+    "AssetPicker spy is call-through and restored in finally",
+    "visible recovered name and unavailable state are preserved",
+    "choiceKey and value.assetId both preserve asset-saved",
+    "running task, removal and confirmation payload assertions remain",
+    "contract and backend operation sets are deduplicated and bidirectionally equal",
+    "every backend production operation still rejects missing context",
+    "owned result asset is created through upload create/complete and read back through outputs.get",
+    "missing and foreign-account assets are rejected without binding",
+    "legal completion succeeds after rejection and replay preserves the first result",
+    "material package repeated export still creates no ordinary asset"
+  ],
+  "evidence": {
+    "red": {"testsPassed":33,"testsFailed":3,"exitCode":1,"logSha256":"9e6c62cfb7fa41be7735984bfe96cd2c3c45f2c7e3cbad5210f4b651ae28c58a"},
+    "firstCalibration": {"testsPassed":36,"testsFailed":1,"exitCode":1,"logSha256":"70770e9061a3bcd5b7fa0e3b56f3653212d41bcb7205037c206023c6631c7ace"},
+    "finalTarget": {"testsPassed":37,"testsFailed":0,"exitCode":0,"logSha256":"35cd3eecef33c180e42cb934b79791075b20f93fdc7ee330368fbf95b889d2b6"},
+    "neighbors": {"testsPassed":18,"testsFailed":0,"exitCode":0,"logSha256":"49ba1ade99b5a7838beaafcaa23bc316e3a483254848b0d64656c6c4a66905a4"}
+  },
+  "findings": [],
+  "pending": [
+    "full canonical reconcile terminal result",
+    "task completion",
+    "package and installed acceptance"
+  ],
+  "knownNonPass": "timeout-policy exit 1 with 27 retained static findings"
+}

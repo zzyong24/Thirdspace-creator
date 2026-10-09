@@ -10,8 +10,9 @@
  *     rendering→ready，失败不把项目永久留在“渲染中”；分场/export 正常建档。
  */
 
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as assetPickerModule from "@/components/media/asset-picker";
 
 // ── client mock(stateful production 状态,可断言步进序列)──────────────────────
 
@@ -909,6 +910,9 @@ describe("ProductionWorkbench", () => {
   });
 
   it("刷新恢复在跑渲染后，执行卡和已确认分镜共用同一运行状态", async () => {
+    // 只观察原身份；spy 默认透传真实组件，仍验证真实已选卡与移除/保存链。
+    const pickerObserver = vi.spyOn(assetPickerModule, "AssetPicker");
+    try {
     const recoveredDecisions = {
       scenes: [{ title: "开场", startSec: 0, endSec: 12, summary: "开场介绍" }],
       cards: [],
@@ -977,14 +981,18 @@ describe("ProductionWorkbench", () => {
     expect(
       container.querySelector('[data-slot="confirmed-decisions-notice"]'),
     ).not.toBeNull();
-    const recoveredSelect = container.querySelector(
-      '[data-testid="broll-0"] select',
-    ) as HTMLSelectElement;
-    expect(recoveredSelect.options[0]?.textContent).toContain(
-      "恢复后的项目录屏",
-    );
-    expect(recoveredSelect.options[0]?.textContent).toContain("素材已不可用");
-    expect(recoveredSelect.value).toBe("asset-saved");
+    const recoveredBroll = within(container.querySelector('[data-testid="broll-0"]')!);
+    const pickerLabel = "B-roll 素材(当前:恢复后的项目录屏)";
+    // 渲染状态和项目素材独立恢复；清单结算后才有真实不可用状态。
+    await waitFor(() => {
+      const recoveredPicker = recoveredBroll.getByRole("button", { name: pickerLabel });
+      expect(recoveredPicker).toHaveTextContent("恢复后的项目录屏");
+      expect(recoveredPicker).toHaveTextContent("素材已不可用");
+    }, { timeout: 120000 });
+    const recoveredChoice = pickerObserver.mock.calls
+      .filter(([props]) => props.label === pickerLabel).at(-1)?.[0].value;
+    expect(recoveredChoice?.choiceKey).toBe("asset-saved");
+    expect(recoveredChoice?.value).toEqual(expect.objectContaining({ assetId: "asset-saved" }));
     expect(
       container.querySelector('[aria-label="移除 B-roll:恢复后的项目录屏"]'),
     ).not.toBeNull();
@@ -1017,7 +1025,10 @@ describe("ProductionWorkbench", () => {
         }),
       }),
     );
-  });
+    } finally {
+      pickerObserver.mockRestore();
+    }
+  }, 180000);
 
   it("项目最新执行任务覆盖方案里保存的旧 sourceRenderTaskId", async () => {
     mockClient.getOutputProduction.mockResolvedValue({

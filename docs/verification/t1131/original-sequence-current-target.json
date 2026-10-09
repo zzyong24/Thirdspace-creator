@@ -1,0 +1,37 @@
+{
+  "schema": "creatoros-current-sequence-diagnosis/v1",
+  "classification": "diagnostic-lesson-sequence-not-canonical-reconcile",
+  "head": "45a52992087c5e6aaa09cb1929fa8ec16d6b4c64",
+  "sourceSha256": {
+    "backend/src/application/collection/self.test.ts": "ee06c6f0ed31d581755781462c1efdb3b4c67aad274206220b0d0633ebde17e0",
+    "backend/src/modules/ai-runtime/automation-driver.test.ts": "d12a637903a155a3202c80480095b4d37232e79af89e93011067232cc155aa35",
+    "backend/src/modules/ai-runtime/automation-driver.ts": "f596c3721f111349ba93a1d765a0bb97b458f15a8f68b6ffb96301b9de9510f9",
+    "backend/src/modules/analytics/analytics.repository.integration.test.ts": "746be4e476080e4b821a014120d7a2d8d0050a4967de4b8ccdc3de089a5a551a",
+    "backend/src/modules/analytics/analytics.repository.ts": "631ec714af3e62c72895a291e40d99c8d55bd49b2fca05e03d6687250a9ad295",
+    "backend/src/modules/analytics/sync-policy.test.ts": "8c8a9ff7fb9c21fed131d1d6703a9eac7138b906019f07e3af556c33ce658a5c",
+    "backend/src/modules/analytics/sync-policy.ts": "4fb50b945a6773f0a6115fe843c369b380645efae04c297d011297ca80ba08cc",
+    "backend/src/modules/analytics/sync-state.service.test.ts": "c501b0a906ea78648c2994723cacbfc1753fd14d968a5e40f1a73c57ec73da23",
+    "backend/src/modules/analytics/sync-state.service.ts": "1e2a60ee8f6291713e540a65dd76a31cee0452acd1d77fcdede610a6584ce24f",
+    "backend/src/modules/ingestion/ingestion.import.integration.test.ts": "994d8b8a75770cfe75cbb91c6a27e6255aa8ca564a75c3da867eeacdd537fe4a",
+    "frontend/src/components/analytics/chart-coordinates.test.tsx": "23ff82b78e34903a8152f90f7188a82650bf20d47ed142f9e1c381bcd20233a3",
+    "frontend/src/components/analytics/chart-frame.tsx": "e3012abd91b9bdb628a1c7cf1aa08ac9327d5bba6c8cb9c6157da9d240c22e16"
+  },
+  "configSha256": "8a53dc17c87d7320ed06d49e2863a499c6913bb1c8e8f958e1b2695210975b94",
+  "sourceStillUnchanged": true,
+  "configStillUnchanged": true,
+  "target": {
+    "index": 27,
+    "led": "LED-031",
+    "command": "pnpm --dir backend exec vitest run src/modules/execution/video-render/executor.test.ts src/modules/execution/child-env.test.ts && node --test tools/windows-closure-rat/*.test.mjs",
+    "startedAt": "2026-10-09T13:56:47.040530+00:00",
+    "finishedAt": "2026-10-09T13:56:54.432274+00:00",
+    "elapsedSeconds": 7.391778582998086,
+    "exitCode": 0,
+    "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/original-lesson-sequence-capture/027-LED-031.log",
+    "logSha256": "3214a8b9b71b3f809af29d5e21567282137f32b14e334010b3c2df6acd7bd90b"
+  },
+  "canonicalReconcile": false,
+  "original43FailureErased": false,
+  "cause": "UNKNOWN",
+  "taskComplete": false
+}

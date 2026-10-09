@@ -1,0 +1,32 @@
+{
+  "schema": "creatoros-t1133-original-failures/v1",
+  "classification": "diagnostic-lesson-sequence-not-canonical-reconcile",
+  "head": "45a52992087c5e6aaa09cb1929fa8ec16d6b4c64",
+  "steps": [
+    {
+      "index": 28,
+      "led": "LED-032",
+      "command": "pnpm --dir contract exec vitest run tests/video-render.test.ts && pnpm --dir ai-worker exec vitest run src/prompt/templates/video-decisions.test.ts && pnpm --dir backend exec vitest run src/modules/ai-runtime/video-decisions-runner.test.ts src/modules/execution/video-render/template.test.ts src/modules/execution/video-render/executor.test.ts && pnpm --dir frontend exec vitest run src/features/production/assemble-video-render-props.test.ts src/features/production/production-workbench.test.tsx",
+      "startedAt": "2026-10-09T13:56:54.437423+00:00",
+      "finishedAt": "2026-10-09T13:57:16.331715+00:00",
+      "elapsedSeconds": 21.894184416974895,
+      "exitCode": 1,
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/original-lesson-sequence-capture/028-LED-032.log",
+      "logSha256": "152b446468d40a86569f3c559bfb116b4b91ab78e7e206668e54904a7e0cbf02"
+    },
+    {
+      "index": 34,
+      "led": "LED-040",
+      "command": "pnpm --dir contract exec vitest run tests/modules/production.test.ts && pnpm --dir backend exec vitest run src/modules/production/production.service.test.ts src/modules/production/production.contract.test.ts src/modules/ai-runtime/video-decisions-runner.test.ts && pnpm --dir frontend exec vitest run src/features/production/production-workbench.test.tsx src/server/__module_integration__/production.persistence-client.test.ts",
+      "startedAt": "2026-10-09T13:58:09.453033+00:00",
+      "finishedAt": "2026-10-09T14:00:09.588869+00:00",
+      "elapsedSeconds": 120.13488670799416,
+      "exitCode": 1,
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/original-lesson-sequence-capture/034-LED-040.log",
+      "logSha256": "c025a403495526c4d2cf2871a91227456888c398ed552b6cb3706a366b61ebea"
+    }
+  ],
+  "sourceUnchangedBeforePort": true,
+  "retryZeroClaim": false,
+  "rootProductChange": false
+}

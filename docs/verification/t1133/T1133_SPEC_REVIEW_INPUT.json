@@ -1,0 +1,35 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "CHANGES_REQUIRED：T1133 的两测试校准准确对应实际 LED-032/040 协议漂移，并保留 asset-saved、无ctx、独立目录集合、真实同owner资产、owner拒绝、合法读回与幂等边界；但当前 modules.config 没有 T-1133，尚未在开工前机械绑定精确写集及正式验证命令。补模块后对 REV-001 recheck；本轮未运行测试或修改产品。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "operability",
+      "requirement_anchor": {
+        "id": "SPEC-LINE:51:94d154938a9b1ed7",
+        "quote": "控制写集：本SPEC、同名review输入/快照、`docs/verification/t1133/**`、BACKLOG/PROJECT、模块验证登记、DECISION_LOG与流程真实事件。不改reconcile规则、生产预算、任务/attempt/deadline、App或媒体。新包和T1062/T1124全功能验收另有证据要求。"
+      },
+      "acceptance_anchor": {
+        "id": "SPEC-LINE:46:cc86e5f1476ff299",
+        "quote": "- 旧测试不变时，以原两个文件显式`--retry=0 --no-file-parallelism --testTimeout=120000 --hookTimeout=120000`取得当前完整RED。"
+      },
+      "where": "orchestrator/process/modules.config.json",
+      "failure_mode": "当前 modules.config.json 不存在 T-1133 条目，因而 taskctl start 前无法机械约束产品写集为空、业务测试仅限两个精确文件，也无法保证原两文件 retry=0、相邻组件、contract目录、frontend类型、三门卫与完整reconcile均被正式执行。实现可在越界或漏验情况下进入后续状态。",
+      "evidence_kind": "deterministic-check",
+      "evidence_ref": "EVIDENCE-SHA256:6d4ca5a4a00b3fcdaeb269a7c422286213c0ebca7711ff2a587acbeba5fcb074:orchestrator/process/modules.config.json",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "constraint",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "SPEC-LINE:51:94d154938a9b1ed7",
+      "suggestion": "实施前增加 T-1133 精确模块绑定：产品写集为空；业务测试只含 SPEC 两文件；控制/证据路径单列；verify_commands 覆盖原两文件同命令 retry=0/no-file-parallelism/test+hook 120000、video-decision-preview 与 asset-picker 相邻回归、contract production 操作测试、frontend typecheck、diff/boundary/semantic/orphan 与完整 reconcile。随后提交 REV-001 recheck。",
+      "resolution_evidence": "",
+      "parent_id": "",
+      "threat_model_id": ""
+    }
+  ]
+}

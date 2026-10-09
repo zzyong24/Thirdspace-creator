@@ -1,0 +1,29 @@
+{
+  "schema": "creatoros-independent-diagnosis-review/v1",
+  "task": "T1134",
+  "reviewedAt": "2026-10-09T14:34:34Z",
+  "specSha256": "8dbdc9086fa1989e64bb8be5c53cff1a803a8899da2670c6bd1f54110174812d",
+  "verdict": "PASS_DIAGNOSIS_CLOSURE_NO_PRODUCT_CHANGE_REQUIRED",
+  "rootCause": "The assertion observed the recovered picker after rendering-state restoration but before the independently loaded project asset inventory reached ready; unavailableAssetLabels is intentionally computed only after ready.",
+  "productChanged": false,
+  "testCalibration": {
+    "mechanism": "bounded wait that re-queries the current picker button",
+    "timeoutMs": 120000,
+    "outerTestTimeoutMs": 180000,
+    "requestsOrTasksResubmitted": false,
+    "assertionsRemoved": false
+  },
+  "evidence": {
+    "firstFailure": {"testsPassed":36,"testsFailed":1,"exitCode":1,"logSha256":"70770e9061a3bcd5b7fa0e3b56f3653212d41bcb7205037c206023c6631c7ace"},
+    "readyRun": {"testsPassed":37,"testsFailed":0,"exitCode":0,"logSha256":"4453c503a498cafbf20347d645dcd34de935cc3005bdfdb85fe8363b2ba24930"},
+    "finalRun": {"testsPassed":37,"testsFailed":0,"exitCode":0,"logSha256":"35cd3eecef33c180e42cb934b79791075b20f93fdc7ee330368fbf95b889d2b6"},
+    "currentValidationSha256": "1bab2f9c02f809c9314cd30b55bd9804713cfdd17ccfbfbe49089a5d57887da7",
+    "receiptSha256": "ab2fed4bdbc00d15aba98fe0743ff35d53ea76d4172d90862f2065b2a28f464f"
+  },
+  "findings": [],
+  "limitations": [
+    "not T1133 full canonical PASS",
+    "not installed UI or visual acceptance",
+    "not model, media encoding or full-function acceptance"
+  ]
+}

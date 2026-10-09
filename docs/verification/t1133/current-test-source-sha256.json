@@ -1,0 +1,20 @@
+{
+  "schema": "creatoros-t1133-test-source/v1",
+  "baseCommit": "45a52992087c5e6aaa09cb1929fa8ec16d6b4c64",
+  "rows": [
+    {
+      "path": "frontend/src/features/production/production-workbench.test.tsx",
+      "currentSha256": "7bc60346c7479fbcf385fce213dfbe0b83b74ed1eb1f0e184e9511e95c80818c"
+    },
+    {
+      "path": "frontend/src/server/__module_integration__/production.persistence-client.test.ts",
+      "currentSha256": "6f5efb5baa663f078f67cc8591eb80fd283eca4f77f6c6c7b45fae1a73beecd3"
+    }
+  ],
+  "productPathsChanged": [],
+  "pendingActualGreen": false,
+  "targetTests": 37,
+  "neighborTests": 18,
+  "nativeVisualClaim": false,
+  "realModelClaim": false
+}

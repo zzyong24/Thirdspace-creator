@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "env",
+    "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+    "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+    "python3",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/capture-original-lesson-sequence.py"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T13:50:15.072016+00:00",
+  "finishedAt": "2026-10-09T14:16:53.569703+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 1598.4843946670298,
+  "logSha256": "836ce98d0dbc47286eb8658a0c860965c3784e78777e2b6f7b6aa88b837d689d"
+}
