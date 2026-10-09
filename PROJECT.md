@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ d35f7d57
+LAST_SYNCED: main @ 87964675
 
 ## 这是什么(定位)
 
@@ -25,6 +25,9 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 - [wip] T-1101 修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集
 - [open] T-1101-global-gates 核对独立main工作树全局对账失败及历史收据漂移
+- [wip] T-1108 核对画布连线引用保存回读及浏览器短观察窗口
+- [wip] T-1109 修复超时验证入口默认10秒初始化导致原测试未执行
+- [open] T-1110 核对浏览器验收开发资源ChunkLoadError与测试状态准备竞态
 - [wip] T-1107 核对平台公共接口新增操作与发布归属回归失败
 - [wip] T-1105 修复共享资源面板失效读取后持续加载
 - [wip] T-1103 排查Pi联合提案反复遗漏完整图文参数
