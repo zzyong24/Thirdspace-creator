@@ -20,6 +20,24 @@ fn private_write(path: &Path, bytes: &[u8]) -> Result<(), String> {
     f.write_all(bytes).map_err(|_| error("隔离测试文件写入失败"))?;
     f.sync_all().map_err(|_| error("隔离测试文件同步失败"))
 }
+fn private_write_capsule_atomic(path:&Path,bytes:&[u8])->Result<(),String> {
+    let parent=path.parent().ok_or_else(||error("隔离胶囊目录无效"))?;
+    let temporary=parent.join(format!("capsule-write-{}.tmp",random()));
+    let result=(||{
+        private_write(&temporary,bytes)?;
+        if std::fs::read(&temporary).map_err(|_|error("临时胶囊回读失败"))?!=bytes {
+            return Err(error("临时胶囊回读不一致"));
+        }
+        std::fs::rename(&temporary,path).map_err(|_|error("胶囊原子替换失败，原胶囊保留"))?;
+        std::fs::File::open(parent).and_then(|f|f.sync_all()).map_err(|_|error("胶囊目录同步未确认，请回读同意向"))?;
+        if std::fs::read(path).map_err(|_|error("胶囊替换后回读失败"))?!=bytes {
+            return Err(error("胶囊替换后回读不一致"));
+        }
+        Ok(())
+    })();
+    if temporary.exists(){let _=std::fs::remove_file(&temporary);}
+    result
+}
 impl Vault {
     fn open() -> Result<Self,String> {
         // 固定在当前工作树，driver输入不能指定用户数据目录。
@@ -44,7 +62,7 @@ impl Vault {
         let cipher=Aes256Gcm::new_from_slice(&self.key).map_err(|_|error("隔离胶囊加密器无效"))?;
         let encrypted=cipher.encrypt(Nonce::from_slice(&nonce),plain.as_slice()).map_err(|_|error("隔离胶囊加密失败"))?;
         let mut bytes=nonce.to_vec();bytes.extend(encrypted);
-        private_write(&self.dir.join("session.enc"),&bytes)
+        private_write_capsule_atomic(&self.dir.join("session.enc"),&bytes)
     }
     fn capsule(&self)->Result<Capsule,String> {
         let bytes=std::fs::read(self.dir.join("session.enc")).map_err(|_|error("隔离胶囊不存在，请先prepare"))?;
@@ -106,10 +124,35 @@ fn run_live_driver()->Result<(),String> {
     license::resolve_public_key(&driver.public_key_b64).map_err(|_|error("Lab公开验签钥匙无效"))?;
     let phase=std::env::var("CREATOROS_OWNED_DEVICES_HTTP_LAB_PHASE").unwrap_or_default();
     let vault=Vault::open()?;
-    if phase=="prepare" {
-        if vault.dir.join("session.enc").exists(){return Err(error("已有隔离意向，请consume，不得重复登记"));}
+    if phase=="prepare" || phase=="prepareAfterExpired" {
+        let previous_machine=if phase=="prepareAfterExpired" {
+            let previous=vault.capsule()?;
+            let cfg=LicenseConfig{base_url:ACTIVITY.into(),project_key:crate::product_identity::built_in_project_key().into(),strict_verify:true,public_key_b64:driver.public_key_b64.clone(),machine_id:previous.machine_id.clone()};
+            validate_journal(&previous.journal,&cfg)?;
+            if canonical_time(&previous.journal.expires_at).is_none_or(|ms|ms>now())
+                || previous.journal.committed || previous.journal.saved_snapshot_hash.is_some()
+                || vault.dir.join("license.enc").exists() {
+                return Err(error("旧意向尚未过期或已有保存事实，不允许新建冒充恢复"));
+            }
+            let request=Zeroizing::new(serde_json::json!({"deviceSecret":previous.journal.device_secret,"codeVerifier":previous.journal.code_verifier}).to_string());
+            let response=Transport::post(&Http,GROWTH,POLL,&request,None)?;
+            if response.signed.status!=410 || check_response(&response)?!=Some("expired") {
+                return Err(error("权威POLL未确认旧意向终结，不允许另建意向"));
+            }
+            let encrypted=std::fs::read(vault.dir.join("session.enc")).map_err(|_|error("旧胶囊无法保留"))?;
+            let archive=vault.dir.join(format!("expired-{}.enc",previous.journal.registration_ref));
+            if archive.exists() {
+                if std::fs::read(&archive).map_err(|_|error("旧胶囊归档无法核对"))?!=encrypted {
+                    return Err(error("旧胶囊归档不一致，禁止覆盖"));
+                }
+            } else {private_write(&archive,&encrypted)?;}
+            Some(previous.machine_id)
+        } else {
+            if vault.dir.join("session.enc").exists(){return Err(error("已有隔离意向，请consume，不得重复登记"));}
+            None
+        };
         // 与生产resolve_machine_id相同的32hex产物形状；种子仅本轮随机测试值，不读取硬件。
-        let machine_id=format!("{:x}",Sha256::digest(random().as_bytes()))[..32].to_string();
+        let machine_id=previous_machine.unwrap_or_else(||format!("{:x}",Sha256::digest(random().as_bytes()))[..32].to_string());
         let verifier=Zeroizing::new(random());
         let challenge=base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(Sha256::digest(verifier.as_bytes()));
         let body=Zeroizing::new(serde_json::json!({"intent":"register_device","client":"creatoros","projectKey":crate::product_identity::built_in_project_key(),"productRef":crate::product_identity::product_ref(),"machineId":machine_id,"deviceLabel":"Creator原生HTTP隔离电脑","codeChallenge":challenge,"codeChallengeMethod":"S256"}).to_string());
@@ -138,10 +181,10 @@ fn run_live_driver()->Result<(),String> {
         let mut j=Journal{integrity:String::new(),schema_version:1,intent:"register_device".into(),registration_ref:created.registration_ref.clone(),device_secret:std::mem::take(&mut created.device_secret),code_verifier:verifier.to_string(),activation_code:None,user_code:user_code.clone(),verification_url:url,expires_at:created.expires_at.clone(),retry_after_seconds:created.poll_interval_seconds,next_poll_at:now()+(created.poll_interval_seconds*1000)as i64,binding:binding(&cfg,&created.registration_ref),saved_snapshot_hash:None,committed:false};
         j.integrity=seal(&j);validate_journal(&j,&cfg)?;
         vault.write_capsule(&Capsule{machine_id,journal:j})?;
-        println!("{}",serde_json::json!({"phase":"prepare","created":true,"registrationRef":created.registration_ref,"userCode":user_code,"expiresAt":created.expires_at,"secretExposure":false}));
+        println!("{}",serde_json::json!({"phase":"prepare","created":true,"registrationRef":created.registration_ref,"userCode":user_code,"expiresAt":created.expires_at,"previousExpiredCapsulePreserved":phase=="prepareAfterExpired","secretExposure":false}));
         return Ok(());
     }
-    if phase!="consume" {return Err(error("phase只允许prepare或consume"));}
+    if phase!="consume" {return Err(error("phase只允许prepare、prepareAfterExpired或consume"));}
     let (_, activity_origin)=http_client_and_origin(ACTIVITY)?;
     let untrusted_certificate_rejected=if activity_origin.starts_with("https://") {
         // 真实同一服务器：不加Lab CA的client必须拒绝证书，绝不使用不校验证书开关。
@@ -152,11 +195,18 @@ fn run_live_driver()->Result<(),String> {
             .err().ok_or_else(||error("Lab证书被默认client信任，无法证明专属CA边界"))?;
         let mut current:Option<&(dyn std::error::Error+'static)>=Some(&failure);
         let mut issuer_rejected=false;
+        let mut ca_used_as_leaf=false;
+        let mut certificate_name_invalid=false;
+        let mut certificate_expired=false;
         while let Some(cause)=current {
             let text=cause.to_string().to_ascii_lowercase();
             issuer_rejected|=text.contains("unknownissuer")||text.contains("unknown issuer");
+            ca_used_as_leaf|=text.contains("causedasendentity");
+            certificate_name_invalid|=text.contains("notvalidforname");
+            certificate_expired|=text.contains("expired");
             current=cause.source();
         }
+        println!("{}",serde_json::json!({"phase":"tlsNegativeMetadata","unknownIssuer":issuer_rejected,"caUsedAsEndEntity":ca_used_as_leaf,"certificateNameInvalid":certificate_name_invalid,"certificateExpired":certificate_expired,"secretExposure":false}));
         if !issuer_rejected {return Err(error("TLS失败不是已确认的未知CA拒绝，不能冒称负向通过"));}
         true
     } else {false};
@@ -184,7 +234,13 @@ fn run_live_driver()->Result<(),String> {
     if j.committed {return Err(error("journal称已保存但授权文件不存在，不能重新激活冒充恢复"));}
     let request=Zeroizing::new(serde_json::json!({"deviceSecret":j.device_secret,"codeVerifier":j.code_verifier}).to_string());
     let response=Transport::post(&Http,GROWTH,POLL,&request,None)?;
-    if response.signed.status!=200 {check_response(&response)?;return Err(error("真实POLL尚未ready，请保留意向"));}
+    if response.signed.status!=200 {
+        println!("{}",serde_json::json!({"phase":"pollResponseMetadata","httpStatus":response.signed.status,"secretExposure":false}));
+        if check_response(&response)?==Some("expired") {
+            return Err(error("真实POLL确认连接已过期/已消费，胶囊保留作为失败恢复证据，不延TTL或自动新建"));
+        }
+        return Err(error("真实POLL尚未ready，请保留意向"));
+    }
     let status:serde_json::Value=parse(&response.signed.body)?;
     if status.get("status").and_then(|v|v.as_str())!=Some("ready") {return Err(error("真实POLL尚未ready，请由本人在隔离网页批准"));}
     let ready:Ready=parse(&response.signed.body)?;
