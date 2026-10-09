@@ -384,7 +384,25 @@ it('T208 原公开retry同execution新attempt恢复时保旧成功与历史，�
   const artifacts=createArtifactsService({db,now:f.now,nextId:f.nextId});
   const successFacts=await artifacts.listProjectArtifacts(f.ctx,projectId),successVersions=await Promise.all(successFacts.map(row=>artifacts.listVersions(f.ctx,row.id)));
   const [queued]=await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:'retry',idempotencyKey:`retry-${f.id}`});expect(queued).toMatchObject({id:f.ref.executionTaskId,status:'queued'});
-  const [pending]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));expect(pending?.payload).toEqual(failed.execution.payload);expect(pending?.deadlineAt).toBe(failed.execution.deadlineAt);
+  const [pending]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));if(!pending)throw Error('原retry缺少同execution持久行');
+  const receiptField='__transcribeCommandReceiptsV1';expect(failed.execution.payload).not.toHaveProperty(receiptField);
+  const {[receiptField]:commandReceipts,...originalPayload}=pending.payload as Record<string,unknown>;
+  expect(originalPayload).toEqual(failed.execution.payload);expect(pending.deadlineAt).toBe(failed.execution.deadlineAt);
+  // 私有回执只容纳这一真实受理；旧字段完整深比较，未知字段或第二记录仍失败。
+  const canonicalReceiptInput=(value:unknown):string=>{
+   if(Array.isArray(value))return '['+value.map(canonicalReceiptInput).join(',')+']';
+   if(value!==null&&typeof value==='object')return '{'+Object.entries(value).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([key,item])=>JSON.stringify(key)+':'+canonicalReceiptInput(item)).join(',')+'}';
+   const encoded=JSON.stringify(value);if(encoded===undefined)throw Error('原冻结回执输入不是完整JSON');return encoded;
+  };
+  const original=failed.execution,business=failed.business;
+  const inputDigest=digest(canonicalReceiptInput({executionTaskId:original.id,userId:original.userId,groupId:original.groupId,accountId:original.accountId,
+   groupVersion:original.groupVersion,membershipVersion:original.membershipVersion,kind:original.kind,ownerType:original.ownerType,ownerId:original.ownerId,
+   aiTaskId:business.id,requestFingerprint:business.requestFingerprint,inputData:business.inputData,modelInput:(original.payload as Record<string,unknown>).modelInput}));
+  expect(commandReceipts).toEqual({[createHash('sha256').update(`retry-${f.id}`).digest('hex')]:{
+   schemaVersion:1,command:'retry',targetDigest:digest(JSON.stringify([f.ref.executionTaskId])),inputDigest,
+   acceptedAttempt:original.attempt,acceptedAt:pending.updatedAt,
+  }});
+  expect(new Date(pending.updatedAt).toISOString()).toBe(pending.updatedAt);
   const claim=await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:'same-task-recovery',leaseSeconds:300});if(!claim)throw Error('原合法retry没有领取');
   const ref={executionTaskId:f.ref.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};expect(ref.attempt).toBe(f.ref.attempt+1);
   await expect(f.workflow.complete(f.ref,{})).rejects.toThrow(); // 旧fence不能写新summary。
