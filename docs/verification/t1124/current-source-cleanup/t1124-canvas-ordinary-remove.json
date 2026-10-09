@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "worktree",
+    "remove",
+    "/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T21:05:25.777188+00:00",
+  "finishedAt": "2026-10-09T21:05:53.408058+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 27.630547999986447,
+  "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

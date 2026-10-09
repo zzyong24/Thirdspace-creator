@@ -1,0 +1,106 @@
+{
+  "head": "3d4444934a618542747dd9839a299c6d769adad1",
+  "pictures": [
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1136/screenshots/shared-asset-picker-683.png",
+      "sha256": "3639dc2cc9bbb6f0e22acb79bfb878ce7900dca25b473dfc16b5bb1c3bd2c230"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1136/screenshots/calendar-long-683.png",
+      "sha256": "53a57e322c3f9d584ce4b67c9f09f127b8bf267a845ebbca08f6f9d2179b1364"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1136/screenshots/shared-asset-picker-900.png",
+      "sha256": "9717469b6ea1a6d7750d833231fc117b488b69bd995a5790a6abb15d2e93a60f"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1136/screenshots/calendar-long-900.png",
+      "sha256": "a84d453032e9f39b7489258193de06d99231ea4d45cb68865c645dee45db60a4"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1136/screenshots/calendar-save-error-900.png",
+      "sha256": "529c1631e61e2270a484212f60e2083473668ba8dc84eaf2086dc43c9572d28e"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1136/screenshots/calendar-long-390.png",
+      "sha256": "1797b95e1c4985629c67626de13ee1ec1acf414c38c18296c038eeba1a0b98b1"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1136/screenshots/calendar-empty-target-900.png",
+      "sha256": "28c5be920fb676bf83e6047dd054db343d34c3eb6f71c20d6e1b3c05e60733de"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1136/screenshots/shared-feedback-900.png",
+      "sha256": "c950ba7db5bccff0df830b82d18c06ae6fe6be8c8c23f1ce4fc4544f7bed7d7d"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1136/screenshots/shared-feedback-1366.png",
+      "sha256": "ef703e389efc259800d9d4f4d605dae0b1e2fd05b6630f49b04296235e0d3021"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1136/screenshots/shared-asset-picker-1366.png",
+      "sha256": "5d3133562021884a233e710f641b97545f7dcf7b10b39700da65b9fee5b4bcf7"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1136/screenshots/calendar-loading-900.png",
+      "sha256": "57e954b021b27c92576a77ab5a4f3f512d1c053d12a438779ba690c3825b6560"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1136/screenshots/calendar-long-1366.png",
+      "sha256": "23a9f0061aa2f9051bdbf5653289eef55fa69b1406d119c835268bc79d33c085"
+    }
+  ],
+  "innerReceipt": {
+    "schema": "creatoros-browser-journey/v1",
+    "task_id": "T-1136",
+    "head": "3d4444934a618542747dd9839a299c6d769adad1",
+    "phase": "current",
+    "surface": "browser",
+    "mode": "non-fixture",
+    "input": "fresh public synthetic group/project/account records",
+    "startedAt": "2026-10-09T21:10:53.739Z",
+    "finishedAt": "2026-10-09T21:12:10.153Z",
+    "elapsedSeconds": 76.411901208,
+    "argv": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "playwright",
+      "test",
+      "tests/e2e/t1136-calendar-dialog-layout.spec.ts",
+      "--project=e2e",
+      "--retries=0"
+    ],
+    "exitCode": 0,
+    "signal": null,
+    "error": null,
+    "logSha256": "addf6d0bfb86c7ae44cebf18e2d403d42a90c0d79834d4baf3486976a6b8bd4b",
+    "rawLogSha256": "e5f3fff0de2b8f3473a9884bfe2a120a485d60c7825eb13a8291fb948d2f21a6",
+    "rawLogPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1136-JN3pQs/current-journey-raw.log",
+    "sourceSha256": {
+      "frontend/src/components/ui/dialog.tsx": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+      "frontend/src/features/content-calendar/group-calendar-planning-control.tsx": "fc077641187ad628fea074927919bccbb8bfe0908a3280dbd73bb1bfb6da4377",
+      "frontend/src/features/content-calendar/content-calendar-view.tsx": "c15aef1a2b92412f1755216deab8c302ba18da0b0b5d30dbc262246ce2ce270e",
+      "frontend/src/components/media/asset-picker.tsx": "236d01545bcddac731f2cccc2cf2ce454ac653aed682b7df390e92cacdc5f14e",
+      "frontend/src/components/shell/issue-feedback-dialog.tsx": "f624b1f8c7e3b6fe1d85d02aae1f34e9f50698ae550d4a73e270a67485dd03cc",
+      "frontend/tests/e2e/t1136-calendar-dialog-layout.spec.ts": "c528fa43b3787159e773df78ba8a423e11ff4554386ed1049f7863dade87807c",
+      "docs/verification/t1136/run-layout-journey.mjs": "7ca45b600d3524aea867a36990bde258f7b9a7a70cd1b65bf1a7fcb322ca561c"
+    },
+    "sourceAfter": {
+      "frontend/src/components/ui/dialog.tsx": "ef0a8b1da82a5079c59979e364c69cd7051e6c6992cea5ffaf02530b6566f2e5",
+      "frontend/src/features/content-calendar/group-calendar-planning-control.tsx": "fc077641187ad628fea074927919bccbb8bfe0908a3280dbd73bb1bfb6da4377",
+      "frontend/src/features/content-calendar/content-calendar-view.tsx": "c15aef1a2b92412f1755216deab8c302ba18da0b0b5d30dbc262246ce2ce270e",
+      "frontend/src/components/media/asset-picker.tsx": "236d01545bcddac731f2cccc2cf2ce454ac653aed682b7df390e92cacdc5f14e",
+      "frontend/src/components/shell/issue-feedback-dialog.tsx": "f624b1f8c7e3b6fe1d85d02aae1f34e9f50698ae550d4a73e270a67485dd03cc",
+      "frontend/tests/e2e/t1136-calendar-dialog-layout.spec.ts": "c528fa43b3787159e773df78ba8a423e11ff4554386ed1049f7863dade87807c",
+      "docs/verification/t1136/run-layout-journey.mjs": "7ca45b600d3524aea867a36990bde258f7b9a7a70cd1b65bf1a7fcb322ca561c"
+    },
+    "retries": 0,
+    "nativeApp": false,
+    "modelCalled": false,
+    "realPlatformCalled": false,
+    "humanViewed": false
+  },
+  "rootViewed": false
+}

@@ -1,0 +1,26 @@
+{
+  "observedAt": "2026-10-09T21:06:47.857830+00:00",
+  "viewer": "root",
+  "actualImagesViewed": [
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1117/screenshots/t1117-preview-narrow.png",
+      "sha256": "843b295a4b36b6c9a99554001bcd7dbf27c363c54cb66114107503516ee48b59"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1117/screenshots/t1117-error-narrow.png",
+      "sha256": "6a5dae98a547ad223252d825c8a8bdfcb167fc64ccc2ac2b5af97869c836c2fe"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1117/screenshots/t1117-preview-normal.png",
+      "sha256": "10b664e694f660fb9d0beb2677abba1c7daa43c645e79119222f35ed6bb11437"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1117/screenshots/t1117-error-normal.png",
+      "sha256": "a43fc4b5a2a940a3c70f18bc3c36d5634c99388d345e33192b91530bde4bdbf0"
+    }
+  ],
+  "scope": "原1366/900保存中文错误、参考缩略图/选择/预览和旧引用恢复入口；无限画布平移及900详情区正文可滚动，未签全节点同屏。",
+  "intentionalFaultIndicator": "一次网络中断的Next开发1 Issue原样保留",
+  "findings": [],
+  "modelOrNativeAppOrHumanAcceptance": false
+}

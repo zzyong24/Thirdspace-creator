@@ -1,0 +1,1498 @@
+{
+  "observedAt": "2026-10-09T21:03:00.315398+00:00",
+  "beforeOriginalSha256": "00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939",
+  "beforeBytes": 97358,
+  "afterBytes": 60241,
+  "rules": [
+    "表格外围空格紧凑",
+    "标题【来源说明】机械外置完整原行"
+  ],
+  "changedRows": [
+    {
+      "original": "| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |",
+      "current": "|ID|任务|状态|审核|验收|文档|一句话|",
+      "originalSha256": "6aca5bd9d5e9c160a3646de52549bd22cbfce966786442c6a93fdda1bcb32f9d"
+    },
+    {
+      "original": "| --- | --- | --- | --- | --- | --- | --- |",
+      "current": "|---|---|---|---|---|---|---|",
+      "originalSha256": "c96fe6d56a6b63aaf911014f754a731f7910bf93995561880ad849b592dd5cda"
+    },
+    {
+      "original": "| T-1173 | 复核历史看板撞号与畸形字段 | 🔨 待办 | — | — | [实际诊断](docs/features/t1173-historical-backlog-identity-collisions.md) | 原健康命令已证实T1018重复及执行/归档复用；保原行和事件，独立核来源再修表示，不删待办或伪迁PASS。 |",
+      "current": "|T-1173|复核历史看板撞号与畸形字段|🔨 待办|—|—|[实际诊断](docs/features/t1173-historical-backlog-identity-collisions.md)|原健康命令已证实T1018重复及执行/归档复用；保原行和事件，独立核来源再修表示，不删待办或伪迁PASS。|",
+      "originalSha256": "271d03df3c6d6803db908b5fd5988af2e1c060f8cf77ccf0e518b8ac65f665d0"
+    },
+    {
+      "original": "| T-1172 | 校正本轮完整校验缺少隔离PG上下文 | 🔨 待办 | — | — | [实际诊断](docs/features/t1172-current-canonical-isolated-pg-context.md) | 本轮原canonical40错误，新增LED052来自遗漏两项显式隔离配置；保原exit1，用原隔离公共runner复验，不改门/产品或拼接全绿。 |",
+      "current": "|T-1172|校正本轮完整校验缺少隔离PG上下文|🔨 待办|—|—|[实际诊断](docs/features/t1172-current-canonical-isolated-pg-context.md)|本轮原canonical40错误，新增LED052来自遗漏两项显式隔离配置；保原exit1，用原隔离公共runner复验，不改门/产品或拼接全绿。|",
+      "originalSha256": "bf433c3399bf98333986775e8bdb83388ca015b7f79f052c358cc21d989af30b"
+    },
+    {
+      "original": "| T-1171 | 无损压缩当前超限任务看板 | 🔨 待办 | — | — | [实际失败](docs/features/t1171-current-backlog-compaction.md) | 当前健康门RUNAWAY；只用原受支持归档/详情外置，任务状态、原文和失败责任保留，原健康复验，不凭归档销审核债。 |",
+      "current": "|T-1171|无损压缩当前超限任务看板|🔨 待办|—|—|[实际失败](docs/features/t1171-current-backlog-compaction.md)|当前健康门RUNAWAY；只用原受支持归档/详情外置，任务状态、原文和失败责任保留，原健康复验，不凭归档销审核债。|",
+      "originalSha256": "57bcc5f6ab334a7de4a0a104e8a49a015c2a55a3d5294a4a3a0dd7e84a818297"
+    },
+    {
+      "original": "| T-1170 | 无损归档原浏览器失败上下文并恢复提交检查 | 🔨 待办 | — | — | [实际失败](docs/features/t1170-raw-browser-evidence-storage.md) | 新增原PW上下文摘录含三行尾空格使staged diff真实exit2；原字节/SHA私有加gzip无损保留，不改原manifest/失败或Git检查；产品写集为空。 |",
+      "current": "|T-1170|无损归档原浏览器失败上下文并恢复提交检查|🔨 待办|—|—|[实际失败](docs/features/t1170-raw-browser-evidence-storage.md)|新增原PW上下文摘录含三行尾空格使staged diff真实exit2；原字节/SHA私有加gzip无损保留，不改原manifest/失败或Git检查；产品写集为空。|",
+      "originalSha256": "5fa8d943dd0fad1011fcb1e12e2f9369036ecbf57560bfd4f5e84b7a48753946"
+    },
+    {
+      "original": "| T-1169 | 修复账号转组弹窗关闭后焦点丢失 | 🔨 待办 | PASS[REV:6b4388bed640] | — | [实际走查与SPEC](docs/features/t1169-account-transfer-focus-return.md) | 独立Cua确认丢焦并正式审/start；真实6RED含三转组，最终51组件PASS、原Chrome六次Esc回焦、切组/脱离DOM守卫和174LED通过；独立局部PASS，最终Gate/安装待验。 |",
+      "current": "|T-1169|修复账号转组弹窗关闭后焦点丢失|🔨 待办|PASS[REV:6b4388bed640]|—|[实际走查与SPEC](docs/features/t1169-account-transfer-focus-return.md)|独立Cua确认丢焦并正式审/start；真实6RED含三转组，最终51组件PASS、原Chrome六次Esc回焦、切组/脱离DOM守卫和174LED通过；独立局部PASS，最终Gate/安装待验。|",
+      "originalSha256": "e381a8301fd72eacf47e2cdb2a0ea9ec4fd921bf51ea5a4bfb3513709d772629"
+    },
+    {
+      "original": "| T-1168 | 统一原生报表身份恢复态的提示与主操作 | 🔨 待办 | PASS[REV:5d38b98b8f17] | — | [实际视觉与SPEC](docs/features/t1168-native-report-recovery-actions.md) | 原冲突提示/红次级恢复与32px保留证据，正式审/start后恢复态和cap优先RED；最终51组件、Chrome24px/一致主动作与0副作用、174LED及独立局部PASS；最终Gate/真人待验。 |",
+      "current": "|T-1168|统一原生报表身份恢复态的提示与主操作|🔨 待办|PASS[REV:5d38b98b8f17]|—|[实际视觉与SPEC](docs/features/t1168-native-report-recovery-actions.md)|原冲突提示/红次级恢复与32px保留证据，正式审/start后恢复态和cap优先RED；最终51组件、Chrome24px/一致主动作与0副作用、174LED及独立局部PASS；最终Gate/真人待验。|",
+      "originalSha256": "16b1bbba6b1f8baceb35c7b91a0a60b783d5e3222b024442fc55c930194661a5"
+    },
+    {
+      "original": "| T-1167 | 修复采集终态等待在途续租无法返回 | 🔨 待办 | PASS[REV:40609910e1a7] | — | [独立反例与SPEC](docs/features/t1167-collector-pending-renewal-finalization.md) | 原finally等pending心跳已按独评6RED/原63GREEN修复，当前原execute终态不等失控续租且晚结果守卫保留；全timeout仅旧27静态失败/运行时166PASS，当前窄复核PASS，不代签其它端口或真人。 |",
+      "current": "|T-1167|修复采集终态等待在途续租无法返回|🔨 待办|PASS[REV:40609910e1a7]|—|[独立反例与SPEC](docs/features/t1167-collector-pending-renewal-finalization.md)|原finally等pending心跳已按独评6RED/原63GREEN修复，当前原execute终态不等失控续租且晚结果守卫保留；全timeout仅旧27静态失败/运行时166PASS，当前窄复核PASS，不代签其它端口或真人。|",
+      "originalSha256": "d8ed4f265ff1c06134aa05f07ffb0f8a980ecda199ca6eba6e6e1365aac7ac50"
+    },
+    {
+      "original": "| T-1166 | 校正新报告旅程有限串行外层预算 | 🔨 待办 | PASS[REV:04e1fdc238d0] | — | [独立预算检查与SPEC](docs/features/t1166-report-journey-outer-budget.md) | 新case25,200,000ms/runner26,400,000ms覆盖有限串行加清理，内层120秒/0retry不变；61路径冻结当前Chrome79秒exit0，独立预算复核PASS；旧27静态欠债仍exit1。 |",
+      "current": "|T-1166|校正新报告旅程有限串行外层预算|🔨 待办|PASS[REV:04e1fdc238d0]|—|[独立预算检查与SPEC](docs/features/t1166-report-journey-outer-budget.md)|新case25,200,000ms/runner26,400,000ms覆盖有限串行加清理，内层120秒/0retry不变；61路径冻结当前Chrome79秒exit0，独立预算复核PASS；旧27静态欠债仍exit1。|",
+      "originalSha256": "3292626488b0c343141a71a1684319851f9834b8eac68d15a151a0b60f0b2631"
+    },
+    {
+      "original": "| T-1165 | 修复平台身份拒绝在正式HTTP链路丢失错误码与扫码恢复 | 🔨 待办 | PASS[REV:e2674ba1ac3b] | — | [实际缺陷与SPEC](docs/features/t1165-platform-scope-error-envelope.md) | 保原Chrome52秒400string失败和trace，固定已有SCOPE_MISSING原400进入合同；正式独评/真实RED→69GREEN，当前Chrome原链恢复可见/0副作用，窄复核PASS；最终Gate与真人待验。 |",
+      "current": "|T-1165|修复平台身份拒绝在正式HTTP链路丢失错误码与扫码恢复|🔨 待办|PASS[REV:e2674ba1ac3b]|—|[实际缺陷与SPEC](docs/features/t1165-platform-scope-error-envelope.md)|保原Chrome52秒400string失败和trace，固定已有SCOPE_MISSING原400进入合同；正式独评/真实RED→69GREEN，当前Chrome原链恢复可见/0副作用，窄复核PASS；最终Gate与真人待验。|",
+      "originalSha256": "2d60351873ff66fd8dcf50a116e33ff35ea70548d63c8358e8c41971275fe8a2"
+    },
+    {
+      "original": "| T-1164 | 校正独立审核输入绑定与证据字段 | 🔨 待办 | — | — | [实际诊断](docs/features/t1164-review-input-binding-and-evidence-kind.md) | 保原非法packet拒绝/不同SPEC读集；独立现字节重读正规record0，原verifyReviewReceipt核当前六份PASS，完整audit原23历史错误保留；未改门/产品，最终canonical待验。 |",
+      "current": "|T-1164|校正独立审核输入绑定与证据字段|🔨 待办|—|—|[实际诊断](docs/features/t1164-review-input-binding-and-evidence-kind.md)|保原非法packet拒绝/不同SPEC读集；独立现字节重读正规record0，原verifyReviewReceipt核当前六份PASS，完整audit原23历史错误保留；未改门/产品，最终canonical待验。|",
+      "originalSha256": "8d69f7c67e138f23aa784368e1f888a365a49f2ccaff9b8fac0bf578942a06ff"
+    },
+    {
+      "original": "| T-1161 | 核对微信账号转组与隐藏管理入口 | 🔨 待办 | PASS[REV:22a46ffc1285] | — | [SPEC](docs/features/t1161-preserve-wechat-account-management.md) | 原截断diff误读已澄清，无凭误读改产品；独立Cua实际展开及Chrome六窗口转组入口确认，另发现真实丢焦交T1169修；原CONCERNS保留，真人转组/扫码未执行。 |",
+      "current": "|T-1161|核对微信账号转组与隐藏管理入口|🔨 待办|PASS[REV:22a46ffc1285]|—|[SPEC](docs/features/t1161-preserve-wechat-account-management.md)|原截断diff误读已澄清，无凭误读改产品；独立Cua实际展开及Chrome六窗口转组入口确认，另发现真实丢焦交T1169修；原CONCERNS保留，真人转组/扫码未执行。|",
+      "originalSha256": "7f3fc602620fe62e48d91f751bc89966f5209e9b2533da2caf2345e3c3a02b27"
+    },
+    {
+      "original": "| T-1159 | 在当前main整合微信原生报表、绑定归属与调度闭包 | 🔨 待办 | PASS[REV:914cad514a19] | 待验 | [SPEC](docs/features/t1159-current-wechat-native-report-integration.md) · [验收合同](docs/verification/t1159/PAGE_SPEC.md) | T1124剩余56路径，来源293d统计页导航UNKNOWN/0报告/两实验用尽；独评后冻结语义移植、当前隔离公共链验收，保纯组/保存/调度与原研究暂停，不代签真人微信或安装。 |",
+      "current": "|T-1159|在当前main整合微信原生报表、绑定归属与调度闭包|🔨 待办|PASS[REV:914cad514a19]|待验|[SPEC](docs/features/t1159-current-wechat-native-report-integration.md) · [验收合同](docs/verification/t1159/PAGE_SPEC.md)|T1124剩余56路径，来源293d统计页导航UNKNOWN/0报告/两实验用尽；独评后冻结语义移植、当前隔离公共链验收，保纯组/保存/调度与原研究暂停，不代签真人微信或安装。|",
+      "originalSha256": "558973347cdf372f0495087a1bf578199100f4c7905d6941e661da49b847ee31"
+    },
+    {
+      "original": "| T-1155 | 核对浏览器导航时本地服务连接中断日志 | ⏸️ 待办 | — | — | [实际诊断](docs/features/t1155-browser-navigation-connection-abort.md) | 当前三轮原日志aborted/ECONNRESET及uncaughtException，主要断言失败另有原因；保原日志，核请求/进程与后续公开操作，不猜根因或屏蔽错误。 |",
+      "current": "|T-1155|核对浏览器导航时本地服务连接中断日志|⏸️ 待办|—|—|[实际诊断](docs/features/t1155-browser-navigation-connection-abort.md)|当前三轮原日志aborted/ECONNRESET及uncaughtException，主要断言失败另有原因；保原日志，核请求/进程与后续公开操作，不猜根因或屏蔽错误。|",
+      "originalSha256": "c1fc3d66d13c3774248ba1dd3b9517fbd075860ab2dfc6276de06ef3fbe8bfab"
+    },
+    {
+      "original": "| T-1149 | 在当前main整合封面用途与图片页组统一画幅 | 🔨 待办 | PASS[REV:0a91f954eb8f] | 待验 | [SPEC](docs/features/t1149-current-cover-group-aspect.md) | T1124独评确认来源四路径仍缺；保T1141旧任务/有效比例及T1117引用保存，逐段移植用途、用户统一选择和能力交集；单页不支持不阻断其它合法生成，当前独评后RED/GREEN与公开回读。 |",
+      "current": "|T-1149|在当前main整合封面用途与图片页组统一画幅|🔨 待办|PASS[REV:0a91f954eb8f]|待验|[SPEC](docs/features/t1149-current-cover-group-aspect.md)|T1124独评确认来源四路径仍缺；保T1141旧任务/有效比例及T1117引用保存，逐段移植用途、用户统一选择和能力交集；单页不支持不阻断其它合法生成，当前独评后RED/GREEN与公开回读。|",
+      "originalSha256": "d869022aa79492788b7c6444657d511c198abe9338505c697b9b72b4bfe31317"
+    },
+    {
+      "original": "| T-1148 | 核对本轮共享页面修改后的旧验收记录失效 | 🔨 待办 | — | — | [实际诊断](docs/features/t1148-current-frontend-receipt-drift.md) | 当前efe9全canonical1093秒exit1/42ERROR，原39保留，新T1136/1117/1108源码绑定失效；保原报告/事件，当前素材先正式补验，旧范围最终源码复验，不改验证器或伪换head。 |",
+      "current": "|T-1148|核对本轮共享页面修改后的旧验收记录失效|🔨 待办|—|—|[实际诊断](docs/features/t1148-current-frontend-receipt-drift.md)|当前efe9全canonical1093秒exit1/42ERROR，原39保留，新T1136/1117/1108源码绑定失效；保原报告/事件，当前素材先正式补验，旧范围最终源码复验，不改验证器或伪换head。|",
+      "originalSha256": "b73535b4ab3a0f317bbf58f5b59b994d73133782a260380b5857c4a22e874ff6"
+    },
+    {
+      "original": "| T-1144 | 核对素材旅程完成后测试进程未退出 | 🔨 待办 | — | — | [实际诊断](docs/features/t1144-picker-worker-cleanup.md) | T1140两例PASS但worker停后300秒不退出，整轮371.938秒exit1；保原失败和归属快照，定位实际清理等待，不缩超时/force退出/忽略全局错误。 |",
+      "current": "|T-1144|核对素材旅程完成后测试进程未退出|🔨 待办|—|—|[实际诊断](docs/features/t1144-picker-worker-cleanup.md)|T1140两例PASS但worker停后300秒不退出，整轮371.938秒exit1；保原失败和归属快照，定位实际清理等待，不缩超时/force退出/忽略全局错误。|",
+      "originalSha256": "c5ab3a3a9e7ae753dc29b93ab02d157101efe0f248834beb18ba91023f8ab6a4"
+    },
+    {
+      "original": "| T-1140 | 优化低高度窗口的素材浏览与预览空间 | ⏸️ 待办 | PASS[REV:2a0be12aac16] | 待验 | [当前观察](docs/features/t1140-picker-low-height-preview.md) · [验收合同](docs/verification/t1140/PAGE_SPEC.md) | 当前683×450主体预览空间被原上下双滚动区挤压；按钮和取消回读通过，AssetPicker源未改。保截图后精确SPEC独评优化，不称选择失败或已修。 |",
+      "current": "|T-1140|优化低高度窗口的素材浏览与预览空间|⏸️ 待办|PASS[REV:2a0be12aac16]|待验|[当前观察](docs/features/t1140-picker-low-height-preview.md) · [验收合同](docs/verification/t1140/PAGE_SPEC.md)|当前683×450主体预览空间被原上下双滚动区挤压；按钮和取消回读通过，AssetPicker源未改。保截图后精确SPEC独评优化，不称选择失败或已修。|",
+      "originalSha256": "e7dcc3cba1d990b391bf5c7bbb2275a85e938d2e57c38a33fdad815515ff7852"
+    },
+    {
+      "original": "| T-1136 | 在当前main修复长项目与平台账号撑宽排期弹窗 | ⏸️ 待办 | PASS[REV:db7fe4526b24] | 待验 | [SPEC](docs/features/t1136-calendar-dialog-current-integration.md) | T1124来源两条布局缺失；仅共享Dialog单列收缩与排期断点及必要select收缩，先独评/当前Chrome真实尺寸RED，再原公共选择保存回读和相邻消费者验证；不签旧来源或全功能。 |",
+      "current": "|T-1136|在当前main修复长项目与平台账号撑宽排期弹窗|⏸️ 待办|PASS[REV:db7fe4526b24]|待验|[SPEC](docs/features/t1136-calendar-dialog-current-integration.md)|T1124来源两条布局缺失；仅共享Dialog单列收缩与排期断点及必要select收缩，先独评/当前Chrome真实尺寸RED，再原公共选择保存回读和相邻消费者验证；不签旧来源或全功能。|",
+      "originalSha256": "9c5186612420d5723741c8182e3234c36788b9d18828455b6553d02048511781"
+    },
+    {
+      "original": "| T-1135 | 核对安装版粗剪成片解码画面比原素材偏暗 | ⏸️ 待办 | — | — | [实际诊断](docs/features/t1135-installed-render-color-fidelity.md) | 已批准r7中性成片正式exact-file下载/245帧解码通过，但源+6.76秒三处背景RGB17/36/57变为0/19/44；先核原工程与编码色彩/公共渲染路径，根因未知，不重提渲染或改原稿/媒体；修产品前精确SPEC独评。 |",
+      "current": "|T-1135|核对安装版粗剪成片解码画面比原素材偏暗|⏸️ 待办|—|—|[实际诊断](docs/features/t1135-installed-render-color-fidelity.md)|已批准r7中性成片正式exact-file下载/245帧解码通过，但源+6.76秒三处背景RGB17/36/57变为0/19/44；先核原工程与编码色彩/公共渲染路径，根因未知，不重提渲染或改原稿/媒体；修产品前精确SPEC独评。|",
+      "originalSha256": "1f804a0b82de280bfbf0f5d89722284553b5a48d34177182cc5c8631114e8b2e"
+    },
+    {
+      "original": "| T-1124 | 核对本轮新增来源分支未合入main的源码并闭合整合 | 🔨 待办 | — | — | [实际诊断](docs/features/t1124-current-worktree-source-gap.md) | T1080删除前只读再盘点：canvas来源17条源码/测试路径main缺失，chart来源1条缺失，其它58条不同不能直接算遗漏；保留来源与活跃树，逐项核main替代及新增SPEC/独评，禁止ours丢源码或代签全合并。先交付当前已复核包继续验收，本轮新增功能不冒称已入包。 |",
+      "current": "|T-1124|核对本轮新增来源分支未合入main的源码并闭合整合|🔨 待办|—|—|[实际诊断](docs/features/t1124-current-worktree-source-gap.md)|T1080删除前只读再盘点：canvas来源17条源码/测试路径main缺失，chart来源1条缺失，其它58条不同不能直接算遗漏；保留来源与活跃树，逐项核main替代及新增SPEC/独评，禁止ours丢源码或代签全合并。先交付当前已复核包继续验收，本轮新增功能不冒称已入包。|",
+      "originalSha256": "01cd41ab0c3bdc557606e02ef5f04b235403b318debabc5a96831b4e69e8f6df"
+    },
+    {
+      "original": "| T-1117 | 修复画布保存英文反馈与参考选择器名称展示遗漏 | ⏸️ 待办 | PASS[REV:161a32c6331a] | 待验 | [SPEC](docs/features/t1117-canvas-error-reference-preview.md) | 当前main两条Chrome流程通过，但实际截图保存错误裸英文，参考已选卡仍长文件名；复用原中文反馈并闭合showIdentity=false全选择流程，精确file/保存/owner不变。独評、实际RED/GREEN及浏览器证据后修复；不代签模型或旧失败。 |",
+      "current": "|T-1117|修复画布保存英文反馈与参考选择器名称展示遗漏|⏸️ 待办|PASS[REV:161a32c6331a]|待验|[SPEC](docs/features/t1117-canvas-error-reference-preview.md)|当前main两条Chrome流程通过，但实际截图保存错误裸英文，参考已选卡仍长文件名；复用原中文反馈并闭合showIdentity=false全选择流程，精确file/保存/owner不变。独評、实际RED/GREEN及浏览器证据后修复；不代签模型或旧失败。|",
+      "originalSha256": "cc28efab40c3bb242f29bcfb4e4d331d414eb2244fa988dd83e4e8e21c4bb405"
+    },
+    {
+      "original": "| T-1118 | 核对本机验收原始日志目录消失 | 📋 待办 | — | — | [实际诊断](docs/features/t1118-verification-directory-disappearance.md) | T1117实际RED/GREEN后，原验收父目录突然不存在；七次包装命令exit2未执行内层验证。保工具实际结果与已提交工件，原因UNKNOWN；新隔离目录继续验证，不重造旧日志或触用户数据。 |",
+      "current": "|T-1118|核对本机验收原始日志目录消失|📋 待办|—|—|[实际诊断](docs/features/t1118-verification-directory-disappearance.md)|T1117实际RED/GREEN后，原验收父目录突然不存在；七次包装命令exit2未执行内层验证。保工具实际结果与已提交工件，原因UNKNOWN；新隔离目录继续验证，不重造旧日志或触用户数据。|",
+      "originalSha256": "afdce4d18c75a7e62149b0f94b5d0856eeb2cdf327a6981e4243e4ef2af98484"
+    },
+    {
+      "original": "| T-1116 | 核对稿件并发保存回归在本轮完整对账中的再次失败 | 🔨 待办 | — | — | [实际诊断](docs/features/t1116-artifact-cas-global-regression.md) | T1114新增相对失败LED027，原41失败保留；实际全局没有保存内层断言，先原两段命令逐段取得真实失败，核CAS/事务/初始化预算。未确认产品根因，不删除竞争或版本断言，不能称已修或全功能PASS。 |",
+      "current": "|T-1116|核对稿件并发保存回归在本轮完整对账中的再次失败|🔨 待办|—|—|[实际诊断](docs/features/t1116-artifact-cas-global-regression.md)|T1114新增相对失败LED027，原41失败保留；实际全局没有保存内层断言，先原两段命令逐段取得真实失败，核CAS/事务/初始化预算。未确认产品根因，不删除竞争或版本断言，不能称已修或全功能PASS。|",
+      "originalSha256": "817d000dc68dd43ac9ae325346a9a5b79f9e96304625cd004df1089e761677d8"
+    },
+    {
+      "original": "| T-1101 | 修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集 | 🔨 | PASS[REV:146ff2046c2c] | 待验 | [SPEC](docs/features/t1101-canvas-binding-collection.md) | 用户2026-10-09截图明确要求：素材只显示预览；生成中禁止重复提交、已有结果再生成需确认；图片连线传递默认参考；扫码入口放平台能力表，删除刷新和下方重复框；三平台独立采集错峰执行。来源f97a80da已完成；main重新初审和组合验收，原PASS不代签当前树。不发布、不改真实Cookie。 |",
+      "current": "|T-1101|修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集|🔨|PASS[REV:146ff2046c2c]|待验|[SPEC](docs/features/t1101-canvas-binding-collection.md)|用户2026-10-09截图明确要求：素材只显示预览；生成中禁止重复提交、已有结果再生成需确认；图片连线传递默认参考；扫码入口放平台能力表，删除刷新和下方重复框；三平台独立采集错峰执行。来源f97a80da已完成；main重新初审和组合验收，原PASS不代签当前树。不发布、不改真实Cookie。|",
+      "originalSha256": "b0e1c608f0e5af5809aaf28a8d73214b29d23e2ca5f81c7ad76b07f954c4fdad"
+    },
+    {
+      "original": "| T-1101-global-gates | 核对独立main工作树全局对账失败及历史收据漂移 | 📋 待办 | — | — | [根因记录](docs/verification/t1101/global-gates.md) | 前置对账76项失败含未装依赖阶段环境、历史审核收据和教训检查；本轮安装依赖后重跑真实Gate。范围外旧类型/契约/短预算仍关联T-1018/T-1081；不得补拍历史PASS。 |",
+      "current": "|T-1101-global-gates|核对独立main工作树全局对账失败及历史收据漂移|📋 待办|—|—|[根因记录](docs/verification/t1101/global-gates.md)|前置对账76项失败含未装依赖阶段环境、历史审核收据和教训检查；本轮安装依赖后重跑真实Gate。范围外旧类型/契约/短预算仍关联T-1018/T-1081；不得补拍历史PASS。|",
+      "originalSha256": "4e656e7929468685b3e1d404804812ccecd98bc7d20420420c305e825808d97e"
+    },
+    {
+      "original": "| T-1108 | 核对画布连线引用保存回读及浏览器短观察窗口 | ⏸️ | PASS[REV:7725159d945d] | 待验 | [实际缺陷](docs/features/t1108-canvas-public-observation.md) [详情](BACKLOG-details.md#t-1108) | 见详情。 |",
+      "current": "|T-1108|核对画布连线引用保存回读及浏览器短观察窗口|⏸️|PASS[REV:7725159d945d]|待验|[实际缺陷](docs/features/t1108-canvas-public-observation.md) [详情](BACKLOG-details.md#t-1108)|见详情。|",
+      "originalSha256": "b13e7481e4ffb559c118661a7a37847ff2aa0a3465e86f147cd2af011339c762"
+    },
+    {
+      "original": "| T-1109 | 修复超时验证入口默认10秒初始化导致原测试未执行 | 🔨 | PASS[REV:a85dda74b249] | 待验 | [SPEC](docs/features/t1109-timeout-verification-default-budget.md) | 实际timeout-policy额外backend beforeAll10秒超时，25例skip；原静态27保留。仅明确真实Vitest test/hook至少120秒，保原断言/退出码/更长局部预算，不删除Gate或改构建。先独评再修公共入口。 |",
+      "current": "|T-1109|修复超时验证入口默认10秒初始化导致原测试未执行|🔨|PASS[REV:a85dda74b249]|待验|[SPEC](docs/features/t1109-timeout-verification-default-budget.md)|实际timeout-policy额外backend beforeAll10秒超时，25例skip；原静态27保留。仅明确真实Vitest test/hook至少120秒，保原断言/退出码/更长局部预算，不删除Gate或改构建。先独评再修公共入口。|",
+      "originalSha256": "466da23597a852d5d3b683193b23cce285c142464d0f400a59e89d2ab976d6b2"
+    },
+    {
+      "original": "| T-1110 | 核对浏览器验收开发资源ChunkLoadError与测试状态准备竞态 | 📋 待办 | — | — | [实际缺陷](docs/features/t1110-browser-development-resource-diagnosis.md) | 用户要求有问题建task；fa09真实两条旅程0PASS/2FAIL，绑定页ChunkLoadError无法加载，第一例旧状态被仍运行页面自动保存覆盖。原trace/log保留；后者在T1108原范围先离开再准备，前者根因未知，核真实静态响应/开发缓存和并发，不删断言或用旧PASS代签。 |",
+      "current": "|T-1110|核对浏览器验收开发资源ChunkLoadError与测试状态准备竞态|📋 待办|—|—|[实际缺陷](docs/features/t1110-browser-development-resource-diagnosis.md)|用户要求有问题建task；fa09真实两条旅程0PASS/2FAIL，绑定页ChunkLoadError无法加载，第一例旧状态被仍运行页面自动保存覆盖。原trace/log保留；后者在T1108原范围先离开再准备，前者根因未知，核真实静态响应/开发缓存和并发，不删断言或用旧PASS代签。|",
+      "originalSha256": "b1c785db5e484868800e78c585fcbb2c655e6a1c3958657c401f4b5c033f09f0"
+    },
+    {
+      "original": "| T-1107 | 核对平台公共接口新增操作与发布归属回归失败 | 🔨 | PASS[REV:9c9181db2c1c] | 待验 | [实际缺陷](docs/features/t1107-platform-public-regression.md) | 全功能验收额外公共真链24例实际22PASS/2FAIL：账号操作数5变6，发布锚冲突首轮200而旧断言期待拒绝；重试又409。先核main合并前基线与真实组/项目归属，再独评修复产品或过期夹具；保原断言/失败/权限，不删除历史洗绿。 |",
+      "current": "|T-1107|核对平台公共接口新增操作与发布归属回归失败|🔨|PASS[REV:9c9181db2c1c]|待验|[实际缺陷](docs/features/t1107-platform-public-regression.md)|全功能验收额外公共真链24例实际22PASS/2FAIL：账号操作数5变6，发布锚冲突首轮200而旧断言期待拒绝；重试又409。先核main合并前基线与真实组/项目归属，再独评修复产品或过期夹具；保原断言/失败/权限，不删除历史洗绿。|",
+      "originalSha256": "a92b3da3bf07cab2963695ee2f6a30a97c1ee1ce6189ff764d8956bb90a254c0"
+    },
+    {
+      "original": "| T-1105 | 修复共享资源面板失效读取后持续加载 | 🔨 | PASS[REV:675552d2d02f] | 待验 | [SPEC](docs/features/t1105-shared-resource-loading.md) · [实际缺陷](docs/features/t1105-shared-resource-loading-diagnosis.md) | T1101额外Chrome走查展开共享资源停在加载，console出现组上下文拒绝；原失败保留。先在main复现epoch/单在途/重开，再独评修，不放宽跨组权限或把扫码PASS代签该面板。 |",
+      "current": "|T-1105|修复共享资源面板失效读取后持续加载|🔨|PASS[REV:675552d2d02f]|待验|[SPEC](docs/features/t1105-shared-resource-loading.md) · [实际缺陷](docs/features/t1105-shared-resource-loading-diagnosis.md)|T1101额外Chrome走查展开共享资源停在加载，console出现组上下文拒绝；原失败保留。先在main复现epoch/单在途/重开，再独评修，不放宽跨组权限或把扫码PASS代签该面板。|",
+      "originalSha256": "67a0974b92430f24b7b346c103c154b430e5a8755a1733e7e30d08c4d0996550"
+    },
+    {
+      "original": "| T-1103 | 排查Pi联合提案反复遗漏完整图文参数 | 🔨 | — | — | [实际缺陷](docs/features/t1103-pi-joint-argument-diagnosis.md) [详情](BACKLOG-details.md#t-1103) | 见详情。 |",
+      "current": "|T-1103|排查Pi联合提案反复遗漏完整图文参数|🔨|—|—|[实际缺陷](docs/features/t1103-pi-joint-argument-diagnosis.md) [详情](BACKLOG-details.md#t-1103)|见详情。|",
+      "originalSha256": "9444ac866e3a2f30256587cfee33a05de50086b099e4b854fa3263be6d50d223"
+    },
+    {
+      "original": "| T-1102 | 排查并恢复本地安装首次运行时展开失败 | 🔨 | — | — | [诊断与边界](docs/features/t1102-installed-runtime-extraction.md) [详情](BACKLOG-details.md#t-1102) | 见详情。 |",
+      "current": "|T-1102|排查并恢复本地安装首次运行时展开失败|🔨|—|—|[诊断与边界](docs/features/t1102-installed-runtime-extraction.md) [详情](BACKLOG-details.md#t-1102)|见详情。|",
+      "originalSha256": "2e79144b0c861f7f33776d831e6702bb054c2f899db68439eac0822bd6de0c30"
+    },
+    {
+      "original": "| T-1094 | 修复部分完成AI任务公开查询状态合同缺口 | 🔨 | PASS[REV:5d2c91b81b45] | — | [SPEC](docs/features/t1094-public-partial-task-status.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) [详情](BACKLOG-details.md#t-1094) | 见详情。 |",
+      "current": "|T-1094|修复部分完成AI任务公开查询状态合同缺口|🔨|PASS[REV:5d2c91b81b45]|—|[SPEC](docs/features/t1094-public-partial-task-status.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) [详情](BACKLOG-details.md#t-1094)|见详情。|",
+      "originalSha256": "e0cdff63be89ad3dd25c66c2899a1b37a9b9bff90b9191571f262076698f6cb8"
+    },
+    {
+      "original": "| T-1096 | 核对文章工作流与任务父归属旧回归断言的实际漂移 | 📋 | — | — | [当场基线](docs/verification/t1094/RELATED_BASELINE_DIAGNOSIS.md) | T1094正式回归文章9FAIL/任务6FAIL；原main770037原测试同名同因复现。先核用户确认的联合创作入口、保存回读与组父归属，再独评是否修fixture或真实代码；原断言/owner不洗绿，不恢复已删快转入口。 |",
+      "current": "|T-1096|核对文章工作流与任务父归属旧回归断言的实际漂移|📋|—|—|[当场基线](docs/verification/t1094/RELATED_BASELINE_DIAGNOSIS.md)|T1094正式回归文章9FAIL/任务6FAIL；原main770037原测试同名同因复现。先核用户确认的联合创作入口、保存回读与组父归属，再独评是否修fixture或真实代码；原断言/owner不洗绿，不恢复已删快转入口。|",
+      "originalSha256": "698f255c707f2728003540b29d0e750204bc5a297fc9006750760a4b8cd28c5c"
+    },
+    {
+      "original": "| T-1099 | 修复工具明确业务拒绝回执缺失与末次失败被算成功 | ⏸️ | PASS[REV:b5aa667d8485] | — | [SPEC](docs/features/t1099-tool-domain-recovery.md) · [实际缺陷](docs/features/t1099-tool-domain-recovery-diagnosis.md) [详情](BACKLOG-details.md#t-1099) | 见详情。 |",
+      "current": "|T-1099|修复工具明确业务拒绝回执缺失与末次失败被算成功|⏸️|PASS[REV:b5aa667d8485]|—|[SPEC](docs/features/t1099-tool-domain-recovery.md) · [实际缺陷](docs/features/t1099-tool-domain-recovery-diagnosis.md) [详情](BACKLOG-details.md#t-1099)|见详情。|",
+      "originalSha256": "7cca99f2a99e45553da2cf75ed7c0dfa48a6768b1a069402e54b485233d3309b"
+    },
+    {
+      "original": "| T-1098 | 核对安装重启后的定期同步失败与采集未启动 | 📋 | — | — | [缺陷登记](docs/features/t1098-installed-scheduled-failure-diagnosis.md) | 用户要求发现问题及时建task；T1095真启动日志两scheduled.intelligence.sync为failed，另账号定期采集Error。保原ID与真实失败，先核公开归属/原回执/启动前事实后独评修复，不猜关联、清历史或重发。 |",
+      "current": "|T-1098|核对安装重启后的定期同步失败与采集未启动|📋|—|—|[缺陷登记](docs/features/t1098-installed-scheduled-failure-diagnosis.md)|用户要求发现问题及时建task；T1095真启动日志两scheduled.intelligence.sync为failed，另账号定期采集Error。保原ID与真实失败，先核公开归属/原回执/启动前事实后独评修复，不猜关联、清历史或重发。|",
+      "originalSha256": "318169c2896e7f952ef8f036202c816d2e34c4d0424f48c3544e65bda6d4a1b7"
+    },
+    {
+      "original": "| T-1097 | 修复文章编导参考资料与候选审读保护缺口 | 📋 | — | — | [缺陷诊断](docs/features/t1097-article-director-options-diagnosis.md) | 用户要求有问题及时建task修复；T1096确认身份/文档只接不可触达旧generate，当前联合未接；事实替换对照及未请求元数据保护也需当前链实证。核真实来源与审读后独评闭合，不恢复旧快转，不把旧恢复/checkbox测试当新链通过。 |",
+      "current": "|T-1097|修复文章编导参考资料与候选审读保护缺口|📋|—|—|[缺陷诊断](docs/features/t1097-article-director-options-diagnosis.md)|用户要求有问题及时建task修复；T1096确认身份/文档只接不可触达旧generate，当前联合未接；事实替换对照及未请求元数据保护也需当前链实证。核真实来源与审读后独评闭合，不恢复旧快转，不把旧恢复/checkbox测试当新链通过。|",
+      "originalSha256": "a4ffc1b71997fb57aa88dc6fe3fe25db760001bbd646ef56b091386a988c76c3"
+    },
+    {
+      "original": "| T-1095 | 验证Pi联合创作必填nullable字段遵循与原任务恢复方法 | ⏸️ | PASS[REV:b3b9dda4753e] | — | [SPEC](docs/features/t1095-tool-parameter-recovery.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) [详情](BACKLOG-details.md#t-1095) | 见详情。 |",
+      "current": "|T-1095|验证Pi联合创作必填nullable字段遵循与原任务恢复方法|⏸️|PASS[REV:b3b9dda4753e]|—|[SPEC](docs/features/t1095-tool-parameter-recovery.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) [详情](BACKLOG-details.md#t-1095)|见详情。|",
+      "originalSha256": "4976fb1275870c0286ecefdf9baa290ed269d3edabe61cd8dae683f1da54121d"
+    },
+    {
+      "original": "| T-1093 | 校准编导数字参数、联合首次读取与真实候选失败恢复 | 🔨 | PASS[REV:267bf399a6b1] | — | [SPEC](docs/features/t1093-director-method-recovery.md) | T1091真实安装6候选通过/2失败；Pi整数发字符串被拒后仍称就绪、联合首读猜错可省略digest。只改功能方法提示，不放宽schema/回执/owner/旧任务或重发未知；正式独评后RED/GREEN及新包真实Pi复验，旧失败保留。 |",
+      "current": "|T-1093|校准编导数字参数、联合首次读取与真实候选失败恢复|🔨|PASS[REV:267bf399a6b1]|—|[SPEC](docs/features/t1093-director-method-recovery.md)|T1091真实安装6候选通过/2失败；Pi整数发字符串被拒后仍称就绪、联合首读猜错可省略digest。只改功能方法提示，不放宽schema/回执/owner/旧任务或重发未知；正式独评后RED/GREEN及新包真实Pi复验，旧失败保留。|",
+      "originalSha256": "823fd382464e959e0b8d2bfa0e236227e68ac5987fd5eacd95e38eae9468f1ab"
+    },
+    {
+      "original": "| T-1091 | 补齐公开编导消息的Codex选择与文章图文视频目标定位并安装验收 | 🔨 | PASS[REV:dcd0b932fca7] | — | [SPEC](docs/features/t1091-public-director-context.md) [详情](BACKLOG-details.md#t-1091) | 见详情。 |",
+      "current": "|T-1091|补齐公开编导消息的Codex选择与文章图文视频目标定位并安装验收|🔨|PASS[REV:dcd0b932fca7]|—|[SPEC](docs/features/t1091-public-director-context.md) [详情](BACKLOG-details.md#t-1091)|见详情。|",
+      "originalSha256": "e71e33bb531089467d52059e154ea01082e9634d16c348c68975c09a67ded0c9"
+    },
+    {
+      "original": "| T-1092 | 核对联合创作旧集成测试未解包可信回执的契约漂移 | 📋 | — | — | [当场基线证据](docs/verification/t1091/CREATION_BASELINE_DIAGNOSIS.md) | T1091扩大回归154PASS/2FAIL，旧main隔离同2FAIL；原第104行严格parse含__creatorosOutcome的展示投影，页面先经原解包器。先独评实际旧断言/回执协议再校准，保可信元数据与两稿内容断言，不改生产schema或洗掉失败。本轮不实施。 |",
+      "current": "|T-1092|核对联合创作旧集成测试未解包可信回执的契约漂移|📋|—|—|[当场基线证据](docs/verification/t1091/CREATION_BASELINE_DIAGNOSIS.md)|T1091扩大回归154PASS/2FAIL，旧main隔离同2FAIL；原第104行严格parse含__creatorosOutcome的展示投影，页面先经原解包器。先独评实际旧断言/回执协议再校准，保可信元数据与两稿内容断言，不改生产schema或洗掉失败。本轮不实施。|",
+      "originalSha256": "c31c99e010d5a793b8167ca0fb0349f1a214f8dbfce32af976f7a5f44c2e5e5e"
+    },
+    {
+      "original": "| T-1072-owned-devices | 配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口 | 🔨 待办 | PASS[REV:eb8de221287b] | 待验 | [SPEC](docs/features/t1072-owned-devices.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-aed1560bebc24ab1)。 |",
+      "current": "|T-1072-owned-devices|配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口|🔨 待办|PASS[REV:eb8de221287b]|待验|[SPEC](docs/features/t1072-owned-devices.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-aed1560bebc24ab1)。|",
+      "originalSha256": "0e3c1a84c532711901909ec6db0e02b1e1c35f81e3c9d3450ceae73ee8ca6383"
+    },
+    {
+      "original": "| T-1066-timeout-policy | 全系统统一两分钟超时下限、嵌套预算与Skill防复发 | ⏸️ 待办 | PASS[REV:13310516269c] | 待验 | [SPEC](docs/features/t1066-timeout-policy.md) [详情](BACKLOG-details.md#t-1066-timeout-policy) | 见详情。 |",
+      "current": "|T-1066-timeout-policy|全系统统一两分钟超时下限、嵌套预算与Skill防复发|⏸️ 待办|PASS[REV:13310516269c]|待验|[SPEC](docs/features/t1066-timeout-policy.md) [详情](BACKLOG-details.md#t-1066-timeout-policy)|见详情。|",
+      "originalSha256": "80843c433d840351ddc1b61757f90aea4da480683e12e31487c89b7227e97234"
+    },
+    {
+      "original": "| T-1067-skill-verification | 清理通用产品流程Skill既有公开分发校验债务 | 📋 待办 | — | 待验 | [根因证据](docs/verification/t1066/SKILL_VERIFICATION.md) [详情](BACKLOG-details.md#t-1067-skill-verification) | 见详情。 |",
+      "current": "|T-1067-skill-verification|清理通用产品流程Skill既有公开分发校验债务|📋 待办|—|待验|[根因证据](docs/verification/t1066/SKILL_VERIFICATION.md) [详情](BACKLOG-details.md#t-1067-skill-verification)|见详情。|",
+      "originalSha256": "5db31e2aaf0b049618ac8758c920f6cea3eb1412cac12b0699bda0bd043b9cf7"
+    },
+    {
+      "original": "| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018) | 见详情。 |",
+      "current": "|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018)|见详情。|",
+      "originalSha256": "da1a9f8f8aae7354101d0e4a7e7fc2012348129d36e2f06eaa29be27e4def44b"
+    },
+    {
+      "original": "| T-1080 | 汇总全部本地worktree代码到main并清理闲置目录后构建 | ⏸️ 待办 | — | — | [SPEC](docs/features/t1080-local-main-worktree-consolidation.md) | 用户2026-10-08明确授权全部代码本地合并至主分支、清理不用的worktree再构建，构建无需备份。先逐树核HEAD/未提交/使用情况并保留Git来源，解决冲突和验证后只删除已保留代码且未占用的目录；保留活跃会话、真实数据与既有备份，不push/tag/发布。 |",
+      "current": "|T-1080|汇总全部本地worktree代码到main并清理闲置目录后构建|⏸️ 待办|—|—|[SPEC](docs/features/t1080-local-main-worktree-consolidation.md)|用户2026-10-08明确授权全部代码本地合并至主分支、清理不用的worktree再构建，构建无需备份。先逐树核HEAD/未提交/使用情况并保留Git来源，解决冲突和验证后只删除已保留代码且未占用的目录；保留活跃会话、真实数据与既有备份，不push/tag/发布。|",
+      "originalSha256": "997e8a8cc7bb90f143888f027c853122ccd123cf4a125b77cd982bd7e49b0b7a"
+    },
+    {
+      "original": "| T-1083 | 复核流程升级后的旧任务写集通配符兼容缺口 | 📋 待办 | — | — | [根因证据](docs/verification/t1080/post-package-progress-block-failure.json) | progress原block命令实际exit2：T1026的docs/verification/t1026*被3.29路径校验拒绝，未写进度；taskctl已真实记T1080阻断。先盘点旧glob实际允许写集、独立复核等价迁移，不放宽guard或手改状态，本轮未实施。 |",
+      "current": "|T-1083|复核流程升级后的旧任务写集通配符兼容缺口|📋 待办|—|—|[根因证据](docs/verification/t1080/post-package-progress-block-failure.json)|progress原block命令实际exit2：T1026的docs/verification/t1026*被3.29路径校验拒绝，未写进度；taskctl已真实记T1080阻断。先盘点旧glob实际允许写集、独立复核等价迁移，不放宽guard或手改状态，本轮未实施。|",
+      "originalSha256": "fe89bf5e04b2d4f1253081b9a8788f4b01def9190de8d87ce76802497133b50c"
+    },
+    {
+      "original": "| T-1082 | 复核合并来源任务的当前评审与UI验收记录归属 | 📋 待办 | — | — | [SPEC](docs/features/t1082-source-receipt-revalidation.md) | 本地main真实出包后对账新增7项：5个source/alias缺当前review链event、2个agent-recovery alias缺completion；原来源链/报告保留不代签当前验收，按真实独立审核和UI旅程闭环，不重哈希旧链、不复制PASS。 |",
+      "current": "|T-1082|复核合并来源任务的当前评审与UI验收记录归属|📋 待办|—|—|[SPEC](docs/features/t1082-source-receipt-revalidation.md)|本地main真实出包后对账新增7项：5个source/alias缺当前review链event、2个agent-recovery alias缺completion；原来源链/报告保留不代签当前验收，按真实独立审核和UI旅程闭环，不重哈希旧链、不复制PASS。|",
+      "originalSha256": "d6131362ad1ed8fd624c8f3d580e945ef4cb096a2d29bc9a82454f5c96242ee8"
+    },
+    {
+      "original": "| T-1081 | 核对整合后原主线的14处短执行预算与超时扫描误报 | 📋 待办 | — | 待验 | [根因证据](docs/verification/t1080/timeout-static-dispositions-corrected.json) | 完整超时门实际exit1：14条既有短执行/有限观察来自原main/client，另13条为冻结编辑器调度/动画、已取消清理、TTL或已归一消费者；先按真实消费者复核，不改vendor洗绿、不延长取消。来源与原失败留存；本轮优先合并和出包，此任务尚未实施。 |",
+      "current": "|T-1081|核对整合后原主线的14处短执行预算与超时扫描误报|📋 待办|—|待验|[根因证据](docs/verification/t1080/timeout-static-dispositions-corrected.json)|完整超时门实际exit1：14条既有短执行/有限观察来自原main/client，另13条为冻结编辑器调度/动画、已取消清理、TTL或已归一消费者；先按真实消费者复核，不改vendor洗绿、不延长取消。来源与原失败留存；本轮优先合并和出包，此任务尚未实施。|",
+      "originalSha256": "723970be31181b60913912988e16f88acce677dcccb25e3692b102dee6819c59"
+    },
+    {
+      "original": "| T-1026 | 补齐新增 Agent 功能的公开 CLI 并逐项验收安装版 | 🔨 | — | — | [SPEC](docs/features/t1026-agent-cli-acceptance.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-67204c9b2c9efc87)。 |",
+      "current": "|T-1026|补齐新增 Agent 功能的公开 CLI 并逐项验收安装版|🔨|—|—|[SPEC](docs/features/t1026-agent-cli-acceptance.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-67204c9b2c9efc87)。|",
+      "originalSha256": "d964bff0dff342e29650043d9cbac19869fb2d93b28c3a8e211a41c798a79907"
+    },
+    {
+      "original": "| T-1027 | 修复评论采集完成统计与失败诊断 | 🔨 | — | — | [SPEC](docs/features/t1027-comment-collection-evidence.md) | T1026真实评论回归failed却提示全量完成；统一完成统计并补公开未完成原因，不把零新增冒充成功。 |",
+      "current": "|T-1027|修复评论采集完成统计与失败诊断|🔨|—|—|[SPEC](docs/features/t1027-comment-collection-evidence.md)|T1026真实评论回归failed却提示全量完成；统一完成统计并补公开未完成原因，不把零新增冒充成功。|",
+      "originalSha256": "5f68abb172bcb72f3cf7d47b1874f7d9c79dceba7dbd7bab4256c480c4812e14"
+    },
+    {
+      "original": "| T-1025 | 重新核验 constitution 变更后的历史评审与前端验收回执 | 📋 | — | — | [SPEC](docs/features/t1025-receipt-drift-revalidation.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-fbe6a3f4e58bcafa)。 |",
+      "current": "|T-1025|重新核验 constitution 变更后的历史评审与前端验收回执|📋|—|—|[SPEC](docs/features/t1025-receipt-drift-revalidation.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-fbe6a3f4e58bcafa)。|",
+      "originalSha256": "ff0f1fdc60b08a4233bf4f6622ac64b6f87f95790baa3bee64e87fa0890847ce"
+    },
+    {
+      "original": "| T-1077 | 修复采纳与作品素材读取的项目返回值 | 🔨 待办 | PASS[REV:a36209c19783] | 待验 | [SPEC](docs/features/t1077-material-parent-port.md) [详情](BACKLOG-details.md#t-1077) | 见详情。 |",
+      "current": "|T-1077|修复采纳与作品素材读取的项目返回值|🔨 待办|PASS[REV:a36209c19783]|待验|[SPEC](docs/features/t1077-material-parent-port.md) [详情](BACKLOG-details.md#t-1077)|见详情。|",
+      "originalSha256": "a14e64c13a08d038d0db7484060ca8417a1156ef4f5cb752b9df9e3228f5fab5"
+    },
+    {
+      "original": "| T-1075 | 修复安装验收发现的素材标签观察与纯组生图证明 | 🔨 待办 | PASS[REV:73a6052db08f] | — | [SPEC](docs/features/t1075-installed-ai-observation-gaps.md) [详情](BACKLOG-details.md#t-1075) | 见详情。 |",
+      "current": "|T-1075|修复安装验收发现的素材标签观察与纯组生图证明|🔨 待办|PASS[REV:73a6052db08f]|—|[SPEC](docs/features/t1075-installed-ai-observation-gaps.md) [详情](BACKLOG-details.md#t-1075)|见详情。|",
+      "originalSha256": "efbe936b7d6d35159345981f9754fa0ed9c19fe74878ae76438944fc0645223f"
+    },
+    {
+      "original": "| T-1074 | 全面验收与补齐AI助手系统操作、工具开放性和功能提示词 | 🔨 待办 | PASS[REV:b19144c34cab] | 待验 | [SPEC](docs/features/t1074-ai-system-operations.md) [详情](BACKLOG-details.md#t-1074) | 见详情。 |",
+      "current": "|T-1074|全面验收与补齐AI助手系统操作、工具开放性和功能提示词|🔨 待办|PASS[REV:b19144c34cab]|待验|[SPEC](docs/features/t1074-ai-system-operations.md) [详情](BACKLOG-details.md#t-1074)|见详情。|",
+      "originalSha256": "402bf18a1f5116ccf02d7ad609ba5be1ba71021d6fb871982c99e2760fb9c789"
+    },
+    {
+      "original": "| T-1071 | 修复账号绑定和页面Tab切换卡顿 | 🔨 待办 | PASS[REV:a53e25bf48df] | 待验 | [SPEC](docs/features/t1071-navigation-latency.md) [详情](BACKLOG-details.md#t-1071) | 见详情。 |",
+      "current": "|T-1071|修复账号绑定和页面Tab切换卡顿|🔨 待办|PASS[REV:a53e25bf48df]|待验|[SPEC](docs/features/t1071-navigation-latency.md) [详情](BACKLOG-details.md#t-1071)|见详情。|",
+      "originalSha256": "75aca6a0cd36c9a8458f9814e3884ed38efe8ded86c988b62f48241bcd2dbf27"
+    },
+    {
+      "original": "| T-1070 | 打通Codex执行与编导精调，脚本一键生成文章和图文 | 🔨 待办 | PASS[REV:b195ac203ec0] | 待验 | [SPEC](docs/features/t1070-director-script-workflow.md) [详情](BACKLOG-details.md#t-1070) | 见详情。 |",
+      "current": "|T-1070|打通Codex执行与编导精调，脚本一键生成文章和图文|🔨 待办|PASS[REV:b195ac203ec0]|待验|[SPEC](docs/features/t1070-director-script-workflow.md) [详情](BACKLOG-details.md#t-1070)|见详情。|",
+      "originalSha256": "06478770b3094f81b982dd5b8e1692a6ccc63c62707fc1a841c0d01870240eda"
+    },
+    {
+      "original": "| T-1069 | 修复安装版素材导入慢与跨Tab丢失，重设计素材选择并补多平台绑定入口 | 🔨 待办 | PASS[REV:19bad8ef6f93] | 待验 | [SPEC](docs/features/t1069-installed-media-and-binding.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e350e6053e05749b)。 |",
+      "current": "|T-1069|修复安装版素材导入慢与跨Tab丢失，重设计素材选择并补多平台绑定入口|🔨 待办|PASS[REV:19bad8ef6f93]|待验|[SPEC](docs/features/t1069-installed-media-and-binding.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e350e6053e05749b)。|",
+      "originalSha256": "11b8fcfdd9dd8ef197371ffc9bdaee8480e086d2629c6b7740541b5ad6b938f4"
+    },
+    {
+      "original": "| T-1066 | 落实本地客户端优先出包并移除人为构建超时 | ⏸️ 待办 | PASS[REV:0d40d8466937] | — | [SPEC](docs/features/t1066-local-package-build-only.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d6ce9166621c4243)。 |",
+      "current": "|T-1066|落实本地客户端优先出包并移除人为构建超时|⏸️ 待办|PASS[REV:0d40d8466937]|—|[SPEC](docs/features/t1066-local-package-build-only.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d6ce9166621c4243)。|",
+      "originalSha256": "75106d59ad4cbfe0834973d3fa86bc773f110d737d8ace42c79e961285290c32"
+    },
+    {
+      "original": "| T-1062 | 汇总各会话改动统一提交并打包本地客户端，逐项验收含Skill粗剪 | 🔨 待办 | PASS[REV:5912ba60da16] | 待验 | [SPEC](docs/features/t1062-consolidated-local-client-acceptance.md) · [测试预算补充](docs/features/t1062-backend-test-harness.md) · [安装渲染修复补充](docs/features/t1062-installed-render-skill-owner.md) [详情](BACKLOG-details.md#t-1062) [详情](BACKLOG-details.md#t-1062) [详情](BACKLOG-details.md#t-1062) | 见详情。 |",
+      "current": "|T-1062|汇总各会话改动统一提交并打包本地客户端，逐项验收含Skill粗剪|🔨 待办|PASS[REV:5912ba60da16]|待验|[SPEC](docs/features/t1062-consolidated-local-client-acceptance.md) · [测试预算补充](docs/features/t1062-backend-test-harness.md) · [安装渲染修复补充](docs/features/t1062-installed-render-skill-owner.md) [详情](BACKLOG-details.md#t-1062) [详情](BACKLOG-details.md#t-1062) [详情](BACKLOG-details.md#t-1062)|见详情。|",
+      "originalSha256": "2dac574d0e52a0d4754a83678fa1ccf03647b67092f2ca36f3355f5fcba5d4a0"
+    },
+    {
+      "original": "| T-1063 | 修正流程工具误拒合法字面方括号文件路径 | 🔨 待办 | PASS[REV:4d99824da112] | 待验 | [SPEC](docs/features/t1063-orchestrator-literal-path-boundary.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-ef8386b2a0a060cc)。 |",
+      "current": "|T-1063|修正流程工具误拒合法字面方括号文件路径|🔨 待办|PASS[REV:4d99824da112]|待验|[SPEC](docs/features/t1063-orchestrator-literal-path-boundary.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-ef8386b2a0a060cc)。|",
+      "originalSha256": "a86baf71993261071b771cccacc1a0f7b150d08147fe93fd821ba7dd4eb5eaaf"
+    },
+    {
+      "original": "| T-1024 | 紧急排查充值50元后Growth受管Omni模型仍报余额不足 | 🔨 待办 | — | 待验 | [排查范围](docs/verification/t1024-managed-credit-diagnosis.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-c9ebcc41ffd59f36)。 |",
+      "current": "|T-1024|紧急排查充值50元后Growth受管Omni模型仍报余额不足|🔨 待办|—|待验|[排查范围](docs/verification/t1024-managed-credit-diagnosis.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-c9ebcc41ffd59f36)。|",
+      "originalSha256": "876ea5480806df496dc64ac3d4526e4342dc307452dd5178eb0616a2ad4c8167"
+    },
+    {
+      "original": "| T-1022 | 按账号组统一多平台工作区、绑定管理、首页与复盘 | ⏸️ 待办 | PASS[REV:2f179f8d9380] | 待验 | [SPEC](docs/features/t1022-account-group-workspace.md) [详情](BACKLOG-details.md#t-1022) | 见详情。 |",
+      "current": "|T-1022|按账号组统一多平台工作区、绑定管理、首页与复盘|⏸️ 待办|PASS[REV:2f179f8d9380]|待验|[SPEC](docs/features/t1022-account-group-workspace.md) [详情](BACKLOG-details.md#t-1022)|见详情。|",
+      "originalSha256": "51ea069895b94be50e3fb12e63bf9696a91842180767af20adcade371174e40a"
+    },
+    {
+      "original": "| T-1023 | 修正既有任务绑定glob导致的progress生成阻断 | 📋 待办 | — | — | [证据](docs/features/t1022-account-group-workspace/VERIFICATION.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-3eba29be37ce0174)。 |",
+      "current": "|T-1023|修正既有任务绑定glob导致的progress生成阻断|📋 待办|—|—|[证据](docs/features/t1022-account-group-workspace/VERIFICATION.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-3eba29be37ce0174)。|",
+      "originalSha256": "a7d13cbe75717f533ac3da6005aa00e2975a9cd813c6ad5bb54100e8b3ca4eff"
+    },
+    {
+      "original": "| T-1021 | CreatorOS封面与小红书图文双模板库、行业分类及私人收藏 | 🔨 待办 | PASS[REV:f0f3fa0ff91b] | 待验 | [SPEC](docs/features/t1021-cover-template-library.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d0c6d059440fcd70)。 |",
+      "current": "|T-1021|CreatorOS封面与小红书图文双模板库、行业分类及私人收藏|🔨 待办|PASS[REV:f0f3fa0ff91b]|待验|[SPEC](docs/features/t1021-cover-template-library.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d0c6d059440fcd70)。|",
+      "originalSha256": "b4452dc5b3ac43e0671e4e1e009cd315ed28ccfcdf4be4827d19717171232eb9"
+    },
+    {
+      "original": "| T-1019 | 按观众具体任务与双九宫格持续生成可实测选题 | ⏸️ 待办 | PASS[REV:3a0362412b23] | 待验 | [SPEC](docs/features/audience-task-topics/README.md) | 用户委派；复用定位/雷达/候选/反馈，观众入口与作者实测分流，保留 T-1017 首稿；不发布或 push。 |",
+      "current": "|T-1019|按观众具体任务与双九宫格持续生成可实测选题|⏸️ 待办|PASS[REV:3a0362412b23]|待验|[SPEC](docs/features/audience-task-topics/README.md)|用户委派；复用定位/雷达/候选/反馈，观众入口与作者实测分流，保留 T-1017 首稿；不发布或 push。|",
+      "originalSha256": "c0194ca30cf04197b8e1f865095f287202c4392978a485e1718a3f5ccfdb8816"
+    },
+    {
+      "original": "| T-1020 | 统一可视化推荐、作品承接与科学运营观测 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/creator-operations/README.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e6765fb61ec296f6)。 |",
+      "current": "|T-1020|统一可视化推荐、作品承接与科学运营观测|📋 待办|待审|待验|[SPEC](docs/features/creator-operations/README.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e6765fb61ec296f6)。|",
+      "originalSha256": "5555a7c4cbc0bb807eb33257ca821209f51f80eb4574b0ff3b20c8fc5cf85ee0"
+    },
+    {
+      "original": "| T-1017 | 简化内容雷达：按账号定位一键生成可编辑改写稿 | 🔨 待办 | PASS[REV:d2fb4541c82d] | 待验 | [SPEC](docs/features/t1017-content-radar-rewrite-first.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-00c1555a12c0e894)。 |",
+      "current": "|T-1017|简化内容雷达：按账号定位一键生成可编辑改写稿|🔨 待办|PASS[REV:d2fb4541c82d]|待验|[SPEC](docs/features/t1017-content-radar-rewrite-first.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-00c1555a12c0e894)。|",
+      "originalSha256": "e8cc25e1d53982f2f726b9a7da83801c0a987d35eb20042df3e2f5f5c6c242ab"
+    },
+    {
+      "original": "| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) | 后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。 | 2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。 |",
+      "current": "|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md)|后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。|2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。|",
+      "originalSha256": "16b56fcbae9432475cf43810c9b56e2f97206851d4a481a8b51cb0f69e6065e4"
+    },
+    {
+      "original": "| T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015) | 见详情。 |",
+      "current": "|T-1015|核实剩余教训失败并校准过期回归断言|📋 待办|—|—|[实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015)|见详情。|",
+      "originalSha256": "a410aece14f1985cb5618fdc0aac42943b1d905123e39dd453d551a34fd266cd"
+    },
+    {
+      "original": "| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |",
+      "current": "|T-1004|冻结共享能力协议与 NomiFun 迁移依赖|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。|",
+      "originalSha256": "4a387fe43b832e71766e1383bc3269d3b18753e86b0ff5585c5caf97282f3875"
+    },
+    {
+      "original": "| T-1005 | 实现多步计划、连续执行与原任务续跑 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；模型规划与重规划，保留回执和成本，停止恢复可核验。 |",
+      "current": "|T-1005|实现多步计划、连续执行与原任务续跑|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004；模型规划与重规划，保留回执和成本，停止恢复可核验。|",
+      "originalSha256": "004dd593e1d672f8d837c1b89ccc1cf1a6e3b07bebee7e396cada2a2f3546dfe"
+    },
+    {
+      "original": "| T-1006 | 接入统一工具网关与长结果回读 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |",
+      "current": "|T-1006|接入统一工具网关与长结果回读|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。|",
+      "originalSha256": "f2a0c187810ad2e7c16a86a1c44b3bffe3870f5d6194016616f9a693dc2848e7"
+    },
+    {
+      "original": "| T-1007 | 补齐任务文件空间与受控命令执行 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；文件读写编辑、版本冲突、跨平台运行和进程树取消。 |",
+      "current": "|T-1007|补齐任务文件空间与受控命令执行|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004；文件读写编辑、版本冲突、跨平台运行和进程树取消。|",
+      "originalSha256": "e1ae831c5dbaa3542a13a62211af9dc936e065f1116f50f4a508a6ef1b1d9e32"
+    },
+    {
+      "original": "| T-1008 | 迁移 NomiFun 浏览器能力并协调既有采集 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004/1006；唯一profile所有者、多任务并发、跨账号隔离和原采集回归。 |",
+      "current": "|T-1008|迁移 NomiFun 浏览器能力并协调既有采集|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004/1006；唯一profile所有者、多任务并发、跨账号隔离和原采集回归。|",
+      "originalSha256": "4688f06a6374501533f5a5f1bc3b99d88d16c2e19359ce69599709c4844e636a"
+    },
+    {
+      "original": "| T-1009 | 实现产物版本、隔离预览与原生导出 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。 |",
+      "current": "|T-1009|实现产物版本、隔离预览与原生导出|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。|",
+      "originalSha256": "4e89663e74e4f16e5674e1af959555d0ea98dceb32b43b6034c1650db97f09d9"
+    },
+    {
+      "original": "| T-1010 | 装配研究创作报告 Skill 与兼容扩展 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1005/1006/1007/1008/1009；按需方法包、锁定版本，自主选工具完成目标。 |",
+      "current": "|T-1010|装配研究创作报告 Skill 与兼容扩展|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1005/1006/1007/1008/1009；按需方法包、锁定版本，自主选工具完成目标。|",
+      "originalSha256": "653c201ba0b1d5243be3bd3f2392916e2bf3cb8edda342a0d2e3f74b3e552455"
+    },
+    {
+      "original": "| T-1011 | 实现对话内计划进度与文件交付交互 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1005/1006/1009；同对话查看修改导出，停止/恢复与性能防复发。 |",
+      "current": "|T-1011|实现对话内计划进度与文件交付交互|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1005/1006/1009；同对话查看修改导出，停止/恢复与性能防复发。|",
+      "originalSha256": "9e47154c4eb560977ef8720f8cef9222e92f3bb9ee46c15aed0c82caab831bf9"
+    },
+    {
+      "original": "| T-1012 | 验收完整多步 Agent 与旧功能兼容 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1008/1010/1011；真实模型工具文件全链路、故障恢复、采集及性能。 |",
+      "current": "|T-1012|验收完整多步 Agent 与旧功能兼容|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1008/1010/1011；真实模型工具文件全链路、故障恢复、采集及性能。|",
+      "originalSha256": "9945c62e1c4274c247edbf98bc1660723119a665ed4d5c03273be87371e92d38"
+    },
+    {
+      "original": "| T-1013 | 验证双端安装包多步 Agent 与升级兼容 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1012；Mac/Windows安装实测，无NomiFun前置，数据升级保留。 |",
+      "current": "|T-1013|验证双端安装包多步 Agent 与升级兼容|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1012；Mac/Windows安装实测，无NomiFun前置，数据升级保留。|",
+      "originalSha256": "0ce6d66d47b9e4208100a7812ab360f4ac9a9a2713d3034ce948ee5627285935"
+    },
+    {
+      "original": "| T-998 | 收敛业务代码硬编码模型名 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-b9b5a6896b2aaf0b)。 |",
+      "current": "|T-998|收敛业务代码硬编码模型名|📋 待办|—|—|[T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-b9b5a6896b2aaf0b)。|",
+      "originalSha256": "7030299a9ef28a36caff696909fac50a3accecdbcc3f9bbef21bb85e57d4780e"
+    },
+    {
+      "original": "| T-997 | 修复 ai→ai-runtime 反向依赖边界违反 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-2eb38b106511cdb8)。 |",
+      "current": "|T-997|修复 ai→ai-runtime 反向依赖边界违反|📋 待办|—|—|[T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-2eb38b106511cdb8)。|",
+      "originalSha256": "f2c60e75ea3c2c8048e4d1d1d6980f24ab861fb5eec4138e0f545b351999817e"
+    },
+    {
+      "original": "| T-996 | 消除 review/reviews 双模块命名混淆 | 📋 待办 | — | — | [T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md) | review/(review-gate 审核门)与 reviews/(复盘评论领域)职责不同但命名极易混；重命名对齐并更新跨模块引用。 |",
+      "current": "|T-996|消除 review/reviews 双模块命名混淆|📋 待办|—|—|[T-914 审计](docs/research/2026-09-04-architecture-agent-audit.md)|review/(review-gate 审核门)与 reviews/(复盘评论领域)职责不同但命名极易混；重命名对齐并更新跨模块引用。|",
+      "originalSha256": "bc5f976e682a0b3c0f2cd780da766bee6fae2a1040b1dcbf0a0dd118f01554a3"
+    },
+    {
+      "original": "| T-993 | 同步 main 分支到最新(落后 origin/main 573 提交) | 📋 待办 | — | — | — | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-6f28905ece9e4a7b)。 |",
+      "current": "|T-993|同步 main 分支到最新(落后 origin/main 573 提交)|📋 待办|—|—|—|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-6f28905ece9e4a7b)。|",
+      "originalSha256": "6db4eda21bac6430abd7d550c94587724e5b945edf2c877ad6eac2612578020f"
+    },
+    {
+      "original": "| T-992 | 修复 Windows 升级启动运行环境切换拒绝访问 | 🔨 待办 | — | — | [SPEC](docs/features/t992-windows-runtime-upgrade.md) | 用户启动日志os error5；检查旧运行目录、安装指针与升级迁移，保留数据，补既有安装升级验证。 |",
+      "current": "|T-992|修复 Windows 升级启动运行环境切换拒绝访问|🔨 待办|—|—|[SPEC](docs/features/t992-windows-runtime-upgrade.md)|用户启动日志os error5；检查旧运行目录、安装指针与升级迁移，保留数据，补既有安装升级验证。|",
+      "originalSha256": "3912783b456125799e9a9fc4fb3d293f23bd9c9aa83efcb13786967bfa6d8fdd"
+    },
+    {
+      "original": "| T-989 | 校正知识图谱错误提示的既有回归断言 | 📋 待办 | — | — | [SPEC](docs/features/t989-knowledge-error-test.md) | T988扩展验证发现原af62ddda及当前均1/9失败；核对错误提示契约后修正，未改该行为。 |",
+      "current": "|T-989|校正知识图谱错误提示的既有回归断言|📋 待办|—|—|[SPEC](docs/features/t989-knowledge-error-test.md)|T988扩展验证发现原af62ddda及当前均1/9失败；核对错误提示契约后修正，未改该行为。|",
+      "originalSha256": "573530826b41861d7b9032f4a73dc5c2a6eb9348526c0e3d7fc0a152141b2c1c"
+    },
+    {
+      "original": "| T-984 | 本地打包并实测拆分采集修复 | ⏸️ 待办 | — | — | [SPEC](docs/verification/t984-local-collection.md) | 用户明确冻结改动范围；以66264111本地打包、安装、真实采集验证，不扩展恢复架构、不公开发布。 |",
+      "current": "|T-984|本地打包并实测拆分采集修复|⏸️ 待办|—|—|[SPEC](docs/verification/t984-local-collection.md)|用户明确冻结改动范围；以66264111本地打包、安装、真实采集验证，不扩展恢复架构、不公开发布。|",
+      "originalSha256": "17371f530dc75eeb28b89d0b198351d6197f0163675c9b7c7d492a1d68952fad"
+    },
+    {
+      "original": "| T-986 | 修复新绑定账号默认采集任务系统标记透传 | 📋 待办 | — | — | [SPEC](docs/features/t986-bind-collection-flag.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-5172365e85a2cee2)。 |",
+      "current": "|T-986|修复新绑定账号默认采集任务系统标记透传|📋 待办|—|—|[SPEC](docs/features/t986-bind-collection-flag.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-5172365e85a2cee2)。|",
+      "originalSha256": "0d03890fa8433b7dca80ccea70b0249e9491d990603f03c2f946c8b43c8ea1c6"
+    },
+    {
+      "original": "| T-980 | 纳入助手修复重新运行 V1.2 双端流水线 | 🔨 待办 | — | — | [SPEC](docs/features/t980-release-rerun.md) | 冻结已提交 T-976至T-978 修复，合并发布分支，预检后运行 Mac/Windows 正式构建并核验产物。 |",
+      "current": "|T-980|纳入助手修复重新运行 V1.2 双端流水线|🔨 待办|—|—|[SPEC](docs/features/t980-release-rerun.md)|冻结已提交 T-976至T-978 修复，合并发布分支，预检后运行 Mac/Windows 正式构建并核验产物。|",
+      "originalSha256": "1fd782acd953adcbc3493604ae51c3558f35d8d71e249b7da8259a3170366258"
+    },
+    {
+      "original": "| T-979 | 自动化页面慢轮询与切换对象回写防护 | ⬜ 待办 | — | — | [SPEC](docs/features/t979-automation-polling.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-9f66fc6ba1d2a7e1)。 |",
+      "current": "|T-979|自动化页面慢轮询与切换对象回写防护|⬜ 待办|—|—|[SPEC](docs/features/t979-automation-polling.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-9f66fc6ba1d2a7e1)。|",
+      "originalSha256": "a73a758533a025db1592849df182e7780cb984c4ecee4a46494156705dc7951d"
+    },
+    {
+      "original": "| T-976 | 修复安装版 AI 助手 RedFox 再次失败与脱离对话的任务交互 | 🔨 待办 | — | — | [SPEC](docs/features/t976-chat-inline-redfox.md) | 定位本次原始错误；当前对话持续执行返回结果，不让用户刷新核对；真实链路验收。 |",
+      "current": "|T-976|修复安装版 AI 助手 RedFox 再次失败与脱离对话的任务交互|🔨 待办|—|—|[SPEC](docs/features/t976-chat-inline-redfox.md)|定位本次原始错误；当前对话持续执行返回结果，不让用户刷新核对；真实链路验收。|",
+      "originalSha256": "2de5d82cbb2db451ebb0756278c9b0709b0c083933dfd772a49a5b0af9b20955"
+    },
+    {
+      "original": "| T-957 | 排查 AI 失败、全场景验收并优化 Agent 提示词【用户截图】 | 🔨 待办 | — | — | [SPEC](docs/features/t957-ai-real-acceptance.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d8c8c522ea52c213)。 |",
+      "current": "|T-957|排查 AI 失败、全场景验收并优化 Agent 提示词|🔨 待办|—|—|[SPEC](docs/features/t957-ai-real-acceptance.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d8c8c522ea52c213)。|",
+      "originalSha256": "93b08dc93b439b6c68f005ea2ceec971930b42623236e4c5df219f3966e9725c"
+    },
+    {
+      "original": "| T-956 | 修复安装版点击采集一直抓取中【用户实测阻断】 | 🔨 待办 | — | — | [SPEC](docs/features/t956-installed-collection-stuck.md) | 对照真实任务、日志与调度恢复定位阻断，修复后沿实际入口验证终态和结果，保护旧数据。 |",
+      "current": "|T-956|修复安装版点击采集一直抓取中|🔨 待办|—|—|[SPEC](docs/features/t956-installed-collection-stuck.md)|对照真实任务、日志与调度恢复定位阻断，修复后沿实际入口验证终态和结果，保护旧数据。|",
+      "originalSha256": "9881aa7a6c132aef7af5ecb1b5dee4ac25a4c526fb4300200bd30691ef36eb69"
+    },
+    {
+      "original": "| T-954 | 接入抖音流量来源并以专家方法改进编导交互【用户要求小改动】 | 🔨 待办 | — | — | [SPEC](docs/features/t954-director-content-loop.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-6ad5b71dceb239e1)。 |",
+      "current": "|T-954|接入抖音流量来源并以专家方法改进编导交互|🔨 待办|—|—|[SPEC](docs/features/t954-director-content-loop.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-6ad5b71dceb239e1)。|",
+      "originalSha256": "ee8fce5660e17fa8c34848b7b7a22b701f1a1ce26e91077a00243418e1716e7e"
+    },
+    {
+      "original": "| T-951 | 修复自动化采集缺 jobRunId 与千条作品采集失败【用户实报】 | ⏸️ 待办 | — | — | [SPEC](docs/features/t951-collection-reliability.md) | 查明原调度绑定、分页和超时恢复，验证公共链路与千条规模，不以吞错冒充成功。 |",
+      "current": "|T-951|修复自动化采集缺 jobRunId 与千条作品采集失败|⏸️ 待办|—|—|[SPEC](docs/features/t951-collection-reliability.md)|查明原调度绑定、分页和超时恢复，验证公共链路与千条规模，不以吞错冒充成功。|",
+      "originalSha256": "b87a0a683ee158a55bc584af0411df616dd1e053ea3ece041ff25b91297fb59b"
+    },
+    {
+      "original": "| T-950 | 排查并恢复当前产品缺失历史数据【用户要求恢复】 | ⏸️ 待办 | — | — | [记录](docs/verification/t950-data-recovery.md) | 先核对账号、数据路径和备份；保留现状后恢复可验证的数据，不覆盖新内容。 |",
+      "current": "|T-950|排查并恢复当前产品缺失历史数据|⏸️ 待办|—|—|[记录](docs/verification/t950-data-recovery.md)|先核对账号、数据路径和备份；保留现状后恢复可验证的数据，不覆盖新内容。|",
+      "originalSha256": "61fd5fe08d47ca8c7b32327dd481927c9872a6dea2141e0a9e1b817e84fce794"
+    },
+    {
+      "original": "| T-945 | 排查并修复当前视频渲染再次失败【用户要求看日志】 | ⏸️ 待办 | — | — | [诊断](docs/verification/t945-render-failure.md) | 对齐最新原任务与安装版日志，定位真实失败点并验证修复，不凭历史错误猜测。 |",
+      "current": "|T-945|排查并修复当前视频渲染再次失败|⏸️ 待办|—|—|[诊断](docs/verification/t945-render-failure.md)|对齐最新原任务与安装版日志，定位真实失败点并验证修复，不凭历史错误猜测。|",
+      "originalSha256": "58abe94f14414fd9dffb0cacfe7f714f449448519a23a44e169be2b9588902b3"
+    },
+    {
+      "original": "| T-943 | 拉取并跑通 JY_IPAgent，调研数字人 API 与 CreatorOS 接入【用户指定仓库】 | ⏸️ 待办 | — | — | [SPEC](docs/features/t943-jy-ipagent-research.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-6da40b9d211687ae)。 |",
+      "current": "|T-943|拉取并跑通 JY_IPAgent，调研数字人 API 与 CreatorOS 接入|⏸️ 待办|—|—|[SPEC](docs/features/t943-jy-ipagent-research.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-6da40b9d211687ae)。|",
+      "originalSha256": "9149a28357fc6611a55064dffc988fb4d51f3dccbc69eb3c992e75fefad5f20e"
+    },
+    {
+      "original": "| T-940 | 补齐应用内签名远程更新闭环【糯米饭对标待落地】 | 📋 待办 | — | — | [缺口与范围](docs/features/t939-positioning-release.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-0e3dd393b702a707)。 |",
+      "current": "|T-940|补齐应用内签名远程更新闭环|📋 待办|—|—|[缺口与范围](docs/features/t939-positioning-release.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-0e3dd393b702a707)。|",
+      "originalSha256": "7c34fbb82f89466ab2da39d9f3ae0023238119dad250e67ea4220d30905c4376"
+    },
+    {
+      "original": "| T-935 | 修复整稿子任务长时间排队无执行【用户截图慢回复】 | 🔨 待办 | — | — | [排查记录](docs/verification/t935-script-queue.md) | 查真实任务排队与唤醒，恢复原任务，不用新任务掩盖卡住；并完成 T-934 聊天复验。 |",
+      "current": "|T-935|修复整稿子任务长时间排队无执行|🔨 待办|—|—|[排查记录](docs/verification/t935-script-queue.md)|查真实任务排队与唤醒，恢复原任务，不用新任务掩盖卡住；并完成 T-934 聊天复验。|",
+      "originalSha256": "0abe98d682e74b6332fa0617c567392045639230d6273364173cdc9a91c7d172"
+    },
+    {
+      "original": "| T-934 | 统一 CLI 与页面的持久聊天工具入口【T-933 真机验收发现】 | 🔨 待办 | — | — | [实现与验收](docs/verification/t934-cli-chat-unification.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-9b2048cb81450808)。 |",
+      "current": "|T-934|统一 CLI 与页面的持久聊天工具入口|🔨 待办|—|—|[实现与验收](docs/verification/t934-cli-chat-unification.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-9b2048cb81450808)。|",
+      "originalSha256": "369491582b66f4fd0edf1cbe7931c33b00d7d99ddafdb1a625a6e7c5ddbfe8f9"
+    },
+    {
+      "original": "| T-933 | 安装并验收本轮Agent Runtime桌面版【用户要求自行检查】 | 🔨 待办 | — | — | [T-932交付](docs/verification/t932-runtime-alignment.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e3d09dce7e422bbe)。 |",
+      "current": "|T-933|安装并验收本轮Agent Runtime桌面版|🔨 待办|—|—|[T-932交付](docs/verification/t932-runtime-alignment.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e3d09dce7e422bbe)。|",
+      "originalSha256": "6bdabdd804a58f558138255e1b92bb87a92728ff7b25eb2eac88273e36e16c98"
+    },
+    {
+      "original": "| T-919 | 定位并修复本地包主导航卡顿、助手通知刷屏与搜索停滞【用户运行反馈】 | 🔨 待办 | — | — | 复用 T-912/T-909 导航契约与 [T-915 SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-125af640cc5d45f9)。 |",
+      "current": "|T-919|定位并修复本地包主导航卡顿、助手通知刷屏与搜索停滞|🔨 待办|—|—|复用 T-912/T-909 导航契约与 [T-915 SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-125af640cc5d45f9)。|",
+      "originalSha256": "49fe874aa40f2155e97588894507e53abbd3e5393413fdf0991aab2e7895ea75"
+    },
+    {
+      "original": "| T-915 | 根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力【T-914 审查承接·用户 2026-09-04】 | 🔨 待办 | PASS[REV:692283b8bace] | — | [SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e93a45cb55075893)。 |",
+      "current": "|T-915|根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力|🔨 待办|PASS[REV:692283b8bace]|—|[SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e93a45cb55075893)。|",
+      "originalSha256": "03036041ba1f8e160553029547039606da7684669b58cce1ae83428c649cae5a"
+    },
+    {
+      "original": "| T-916 | 修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】 | 🔨 待办 | — | — | [审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916) | 见详情。 |",
+      "current": "|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|🔨 待办|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916)|见详情。|",
+      "originalSha256": "8ac791308d060dc8a723296f4200634781ffdaa07fb16e495372238a16ab34cb"
+    },
+    {
+      "original": "| T-917 | 记录 T-915 媒体测试事故并防止测试再次访问真实媒体根【用户接受数据清理，解除恢复前置】 | 📋 待办 | — | — | [事故记录](docs/research/evidence/t915/2026-09-06-media-test-incident.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-20ca3c0dceb6f8f4)。 |",
+      "current": "|T-917|记录 T-915 媒体测试事故并防止测试再次访问真实媒体根|📋 待办|—|—|[事故记录](docs/research/evidence/t915/2026-09-06-media-test-incident.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-20ca3c0dceb6f8f4)。|",
+      "originalSha256": "14b15ff0ed4d8d642a9634e1b23a3aafe4e3182fa9623980ca63099619b47bb4"
+    },
+    {
+      "original": "| T-908 | 真实复测 douyin-transcribe Skill，并对照 CreatorOS 当前抖音抓取链路判断是否需要兼容修复【用户截图与压缩包·2026-08-23】 | 📋 待办 | — | — | — | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-0d6e5afae67dc6b3)。 |",
+      "current": "|T-908|真实复测 douyin-transcribe Skill，并对照 CreatorOS 当前抖音抓取链路判断是否需要兼容修复|📋 待办|—|—|—|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-0d6e5afae67dc6b3)。|",
+      "originalSha256": "7b33118d9280c1561e0cbdedf057ebee22479dd18f3999ceb19de86b56864dd5"
+    },
+    {
+      "original": "| T-906 | 放大 AI 助手默认窗口并支持拖拽缩放与跨启动尺寸记忆【用户反馈·2026-08-20】 | ⏸️ 待办 | — | 待验 | — | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-43eab6d6e3e39443)。 |",
+      "current": "|T-906|放大 AI 助手默认窗口并支持拖拽缩放与跨启动尺寸记忆|⏸️ 待办|—|待验|—|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-43eab6d6e3e39443)。|",
+      "originalSha256": "45dea1942c24c92294502846e69acdbb319ab40fe4bb5365c4acfd10cc8ea19a"
+    },
+    {
+      "original": "| T-905 | 调研独立的极简手机口播创作产品，以人设选稿、灵感写稿、实拍与“123321”真人换口型为核心【产品可能性探索·用户 2026-08-20】 | 📋 待办 | — | — | — | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-916d71382f9f6b24)。 |",
+      "current": "|T-905|调研独立的极简手机口播创作产品，以人设选稿、灵感写稿、实拍与“123321”真人换口型为核心|📋 待办|—|—|—|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-916d71382f9f6b24)。|",
+      "originalSha256": "c4ab78fe8d37e6272017b52e1a03e00a195a40d02d201aa6f26d5765e667d730"
+    },
+    {
+      "original": "| T-884 | 只读诊断用户加密日志中的 ASR 转写失败【用户日志·2026-08-18】 | ⏸️ 待办 | — | — | 复用 T-768 ASR 通用回退、T-639 MiMo ASR 与 T-676 逐字稿队列契约 | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-15d0c7dabac4150e)。 |",
+      "current": "|T-884|只读诊断用户加密日志中的 ASR 转写失败|⏸️ 待办|—|—|复用 T-768 ASR 通用回退、T-639 MiMo ASR 与 T-676 逐字稿队列契约|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-15d0c7dabac4150e)。|",
+      "originalSha256": "2762b7cf775cc753a2aeadb5c92871c539ae427d7663e467a1298de944189207"
+    },
+    {
+      "original": "| T-883 | 提交并推送 T-881/T-882 候选，触发 GitHub macOS 与 Windows 官方安装包流水线【用户明确授权·2026-08-18】 | ⏸️ 待办 | — | — | 复用 [T-881 验收](orchestrator/T881-FRONTEND-VALIDATION.md)、[T-882 本地包验收](orchestrator/T882-BUILD-VALIDATION.md) [详情](BACKLOG-details.md#t-883) | 见详情。 |",
+      "current": "|T-883|提交并推送 T-881/T-882 候选，触发 GitHub macOS 与 Windows 官方安装包流水线|⏸️ 待办|—|—|复用 [T-881 验收](orchestrator/T881-FRONTEND-VALIDATION.md)、[T-882 本地包验收](orchestrator/T882-BUILD-VALIDATION.md) [详情](BACKLOG-details.md#t-883)|见详情。|",
+      "originalSha256": "062b945acd3ccd19c3f8ccf3145b45e0066802b4c4fa776ab27520ef955d6d46"
+    },
+    {
+      "original": "| T-878 | 让生图模型连接测试正确识别并提示 401/403 鉴权失败【T-877 诊断承接·2026-08-17】 | 📋 待办 | — | — | [T-877 脱敏诊断](docs/research/2026-08-17-dudu-image-auth-failure-diagnosis.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-ab507299fb3fcd91)。 |",
+      "current": "|T-878|让生图模型连接测试正确识别并提示 401/403 鉴权失败|📋 待办|—|—|[T-877 脱敏诊断](docs/research/2026-08-17-dudu-image-auth-failure-diagnosis.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-ab507299fb3fcd91)。|",
+      "originalSha256": "ce638f9a5a6c006f510c6aba82698de99feb146bd0874da739a2b93bb654941c"
+    },
+    {
+      "original": "| T-867 | 恢复 AI 对项目素材与分镜场景的自动语义匹配【用户真机截图·2026-08-17】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-867) | 详情见外置记录。 |",
+      "current": "|T-867|恢复 AI 对项目素材与分镜场景的自动语义匹配|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-867)|详情见外置记录。|",
+      "originalSha256": "ff7fce5f5ea13f00a9f80a6cb4c4c7e073f330506c348aa507bd437cd871e2d7"
+    },
+    {
+      "original": "| T-860 | 修复竖屏素材底边与左下人物框边界重合【用户截图·2026-08-16】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-860) | 详情见外置记录。 |",
+      "current": "|T-860|修复竖屏素材底边与左下人物框边界重合|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-860)|详情见外置记录。|",
+      "originalSha256": "8707c81dfe19476dc435e7abfa9ae00dd4f3ce4e364761497cef391ef6bd5b39"
+    },
+    {
+      "original": "| T-859 | 竖屏素材段人物收进左下角，并消除切换白闪【用户预览纠偏·2026-08-16】 | 🔨 待办 | PASS[REV:9895a91a63a8] | 待验 | [详情](BACKLOG-details.md#t-859)  [SPEC](docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md) | 详情见外置记录。 |",
+      "current": "|T-859|竖屏素材段人物收进左下角，并消除切换白闪|🔨 待办|PASS[REV:9895a91a63a8]|待验|[详情](BACKLOG-details.md#t-859)  [SPEC](docs/superpowers/specs/2026-08-16-portrait-material-pip-smooth-transition.md)|详情见外置记录。|",
+      "originalSha256": "5e8ff605407a5d8a860104e364bbb24ba863554c3b87fd87637eda6bc066cfae"
+    },
+    {
+      "original": "| T-858 | 把剪辑方法真正落到 CreatorOS，根治竖屏统一舞台、字幕重点词与动态 PPT【用户明确要求·2026-08-16】 | 🔨 待办 | PASS[REV:2521be715a0a] | 待验 | [详情](BACKLOG-details.md#t-858)  [SPEC](docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md) | 详情见外置记录。 |",
+      "current": "|T-858|把剪辑方法真正落到 CreatorOS，根治竖屏统一舞台、字幕重点词与动态 PPT|🔨 待办|PASS[REV:2521be715a0a]|待验|[详情](BACKLOG-details.md#t-858)  [SPEC](docs/superpowers/specs/2026-08-16-video-direction-stage-and-caption-emphasis.md)|详情见外置记录。|",
+      "originalSha256": "d578cc0a0e569d05691b37b240f864b8954928b75933fb7d7a7b6aa9448a574b"
+    },
+    {
+      "original": "| T-857 | 构建当前已提交候选的 CreatorOS 1.1.0 Windows 安装包【用户明确要求·2026-08-16】 | ⏸️ 待办 | — | 待验 | [详情](BACKLOG-details.md#t-857) | 详情见外置记录。 |",
+      "current": "|T-857|构建当前已提交候选的 CreatorOS 1.1.0 Windows 安装包|⏸️ 待办|—|待验|[详情](BACKLOG-details.md#t-857)|详情见外置记录。|",
+      "originalSha256": "b5c7b2582d2cffbf70e5da0d719ea7111f1dbb8b40f908bc50fd1215bfb81098"
+    },
+    {
+      "original": "| T-856 | 重做竖屏成片的统一舞台、字幕可读性与重点词强调【用户成片截图·2026-08-16】 | ⏸️ 待办 | — | 待验 | [详情](BACKLOG-details.md#t-856) | 详情见外置记录。 |",
+      "current": "|T-856|重做竖屏成片的统一舞台、字幕可读性与重点词强调|⏸️ 待办|—|待验|[详情](BACKLOG-details.md#t-856)|详情见外置记录。|",
+      "originalSha256": "8ae339cf9493d4d51793a27d07473416590593bc16d97467340f5dfc79ab2fcb"
+    },
+    {
+      "original": "| T-855 | 构建包含 T-854 与当前已提交修复的 CreatorOS macOS 本地安装包【用户明确授权·2026-08-16】 | ⏸️ 待办 | — | — | [详情](BACKLOG-details.md#t-855) | 详情见外置记录。 |",
+      "current": "|T-855|构建包含 T-854 与当前已提交修复的 CreatorOS macOS 本地安装包|⏸️ 待办|—|—|[详情](BACKLOG-details.md#t-855)|详情见外置记录。|",
+      "originalSha256": "4df672e2d83222d4c1fde1e0510228cd62567b588a1b8bb73f151eca0c5f2645"
+    },
+    {
+      "original": "| T-851 | 支持录制“123”短视频生成本人授权的 AI 数字人口播【数字人制作·用户 2026-08-16】 | 📋 待办 | 待审 | 待验 | [详情](BACKLOG-details.md#t-851) | 详情见外置记录。 |",
+      "current": "|T-851|支持录制“123”短视频生成本人授权的 AI 数字人口播|📋 待办|待审|待验|[详情](BACKLOG-details.md#t-851)|详情见外置记录。|",
+      "originalSha256": "2fe66e55ba4e7199b8653318f0276e12e6bdcde944bc8848b1a280a053a242c6"
+    },
+    {
+      "original": "| T-850 | 支持只上传未粗剪口播录像，由 AI 理解实拍语义并生成可确认粗剪【制作输入简化·用户 2026-08-16】 | 📋 待办 | 待审 | 待验 | [详情](BACKLOG-details.md#t-850) | 详情见外置记录。 |",
+      "current": "|T-850|支持只上传未粗剪口播录像，由 AI 理解实拍语义并生成可确认粗剪|📋 待办|待审|待验|[详情](BACKLOG-details.md#t-850)|详情见外置记录。|",
+      "originalSha256": "864bda31cddc107f6e1a1f7f04d284aac30c49cd5555ec3755199fca4d7cbdaf"
+    },
+    {
+      "original": "| T-847 | 补齐 Windows 正式包的 CreatorOS CLI runtime 并重跑 1.1.0 双端流水线【T-846 阻断承接·用户认可 2026-08-16】 | ⏸️ 待办 | — | — | [详情](BACKLOG-details.md#t-847) | 详情见外置记录。 |",
+      "current": "|T-847|补齐 Windows 正式包的 CreatorOS CLI runtime 并重跑 1.1.0 双端流水线|⏸️ 待办|—|—|[详情](BACKLOG-details.md#t-847)|详情见外置记录。|",
+      "originalSha256": "8875f830f30d39a0dab06358878cd111716e0232b7ac71ad7e45a1572161a3de"
+    },
+    {
+      "original": "| T-846 | 提交当前批准候选并运行 CreatorOS 1.1.0 macOS/Windows 官方双端构建【用户明确授权·2026-08-16】 | ⏸️ 待办 | — | — | [详情](BACKLOG-details.md#t-846) | 详情见外置记录。 |",
+      "current": "|T-846|提交当前批准候选并运行 CreatorOS 1.1.0 macOS/Windows 官方双端构建|⏸️ 待办|—|—|[详情](BACKLOG-details.md#t-846)|详情见外置记录。|",
+      "originalSha256": "d9194302ef156fe160ba1ffe45d4bafd1f671c7f3261f6fd907618d92acffd44"
+    },
+    {
+      "original": "| T-845 | 根治 Windows 用户机成片在 HyperFrames 启动阶段缺失分层模块解析器【T-844 根因修复·用户 2026-08-16】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-845) | 详情见外置记录。 |",
+      "current": "|T-845|根治 Windows 用户机成片在 HyperFrames 启动阶段缺失分层模块解析器|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-845)|详情见外置记录。|",
+      "originalSha256": "de0406239ebe1015b35a12bd0e58fa5b5c81eb1e4747824832894239b5c6b36d"
+    },
+    {
+      "original": "| T-843 | 为 CreatorOS 建立可由 Codex 完整操作的官方 CLI，并复用现有全部业务能力【产品方向·用户 2026-08-15】 | 🔨 待办 | PASS[REV:ea17774db868] | — | [详情](BACKLOG-details.md#t-843)  [SPEC](docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md) | 详情见外置记录。 |",
+      "current": "|T-843|为 CreatorOS 建立可由 Codex 完整操作的官方 CLI，并复用现有全部业务能力|🔨 待办|PASS[REV:ea17774db868]|—|[详情](BACKLOG-details.md#t-843)  [SPEC](docs/superpowers/specs/2026-08-15-creatoros-codex-cli.md)|详情见外置记录。|",
+      "originalSha256": "102dd53edd60fe6770dc87b16f68215b4ea478cf6f8a85924960d485a5f39c5e"
+    },
+    {
+      "original": "| T-835 | 取消制作分镜逐字保真失败对整稿候选的阻断，并给出可诊断恢复【用户真机反馈·2026-08-14】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-835) | 详情见外置记录。 |",
+      "current": "|T-835|取消制作分镜逐字保真失败对整稿候选的阻断，并给出可诊断恢复|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-835)|详情见外置记录。|",
+      "originalSha256": "b0536363173e4184bd0753b1d1a72c20eefedbd64fc318b4508b82875baf7fd3"
+    },
+    {
+      "original": "| T-833 | 根治结构化节点 schema 兼容报错与多张局部改稿卡无法连续采纳【用户高频真机反馈·2026-08-14】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-833) | 详情见外置记录。 |",
+      "current": "|T-833|根治结构化节点 schema 兼容报错与多张局部改稿卡无法连续采纳|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-833)|详情见外置记录。|",
+      "originalSha256": "182256cee67b5381e0d6d7b20cbe751b5596650b33289b65a257559b735fea8d"
+    },
+    {
+      "original": "| T-831 | 重排官方渠道模型配置并复核上游图生图能力【官方渠道配置·用户 2026-08-14】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-831) | 详情见外置记录。 |",
+      "current": "|T-831|重排官方渠道模型配置并复核上游图生图能力|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-831)|详情见外置记录。|",
+      "originalSha256": "811280bf7d5bcfa2b24837b06e9673e29a1ad586ac0d32e379f6472d6cc9f500"
+    },
+    {
+      "original": "| T-829 | 建立并执行上游模型全能力真实兼容矩阵，覆盖渠道托管与用户中转站【用户 Windows 生图/文本回归·2026-08-14】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-829) | 详情见外置记录。 |",
+      "current": "|T-829|建立并执行上游模型全能力真实兼容矩阵，覆盖渠道托管与用户中转站|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-829)|详情见外置记录。|",
+      "originalSha256": "ed9aaa7db4995789d236c9d8c101b4d418e9cd4cb681e6aa4eefe14aee992920"
+    },
+    {
+      "original": "| T-828 | 诊断行业热点出题不可用、Windows 滚动条异常与 DeepMind/Max 模型报错【用户 Windows 真机截图与加密日志·2026-08-13】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-828) | 详情见外置记录。 |",
+      "current": "|T-828|诊断行业热点出题不可用、Windows 滚动条异常与 DeepMind/Max 模型报错|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-828)|详情见外置记录。|",
+      "originalSha256": "0177fa85c8ac11771f3ffbe6d852888bdc5ea810eb782c406aafea5a92f79700"
+    },
+    {
+      "original": "| T-827 | 根治选题中心来源筛选失效与候选操作按钮无法点击【用户真机截图·2026-08-13】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-827) | 详情见外置记录。 |",
+      "current": "|T-827|根治选题中心来源筛选失效与候选操作按钮无法点击|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-827)|详情见外置记录。|",
+      "originalSha256": "a7e64c51ef31af2de6e1f9903e06e3f84e0df99f5409935b6b5a0b1c643bdac8"
+    },
+    {
+      "original": "| T-826 | 根治 CreatorOS v1.1 Windows 新安装包安装后无法启动【用户真机日志·2026-08-13】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-826) | 详情见外置记录。 |",
+      "current": "|T-826|根治 CreatorOS v1.1 Windows 新安装包安装后无法启动|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-826)|详情见外置记录。|",
+      "originalSha256": "a5628eb3b68479eae4a5564e8665f7d393d0aaa127dc91aca8c44a96bf9b61c4"
+    },
+    {
+      "original": "| T-824 | 根治昨日文稿 Skill 与内容动效卡片迭代在标准版成品中无明显效果【用户真实验收失败·2026-08-13】 | 🔨 待办 | PASS[REV:18361dc8c3c3] | 待验 | [详情](BACKLOG-details.md#t-824)  [SPEC](docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.md) | 详情见外置记录。 |",
+      "current": "|T-824|根治昨日文稿 Skill 与内容动效卡片迭代在标准版成品中无明显效果|🔨 待办|PASS[REV:18361dc8c3c3]|待验|[详情](BACKLOG-details.md#t-824)  [SPEC](docs/superpowers/specs/2026-08-13-continuous-voiceover-storyboard-pipeline.md)|详情见外置记录。|",
+      "originalSha256": "3b830926c006a58ad94979da573489594bfe1b1e7d3b44d47182b932467a4350"
+    },
+    {
+      "original": "| T-823 | 根治架构图等主视觉被信息卡遮挡并修正跨段画面切换滞后【成片真机截图·2026-08-13】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-823) | 详情见外置记录。 |",
+      "current": "|T-823|根治架构图等主视觉被信息卡遮挡并修正跨段画面切换滞后|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-823)|详情见外置记录。|",
+      "originalSha256": "821ff70559748b457f9d712f6de38d0ea0614833cf619993a83a774d78791e79"
+    },
+    {
+      "original": "| T-821 | 网站内容因未登录或权限不足读取失败时引导用户前往登录保管库【用户截图·2026-08-13】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-821) | 详情见外置记录。 |",
+      "current": "|T-821|网站内容因未登录或权限不足读取失败时引导用户前往登录保管库|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-821)|详情见外置记录。|",
+      "originalSha256": "a7c72543b0a5b97eb3f601c5ab1bbd798ae6424a8afa63413a5816e23b0d7c1b"
+    },
+    {
+      "original": "| T-819 | 让编导在普通对话中按自然语言定位并改写当前稿单段【用户真实用法·2026-08-13】 | 🔨 待办 | PASS[REV:0425ab7b87b8] | 待验 | [详情](BACKLOG-details.md#t-819)  [SPEC](docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.md) | 详情见外置记录。 |",
+      "current": "|T-819|让编导在普通对话中按自然语言定位并改写当前稿单段|🔨 待办|PASS[REV:0425ab7b87b8]|待验|[详情](BACKLOG-details.md#t-819)  [SPEC](docs/superpowers/specs/2026-08-13-natural-language-current-script-section-editing.md)|详情见外置记录。|",
+      "originalSha256": "6449700cdd73bfd7b140415b3d89d194310f6cee25451a0ecbbbbe0f5e43a8fb"
+    },
+    {
+      "original": "| T-820 | 修复选题补卡到项目与文案的数据丢失并保存生成消费血缘【T-811 审计承接·2026-08-13】 | 📋 待办 | — | — | [详情](BACKLOG-details.md#t-820) | 详情见外置记录。 |",
+      "current": "|T-820|修复选题补卡到项目与文案的数据丢失并保存生成消费血缘|📋 待办|—|—|[详情](BACKLOG-details.md#t-820)|详情见外置记录。|",
+      "originalSha256": "b504106fc2e96183c912c29681476c86d8d3ee38340d15019ba1dc1be47b4cd7"
+    },
+    {
+      "original": "| T-816 | 让当前确认稿成为配图与封面生成的第一内容真相【用户确认·2026-08-13】 | 🔨 待办 | PASS[REV:fb03de3a57d7] | 待验 | [详情](BACKLOG-details.md#t-816)  [SPEC](docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.md) | 详情见外置记录。 |",
+      "current": "|T-816|让当前确认稿成为配图与封面生成的第一内容真相|🔨 待办|PASS[REV:fb03de3a57d7]|待验|[详情](BACKLOG-details.md#t-816)  [SPEC](docs/superpowers/specs/2026-08-13-current-script-truth-and-natural-language-section-editing.md)|详情见外置记录。|",
+      "originalSha256": "ee961a9909d10f5b9356a98d954c878439794136cc22be30e6787fa585a8652c"
+    },
+    {
+      "original": "| T-814 | 统一 CreatorOS 多页面 AI 对话体验并保留场景上下文与自由讨论能力【用户体验方向·2026-08-13】 | 📋 待办 | — | — | [详情](BACKLOG-details.md#t-814) | 详情见外置记录。 |",
+      "current": "|T-814|统一 CreatorOS 多页面 AI 对话体验并保留场景上下文与自由讨论能力|📋 待办|—|—|[详情](BACKLOG-details.md#t-814)|详情见外置记录。|",
+      "originalSha256": "38769c314296ad48e28a8b8de4df2db27181112ab4654333b50f6994521bbced"
+    },
+    {
+      "original": "| T-779 | 根治参考历史作品生成封面时误探本机工具并中断生图【v1.0 回归·用户确认 2026-08-11】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-779) | 详情见外置记录。 |",
+      "current": "|T-779|根治参考历史作品生成封面时误探本机工具并中断生图|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-779)|详情见外置记录。|",
+      "originalSha256": "a41b189ff66bb21a44c1894e6668c1f517023c4028f3a3dde0110b5901071504"
+    },
+    {
+      "original": "| T-773 | 更新 CreatorOS 1.0 最新使用教程、匿名化截图并新建成交型测试版教程【教程交付·用户 2026-08-11】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-773) | 详情见外置记录。 |",
+      "current": "|T-773|更新 CreatorOS 1.0 最新使用教程、匿名化截图并新建成交型测试版教程|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-773)|详情见外置记录。|",
+      "originalSha256": "1eacec573e0094acae9ecf2fa55bce2cc919a416b8c6ccb2f7ff90306a85728c"
+    },
+    {
+      "original": "| T-768 | 任何云端 ASR 故障都必须自动回退本地 Whisper【逐字稿可靠性·用户确认 2026-08-11】 | 🔨 待办 | PASS[REV:3eb18966ea59] | 待验 | [详情](BACKLOG-details.md#t-768)  [SPEC](docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md) | 详情见外置记录。 |",
+      "current": "|T-768|任何云端 ASR 故障都必须自动回退本地 Whisper|🔨 待办|PASS[REV:3eb18966ea59]|待验|[详情](BACKLOG-details.md#t-768)  [SPEC](docs/superpowers/specs/2026-08-11-asr-universal-local-fallback.md)|详情见外置记录。|",
+      "originalSha256": "89daec0e0980f3f8d2ac087efca2d1cd53eb88e96a3289c9e770802dba5105e5"
+    },
+    {
+      "original": "| T-762 | 根因复盘并设计渠道 ASR 密钥的短时租约闭环【正式版受管能力·用户 2026-08-10】 | 🔨 待办 | — | — | [详情](BACKLOG-details.md#t-762) | 详情见外置记录。 |",
+      "current": "|T-762|根因复盘并设计渠道 ASR 密钥的短时租约闭环|🔨 待办|—|—|[详情](BACKLOG-details.md#t-762)|详情见外置记录。|",
+      "originalSha256": "922085ae45c7a040305bd8b03bbcd932f5fc19ed27ea0ff05f45d39294a8e50b"
+    },
+    {
+      "original": "| T-759 | 根治已绑定 B-roll 因 inventory 失配显示空白【正式版制作回归·用户 2026-08-10】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-759) | 详情见外置记录。 |",
+      "current": "|T-759|根治已绑定 B-roll 因 inventory 失配显示空白|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-759)|详情见外置记录。|",
+      "originalSha256": "15ff5ae3e6a6afbf09d1a8b062d5ba871c9afeb510cbe48e8a9f5fdd726012f8"
+    },
+    {
+      "original": "| T-754 | 根治 CreatorOS v1.0 官方包启动无限转圈【正式版启动阻断·用户 2026-08-10】 | 🔨 待办 | — | — | [详情](BACKLOG-details.md#t-754) | 详情见外置记录。 |",
+      "current": "|T-754|根治 CreatorOS v1.0 官方包启动无限转圈|🔨 待办|—|—|[详情](BACKLOG-details.md#t-754)|详情见外置记录。|",
+      "originalSha256": "c76acf3c1b49d35bda25400a56f394bc9b2897fbcc227ee9184c2af3f12c8411"
+    },
+    {
+      "original": "| T-748 | 补齐“重新输入激活码”原生命令 ACL 并重打官方包【正式版回归·用户真机 2026-08-09】 | 🔨 待办 | — | — | [详情](BACKLOG-details.md#t-748) | 详情见外置记录。 |",
+      "current": "|T-748|补齐“重新输入激活码”原生命令 ACL 并重打官方包|🔨 待办|—|—|[详情](BACKLOG-details.md#t-748)|详情见外置记录。|",
+      "originalSha256": "3177da8d3d072a96f81c364e427498b5b1002dffa3fee3177ecc60441a6baa89"
+    },
+    {
+      "original": "| T-741 | 下移知识库“记一条经验”入口到录入操作行【正式版细节·用户 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-741) | 详情见外置记录。 |",
+      "current": "|T-741|下移知识库“记一条经验”入口到录入操作行|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-741)|详情见外置记录。|",
+      "originalSha256": "87b90ae8864610c5c6b1a7c6160c8e8d11e382c91b13cba35389cae77fc5d533"
+    },
+    {
+      "original": "| T-739 | 根治制作视频跨项目灌入 B-roll、无证据改稿偏好与超长复盘卡【正式版回归·用户 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-739) | 详情见外置记录。 |",
+      "current": "|T-739|根治制作视频跨项目灌入 B-roll、无证据改稿偏好与超长复盘卡|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-739)|详情见外置记录。|",
+      "originalSha256": "535bc221e9e718585cd1a61600157d7712b6775716ae9c2d8ebb88a8e754e747"
+    },
+    {
+      "original": "| T-738 | 根治发布物料生成成功后无处查看并恢复卡内查看闭环【正式版回归·用户 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-738) | 详情见外置记录。 |",
+      "current": "|T-738|根治发布物料生成成功后无处查看并恢复卡内查看闭环|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-738)|详情见外置记录。|",
+      "originalSha256": "248e4da24fb8838997b8039165fb6b75931126ac5250946989f4e04450fda1fd"
+    },
+    {
+      "original": "| T-735 | 根治渠道受管模型成功产物被误判失败并建立 C 端稳定性闭环【智溯AI真机 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-735) | 详情见外置记录。 |",
+      "current": "|T-735|根治渠道受管模型成功产物被误判失败并建立 C 端稳定性闭环|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-735)|详情见外置记录。|",
+      "originalSha256": "61014dbd76e3ebca41cb7191bf4d8975cd1cea708bb138059878838a4f6dd300"
+    },
+    {
+      "original": "| T-734 | 根治 Windows 扫码绑定在启动前误依赖缺失 Playwright CLI【抖音账号绑定·用户真机 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-734) | 详情见外置记录。 |",
+      "current": "|T-734|根治 Windows 扫码绑定在启动前误依赖缺失 Playwright CLI|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-734)|详情见外置记录。|",
+      "originalSha256": "9220edbe75f468fe4cc70a63b9076eee227219202f1309529eb89b5c73af420c"
+    },
+    {
+      "original": "| T-733 | 本地模型可用时收起渠道配置误报警并纠正票据不适用状态【模型设置·用户真机 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-733) | 详情见外置记录。 |",
+      "current": "|T-733|本地模型可用时收起渠道配置误报警并纠正票据不适用状态|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-733)|详情见外置记录。|",
+      "originalSha256": "bac27d9ced8bed5ecdf6ef413512e4b0a89280debdc106485af7ea75b4100c80"
+    },
+    {
+      "original": "| T-732 | 根治局部改稿锚点失效后阻断全部 Copilot 对话【AI 对话可用性·用户真机 2026-08-09】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-732) | 详情见外置记录。 |",
+      "current": "|T-732|根治局部改稿锚点失效后阻断全部 Copilot 对话|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-732)|详情见外置记录。|",
+      "originalSha256": "754e519fb6794c7e8bf62893ce0eb079077d84827642a81f5db74ff88360508e"
+    },
+    {
+      "original": "| T-730 | 恢复可选“立论点”UI并增加适用场景引导，不重新变成写稿门槛【创作弹性·用户确认 2026-08-09】 | 🔨 待办 | PASS[REV:aeda30778cf2] | 待验 | [详情](BACKLOG-details.md#t-730)  [SPEC](docs/superpowers/specs/2026-08-09-optional-thesis-guidance.md) | 详情见外置记录。 |",
+      "current": "|T-730|恢复可选“立论点”UI并增加适用场景引导，不重新变成写稿门槛|🔨 待办|PASS[REV:aeda30778cf2]|待验|[详情](BACKLOG-details.md#t-730)  [SPEC](docs/superpowers/specs/2026-08-09-optional-thesis-guidance.md)|详情见外置记录。|",
+      "originalSha256": "2dbba13267525aa100fc6ec37e318b4119e14ec1dcec658c97e31cc336d23fd9"
+    },
+    {
+      "original": "| T-731 | 支持按电商等创作场景生成并自定义创作框架【场景化框架·用户后续 2026-08-09】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-731) | 详情见外置记录。 |",
+      "current": "|T-731|支持按电商等创作场景生成并自定义创作框架|📋 待办|—|待验|[详情](BACKLOG-details.md#t-731)|详情见外置记录。|",
+      "originalSha256": "1e9347e462793ea5f3901e4e0223cd4097e12e058948fd9535a416868904a2f7"
+    },
+    {
+      "original": "| T-729 | 根治渠道专属包仍跳官方入口并拆分官网、下载、人工反馈与反馈 API【白标完整性·智溯AI真机 2026-08-08】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-729) | 详情见外置记录。 |",
+      "current": "|T-729|根治渠道专属包仍跳官方入口并拆分官网、下载、人工反馈与反馈 API|📋 待办|—|待验|[详情](BACKLOG-details.md#t-729)|详情见外置记录。|",
+      "originalSha256": "e2a2e6f5b00c6687c660125f759f93ce0bea76a25ff19a68116c2f3516184641"
+    },
+    {
+      "original": "| T-726 | 退役项目“论点骨架”并让写稿直接消费 Brief 与素材【创作链瘦身·用户确认 2026-08-08】 | 🔨 待办 | PASS[REV:2809820bf64a] | 待验 | [详情](BACKLOG-details.md#t-726)  [SPEC](docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md) | 详情见外置记录。 |",
+      "current": "|T-726|退役项目“论点骨架”并让写稿直接消费 Brief 与素材|🔨 待办|PASS[REV:2809820bf64a]|待验|[详情](BACKLOG-details.md#t-726)  [SPEC](docs/superpowers/specs/2026-08-08-thesis-skeleton-retirement.md)|详情见外置记录。|",
+      "originalSha256": "1160601851344041b3dac89d54862bdc569025d361c85f69b0b085545562a9d9"
+    },
+    {
+      "original": "| T-721 | 根治素材包导出回流造成递归嵌套并恢复大素材库完整可见性【素材数据安全·用户 2026-08-08】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-721) | 详情见外置记录。 |",
+      "current": "|T-721|根治素材包导出回流造成递归嵌套并恢复大素材库完整可见性|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-721)|详情见外置记录。|",
+      "originalSha256": "d4ec718b0db4e2d13b7534ff56230eea5e6b99373fd15e709f53437782670844"
+    },
+    {
+      "original": "| T-720 | 根治特定 Windows 设备抖音内置浏览器页面崩溃导致内容雷达主页验证失败【飞书用户日志·2026-08-08】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-720) | 详情见外置记录。 |",
+      "current": "|T-720|根治特定 Windows 设备抖音内置浏览器页面崩溃导致内容雷达主页验证失败|📋 待办|—|待验|[详情](BACKLOG-details.md#t-720)|详情见外置记录。|",
+      "originalSha256": "902510ff7e7fa826a89d801d2298a84bba9f398563e6fc4f3be3298ca4211fe2"
+    },
+    {
+      "original": "| T-719 | 根治桌面端启动后二次白屏闪烁与首页排期提醒不可用【启动稳定性·用户录屏 2026-08-07】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-719) | 详情见外置记录。 |",
+      "current": "|T-719|根治桌面端启动后二次白屏闪烁与首页排期提醒不可用|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-719)|详情见外置记录。|",
+      "originalSha256": "9b45a34713b4f1b1d51a564213dabb9e425ccbf06b8e1ecfb9aee193a6de3cc5"
+    },
+    {
+      "original": "| T-718 | 补齐智溯AI包内品牌并交付完整 Growth 配置后重打本地包【渠道验收失败·用户 2026-08-07】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-718) | 详情见外置记录。 |",
+      "current": "|T-718|补齐智溯AI包内品牌并交付完整 Growth 配置后重打本地包|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-718)|详情见外置记录。|",
+      "originalSha256": "4ac62cd8ddeaa858d7b39710e45e8bee5a0a3ef6d76999042262e92ac18b82d8"
+    },
+    {
+      "original": "| T-716 | 完善 Copilot 局部改稿、脚本版本回退、附件上下文与素材中心稳定排序【创作编辑闭环·用户 2026-08-06】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-716) | 详情见外置记录。 |",
+      "current": "|T-716|完善 Copilot 局部改稿、脚本版本回退、附件上下文与素材中心稳定排序|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-716)|详情见外置记录。|",
+      "originalSha256": "08e9c30b0abf042b48f2645e18b3bf8a41d6c031481f1f6467fc399b747e948e"
+    },
+    {
+      "original": "| T-715 | 在 CreatorOS 增加 Growth AI 额度账户连接、查看与充值入口【额度闭环·用户 2026-08-06】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-715) | 详情见外置记录。 |",
+      "current": "|T-715|在 CreatorOS 增加 Growth AI 额度账户连接、查看与充值入口|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-715)|详情见外置记录。|",
+      "originalSha256": "aa8ab776e160f2c46f5c2b58d929cc931c5379d4c3e957d91a38c7c36054ec31"
+    },
+    {
+      "original": "| T-714 | 接入工程教训闭环并迁移旧账本，确保真实踩坑可被后续任务自动复用【工程进化·用户 2026-08-06】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-714) | 详情见外置记录。 |",
+      "current": "|T-714|接入工程教训闭环并迁移旧账本，确保真实踩坑可被后续任务自动复用|📋 待办|—|待验|[详情](BACKLOG-details.md#t-714)|详情见外置记录。|",
+      "originalSha256": "b5103a16065cb4abb95c2e94a76dfa11af09eb5fcb1b7b00cda34ce54b8a4829"
+    },
+    {
+      "original": "| T-713 | 构建包含通用智能体语义边界与当前制作修复的 macOS 0.3.0 本地测试包【本地验收·用户 2026-08-06】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-713) | 详情见外置记录。 |",
+      "current": "|T-713|构建包含通用智能体语义边界与当前制作修复的 macOS 0.3.0 本地测试包|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-713)|详情见外置记录。|",
+      "originalSha256": "47be9d740c05512c82cbcc7df2be533a417c54cb2df47e00e9214a6517707477"
+    },
+    {
+      "original": "| T-712 | 优先采用用户上传素材进入 B-roll 时间线、恢复成片预览并收回渠道同步常驻提示【制作体验·本机实测 2026-08-05】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-712) | 详情见外置记录。 |",
+      "current": "|T-712|优先采用用户上传素材进入 B-roll 时间线、恢复成片预览并收回渠道同步常驻提示|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-712)|详情见外置记录。|",
+      "originalSha256": "3540f26dd6c8cacc8f33d618296e84fdd4371359a1cc991f69da6d045688d2df"
+    },
+    {
+      "original": "| T-709 | 将 macOS Developer ID 签名与 Apple 公证凭据接入 GitHub 正式发布流水线【发布安全·用户 2026-08-05】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-709) | 详情见外置记录。 |",
+      "current": "|T-709|将 macOS Developer ID 签名与 Apple 公证凭据接入 GitHub 正式发布流水线|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-709)|详情见外置记录。|",
+      "originalSha256": "043bc37e53b6406a73448a8db4eb8c64942c3e6b015c123bb0d128ab1701493a"
+    },
+    {
+      "original": "| T-708 | 全局审计并软化 AI 工具中不合理的创作完整度门禁【工具灵活性·用户 2026-08-05】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-708) | 详情见外置记录。 |",
+      "current": "|T-708|全局审计并软化 AI 工具中不合理的创作完整度门禁|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-708)|详情见外置记录。|",
+      "originalSha256": "8324155c91c6c1deb5531d2519bfc914d9ca240bb28d3b059e42950febff9d9c"
+    },
+    {
+      "original": "| T-707 | 将定位前采收敛为 Copilot 主导的自适应编导访谈并直接闭环定位中心【定位精准度·飞书反馈 2026-08-05】 | 🔨 待办 | PASS[REV:06867c4bf60c] | 待验 | [详情](BACKLOG-details.md#t-707)  [SPEC](docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md) | 详情见外置记录。 |",
+      "current": "|T-707|将定位前采收敛为 Copilot 主导的自适应编导访谈并直接闭环定位中心|🔨 待办|PASS[REV:06867c4bf60c]|待验|[详情](BACKLOG-details.md#t-707)  [SPEC](docs/superpowers/specs/2026-08-01-positioning-pre-interview-workflow.md)|详情见外置记录。|",
+      "originalSha256": "b3b862a7dc34ef441e9edde9b9267383a3e2058328b84fe632506841de161644"
+    },
+    {
+      "original": "| T-705 | 根治 macOS 本地包启动后落入 Page Not Found【发布阻断·本机实测 2026-08-05】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-705) | 详情见外置记录。 |",
+      "current": "|T-705|根治 macOS 本地包启动后落入 Page Not Found|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-705)|详情见外置记录。|",
+      "originalSha256": "e403ef2621db00bab71db58b18b495fe774ec17d55e6fd767992ac7bb3bb1b93"
+    },
+    {
+      "original": "| T-703 | 根治视频制作从分镜到预览、对话调剪、采纳与再制作的多处断裂并重打本地包【制作闭环·用户 2026-08-05】 | 🔨 待办 | PASS[REV:c1a3920aea71] | 待验 | [详情](BACKLOG-details.md#t-703)  [SPEC](docs/superpowers/specs/2026-08-05-video-production-editing-loop.md) | 详情见外置记录。 |",
+      "current": "|T-703|根治视频制作从分镜到预览、对话调剪、采纳与再制作的多处断裂并重打本地包|🔨 待办|PASS[REV:c1a3920aea71]|待验|[详情](BACKLOG-details.md#t-703)  [SPEC](docs/superpowers/specs/2026-08-05-video-production-editing-loop.md)|详情见外置记录。|",
+      "originalSha256": "ccf330b4879b01f9804d71ff6df55857259ce56e8f9bd57d9e462056c49f6075"
+    },
+    {
+      "original": "| T-702 | 根治审核“应用改写”后分镜稿格式坍缩为 Markdown 表格源码【稿面编辑·用户 2026-08-05】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-702) | 详情见外置记录。 |",
+      "current": "|T-702|根治审核“应用改写”后分镜稿格式坍缩为 Markdown 表格源码|📋 待办|—|待验|[详情](BACKLOG-details.md#t-702)|详情见外置记录。|",
+      "originalSha256": "98d7afb635c30dfb31bd1b47c65678c56b750310f2346d53cd26e533e4f1f6b4"
+    },
+    {
+      "original": "| T-695 | 清理应用内硬编码品牌并让白标用户表面保持中性【白标体验·用户 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-695) | 详情见外置记录。 |",
+      "current": "|T-695|清理应用内硬编码品牌并让白标用户表面保持中性|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-695)|详情见外置记录。|",
+      "originalSha256": "d09d93b26641320e866275717c607b3682500e105fe1c1b422f9807bd415da3a"
+    },
+    {
+      "original": "| T-691 | 补齐 Copilot 单项目全生命周期、跨项目历史与审核改稿工具闭环【Context 契约·用户 2026-08-04】 | 🔨 待办 | PASS[REV:9444ca5b32a9] | 待验 | [详情](BACKLOG-details.md#t-691)  [SPEC](docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md) | 详情见外置记录。 |",
+      "current": "|T-691|补齐 Copilot 单项目全生命周期、跨项目历史与审核改稿工具闭环|🔨 待办|PASS[REV:9444ca5b32a9]|待验|[详情](BACKLOG-details.md#t-691)  [SPEC](docs/superpowers/specs/2026-08-04-copilot-project-lifecycle-tool-closure.md)|详情见外置记录。|",
+      "originalSha256": "83157ff20c3e69ac81f3e5f1f61ffab5a7ad8a9b1bf7b07e6e17ed07734b1f61"
+    },
+    {
+      "original": "| T-694 | 建立多渠道专属包工厂、项目级出包 Skill 与安全增量更新闭环【渠道规模化·用户 2026-08-04】 | 🔨 待办 | PASS[REV:2c7be136aea0] | 待验 | [详情](BACKLOG-details.md#t-694)  [SPEC](docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md) | 详情见外置记录。 |",
+      "current": "|T-694|建立多渠道专属包工厂、项目级出包 Skill 与安全增量更新闭环|🔨 待办|PASS[REV:2c7be136aea0]|待验|[详情](BACKLOG-details.md#t-694)  [SPEC](docs/superpowers/specs/2026-08-04-channel-package-factory-and-incremental-update.md)|详情见外置记录。|",
+      "originalSha256": "547c6a057dc2b504938a98642d484d6709f3647e3f536dd66bf78030a43d80f0"
+    },
+    {
+      "original": "| T-686 | 根治定位前采联网补充直接报错并恢复国内中文公开检索【定位前采·本机实测 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-686) | 详情见外置记录。 |",
+      "current": "|T-686|根治定位前采联网补充直接报错并恢复国内中文公开检索|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-686)|详情见外置记录。|",
+      "originalSha256": "3549b1e0133f78da78c7b3e2984802ef3c2177d477264718daf6f48eec53ed7c"
+    },
+    {
+      "original": "| T-687 | 建立口播联想画面 Skill 并打通图序号引用、项目 B-roll 与成片渲染【视觉创作主链·本机日志 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-687) | 详情见外置记录。 |",
+      "current": "|T-687|建立口播联想画面 Skill 并打通图序号引用、项目 B-roll 与成片渲染|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-687)|详情见外置记录。|",
+      "originalSha256": "8c8e345f26488728e0e511293f0e8857a1e2b3c50119ec01c0d2afd640d63774"
+    },
+    {
+      "original": "| T-685 | 排查并根治全流程写稿长度失控及审核不识别已采纳文案卡【创作主链·本机日志 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-685) | 详情见外置记录。 |",
+      "current": "|T-685|排查并根治全流程写稿长度失控及审核不识别已采纳文案卡|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-685)|详情见外置记录。|",
+      "originalSha256": "23bdf54ec47cc3ed6e7b8c666518c8e10986fb795b78372e64ccc5350cbd5608"
+    },
+    {
+      "original": "| T-684 | 根治 Copilot 联网搜素材失败后回退模型记忆并误导配置搜索模型【浏览器检索·用户截图 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-684) | 详情见外置记录。 |",
+      "current": "|T-684|根治 Copilot 联网搜素材失败后回退模型记忆并误导配置搜索模型|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-684)|详情见外置记录。|",
+      "originalSha256": "c83d1dadfa6c55f96ba6245663959a68f6ec5fdaed4ea8741b73713e46c94127"
+    },
+    {
+      "original": "| T-683 | 修复 Copilot 在 Windows 无法读取盘符绝对路径与目录授权失效【本地文件读取·用户截图 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-683) | 详情见外置记录。 |",
+      "current": "|T-683|修复 Copilot 在 Windows 无法读取盘符绝对路径与目录授权失效|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-683)|详情见外置记录。|",
+      "originalSha256": "948382d44cc32993c6af0fdd2ddd5c6583e411411ab7fe970a8f43b09f14261c"
+    },
+    {
+      "original": "| T-679 | 接入 Growth 按激活权益签发的受管模型凭据、真实模型白名单与用户选择【模型服务最小闭环·用户 2026-08-04】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-679) | 详情见外置记录。 |",
+      "current": "|T-679|接入 Growth 按激活权益签发的受管模型凭据、真实模型白名单与用户选择|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-679)|详情见外置记录。|",
+      "originalSha256": "7386057e31a9c2553c7f805a149b69f9aa26db3205926f83c7ae3c293c9773d9"
+    },
+    {
+      "original": "| T-678 | 根治内容雷达生成选题继续读取旧定位【定位消费一致性·飞书用户 2026-08-04】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-678) | 详情见外置记录。 |",
+      "current": "|T-678|根治内容雷达生成选题继续读取旧定位|📋 待办|—|待验|[详情](BACKLOG-details.md#t-678)|详情见外置记录。|",
+      "originalSha256": "59fbf510a0c59609f6ef0115ab22ea9849349cecc91ac8b697c877a741da0d35"
+    },
+    {
+      "original": "| T-677 | 优化首页与定位中心切换时整页骨架卡顿 1–2 秒【桌面交互性能·飞书用户 2026-08-03】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-677) | 详情见外置记录。 |",
+      "current": "|T-677|优化首页与定位中心切换时整页骨架卡顿 1–2 秒|📋 待办|—|待验|[详情](BACKLOG-details.md#t-677)|详情见外置记录。|",
+      "originalSha256": "3f6b786a0cd64af7cf372fdac2c5c964459a2a35e2633a4f4a007a059d63a877"
+    },
+    {
+      "original": "| T-676 | 根治云端 ASR 测试假阳性并接通 StepFun，同时修复 Windows 本地 Whisper 回退【逐字稿阻断·飞书用户 2026-08-03】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-676) | 详情见外置记录。 |",
+      "current": "|T-676|根治云端 ASR 测试假阳性并接通 StepFun，同时修复 Windows 本地 Whisper 回退|📋 待办|—|待验|[详情](BACKLOG-details.md#t-676)|详情见外置记录。|",
+      "originalSha256": "a90f043025a8fbf8ae0fe0cdbf4d4a5ce0715fdfc9eb8680d1607313230a4c53"
+    },
+    {
+      "original": "| T-671 | 确定 CreatorOS 代理商业模式与官网价格边界【渠道商业化·用户 2026-08-02/03】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-671) | 详情见外置记录。 |",
+      "current": "|T-671|确定 CreatorOS 代理商业模式与官网价格边界|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-671)|详情见外置记录。|",
+      "originalSha256": "485c2aff278680555c2cd4cdf7a5c235e96d10838037fd0e0ab6b4218bd7f2e3"
+    },
+    {
+      "original": "| T-670 | 恢复 CreatorOS 部署前真实官网并收口公开商业信息【官网回滚纠偏·用户 2026-08-02/03】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-670) | 详情见外置记录。 |",
+      "current": "|T-670|恢复 CreatorOS 部署前真实官网并收口公开商业信息|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-670)|详情见外置记录。|",
+      "originalSha256": "e1e3d952354aca1c2a7fdc2d108984fa31895e0e2efcfa6665aae31305c55318"
+    },
+    {
+      "original": "| T-666 | 根治定位前采误清空既有定位并改为非破坏草稿切换【定位数据安全·用户 2026-08-02】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-666) | 详情见外置记录。 |",
+      "current": "|T-666|根治定位前采误清空既有定位并改为非破坏草稿切换|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-666)|详情见外置记录。|",
+      "originalSha256": "2e98f1d6d4415619f57ac4dc71cef8142402957ed0841d20f91e87e1ab16cce7"
+    },
+    {
+      "original": "| T-665 | 支持彻底删除内容雷达信源及其全部归属数据【信源生命周期·用户 2026-08-02】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-665) | 详情见外置记录。 |",
+      "current": "|T-665|支持彻底删除内容雷达信源及其全部归属数据|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-665)|详情见外置记录。|",
+      "originalSha256": "e096919ff8056730c9dee4b2e7a7ceb37f688f3d57abdfcb1d2895ea8285cb44"
+    },
+    {
+      "original": "| T-662 | 根治成片把内部结构标签当正文并优化卡片文字重合【视频内容质量·用户 2026-08-02】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-662) | 详情见外置记录。 |",
+      "current": "|T-662|根治成片把内部结构标签当正文并优化卡片文字重合|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-662)|详情见外置记录。|",
+      "originalSha256": "076769188d71ee4d2e49a4172a79febba95843b115feec3e72918982a97dcffc"
+    },
+    {
+      "original": "| T-661 | 根治项目素材未进入制作、采纳后仍转圈及素材包图片无扩展名【制作闭环·用户 2026-08-02】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-661) | 详情见外置记录。 |",
+      "current": "|T-661|根治项目素材未进入制作、采纳后仍转圈及素材包图片无扩展名|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-661)|详情见外置记录。|",
+      "originalSha256": "e09114fcbf52bdcc74893fbfd18dde67f51c760351ff1dff3a6ed6dbb6b86f0d"
+    },
+    {
+      "original": "| T-660 | 根治雷达预填逐字稿未解锁下一步及已采纳封面仍被判缺失【项目状态回显·用户 2026-08-02】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-660) | 详情见外置记录。 |",
+      "current": "|T-660|根治雷达预填逐字稿未解锁下一步及已采纳封面仍被判缺失|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-660)|详情见外置记录。|",
+      "originalSha256": "728e51290a1043ffcccfc90d6e02f6b0c7207d0bd6ee7b61ab6a7090efe17cb8"
+    },
+    {
+      "original": "| T-656 | 收紧桌面授权本地信任链，移除生产冒烟旁路并消除 verdict 私钥明文靶点【安全加固·用户 2026-08-02】 | 🔨 待办 | PASS[REV:5f6970ac76f2] | 待验 | [详情](BACKLOG-details.md#t-656)  [SPEC](docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md) | 详情见外置记录。 |",
+      "current": "|T-656|收紧桌面授权本地信任链，移除生产冒烟旁路并消除 verdict 私钥明文靶点|🔨 待办|PASS[REV:5f6970ac76f2]|待验|[详情](BACKLOG-details.md#t-656)  [SPEC](docs/superpowers/specs/2026-08-02-desktop-verdict-basic-hardening.md)|详情见外置记录。|",
+      "originalSha256": "7dfeffeb40f198d262f5685b1dabca5b52f4a2550ec235192fed87b5585540d4"
+    },
+    {
+      "original": "| T-655 | 接通 Seedance 文生视频适配器并修复 `seeddance` 配置报未知 provider【文生视频阻断·用户 2026-08-02】 | 🔨 待办 | — | — | [详情](BACKLOG-details.md#t-655) | 详情见外置记录。 |",
+      "current": "|T-655|接通 Seedance 文生视频适配器并修复 `seeddance` 配置报未知 provider|🔨 待办|—|—|[详情](BACKLOG-details.md#t-655)|详情见外置记录。|",
+      "originalSha256": "835f8b7f3075d58ab2228266c0546ee11ac9390ab630deb4192692a957571917"
+    },
+    {
+      "original": "| T-654 | 新增 Qwen 方言 ASR 适配器并接入设置预设【逐字稿质量·用户 2026-08-02】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-654) | 详情见外置记录。 |",
+      "current": "|T-654|新增 Qwen 方言 ASR 适配器并接入设置预设|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-654)|详情见外置记录。|",
+      "originalSha256": "45c2bab3c5e0007b382a4b1ae593b21a948b01c51e3b0bc544c724f16886964e"
+    },
+    {
+      "original": "| T-653 | 支持本地自配与渠道子 Key 托管双模式模型供给【模型商业化·跨仓·用户 2026-08-02】 | 📋 待办 | 待审 | 待验 | [详情](BACKLOG-details.md#t-653) | 详情见外置记录。 |",
+      "current": "|T-653|支持本地自配与渠道子 Key 托管双模式模型供给|📋 待办|待审|待验|[详情](BACKLOG-details.md#t-653)|详情见外置记录。|",
+      "originalSha256": "fdab6358f9c1dc31e6893f2c1dc375d7b0e2733e7a8d5b13d79ea460798c2b2d"
+    },
+    {
+      "original": "| T-652 | 重构定位前采为必经的编导式访谈与证据辅助工作流【定位业务流·用户 2026-08-01】 | 🔨 待办 | 待审 | 待验 | [详情](BACKLOG-details.md#t-652) | 详情见外置记录。 |",
+      "current": "|T-652|重构定位前采为必经的编导式访谈与证据辅助工作流|🔨 待办|待审|待验|[详情](BACKLOG-details.md#t-652)|详情见外置记录。|",
+      "originalSha256": "93671f27d515ea9553322e164259e9c35601cbab31e0eef50f83aa74b8239687"
+    },
+    {
+      "original": "| T-650 | 知识倾倒输入框支持拖拽文件直接导入【知识录入体验·用户 2026-08-01】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-650) | 详情见外置记录。 |",
+      "current": "|T-650|知识倾倒输入框支持拖拽文件直接导入|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-650)|详情见外置记录。|",
+      "originalSha256": "f116be143a670ea8791cb61f9bf82826a96c0425a7a0435a057a13fe8e19afbf"
+    },
+    {
+      "original": "| T-651 | 内容雷达默认按作品真实发布时间倒序【排序语义·用户 2026-08-01】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-651) | 详情见外置记录。 |",
+      "current": "|T-651|内容雷达默认按作品真实发布时间倒序|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-651)|详情见外置记录。|",
+      "originalSha256": "58a5269c03eeb29594155fad936af7c37f15dbf8d84b3f3e1db6bc8ec952e783"
+    },
+    {
+      "original": "| T-649 | 调研并设计激活后渠道白标：品牌名、应用内 Logo 与系统级图标边界【商业渠道·跨仓·用户 2026-08-01】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-649) | 详情见外置记录。 |",
+      "current": "|T-649|调研并设计激活后渠道白标：品牌名、应用内 Logo 与系统级图标边界|📋 待办|—|待验|[详情](BACKLOG-details.md#t-649)|详情见外置记录。|",
+      "originalSha256": "98a9940afa1640a09d0c975a1fc82096bdfd7ab4591f9f2e22e98430ec437bf8"
+    },
+    {
+      "original": "| T-646 | 统一优化结构化 AI 工具为结果优先、分段生成与局部修复【性能与可靠性·用户 2026-08-01】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-646) | 详情见外置记录。 |",
+      "current": "|T-646|统一优化结构化 AI 工具为结果优先、分段生成与局部修复|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-646)|详情见外置记录。|",
+      "originalSha256": "e8c5916410b28ff3e0f8c7dd0cd049320658a50a9312848419b698f4f16310c0"
+    },
+    {
+      "original": "| T-645 | 收敛模型配置项并同步精简 Growth 渠道模板【设置体验·跨仓配置·用户 2026-08-01/02】 | 🔨 待办 | PASS[REV:5dfe24b42eb7] | 待验 | [详情](BACKLOG-details.md#t-645)  [SPEC](docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md) | 详情见外置记录。 |",
+      "current": "|T-645|收敛模型配置项并同步精简 Growth 渠道模板|🔨 待办|PASS[REV:5dfe24b42eb7]|待验|[详情](BACKLOG-details.md#t-645)  [SPEC](docs/superpowers/specs/2026-08-02-capability-scoped-channel-model-authority.md)|详情见外置记录。|",
+      "originalSha256": "f1ab84a043b9e10979f178aae4a7de916194c5a40927c80434a1367baa344cac"
+    },
+    {
+      "original": "| T-644 | 根治 CreatorOS macOS 客户端持续闪屏【运行态阻断·用户 2026-08-01】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-644) | 详情见外置记录。 |",
+      "current": "|T-644|根治 CreatorOS macOS 客户端持续闪屏|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-644)|详情见外置记录。|",
+      "originalSha256": "ecd0a1fedf766683d8d3c1892d041ed8917c97227191b784c5610918019245b8"
+    },
+    {
+      "original": "| T-643 | 收口 CreatorOS 为输入 Activity 激活码后直接授权，隐藏当前权益领取入口【商业激活主线·用户 2026-08-01】 | 📋 待办 | — | 待验 | [详情](BACKLOG-details.md#t-643) | 详情见外置记录。 |",
+      "current": "|T-643|收口 CreatorOS 为输入 Activity 激活码后直接授权，隐藏当前权益领取入口|📋 待办|—|待验|[详情](BACKLOG-details.md#t-643)|详情见外置记录。|",
+      "originalSha256": "6afed5170892586e538cce0c329b21e39771da3faacb5ce90ecfaf9e154094a8"
+    },
+    {
+      "original": "| T-642 | 打通内容雷达对标文案→改写策略→选题卡→项目写稿的编导证据链【产品链路·用户 2026-08-01/02】 | 🔨 待办 | CONCERNS[REV:7728c9ed44bd] | 待验 | [详情](BACKLOG-details.md#t-642) | 详情见外置记录。 |",
+      "current": "|T-642|打通内容雷达对标文案→改写策略→选题卡→项目写稿的编导证据链|🔨 待办|CONCERNS[REV:7728c9ed44bd]|待验|[详情](BACKLOG-details.md#t-642)|详情见外置记录。|",
+      "originalSha256": "bd067d75f04893e5294a9547ba3857a1a729dc84b9e1ca311615b8d182b31658"
+    },
+    {
+      "original": "| T-641 | 根治发布中心“登录多日仍只有一个采集日、发布趋势不出曲线”【线上数据回流·用户 2026-07-31】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-641) | 详情见外置记录。 |",
+      "current": "|T-641|根治发布中心“登录多日仍只有一个采集日、发布趋势不出曲线”|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-641)|详情见外置记录。|",
+      "originalSha256": "22fef956a16b86e9a20fb19b4143143c87db8d67c7b740e3e3260eb6eb1bb0ee"
+    },
+    {
+      "original": "| T-640 | 配置 Apple Developer ID 签名与公证，并在前序修复全部闭环后统一产出本地安装包【发布·用户 2026-07-31】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-640) | 详情见外置记录。 |",
+      "current": "|T-640|配置 Apple Developer ID 签名与公证，并在前序修复全部闭环后统一产出本地安装包|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-640)|详情见外置记录。|",
+      "originalSha256": "adc56f1075d2c7c6f53faf79c275a7987d9de5cbf49734679edf7236986fcaba"
+    },
+    {
+      "original": "| T-635 | 把 CreatorOS 正式构建绑定到 Growth 商品的统一 `projectKey`，禁止运行时覆盖产品身份或关闭严格验签 | 🔨 本地实现待验 | PASS[REV:b8add273a494] | 待验 | [详情](BACKLOG-details.md#t-635)  [SPEC](docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md) | 详情见外置记录。 |",
+      "current": "|T-635|把 CreatorOS 正式构建绑定到 Growth 商品的统一 `projectKey`，禁止运行时覆盖产品身份或关闭严格验签|🔨 本地实现待验|PASS[REV:b8add273a494]|待验|[详情](BACKLOG-details.md#t-635)  [SPEC](docs/superpowers/specs/2026-07-30-growth-product-identity-binding.md)|详情见外置记录。|",
+      "originalSha256": "e982e8b548406fd39952585aef331a21de52320051783167fb363f80a6d62f7d"
+    },
+    {
+      "original": "| T-633 | 恢复创作者中心自动扫码登录【线上阻断·用户 2026-07-30】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-633) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-f9f6ea5f8246191a)。 |",
+      "current": "|T-633|恢复创作者中心自动扫码登录|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-633)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-f9f6ea5f8246191a)。|",
+      "originalSha256": "4112cd2866f45ea55b058463a8309c620ba99a9fabb5b8879c64ac377b4fe2b1"
+    },
+    {
+      "original": "| T-632 | 根治“新建定位母版”无效、历史母版无法恢复与逐字稿提取长时间无结果【线上阻断·用户 2026-07-30/31】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-632) | 详情见外置记录。 |",
+      "current": "|T-632|根治“新建定位母版”无效、历史母版无法恢复与逐字稿提取长时间无结果|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-632)|详情见外置记录。|",
+      "originalSha256": "95bd213a50afa5b813d82b0881bd51f7fcb1a4186e8080422a7b5564eaa13b9c"
+    },
+    {
+      "original": "| T-631 | 根治大视频上传被 10MB 截断并误报 ffmpeg 缺失【线上阻断·用户 2026-07-30】 | 🔨 待办 | — | 待验 | [详情](BACKLOG-details.md#t-631) | 详情见外置记录。 |",
+      "current": "|T-631|根治大视频上传被 10MB 截断并误报 ffmpeg 缺失|🔨 待办|—|待验|[详情](BACKLOG-details.md#t-631)|详情见外置记录。|",
+      "originalSha256": "a45e09c5fed32cf1ce0bdaf54ccb5214df5ff181fb6eeb7f39759c3d7a0dd33b"
+    },
+    {
+      "original": "| T-621 | 补齐渠道模型 authority snapshot 生产链路回归【非阻断测试增强·T-606 复核】 | 📋 待办 | — | — | [详情](BACKLOG-details.md#t-621) | 详情见外置记录。 |",
+      "current": "|T-621|补齐渠道模型 authority snapshot 生产链路回归|📋 待办|—|—|[详情](BACKLOG-details.md#t-621)|详情见外置记录。|",
+      "originalSha256": "5e2b45cbf51ad8f1f564e96da1cc675cbdfcd1cbece501d8fc6e275d957d481d"
+    },
+    {
+      "original": "| T-576 | 统一跟进尚未关闭的飞书线上用户反馈【线上支持】 | 🔨 免审 | — | — | [详情](BACKLOG-details.md#t-576) | 详情见外置记录。 |",
+      "current": "|T-576|统一跟进尚未关闭的飞书线上用户反馈|🔨 免审|—|—|[详情](BACKLOG-details.md#t-576)|详情见外置记录。|",
+      "originalSha256": "1a17028fe11b5e6f5e2d7177f2bd2b7e49f7c60150cfe367ac3ddaa826391ebd"
+    },
+    {
+      "original": "| T-575 | 接通 CreatorOS 权益领取、渠道配置与问题反馈【跨系统上线闭环】 | 🔨 本地PASS·待生产E2E | — | 待验 | [详情](BACKLOG-details.md#t-575) | 详情见外置记录。 |",
+      "current": "|T-575|接通 CreatorOS 权益领取、渠道配置与问题反馈|🔨 本地PASS·待生产E2E|—|待验|[详情](BACKLOG-details.md#t-575)|详情见外置记录。|",
+      "originalSha256": "5146d078d5a7a2b9e5c01d874359e42bdf4152f5215905943233bc9f49120d3b"
+    },
+    {
+      "original": "| T-562 | 根治 CreatorOS 0.2.0 Windows 安装后持续白屏【发布阻断】 | 🔨 免审 | — | 待验 | [详情](BACKLOG-details.md#t-562) | 详情见外置记录。 |",
+      "current": "|T-562|根治 CreatorOS 0.2.0 Windows 安装后持续白屏|🔨 免审|—|待验|[详情](BACKLOG-details.md#t-562)|详情见外置记录。|",
+      "originalSha256": "240ed67e15848a72a3840c6ebd150ce6ccd3055918c257c7c623f7899b7153ac"
+    },
+    {
+      "original": "| T-548 | 根治视频渲染重试后成片脱离项目且制作页实时预览消失【发布阻断·用户 2026-07-26】 | 🔨 待安装版真机 | — | 待验 | [详情](BACKLOG-details.md#t-548) | 详情见外置记录。 |",
+      "current": "|T-548|根治视频渲染重试后成片脱离项目且制作页实时预览消失|🔨 待安装版真机|—|待验|[详情](BACKLOG-details.md#t-548)|详情见外置记录。|",
+      "originalSha256": "8f5a5f8128360a57f49e34b483e0665e4be2becef7937983c6c91074dc49241d"
+    },
+    {
+      "original": "| T-538 | 接通渠道签名上下文的产品问题反馈【跨仓契约·上线闭环】 | 🔨 本地PASS·待生产E2E | — | 待验 | [详情](BACKLOG-details.md#t-538) | 详情见外置记录。 |",
+      "current": "|T-538|接通渠道签名上下文的产品问题反馈|🔨 本地PASS·待生产E2E|—|待验|[详情](BACKLOG-details.md#t-538)|详情见外置记录。|",
+      "originalSha256": "1e476e626215779f0570d73bef998e052a31463e04b7ae18b2f4e8038daee383"
+    },
+    {
+      "original": "| T-536 | 根治“我的收藏”同步错误分类与浏览器档案锁恢复【bug·多账号采集·用户 2026-07-26】 | 🔨 待真实账号只读验收 | — | 待验 | [详情](BACKLOG-details.md#t-536) | 详情见外置记录。 |",
+      "current": "|T-536|根治“我的收藏”同步错误分类与浏览器档案锁恢复|🔨 待真实账号只读验收|—|待验|[详情](BACKLOG-details.md#t-536)|详情见外置记录。|",
+      "originalSha256": "cee38d6cc0379fc73a9eb601de584fc5dd61f4e52e227c89a131dbc23c2fb753"
+    },
+    {
+      "original": "| T-626 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-626) |",
+      "current": "|T-626|⏸️|—|待验|[详情](BACKLOG-details.md#t-626)|",
+      "originalSha256": "278916a02b47bb9ea3cb2af5be8d0a27fd9861542a8146375602033fa418c07a"
+    },
+    {
+      "original": "| T-577 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-577) |",
+      "current": "|T-577|⏸️|—|待验|[详情](BACKLOG-details.md#t-577)|",
+      "originalSha256": "49d464f3bbf311fbc3ecbce0c6bef7c3cc92c168309b77011798b92d8f29b180"
+    },
+    {
+      "original": "| T-565 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-565) |",
+      "current": "|T-565|⏸️|—|待验|[详情](BACKLOG-details.md#t-565)|",
+      "originalSha256": "8202406b7550e4a7a51baac7155481e67870852def80f0c4937e0f534636202b"
+    },
+    {
+      "original": "| T-524 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-524) |",
+      "current": "|T-524|⏸️|—|待验|[详情](BACKLOG-details.md#t-524)|",
+      "originalSha256": "d1f3e892fd8104c6bf0a884608a75b1e8225169158c3cdb509e767165d07a82b"
+    },
+    {
+      "original": "| T-519 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-519) |",
+      "current": "|T-519|⏸️|—|待验|[详情](BACKLOG-details.md#t-519)|",
+      "originalSha256": "60cb34772f8b1e1db5b1f2c022ca59a5afd15e2174bdbf03fa41a20faa4d9fd7"
+    },
+    {
+      "original": "| T-525 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-525) |",
+      "current": "|T-525|⏸️|—|待验|[详情](BACKLOG-details.md#t-525)|",
+      "originalSha256": "8f98542ad51e240e0be427c5de6a72f14985a04760152c42031727973c57672e"
+    },
+    {
+      "original": "| T-517 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-517) |",
+      "current": "|T-517|⏸️|—|待验|[详情](BACKLOG-details.md#t-517)|",
+      "originalSha256": "855808a819c4f058541274e690cab1f63c8ff0f2ded8f2f602ad816920ae9ec9"
+    },
+    {
+      "original": "| T-516 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-516) |",
+      "current": "|T-516|⏸️|—|待验|[详情](BACKLOG-details.md#t-516)|",
+      "originalSha256": "820251ce0a43c602c4a5034f25030076283cab38b6072e6224f0baeae1449799"
+    },
+    {
+      "original": "| T-510 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-510) |",
+      "current": "|T-510|⏸️|—|待验|[详情](BACKLOG-details.md#t-510)|",
+      "originalSha256": "b2d1e48e56cfd18a446b36db7b926d476f39dba967e73b1c3847d744ae896abd"
+    },
+    {
+      "original": "| T-506 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-506) |",
+      "current": "|T-506|⏸️|—|待验|[详情](BACKLOG-details.md#t-506)|",
+      "originalSha256": "f0a3ed1e2a7ebcb54fe1161925aa624c7b4deceafde763bd4c17851bb55efa56"
+    },
+    {
+      "original": "| T-502 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-502) |",
+      "current": "|T-502|⏸️|—|待验|[详情](BACKLOG-details.md#t-502)|",
+      "originalSha256": "4150ca3517f013bc2633ffe10647447dc47865e923eb7e14db483f60b7ba7a7f"
+    },
+    {
+      "original": "| T-497 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-497) |",
+      "current": "|T-497|⏸️|—|待验|[详情](BACKLOG-details.md#t-497)|",
+      "originalSha256": "892123f5eb5c19f37cbb0bf9be10b9eec1d5e649d6375a0ed9b38f8c69e6c6b4"
+    },
+    {
+      "original": "| T-451 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-451) |",
+      "current": "|T-451|⏸️|—|待验|[详情](BACKLOG-details.md#t-451)|",
+      "originalSha256": "54603faf4381051e966911a98d8ab3e5a53b394228940b7edd0854aa30b1443d"
+    },
+    {
+      "original": "| T-449 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-449) |",
+      "current": "|T-449|⏸️|—|待验|[详情](BACKLOG-details.md#t-449)|",
+      "originalSha256": "2bcf9860fb59e53e4217138dee51faecaf29ab0e995a4e5e6fe77baa451bc882"
+    },
+    {
+      "original": "| T-448 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-448) |",
+      "current": "|T-448|⏸️|—|待验|[详情](BACKLOG-details.md#t-448)|",
+      "originalSha256": "f2d7b3efd4d098ed75c2fdbbf10d855633fbfd839bb68a3ba02b6f9c58917149"
+    },
+    {
+      "original": "| T-433 S2 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-433-s2) |",
+      "current": "|T-433 S2|⏸️|—|待验|[详情](BACKLOG-details.md#t-433-s2)|",
+      "originalSha256": "252d7f97cd0392eda7c4b5161ce4cf7df013ab3cb345050f69d01ac45cf95159"
+    },
+    {
+      "original": "| T-433 S4 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-433-s4) |",
+      "current": "|T-433 S4|⏸️|—|待验|[详情](BACKLOG-details.md#t-433-s4)|",
+      "originalSha256": "51feac71fd0d769eabfb61d02b18fb991fab577e21eb384dfe25dd03ff2714be"
+    },
+    {
+      "original": "| T-433 S5 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-433-s5) |",
+      "current": "|T-433 S5|⏸️|—|待验|[详情](BACKLOG-details.md#t-433-s5)|",
+      "originalSha256": "856680852ca1326f47fa2142b99b35af7f6cce4a52004a19742222ead213b1f4"
+    },
+    {
+      "original": "| T-426 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-426) |",
+      "current": "|T-426|⏸️|—|待验|[详情](BACKLOG-details.md#t-426)|",
+      "originalSha256": "32e3c92325215ee6b4dcf39e5ce99a66b83c85544c58cdd3aaf9fd1f5dd39c91"
+    },
+    {
+      "original": "| T-425W | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-425w) |",
+      "current": "|T-425W|⏸️|—|待验|[详情](BACKLOG-details.md#t-425w)|",
+      "originalSha256": "2e106e7e2e8081a293d6da4e13992b54fda941beb10ba85558c0882495a27bd1"
+    },
+    {
+      "original": "| T-413 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-413) |",
+      "current": "|T-413|⏸️|—|待验|[详情](BACKLOG-details.md#t-413)|",
+      "originalSha256": "0f869d4b856ba78430b69c32fee234b74fc8f31a931d25953866154bf4ba5478"
+    },
+    {
+      "original": "| T-417 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-417) |",
+      "current": "|T-417|⏸️|—|待验|[详情](BACKLOG-details.md#t-417)|",
+      "originalSha256": "786ae3f1a4a558f60451f7a59f8de31edc0421ab28d25042e4e71a35a8003b27"
+    },
+    {
+      "original": "| T-418 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-418) |",
+      "current": "|T-418|⏸️|—|待验|[详情](BACKLOG-details.md#t-418)|",
+      "originalSha256": "6c75b5b8935f8a384c8d7857604ccc9bfcef92d1691a6e9161fd5016dd06299d"
+    },
+    {
+      "original": "| T-420 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-420) |",
+      "current": "|T-420|⏸️|—|待验|[详情](BACKLOG-details.md#t-420)|",
+      "originalSha256": "ac5b3f1dfe16e5439421eddaad64abdbe70b8bb76135fa5aa3a624846e417e57"
+    },
+    {
+      "original": "| T-399 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-399) |",
+      "current": "|T-399|⏸️|—|待验|[详情](BACKLOG-details.md#t-399)|",
+      "originalSha256": "ba2d09ada95eb5e67c888d7f3973ebcd7be259befee727a9a97ccc478d7246a2"
+    },
+    {
+      "original": "| T-399c | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-399c) |",
+      "current": "|T-399c|⏸️|—|待验|[详情](BACKLOG-details.md#t-399c)|",
+      "originalSha256": "86f4da7cb5daa1e99a3bba51834b4eda655a37c54ee692f11fb3a183a12c2b2a"
+    },
+    {
+      "original": "| T-409 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-409) |",
+      "current": "|T-409|⏸️|—|待验|[详情](BACKLOG-details.md#t-409)|",
+      "originalSha256": "b99ebe276fbff5f5adf2ca879a86708ca4b8e692642c4c1d131c2218794426d9"
+    },
+    {
+      "original": "| T-372 W-spike | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-372-w-spike) |",
+      "current": "|T-372 W-spike|⏸️|—|待验|[详情](BACKLOG-details.md#t-372-w-spike)|",
+      "originalSha256": "4979e5c1b67dc60b84e5f7b2c8f73a0b5b5715ffde12d783b3e647cbb332cdcd"
+    },
+    {
+      "original": "| T-372 W-ci | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-372-w-ci) |",
+      "current": "|T-372 W-ci|⏸️|—|待验|[详情](BACKLOG-details.md#t-372-w-ci)|",
+      "originalSha256": "34542015c51d486faf957a8c8b63413b6793f303aaa270f3b8cc86180c6f255b"
+    },
+    {
+      "original": "| T-391 H-econ | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-391-h-econ) |",
+      "current": "|T-391 H-econ|⏸️|—|待验|[详情](BACKLOG-details.md#t-391-h-econ)|",
+      "originalSha256": "651c49876efac08087ebeafa2e02edd0c402421545c0db084e8b847dc2916050"
+    },
+    {
+      "original": "| T-393 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-393) |",
+      "current": "|T-393|⏸️|—|待验|[详情](BACKLOG-details.md#t-393)|",
+      "originalSha256": "485a90f40f2336ee39762ce4433e2a5c2ec50ddcb372da6053ed9e3d1d31e235"
+    },
+    {
+      "original": "| T-401 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-401) |",
+      "current": "|T-401|⏸️|—|待验|[详情](BACKLOG-details.md#t-401)|",
+      "originalSha256": "2ac4095127dbe720770fed4afaae86a303a3b0cd2ecf74a07b4c6a1753516d84"
+    },
+    {
+      "original": "| T-406 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-406) |",
+      "current": "|T-406|⏸️|—|待验|[详情](BACKLOG-details.md#t-406)|",
+      "originalSha256": "099f0d1ea7ec63eb935a0858922686a9e2c14e25827f6067642aa81e516b08f6"
+    },
+    {
+      "original": "| T-407 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-407) |",
+      "current": "|T-407|⏸️|—|待验|[详情](BACKLOG-details.md#t-407)|",
+      "originalSha256": "24888d18dd37fb556aa3eef6a724a9f1e20770c4ee51eecc1b7549d49bfad61d"
+    },
+    {
+      "original": "| T-396 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-396) |",
+      "current": "|T-396|⏸️|—|待验|[详情](BACKLOG-details.md#t-396)|",
+      "originalSha256": "14a39c68fbbcbdfdde55729619f91846ed662c5b5116a0da510ea67752db6c2e"
+    },
+    {
+      "original": "| T-398 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-398) |",
+      "current": "|T-398|⏸️|—|待验|[详情](BACKLOG-details.md#t-398)|",
+      "originalSha256": "e9a6cef8d125c3f05c7dc96b63517bcc09643c1f50938a9c234aa90faf3f063d"
+    },
+    {
+      "original": "| T-366c | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-366c) |",
+      "current": "|T-366c|⏸️|—|待验|[详情](BACKLOG-details.md#t-366c)|",
+      "originalSha256": "daaaf39fe703b70614f0e07d150e653d4cb7bb5d0255d13a88d57c2aa11ca6b4"
+    },
+    {
+      "original": "| T-361 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-361) |",
+      "current": "|T-361|⏸️|—|待验|[详情](BACKLOG-details.md#t-361)|",
+      "originalSha256": "db49aea6c0c4b2064ed5027ba681e74aa78337beb3c4f9a0c17db13296ed1e40"
+    },
+    {
+      "original": "| T-352 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-352) |",
+      "current": "|T-352|⏸️|—|待验|[详情](BACKLOG-details.md#t-352)|",
+      "originalSha256": "2cae131f5017a5281e50cb91966846a0e6e1b0e37b5e41617572c0cbc6850266"
+    },
+    {
+      "original": "| T-320c | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-320c) |",
+      "current": "|T-320c|⏸️|—|待验|[详情](BACKLOG-details.md#t-320c)|",
+      "originalSha256": "f2c31cdf75b9635df00c3b5e24c134a859398f7e76b5d5bc29f1637ca3e5a37f"
+    },
+    {
+      "original": "| T-350c | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-350c) |",
+      "current": "|T-350c|⏸️|—|待验|[详情](BACKLOG-details.md#t-350c)|",
+      "originalSha256": "cb0927dd9a79a3b3ed36108f35602cbe77c03c6ca7c2aded54a49973630a83ef"
+    },
+    {
+      "original": "| T-351 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-351) |",
+      "current": "|T-351|⏸️|—|待验|[详情](BACKLOG-details.md#t-351)|",
+      "originalSha256": "fa8087a804bff37687266c85a8b0cdc733bdc61357884eacfaafb317657e7dd9"
+    },
+    {
+      "original": "| T-349d | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-349d) |",
+      "current": "|T-349d|⏸️|—|待验|[详情](BACKLOG-details.md#t-349d)|",
+      "originalSha256": "5892777fa1515f0467d62fa7b9c34a761aac6420be12d0ca1d27705c470fe0e8"
+    },
+    {
+      "original": "| T-339 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-339) |",
+      "current": "|T-339|⏸️|—|待验|[详情](BACKLOG-details.md#t-339)|",
+      "originalSha256": "98197af63fc2ca409435aee9aa4127ac3240abaa5836984dbef02faaa5ce6565"
+    },
+    {
+      "original": "| T-328 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-328) |",
+      "current": "|T-328|⏸️|—|待验|[详情](BACKLOG-details.md#t-328)|",
+      "originalSha256": "c50182437f17c6c238a3f7b03a4d7e840ba7301065cd26d0af1d36e97800b139"
+    },
+    {
+      "original": "| T-332R | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-332r) |",
+      "current": "|T-332R|⏸️|—|待验|[详情](BACKLOG-details.md#t-332r)|",
+      "originalSha256": "85ede0ab2890024bef713d47605565bb3ba12fee60402c7684d9cab27cecddb5"
+    },
+    {
+      "original": "| T-336 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-336) |",
+      "current": "|T-336|⏸️|—|待验|[详情](BACKLOG-details.md#t-336)|",
+      "originalSha256": "f76ec744245543fb8622b6e3e2b241a2ecdbdcbccf8940d4cf7ec946d423a72d"
+    },
+    {
+      "original": "| T-335 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-335) |",
+      "current": "|T-335|⏸️|—|待验|[详情](BACKLOG-details.md#t-335)|",
+      "originalSha256": "458dc5e8ebc2aaa5fdc2ee86075ae026d0aea1320e8b6f2adc6b792fb8b7b462"
+    },
+    {
+      "original": "| T-337 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337) |",
+      "current": "|T-337|⏸️|—|待验|[详情](BACKLOG-details.md#t-337)|",
+      "originalSha256": "7c80fa11e2d7c3d2ec30fdc775dc2d85cb8ffa9c0a9767a2ee989a85766d1a48"
+    },
+    {
+      "original": "| T-337a | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337a) |",
+      "current": "|T-337a|⏸️|—|待验|[详情](BACKLOG-details.md#t-337a)|",
+      "originalSha256": "5eef94cf730eec2e4d6a871c21a9a610f3fa4271217b95b89fe931e53bd54892"
+    },
+    {
+      "original": "| T-337b | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337b) |",
+      "current": "|T-337b|⏸️|—|待验|[详情](BACKLOG-details.md#t-337b)|",
+      "originalSha256": "dfb3bb86fe494c70f9cb0b3d5765d29389d3b2a37b67a516ba7d9542874ac505"
+    },
+    {
+      "original": "| T-337c | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337c) |",
+      "current": "|T-337c|⏸️|—|待验|[详情](BACKLOG-details.md#t-337c)|",
+      "originalSha256": "c3ca65f294fbb7410bdd6314941b4e336ab45a82d282ef22c2b80fd4a925a26c"
+    },
+    {
+      "original": "| T-337d | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337d) |",
+      "current": "|T-337d|⏸️|—|待验|[详情](BACKLOG-details.md#t-337d)|",
+      "originalSha256": "ba71f2cf2b3e9a0c8ca52629f47a116e4c4eb557ae2658e04ba2d8b3d3f4fe75"
+    },
+    {
+      "original": "| T-337e | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337e) |",
+      "current": "|T-337e|⏸️|—|待验|[详情](BACKLOG-details.md#t-337e)|",
+      "originalSha256": "d41cc78cf4dda4a9627e15509ec2b400b198aba58e26783d0c21a0e8e5b6d62b"
+    },
+    {
+      "original": "| T-337f | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337f) |",
+      "current": "|T-337f|⏸️|—|待验|[详情](BACKLOG-details.md#t-337f)|",
+      "originalSha256": "9ae2668ef8dc58edbbd9ee4f6e5b38effa1b2b1cb9f0c19a0af548680304e1d8"
+    },
+    {
+      "original": "| T-337g | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337g) |",
+      "current": "|T-337g|⏸️|—|待验|[详情](BACKLOG-details.md#t-337g)|",
+      "originalSha256": "55c7b0e8078ed70bd2efce58b1a5a81cf79df22d5b8efddcf6170ff11a505aa5"
+    },
+    {
+      "original": "| T-334 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-334) |",
+      "current": "|T-334|⏸️|—|待验|[详情](BACKLOG-details.md#t-334)|",
+      "originalSha256": "e6c97a3549c5db13b8705f51bd7258e143d4963c99c39bdf208c177b649d9c24"
+    },
+    {
+      "original": "| T-324 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-324) |",
+      "current": "|T-324|⏸️|—|待验|[详情](BACKLOG-details.md#t-324)|",
+      "originalSha256": "4ef8bbf1d53550463b7fc4ea84034375ae89ecd75a08576e11b2f79d98135b43"
+    },
+    {
+      "original": "| T-340 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-340) |",
+      "current": "|T-340|⏸️|—|待验|[详情](BACKLOG-details.md#t-340)|",
+      "originalSha256": "50c668f377928e4d29a1282d31434f263547b7018d21c65421839e906febfa49"
+    },
+    {
+      "original": "| T-315 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-315) |",
+      "current": "|T-315|⏸️|—|待验|[详情](BACKLOG-details.md#t-315)|",
+      "originalSha256": "5efc1101d8c4ec7276116cc0db03253d8e2b381ac301fb25217723ca4f214779"
+    },
+    {
+      "original": "| T-316 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-316) |",
+      "current": "|T-316|⏸️|—|待验|[详情](BACKLOG-details.md#t-316)|",
+      "originalSha256": "1a90bb84dd9731562993e213dc5a05638f6f48b73f151194c82e56da1378f438"
+    },
+    {
+      "original": "| T-317 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-317) |",
+      "current": "|T-317|⏸️|—|待验|[详情](BACKLOG-details.md#t-317)|",
+      "originalSha256": "0e134e4e77c8ec3c226a4da1fa42887ef8c400088d04b0917543450640b2ce97"
+    },
+    {
+      "original": "| T-318 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-318) |",
+      "current": "|T-318|⏸️|—|待验|[详情](BACKLOG-details.md#t-318)|",
+      "originalSha256": "b6ff186127f2951f39d8fc3b0f9f3ae7c5934d7c66bed20289e2bab53291a3ca"
+    },
+    {
+      "original": "| T-319 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-319) |",
+      "current": "|T-319|⏸️|—|待验|[详情](BACKLOG-details.md#t-319)|",
+      "originalSha256": "be1dcadf2c6a53f8c0e8330f9c6ec32f1bb2d9f87cb6492827d4ee0cbd37ff00"
+    },
+    {
+      "original": "| T-312 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-312) |",
+      "current": "|T-312|⏸️|—|待验|[详情](BACKLOG-details.md#t-312)|",
+      "originalSha256": "eaa5d5d38cfd083770ef7876b0e1885f284f7e0675f0b098e706a82394a9500b"
+    },
+    {
+      "original": "| T-307 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-307) |",
+      "current": "|T-307|⏸️|—|待验|[详情](BACKLOG-details.md#t-307)|",
+      "originalSha256": "b6ef6fc9fb1347dbc10bbf1d6df0d44f2026d5492fb3d470e146501800d9f329"
+    },
+    {
+      "original": "| T-306 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-306) |",
+      "current": "|T-306|⏸️|—|待验|[详情](BACKLOG-details.md#t-306)|",
+      "originalSha256": "ee61bfcb3294f70cbbfa5bbab45dd6ca4d004ecf41b468fe5faaace0fd3376a5"
+    },
+    {
+      "original": "| T-301 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-301) |",
+      "current": "|T-301|⏸️|—|待验|[详情](BACKLOG-details.md#t-301)|",
+      "originalSha256": "af113b207946199ba2c509b81c28181738068e81d556301540e39cb65775a3fb"
+    },
+    {
+      "original": "| T-302 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-302) |",
+      "current": "|T-302|⏸️|—|待验|[详情](BACKLOG-details.md#t-302)|",
+      "originalSha256": "fb208fa0340c445c0c752a47213a69ec72de6a922547250f2c52ef2d647dccf9"
+    },
+    {
+      "original": "| T-261 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-261) |",
+      "current": "|T-261|⏸️|—|待验|[详情](BACKLOG-details.md#t-261)|",
+      "originalSha256": "ed2893027e59e49a308f6833f817ac3c41d81c763690444baef2e8a43107676e"
+    },
+    {
+      "original": "| T-249 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-249) |",
+      "current": "|T-249|⏸️|—|待验|[详情](BACKLOG-details.md#t-249)|",
+      "originalSha256": "0440c19500b2ec1e54205fd776e2f9e68e7b5577eb771bd716bf8d956ec6ef67"
+    },
+    {
+      "original": "| T-250 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-250) |",
+      "current": "|T-250|⏸️|—|待验|[详情](BACKLOG-details.md#t-250)|",
+      "originalSha256": "30cfa4031a228ae6291044ed283674a4666ef9a32651f820bdc4cee87757c50d"
+    },
+    {
+      "original": "| T-255b | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-255b) |",
+      "current": "|T-255b|⏸️|—|待验|[详情](BACKLOG-details.md#t-255b)|",
+      "originalSha256": "2c522fdee0882d2c9c8b04381f5fe331742fa206c2659c45aa37d1d1e624b1bd"
+    },
+    {
+      "original": "| T-185R | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-185r) |",
+      "current": "|T-185R|⏸️|—|待验|[详情](BACKLOG-details.md#t-185r)|",
+      "originalSha256": "e2239b79d6b1c350aca8d3d318d936c47364848a06d1ffff945a97b905863559"
+    },
+    {
+      "original": "| T-136R | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-136r) |",
+      "current": "|T-136R|⏸️|—|待验|[详情](BACKLOG-details.md#t-136r)|",
+      "originalSha256": "cfcefedc793ec4c8418cb8f354ddf553d241b638ed1d70c086862c8bca357088"
+    },
+    {
+      "original": "| T-100 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-100) |",
+      "current": "|T-100|⏸️|—|待验|[详情](BACKLOG-details.md#t-100)|",
+      "originalSha256": "ca469483e64cb4b0b5e612cbe65c0e80f0d3d3cdd6d410f2d9f7ba8c0a5ff0b7"
+    },
+    {
+      "original": "| T-087 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-087) |",
+      "current": "|T-087|⏸️|—|待验|[详情](BACKLOG-details.md#t-087)|",
+      "originalSha256": "3045aa0b25ff7e365b7e1df214ee8a730b57b3553dbc043b1ea3e1126b6755bd"
+    },
+    {
+      "original": "| T-045 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-045) |",
+      "current": "|T-045|⏸️|—|待验|[详情](BACKLOG-details.md#t-045)|",
+      "originalSha256": "0d7911183f1d59fd1f7675f6bd7c4cf0ca4d476418e60f8896c621de98e8e43f"
+    }
+  ],
+  "historicalIdentityErrorsFixed": false
+}

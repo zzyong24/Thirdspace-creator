@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "worktree",
+    "remove",
+    "/Users/zyongzhu/.codex/worktrees/chart-cover-labels/Thirdspace-creator"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T21:05:38.787579+00:00",
+  "finishedAt": "2026-10-09T21:06:00.534943+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 21.746956459013745,
+  "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -1,0 +1,52 @@
+{
+  "schema": "creatoros-browser-journey/v1",
+  "task_id": "T-1140",
+  "head": "3d4444934a618542747dd9839a299c6d769adad1",
+  "phase": "current",
+  "surface": "browser",
+  "mode": "non-fixture",
+  "input": "fresh public synthetic group/canvas records and uploaded built-in portrait/landscape images",
+  "startedAt": "2026-10-09T21:17:20.727Z",
+  "finishedAt": "2026-10-09T21:18:36.892Z",
+  "elapsedSeconds": 76.16191479199999,
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "playwright",
+    "test",
+    "tests/e2e/t1140-picker-low-height.spec.ts",
+    "--project=e2e",
+    "--retries=0"
+  ],
+  "exitCode": 0,
+  "signal": null,
+  "error": null,
+  "logSha256": "6b4490821b662d87cd1c80d36da2762e7f7268c10cd9cf9d70e4c94d1eaf0448",
+  "rawLogSha256": "34fd17547651944fa7f80572e5132519aa3c492722e647a40fdc1d2009dc66e1",
+  "rawLogPath": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1140-9nH6q7/current-journey-raw.log",
+  "sourceSha256": {
+    "frontend/src/components/media/asset-picker.tsx": "236d01545bcddac731f2cccc2cf2ce454ac653aed682b7df390e92cacdc5f14e",
+    "frontend/src/components/media/asset-media-preview.tsx": "7ca28b2d737331713413d1b2d2ae7b22d2e43db1fc47cc084581aa6eedd2489d",
+    "frontend/src/components/media/use-asset-picker-source.ts": "a9339c94712d97b477b91015dbde2e9bc30a81e1eb16fc97eac3dc106bc28f07",
+    "frontend/src/features/creative-canvas/canvas-asset-picker.tsx": "8780dbace3bcfed9c3bdfc0dacd63e6414ec2ec8d97ecd585f133bc2f3e6ad55",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "d67ba3e119fc7aa8dc18c2b83a295befdecd710915fccf34d8bc45716780cec9",
+    "frontend/tests/e2e/t1140-picker-low-height.spec.ts": "7e83385dce28ed66077b8632833ab927c2cf03a424d637b434b51f60a855212d",
+    "docs/verification/t1140/run-picker-journey.mjs": "e1ab3359fc4e32a085eeacd40bfe626c75cf1287eebd587627d2317972989470"
+  },
+  "sourceAfter": {
+    "frontend/src/components/media/asset-picker.tsx": "236d01545bcddac731f2cccc2cf2ce454ac653aed682b7df390e92cacdc5f14e",
+    "frontend/src/components/media/asset-media-preview.tsx": "7ca28b2d737331713413d1b2d2ae7b22d2e43db1fc47cc084581aa6eedd2489d",
+    "frontend/src/components/media/use-asset-picker-source.ts": "a9339c94712d97b477b91015dbde2e9bc30a81e1eb16fc97eac3dc106bc28f07",
+    "frontend/src/features/creative-canvas/canvas-asset-picker.tsx": "8780dbace3bcfed9c3bdfc0dacd63e6414ec2ec8d97ecd585f133bc2f3e6ad55",
+    "frontend/src/features/creative-canvas/canvas-editor.tsx": "d67ba3e119fc7aa8dc18c2b83a295befdecd710915fccf34d8bc45716780cec9",
+    "frontend/tests/e2e/t1140-picker-low-height.spec.ts": "7e83385dce28ed66077b8632833ab927c2cf03a424d637b434b51f60a855212d",
+    "docs/verification/t1140/run-picker-journey.mjs": "e1ab3359fc4e32a085eeacd40bfe626c75cf1287eebd587627d2317972989470"
+  },
+  "retries": 0,
+  "nativeApp": false,
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "humanViewed": false
+}

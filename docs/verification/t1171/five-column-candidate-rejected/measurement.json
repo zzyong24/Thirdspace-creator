@@ -1,0 +1,58 @@
+{
+  "schema": "creatoros-read-only-rejected-index-measurement/v1",
+  "task": "T-1171",
+  "observedAt": "2026-10-09T21:17:48.499292+00:00",
+  "head": "3d4444934a618542747dd9839a299c6d769adad1",
+  "backlogSha256": "727a62a830a6b389db96e6d5ad56ab8dbf8cb109d78a3d6a0e60e2e991783b5a",
+  "currentBacklogBytes": 59487,
+  "currentBacklogKiB": 58.0927734375,
+  "hardThresholdBytes": 30720,
+  "originalSevenColumnRows": 216,
+  "originalExistingFiveColumnRows": 78,
+  "retainedGE1062SevenColumnRows": 57,
+  "proposedOlderSevenToFiveRows": 159,
+  "titleBytesRemoved": 11033,
+  "summaryBytesRemoved": 7712,
+  "delimiterBytesRemoved": 318,
+  "hypotheticalRawLowerBoundBytes": 40424,
+  "mixedSchemaTransitions": 5,
+  "headerOverheadLowerBytes": 280,
+  "headerOverheadUpperBytes": 405,
+  "hypotheticalWithHeaderByteRange": [
+    40704,
+    40829
+  ],
+  "sourceHistoryLinkAndMappingOverheadExcludedFromLowerBound": true,
+  "rawLowerBoundUnder30KiB": false,
+  "lowerBoundMethod": "只在内存从原7列去掉title及一句话，保原ID/状态/审核/验收/文档；未写候选BACKLOG、不执行消费者。混合新旧区另需正确表头；完整原行历史/引用/SHA映射会再增加成本。该数字不能证明合法实施后的体积。",
+  "pmemWouldDropCurrentlyOpenOlderRows": 143,
+  "pmemDroppedIdSample": [
+    "T-1018",
+    "T-1026",
+    "T-1027",
+    "T-1025",
+    "T-1024",
+    "T-1023",
+    "T-1021",
+    "T-1020",
+    "T-1017",
+    "T-1015"
+  ],
+  "contextCompileCounterexample": {
+    "id": "T-1018",
+    "originalTaskTitle": "清理本轮测试暴露的全局类型与边界欠债",
+    "fiveColumnCells": [
+      "T-1018",
+      "📋 待办",
+      "—",
+      "待验",
+      "[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018) [完整历史](BACKLOG-details.md#t1173-t1018-global-debt-history)"
+    ],
+    "actualHeaderFallbackTaskName": "📋 待办",
+    "actualHeaderFallbackOneLiner": "[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018) [完整历史](BACKLOG-details.md#t1173-t1018-global-debt-history)",
+    "documentCellStillRetained": true
+  },
+  "consumersExecuted": false,
+  "candidateAdmitted": false,
+  "candidateApplied": false
+}

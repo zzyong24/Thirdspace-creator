@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1173",
+    "--evidence",
+    "已审13项机械身份修复与实际原health仅余T1171容量；完整原行/事件/未知五警告保留，docs/verification/t1173。完整canonical原40失败为范围外历史债，未签业务状态。"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T21:25:05.825220+00:00",
+  "finishedAt": "2026-10-09T21:25:05.953487+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.12801683298312128,
+  "logSha256": "6cce90a2fa8f37e2cf8fade60febd740d0b9050b873fe6daf8cc42263e1a7e35"
+}

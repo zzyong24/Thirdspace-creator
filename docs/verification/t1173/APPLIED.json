@@ -1,0 +1,114 @@
+{
+  "observedAt": "2026-10-09T21:14:10.459467+00:00",
+  "reviewCandidateSha256": "88a73797190ac1dc910a2cf53b7e9853d3cc4d13351b51c72dc2eb976e20269f",
+  "before": {
+    "BACKLOG.md": "bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13",
+    "BACKLOG-archive.md": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8",
+    "BACKLOG-details.md": "2ee3a8173783e8e59787e5cfc641c87f423a2f1f70101fcfedbd72754f7397d3"
+  },
+  "after": {
+    "BACKLOG.md": "b9ce43b63f549e80e96623afe6664714575cdb77ca7a5262d5be398c4c615c7d",
+    "BACKLOG-archive.md": "e547d27b13733bb1d210fd06edbb6983218bcb631ffca334523843b9e28d6b6c",
+    "BACKLOG-details.md": "dfd17d106c8eeebd802f35566778e6991fc8e02e316ab6e1cba66987ca086132"
+  },
+  "appliedEdits": [
+    {
+      "path": "BACKLOG.md",
+      "beforeSha256": "26444114bde94a4a34082fbce254e3679562cb54f6e2b6241e0162567c5c88af",
+      "afterSha256": "39b06fa6e82116127115bec371d63f53d0d0936e43bb401ff3d8f5a8b962ed97"
+    },
+    {
+      "path": "BACKLOG.md",
+      "beforeSha256": "510ffe14554f53332b4538c241dc9e3af21409845b2009f7c9d3596b032120ad",
+      "afterSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "beforeSha256": "43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d",
+      "afterSha256": "eaf88821c333a7bd721fd350a747087a5a99d7192ece3c9fd4759fdf86f5a541"
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "beforeSha256": "e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa",
+      "afterSha256": "985fdb33cb4856741be2fecf87c2262ae0f8b80c412761f8cac1e7a4ff3dc492"
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "beforeSha256": "a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52",
+      "afterSha256": "e14b2dced5999f5ab7d1d1edbe64ce4953e54274cb69c4cffe1c5975405edb9b"
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "beforeSha256": "d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5",
+      "afterSha256": "1c31ea9d1789ca65f0b658fd4c167e9d423134df474b0cbbd7a730b4f631328a"
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "beforeSha256": "36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b",
+      "afterSha256": "908e3673df7a8140a3ffeabfa6d765ee88c9ecb6dbbdfa065b157493a08a3f2b"
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "beforeSha256": "7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860",
+      "afterSha256": "23b33dce65577e902272e55bef1efa31aaea70561d9c42e76888e724e9553005"
+    },
+    {
+      "path": "BACKLOG.md",
+      "beforeSha256": "261d987b2cb3c5b639756d1ed2ebd38ae7025576d7d974cebaacaa7039a96f09",
+      "afterSha256": "4143dee476eaddcd5d21c2de5d37992644c4b94e367e8605047c81fefc020749"
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "beforeSha256": "bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618",
+      "afterSha256": "c51021aba5f672465f14800f6f4a9d5f267cbce49251b041b63bb00d369b290c"
+    },
+    {
+      "path": "BACKLOG.md",
+      "beforeSha256": "481a62b039b27b37172294d2b2796779a326c3a30d329ddb4fee96c9f1f53c07",
+      "afterSha256": "dba453c9474519d4f5091f2c5f6f91f972ffabae43e4cc5c480c2a1251296f0b"
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "beforeSha256": "3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5",
+      "afterSha256": "5da89afc9b9c8a2dd4521460750cd9baf75f7df00ab24a5537a401f6b8a95d19"
+    },
+    {
+      "path": "BACKLOG.md",
+      "beforeSha256": "fec3a032fbade48985e8ada56ae14192d56b0e5c2bd495eb2b7a2f24e0375f47",
+      "afterSha256": "00aa299fa505c8c2c31b6e03c07961c6052ac5c435462d1ca28a54b858c1b414"
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "beforeSha256": "11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b",
+      "afterSha256": "3ccdfda3ef608ac31ccb8820e784ee10f081865bd7e434ebac33ae7be9c90626"
+    },
+    {
+      "path": "BACKLOG.md",
+      "beforeSha256": "edb588cd97f2a646aec26882e05c89afd8677ed2eda5a63f412f84952f3bc357",
+      "afterSha256": "d5770282574e207b22d5d179510ea1939809cd528da8a7c0eee7290b147e2ce7"
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "beforeSha256": "43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce",
+      "afterSha256": "ac35097e2c6a48753b81983df65d438daadd7664b80ff33914c633af8d57bb25"
+    },
+    {
+      "path": "BACKLOG.md",
+      "beforeSha256": "a589df718fc5b8ada6ad363a8d7e3d9b755b9b18bdab80de50245d679cdf3961",
+      "afterSha256": "fc12bbea587790ef99df7fabb67373b3dae970b0f3e59103e835621d7485872f"
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "beforeSha256": "3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb",
+      "afterSha256": "77a3d6dd678a5aff348d4df20780da7894745231f43ab51336de5210b44586eb"
+    },
+    {
+      "path": "BACKLOG-archive.md",
+      "exactDuplicateMerged": true
+    }
+  ],
+  "originalEventsReportsUnchanged": true,
+  "currentBusinessStatusRevalidated": false,
+  "unknownOldArchiveWarningsRetained": true,
+  "originalPrivateAssertionRejectedBeforeWrite": "最初错误要求findings为空，实际四条是候选针对问题及保留UNKNOWN，按完整原review SHA/verdict/候选精确审核，未改review。"
+}

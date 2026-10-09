@@ -1,0 +1,35 @@
+{
+  "scope": "T1117 formal执行原件；根看图为pre目录7原图，未伪签formal图已逐张看。",
+  "pictures": [
+    {
+      "name": "t1108-legacy-narrow.png",
+      "sha256": "528925657b1663dd97b2bff54e7f92af18936373851d00c134d1d7bf5345fea6"
+    },
+    {
+      "name": "t1117-preview-narrow.png",
+      "sha256": "843b295a4b36b6c9a99554001bcd7dbf27c363c54cb66114107503516ee48b59"
+    },
+    {
+      "name": "t1117-error-narrow.png",
+      "sha256": "c8fc8ce5d65adc46e7326f83e0f91f093f2e9f99f573ad15aea8e4789d88c663"
+    },
+    {
+      "name": "t1117-preview-normal.png",
+      "sha256": "27411458188b1dbc21d7bec7a9d1dbdc6b023260a0d118e54391a576a62cd648"
+    },
+    {
+      "name": "t1108-legacy-normal.png",
+      "sha256": "71c7bff1ca41d92d2ff772a54caee99d6708c10e4009d7883b94f65aa00687fb"
+    },
+    {
+      "name": "t1117-error-normal.png",
+      "sha256": "63bef4191717885181a85f04dec59597f3034afc96cf0ac665e209c59d192e40"
+    },
+    {
+      "name": "t1108-interrupted-save.png",
+      "sha256": "63bef4191717885181a85f04dec59597f3034afc96cf0ac665e209c59d192e40"
+    }
+  ],
+  "rawPrivatePath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1117-3d-formal-runner-raw.log",
+  "rawSha256": "e3749972377c4d34bdd8839cc160e40be59ab57b6d513a4904e0570bbd160f93"
+}

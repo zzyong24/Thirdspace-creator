@@ -1,0 +1,1821 @@
+{
+  "schema": "creatoros-mechanical-control-candidate/v1",
+  "task": "T-1173",
+  "createdAt": "2026-10-09T21:09:16.090705+00:00",
+  "baseHead": "3d4444934a618542747dd9839a299c6d769adad1",
+  "baseFileSha256": {
+    "BACKLOG.md": "bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13",
+    "BACKLOG-archive.md": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8",
+    "BACKLOG-details.md": "2ee3a8173783e8e59787e5cfc641c87f423a2f1f70101fcfedbd72754f7397d3"
+  },
+  "candidateOnlyNotApplied": true,
+  "approvedScope": "任务身份与完整原行表示；业务phase/审核/验收、原SPEC/事件/报告/验证器一律不改。",
+  "operations": [
+    {
+      "id": "C01",
+      "kind": "merge_same_task_live_rows_and_externalize_malformed_tail",
+      "path": "BACKLOG.md",
+      "canonicalTaskId": "T-1018",
+      "beforeRows": [
+        {
+          "line": 56,
+          "raw": "|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018)|见详情。|",
+          "sha256": "26444114bde94a4a34082fbce254e3679562cb54f6e2b6241e0162567c5c88af",
+          "cells": [
+            "T-1018",
+            "清理本轮测试暴露的全局类型与边界欠债",
+            "📋 待办",
+            "—",
+            "待验",
+            "[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018)",
+            "见详情。"
+          ],
+          "id": "T-1018",
+          "title": "清理本轮测试暴露的全局类型与边界欠债",
+          "status": "📋 待办",
+          "columnCount": 7
+        },
+        {
+          "line": 80,
+          "raw": "|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md)|后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。|2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。|",
+          "sha256": "510ffe14554f53332b4538c241dc9e3af21409845b2009f7c9d3596b032120ad",
+          "cells": [
+            "T-1018",
+            "清理本轮测试暴露的全局类型与边界欠债",
+            "📋 待办",
+            "—",
+            "待验",
+            "[实测证据](docs/verification/t1017-rewrite-first.md)",
+            "后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。",
+            "2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。"
+          ],
+          "id": "T-1018",
+          "title": "清理本轮测试暴露的全局类型与边界欠债",
+          "status": "📋 待办",
+          "columnCount": 8
+        }
+      ],
+      "afterCanonicalRow": "|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018) [完整历史](BACKLOG-details.md#t1173-t1018-global-debt-history)|见详情。|",
+      "removedRowIsMergedNotDeletedTask": true,
+      "rawHistoryAnchor": "t1173-t1018-global-debt-history",
+      "originalFirstFiveCellsUnchanged": true,
+      "originalExistingDetailAnchorRetained": "t-1018",
+      "extraEighthCell": "2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。",
+      "extraCellTreatment": "第7及第8列均为诊断叙事，完整原八列行逐字外置；不截断、不改变phase、不得与portrait同ID历史任务合并。",
+      "decision": "DIRECT_MECHANICAL_ONLY"
+    },
+    {
+      "id": "A-T-1017",
+      "kind": "source_qualified_historical_identity_alias",
+      "path": "BACKLOG-archive.md",
+      "originalTaskId": "T-1017",
+      "proposedAlias": "T-1017-source-31eb30d3-durable-chat",
+      "beforeRow": {
+        "line": 1014,
+        "raw": "| T-1017 | 按持久执行链重建聊天路由回归 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-014/017/020 共用旧同步 runChatStream 测试 29/50 失败；按 durable.submit、消息快照、事件订阅和完成事务重建局部改稿、逐字保真及工具门回归，不机械改预期。 |",
+        "sha256": "43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d",
+        "cells": [
+          "T-1017",
+          "按持久执行链重建聊天路由回归",
+          "✅ 待办",
+          "—",
+          "—",
+          "[核实记录](docs/verification/t1015-lesson-verification.md)",
+          "LED-014/017/020 共用旧同步 runChatStream 测试 29/50 失败；按 durable.submit、消息快照、事件订阅和完成事务重建局部改稿、逐字保真及工具门回归，不机械改预期。"
+        ],
+        "id": "T-1017",
+        "title": "按持久执行链重建聊天路由回归",
+        "status": "✅ 待办",
+        "columnCount": 7
+      },
+      "afterRow": "|T-1017-source-31eb30d3-durable-chat|按持久执行链重建聊天路由回归|✅ 待办|—|—|[核实记录](docs/verification/t1015-lesson-verification.md) [原ID与来源](BACKLOG-details.md#t1173-t-1017-source-31eb30d3-durable-chat-original)|LED-014/017/020 共用旧同步 runChatStream 测试 29/50 失败；按 durable.submit、消息快照、事件订阅和完成事务重建局部改稿、逐字保真及工具门回归，不机械改预期。|",
+      "rawHistoryAnchor": "t1173-t-1017-source-31eb30d3-durable-chat-original",
+      "origin": {
+        "sourceCommit": "31eb30d3f109b376f22f4a56dc9f775f7e527724",
+        "sourcePath": "BACKLOG.md",
+        "sourceObjectSha256": "6e80991e92a292a7bbaf4863197c49edd872ebfd15bc0c8125f57b26b73056be",
+        "introducedRow": {
+          "line": 15,
+          "raw": "| T-1017 | 按持久执行链重建聊天路由回归 | 📋 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-014/017/020 共用旧同步 runChatStream 测试 29/50 失败；按 durable.submit、消息快照、事件订阅和完成事务重建局部改稿、逐字保真及工具门回归，不机械改预期。 |",
+          "sha256": "d517d5a74493d755e3abbbdf28f987d5b3ac412ee9b034afa947d89c25ecfe63",
+          "cells": [
+            "T-1017",
+            "按持久执行链重建聊天路由回归",
+            "📋 待办",
+            "—",
+            "—",
+            "[核实记录](docs/verification/t1015-lesson-verification.md)",
+            "LED-014/017/020 共用旧同步 runChatStream 测试 29/50 失败；按 durable.submit、消息快照、事件订阅和完成事务重建局部改稿、逐字保真及工具门回归，不机械改预期。"
+          ],
+          "id": "T-1017",
+          "title": "按持久执行链重建聊天路由回归",
+          "status": "📋 待办",
+          "columnCount": 7
+        },
+        "proposedAlias": "T-1017-source-31eb30d3-durable-chat",
+        "provenance": "实际Git原对象有对应原ID及任务名；该SHA不是由当前别名生成。"
+      },
+      "allOriginalBusinessCellsRetained": {
+        "title": true,
+        "status": true,
+        "review": true,
+        "acceptance": true,
+        "originalDocs": true,
+        "detail": true
+      },
+      "reviewTokenWasDash": true,
+      "eventsAndReportsRemainOriginalId": true,
+      "completionOrPassTransferred": false,
+      "decision": "DIRECT_IDENTITY_REPRESENTATION_ONLY",
+      "requiresOriginalTaskRevalidationIfUsedAsCurrentAcceptance": true
+    },
+    {
+      "id": "A-T-1018",
+      "kind": "source_qualified_historical_identity_alias",
+      "path": "BACKLOG-archive.md",
+      "originalTaskId": "T-1018",
+      "proposedAlias": "T-1018-source-31eb30d3-portrait-timeline",
+      "beforeRow": {
+        "line": 1015,
+        "raw": "| T-1018 | 核实并修正竖屏动效时间线超出约束 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。 |",
+        "sha256": "e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa",
+        "cells": [
+          "T-1018",
+          "核实并修正竖屏动效时间线超出约束",
+          "✅ 待办",
+          "—",
+          "—",
+          "[核实记录](docs/verification/t1015-lesson-verification.md)",
+          "LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。"
+        ],
+        "id": "T-1018",
+        "title": "核实并修正竖屏动效时间线超出约束",
+        "status": "✅ 待办",
+        "columnCount": 7
+      },
+      "afterRow": "|T-1018-source-31eb30d3-portrait-timeline|核实并修正竖屏动效时间线超出约束|✅ 待办|—|—|[核实记录](docs/verification/t1015-lesson-verification.md) [原ID与来源](BACKLOG-details.md#t1173-t-1018-source-31eb30d3-portrait-timeline-original)|LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。|",
+      "rawHistoryAnchor": "t1173-t-1018-source-31eb30d3-portrait-timeline-original",
+      "origin": {
+        "sourceCommit": "31eb30d3f109b376f22f4a56dc9f775f7e527724",
+        "sourcePath": "BACKLOG.md",
+        "sourceObjectSha256": "6e80991e92a292a7bbaf4863197c49edd872ebfd15bc0c8125f57b26b73056be",
+        "introducedRow": {
+          "line": 16,
+          "raw": "| T-1018 | 核实并修正竖屏动效时间线超出约束 | 📋 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。 |",
+          "sha256": "24258e7d1c6cba93b386a5123a955ff2fd5a4f2f18ed5622c03f741ae9ce676d",
+          "cells": [
+            "T-1018",
+            "核实并修正竖屏动效时间线超出约束",
+            "📋 待办",
+            "—",
+            "—",
+            "[核实记录](docs/verification/t1015-lesson-verification.md)",
+            "LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。"
+          ],
+          "id": "T-1018",
+          "title": "核实并修正竖屏动效时间线超出约束",
+          "status": "📋 待办",
+          "columnCount": 7
+        },
+        "proposedAlias": "T-1018-source-31eb30d3-portrait-timeline",
+        "provenance": "实际Git原对象有对应原ID及任务名；该SHA不是由当前别名生成。"
+      },
+      "allOriginalBusinessCellsRetained": {
+        "title": true,
+        "status": true,
+        "review": true,
+        "acceptance": true,
+        "originalDocs": true,
+        "detail": true
+      },
+      "reviewTokenWasDash": true,
+      "eventsAndReportsRemainOriginalId": true,
+      "completionOrPassTransferred": false,
+      "decision": "DIRECT_IDENTITY_REPRESENTATION_ONLY",
+      "requiresOriginalTaskRevalidationIfUsedAsCurrentAcceptance": true
+    },
+    {
+      "id": "A-T-1019",
+      "kind": "source_qualified_historical_identity_alias",
+      "path": "BACKLOG-archive.md",
+      "originalTaskId": "T-1019",
+      "proposedAlias": "T-1019-source-31eb30d3-confirm-candidate",
+      "beforeRow": {
+        "line": 1016,
+        "raw": "| T-1019 | 恢复成功候选确认写入选题池入口 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。 |",
+        "sha256": "a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52",
+        "cells": [
+          "T-1019",
+          "恢复成功候选确认写入选题池入口",
+          "✅ 待办",
+          "—",
+          "—",
+          "[核实记录](docs/verification/t1015-lesson-verification.md)",
+          "LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。"
+        ],
+        "id": "T-1019",
+        "title": "恢复成功候选确认写入选题池入口",
+        "status": "✅ 待办",
+        "columnCount": 7
+      },
+      "afterRow": "|T-1019-source-31eb30d3-confirm-candidate|恢复成功候选确认写入选题池入口|✅ 待办|—|—|[核实记录](docs/verification/t1015-lesson-verification.md) [原ID与来源](BACKLOG-details.md#t1173-t-1019-source-31eb30d3-confirm-candidate-original)|LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。|",
+      "rawHistoryAnchor": "t1173-t-1019-source-31eb30d3-confirm-candidate-original",
+      "origin": {
+        "sourceCommit": "31eb30d3f109b376f22f4a56dc9f775f7e527724",
+        "sourcePath": "BACKLOG.md",
+        "sourceObjectSha256": "6e80991e92a292a7bbaf4863197c49edd872ebfd15bc0c8125f57b26b73056be",
+        "introducedRow": {
+          "line": 17,
+          "raw": "| T-1019 | 恢复成功候选确认写入选题池入口 | 📋 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。 |",
+          "sha256": "e6e1d0169448bfbbb46fbf34853403d3d2aca0e509753f4caba318a0b2bfc039",
+          "cells": [
+            "T-1019",
+            "恢复成功候选确认写入选题池入口",
+            "📋 待办",
+            "—",
+            "—",
+            "[核实记录](docs/verification/t1015-lesson-verification.md)",
+            "LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。"
+          ],
+          "id": "T-1019",
+          "title": "恢复成功候选确认写入选题池入口",
+          "status": "📋 待办",
+          "columnCount": 7
+        },
+        "proposedAlias": "T-1019-source-31eb30d3-confirm-candidate",
+        "provenance": "实际Git原对象有对应原ID及任务名；该SHA不是由当前别名生成。"
+      },
+      "allOriginalBusinessCellsRetained": {
+        "title": true,
+        "status": true,
+        "review": true,
+        "acceptance": true,
+        "originalDocs": true,
+        "detail": true
+      },
+      "reviewTokenWasDash": true,
+      "eventsAndReportsRemainOriginalId": true,
+      "completionOrPassTransferred": false,
+      "decision": "DIRECT_IDENTITY_REPRESENTATION_ONLY",
+      "requiresOriginalTaskRevalidationIfUsedAsCurrentAcceptance": true
+    },
+    {
+      "id": "A-T-1020",
+      "kind": "source_qualified_historical_identity_alias",
+      "path": "BACKLOG-archive.md",
+      "originalTaskId": "T-1020",
+      "proposedAlias": "T-1020-source-da970ced-guide-fixture",
+      "beforeRow": {
+        "line": 1017,
+        "raw": "| T-1020 | 校准租约恢复测试的官方产品说明快照 | ✅ 待办 | — | — | [核实记录](docs/verification/t1020-guide-snapshot-fixture.md) | 扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。 |",
+        "sha256": "d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5",
+        "cells": [
+          "T-1020",
+          "校准租约恢复测试的官方产品说明快照",
+          "✅ 待办",
+          "—",
+          "—",
+          "[核实记录](docs/verification/t1020-guide-snapshot-fixture.md)",
+          "扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。"
+        ],
+        "id": "T-1020",
+        "title": "校准租约恢复测试的官方产品说明快照",
+        "status": "✅ 待办",
+        "columnCount": 7
+      },
+      "afterRow": "|T-1020-source-da970ced-guide-fixture|校准租约恢复测试的官方产品说明快照|✅ 待办|—|—|[核实记录](docs/verification/t1020-guide-snapshot-fixture.md) [原ID与来源](BACKLOG-details.md#t1173-t-1020-source-da970ced-guide-fixture-original)|扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。|",
+      "rawHistoryAnchor": "t1173-t-1020-source-da970ced-guide-fixture-original",
+      "origin": {
+        "sourceCommit": "da970ced24032df3afcc37415db1f67d2f1bc56a",
+        "sourcePath": "BACKLOG.md",
+        "sourceObjectSha256": "09a1262932c2835001d8a5c108a81ebfe447745d5925c0b75fb7f0c0f286d475",
+        "introducedRow": {
+          "line": 18,
+          "raw": "| T-1020 | 校准租约恢复测试的官方产品说明快照 | ✅ 待办 | — | — | [核实记录](docs/verification/t1020-guide-snapshot-fixture.md) | 扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。 |",
+          "sha256": "d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5",
+          "cells": [
+            "T-1020",
+            "校准租约恢复测试的官方产品说明快照",
+            "✅ 待办",
+            "—",
+            "—",
+            "[核实记录](docs/verification/t1020-guide-snapshot-fixture.md)",
+            "扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。"
+          ],
+          "id": "T-1020",
+          "title": "校准租约恢复测试的官方产品说明快照",
+          "status": "✅ 待办",
+          "columnCount": 7
+        },
+        "proposedAlias": "T-1020-source-da970ced-guide-fixture",
+        "provenance": "实际Git原对象有对应原ID及任务名；该SHA不是由当前别名生成。"
+      },
+      "allOriginalBusinessCellsRetained": {
+        "title": true,
+        "status": true,
+        "review": true,
+        "acceptance": true,
+        "originalDocs": true,
+        "detail": true
+      },
+      "reviewTokenWasDash": true,
+      "eventsAndReportsRemainOriginalId": true,
+      "completionOrPassTransferred": false,
+      "decision": "DIRECT_IDENTITY_REPRESENTATION_ONLY",
+      "requiresOriginalTaskRevalidationIfUsedAsCurrentAcceptance": true
+    },
+    {
+      "id": "A-T-1021",
+      "kind": "source_qualified_historical_identity_alias",
+      "path": "BACKLOG-archive.md",
+      "originalTaskId": "T-1021",
+      "proposedAlias": "T-1021-source-526070b3-mac-artifact",
+      "beforeRow": {
+        "line": 1018,
+        "raw": "| T-1021 | 补齐 T-1009 真实 Mac 产物原子结算验收 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md) | 全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。 |",
+        "sha256": "36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b",
+        "cells": [
+          "T-1021",
+          "补齐 T-1009 真实 Mac 产物原子结算验收",
+          "✅ 待办",
+          "—",
+          "—",
+          "[SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md)",
+          "全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。"
+        ],
+        "id": "T-1021",
+        "title": "补齐 T-1009 真实 Mac 产物原子结算验收",
+        "status": "✅ 待办",
+        "columnCount": 7
+      },
+      "afterRow": "|T-1021-source-526070b3-mac-artifact|补齐 T-1009 真实 Mac 产物原子结算验收|✅ 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md) [原ID与来源](BACKLOG-details.md#t1173-t-1021-source-526070b3-mac-artifact-original)|全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。|",
+      "rawHistoryAnchor": "t1173-t-1021-source-526070b3-mac-artifact-original",
+      "origin": {
+        "sourceCommit": "526070b3a36ba366ff05c7dea7644b196174dd2d",
+        "sourcePath": "BACKLOG.md",
+        "sourceObjectSha256": "b947b49c451cd4c8cec86d1fcaf631ab2c38c777d9948c6b1027ccb4f95442f0",
+        "introducedRow": {
+          "line": 19,
+          "raw": "| T-1021 | 补齐 T-1009 真实 Mac 产物原子结算验收 | 🔨 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md) | 全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。 |",
+          "sha256": "6e857cd8a22e863d7a44523428a011eaad09957504d17f986d954fad90a09dc8",
+          "cells": [
+            "T-1021",
+            "补齐 T-1009 真实 Mac 产物原子结算验收",
+            "🔨 待办",
+            "—",
+            "—",
+            "[SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md)",
+            "全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。"
+          ],
+          "id": "T-1021",
+          "title": "补齐 T-1009 真实 Mac 产物原子结算验收",
+          "status": "🔨 待办",
+          "columnCount": 7
+        },
+        "proposedAlias": "T-1021-source-526070b3-mac-artifact",
+        "provenance": "实际Git原对象有对应原ID及任务名；该SHA不是由当前别名生成。"
+      },
+      "allOriginalBusinessCellsRetained": {
+        "title": true,
+        "status": true,
+        "review": true,
+        "acceptance": true,
+        "originalDocs": true,
+        "detail": true
+      },
+      "reviewTokenWasDash": true,
+      "eventsAndReportsRemainOriginalId": true,
+      "completionOrPassTransferred": false,
+      "decision": "DIRECT_IDENTITY_REPRESENTATION_ONLY",
+      "requiresOriginalTaskRevalidationIfUsedAsCurrentAcceptance": true
+    },
+    {
+      "id": "A-T-1016",
+      "kind": "source_qualified_historical_identity_alias",
+      "path": "BACKLOG-archive.md",
+      "originalTaskId": "T-1016",
+      "proposedAlias": "T-1016-source-3d5dc732-sdk-boundary",
+      "beforeRow": {
+        "line": 1013,
+        "raw": "| T-1016 | 核对前端聊天会话 SDK 物理边界 | ✅ 待办 | — | — | [根因清单](docs/verification/t1014-reconcile-triage.md) | 核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。 |",
+        "sha256": "7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860",
+        "cells": [
+          "T-1016",
+          "核对前端聊天会话 SDK 物理边界",
+          "✅ 待办",
+          "—",
+          "—",
+          "[根因清单](docs/verification/t1014-reconcile-triage.md)",
+          "核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。"
+        ],
+        "id": "T-1016",
+        "title": "核对前端聊天会话 SDK 物理边界",
+        "status": "✅ 待办",
+        "columnCount": 7
+      },
+      "afterRow": "|T-1016-source-3d5dc732-sdk-boundary|核对前端聊天会话 SDK 物理边界|✅ 待办|—|—|[根因清单](docs/verification/t1014-reconcile-triage.md) [原ID与来源](BACKLOG-details.md#t1173-t-1016-source-3d5dc732-sdk-boundary-original)|核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。|",
+      "rawHistoryAnchor": "t1173-t-1016-source-3d5dc732-sdk-boundary-original",
+      "origin": {
+        "sourceCommit": "3d5dc732afc4c2d5ac2caef6dcd527b251f40d44",
+        "sourcePath": "BACKLOG.md",
+        "sourceObjectSha256": "1a753444c1b354604406ba637a7fc6e052c58764e7d92fc6b547f250ee2ba616",
+        "introducedRow": {
+          "line": 14,
+          "raw": "| T-1016 | 核对前端聊天会话 SDK 物理边界 | 📋 待办 | — | — | [根因清单](docs/verification/t1014-reconcile-triage.md) | 核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。 |",
+          "sha256": "fb5b29e85a6ddac50608f8fd110148297e3ee2109c5fb512e2223799723167f8",
+          "cells": [
+            "T-1016",
+            "核对前端聊天会话 SDK 物理边界",
+            "📋 待办",
+            "—",
+            "—",
+            "[根因清单](docs/verification/t1014-reconcile-triage.md)",
+            "核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。"
+          ],
+          "id": "T-1016",
+          "title": "核对前端聊天会话 SDK 物理边界",
+          "status": "📋 待办",
+          "columnCount": 7
+        },
+        "proposedAlias": "T-1016-source-3d5dc732-sdk-boundary",
+        "provenance": "实际Git原对象有对应原ID及任务名；该SHA不是由当前别名生成。"
+      },
+      "allOriginalBusinessCellsRetained": {
+        "title": true,
+        "status": true,
+        "review": true,
+        "acceptance": true,
+        "originalDocs": true,
+        "detail": true
+      },
+      "reviewTokenWasDash": true,
+      "eventsAndReportsRemainOriginalId": true,
+      "completionOrPassTransferred": false,
+      "decision": "DIRECT_IDENTITY_REPRESENTATION_ONLY",
+      "requiresOriginalTaskRevalidationIfUsedAsCurrentAcceptance": true
+    },
+    {
+      "id": "S-T-1004",
+      "kind": "consolidate_same_identity_without_resolving_business_status",
+      "canonicalIndex": "BACKLOG.md",
+      "canonicalTaskId": "T-1004",
+      "liveBeforeRow": {
+        "line": 82,
+        "raw": "|T-1004|冻结共享能力协议与 NomiFun 迁移依赖|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。|",
+        "sha256": "261d987b2cb3c5b639756d1ed2ebd38ae7025576d7d974cebaacaa7039a96f09",
+        "cells": [
+          "T-1004",
+          "冻结共享能力协议与 NomiFun 迁移依赖",
+          "📋 待办",
+          "—",
+          "—",
+          "[SPEC](docs/features/t1003-agent-workbench.md)",
+          "T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。"
+        ],
+        "id": "T-1004",
+        "title": "冻结共享能力协议与 NomiFun 迁移依赖",
+        "status": "📋 待办",
+        "columnCount": 7
+      },
+      "liveAfterRow": "|T-1004|冻结共享能力协议与 NomiFun 迁移依赖|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md) [状态与原审核历史](BACKLOG-details.md#t1173-t-1004-same-identity-history)|T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。|",
+      "archivedBeforeRow": {
+        "line": 1019,
+        "raw": "| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |",
+        "sha256": "bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618",
+        "cells": [
+          "T-1004",
+          "冻结共享能力协议与 NomiFun 迁移依赖",
+          "✅ 待办",
+          "—",
+          "—",
+          "[SPEC](docs/features/t1003-agent-workbench.md)",
+          "T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。"
+        ],
+        "id": "T-1004",
+        "title": "冻结共享能力协议与 NomiFun 迁移依赖",
+        "status": "✅ 待办",
+        "columnCount": 7
+      },
+      "archiveReplacementHistoricalPointer": "> T1173 同任务历史索引：T-1004 当前唯一执行行在 [BACKLOG.md](BACKLOG.md)；旧完成、原审核和全部原行保留于 [完整历史](BACKLOG-details.md#t1173-t-1004-same-identity-history)。当前状态仍为「📋 待办」，不迁移旧PASS/complete，不签业务重新完成。",
+      "rawHistoryAnchor": "t1173-t-1004-same-identity-history",
+      "liveStatusReviewAcceptanceUnchanged": true,
+      "oldStatusReviewAcceptanceFullyPreservedInHistory": true,
+      "eventsAndReportsUnchanged": true,
+      "oldCompletionReapplied": false,
+      "decision": "DIRECT_REPRESENTATION_ONLY_KEEP_CURRENT_STATE",
+      "businessStatusResolution": "UNKNOWN_REQUIRES_ORIGINAL_TASK_SCOPE_REVALIDATION",
+      "forbidden": "不能据旧archive完成行或旧complete事件把当前执行行改为✅；不能把T1009旧PASS写入当前审核列。"
+    },
+    {
+      "id": "S-T-1006",
+      "kind": "consolidate_same_identity_without_resolving_business_status",
+      "canonicalIndex": "BACKLOG.md",
+      "canonicalTaskId": "T-1006",
+      "liveBeforeRow": {
+        "line": 84,
+        "raw": "|T-1006|接入统一工具网关与长结果回读|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。|",
+        "sha256": "481a62b039b27b37172294d2b2796779a326c3a30d329ddb4fee96c9f1f53c07",
+        "cells": [
+          "T-1006",
+          "接入统一工具网关与长结果回读",
+          "📋 待办",
+          "—",
+          "—",
+          "[SPEC](docs/features/t1003-agent-workbench.md)",
+          "依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。"
+        ],
+        "id": "T-1006",
+        "title": "接入统一工具网关与长结果回读",
+        "status": "📋 待办",
+        "columnCount": 7
+      },
+      "liveAfterRow": "|T-1006|接入统一工具网关与长结果回读|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md) [状态与原审核历史](BACKLOG-details.md#t1173-t-1006-same-identity-history)|依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。|",
+      "archivedBeforeRow": {
+        "line": 1020,
+        "raw": "| T-1006 | 接入统一工具网关与长结果回读 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |",
+        "sha256": "3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5",
+        "cells": [
+          "T-1006",
+          "接入统一工具网关与长结果回读",
+          "✅ 待办",
+          "—",
+          "—",
+          "[SPEC](docs/features/t1003-agent-workbench.md)",
+          "依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。"
+        ],
+        "id": "T-1006",
+        "title": "接入统一工具网关与长结果回读",
+        "status": "✅ 待办",
+        "columnCount": 7
+      },
+      "archiveReplacementHistoricalPointer": "> T1173 同任务历史索引：T-1006 当前唯一执行行在 [BACKLOG.md](BACKLOG.md)；旧完成、原审核和全部原行保留于 [完整历史](BACKLOG-details.md#t1173-t-1006-same-identity-history)。当前状态仍为「📋 待办」，不迁移旧PASS/complete，不签业务重新完成。",
+      "rawHistoryAnchor": "t1173-t-1006-same-identity-history",
+      "liveStatusReviewAcceptanceUnchanged": true,
+      "oldStatusReviewAcceptanceFullyPreservedInHistory": true,
+      "eventsAndReportsUnchanged": true,
+      "oldCompletionReapplied": false,
+      "decision": "DIRECT_REPRESENTATION_ONLY_KEEP_CURRENT_STATE",
+      "businessStatusResolution": "UNKNOWN_REQUIRES_ORIGINAL_TASK_SCOPE_REVALIDATION",
+      "forbidden": "不能据旧archive完成行或旧complete事件把当前执行行改为✅；不能把T1009旧PASS写入当前审核列。"
+    },
+    {
+      "id": "S-T-1009",
+      "kind": "consolidate_same_identity_without_resolving_business_status",
+      "canonicalIndex": "BACKLOG.md",
+      "canonicalTaskId": "T-1009",
+      "liveBeforeRow": {
+        "line": 87,
+        "raw": "|T-1009|实现产物版本、隔离预览与原生导出|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。|",
+        "sha256": "fec3a032fbade48985e8ada56ae14192d56b0e5c2bd495eb2b7a2f24e0375f47",
+        "cells": [
+          "T-1009",
+          "实现产物版本、隔离预览与原生导出",
+          "📋 待办",
+          "—",
+          "—",
+          "[SPEC](docs/features/t1003-agent-workbench.md)",
+          "依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。"
+        ],
+        "id": "T-1009",
+        "title": "实现产物版本、隔离预览与原生导出",
+        "status": "📋 待办",
+        "columnCount": 7
+      },
+      "liveAfterRow": "|T-1009|实现产物版本、隔离预览与原生导出|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md) [状态与原审核历史](BACKLOG-details.md#t1173-t-1009-same-identity-history)|依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。|",
+      "archivedBeforeRow": {
+        "line": 1021,
+        "raw": "| T-1009 | 实现产物版本、隔离预览与原生导出 | ✅ 待办 | PASS[REV:a57fadb33099] | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合补充规格](docs/features/t1009-artifact-lineage-proposal.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。跨回合修订按 DEC-AW-1009 实施。 |",
+        "sha256": "11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b",
+        "cells": [
+          "T-1009",
+          "实现产物版本、隔离预览与原生导出",
+          "✅ 待办",
+          "PASS[REV:a57fadb33099]",
+          "—",
+          "[SPEC](docs/features/t1003-agent-workbench.md) [跨回合补充规格](docs/features/t1009-artifact-lineage-proposal.md)",
+          "依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。跨回合修订按 DEC-AW-1009 实施。"
+        ],
+        "id": "T-1009",
+        "title": "实现产物版本、隔离预览与原生导出",
+        "status": "✅ 待办",
+        "columnCount": 7
+      },
+      "archiveReplacementHistoricalPointer": "> T1173 同任务历史索引：T-1009 当前唯一执行行在 [BACKLOG.md](BACKLOG.md)；旧完成、原审核和全部原行保留于 [完整历史](BACKLOG-details.md#t1173-t-1009-same-identity-history)。当前状态仍为「📋 待办」，不迁移旧PASS/complete，不签业务重新完成。",
+      "rawHistoryAnchor": "t1173-t-1009-same-identity-history",
+      "liveStatusReviewAcceptanceUnchanged": true,
+      "oldStatusReviewAcceptanceFullyPreservedInHistory": true,
+      "eventsAndReportsUnchanged": true,
+      "oldCompletionReapplied": false,
+      "decision": "DIRECT_REPRESENTATION_ONLY_KEEP_CURRENT_STATE",
+      "businessStatusResolution": "UNKNOWN_REQUIRES_ORIGINAL_TASK_SCOPE_REVALIDATION",
+      "forbidden": "不能据旧archive完成行或旧complete事件把当前执行行改为✅；不能把T1009旧PASS写入当前审核列。"
+    },
+    {
+      "id": "S-T-1015",
+      "kind": "consolidate_same_identity_without_resolving_business_status",
+      "canonicalIndex": "BACKLOG.md",
+      "canonicalTaskId": "T-1015",
+      "liveBeforeRow": {
+        "line": 81,
+        "raw": "|T-1015|核实剩余教训失败并校准过期回归断言|📋 待办|—|—|[实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015)|见详情。|",
+        "sha256": "edb588cd97f2a646aec26882e05c89afd8677ed2eda5a63f412f84952f3bc357",
+        "cells": [
+          "T-1015",
+          "核实剩余教训失败并校准过期回归断言",
+          "📋 待办",
+          "—",
+          "—",
+          "[实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015)",
+          "见详情。"
+        ],
+        "id": "T-1015",
+        "title": "核实剩余教训失败并校准过期回归断言",
+        "status": "📋 待办",
+        "columnCount": 7
+      },
+      "liveAfterRow": "|T-1015|核实剩余教训失败并校准过期回归断言|📋 待办|—|—|[实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015) [状态与原审核历史](BACKLOG-details.md#t1173-t-1015-same-identity-history)|见详情。|",
+      "archivedBeforeRow": {
+        "line": 1012,
+        "raw": "| T-1015 | 核实剩余教训失败并校准过期回归断言 | ✅ 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 |",
+        "sha256": "43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce",
+        "cells": [
+          "T-1015",
+          "核实剩余教训失败并校准过期回归断言",
+          "✅ 待办",
+          "—",
+          "—",
+          "[实测清单](docs/verification/t1014-reconcile-triage.md)",
+          "从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。"
+        ],
+        "id": "T-1015",
+        "title": "核实剩余教训失败并校准过期回归断言",
+        "status": "✅ 待办",
+        "columnCount": 7
+      },
+      "archiveReplacementHistoricalPointer": "> T1173 同任务历史索引：T-1015 当前唯一执行行在 [BACKLOG.md](BACKLOG.md)；旧完成、原审核和全部原行保留于 [完整历史](BACKLOG-details.md#t1173-t-1015-same-identity-history)。当前状态仍为「📋 待办」，不迁移旧PASS/complete，不签业务重新完成。",
+      "rawHistoryAnchor": "t1173-t-1015-same-identity-history",
+      "liveStatusReviewAcceptanceUnchanged": true,
+      "oldStatusReviewAcceptanceFullyPreservedInHistory": true,
+      "eventsAndReportsUnchanged": true,
+      "oldCompletionReapplied": false,
+      "decision": "DIRECT_REPRESENTATION_ONLY_KEEP_CURRENT_STATE",
+      "businessStatusResolution": "UNKNOWN_REQUIRES_ORIGINAL_TASK_SCOPE_REVALIDATION",
+      "forbidden": "不能据旧archive完成行或旧complete事件把当前执行行改为✅；不能把T1009旧PASS写入当前审核列。"
+    },
+    {
+      "id": "S-T-916",
+      "kind": "consolidate_same_identity_without_resolving_business_status",
+      "canonicalIndex": "BACKLOG.md",
+      "canonicalTaskId": "T-916",
+      "liveBeforeRow": {
+        "line": 116,
+        "raw": "|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|🔨 待办|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916)|见详情。|",
+        "sha256": "a589df718fc5b8ada6ad363a8d7e3d9b755b9b18bdab80de50245d679cdf3961",
+        "cells": [
+          "T-916",
+          "修复工程对账与历史任务证据漂移，恢复可信重构基线",
+          "🔨 待办",
+          "—",
+          "—",
+          "[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916)",
+          "见详情。"
+        ],
+        "id": "T-916",
+        "title": "修复工程对账与历史任务证据漂移，恢复可信重构基线",
+        "status": "🔨 待办",
+        "columnCount": 7
+      },
+      "liveAfterRow": "|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|🔨 待办|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916) [状态与原审核历史](BACKLOG-details.md#t1173-t-916-same-identity-history)|见详情。|",
+      "archivedBeforeRow": {
+        "line": 1027,
+        "raw": "|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|✅|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [本轮证据](docs/verification/t916-review-receipt-repair.md)|回执、活动看板和健康门已修复（e4ec21a8、0ae6ca34）；reconcile 0/0。|",
+        "sha256": "3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb",
+        "cells": [
+          "T-916",
+          "修复工程对账与历史任务证据漂移，恢复可信重构基线",
+          "✅",
+          "—",
+          "—",
+          "[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [本轮证据](docs/verification/t916-review-receipt-repair.md)",
+          "回执、活动看板和健康门已修复（e4ec21a8、0ae6ca34）；reconcile 0/0。"
+        ],
+        "id": "T-916",
+        "title": "修复工程对账与历史任务证据漂移，恢复可信重构基线",
+        "status": "✅",
+        "columnCount": 7
+      },
+      "archiveReplacementHistoricalPointer": "> T1173 同任务历史索引：T-916 当前唯一执行行在 [BACKLOG.md](BACKLOG.md)；旧完成、原审核和全部原行保留于 [完整历史](BACKLOG-details.md#t1173-t-916-same-identity-history)。当前状态仍为「🔨 待办」，不迁移旧PASS/complete，不签业务重新完成。",
+      "rawHistoryAnchor": "t1173-t-916-same-identity-history",
+      "liveStatusReviewAcceptanceUnchanged": true,
+      "oldStatusReviewAcceptanceFullyPreservedInHistory": true,
+      "eventsAndReportsUnchanged": true,
+      "oldCompletionReapplied": false,
+      "decision": "DIRECT_REPRESENTATION_ONLY_KEEP_CURRENT_STATE",
+      "businessStatusResolution": "UNKNOWN_REQUIRES_ORIGINAL_TASK_SCOPE_REVALIDATION",
+      "forbidden": "不能据旧archive完成行或旧complete事件把当前执行行改为✅；不能把T1009旧PASS写入当前审核列。"
+    },
+    {
+      "id": "D-T-1014",
+      "kind": "merge_exact_duplicate_archival_row",
+      "path": "BACKLOG-archive.md",
+      "beforeRows": [
+        {
+          "line": 1011,
+          "raw": "| T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |",
+          "sha256": "819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f",
+          "cells": [
+            "T-1014",
+            "核对并清理233项历史对账失败",
+            "✅ 待办",
+            "—",
+            "—",
+            "[范围](docs/verification/t1014-reconcile-triage.md)",
+            "按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。"
+          ],
+          "id": "T-1014",
+          "title": "核对并清理233项历史对账失败",
+          "status": "✅ 待办",
+          "columnCount": 7
+        },
+        {
+          "line": 1107,
+          "raw": "| T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |",
+          "sha256": "819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f",
+          "cells": [
+            "T-1014",
+            "核对并清理233项历史对账失败",
+            "✅ 待办",
+            "—",
+            "—",
+            "[范围](docs/verification/t1014-reconcile-triage.md)",
+            "按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。"
+          ],
+          "id": "T-1014",
+          "title": "核对并清理233项历史对账失败",
+          "status": "✅ 待办",
+          "columnCount": 7
+        }
+      ],
+      "canonicalRowUnchanged": "| T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |",
+      "secondRowReplacement": "> T1173：T-1014第二份完全相同归档行合入同任务首行；原行及SHA见[完整历史](BACKLOG-details.md#t1173-t1014-identical-archive-history)。状态/审核/验收未改变。",
+      "rawHistoryAnchor": "t1173-t1014-identical-archive-history",
+      "decision": "DIRECT_MECHANICAL_ONLY",
+      "oldBusinessStatusUnchanged": true
+    }
+  ],
+  "appendOnlyHistorySections": [
+    {
+      "anchor": "t1173-t1018-global-debt-history",
+      "title": "T-1018全局类型与边界欠债重复行及八列原文",
+      "rawRows": [
+        {
+          "line": 56,
+          "raw": "|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018)|见详情。|",
+          "sha256": "26444114bde94a4a34082fbce254e3679562cb54f6e2b6241e0162567c5c88af",
+          "cells": [
+            "T-1018",
+            "清理本轮测试暴露的全局类型与边界欠债",
+            "📋 待办",
+            "—",
+            "待验",
+            "[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018)",
+            "见详情。"
+          ],
+          "id": "T-1018",
+          "title": "清理本轮测试暴露的全局类型与边界欠债",
+          "status": "📋 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG.md"
+        },
+        {
+          "line": 80,
+          "raw": "|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md)|后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。|2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。|",
+          "sha256": "510ffe14554f53332b4538c241dc9e3af21409845b2009f7c9d3596b032120ad",
+          "cells": [
+            "T-1018",
+            "清理本轮测试暴露的全局类型与边界欠债",
+            "📋 待办",
+            "—",
+            "待验",
+            "[实测证据](docs/verification/t1017-rewrite-first.md)",
+            "后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。",
+            "2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。"
+          ],
+          "id": "T-1018",
+          "title": "清理本轮测试暴露的全局类型与边界欠债",
+          "status": "📋 待办",
+          "columnCount": 8,
+          "sourcePath": "BACKLOG.md"
+        },
+        {
+          "line": 121,
+          "raw": "| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018) | 见详情。 |",
+          "sha256": "da1a9f8f8aae7354101d0e4a7e7fc2012348129d36e2f06eaa29be27e4def44b",
+          "cells": [
+            "T-1018",
+            "清理本轮测试暴露的全局类型与边界欠债",
+            "📋 待办",
+            "—",
+            "待验",
+            "[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018)",
+            "见详情。"
+          ],
+          "id": "T-1018",
+          "title": "清理本轮测试暴露的全局类型与边界欠债",
+          "status": "📋 待办",
+          "columnCount": 7,
+          "sourcePath": "N/t1171-before/BACKLOG.md"
+        },
+        {
+          "line": 152,
+          "raw": "| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) | 后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。 | 2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。 |",
+          "sha256": "16b56fcbae9432475cf43810c9b56e2f97206851d4a481a8b51cb0f69e6065e4",
+          "cells": [
+            "T-1018",
+            "清理本轮测试暴露的全局类型与边界欠债",
+            "📋 待办",
+            "—",
+            "待验",
+            "[实测证据](docs/verification/t1017-rewrite-first.md)",
+            "后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。",
+            "2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。"
+          ],
+          "id": "T-1018",
+          "title": "清理本轮测试暴露的全局类型与边界欠债",
+          "status": "📋 待办",
+          "columnCount": 8,
+          "sourcePath": "N/t1171-before/BACKLOG.md"
+        }
+      ],
+      "proposedAppendMarkdown": "<a id=\"t1173-t1018-global-debt-history\"></a>\n\n### T1173保留：T-1018全局类型与边界欠债重复行及八列原文\n\n此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。\n\n原路径/行：BACKLOG.md:56；原行SHA256 `26444114bde94a4a34082fbce254e3679562cb54f6e2b6241e0162567c5c88af`。\n\n```text\n|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018)|见详情。|\n```\n\n原路径/行：BACKLOG.md:80；原行SHA256 `510ffe14554f53332b4538c241dc9e3af21409845b2009f7c9d3596b032120ad`。\n\n```text\n|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md)|后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。|2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。|\n```\n\n原路径/行：N/t1171-before/BACKLOG.md:121；原行SHA256 `da1a9f8f8aae7354101d0e4a7e7fc2012348129d36e2f06eaa29be27e4def44b`。\n\n```text\n| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018) | 见详情。 |\n```\n\n原路径/行：N/t1171-before/BACKLOG.md:152；原行SHA256 `16b56fcbae9432475cf43810c9b56e2f97206851d4a481a8b51cb0f69e6065e4`。\n\n```text\n| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) | 后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。 | 2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。 |\n```\n\n原行各出现位置（同SHA副本也保留计数，不另判业务状态）：\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:56`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `26444114bde94a4a34082fbce254e3679562cb54f6e2b6241e0162567c5c88af`。\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:80`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `510ffe14554f53332b4538c241dc9e3af21409845b2009f7c9d3596b032120ad`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:121`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `da1a9f8f8aae7354101d0e4a7e7fc2012348129d36e2f06eaa29be27e4def44b`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:152`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `16b56fcbae9432475cf43810c9b56e2f97206851d4a481a8b51cb0f69e6065e4`。\n",
+      "originalOccurrences": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+          "line": 56,
+          "rawLineSha256": "26444114bde94a4a34082fbce254e3679562cb54f6e2b6241e0162567c5c88af",
+          "sourceFileSha256": "bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+          "line": 80,
+          "rawLineSha256": "510ffe14554f53332b4538c241dc9e3af21409845b2009f7c9d3596b032120ad",
+          "sourceFileSha256": "bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md",
+          "line": 121,
+          "rawLineSha256": "da1a9f8f8aae7354101d0e4a7e7fc2012348129d36e2f06eaa29be27e4def44b",
+          "sourceFileSha256": "00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md",
+          "line": 152,
+          "rawLineSha256": "16b56fcbae9432475cf43810c9b56e2f97206851d4a481a8b51cb0f69e6065e4",
+          "sourceFileSha256": "00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939"
+        }
+      ]
+    },
+    {
+      "anchor": "t1173-t-1017-source-31eb30d3-durable-chat-original",
+      "title": "T-1017-source-31eb30d3-durable-chat 原ID身份来源",
+      "rawRows": [
+        {
+          "line": 1014,
+          "raw": "| T-1017 | 按持久执行链重建聊天路由回归 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-014/017/020 共用旧同步 runChatStream 测试 29/50 失败；按 durable.submit、消息快照、事件订阅和完成事务重建局部改稿、逐字保真及工具门回归，不机械改预期。 |",
+          "sha256": "43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d",
+          "cells": [
+            "T-1017",
+            "按持久执行链重建聊天路由回归",
+            "✅ 待办",
+            "—",
+            "—",
+            "[核实记录](docs/verification/t1015-lesson-verification.md)",
+            "LED-014/017/020 共用旧同步 runChatStream 测试 29/50 失败；按 durable.submit、消息快照、事件订阅和完成事务重建局部改稿、逐字保真及工具门回归，不机械改预期。"
+          ],
+          "id": "T-1017",
+          "title": "按持久执行链重建聊天路由回归",
+          "status": "✅ 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG-archive.md"
+        }
+      ],
+      "proposedAppendMarkdown": "<a id=\"t1173-t-1017-source-31eb30d3-durable-chat-original\"></a>\n\n### T1173保留：T-1017-source-31eb30d3-durable-chat 原ID身份来源\n\n此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。\n\n原路径/行：BACKLOG-archive.md:1014；原行SHA256 `43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d`。\n\n```text\n| T-1017 | 按持久执行链重建聊天路由回归 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-014/017/020 共用旧同步 runChatStream 测试 29/50 失败；按 durable.submit、消息快照、事件订阅和完成事务重建局部改稿、逐字保真及工具门回归，不机械改预期。 |\n```\n\n原行各出现位置（同SHA副本也保留计数，不另判业务状态）：\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1014`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1014`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d`。\n",
+      "originalOccurrences": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+          "line": 1014,
+          "rawLineSha256": "43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d",
+          "sourceFileSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md",
+          "line": 1014,
+          "rawLineSha256": "43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d",
+          "sourceFileSha256": "e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40"
+        }
+      ]
+    },
+    {
+      "anchor": "t1173-t-1018-source-31eb30d3-portrait-timeline-original",
+      "title": "T-1018-source-31eb30d3-portrait-timeline 原ID身份来源",
+      "rawRows": [
+        {
+          "line": 1015,
+          "raw": "| T-1018 | 核实并修正竖屏动效时间线超出约束 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。 |",
+          "sha256": "e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa",
+          "cells": [
+            "T-1018",
+            "核实并修正竖屏动效时间线超出约束",
+            "✅ 待办",
+            "—",
+            "—",
+            "[核实记录](docs/verification/t1015-lesson-verification.md)",
+            "LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。"
+          ],
+          "id": "T-1018",
+          "title": "核实并修正竖屏动效时间线超出约束",
+          "status": "✅ 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG-archive.md"
+        }
+      ],
+      "proposedAppendMarkdown": "<a id=\"t1173-t-1018-source-31eb30d3-portrait-timeline-original\"></a>\n\n### T1173保留：T-1018-source-31eb30d3-portrait-timeline 原ID身份来源\n\n此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。\n\n原路径/行：BACKLOG-archive.md:1015；原行SHA256 `e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa`。\n\n```text\n| T-1018 | 核实并修正竖屏动效时间线超出约束 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。 |\n```\n\n原行各出现位置（同SHA副本也保留计数，不另判业务状态）：\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1015`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1015`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa`。\n",
+      "originalOccurrences": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+          "line": 1015,
+          "rawLineSha256": "e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa",
+          "sourceFileSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md",
+          "line": 1015,
+          "rawLineSha256": "e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa",
+          "sourceFileSha256": "e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40"
+        }
+      ]
+    },
+    {
+      "anchor": "t1173-t-1019-source-31eb30d3-confirm-candidate-original",
+      "title": "T-1019-source-31eb30d3-confirm-candidate 原ID身份来源",
+      "rawRows": [
+        {
+          "line": 1016,
+          "raw": "| T-1019 | 恢复成功候选确认写入选题池入口 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。 |",
+          "sha256": "a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52",
+          "cells": [
+            "T-1019",
+            "恢复成功候选确认写入选题池入口",
+            "✅ 待办",
+            "—",
+            "—",
+            "[核实记录](docs/verification/t1015-lesson-verification.md)",
+            "LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。"
+          ],
+          "id": "T-1019",
+          "title": "恢复成功候选确认写入选题池入口",
+          "status": "✅ 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG-archive.md"
+        }
+      ],
+      "proposedAppendMarkdown": "<a id=\"t1173-t-1019-source-31eb30d3-confirm-candidate-original\"></a>\n\n### T1173保留：T-1019-source-31eb30d3-confirm-candidate 原ID身份来源\n\n此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。\n\n原路径/行：BACKLOG-archive.md:1016；原行SHA256 `a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52`。\n\n```text\n| T-1019 | 恢复成功候选确认写入选题池入口 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。 |\n```\n\n原行各出现位置（同SHA副本也保留计数，不另判业务状态）：\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1016`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1016`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52`。\n",
+      "originalOccurrences": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+          "line": 1016,
+          "rawLineSha256": "a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52",
+          "sourceFileSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md",
+          "line": 1016,
+          "rawLineSha256": "a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52",
+          "sourceFileSha256": "e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40"
+        }
+      ]
+    },
+    {
+      "anchor": "t1173-t-1020-source-da970ced-guide-fixture-original",
+      "title": "T-1020-source-da970ced-guide-fixture 原ID身份来源",
+      "rawRows": [
+        {
+          "line": 1017,
+          "raw": "| T-1020 | 校准租约恢复测试的官方产品说明快照 | ✅ 待办 | — | — | [核实记录](docs/verification/t1020-guide-snapshot-fixture.md) | 扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。 |",
+          "sha256": "d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5",
+          "cells": [
+            "T-1020",
+            "校准租约恢复测试的官方产品说明快照",
+            "✅ 待办",
+            "—",
+            "—",
+            "[核实记录](docs/verification/t1020-guide-snapshot-fixture.md)",
+            "扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。"
+          ],
+          "id": "T-1020",
+          "title": "校准租约恢复测试的官方产品说明快照",
+          "status": "✅ 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG-archive.md"
+        }
+      ],
+      "proposedAppendMarkdown": "<a id=\"t1173-t-1020-source-da970ced-guide-fixture-original\"></a>\n\n### T1173保留：T-1020-source-da970ced-guide-fixture 原ID身份来源\n\n此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。\n\n原路径/行：BACKLOG-archive.md:1017；原行SHA256 `d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5`。\n\n```text\n| T-1020 | 校准租约恢复测试的官方产品说明快照 | ✅ 待办 | — | — | [核实记录](docs/verification/t1020-guide-snapshot-fixture.md) | 扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。 |\n```\n\n原行各出现位置（同SHA副本也保留计数，不另判业务状态）：\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1017`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1017`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5`。\n",
+      "originalOccurrences": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+          "line": 1017,
+          "rawLineSha256": "d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5",
+          "sourceFileSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md",
+          "line": 1017,
+          "rawLineSha256": "d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5",
+          "sourceFileSha256": "e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40"
+        }
+      ]
+    },
+    {
+      "anchor": "t1173-t-1021-source-526070b3-mac-artifact-original",
+      "title": "T-1021-source-526070b3-mac-artifact 原ID身份来源",
+      "rawRows": [
+        {
+          "line": 1018,
+          "raw": "| T-1021 | 补齐 T-1009 真实 Mac 产物原子结算验收 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md) | 全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。 |",
+          "sha256": "36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b",
+          "cells": [
+            "T-1021",
+            "补齐 T-1009 真实 Mac 产物原子结算验收",
+            "✅ 待办",
+            "—",
+            "—",
+            "[SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md)",
+            "全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。"
+          ],
+          "id": "T-1021",
+          "title": "补齐 T-1009 真实 Mac 产物原子结算验收",
+          "status": "✅ 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG-archive.md"
+        }
+      ],
+      "proposedAppendMarkdown": "<a id=\"t1173-t-1021-source-526070b3-mac-artifact-original\"></a>\n\n### T1173保留：T-1021-source-526070b3-mac-artifact 原ID身份来源\n\n此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。\n\n原路径/行：BACKLOG-archive.md:1018；原行SHA256 `36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b`。\n\n```text\n| T-1021 | 补齐 T-1009 真实 Mac 产物原子结算验收 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md) | 全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。 |\n```\n\n原行各出现位置（同SHA副本也保留计数，不另判业务状态）：\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1018`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1018`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b`。\n",
+      "originalOccurrences": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+          "line": 1018,
+          "rawLineSha256": "36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b",
+          "sourceFileSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md",
+          "line": 1018,
+          "rawLineSha256": "36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b",
+          "sourceFileSha256": "e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40"
+        }
+      ]
+    },
+    {
+      "anchor": "t1173-t-1016-source-3d5dc732-sdk-boundary-original",
+      "title": "T-1016-source-3d5dc732-sdk-boundary 原ID身份来源",
+      "rawRows": [
+        {
+          "line": 1013,
+          "raw": "| T-1016 | 核对前端聊天会话 SDK 物理边界 | ✅ 待办 | — | — | [根因清单](docs/verification/t1014-reconcile-triage.md) | 核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。 |",
+          "sha256": "7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860",
+          "cells": [
+            "T-1016",
+            "核对前端聊天会话 SDK 物理边界",
+            "✅ 待办",
+            "—",
+            "—",
+            "[根因清单](docs/verification/t1014-reconcile-triage.md)",
+            "核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。"
+          ],
+          "id": "T-1016",
+          "title": "核对前端聊天会话 SDK 物理边界",
+          "status": "✅ 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG-archive.md"
+        }
+      ],
+      "proposedAppendMarkdown": "<a id=\"t1173-t-1016-source-3d5dc732-sdk-boundary-original\"></a>\n\n### T1173保留：T-1016-source-3d5dc732-sdk-boundary 原ID身份来源\n\n此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。\n\n原路径/行：BACKLOG-archive.md:1013；原行SHA256 `7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860`。\n\n```text\n| T-1016 | 核对前端聊天会话 SDK 物理边界 | ✅ 待办 | — | — | [根因清单](docs/verification/t1014-reconcile-triage.md) | 核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。 |\n```\n\n原行各出现位置（同SHA副本也保留计数，不另判业务状态）：\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1013`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1013`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860`。\n",
+      "originalOccurrences": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+          "line": 1013,
+          "rawLineSha256": "7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860",
+          "sourceFileSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md",
+          "line": 1013,
+          "rawLineSha256": "7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860",
+          "sourceFileSha256": "e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40"
+        }
+      ]
+    },
+    {
+      "anchor": "t1173-t-1004-same-identity-history",
+      "title": "T-1004 同任务执行与旧完成表示",
+      "rawRows": [
+        {
+          "line": 82,
+          "raw": "|T-1004|冻结共享能力协议与 NomiFun 迁移依赖|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。|",
+          "sha256": "261d987b2cb3c5b639756d1ed2ebd38ae7025576d7d974cebaacaa7039a96f09",
+          "cells": [
+            "T-1004",
+            "冻结共享能力协议与 NomiFun 迁移依赖",
+            "📋 待办",
+            "—",
+            "—",
+            "[SPEC](docs/features/t1003-agent-workbench.md)",
+            "T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。"
+          ],
+          "id": "T-1004",
+          "title": "冻结共享能力协议与 NomiFun 迁移依赖",
+          "status": "📋 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG.md"
+        },
+        {
+          "line": 1019,
+          "raw": "| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |",
+          "sha256": "bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618",
+          "cells": [
+            "T-1004",
+            "冻结共享能力协议与 NomiFun 迁移依赖",
+            "✅ 待办",
+            "—",
+            "—",
+            "[SPEC](docs/features/t1003-agent-workbench.md)",
+            "T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。"
+          ],
+          "id": "T-1004",
+          "title": "冻结共享能力协议与 NomiFun 迁移依赖",
+          "status": "✅ 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG-archive.md"
+        },
+        {
+          "line": 156,
+          "raw": "| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |",
+          "sha256": "4a387fe43b832e71766e1383bc3269d3b18753e86b0ff5585c5caf97282f3875",
+          "cells": [
+            "T-1004",
+            "冻结共享能力协议与 NomiFun 迁移依赖",
+            "📋 待办",
+            "—",
+            "—",
+            "[SPEC](docs/features/t1003-agent-workbench.md)",
+            "T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。"
+          ],
+          "id": "T-1004",
+          "title": "冻结共享能力协议与 NomiFun 迁移依赖",
+          "status": "📋 待办",
+          "columnCount": 7,
+          "sourcePath": "N/t1171-before/BACKLOG.md"
+        }
+      ],
+      "proposedAppendMarkdown": "<a id=\"t1173-t-1004-same-identity-history\"></a>\n\n### T1173保留：T-1004 同任务执行与旧完成表示\n\n此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。\n\n原路径/行：BACKLOG.md:82；原行SHA256 `261d987b2cb3c5b639756d1ed2ebd38ae7025576d7d974cebaacaa7039a96f09`。\n\n```text\n|T-1004|冻结共享能力协议与 NomiFun 迁移依赖|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。|\n```\n\n原路径/行：BACKLOG-archive.md:1019；原行SHA256 `bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618`。\n\n```text\n| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |\n```\n\n原路径/行：N/t1171-before/BACKLOG.md:156；原行SHA256 `4a387fe43b832e71766e1383bc3269d3b18753e86b0ff5585c5caf97282f3875`。\n\n```text\n| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |\n```\n\n原行各出现位置（同SHA副本也保留计数，不另判业务状态）：\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:82`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `261d987b2cb3c5b639756d1ed2ebd38ae7025576d7d974cebaacaa7039a96f09`。\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1019`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:156`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `4a387fe43b832e71766e1383bc3269d3b18753e86b0ff5585c5caf97282f3875`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1019`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618`。\n",
+      "originalOccurrences": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+          "line": 82,
+          "rawLineSha256": "261d987b2cb3c5b639756d1ed2ebd38ae7025576d7d974cebaacaa7039a96f09",
+          "sourceFileSha256": "bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+          "line": 1019,
+          "rawLineSha256": "bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618",
+          "sourceFileSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md",
+          "line": 156,
+          "rawLineSha256": "4a387fe43b832e71766e1383bc3269d3b18753e86b0ff5585c5caf97282f3875",
+          "sourceFileSha256": "00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md",
+          "line": 1019,
+          "rawLineSha256": "bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618",
+          "sourceFileSha256": "e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40"
+        }
+      ]
+    },
+    {
+      "anchor": "t1173-t-1006-same-identity-history",
+      "title": "T-1006 同任务执行与旧完成表示",
+      "rawRows": [
+        {
+          "line": 84,
+          "raw": "|T-1006|接入统一工具网关与长结果回读|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。|",
+          "sha256": "481a62b039b27b37172294d2b2796779a326c3a30d329ddb4fee96c9f1f53c07",
+          "cells": [
+            "T-1006",
+            "接入统一工具网关与长结果回读",
+            "📋 待办",
+            "—",
+            "—",
+            "[SPEC](docs/features/t1003-agent-workbench.md)",
+            "依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。"
+          ],
+          "id": "T-1006",
+          "title": "接入统一工具网关与长结果回读",
+          "status": "📋 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG.md"
+        },
+        {
+          "line": 1020,
+          "raw": "| T-1006 | 接入统一工具网关与长结果回读 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |",
+          "sha256": "3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5",
+          "cells": [
+            "T-1006",
+            "接入统一工具网关与长结果回读",
+            "✅ 待办",
+            "—",
+            "—",
+            "[SPEC](docs/features/t1003-agent-workbench.md)",
+            "依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。"
+          ],
+          "id": "T-1006",
+          "title": "接入统一工具网关与长结果回读",
+          "status": "✅ 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG-archive.md"
+        },
+        {
+          "line": 158,
+          "raw": "| T-1006 | 接入统一工具网关与长结果回读 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |",
+          "sha256": "f2a0c187810ad2e7c16a86a1c44b3bffe3870f5d6194016616f9a693dc2848e7",
+          "cells": [
+            "T-1006",
+            "接入统一工具网关与长结果回读",
+            "📋 待办",
+            "—",
+            "—",
+            "[SPEC](docs/features/t1003-agent-workbench.md)",
+            "依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。"
+          ],
+          "id": "T-1006",
+          "title": "接入统一工具网关与长结果回读",
+          "status": "📋 待办",
+          "columnCount": 7,
+          "sourcePath": "N/t1171-before/BACKLOG.md"
+        }
+      ],
+      "proposedAppendMarkdown": "<a id=\"t1173-t-1006-same-identity-history\"></a>\n\n### T1173保留：T-1006 同任务执行与旧完成表示\n\n此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。\n\n原路径/行：BACKLOG.md:84；原行SHA256 `481a62b039b27b37172294d2b2796779a326c3a30d329ddb4fee96c9f1f53c07`。\n\n```text\n|T-1006|接入统一工具网关与长结果回读|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。|\n```\n\n原路径/行：BACKLOG-archive.md:1020；原行SHA256 `3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5`。\n\n```text\n| T-1006 | 接入统一工具网关与长结果回读 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |\n```\n\n原路径/行：N/t1171-before/BACKLOG.md:158；原行SHA256 `f2a0c187810ad2e7c16a86a1c44b3bffe3870f5d6194016616f9a693dc2848e7`。\n\n```text\n| T-1006 | 接入统一工具网关与长结果回读 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |\n```\n\n原行各出现位置（同SHA副本也保留计数，不另判业务状态）：\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:84`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `481a62b039b27b37172294d2b2796779a326c3a30d329ddb4fee96c9f1f53c07`。\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1020`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:158`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `f2a0c187810ad2e7c16a86a1c44b3bffe3870f5d6194016616f9a693dc2848e7`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1020`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5`。\n",
+      "originalOccurrences": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+          "line": 84,
+          "rawLineSha256": "481a62b039b27b37172294d2b2796779a326c3a30d329ddb4fee96c9f1f53c07",
+          "sourceFileSha256": "bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+          "line": 1020,
+          "rawLineSha256": "3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5",
+          "sourceFileSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md",
+          "line": 158,
+          "rawLineSha256": "f2a0c187810ad2e7c16a86a1c44b3bffe3870f5d6194016616f9a693dc2848e7",
+          "sourceFileSha256": "00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md",
+          "line": 1020,
+          "rawLineSha256": "3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5",
+          "sourceFileSha256": "e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40"
+        }
+      ]
+    },
+    {
+      "anchor": "t1173-t-1009-same-identity-history",
+      "title": "T-1009 同任务执行与旧完成表示",
+      "rawRows": [
+        {
+          "line": 87,
+          "raw": "|T-1009|实现产物版本、隔离预览与原生导出|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。|",
+          "sha256": "fec3a032fbade48985e8ada56ae14192d56b0e5c2bd495eb2b7a2f24e0375f47",
+          "cells": [
+            "T-1009",
+            "实现产物版本、隔离预览与原生导出",
+            "📋 待办",
+            "—",
+            "—",
+            "[SPEC](docs/features/t1003-agent-workbench.md)",
+            "依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。"
+          ],
+          "id": "T-1009",
+          "title": "实现产物版本、隔离预览与原生导出",
+          "status": "📋 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG.md"
+        },
+        {
+          "line": 1021,
+          "raw": "| T-1009 | 实现产物版本、隔离预览与原生导出 | ✅ 待办 | PASS[REV:a57fadb33099] | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合补充规格](docs/features/t1009-artifact-lineage-proposal.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。跨回合修订按 DEC-AW-1009 实施。 |",
+          "sha256": "11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b",
+          "cells": [
+            "T-1009",
+            "实现产物版本、隔离预览与原生导出",
+            "✅ 待办",
+            "PASS[REV:a57fadb33099]",
+            "—",
+            "[SPEC](docs/features/t1003-agent-workbench.md) [跨回合补充规格](docs/features/t1009-artifact-lineage-proposal.md)",
+            "依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。跨回合修订按 DEC-AW-1009 实施。"
+          ],
+          "id": "T-1009",
+          "title": "实现产物版本、隔离预览与原生导出",
+          "status": "✅ 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG-archive.md"
+        },
+        {
+          "line": 161,
+          "raw": "| T-1009 | 实现产物版本、隔离预览与原生导出 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。 |",
+          "sha256": "4e89663e74e4f16e5674e1af959555d0ea98dceb32b43b6034c1650db97f09d9",
+          "cells": [
+            "T-1009",
+            "实现产物版本、隔离预览与原生导出",
+            "📋 待办",
+            "—",
+            "—",
+            "[SPEC](docs/features/t1003-agent-workbench.md)",
+            "依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。"
+          ],
+          "id": "T-1009",
+          "title": "实现产物版本、隔离预览与原生导出",
+          "status": "📋 待办",
+          "columnCount": 7,
+          "sourcePath": "N/t1171-before/BACKLOG.md"
+        }
+      ],
+      "proposedAppendMarkdown": "<a id=\"t1173-t-1009-same-identity-history\"></a>\n\n### T1173保留：T-1009 同任务执行与旧完成表示\n\n此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。\n\n原路径/行：BACKLOG.md:87；原行SHA256 `fec3a032fbade48985e8ada56ae14192d56b0e5c2bd495eb2b7a2f24e0375f47`。\n\n```text\n|T-1009|实现产物版本、隔离预览与原生导出|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。|\n```\n\n原路径/行：BACKLOG-archive.md:1021；原行SHA256 `11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b`。\n\n```text\n| T-1009 | 实现产物版本、隔离预览与原生导出 | ✅ 待办 | PASS[REV:a57fadb33099] | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合补充规格](docs/features/t1009-artifact-lineage-proposal.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。跨回合修订按 DEC-AW-1009 实施。 |\n```\n\n原路径/行：N/t1171-before/BACKLOG.md:161；原行SHA256 `4e89663e74e4f16e5674e1af959555d0ea98dceb32b43b6034c1650db97f09d9`。\n\n```text\n| T-1009 | 实现产物版本、隔离预览与原生导出 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。 |\n```\n\n原行各出现位置（同SHA副本也保留计数，不另判业务状态）：\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:87`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `fec3a032fbade48985e8ada56ae14192d56b0e5c2bd495eb2b7a2f24e0375f47`。\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1021`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:161`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `4e89663e74e4f16e5674e1af959555d0ea98dceb32b43b6034c1650db97f09d9`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1021`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b`。\n",
+      "originalOccurrences": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+          "line": 87,
+          "rawLineSha256": "fec3a032fbade48985e8ada56ae14192d56b0e5c2bd495eb2b7a2f24e0375f47",
+          "sourceFileSha256": "bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+          "line": 1021,
+          "rawLineSha256": "11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b",
+          "sourceFileSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md",
+          "line": 161,
+          "rawLineSha256": "4e89663e74e4f16e5674e1af959555d0ea98dceb32b43b6034c1650db97f09d9",
+          "sourceFileSha256": "00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md",
+          "line": 1021,
+          "rawLineSha256": "11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b",
+          "sourceFileSha256": "e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40"
+        }
+      ]
+    },
+    {
+      "anchor": "t1173-t-1015-same-identity-history",
+      "title": "T-1015 同任务执行与旧完成表示",
+      "rawRows": [
+        {
+          "line": 81,
+          "raw": "|T-1015|核实剩余教训失败并校准过期回归断言|📋 待办|—|—|[实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015)|见详情。|",
+          "sha256": "edb588cd97f2a646aec26882e05c89afd8677ed2eda5a63f412f84952f3bc357",
+          "cells": [
+            "T-1015",
+            "核实剩余教训失败并校准过期回归断言",
+            "📋 待办",
+            "—",
+            "—",
+            "[实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015)",
+            "见详情。"
+          ],
+          "id": "T-1015",
+          "title": "核实剩余教训失败并校准过期回归断言",
+          "status": "📋 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG.md"
+        },
+        {
+          "line": 1012,
+          "raw": "| T-1015 | 核实剩余教训失败并校准过期回归断言 | ✅ 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 |",
+          "sha256": "43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce",
+          "cells": [
+            "T-1015",
+            "核实剩余教训失败并校准过期回归断言",
+            "✅ 待办",
+            "—",
+            "—",
+            "[实测清单](docs/verification/t1014-reconcile-triage.md)",
+            "从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。"
+          ],
+          "id": "T-1015",
+          "title": "核实剩余教训失败并校准过期回归断言",
+          "status": "✅ 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG-archive.md"
+        },
+        {
+          "line": 155,
+          "raw": "| T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015) | 见详情。 |",
+          "sha256": "a410aece14f1985cb5618fdc0aac42943b1d905123e39dd453d551a34fd266cd",
+          "cells": [
+            "T-1015",
+            "核实剩余教训失败并校准过期回归断言",
+            "📋 待办",
+            "—",
+            "—",
+            "[实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015)",
+            "见详情。"
+          ],
+          "id": "T-1015",
+          "title": "核实剩余教训失败并校准过期回归断言",
+          "status": "📋 待办",
+          "columnCount": 7,
+          "sourcePath": "N/t1171-before/BACKLOG.md"
+        }
+      ],
+      "proposedAppendMarkdown": "<a id=\"t1173-t-1015-same-identity-history\"></a>\n\n### T1173保留：T-1015 同任务执行与旧完成表示\n\n此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。\n\n原路径/行：BACKLOG.md:81；原行SHA256 `edb588cd97f2a646aec26882e05c89afd8677ed2eda5a63f412f84952f3bc357`。\n\n```text\n|T-1015|核实剩余教训失败并校准过期回归断言|📋 待办|—|—|[实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015)|见详情。|\n```\n\n原路径/行：BACKLOG-archive.md:1012；原行SHA256 `43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce`。\n\n```text\n| T-1015 | 核实剩余教训失败并校准过期回归断言 | ✅ 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 |\n```\n\n原路径/行：N/t1171-before/BACKLOG.md:155；原行SHA256 `a410aece14f1985cb5618fdc0aac42943b1d905123e39dd453d551a34fd266cd`。\n\n```text\n| T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015) | 见详情。 |\n```\n\n原行各出现位置（同SHA副本也保留计数，不另判业务状态）：\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:81`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `edb588cd97f2a646aec26882e05c89afd8677ed2eda5a63f412f84952f3bc357`。\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1012`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:155`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `a410aece14f1985cb5618fdc0aac42943b1d905123e39dd453d551a34fd266cd`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1012`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce`。\n",
+      "originalOccurrences": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+          "line": 81,
+          "rawLineSha256": "edb588cd97f2a646aec26882e05c89afd8677ed2eda5a63f412f84952f3bc357",
+          "sourceFileSha256": "bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+          "line": 1012,
+          "rawLineSha256": "43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce",
+          "sourceFileSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md",
+          "line": 155,
+          "rawLineSha256": "a410aece14f1985cb5618fdc0aac42943b1d905123e39dd453d551a34fd266cd",
+          "sourceFileSha256": "00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md",
+          "line": 1012,
+          "rawLineSha256": "43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce",
+          "sourceFileSha256": "e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40"
+        }
+      ]
+    },
+    {
+      "anchor": "t1173-t-916-same-identity-history",
+      "title": "T-916 同任务执行与旧完成表示",
+      "rawRows": [
+        {
+          "line": 116,
+          "raw": "|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|🔨 待办|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916)|见详情。|",
+          "sha256": "a589df718fc5b8ada6ad363a8d7e3d9b755b9b18bdab80de50245d679cdf3961",
+          "cells": [
+            "T-916",
+            "修复工程对账与历史任务证据漂移，恢复可信重构基线",
+            "🔨 待办",
+            "—",
+            "—",
+            "[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916)",
+            "见详情。"
+          ],
+          "id": "T-916",
+          "title": "修复工程对账与历史任务证据漂移，恢复可信重构基线",
+          "status": "🔨 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG.md"
+        },
+        {
+          "line": 1027,
+          "raw": "|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|✅|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [本轮证据](docs/verification/t916-review-receipt-repair.md)|回执、活动看板和健康门已修复（e4ec21a8、0ae6ca34）；reconcile 0/0。|",
+          "sha256": "3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb",
+          "cells": [
+            "T-916",
+            "修复工程对账与历史任务证据漂移，恢复可信重构基线",
+            "✅",
+            "—",
+            "—",
+            "[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [本轮证据](docs/verification/t916-review-receipt-repair.md)",
+            "回执、活动看板和健康门已修复（e4ec21a8、0ae6ca34）；reconcile 0/0。"
+          ],
+          "id": "T-916",
+          "title": "修复工程对账与历史任务证据漂移，恢复可信重构基线",
+          "status": "✅",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG-archive.md"
+        },
+        {
+          "line": 190,
+          "raw": "| T-916 | 修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】 | 🔨 待办 | — | — | [审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916) | 见详情。 |",
+          "sha256": "8ac791308d060dc8a723296f4200634781ffdaa07fb16e495372238a16ab34cb",
+          "cells": [
+            "T-916",
+            "修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】",
+            "🔨 待办",
+            "—",
+            "—",
+            "[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916)",
+            "见详情。"
+          ],
+          "id": "T-916",
+          "title": "修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】",
+          "status": "🔨 待办",
+          "columnCount": 7,
+          "sourcePath": "N/t1171-before/BACKLOG.md"
+        }
+      ],
+      "proposedAppendMarkdown": "<a id=\"t1173-t-916-same-identity-history\"></a>\n\n### T1173保留：T-916 同任务执行与旧完成表示\n\n此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。\n\n原路径/行：BACKLOG.md:116；原行SHA256 `a589df718fc5b8ada6ad363a8d7e3d9b755b9b18bdab80de50245d679cdf3961`。\n\n```text\n|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|🔨 待办|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916)|见详情。|\n```\n\n原路径/行：BACKLOG-archive.md:1027；原行SHA256 `3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb`。\n\n```text\n|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|✅|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [本轮证据](docs/verification/t916-review-receipt-repair.md)|回执、活动看板和健康门已修复（e4ec21a8、0ae6ca34）；reconcile 0/0。|\n```\n\n原路径/行：N/t1171-before/BACKLOG.md:190；原行SHA256 `8ac791308d060dc8a723296f4200634781ffdaa07fb16e495372238a16ab34cb`。\n\n```text\n| T-916 | 修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】 | 🔨 待办 | — | — | [审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916) | 见详情。 |\n```\n\n原行各出现位置（同SHA副本也保留计数，不另判业务状态）：\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:116`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `a589df718fc5b8ada6ad363a8d7e3d9b755b9b18bdab80de50245d679cdf3961`。\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1027`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:190`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `8ac791308d060dc8a723296f4200634781ffdaa07fb16e495372238a16ab34cb`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1027`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb`。\n",
+      "originalOccurrences": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+          "line": 116,
+          "rawLineSha256": "a589df718fc5b8ada6ad363a8d7e3d9b755b9b18bdab80de50245d679cdf3961",
+          "sourceFileSha256": "bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+          "line": 1027,
+          "rawLineSha256": "3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb",
+          "sourceFileSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md",
+          "line": 190,
+          "rawLineSha256": "8ac791308d060dc8a723296f4200634781ffdaa07fb16e495372238a16ab34cb",
+          "sourceFileSha256": "00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md",
+          "line": 1027,
+          "rawLineSha256": "3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb",
+          "sourceFileSha256": "e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40"
+        }
+      ]
+    },
+    {
+      "anchor": "t1173-t1014-identical-archive-history",
+      "title": "T-1014相同归档原行",
+      "rawRows": [
+        {
+          "line": 1011,
+          "raw": "| T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |",
+          "sha256": "819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f",
+          "cells": [
+            "T-1014",
+            "核对并清理233项历史对账失败",
+            "✅ 待办",
+            "—",
+            "—",
+            "[范围](docs/verification/t1014-reconcile-triage.md)",
+            "按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。"
+          ],
+          "id": "T-1014",
+          "title": "核对并清理233项历史对账失败",
+          "status": "✅ 待办",
+          "columnCount": 7,
+          "sourcePath": "BACKLOG-archive.md"
+        }
+      ],
+      "proposedAppendMarkdown": "<a id=\"t1173-t1014-identical-archive-history\"></a>\n\n### T1173保留：T-1014相同归档原行\n\n此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。\n\n原路径/行：BACKLOG-archive.md:1011；原行SHA256 `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。\n\n```text\n| T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |\n```\n\n原行各出现位置（同SHA副本也保留计数，不另判业务状态）：\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1011`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。\n- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1107`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:154`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。\n- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1011`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。\n",
+      "originalOccurrences": [
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+          "line": 1011,
+          "rawLineSha256": "819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f",
+          "sourceFileSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+          "line": 1107,
+          "rawLineSha256": "819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f",
+          "sourceFileSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md",
+          "line": 154,
+          "rawLineSha256": "819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f",
+          "sourceFileSha256": "00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939"
+        },
+        {
+          "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md",
+          "line": 1011,
+          "rawLineSha256": "819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f",
+          "sourceFileSha256": "e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40"
+        }
+      ]
+    }
+  ],
+  "immutableSourceIdentity": [
+    {
+      "gitRef": "31eb30d3f109b376f22f4a56dc9f775f7e527724",
+      "path": "BACKLOG.md",
+      "sha256": "6e80991e92a292a7bbaf4863197c49edd872ebfd15bc0c8125f57b26b73056be"
+    },
+    {
+      "gitRef": "31eb30d3f109b376f22f4a56dc9f775f7e527724",
+      "path": "BACKLOG.md",
+      "sha256": "6e80991e92a292a7bbaf4863197c49edd872ebfd15bc0c8125f57b26b73056be"
+    },
+    {
+      "gitRef": "31eb30d3f109b376f22f4a56dc9f775f7e527724",
+      "path": "BACKLOG.md",
+      "sha256": "6e80991e92a292a7bbaf4863197c49edd872ebfd15bc0c8125f57b26b73056be"
+    },
+    {
+      "gitRef": "da970ced24032df3afcc37415db1f67d2f1bc56a",
+      "path": "BACKLOG.md",
+      "sha256": "09a1262932c2835001d8a5c108a81ebfe447745d5925c0b75fb7f0c0f286d475"
+    },
+    {
+      "gitRef": "526070b3a36ba366ff05c7dea7644b196174dd2d",
+      "path": "BACKLOG.md",
+      "sha256": "b947b49c451cd4c8cec86d1fcaf631ab2c38c777d9948c6b1027ccb4f95442f0"
+    },
+    {
+      "gitRef": "3d5dc732afc4c2d5ac2caef6dcd527b251f40d44",
+      "path": "BACKLOG.md",
+      "sha256": "1a753444c1b354604406ba637a7fc6e052c58764e7d92fc6b547f250ee2ba616"
+    }
+  ],
+  "unknownDeferred": [
+    {
+      "id": "T-357",
+      "status": "UNKNOWN_PRECISE_SOURCE_IDENTITY",
+      "rowCount": 2,
+      "rows": [
+        {
+          "line": 78,
+          "title": "项目页三阶段 tab(脚本/制作视频/复盘)切换后选中态不跟手:从复盘切回脚本,内容已换、顶栏高亮仍停在「复盘」【bug·UI 状态·用户 2026-07-16 真机截图】",
+          "status": "✅ **已被 T-373 修复覆盖**(2026-07-17 主 agent 核对):T-373 根因=tab 高亮跟 project.currentStage(成熟度)而非正在查看的面,已改 selected 跟 isCurrent+根路由默认 script(project-stage-stepper/top-header),同一病症同一修;随 T-373 下批包真机验。",
+          "sha256": "728d2ea7be5b57003f8bb418c1e81e462e85a67c863287a3973f969315aa4329"
+        },
+        {
+          "line": 81,
+          "title": "采集逐字稿后处理:ASR 错字纠正 + 断句/分段换行(转写落库前过一遍)【功能·数据质量·用户 2026-07-16】",
+          "status": "✅ **代码完成+主 agent 亲验**(2026-07-17,e934f3a):收口点=runTranscribe processOne(ASR 产文本后 ensureTranscriptArtifact 前)一处生效,覆盖每日批量/T-374 单条/T-385 对话工具(同一 dispatch);benchmark 对标抓稿与收藏夹蒸馏走 transcribeOneAweme 原语**不覆盖**(边界明确,要覆盖另立任务);图集占位锚刻意跳过(测锁)。capability **复用 video.subtitles**(T-320a 同任务族,一处调优两处受益;否决 script.draft/review 语义漂移);模板复用 T-320a 条款+账号定位/标题可选专名参照;runStructuredNode 绑 {correctedText}。**保真护栏**:归一化(剔空白标点)后长度比 [0.90,1.10]+banded Levenshtein 编辑距离 ≤15%,超阈=模型越权改写→弃用落原文;失败诚实 applied:false+步骤注记,双 try/catch 转写链绝不因后处理挂。亲验:31 新测+ai-runtime 全量 61 文件 934 测绿+两端 tsc 净。**AI 行为待下批包真机复测**;阈值常量 FIDELITY_* 弱模型下可能需微调。",
+          "sha256": "4c7958a2159d33769be5d3fa4c567ba03c2e8c894a87bdb30b178749bc11558e"
+        }
+      ],
+      "action": "保留原归档完整行及当前WARN；此轮未读闭合各自Git引入/事件/报告绑定，不凭名称相异自动别名，更不删旧状态或PASS。",
+      "requiresIndependentOriginalOriginReview": true
+    },
+    {
+      "id": "T-356",
+      "status": "UNKNOWN_PRECISE_SOURCE_IDENTITY",
+      "rowCount": 2,
+      "rows": [
+        {
+          "line": 80,
+          "title": "白屏根因:本地 Whisper 推理阻塞 sidecar 主线程——转写批跑时全 app 无响应,切页即白屏【bug·阻断·真机证据 2026-07-16】",
+          "status": "✅ **代码已落地**(主 agent 2026-07-17 核对补记):multimodal-whisper-local.ts 推理已挪 **worker_threads 常驻单 worker**(spawnWorker 可注入单测;主线程只 await message);预警的打包坑已由 **T-383** 修掉(bundleXenovaTransformers 81 entry 闭包+HARD 自检 worker 同路径真加载)。本行原 🔨 系状态漏翻。**真机白屏复验**(转写批跑中切页不卡)随本批包(2026-07-17 20:10)验。",
+          "sha256": "9fbd1243d42eac97bb4102df6fa3318cea7c067cdcdbf345b6c8dc5a2dead273"
+        },
+        {
+          "line": 83,
+          "title": "项目复盘 tab 整顿 + 设置邮箱行下架【bug+UI·用户 2026-07-16 真机】",
+          "status": "✅ **代码完成+全测**(2026-07-16):④**根因=reviews transport list 只返 meta:{requestId},isList 端点 client envelope 校验(listMeta page/pageSize/total 必填)必抛 ZodError→readReviewHistory 静默 catch 成空→复盘记录永远空**(洞察写入全成功——真机 curl 证:用户那条 completed 复盘在库;dispatch 不做 envelope 校验故 curl 可读,坑只咬 RSC)。修=transport 补齐 listMeta+契约测试补 reviews.list 用例锚死 listEnvelope(T-053 加 op 时漏了)+readReviewHistory 吞错加 console.error 留痕。①邮箱行删(含测试)②热门作品发布列表整区删+死代码清零③AI 要点卡下架(与本期经验区同源冗余),裁决区头常驻「帮我复盘」+副标题写明「采纳后沉淀进知识库的经验区」(已核实 knowledge 页 T-118b 经验混排真在)。review+settings 186+backend reviews 32(+1 锚)全绿;四端 tsc 净;next build 过。**已装机(08:51 包)+真机 curl 五点全过**:复盘记录渲出用户那条「项目复盘 ·」条目/「还没有复盘记录」消失/AI 要点卡与热门作品列表零残留/采纳去处副标题在/设置邮箱行零命中;排查用测试复盘行已 PGlite 直删(库只剩用户真实数据)。原四子项:①设置「邮箱(登录标识唯一键不支持修改)」行删——产品已无邮箱概念(T-046 免登录/T-135 中性化)②复盘 tab「热门作品发布列表」删——单项目复盘页拉账号级全作品列表=凑数(同 chatbox-scope-tools-to-task 教训)③「AI 要点·本期复盘摘要」vs「本期经验可采纳沉淀」概念重叠,查清两者语义后整合成一条「要点→采纳成经验」流④**bug:复盘编辑「添加洞察」录入后没写进复盘记录** + 复盘沉淀的统一查看入口不明(经验库?)需给用户明确去处。",
+          "sha256": "9e0356676d6061902c002bc4373a0fdad155b0b90060cb7ae2a2df0f4310b47a"
+        }
+      ],
+      "action": "保留原归档完整行及当前WARN；此轮未读闭合各自Git引入/事件/报告绑定，不凭名称相异自动别名，更不删旧状态或PASS。",
+      "requiresIndependentOriginalOriginReview": true
+    },
+    {
+      "id": "T-488",
+      "status": "UNKNOWN_PRECISE_SOURCE_IDENTITY",
+      "rowCount": 2,
+      "rows": [
+        {
+          "line": 193,
+          "title": "删除项目脚本阶段重复的「导出素材包」按钮【体验·项目·用户 2026-07-23】",
+          "status": "✅ 已完成。脚本阶段不再展示导出入口；导出能力只保留在制作阶段，避免同一动作跨阶段重复。",
+          "sha256": "542818b67f3e9996266f60c10b24a051e0090d246bd3d719281cb1a1fb6a8262"
+        },
+        {
+          "line": 268,
+          "title": "抖音已在“网站登录保管库”登录，Copilot 读取视频仍返回 `needLogin`【bug·网页登录态·用户 2026-07-23】",
+          "status": "✅ 待办（用户已恢复）",
+          "sha256": "a14a435a5db4890a509c8e8015acf2d5c84a948bde5c20d8882ee80f449fc0b5"
+        }
+      ],
+      "action": "保留原归档完整行及当前WARN；此轮未读闭合各自Git引入/事件/报告绑定，不凭名称相异自动别名，更不删旧状态或PASS。",
+      "requiresIndependentOriginalOriginReview": true
+    },
+    {
+      "id": "T-489",
+      "status": "UNKNOWN_PRECISE_SOURCE_IDENTITY",
+      "rowCount": 2,
+      "rows": [
+        {
+          "line": 194,
+          "title": "模型配置把 ASR 调整为可选模型第一位，并在页面增加带截图的配置手册【体验·设置·用户 2026-07-23】",
+          "status": "✅ 已完成。ASR 已前置为可选模型第一项；必配区标题旁新增「配置手册」，提供真实字段说明、MiniMax/ASR 配置示意与常见错误。",
+          "sha256": "58a1fd27e564ee6fcf1411383f0523de30b1429a99c43399e13b3146eeb5cd5e"
+        },
+        {
+          "line": 267,
+          "title": "Windows updater `latest.json` 下载 URL 混入 runner 绝对路径【bug·桌面发布·CI 2026-07-23】",
+          "status": "✅ 待办",
+          "sha256": "be83b1fdd54a40e963c3df175f31c3e1e9db95be761059f652d410aa0624d96d"
+        }
+      ],
+      "action": "保留原归档完整行及当前WARN；此轮未读闭合各自Git引入/事件/报告绑定，不凭名称相异自动别名，更不删旧状态或PASS。",
+      "requiresIndependentOriginalOriginReview": true
+    },
+    {
+      "id": "T-627",
+      "status": "UNKNOWN_PRECISE_SOURCE_IDENTITY",
+      "rowCount": 2,
+      "rows": [
+        {
+          "line": 699,
+          "title": "定位最新飞书反馈“内容雷达生成选题卡卡住”【线上故障诊断·用户 2026-07-29】",
+          "status": "✅ 免审",
+          "sha256": "808376ebbb2d7a725d77f3a54589182a9ee6bcc67d3d15890488e001c431f6e5"
+        },
+        {
+          "line": 719,
+          "title": "CreatorOS 消费 Growth 渠道多模型数组【用户 2026-07-30 恢复】",
+          "status": "✅ 待办",
+          "sha256": "2022fd694e49c16697642264ee8cb4197dc5ae5f822ca9e842db277ea0f16a58"
+        }
+      ],
+      "action": "保留原归档完整行及当前WARN；此轮未读闭合各自Git引入/事件/报告绑定，不凭名称相异自动别名，更不删旧状态或PASS。",
+      "requiresIndependentOriginalOriginReview": true
+    }
+  ],
+  "expectedStaticEffects": {
+    "method": "私有候选文本的静态集合推导，未执行backlog-health/测试/CLI",
+    "activeDuplicateIds": [],
+    "activeArchivedReuse": [],
+    "remainingArchiveDuplicateIds": [
+      "T-357",
+      "T-356",
+      "T-488",
+      "T-489",
+      "T-627"
+    ],
+    "originalLiveBusinessStatesUnchanged": true,
+    "candidateBacklogBytes": 59477,
+    "backlogHardSizeThresholdNotRelaxed": 30720,
+    "expectedHealthNotClaimedPass": true,
+    "sizeStillSeparatelyOwnedBy": "T1171",
+    "remainingMalformedT1018Rows": []
+  },
+  "implementationPreconditions": [
+    "根应用前核baseFileSha256/每原行SHA仍匹配；若并发控制变化则重新定位，不能按过时行号盲替。",
+    "先落完整历史append section再按exact原行SHA替换；同任务合一不是删掉任务。",
+    "aliases只是已读源commit限定的历史身份，原event/报告/receipt task ID与hash不得改。",
+    "当前未审业务状态不因健康表表示修复而变✅/PASS。",
+    "落实后必须执行原backlog-health实际复验，保实际exit/log，不以静态推导签PASS。"
+  ],
+  "forbiddenWrites": [
+    "产品及测试源码",
+    "验证器/阈值/正则",
+    "原SPEC/PASS报告/旧events与review-events",
+    "业务任务状态"
+  ],
+  "rebasedCurrentControlAt": "2026-10-09T21:11:27.787484+00:00",
+  "previousBaseFileSha256": {
+    "BACKLOG.md": "ed557bb0f6ed46514891784db01ef5a3e6b9fbb7b88c5f8ff19047980e3c5d70",
+    "BACKLOG-archive.md": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8",
+    "BACKLOG-details.md": "8d329e868064d4eac6b365329d8db5646cf00d8e4fbede56036966b965f66da8"
+  },
+  "protectedConcurrentControlRows": [
+    {
+      "taskId": "T-1117",
+      "currentRawRow": "|T-1117|修复画布保存英文反馈与参考选择器名称展示遗漏|✅ 待办|PASS[REV:161a32c6331a]|PASS:32177b98fc54|[SPEC](docs/features/t1117-canvas-error-reference-preview.md)|当前main两条Chrome流程通过，但实际截图保存错误裸英文，参考已选卡仍长文件名；复用原中文反馈并闭合showIdentity=false全选择流程，精确file/保存/owner不变。独評、实际RED/GREEN及浏览器证据后修复；不代签模型或旧失败。|",
+      "sha256": "8c855c471dad3043f4bbc4a6e4af8746bdb2663a6715bdcd36df2b554f5915bf",
+      "candidatePreservesExactCurrentRow": true
+    },
+    {
+      "taskId": "T-1108",
+      "currentRawRow": "|T-1108|核对画布连线引用保存回读及浏览器短观察窗口|✅|PASS[REV:7725159d945d]|PASS:54ebbd993813|[实际缺陷](docs/features/t1108-canvas-public-observation.md) [详情](BACKLOG-details.md#t-1108)|见详情。|",
+      "sha256": "914c0342a5b3f9441fb1b3e51ae43f98766a42566c950eaf5446b0d8efe7ab67",
+      "candidatePreservesExactCurrentRow": true
+    }
+  ],
+  "historicalPreservationPolicy": {
+    "byteDefinition": "raw字段等于原UTF-8完整表格行，不trim、不改竖线/空格/文案；行SHA明确不包含换行符。原文件SHA及原位置独立记录，完整文件在N/t1171-before及根T1171无损gzip/逐行映射保留。",
+    "lineShaExcludesTerminator": true,
+    "occurrenceMultiplicityPreserved": true,
+    "archiveLiveDuplicateRendering": "同任务archive索引仅转非执行历史指针；完整原行在BACKLOG-details新增历史段按原字节展示，不把旧完成重新变成当前完成。",
+    "differentIdentityRendering": "别名表格只按已核source commit改变ID表示并追加来源链接，其余原业务列保持；另历史段保原ID完整行，events/SPEC/报告/审核hash均不修改。",
+    "oldPassPolicy": "候选不同源aliases的原review全为—；T1009等原PASS仅承接在原完整历史，不搬入当前审核列或新身份。",
+    "noHistoryDeletionForGate": true,
+    "existingT1171ArchiveRetention": "本候选不改根已保留的原95.1KB看板gzip/逐行映射；仅新增T1173身份对应关系。"
+  }
+}

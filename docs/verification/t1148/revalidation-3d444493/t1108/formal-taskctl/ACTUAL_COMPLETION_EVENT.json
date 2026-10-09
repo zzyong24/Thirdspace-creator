@@ -1,0 +1,22 @@
+{
+  "ts": "2026-10-09T21:08:06.171Z",
+  "actor": "taskctl",
+  "action": "complete",
+  "task": "T-1108",
+  "evidence": "docs/verification/t1148/revalidation-3d444493/t1108/FRONTEND_VALIDATION_REPORT.md",
+  "report": "docs/verification/t1148/revalidation-3d444493/t1108/FRONTEND_VALIDATION_REPORT.md",
+  "report_sha": "54ebbd993813",
+  "acceptance_checks": [
+    "AC-PERSIST",
+    "AC-LEGACY"
+  ],
+  "visible_copy_sha": "e9de97b0534d3cbf60307f9cd336a97467acc5d43ed7d73bb37dac3e6cf631e7",
+  "visible_copy_captures": 2,
+  "commit_sha": "3d4444934a618542747dd9839a299c6d769adad1",
+  "verification_executed": true,
+  "verification_command_sha": "5daf0824fdcc",
+  "verification_output_sha": "404cd16a076e",
+  "verification_output_bytes": 78,
+  "sha_before": "2d5ce36f4ff8",
+  "sha_after": "ed557bb0f6ed"
+}

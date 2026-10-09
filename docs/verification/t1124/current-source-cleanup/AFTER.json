@@ -1,0 +1,13 @@
+{
+  "observedAt": "2026-10-09T21:08:22.477324+00:00",
+  "originalSourceRootsRemoved": true,
+  "retainedBranches": {
+    "codex/t1101-canvas-binding": "23c3bedc0e8216e20b67f39c653e34a3dfdd508e",
+    "codex/t1106-chart-cover-labels": "454e9241a2adb107f3beb224914bc3273c063bee"
+  },
+  "remainingWorktrees": "worktree /Users/zyongzhu/Workbase/Thirdspace-creator\nHEAD fe4f73d2e89388cf174c384be0eef18450c6b893\nbranch refs/heads/codex/t1062-account-group-snapshot\n\nworktree /Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator\nHEAD 3d4444934a618542747dd9839a299c6d769adad1\nbranch refs/heads/main\n\nworktree /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator\nHEAD 430cc8cff8b730950623b5d97c725a05a257a904\nbranch refs/heads/codex/t188-completion-integration\n\n",
+  "originalPrivateEvidenceFiles": 152,
+  "ignoredEvidenceByteEqual": true,
+  "forceUsed": false,
+  "appOrDatabaseBackup": false
+}

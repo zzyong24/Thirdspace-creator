@@ -1009,19 +1009,99 @@
 | ID | 任务 | 状态 | 文档 | 一句话 |
 |---|---|---|---|---|
 | T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |
-| T-1015 | 核实剩余教训失败并校准过期回归断言 | ✅ 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 |
-| T-1016 | 核对前端聊天会话 SDK 物理边界 | ✅ 待办 | — | — | [根因清单](docs/verification/t1014-reconcile-triage.md) | 核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。 |
-| T-1017 | 按持久执行链重建聊天路由回归 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-014/017/020 共用旧同步 runChatStream 测试 29/50 失败；按 durable.submit、消息快照、事件订阅和完成事务重建局部改稿、逐字保真及工具门回归，不机械改预期。 |
-| T-1018 | 核实并修正竖屏动效时间线超出约束 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。 |
-| T-1019 | 恢复成功候选确认写入选题池入口 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。 |
-| T-1020 | 校准租约恢复测试的官方产品说明快照 | ✅ 待办 | — | — | [核实记录](docs/verification/t1020-guide-snapshot-fixture.md) | 扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。 |
-| T-1021 | 补齐 T-1009 真实 Mac 产物原子结算验收 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md) | 全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。 |
-| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
-| T-1006 | 接入统一工具网关与长结果回读 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |
-| T-1009 | 实现产物版本、隔离预览与原生导出 | ✅ 待办 | PASS[REV:a57fadb33099] | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合补充规格](docs/features/t1009-artifact-lineage-proposal.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。跨回合修订按 DEC-AW-1009 实施。 |
+> T1173 同任务历史索引：T-1015 当前唯一执行行在 [BACKLOG.md](BACKLOG.md)；旧完成、原审核和全部原行保留于 [完整历史](BACKLOG-details.md#t1173-t-1015-same-identity-history)。当前状态仍为「📋 待办」，不迁移旧PASS/complete，不签业务重新完成。
+|T-1016-source-3d5dc732-sdk-boundary|核对前端聊天会话 SDK 物理边界|✅ 待办|—|—|[根因清单](docs/verification/t1014-reconcile-triage.md) [原ID与来源](BACKLOG-details.md#t1173-t-1016-source-3d5dc732-sdk-boundary-original)|核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。|
+|T-1017-source-31eb30d3-durable-chat|按持久执行链重建聊天路由回归|✅ 待办|—|—|[核实记录](docs/verification/t1015-lesson-verification.md) [原ID与来源](BACKLOG-details.md#t1173-t-1017-source-31eb30d3-durable-chat-original)|LED-014/017/020 共用旧同步 runChatStream 测试 29/50 失败；按 durable.submit、消息快照、事件订阅和完成事务重建局部改稿、逐字保真及工具门回归，不机械改预期。|
+|T-1018-source-31eb30d3-portrait-timeline|核实并修正竖屏动效时间线超出约束|✅ 待办|—|—|[核实记录](docs/verification/t1015-lesson-verification.md) [原ID与来源](BACKLOG-details.md#t1173-t-1018-source-31eb30d3-portrait-timeline-original)|LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。|
+|T-1019-source-31eb30d3-confirm-candidate|恢复成功候选确认写入选题池入口|✅ 待办|—|—|[核实记录](docs/verification/t1015-lesson-verification.md) [原ID与来源](BACKLOG-details.md#t1173-t-1019-source-31eb30d3-confirm-candidate-original)|LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。|
+|T-1020-source-da970ced-guide-fixture|校准租约恢复测试的官方产品说明快照|✅ 待办|—|—|[核实记录](docs/verification/t1020-guide-snapshot-fixture.md) [原ID与来源](BACKLOG-details.md#t1173-t-1020-source-da970ced-guide-fixture-original)|扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。|
+|T-1021-source-526070b3-mac-artifact|补齐 T-1009 真实 Mac 产物原子结算验收|✅ 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md) [原ID与来源](BACKLOG-details.md#t1173-t-1021-source-526070b3-mac-artifact-original)|全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。|
+> T1173 同任务历史索引：T-1004 当前唯一执行行在 [BACKLOG.md](BACKLOG.md)；旧完成、原审核和全部原行保留于 [完整历史](BACKLOG-details.md#t1173-t-1004-same-identity-history)。当前状态仍为「📋 待办」，不迁移旧PASS/complete，不签业务重新完成。
+> T1173 同任务历史索引：T-1006 当前唯一执行行在 [BACKLOG.md](BACKLOG.md)；旧完成、原审核和全部原行保留于 [完整历史](BACKLOG-details.md#t1173-t-1006-same-identity-history)。当前状态仍为「📋 待办」，不迁移旧PASS/complete，不签业务重新完成。
+> T1173 同任务历史索引：T-1009 当前唯一执行行在 [BACKLOG.md](BACKLOG.md)；旧完成、原审核和全部原行保留于 [完整历史](BACKLOG-details.md#t1173-t-1009-same-identity-history)。当前状态仍为「📋 待办」，不迁移旧PASS/complete，不签业务重新完成。
 
 ## 归档于 2026-09-21
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 |---|---|---|---|---|---|---|
-|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|✅|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [本轮证据](docs/verification/t916-review-receipt-repair.md)|回执、活动看板和健康门已修复（e4ec21a8、0ae6ca34）；reconcile 0/0。|
+> T1173 同任务历史索引：T-916 当前唯一执行行在 [BACKLOG.md](BACKLOG.md)；旧完成、原审核和全部原行保留于 [完整历史](BACKLOG-details.md#t1173-t-916-same-identity-history)。当前状态仍为「🔨 待办」，不迁移旧PASS/complete，不签业务重新完成。
+
+## 归档于 2026-10-10
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+| T-1163 | 校正迁移原测试所需的隔离PostgreSQL角色 | ✅ 待办 | — | — | [实际诊断](docs/features/t1163-isolated-postgres-test-role.md) | 原backend109例105PASS/4FAIL，原硬编码55422/zyongzhu角色不存在；只核本会话隔离cluster后补测试LOGIN CREATEDB角色，原迁移/恢复断言不删，不改用户库或产品。 |
+| T-1162 | 核对注册表预期缺失的当前五个公开操作 | ✅ 待办 | PASS[REV:122abbd28afd] | — | [实际缺陷与SPEC](docs/features/t1162-registry-approved-route-expectation.md) | 当前contract12例11PASS/1FAIL，缺5旧operation预期；核实际已审出处后只固定补清单，原extra拒绝保留，不自动白名单或改产品。 |
+| T-1160 | 校正独立审核报告提前占用正式输出路径 | ✅ 待办 | — | — | [实际诊断](docs/features/t1160-spec-review-report-path-collision.md) | T1159独评PASS，但root误放手工报告到reviewctl输出路径，原record真实exit1拒绝legacy覆盖；只保原件后让原工具生成，不改验证器/旧审核或产品。 |
+| T-1158 | 核对微信来源研究暂停对当前源码整合的准入 | ✅ 待办 | — | — | [实际诊断](docs/features/t1158-wechat-source-research-admission.md) | 来源最新视频号同步0报告、统计页导航未知、两实验用尽；原研究卡保留，独立核冻结移植/当前门，不换ID重置预算或冒称微信已跑通。 |
+| T-1157 | 校正验收报告运行时字段混入夹具声明 | ✅ 待办 | — | — | [实际诊断](docs/features/t1157-frontend-runtime-report-field.md) | 原Chrome两PASS但正式报告校验exit1，runtime混入fixture；保原FAIL，仅准确分离运行时与数据声明，不改验证器/产品或冒称全验收。 |
+| T-1156 | 补齐画幅截图前参考缩略图加载观察 | ✅ 待办 | — | — | [实际观察](docs/features/t1156-aspect-reference-capture-readiness.md) | 原Chrome2PASS/exit0但根看900修改前图参考未加载；保原8图，采证前等具体真实PNG解码再原读写旅程，不改产品或代签视觉。 |
+| T-1154 | 核对原生画幅选项被禁用观察读取成父控件 | ✅ 待办 | — | — | [实际诊断](docs/features/t1154-native-option-disabled-observation.md) | 原Chrome1PASS/1FAIL，240次option实际disabled但matcher读enabled；保原失败，核实际follow-label及同构控件，仅校准原生属性观察，不改产品/删禁用要求。 |
+| T-1153 | 校正画幅浏览器业务alert与路由播报重复定位 | ✅ 待办 | — | — | [实际诊断](docs/features/t1153-current-browser-alert-scope.md) | 当前Chrome1PASS/1FAIL，实际模式拒绝和引用保留已走过，alert命中业务与Next播报器两项；保FAIL，限定真实main，不first/force/删中文断言。 |
+| T-1152 | 修正画幅浏览器准备使用不存在模板ID | ✅ 待办 | — | — | [实际诊断](docs/features/t1152-current-browser-template-identity.md) | 当前Chrome初始save两404，trace明确模板快照不存在；保原日志，仅读公开真实模板ID/version准备，不改权限/产品或删除快照断言。 |
+| T-1151 | 校正新画幅浏览器能力响应缺两种模式 | ✅ 待办 | — | — | [实际诊断](docs/features/t1151-current-browser-capability-fixture.md) | 独立静态复核IMP-001，未启动Chrome；原两项fixture违反四项schema，保原件，仅补不可用视频模式并原schema校验，不改产品或断言。 |
+| T-1150 | 修正当前画幅整合的测试API与节点类型收窄 | ✅ 待办 | — | — | [实际诊断](docs/features/t1150-current-aspect-typecheck.md) | 当前48组件PASS但typecheck exit2七处；保原失败，仅删新增getByRole无效exact和显式目标类型收窄，不降检查/改业务。 |
+| T-1147 | 核对固定素材抽屉的可见范围观察 | ✅ 待办 | — | — | [实际诊断](docs/features/t1147-fixed-drawer-clip-observation.md) | 当前field六窗口PASS，390×450图库whole失败但原图完整；保原失败，按实际fixed包含块核clip，不删真实边界/放宽媒体断言。 |
+| T-1146 | 核对素材弹窗重开后滚动目标被重建 | ✅ 待办 | — | — | [实际诊断](docs/features/t1146-picker-reopen-detached-observation.md) | 当前390重开旧列表后点选成功但scroll稳定时DOM重建；保原失败，按实际200ms正式重读等待本次响应和ready，再原完整媒体断言，不force或删断言。 |
+| T-1145 | 核对素材图库预览与卡片重叠 | ✅ 待办 | PASS[REV:b3ff530bb6ca] | — | [实际观察](docs/features/t1145-gallery-preview-overlap.md) | 实际查看1024×680gallery原图疑似占位重叠；预览解码/关闭回读通过不代签布局，先保图核flex/滚动，产品改动先精确独评。 |
+| T-1143 | 核对窄窗画布走查先打开详情后无法点击节点 | ✅ 待办 | — | — | [实际诊断](docs/features/t1143-canvas-selection-inspector-observation.md) | T1140第二例真实选用/保存/reload/gallery均走过，1024×680开详情后点原节点120秒被aside/html挡；保失败核选择顺序与视口，不force点击、直接改React或冒称产品已修。 |
+| T-1142 | 核对素材布局测试把无需滚动误判为滚动区缺失 | ✅ 待办 | — | — | [实际诊断](docs/features/t1142-picker-scroll-owner-observation.md) | T1140首例683×450完整左右媒体边界已过，内容未溢出，测试要求实际滚动区恰为1而得到0；保原失败，校准唯一正文滚动责任，不强制造溢出或删媒体断言。 |
+| T-1141 | 核对旧图片页组的组画幅未进入新生成请求 | ✅ 待办 | PASS[REV:070b1fbe0e33] | — | [实际诊断](docs/features/t1141-legacy-group-generation-ratio.md) | 当前service允许node缺比例，但新task只取node未继承明确group；先隔离公共链验证，不调用模型/改旧任务或把静态分析称已修。 |
+| T-1139 | 核对素材选择器切换视口后的即时尺寸失败 | ✅ 待办 | — | — | [实际诊断](docs/features/t1139-picker-viewport-observation.md) | 当前Chrome2PASS/1FAIL，900即时x=-30但随后实际截图x约16；保原失败并有限120秒观察原边界，不猜根因或删断言。 |
+| T-1138 | 核对共享素材弹窗走查未命中原生模式选择控件 | ✅ 待办 | — | — | [实际诊断](docs/features/t1138-calendar-shared-picker-test-selector.md) | 原Chrome2PASS/1FAIL，模式combobox确实存在；仅校准测试可访问名定位，保原日志/120秒/0retry并真实进入图库，不改产品洗绿。 |
+| T-1137 | 核对排期弹窗关闭后键盘焦点丢失 | ✅ 待办 | — | — | [实际缺陷](docs/features/t1137-calendar-focus-return.md) | T1136原Chrome Esc已关但120秒触发器inactive；原缺DialogTrigger，保失败并由T1136同路径明确扩展独评后修复，不删焦点断言。 |
+| T-1134 | 核对恢复素材不可用提示的读取时序 | ✅ 待办 | — | — | [实际诊断](docs/features/t1134-recovered-material-readiness.md) | T1133校准后37例36PASS/1FAIL，素材标记同步断言未等清单ready；先按原断言120秒观察实际状态，持续缺失再补产品SPEC，不猜界面缺陷或放宽为总提示。 |
+| T-1133 | 修正制作回归测试的素材选择、操作目录与结果归属漂移 | ✅ 待办 | PASS[REV:c6d0579feef6] | — | [SPEC](docs/features/t1133-production-regression-fixture-compatibility.md) | 原顺序LED032/040实际失败：退役select、目录18对32、假结果资产；先独评保原恢复/导出/归属断言，按当前选择器及真实公开资产链校准，不改产品洗绿。 |
+| T-1132 | 核对完整对账新增资源生命周期回归失败 | ✅ 待办 | — | — | [实际诊断](docs/features/t1132-resource-lifecycle-current-gate.md) | 同轮完整canonical新增LED061；先原命令分段保实际断言、作用域和sourceSHA，核释放/背压/停止及等待真值，不删历史、重发任务或用旧PASS代签。 |
+| T-1131 | 核对完整对账新增渲染模块解析消费门失败 | ✅ 待办 | — | — | [实际诊断](docs/features/t1131-render-resolver-current-gate.md) | T1127完整canonical实际43ERROR，原41保留、LED031新增；取得原公开检查内层断言后核源码/依赖/环境，尚不猜归因、不删require/NODE_OPTIONS规则或弱化真渲染。 |
+| T-1130 | 校正局部图表验证被登记为整页旅程验收 | ✅ 待办 | — | — | [实际诊断](docs/features/t1130-chart-acceptance-applicability.md) | 根登记T1127验收待验，但原已审SPEC只要求局部组件Chrome回放；正式消费者强制non-fixture及journey，不能补拍。只读独评允许仅校正适用性并保全部原验证，不改状态/验证器/产品。 |
+| T-1129 | 校正本轮验证清单的孤儿检查入口名称 | ✅ 待办 | — | — | [实际诊断](docs/features/t1129-verification-orphan-entry.md) | T1127实际组合static exit1，boundary/semantic/diff已0，根误写不存在orphan-check；真实入口为orphan-scan，只校正命令并原扫描，不删门/断言或代签旧0。 |
+| T-1128 | 修正图表采证入口依赖本机未安装图片库 | ✅ 待办 | — | — | [实际诊断](docs/features/t1128-chart-visual-dependency.md) | T1127产品未改，首次baseline截图后PIL未安装实际exit1；只用浏览器原生图片解码取同截图像素，不删圆点/坐标/0retry断言，不将环境失败冒作产品RED。 |
+| T-1127 | 在当前main整合实测样本、错过计划保护与图表孤立点修复 | ✅ 待办 | PASS[REV:d4acb71a0241] | — | [SPEC](docs/features/t1127-main-analytics-integration.md) | T1124实际发现来源T1106分析12条路径增量缺失，main逐字仍旧基点；先独评、仅测试真实RED，再整合5产品/7测试及当前组合验证，不补历史或代签来源/安装。 |
+| T-1126 | 核对安装版粗剪导出确认409与AI工具入口指引 | ✅ 待办 | — | — | [实际诊断](docs/features/t1126-installed-render-confirm-routing.md) | d712新安装版65原读回一致；同一已采纳r7粗剪导出task317待确认，ai.tasks.confirm显式同组仍409 execution_manifest未实现；先核结果/真实执行ID与正确公开入口，不改归属/不猜ID/不重提导出或模型。具体是调用选择或产品指引缺口待证。 |
+| T-1125 | 修正本机出包冻结辅助检查把脱敏测试夹具误报为真实密钥 | ✅ 待办 | PASS[REV:d9e25d4f31e7] | — | [SPEC](docs/features/t1125-package-private-preflight-fixture.md) | ec5冻结全扫描321秒exit1，三Rust测试模块4类命中皆脱敏合成夹具；保原RED并先独评仅准确path/sourceSHA/逐值SHA分类，未知仍拒，原规则全扫描不删。只改私有helper，不改vendor/build；当前45基本PASS不代签出包。 |
+| T-1122 | 补齐参考素材选择窄屏缩略图加载后的视觉验收 | ✅ 待办 | PASS[REV:65d15e7b733e] | — | [SPEC](docs/features/t1122-reference-thumbnail-visual-readiness.md) | 原旅程真实2PASS，但根看900截图左选中卡空白、右图已加载；只等右预览采证不足。先独评后各视口新增真实左img加载断言，原断言/来源/预算/0retry不变；持续失败再审产品修复，不凭空白图签视觉PASS。 |
+| T-1123 | 核对纯账号组项目列表仍要求旧平台账号 | ✅ 待办 | — | — | [实际诊断](docs/features/t1123-group-project-list-legacy-account.md) | 原中性组正式list/get成功，projects.list显式group真实HTTP428旧账号门；原失败及schema保留，先核operation/transport/service与安装源，不填默认账号绕过，不重发模型；产品修复先独评，当前冻结UI验收后实施。 |
+| T-1121 | 核对本轮完整对账归档执行门再次失败 | ✅ 待办 | — | — | [实际诊断](docs/features/t1121-archive-guard-current-reconcile.md) | T1117完整对账1940秒exit1/42ERROR，原41保留且LED052再次失败；归档产品字节未变、隔离PG已重建，具体内层断言UNKNOWN。保日志并原入口取证，不猜负载、删归属断言或以T1115旧59PASS代签。 |
+| T-1120 | 核对画布中断保存失败状态被后续成功保存覆盖 | ✅ 待办 | PASS[REV:8af0827f9d1e] | — | [实际诊断](docs/features/t1120-canvas-interrupted-save-observation.md) | T1117第三公共原流程1PASS1FAIL，单次中断已发生但保存失败状态未观察到、最终已保存；前两次相同产品字节通过不代签。保trace核后续save/HMR/导航，不猜环境、删断言或盲重跑。 |
+| T-1119 | 核对类型检查与开发浏览器共用Next生成目录竞态 | ✅ 待办 | PASS[REV:02f5e7bfc00c] | — | [实际诊断](docs/features/t1119-next-verification-type-directory-race.md) | 本轮第二次typecheck与dev浏览器并行，生成routes/validator语法错exit2；源码原type已PASS。保原日志，先原入口串行复验，不删缓存/弱化tsc，不把共享生成目录命令当独立并行。 |
+| T-1115 | 修复原归档验收入口默认初始化10秒与执行30秒预算 | ✅ 待办 | PASS[REV:61382e511aa5] | — | [SPEC及原诊断](docs/features/t1115-archive-global-regression.md) | 原入口实际55PASS/4SKIP，lease beforeAll触发10000ms；只修backend Vitest test/hook默认及同入口两it预算120秒，保原PG/权限/竞争/退出码，先独评再原59例与完整对账复验。不把T1116独立49PASS当根因或全功能完成。 |
+| T-1114 | 补齐原聊天模型调用的工作区归属只读摘要诊断 | ✅ 待办 | PASS[REV:aa44cb7e4c35] | — | [SPEC](docs/features/t1114-owned-model-call-summary.md) | 承接T1103原task272缺图文与不可见回执；只新增owner校验后的已结算分片/最终参数一致性摘要，不返回正文/密钥/字段名。先独评RED/GREEN及公共链，main无备份新包对原任务读取；不修parser、不重发模型、不代签联合候选。 |
+| T-1112 | 修复纯账号组读取 AI 工作台能力目录被要求平台账号 | ✅ 待办 | PASS[REV:7e93c8940e44] | — | [SPEC](docs/features/t1112-group-workbench-capabilities.md) | 879646新安装版18项正式读取17PASS/1FAIL，workbench.capabilities.list返回428；已核操作归属声明及transport二次账号门。仅修目录纯组读取，真实组鉴权与其它七项账号门不变；先独评RED/GREEN及正式公共组合，再main无备份出包安装复验。不代签T1103候选。 |
+| T-1113 | 核对抖音扫码与采集在两份公共能力目录中的差异 | ✅ 待办 | — | — | [实际诊断](docs/features/t1113-installed-platform-capability-consistency.md) | 已核不同入口：账号绑定目录走既有抖音stage，统一目录仅新sourceAdapters；AI已发现accounts目录并经原owner采用，独立诊断无已确认缺陷。原PG组合3PASS/72未选，未扫码、未改flag，证据见诊断；不代签T1103。 |
+| T-1111 | 修正本地冻结辅助校验把已解决复核项误判为阻断 | ✅ 待办 | PASS[REV:be761523cfcf] | — | [SPEC](docs/features/t1111-freeze-resolved-review.md) | 当前main文档已提交，冻结预检退出1：T1107有限PASS报告保留IMP-001 resolved，被辅助脚本findings==[]误拒。只修本机私有校验的机械状态读取，未解决/未知状态仍拒；保原报告/失败/产品字节，不改仓库构建、Gate或用户数据。 |
+| T-1104 | 修复运行时展开错误链与清理诊断失真 | ✅ | PASS[REV:055e0175f519] | — | [SPEC](docs/features/t1104-runtime-extraction-error-chain.md) | T1102确认tar内层I/O原因被Display丢失，清理Result被忽略却称已清理。唯一Rust文件保留有限真实链与清理结果，先独评/真实tar碰撞RED；不改解压安全/旧runtime/超时或当前App，不代签首次根因。 |
+| T-1100 | 明确原completion兼容测试的旧冻结格式 | ✅ | PASS[REV:5ee066dd22cf] | — | [SPEC](docs/features/t1100-completion-legacy-fixture.md) | T1099正式扩大回归282PASS/2FAIL；旧原completion夹具仍新提交，末次失败按新格式正确partial却期待旧succeeded。只显式声明隔离旧格式，保原60断言/预算并追加新partial与回放，不改产品或用户数据；先独评再修。 |
+| T-1084 | 修复安装版 AI 普通消息被 Workbench 工具预装配校验阻断 | ✅ | PASS[REV:e209f8301608] | — | [SPEC](docs/features/t1084-chat-workbench-preparation-order.md) | T1062 新 main 安装实测公开消息入口 HTTP400：plan.update 未装配；原已有 plan host，但校验发生在原型注入之前。只修准备顺序，保留最终严格目录/副作用/schema/租约校验；先独立复核、RED/GREEN，再重新出包和原会话公开复验，不重发未知任务、不触碰真实稿件。 |
+| T-1085 | 核对实际聊天集成失败与既有计划恢复场景漂移 | ✅ | PASS[REV:beb541a947be] | — | [SPEC](docs/features/t1085-chat-integration-fixture-calibration.md) | T1084 回归实际暴露原 plan 集成2FAIL及完整装配后段失败。两plan旧fixture不经本轮修改函数，与有限错误收口和安全根模型恢复协议漂移；前端后段还需完整诊断。先取得实际账本/lastError/模型请求事实，修复需单独SPEC和独评，不放宽生产门或删断言，不冒称完整Gate通过。 |
+| T-1086 | 补齐 AI 助手对项目现有剪辑工程的发现与真实读取 | ✅ | PASS[REV:6e65ef420578] | — | [SPEC](docs/features/t1086-assistant-native-editor-read.md) | 新安装 main3a60 中性只读会话真实完成却误称无可编辑视频；项目104实际已有output119原生编辑器rev7。先核对作品发现/生命周期/只读目录和提示词，独评后打通原正式端口及归属边界，不自动写稿/剪辑/生成，安装版同项目真实复验。 |
+| T-1087 | 排查安装版首个读取请求长时间阻塞与密钥fd同步等待 | ✅ | PASS[REV:8ffb9d8c552a] | — | [SPEC](docs/features/t1087-installed-first-read-fd-wait.md) | 新包首读实际231.782秒，运行中sample主线程Atomics.wait；源码唯一对应secret-crypto fd读取在EOF n=0时仍等executionTimeoutMs。先用原fd/纯隔离测试核EOF与EAGAIN，保密钥/激活/真实数据，独评后修确定性同步阻塞，不猜数据库锁或清历史。 |
+| T-1088 | 修复同参不可重试工具失败无法提交终态回执 | ✅ | PASS[REV:a686e18173fe] | — | [SPEC](docs/features/t1088-terminal-receipt-signature.md) | T1085真实Worker新增同参例两次commitChatResult被拒、running超过120秒；原inputDigest含model和tool调用ID，不能用于跨调用参数相等判断。先核原已绑定参数和真实账本再独评，不忽略digest或信任Worker自报，保留有限收口/归属/未知阻断。 |
+| T-1089 | 核对旧账号入口冻结账号组后读取旧会话与稿件的兼容缺口 | ✅ | PASS[REV:1fe141f61ea3] | — | [SPEC](docs/features/t1089-legacy-source-ownership-repair.md) · [原诊断](docs/features/t1089-legacy-frozen-source-read.md) | 已登记账号只选账号的新会话/两稿件遗漏组盖章，冻结后原owner拒绝；候选0130三表trigger与可证明旧NULL精确回填，保留原task/payload/digest/读权限。新包已交付，当前收敛PG锁顺序与独评；不手改用户库或重发任务。 |
+| T-1090 | 修复完成回执回放被同时间消息排序误判来源变化 | ✅ | PASS[REV:0f4c60fe8b62] | — | [SPEC](docs/features/t1090-frozen-chat-history-replay.md) · [原诊断](docs/features/t1090-chat-completion-replay-diagnosis.md) | 原b75及当前60例同59PASS/1FAIL，已定位首次合法commit后同参replay的同createdAt乱序。仅按原可信task历史ID重建原消息，保留摘要/归属/lease及账本校验，独评后RED/GREEN、main与无备份出包；原失败不抹除。 |
+| T-1073 | 修复全面排查确认的8处资源浪费与内存泄漏 | ✅ 待办 | PASS[REV:3b0b0c1dc9ce] | — | [SPEC](docs/features/t1073-resource-memory-fixes.md) [详情](BACKLOG-details.md#t-1073) | 见详情。 |
+| T-1071-resource-audit | 全系统排查资源浪费与内存泄漏并隔离复现 | ✅ 待办 | — | — | [排查范围](docs/verification/t1071-resource-memory-audit.md) [详情](BACKLOG-details.md#t-1071-resource-audit) | 见详情。 |
+| T-1071-whisper | 修复本地转录成功后遗留Whisper线程 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-a99ff608d0b49e76)。 |
+| T-1071-stream | 补齐聊天响应背压与缓冲容量策略 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-b61a9e0e1e4b28e3)。 |
+| T-1071-worker-memory | 收敛宿主IPC历史回执与音频字节保留 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-3e6fddab175311d1)。 |
+| T-1071-cache | 为完成聊天会话和预览元数据增加安全淘汰 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-9ee728d6794951d7)。 |
+| T-1071-polling | 修复稿面慢读取叠加、雷达空闲扫描与历史卡终态观察 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-2052423e231a8ccf)。 |
+| T-1071-scheduler | 修复后台调度重叠并补停止清理与心跳在途防护 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d62221da75f2c693)。 |
+| T-1068-radar-transcription | 隔离复现内容雷达转录 MODEL_RESULT_UNKNOWN 暂停并定位原因 | ✅ 待办 | — | — | [诊断范围](docs/verification/t1068-radar-transcription.md) [详情](BACKLOG-details.md#t-1068-radar-transcription) | 见详情。 |
+| T-1069-completion-json | 修复雷达文本模型完整非流式JSON回执被流式解析误判未知 | ✅ 待办 | PASS[REV:020bbb5c97fa] | — | [SPEC](docs/features/t1069-completion-json-compat.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-32643c4cf546ed76)。 |
+| T-1070-transcript-reliability | 修复通用转录整理文本兼容模式缺少schema校验器与保存阻断 | ✅ 待办 | PASS[REV:5b690995d15b] | — | [SPEC](docs/features/t1070-transcript-postprocess-reliability.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e05ce3185fe7853c)。 |
+| T-1066-worker | 执行Worker及后端超时修复 | ✅ 待办 | — | — | [已评审父SPEC](docs/features/t1066-timeout-policy.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-7ac9ae31a324c3ee)。 |
+| T-1066-frontend | 前端与桌面原生层超时修复 | ✅ 待办 | — | — | [已评审父SPEC](docs/features/t1066-timeout-policy.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-00e46835d1567ae8)。 |
+| T-1066-tooling | 构建CI及运维工具超时修复 | ✅ 待办 | — | — | [已评审父SPEC](docs/features/t1066-timeout-policy.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-79f5cc742488451b)。 |
+| T-1065 | 全盘审计系统所有超时限制与固定30秒上限 | ✅ 待办 | — | — | [范围](docs/features/t1065-timeout-audit.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-37095e929dd176d6)。 |
+| T-1064 | 只读诊断本机作品升级/提取 AbortError | ✅ 待办 | — | — | [排查记录](docs/verification/t1064-aborterror-diagnosis.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e5c1f0d53099b701)。 |
+| T-1063-release-pipeline | 取消双端出包人为超时与阻断检查并重跑 Windows 流水线 | ✅ 待办 | PASS[REV:245946205971] | — | [SPEC](docs/features/t1063-release-pipeline.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-b6ea894360489899)。 |
+| T-1024-runtime-liveness | 根治聊天生成占用数据通道与重启后 unknown_result 卡死 | ✅ | — | — | [SPEC](docs/features/t1024-chat-runtime-liveness.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e2b40696b7cb6d4c)。 |
+| T-1023-agent-recovery | 根治 AI 助手自动恢复无限卡死并证明后台进展 | ✅ | — | PASS:87c802e61bbe | [SPEC](docs/features/t1023-agent-recovery-liveness.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-6b5c0536610c48a8)。 |
+| T-1022-agent-recovery | 禁止模型超时或不完整输出阻断生成，统一由 Agent loop 恢复 | ✅ | — | PASS:06eb90bb86b5 | [SPEC](docs/features/t1022-nonblocking-agent-recovery.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-eee9f25319e1abe5)。 |
+| T-1076 | 清理旧安装包与本轮临时构建垃圾 | ✅ 待办 | — | — | [SPEC](docs/features/t1076-clean-obsolete-local-packages.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-0808de95d80d8a23)。 |
+| T-1072 | 修复全局Git钩子误用失效Lefthook路径 | ✅ 待办 | — | — | [SPEC](docs/features/t1072-global-git-hook.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-f6abe467486ee90c)。 |
+| T-1068 | 排查并修复本地客户端启动超时，交付可启动测试包 | ✅ 待办 | PASS[REV:8abc34b1f775] | — | [SPEC](docs/features/t1068-local-client-startup.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-80e4d3ffb5f9172c)。 |
+| T-1067 | 落实本地客户端优先出包并移除人为构建超时 | ✅ 待办 | PASS[REV:ebe1b789bc56] | — | [SPEC](docs/features/t1067-local-package-build-only.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-25094b544f740169)。 |
+| T-1016 | 调研 CreatorOS 连接本地 Codex、WorkBuddy 与外部 Agent | ✅ 待办 | — | — | [SPEC](docs/features/t1016-external-agent-research.md) | 参考 ChatCut 和公开协议，核实双向接入、现有执行边界与可落地方案；本轮仅调研设计。 |
+> T1173：T-1014第二份完全相同归档行合入同任务首行；原行及SHA见[完整历史](BACKLOG-details.md#t1173-t1014-identical-archive-history)。状态/审核/验收未改变。

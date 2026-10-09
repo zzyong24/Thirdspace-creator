@@ -2084,3 +2084,345 @@ T-1014仅迁移看板原说明，状态和验收未改：
 ## T1062 本地main安装验收续跑（2026-10-08）
 
 用户本轮继续此前全功能验收；沿当前用户/已安装App及本地main新包验收授权，实际包源0480、收尾main0bc810。已完成本地构建和镜像/深签名/内层运行时校验，当前准备使用现有安装函数安装并启动，继续公开CLI和实际页面链路；不重建，不创建构建App/数据备份，不推送或发布。主SPEC原历史备份记录保留，新包本轮行为单独记实证，不冒称原备份/全部Gate通过；用户资料/激活不清理，当前工作区选择保留。仅在原中性验收组/原项目/原任务执行授权验收，不修改真实账号作品，不重新生成原未知图。全局T1081/T1082/T1083失败不影响既有合法安装和验证。
+
+<a id="t-1108"></a>
+### T-1108 · 核对画布连线引用保存回读及浏览器短观察窗口
+
+- 原文档：[实际缺陷](docs/features/t1108-canvas-public-observation.md)
+- 任务详情：main188c当前Chrome实际1PASS/1FAIL，连线referenceFileId回读undefined且默认poll5秒超时；此前main同产品旅程2PASS保留。先核trace/save/API及LED053真实消费者，规范观察至少120秒后仍失败则修产品；不删保存断言或伪造已有引用。
+
+<a id="t-1103"></a>
+### T-1103 · 排查Pi联合提案反复遗漏完整图文参数
+
+- 原文档：[实际缺陷](docs/features/t1103-pi-joint-argument-diagnosis.md)
+- 任务详情：T1099安装源码070287真实Pi task272只读成功，3次提案仅digest/文章，图文始终缺失，收到具体错误却重复同参；真实partial、零候选、原稿不变。保原ID/调用/期限；两实验已用尽：完整分片3PASS，截断3PASS/2FAIL；宽容解析保真缺口已复现，task272原wire未知，先兼容设计独评，不放宽schema或新键重发。T1099/T1095仍待实际候选。
+
+<a id="t-1102"></a>
+### T-1102 · 排查并恢复本地安装首次运行时展开失败
+
+- 原文档：[诊断与边界](docs/features/t1102-installed-runtime-extraction.md)
+- 任务详情：T1099源码070287新DMG校验/签名/安装成功，但首次展开Chrome框架条目失败，落tauri错误页且CLI无连接。原日志已保存，根因未确认；同包一次温和重启已恢复HTTP61596/CLI，首次根因仍UNKNOWN；另立T1104修确定的错误链/清理诊断缺口，不删原runtime/数据、不重发AI。
+
+<a id="t-1094"></a>
+### T-1094 · 修复部分完成AI任务公开查询状态合同缺口
+
+- 原文档：[SPEC](docs/features/t1094-public-partial-task-status.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md)
+- 任务详情：源码e71022ff新包装入当前App，原task200get/list真实partial，正常重启后10原任务/原键/稿件一致。新增公共链/消费者与安装恢复通过；正式相关9+6旧失败登记T1096、全局原42仍保留，不complete，不重发或采纳。
+
+<a id="t-1099"></a>
+### T-1099 · 修复工具明确业务拒绝回执缺失与末次失败被算成功
+
+- 原文档：[SPEC](docs/features/t1099-tool-domain-recovery.md) · [实际缺陷](docs/features/t1099-tool-domain-recovery-diagnosis.md)
+- 任务详情：070287新包已无备份安装，同包一次恢复首页/CLI、11任务/4DTO/22读取对照通过；真实Pi272 read成功但3次缺图文，partial零候选，原稿不变，taskctl因T1103阻断。源码正式291PASS/原42逐字保留；不完成或盲重发。
+
+<a id="t-1095"></a>
+### T-1095 · 验证Pi联合创作必填nullable字段遵循与原任务恢复方法
+
+- 原文档：[SPEC](docs/features/t1095-tool-parameter-recovery.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md)
+- 任务详情：用户要求问题及时建task修复；原task200三次nullable填参失败。独评后冻结新任务纠错格式，旧回执不变；正式121PASS/类型/架构门通过，完整原42逐字一致及timeout原27保留。68dff新包已安装、首页/10原任务/4对象对照通过；真实Pi task222静态结构纠正后领域来源拒绝且错误被吞/结束假成功，登记T1099。无候选或采纳，不complete。
+
+<a id="t-1091"></a>
+### T-1091 · 补齐公开编导消息的Codex选择与文章图文视频目标定位并安装验收
+
+- 原文档：[SPEC](docs/features/t1091-public-director-context.md)
+- 任务详情：用户继续全面验证；安装公开消息仅content/attachments，实际owner固定Pi，无法从正式CLI验收已实现的编辑/联合创作。仅加可选引擎及严格已保存目标，保默认Pi和原任务/owner/候选采纳；先独评和真实RED/GREEN，再main无备份出包/公开Codex实测，不绕过本地来源保护。
+
+<a id="t1173-t1018-global-debt-history"></a>
+
+### T1173保留：T-1018全局类型与边界欠债重复行及八列原文
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG.md:56；原行SHA256 `26444114bde94a4a34082fbce254e3679562cb54f6e2b6241e0162567c5c88af`。
+
+```text
+|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018)|见详情。|
+```
+
+原路径/行：BACKLOG.md:80；原行SHA256 `510ffe14554f53332b4538c241dc9e3af21409845b2009f7c9d3596b032120ad`。
+
+```text
+|T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md)|后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。|2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。|
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:121；原行SHA256 `da1a9f8f8aae7354101d0e4a7e7fc2012348129d36e2f06eaa29be27e4def44b`。
+
+```text
+| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018) | 见详情。 |
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:152；原行SHA256 `16b56fcbae9432475cf43810c9b56e2f97206851d4a481a8b51cb0f69e6065e4`。
+
+```text
+| T-1018 | 清理本轮测试暴露的全局类型与边界欠债 | 📋 待办 | — | 待验 | [实测证据](docs/verification/t1017-rewrite-first.md) | 后端旧测试 API/类型漂移、contract旧快照/资产/cover断言、live-chat-session SDK 边界与 video-decisions-runner 语义门仍失败；与 T-1015 历史教训对账联动，不混入 T-1017。 本轮T-1022再次实测原12项后端类型、3项契约及边界/语义旧失败，见docs/features/t1022-account-group-workspace/VERIFICATION.md。 2026-10-06 T1068收尾全局37错误/1告警，原36保留，另LED-027稿件并发检查此次失败；相关产品/测试未变，根因待查，原始与比较记录见本地验收根t1068-post-startup-reconcile，T1068启动独立验收不代签此项。 | 2026-10-07 T1070实测保留原boundary7（含未改live-chat-session旧2）、semantic缺material.match及MAIN缺tools/timeout-policy/verify.mjs；规定命令MODULE_NOT_FOUND，详情docs/verification/t1070/CURRENT_VALIDATION.md，不以其他checkout代签。 2026-10-07 T1070收尾完整对账37错误/1告警，当前原始日志docs/verification/t1070/root-prefreeze-reconcile.log；其它历史receipt与boundary/语义/LED仍失败，未逐项核因，不签全仓通过。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:56`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `26444114bde94a4a34082fbce254e3679562cb54f6e2b6241e0162567c5c88af`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:80`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `510ffe14554f53332b4538c241dc9e3af21409845b2009f7c9d3596b032120ad`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:121`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `da1a9f8f8aae7354101d0e4a7e7fc2012348129d36e2f06eaa29be27e4def44b`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:152`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `16b56fcbae9432475cf43810c9b56e2f97206851d4a481a8b51cb0f69e6065e4`。
+
+<a id="t1173-t-1017-source-31eb30d3-durable-chat-original"></a>
+
+### T1173保留：T-1017-source-31eb30d3-durable-chat 原ID身份来源
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1014；原行SHA256 `43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d`。
+
+```text
+| T-1017 | 按持久执行链重建聊天路由回归 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-014/017/020 共用旧同步 runChatStream 测试 29/50 失败；按 durable.submit、消息快照、事件订阅和完成事务重建局部改稿、逐字保真及工具门回归，不机械改预期。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1014`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1014`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `43c9b50296ab221a823170b87e2d983a0e203c298556306db25c74df64f3346d`。
+
+<a id="t1173-t-1018-source-31eb30d3-portrait-timeline-original"></a>
+
+### T1173保留：T-1018-source-31eb30d3-portrait-timeline 原ID身份来源
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1015；原行SHA256 `e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa`。
+
+```text
+| T-1018 | 核实并修正竖屏动效时间线超出约束 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-024 portrait 实际为 15.34 秒而验收约束为 15 秒；查明多出 0.34 秒的来源，按真实契约修正并复测成片，不放宽断言掩盖偏差。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1015`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1015`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `e285dd716892d838a1c40697d289d3a870377f0206962fc1db205faff3cecdaa`。
+
+<a id="t1173-t-1019-source-31eb30d3-confirm-candidate-original"></a>
+
+### T1173保留：T-1019-source-31eb30d3-confirm-candidate 原ID身份来源
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1016；原行SHA256 `a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52`。
+
+```text
+| T-1019 | 恢复成功候选确认写入选题池入口 | ✅ 待办 | — | — | [核实记录](docs/verification/t1015-lesson-verification.md) | LED-042 重现 T-900 成功且已有改写初稿时缺“确认写入选题池”按钮；修复状态门并保留归属、来源及幂等校验。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1016`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1016`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `a7748448e122ef3d29dea3f80d3f8403e55b8f4763c94767bb6a13547faa5b52`。
+
+<a id="t1173-t-1020-source-da970ced-guide-fixture-original"></a>
+
+### T1173保留：T-1020-source-da970ced-guide-fixture 原ID身份来源
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1017；原行SHA256 `d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5`。
+
+```text
+| T-1020 | 校准租约恢复测试的官方产品说明快照 | ✅ 待办 | — | — | [核实记录](docs/verification/t1020-guide-snapshot-fixture.md) | 扩大后端回归 349/350 中旧 creatoros.guide 夹具硬填 v1 与任意正文，和现行官方版本/正文校验冲突；核实真值后修正夹具，不放宽运行时校验。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1017`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1017`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `d6d415bc1be07cb03a022ff9cf1d46f2902a1c649ce2317affb3caddac985fa5`。
+
+<a id="t1173-t-1021-source-526070b3-mac-artifact-original"></a>
+
+### T1173保留：T-1021-source-526070b3-mac-artifact 原ID身份来源
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1018；原行SHA256 `36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b`。
+
+```text
+| T-1021 | 补齐 T-1009 真实 Mac 产物原子结算验收 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合规格](docs/features/t1009-artifact-lineage-proposal.md) | 全量自测发现真实 Mac 组合宿主漏传产物原子端口，且已确认提交会被后置工具卡投影故障反杀；补齐装配、保护已确认回执，并重跑产物版本、预览、导出、恢复与安装包验收。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1018`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1018`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `36fb5325a342276767bcae629b94304cb3392b8e0431cf336737be955426725b`。
+
+<a id="t1173-t-1016-source-3d5dc732-sdk-boundary-original"></a>
+
+### T1173保留：T-1016-source-3d5dc732-sdk-boundary 原ID身份来源
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1013；原行SHA256 `7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860`。
+
+```text
+| T-1016 | 核对前端聊天会话 SDK 物理边界 | ✅ 待办 | — | — | [根因清单](docs/verification/t1014-reconcile-triage.md) | 核实 live-chat-session.ts 的两个 AI SDK 导入与 R2 架构规则；按真实依赖消除违规，若确需改变边界先补 SPEC 和评审，不直接放宽基线。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1013`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1013`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `7f0a44f482f7676441c5d2b617f1a1e3359ea112a22d8813d9d7cf487ed6f860`。
+
+<a id="t1173-t-1004-same-identity-history"></a>
+
+### T1173保留：T-1004 同任务执行与旧完成表示
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG.md:82；原行SHA256 `261d987b2cb3c5b639756d1ed2ebd38ae7025576d7d974cebaacaa7039a96f09`。
+
+```text
+|T-1004|冻结共享能力协议与 NomiFun 迁移依赖|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。|
+```
+
+原路径/行：BACKLOG-archive.md:1019；原行SHA256 `bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618`。
+
+```text
+| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:156；原行SHA256 `4a387fe43b832e71766e1383bc3269d3b18753e86b0ff5585c5caf97282f3875`。
+
+```text
+| T-1004 | 冻结共享能力协议与 NomiFun 迁移依赖 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:82`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `261d987b2cb3c5b639756d1ed2ebd38ae7025576d7d974cebaacaa7039a96f09`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1019`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:156`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `4a387fe43b832e71766e1383bc3269d3b18753e86b0ff5585c5caf97282f3875`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1019`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `bb50192e3e4fbc1a60ac226e8ae08ee22a45ef4ae62d53e18022f6cc033df618`。
+
+<a id="t1173-t-1006-same-identity-history"></a>
+
+### T1173保留：T-1006 同任务执行与旧完成表示
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG.md:84；原行SHA256 `481a62b039b27b37172294d2b2796779a326c3a30d329ddb4fee96c9f1f53c07`。
+
+```text
+|T-1006|接入统一工具网关与长结果回读|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。|
+```
+
+原路径/行：BACKLOG-archive.md:1020；原行SHA256 `3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5`。
+
+```text
+| T-1006 | 接入统一工具网关与长结果回读 | ✅ 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:158；原行SHA256 `f2a0c187810ad2e7c16a86a1c44b3bffe3870f5d6194016616f9a693dc2848e7`。
+
+```text
+| T-1006 | 接入统一工具网关与长结果回读 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:84`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `481a62b039b27b37172294d2b2796779a326c3a30d329ddb4fee96c9f1f53c07`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1020`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:158`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `f2a0c187810ad2e7c16a86a1c44b3bffe3870f5d6194016616f9a693dc2848e7`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1020`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `3d78cf335be30ec803c06528ef94ad06ec642dc4e581e711532fd34f53e5c5b5`。
+
+<a id="t1173-t-1009-same-identity-history"></a>
+
+### T1173保留：T-1009 同任务执行与旧完成表示
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG.md:87；原行SHA256 `fec3a032fbade48985e8ada56ae14192d56b0e5c2bd495eb2b7a2f24e0375f47`。
+
+```text
+|T-1009|实现产物版本、隔离预览与原生导出|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。|
+```
+
+原路径/行：BACKLOG-archive.md:1021；原行SHA256 `11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b`。
+
+```text
+| T-1009 | 实现产物版本、隔离预览与原生导出 | ✅ 待办 | PASS[REV:a57fadb33099] | — | [SPEC](docs/features/t1003-agent-workbench.md) [跨回合补充规格](docs/features/t1009-artifact-lineage-proposal.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。跨回合修订按 DEC-AW-1009 实施。 |
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:161；原行SHA256 `4e89663e74e4f16e5674e1af959555d0ea98dceb32b43b6034c1650db97f09d9`。
+
+```text
+| T-1009 | 实现产物版本、隔离预览与原生导出 | 📋 待办 | — | — | [SPEC](docs/features/t1003-agent-workbench.md) | 依赖 T-1006/1007；真实文件交付、HTML/图表预览、图片/PDF及选址导出。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:87`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `fec3a032fbade48985e8ada56ae14192d56b0e5c2bd495eb2b7a2f24e0375f47`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1021`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:161`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `4e89663e74e4f16e5674e1af959555d0ea98dceb32b43b6034c1650db97f09d9`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1021`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `11c6cf73ab04c3dc194cc4115c2addc0bb4603402d3c326c447a8f5c3bede96b`。
+
+<a id="t1173-t-1015-same-identity-history"></a>
+
+### T1173保留：T-1015 同任务执行与旧完成表示
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG.md:81；原行SHA256 `edb588cd97f2a646aec26882e05c89afd8677ed2eda5a63f412f84952f3bc357`。
+
+```text
+|T-1015|核实剩余教训失败并校准过期回归断言|📋 待办|—|—|[实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015)|见详情。|
+```
+
+原路径/行：BACKLOG-archive.md:1012；原行SHA256 `43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce`。
+
+```text
+| T-1015 | 核实剩余教训失败并校准过期回归断言 | ✅ 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) | 从19条失败命令定位旧版本/源码字符串断言与实际重试、消费、交互差异；保留有效检查，修正后重验。 |
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:155；原行SHA256 `a410aece14f1985cb5618fdc0aac42943b1d905123e39dd453d551a34fd266cd`。
+
+```text
+| T-1015 | 核实剩余教训失败并校准过期回归断言 | 📋 待办 | — | — | [实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015) | 见详情。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:81`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `edb588cd97f2a646aec26882e05c89afd8677ed2eda5a63f412f84952f3bc357`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1012`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:155`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `a410aece14f1985cb5618fdc0aac42943b1d905123e39dd453d551a34fd266cd`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1012`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `43347d16b93026a669bcf0bc5529317dc35e81fb58f1d668e5395225b25257ce`。
+
+<a id="t1173-t-916-same-identity-history"></a>
+
+### T1173保留：T-916 同任务执行与旧完成表示
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG.md:116；原行SHA256 `a589df718fc5b8ada6ad363a8d7e3d9b755b9b18bdab80de50245d679cdf3961`。
+
+```text
+|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|🔨 待办|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916)|见详情。|
+```
+
+原路径/行：BACKLOG-archive.md:1027；原行SHA256 `3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb`。
+
+```text
+|T-916|修复工程对账与历史任务证据漂移，恢复可信重构基线|✅|—|—|[审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [本轮证据](docs/verification/t916-review-receipt-repair.md)|回执、活动看板和健康门已修复（e4ec21a8、0ae6ca34）；reconcile 0/0。|
+```
+
+原路径/行：N/t1171-before/BACKLOG.md:190；原行SHA256 `8ac791308d060dc8a723296f4200634781ffdaa07fb16e495372238a16ab34cb`。
+
+```text
+| T-916 | 修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】 | 🔨 待办 | — | — | [审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) [详情](BACKLOG-details.md#t-916) | 见详情。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md:116`；原文件SHA `bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13`；原行SHA `a589df718fc5b8ada6ad363a8d7e3d9b755b9b18bdab80de50245d679cdf3961`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1027`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:190`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `8ac791308d060dc8a723296f4200634781ffdaa07fb16e495372238a16ab34cb`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1027`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `3c8b7c1cdaea567d4bfc8b8e9b80690adee51dcf83a6f066dfaa7e280595f1cb`。
+
+<a id="t1173-t1014-identical-archive-history"></a>
+
+### T1173保留：T-1014相同归档原行
+
+此节仅保留原完整行/各列/SHA及不同时间状态；不迁移审核/完成事件，不签当前业务。
+
+原路径/行：BACKLOG-archive.md:1011；原行SHA256 `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。
+
+```text
+| T-1014 | 核对并清理233项历史对账失败 | ✅ 待办 | — | — | [范围](docs/verification/t1014-reconcile-triage.md) | 按真实证据关闭过期治理项，保留有效缺陷与历史回执；不修改产品运行时。 |
+```
+
+原行各出现位置（同SHA副本也保留计数，不另判业务状态）：
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1011`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。
+- `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1107`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:154`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。
+- `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1011`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。

@@ -1,0 +1,95 @@
+[
+  {
+    "ts": "2026-10-09T21:08:06.171Z",
+    "actor": "taskctl",
+    "action": "complete",
+    "task": "T-1108",
+    "evidence": "docs/verification/t1148/revalidation-3d444493/t1108/FRONTEND_VALIDATION_REPORT.md",
+    "report": "docs/verification/t1148/revalidation-3d444493/t1108/FRONTEND_VALIDATION_REPORT.md",
+    "report_sha": "54ebbd993813",
+    "acceptance_checks": [
+      "AC-PERSIST",
+      "AC-LEGACY"
+    ],
+    "visible_copy_sha": "e9de97b0534d3cbf60307f9cd336a97467acc5d43ed7d73bb37dac3e6cf631e7",
+    "visible_copy_captures": 2,
+    "commit_sha": "3d4444934a618542747dd9839a299c6d769adad1",
+    "verification_executed": true,
+    "verification_command_sha": "5daf0824fdcc",
+    "verification_output_sha": "404cd16a076e",
+    "verification_output_bytes": 78,
+    "sha_before": "2d5ce36f4ff8",
+    "sha_after": "ed557bb0f6ed"
+  },
+  {
+    "ts": "2026-10-09T21:09:56.364Z",
+    "actor": "taskctl",
+    "action": "complete",
+    "task": "T-1117",
+    "evidence": "docs/verification/t1148/revalidation-3d444493/t1117/FRONTEND_VALIDATION_REPORT.md",
+    "report": "docs/verification/t1148/revalidation-3d444493/t1117/FRONTEND_VALIDATION_REPORT.md",
+    "report_sha": "32177b98fc54",
+    "acceptance_checks": [
+      "AC-ERROR",
+      "AC-PREVIEW"
+    ],
+    "visible_copy_sha": "fb5b542c25fb6ac2bbc207f74318fa92ad412973e4ee1dd76a4ff393bb5bac25",
+    "visible_copy_captures": 4,
+    "commit_sha": "3d4444934a618542747dd9839a299c6d769adad1",
+    "verification_executed": true,
+    "verification_command_sha": "5daf0824fdcc",
+    "verification_output_sha": "404cd16a076e",
+    "verification_output_bytes": 78,
+    "sha_before": "ed557bb0f6ed",
+    "sha_after": "bf8c9fbd338e"
+  },
+  {
+    "ts": "2026-10-09T21:16:44.305Z",
+    "actor": "taskctl",
+    "action": "complete",
+    "task": "T-1136",
+    "evidence": "docs/verification/t1148/revalidation-3d444493/t1136/FRONTEND_VALIDATION_REPORT.md",
+    "report": "docs/verification/t1148/revalidation-3d444493/t1136/FRONTEND_VALIDATION_REPORT.md",
+    "report_sha": "bb71e533cae7",
+    "acceptance_checks": [
+      "AC-LAYOUT",
+      "AC-WRITE-READ",
+      "AC-TARGET",
+      "AC-SHARED"
+    ],
+    "visible_copy_sha": "f087ce26325218437f96b57275d7d3cf0d9c3a9723b7c9932bdc38d616a8a08b",
+    "visible_copy_captures": 12,
+    "commit_sha": "3d4444934a618542747dd9839a299c6d769adad1",
+    "verification_executed": true,
+    "verification_command_sha": "0b005757a381",
+    "verification_output_sha": "894a483e176c",
+    "verification_output_bytes": 2664,
+    "sha_before": "b9ce43b63f54",
+    "sha_after": "727a62a830a6"
+  },
+  {
+    "ts": "2026-10-09T21:23:55.161Z",
+    "actor": "taskctl",
+    "action": "complete",
+    "task": "T-1140",
+    "evidence": "docs/verification/t1148/revalidation-3d444493/t1140/FRONTEND_VALIDATION_REPORT.md",
+    "report": "docs/verification/t1148/revalidation-3d444493/t1140/FRONTEND_VALIDATION_REPORT.md",
+    "report_sha": "a6f428841135",
+    "acceptance_checks": [
+      "AC-LAYOUT",
+      "AC-CANCEL",
+      "AC-EXACT",
+      "AC-SHARED",
+      "AC-STATES"
+    ],
+    "visible_copy_sha": "1a109a95b57b8e49a66292f2772de3f7614c81cd8767d3177de1aaba3d7b2620",
+    "visible_copy_captures": 20,
+    "commit_sha": "3d4444934a618542747dd9839a299c6d769adad1",
+    "verification_executed": true,
+    "verification_command_sha": "386c317010ee",
+    "verification_output_sha": "7a7759e6d5e6",
+    "verification_output_bytes": 2678,
+    "sha_before": "727a62a830a6",
+    "sha_after": "0c7bdc4ffbc7"
+  }
+]

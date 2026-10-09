@@ -1,0 +1,42 @@
+{
+  "observedAt": "2026-10-09T21:03:39.515576+00:00",
+  "head": "3d4444934a618542747dd9839a299c6d769adad1",
+  "priorCount": 42,
+  "currentCount": 40,
+  "added": [
+    "✗ [ERROR] lesson LED-052 RECURRED — 归档执行门失败：普通AI/source_sync claim与新动作必须拒绝；四类实际collector按真实job/member/owner/version验证；已存在同键调用settlement必须保留幂等。缺隔离PG配置不能skip。"
+  ],
+  "removed": [
+    "✗ [ERROR] frontend receipt: T-1136: receipt commit 之后 watched_paths 代码已变化，receipt 失效:",
+    "✗ [ERROR] frontend receipt: T-1117: receipt commit 之后 watched_paths 代码已变化，receipt 失效:",
+    "✗ [ERROR] frontend receipt: T-1108: receipt commit 之后 watched_paths 代码已变化，receipt 失效:"
+  ],
+  "globalPass": false,
+  "newLed052Task": "T-1172",
+  "historicalBacklogTask": "T-1171/T-1173",
+  "retainedDebtTasks": [
+    "T-1081",
+    "T-1082",
+    "T-1015",
+    "T-1101-global-gates"
+  ],
+  "rawLogSha256": "4f02bc4640d79a0f4dbfe50b78b3e03876faefc2c393c20983d4220fed942456",
+  "artifacts": [
+    {
+      "path": "docs/verification/t1159/final-source-canonical/t1159-current-full-canonical.json",
+      "originalSha256": "724a0cb7b58ea65040586e3e1ed8ac89cd835f98807428430fdf36ebc49a2bf6",
+      "storedSha256": "724a0cb7b58ea65040586e3e1ed8ac89cd835f98807428430fdf36ebc49a2bf6"
+    },
+    {
+      "path": "docs/verification/t1159/final-source-canonical/t1159-current-canonical-before.json.gz",
+      "originalSha256": "2488cce8a266a0416e603ac28e2f96414366357649115c6efaeb687d3dcb9237",
+      "storedSha256": "b4f52025f2a65925049da56d1f8b8813d6648971f734a8041b88e42682f1273e"
+    },
+    {
+      "path": "docs/verification/t1159/final-source-canonical/t1159-current-canonical-after.json",
+      "originalSha256": "56f44c8742c72fa9e3e3fbbef91d238753e7713f67c342563faf311f20395fdb",
+      "storedSha256": "56f44c8742c72fa9e3e3fbbef91d238753e7713f67c342563faf311f20395fdb"
+    }
+  ],
+  "uiReceiptRemovedBecause": "原taskctl block失效转待验，不是当前补验PASS"
+}

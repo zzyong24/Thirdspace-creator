@@ -1,0 +1,40 @@
+{
+  "head": "3d4444934a618542747dd9839a299c6d769adad1",
+  "receipt": {
+    "argv": [
+      "node",
+      "docs/verification/t1101/run-journey.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T21:04:03.488106+00:00",
+    "finishedAt": "2026-10-09T21:05:23.524453+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 80.03556325001409,
+    "logSha256": "404cd16a076ee0f9b139351e21a74f161103e792f8a1b07a5f715e4d829de05d"
+  },
+  "pictures": [
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1117/screenshots/t1117-preview-narrow.png",
+      "sha256": "843b295a4b36b6c9a99554001bcd7dbf27c363c54cb66114107503516ee48b59"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1117/screenshots/t1117-error-narrow.png",
+      "sha256": "6a5dae98a547ad223252d825c8a8bdfcb167fc64ccc2ac2b5af97869c836c2fe"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1117/screenshots/t1117-preview-normal.png",
+      "sha256": "10b664e694f660fb9d0beb2677abba1c7daa43c645e79119222f35ed6bb11437"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1117/screenshots/t1117-error-normal.png",
+      "sha256": "a43fc4b5a2a940a3c70f18bc3c36d5634c99388d345e33192b91530bde4bdbf0"
+    }
+  ],
+  "rawPrivatePath": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1117-3d-shared-raw.log",
+  "rawSha256": "f7ff7a893b4d2c4bd244dfc434b1e5a6c2cce2102c2439ad1e514f4d6ee7e5fd",
+  "readableSha256": "5584c7e9244c3c4531ed19ca8961b3bff5aaffe5fb58c22a3693733e925dbd82",
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "nativeApp": false,
+  "rootViewed": false
+}

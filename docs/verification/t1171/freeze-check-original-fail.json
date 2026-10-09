@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "python3",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source-3d-final.py",
+    "--self-test"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T21:09:31.694403+00:00",
+  "finishedAt": "2026-10-09T21:09:32.167984+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 0.47344341600546613,
+  "logSha256": "7fb83d55a21fd8952dbd28317de4c9f532bd30b1582670d62d17c40fdf458093"
+}

@@ -1,0 +1,499 @@
+{
+  "schema": "creatoros-current-integration-admission-review/v1",
+  "reviewKind": "independent-read-only-real-profile-wechat-boundary",
+  "reviewedAt": "2026-10-09T20:53:16.358241+00:00",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "currentHead": "3d4444934a618542747dd9839a299c6d769adad1",
+  "stage": "4-build",
+  "verdict": "PASS_CURRENT_PUBLIC_IDENTITY_FACTS_REAL_PROFILE_STARTUP_NOT_ADMITTED",
+  "summary": "已读最小公开证据支持当前public身份域完整4/4账号微信0、含archived完整6/6组的account_binding全列表均0；groupId=null旧绑定在创建staging/login前guard失败。源码仍存在跨身份的全局绑定队列恢复，其它身份域未知，不能据当前public0放行真profile安装启动；原研究暂停保持，离线/隔离构建可继续。",
+  "readSet": [
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/installed-binding-admission-public-read/accountGroups-list-description.json",
+      "sha256": "c8ea729482f4cf56658d4481cf961a29087f5412d824a1bfe0841021c85ccde4"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/installed-binding-admission-public-read/accounts-bind-status-description.json",
+      "sha256": "cfbb6df43ad1e732df1c730d77528253d4601c9270e107d791f0faf8da0c2cdb"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/installed-binding-admission-public-read/binding-task-minimal-summary.json",
+      "sha256": "7af20581653ee1b47fb4cc5abe8bd39824ca4e056bb0039855b98d304035403c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/installed-binding-admission-public-read/describe-receipts.json",
+      "sha256": "864640e5480c09f1692933e3b1df59f278f5c497ec539cc280375f37a9998a11"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/installed-binding-admission-public-read/execution-tasks-list-description.json",
+      "sha256": "8c6d64e864f6a54542da7e7671a73855dad4e3e204c30d6c5d8b33b7790c1509"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/installed-binding-admission-public-read/group-inventory-minimal.json",
+      "sha256": "e072493211b26145c94362ab5591d722090cb5f93ed74cb29e105910676ca55b"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/installed-binding-admission-public-read/group-read-receipt.json",
+      "sha256": "102f0dd1d44cab8e4fb10850a18440c03b417b92c9d6a4c18d2e2ab2208da332"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/installed-binding-admission-public-read/task-read-receipts.json",
+      "sha256": "3785d43fa64e548a1cb5f3f2c56c2826902a892c1375083666a4e7adb05678bf"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/installed-public-release-boundary-current/accounts-summary.json",
+      "sha256": "05bf964b70574150e6d518127636f3b5907c5ca3f5a7a82edfced20a78ce2051"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/installed-public-release-boundary-current/read-command-receipts.json",
+      "sha256": "f33d1fb73542f888e1c25e5f3d3d92e692934d94b66b12b68d9f5dea0a27e5ee"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1062-current-review-context.json",
+      "sha256": "c1e40fae107944b4908a6fbf25c706d2779c25d07215daa780acb079a778ab9f"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1062-current-review-context.log",
+      "sha256": "b3670f9854c345d75a23b50e7b6cfe5805d7508d384d951097e3e0d4768de554"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1062-current-review-context.md",
+      "sha256": "103e5e75ab9b23ba881ec86bc540ff2a7ad7b7473906fa51616cf1cdbced86a0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "d8b787bd8a499f77de175052e26495e8d82547c995d9cdf56c0dcfbee2a4cd8c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT.md",
+      "sha256": "8af3910ee16828f032f5b3616978a8bed792e4291d86d712d3dce40cea1d52a4"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT_CONTEXT.md",
+      "sha256": "a74ec6498a8e06fe574f86ec96c51a99076672b717d103b26b25578bd2a1ed3c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/runtime/platform/wechat-browser-source.ts",
+      "sha256": "ec7c53bc4c83bb57b8f707acd2ba1602f6722f9626c6a3843f8b3031814df19a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/collection/wechat-native-collector.ts",
+      "sha256": "869bf687228bcd1a1fe70f86901e2cf9f872fbc742dd7cc293413208b500003b"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/platform-collection/periodic.ts",
+      "sha256": "303cc7cfe430a790b642fc119097d750a05c9d2f74eb308d1758a901477c2d40"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/scheduling/automation.ts",
+      "sha256": "513ff8cf606a4c8c14576839e7aaa49c33b2e46341ac40b9de4bcb9c0a3e47e5"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/scheduling/collection-execution.ts",
+      "sha256": "6da01dd745e0849b12f5c43bb77e44965763fe1e33590433e23cb359b341afbc"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/scheduling/controls.ts",
+      "sha256": "4f93ad2ef29cc06fe36a5940827fabef87814860fbf162fa9be83040331514ff"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/scheduling/platform-collector.ts",
+      "sha256": "55560f2a87a8c2720bc29a5cd5067ed978f98ebeae673ea57f0fe23fbe9c7364"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/workspace/startup.ts",
+      "sha256": "9e2bc08d1547e70ca065f93a145db55540fb256af95bf83205cb3437729f9317"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/ai-runtime/collection-bootstrap.ts",
+      "sha256": "c39edc58f3a88ea47c22db9d4a5b2828e80192517d50e30247f55e6631fe9a39"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/ai-runtime/scheduled-flywheel-execution.service.ts",
+      "sha256": "27227dc57043dc13b2a3d98c915299d5c590c977f66b043cd3c160567272e65a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/execution/execution-lease.service.ts",
+      "sha256": "3aa4f15dbe1039adf0f031f35f7e545c63d909ad42c706361efbc6e429340cb0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/execution/execution.transport.ts",
+      "sha256": "dd9e3325c9dffedc027562a7c4bd68acba53f04e945334e5a471e9e44ef96560"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/execution/host-browser-profile-lifecycle.ts",
+      "sha256": "d1f212642a5532d514b29c997a7fb14a1c08f59c562258e60bad39b74d0e1b56"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "3e8cf47382c7c7db7ea77166c28a9f04c069256f17c5b9ebaaeb56d9a50f1475"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/platform-account/account-binding.service.ts",
+      "sha256": "870a6540551955fd0f783110bee63f8dfa35cc52264ec3e6eee55fc38162aa4f"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/platform-account/account-group.service.ts",
+      "sha256": "7807d8c60a0abb422226effc4a24d6786ade4a737a7f03e8fbb6cd2c5be18973"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/platform-account/browser-profile-authority.service.ts",
+      "sha256": "0364271422f15ed4eafa75e9aa5a77ac2245cb02a88f8ed2833ce9ae156eb22b"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/platform-account/local-platform-binding-stage.ts",
+      "sha256": "f5cc1e3f9c994aabfe07627c49d15fdfee4f82ee16ec77aefb16a091a2ab9c49"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/platform-account/membership-lock.service.ts",
+      "sha256": "0e883fdd6eff5c65cb6b88bc803f8b08ced211d0cdcc23668482c288a8fffbf5"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/platform-account/platform-account.repository.ts",
+      "sha256": "0103f372d12b559790564437c86c9c514aa10f4680aac0426df264cd0a343c5b"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/platform-account/platform-account.transport.ts",
+      "sha256": "b1ea69d27bd2f40a567a28b4302d4b17095220dc4b099d8a24fc25df8ebc2fc3"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/platform-collection/platform-collection.service.ts",
+      "sha256": "1c234861a4316a6bd6e9d375c6af4af43447b7c8f7131c5950d3d456a2f35ef9"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/scheduling/private-collector-admission.service.ts",
+      "sha256": "ae5f92c8d2987819fb02d62d808c44d4aa5746a891e446910533ee81d2f6559d"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/workspace-scope.ts",
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/operations/execution.ts",
+      "sha256": "5a7ea6eae3896c97ac5438cecfb71eecb2b720ea4ff844299ff7a5eb3a0ac55d"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1062-consolidated-local-client-acceptance.md",
+      "sha256": "cfbaf9e80e6c8b005899c9be2f06d080e66cc119a14be381b721850a4fd36a1c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1080-local-main-worktree-consolidation.md",
+      "sha256": "0b2b4dee442fa906072cc5ae4f9590c1432e36b85dfb73c70fb704a1fca4e2b1"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1124-current-worktree-source-gap.md",
+      "sha256": "27275c901393f75bad922877ad69a1e7bbcf76507523faceb66fc39df7753b7d"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1159-current-wechat-native-report-integration.md",
+      "sha256": "b95d6954c52e5251f3b4b430ae6af2fb6e4a571c3839e0f9230ee33abae59073"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/current-command-evidence/t1159-suite-frontend.json",
+      "sha256": "eddb166662f42cb470dd9a5e1532d72f9dec8ba4176a9fb0e69ebfff56bb438f"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/current-command-evidence/t1159-suite-frontend.log",
+      "sha256": "2f494c19e8826516204c8ea1336db7017c0f1043849776aa1908cc9715c50eeb"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/current-command-evidence/t1163-original-backend-green.json",
+      "sha256": "63b26a6b6e4523ca5a3136ff4b80ada0bb434d7d8365b9316ae68c730182a6b6"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/current-command-evidence/t1163-original-backend-green.log",
+      "sha256": "f14d1b8ee7d68969f71c2877009ffd1fa1dcc90edf6debbc71e08243555d33c1"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+      "sha256": "e6dc33564e80d15df75677587ba533ea37d989fee1c08feb226231c039139242"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/ingestion/host-browser-profile-lifecycle.ts",
+      "sha256": "a9d8c6cfc74bbd5d4633bf1d3b5546ebe2f71211ed518f0c70a6bf4d6273070b"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/persistence-client.ts",
+      "sha256": "ab11053526e4f2a4f71b45fad6e012b5215a1502d4d5124a8e4db4b5d0457dd8"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d"
+    }
+  ],
+  "publicAccountObservation": {
+    "observedAt": "2026-10-09T20:32:28.699837+00:00",
+    "requestId": "req-69d4c1de-761",
+    "listed": 4,
+    "total": 4,
+    "platformCounts": {
+      "xiaohongshu": 1,
+      "douyin": 2,
+      "x": 1
+    },
+    "wechatCount": 0,
+    "rawSha256": "f28840a2da459ea669ee8a4c348bbba1358eb489bd822a58a2ee81d2cb9114ce",
+    "userDataWrites": false
+  },
+  "publicAccountReceiptConsistency": {
+    "commands": 6,
+    "allActualExit0": true,
+    "summaryRawShaMatchesReceipt": true,
+    "rawAccountBodyRead": false,
+    "rawAccountBytesIndependentlyHashed": false,
+    "scope": "当前CLI获授权user全部平台/状态账号；不是数据库所有用户。"
+  },
+  "publicBindingObservation": {
+    "observedAt": "2026-10-09T20:46:06.007704+00:00",
+    "groupInventoryObservedAt": "2026-10-09T20:43:45.599251+00:00",
+    "allGroupsIncludingArchivedCovered": true,
+    "groupCount": 6,
+    "listedEqualsMetaTotal": true,
+    "bindingKindExplicit": true,
+    "sixExplicitGroupsAllPagesReadByRoot": true,
+    "allStatusesNoStatusFilter": true,
+    "allBindingTasksCount": 0,
+    "nonterminalCount": 0,
+    "identityDomain": "current CLI authorized user only",
+    "otherUsersInDatabase": "UNKNOWN",
+    "noDomainWrites": true,
+    "summarySha256": "7af20581653ee1b47fb4cc5abe8bd39824ca4e056bb0039855b98d304035403c",
+    "inventorySha256": "e072493211b26145c94362ab5591d722090cb5f93ed74cb29e105910676ca55b",
+    "dynamicDescriptionsReadEffectAndHashVerified": true,
+    "taskReceiptCount": 6,
+    "allTaskActualExit0": true,
+    "allTaskGroupsExplicitAndInventoryCovered": true,
+    "rawGroupAndTaskBodiesRead": false,
+    "derivedSummaryNotRawPayloadVerification": true
+  },
+  "executionTasksListScope": {
+    "queryGroupIdField": false,
+    "explicitGroupComesFromRequestContext": true,
+    "persistentQueueSelectedBy": "query.kind=account_binding (V2); without V2 filters old ai_tasks branch remains",
+    "filters": [
+      "executionTasks.userId = ctx.userId",
+      "workspaceFilter: ctx.groupId equality, else explicit ctx.accountId and legacy group/null match"
+    ],
+    "groupOrExplicitLegacyAccountRequired": true,
+    "userWideUnscopedListAvailableHere": false,
+    "savedDefaultGroupMustNotBeTreatedAsWholeUser": true,
+    "nullGroupBindingBrowserAdmission": "execute forces accountId=null; first guard -> lease admission -> lockWorkspaceMembership -> requireWorkspace; null group/account fails before createStaging/login. Existing running recovery cleans/discards only."
+  },
+  "callChain": [
+    {
+      "path": "backend/src/application/workspace/startup.ts",
+      "conclusion": "按公开service分页枚举真实active账号；以实际account.platform装配原bootstrap，不从旧profile目录推断微信账号。"
+    },
+    {
+      "path": "backend/src/application/platform-collection/periodic.ts",
+      "conclusion": "recoveryOnly枚举真实active账号，只对实际微信平台恢复既有nativeReports run；TASK_TIMEOUT不恢复；不凭旧run.platform新建微信执行。"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "lines": [
+        4880,
+        4892,
+        4893,
+        4967,
+        5301,
+        5303
+      ],
+      "conclusion": "所有既有run的无信号/队列调度在执行前getAccount(run.accountId)按真实platform分派；scheduled self.metrics也读取真实账号，不能仅由旧run/job标签触发微信。"
+    },
+    {
+      "path": "backend/src/application/scheduling/platform-collector.ts",
+      "lines": [
+        15,
+        16,
+        17,
+        33,
+        34
+      ],
+      "conclusion": "原调度账号必需并由ports.account重查平台；微信才选nativeReports；key保持scheduled原taskId-reports，原attempt/期限不续期。"
+    },
+    {
+      "path": "backend/src/modules/scheduling/private-collector-admission.service.ts",
+      "conclusion": "真实forAccount join与原冻结组/成员/任务/lease准入在副作用前重核；job payload不能自造真实平台账号。"
+    },
+    {
+      "path": "backend/src/application/collection/wechat-native-collector.ts",
+      "lines": [
+        164,
+        169,
+        175,
+        176
+      ],
+      "conclusion": "原nativeReports/run/lease/platform/identity/deadline及profile authority满足后才浏览器采集；不伪造新任务或延长原剩余期限。"
+    },
+    {
+      "path": "backend/src/modules/platform-account/browser-profile-authority.service.ts",
+      "lines": [
+        31,
+        40,
+        58,
+        61,
+        62
+      ],
+      "conclusion": "account profile授权重读真实账号user/platform/externalID/active；staging仅由原account_binding task显式授权。未登记的孤立微信profile没有自动采集入口。"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "lines": [
+        7144,
+        7147,
+        7174
+      ],
+      "conclusion": "startup recoveryWake仍会drain account_binding；此lane不以现微信账号数为0为条件。"
+    },
+    {
+      "path": "backend/src/modules/platform-account/account-binding.service.ts",
+      "lines": [
+        54,
+        56,
+        61,
+        62,
+        64,
+        101,
+        103,
+        142
+      ],
+      "conclusion": "queued绑定可由payload.platform选择微信，在创建账号前login。原running/cancel_requested恢复只清理/停止，不重新login。execute先强制accountId=null并guard原组，故groupId=null/无效/归档/变更在createStaging/login前拒绝。"
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "lines": [
+        445,
+        446,
+        448,
+        449,
+        619,
+        627,
+        638,
+        639
+      ],
+      "conclusion": "public list按ctx.userId+workspace过滤；claimNext绑定drain过滤可claim状态/kind，未限制当前public user，故其它身份域队列未知仍可成为启动候选。"
+    }
+  ],
+  "existingIsolatedEvidence": [
+    {
+      "receipt": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/current-command-evidence/t1163-original-backend-green.json",
+      "receiptSha256": "63b26a6b6e4523ca5a3136ff4b80ada0bb434d7d8365b9316ae68c730182a6b6",
+      "actualLog": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/current-command-evidence/t1163-original-backend-green.log",
+      "actualLogSha256": "f14d1b8ee7d68969f71c2877009ffd1fa1dcc90edf6debbc71e08243555d33c1",
+      "receiptLogHashMatchesActual": true,
+      "exitCode": 0,
+      "elapsedSeconds": 195.22545587498462,
+      "testFiles": 9,
+      "passedTests": 109,
+      "argv": [
+        "pnpm",
+        "--dir",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/application/collection/wechat-native-collector.test.ts",
+        "src/application/platform-collection/periodic.test.ts",
+        "src/application/scheduling/platform-collector.test.ts",
+        "src/application/workspace/startup.test.ts",
+        "src/migration-convergence.test.ts",
+        "src/modules/ai-runtime/collection-bootstrap.test.ts",
+        "src/modules/platform-collection/platform-collection.transport.integration.test.ts",
+        "src/modules/platform-collection/platform-native-reports.integration.test.ts",
+        "src/modules/scheduling/private-collector-wechat-admission.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=120000",
+        "--hookTimeout=120000"
+      ],
+      "scope": "既有隔离测试实际日志，仅支持代码/公共isolated链；不证明安装库队列为空或真人研究恢复。"
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/current-command-evidence/t1159-suite-frontend.json",
+      "receiptSha256": "eddb166662f42cb470dd9a5e1532d72f9dec8ba4176a9fb0e69ebfff56bb438f",
+      "actualLog": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1159/current-command-evidence/t1159-suite-frontend.log",
+      "actualLogSha256": "2f494c19e8826516204c8ea1336db7017c0f1043849776aa1908cc9715c50eeb",
+      "receiptLogHashMatchesActual": true,
+      "exitCode": 0,
+      "elapsedSeconds": 79.14494283299427,
+      "testFiles": 6,
+      "passedTests": 76,
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/platform-account/account-binding-panel.test.tsx",
+        "src/features/platform-account/account-group-manager.test.tsx",
+        "src/features/platform-account/native-report-page.test.tsx",
+        "src/features/platform-account/native-report-panel.test.tsx",
+        "src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+        "src/server/ingestion/account-binding-stage.integration.test.ts",
+        "--retry=0",
+        "--no-file-parallelism",
+        "--testTimeout=120000",
+        "--hookTimeout=120000"
+      ],
+      "scope": "既有隔离测试实际日志，仅支持代码/公共isolated链；不证明安装库队列为空或真人研究恢复。",
+      "fixtureBoundary": "实际 argv 包含 frontend/src/server/__module_integration__/local-platform-binding.persistence-client.test.ts。两微信测试从accountId=null创建原绑定任务，后台队列完成后才有真实service账号；供应商是隔离mock，非真人微信扫码/身份。当前此测试字节与source293d及当前HEAD相同。"
+    }
+  ],
+  "knownTriggerPath": {
+    "name": "startup account_binding recovery lane",
+    "accountRequiredBeforeLogin": false,
+    "queuedTaskPlatform": "original validated task.payload.platform",
+    "userDomainOfClaim": "claimNext across eligible rows; execution context uses claimed original userId",
+    "publicUserQueueEmptyAtObservation": true,
+    "allIdentityDomainsQueueEmpty": "UNKNOWN",
+    "orphanWechatProfileAloneStartsCollection": false,
+    "nullGroupBindingStartsLogin": false
+  },
+  "conditionalConclusions": {
+    "currentPublicIdentityNativeReports": "已观察该身份完整账号微信0；现native报告/调度调用链须真实微信account/platform与归属/profile授权，旧run/job标签或孤立目录自身不足以采集。",
+    "currentPublicIdentityBinding": "全6组含archived的全部account_binding均0，null-group绑定先guard拒绝；此观察仅当场当前public身份域。",
+    "otherIdentityDomains": "UNKNOWN；至少全局queued account_binding可以在尚无account时login，其它真实微信账号/队列也未由当前public事实覆盖。",
+    "realProfileInstallationStartupAdmitted": false,
+    "researchResumed": false,
+    "offlineBuildOrIsolatedStartupCanContinue": true
+  },
+  "conditionsBeforeAnyFutureRealProfileExecution": [
+    "来源研究resume criteria满足且取得原流程的真人执行准入；当前public0不替代研究恢复。",
+    "若复用public最小事实，安装前须按原公开入口重新完整读取账号及显式各组绑定队列，保meta/分页，不能将时间流逝当证据。",
+    "还须在授权边界内闭合实际profile其它身份域/可启动队列未知；本报告不要求越权读取原始账户、DB或profile，也未据未知批准启动。",
+    "不新增微信开关/停其它合法任务/写库清空或隐藏能力来绕过原SPEC限制。"
+  ],
+  "unknowns": [
+    "实际profile其它身份域账号与全局可执行绑定/调度任务未知。",
+    "当前当场public事实不能保证以后队列仍为0。",
+    "原微信统计页原因UNKNOWN、0实际报告、两实验耗尽，真人AC-LIVE未验。"
+  ],
+  "findings": [],
+  "excludedClaims": [
+    "真实profile安装启动可放行",
+    "当前public观察覆盖数据库所有身份",
+    "原研究恢复或真人微信成功",
+    "完整Gate、包/安装、模型或全功能PASS"
+  ],
+  "operationsPerformed": [
+    "只读源码和指定public最小summary/receipts/description",
+    "读取既有isolated日志并核实际SHA",
+    "仅写指定私有报告"
+  ],
+  "rawUserAccountsCredentialsDatabaseProfilesRead": false,
+  "repositoryWrites": false,
+  "testsServicesCliDatabaseModelExecuted": false
+}

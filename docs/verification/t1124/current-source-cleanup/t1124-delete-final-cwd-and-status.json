@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-10-09T21:04:51.770790+00:00",
+  "lsofExitCode": 0,
+  "cwdMatches": [],
+  "roots": [
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator",
+      "head": "293d4e98d2cedbd04eebce16a62f921711ee8079",
+      "branch": "codex/t1101-canvas-binding",
+      "status": "M orchestrator/.lessons-stats.json",
+      "statsSha256": "32a3dc3233efb163e41b94f1073df7aff894908d330e64d2317bedba8a40d9f5"
+    },
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/chart-cover-labels/Thirdspace-creator",
+      "head": "454e9241a2adb107f3beb224914bc3273c063bee",
+      "branch": "codex/t1106-chart-cover-labels",
+      "status": "",
+      "statsSha256": "fdb01384fe898c5135b58f056f8c51838ca6ff463879fba3b2156d3986847379"
+    }
+  ],
+  "sourceIgnoredEvidenceManifestSha256": "cd4e3fbe3915eb938d6578ebf8a07ab30724df7ae93d2cd8f0e20e37c0575db0"
+}

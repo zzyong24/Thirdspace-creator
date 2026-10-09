@@ -1,0 +1,1067 @@
+{
+  "schema": "creatoros-independent-control-review/v1",
+  "task": "T-1173",
+  "reviewedAt": "2026-10-09T21:09:16.095194+00:00",
+  "reviewKind": "independent-read-only-mechanical-candidate",
+  "stage": "4-build",
+  "head": "3d4444934a618542747dd9839a299c6d769adad1",
+  "verdict": "PASS_MECHANICAL_IDENTITY_CANDIDATE_BUSINESS_STATUS_UNREVALIDATED",
+  "summary": "原T1018执行同任务重复与八列诊断尾文已精确定位；10个执行/归档复用分为5组不同来源与5组同任务状态快照，另T1014相同归档合一/T1016两不同归档来源。候选仅修唯一索引及完整历史表示，不变phase/审核/验收，不迁旧事件/PASS。旧5个归档来源本轮未闭合保UNKNOWN/WARN；原健康实际FAIL与T1171容量欠债保留。",
+  "readSet": [
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md",
+      "sha256": "e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-details.md",
+      "sha256": "5d4dd34702ea4bcf6f7311318c7af20030986f65fb6f6cadd5af1799770c172a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md",
+      "sha256": "00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/INDEX.json",
+      "sha256": "17bd8628ea8735fd45aef0efa5ddd222128e00c4ab6f85556194336c0f328026"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-compact.json",
+      "sha256": "b3fb919819c56c1c30bd314449911337ee41cd6f38b94f28fa686a11f7b5c36b"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-compact.log",
+      "sha256": "6a8780a9d270294307dad9144b215730a89a9f5e6f16eefda34e7a23dcdbf7d9"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-health-after.json",
+      "sha256": "cb34e0cb5d3fa25214c5e357961bde8d72b9e9745c97645b84f6921636c38a73"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-health-after.log",
+      "sha256": "2a333d889c4bbf60945932769b8810278dc9f002b9c0662f091c06e3f6ee5e76"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-health-red.json",
+      "sha256": "42a5bc04486d0966409a6d465618a2ebec3c04c0a28fa62b00be0fe2c7d6cd9f"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-health-red.log",
+      "sha256": "5aaf41fe1de35eb458f9ab0cb7a7a5dc5f13a933b8de2ef7925cba1f032c00a5"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-health-sized.json",
+      "sha256": "6880c2c5ad3ccd725d815dcefc6c4a4c620dc105d19029304bdbd42a0f3517f3"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-health-sized.log",
+      "sha256": "bccea0f2c5e477a2067df0038d2f5fc9b2f08a01dddffdbe554591e3643d5ff3"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/VERSION",
+      "sha256": "db8c5f26ffadff528c3c988af09e26339ee629b449372f4a62f0c357f7329dfc"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+      "sha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-details.md",
+      "sha256": "2ee3a8173783e8e59787e5cfc641c87f423a2f1f70101fcfedbd72754f7397d3"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT.md",
+      "sha256": "6d883e890575bb996f9de014bdefefcb3597a96a663172e5e64e2626a85ed6b0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT_CONTEXT.md",
+      "sha256": "a74ec6498a8e06fe574f86ec96c51a99076672b717d103b26b25578bd2a1ed3c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1080-local-main-worktree-consolidation.md",
+      "sha256": "0b2b4dee442fa906072cc5ae4f9590c1432e36b85dfb73c70fb704a1fca4e2b1"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1171-current-backlog-compaction.md",
+      "sha256": "348e7a1ce926b17cdde02352625366098aa0360b1217aa827db7d095a4f2a058"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1173-historical-backlog-identity-collisions.md",
+      "sha256": "b174cf49eed7dd17b0a2c125151032930d221822b50a053bb2c28668f6360798"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1014-reconcile-triage.md",
+      "sha256": "d14078b86b1935ca33a955efc57fafce415be0b44ce69ac0ac32f6726a28cf8a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1015-lesson-verification.md",
+      "sha256": "57960fa779093386c00dfc31e7ad1308224c2ac3dac2f998d00f1aa1cc6804de"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1020-guide-snapshot-fixture.md",
+      "sha256": "114cb730cef9da4dbd8f9bb32780e31e6aac183e0c5c750d45ce9ed533f1f831"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t916-review-receipt-repair.md",
+      "sha256": "33d86d846ba06dcf7080a095ac7520c6e8b1223aafdbde638d2d8d0c4fe770c6"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/events.ndjson",
+      "sha256": "1f755b288e4e77c51b6e86a3fd29bef22030cb8e9338caaa84727019ccd4345d"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/backlog-health.mjs",
+      "sha256": "96e5b52bc15585a724f023a1b6b4652c3be0a97f54ff5e30c09437d63d92be36"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/review-events.ndjson",
+      "sha256": "794d87ae1043e74bd70a05535eed271647ed482cfdc2baab61839dc402dc574f"
+    }
+  ],
+  "readGitObjects": [
+    {
+      "gitRef": "31eb30d3f109b376f22f4a56dc9f775f7e527724",
+      "path": "BACKLOG.md",
+      "sha256": "6e80991e92a292a7bbaf4863197c49edd872ebfd15bc0c8125f57b26b73056be"
+    },
+    {
+      "gitRef": "31eb30d3f109b376f22f4a56dc9f775f7e527724",
+      "path": "BACKLOG.md",
+      "sha256": "6e80991e92a292a7bbaf4863197c49edd872ebfd15bc0c8125f57b26b73056be"
+    },
+    {
+      "gitRef": "31eb30d3f109b376f22f4a56dc9f775f7e527724",
+      "path": "BACKLOG.md",
+      "sha256": "6e80991e92a292a7bbaf4863197c49edd872ebfd15bc0c8125f57b26b73056be"
+    },
+    {
+      "gitRef": "da970ced24032df3afcc37415db1f67d2f1bc56a",
+      "path": "BACKLOG.md",
+      "sha256": "09a1262932c2835001d8a5c108a81ebfe447745d5925c0b75fb7f0c0f286d475"
+    },
+    {
+      "gitRef": "526070b3a36ba366ff05c7dea7644b196174dd2d",
+      "path": "BACKLOG.md",
+      "sha256": "b947b49c451cd4c8cec86d1fcaf631ab2c38c777d9948c6b1027ccb4f95442f0"
+    },
+    {
+      "gitRef": "3d5dc732afc4c2d5ac2caef6dcd527b251f40d44",
+      "path": "BACKLOG.md",
+      "sha256": "1a753444c1b354604406ba637a7fc6e052c58764e7d92fc6b547f250ee2ba616"
+    }
+  ],
+  "actualPriorCommandEvidence": [
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-health-red.json",
+      "receiptSha256": "42a5bc04486d0966409a6d465618a2ebec3c04c0a28fa62b00be0fe2c7d6cd9f",
+      "actualLog": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-health-red.log",
+      "actualLogSha256": "5aaf41fe1de35eb458f9ab0cb7a7a5dc5f13a933b8de2ef7925cba1f032c00a5",
+      "actualExitCode": 2,
+      "observedAt": "2026-10-09T21:00:40.803785+00:00",
+      "argv": [
+        "node",
+        "orchestrator/process/backlog-health.mjs"
+      ]
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-health-after.json",
+      "receiptSha256": "cb34e0cb5d3fa25214c5e357961bde8d72b9e9745c97645b84f6921636c38a73",
+      "actualLog": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-health-after.log",
+      "actualLogSha256": "2a333d889c4bbf60945932769b8810278dc9f002b9c0662f091c06e3f6ee5e76",
+      "actualExitCode": 2,
+      "observedAt": "2026-10-09T21:01:07.810768+00:00",
+      "argv": [
+        "node",
+        "orchestrator/process/backlog-health.mjs"
+      ]
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-health-sized.json",
+      "receiptSha256": "6880c2c5ad3ccd725d815dcefc6c4a4c620dc105d19029304bdbd42a0f3517f3",
+      "actualLog": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-health-sized.log",
+      "actualLogSha256": "bccea0f2c5e477a2067df0038d2f5fc9b2f08a01dddffdbe554591e3643d5ff3",
+      "actualExitCode": 1,
+      "observedAt": "2026-10-09T21:03:00.664392+00:00",
+      "argv": [
+        "node",
+        "orchestrator/process/backlog-health.mjs"
+      ]
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-compact.json",
+      "receiptSha256": "b3fb919819c56c1c30bd314449911337ee41cd6f38b94f28fa686a11f7b5c36b",
+      "actualLog": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-compact.log",
+      "actualLogSha256": "6a8780a9d270294307dad9144b215730a89a9f5e6f16eefda34e7a23dcdbf7d9",
+      "actualExitCode": 0,
+      "observedAt": "2026-10-09T21:01:07.475303+00:00",
+      "argv": [
+        "node",
+        "orchestrator/process/backlog-compact.mjs",
+        "--all",
+        "--squeeze"
+      ]
+    }
+  ],
+  "beforeIndex": {
+    "sha256": "17bd8628ea8735fd45aef0efa5ddd222128e00c4ab6f85556194336c0f328026",
+    "sourceSha256": "00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939",
+    "sourceFileHashActuallyMatched": true,
+    "taskCount": 369,
+    "rowsCount": 369
+  },
+  "actualCurrentControlFacts": {
+    "BACKLOGsha256": "bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13",
+    "archiveSha256": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8",
+    "detailsSha256": "2ee3a8173783e8e59787e5cfc641c87f423a2f1f70101fcfedbd72754f7397d3",
+    "activeDuplicateIds": [
+      "T-1018"
+    ],
+    "activeArchiveReusedIds": [
+      "T-1018",
+      "T-1021",
+      "T-1019",
+      "T-1020",
+      "T-1017",
+      "T-1015",
+      "T-1004",
+      "T-1006",
+      "T-1009",
+      "T-916"
+    ],
+    "archiveDuplicateIds": [
+      "T-357",
+      "T-356",
+      "T-488",
+      "T-489",
+      "T-627",
+      "T-1014",
+      "T-1016"
+    ],
+    "T1018ColumnCounts": [
+      7,
+      8
+    ],
+    "healthValidatorDoesNotCheckColumnArity": "源码实际只检查ID重复/体积/行长/状态长度；八列由当前原行静态分列核实，不能冒称日志曾单独报八列字段。",
+    "oldHealthRedVsCurrentSizedDifference": "T1014/T1016原执行完成行经T1171原工具移到archive，复用错误从12变10、archive重复WARN从5变7；并非本次制造原撞号。"
+  },
+  "classifications": [
+    {
+      "id": "T-1018",
+      "liveDuplicate": "SAME_TASK",
+      "liveVsArchive": "DIFFERENT_TASKS",
+      "liveStateUnchanged": "📋 待办",
+      "archiveAlias": "T-1018-source-31eb30d3-portrait-timeline"
+    },
+    {
+      "id": "T-1017",
+      "classification": "DIFFERENT_SOURCE_TASKS",
+      "sourceAlias": "T-1017-source-31eb30d3-durable-chat",
+      "sourceCommit": "31eb30d3f109b376f22f4a56dc9f775f7e527724",
+      "unchangedCurrentIdentity": "简化内容雷达：按账号定位一键生成可编辑改写稿"
+    },
+    {
+      "id": "T-1019",
+      "classification": "DIFFERENT_SOURCE_TASKS",
+      "sourceAlias": "T-1019-source-31eb30d3-confirm-candidate",
+      "sourceCommit": "31eb30d3f109b376f22f4a56dc9f775f7e527724",
+      "unchangedCurrentIdentity": "按观众具体任务与双九宫格持续生成可实测选题"
+    },
+    {
+      "id": "T-1020",
+      "classification": "DIFFERENT_SOURCE_TASKS",
+      "sourceAlias": "T-1020-source-da970ced-guide-fixture",
+      "sourceCommit": "da970ced24032df3afcc37415db1f67d2f1bc56a",
+      "unchangedCurrentIdentity": "统一可视化推荐、作品承接与科学运营观测"
+    },
+    {
+      "id": "T-1021",
+      "classification": "DIFFERENT_SOURCE_TASKS",
+      "sourceAlias": "T-1021-source-526070b3-mac-artifact",
+      "sourceCommit": "526070b3a36ba366ff05c7dea7644b196174dd2d",
+      "unchangedCurrentIdentity": "CreatorOS封面与小红书图文双模板库、行业分类及私人收藏"
+    },
+    {
+      "id": "T-1016",
+      "classification": "TWO_DIFFERENT_ARCHIVED_IDENTITIES",
+      "sourceAlias": "T-1016-source-3d5dc732-sdk-boundary",
+      "sourceCommit": "3d5dc732afc4c2d5ac2caef6dcd527b251f40d44",
+      "unchangedCurrentIdentity": "调研 CreatorOS 连接本地 Codex、WorkBuddy 与外部 Agent"
+    },
+    {
+      "id": "T-1004",
+      "classification": "SAME_TASK_DIFFERENT_TIME_OR_SOURCE_STATUS_SNAPSHOTS",
+      "liveStatus": "📋 待办",
+      "historicalStatus": "✅ 待办",
+      "reviewConflict": false,
+      "businessStatusResolution": "保持当前，不在T1173重新判完成。"
+    },
+    {
+      "id": "T-1006",
+      "classification": "SAME_TASK_DIFFERENT_TIME_OR_SOURCE_STATUS_SNAPSHOTS",
+      "liveStatus": "📋 待办",
+      "historicalStatus": "✅ 待办",
+      "reviewConflict": false,
+      "businessStatusResolution": "保持当前，不在T1173重新判完成。"
+    },
+    {
+      "id": "T-1009",
+      "classification": "SAME_TASK_DIFFERENT_TIME_OR_SOURCE_STATUS_SNAPSHOTS",
+      "liveStatus": "📋 待办",
+      "historicalStatus": "✅ 待办",
+      "reviewConflict": true,
+      "businessStatusResolution": "保持当前，不在T1173重新判完成。"
+    },
+    {
+      "id": "T-1015",
+      "classification": "SAME_TASK_DIFFERENT_TIME_OR_SOURCE_STATUS_SNAPSHOTS",
+      "liveStatus": "📋 待办",
+      "historicalStatus": "✅ 待办",
+      "reviewConflict": false,
+      "businessStatusResolution": "保持当前，不在T1173重新判完成。"
+    },
+    {
+      "id": "T-916",
+      "classification": "SAME_TASK_DIFFERENT_TIME_OR_SOURCE_STATUS_SNAPSHOTS",
+      "liveStatus": "🔨 待办",
+      "historicalStatus": "✅",
+      "reviewConflict": false,
+      "businessStatusResolution": "保持当前，不在T1173重新判完成。"
+    }
+  ],
+  "preservedTaskEvents": [
+    {
+      "line": 944,
+      "sha256": "73fb83f9bbcfa76a69194f462830b7516b0c65d6a205d2488866c644c8903a2e",
+      "raw": "{\"ts\":\"2026-09-05T06:50:47.109Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-916\",\"sha_before\":\"f563e5f9f40e\",\"sha_after\":\"c85301c4c32d\"}",
+      "event": {
+        "ts": "2026-09-05T06:50:47.109Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-916",
+        "sha_before": "f563e5f9f40e",
+        "sha_after": "c85301c4c32d"
+      }
+    },
+    {
+      "line": 1112,
+      "sha256": "8d5a980fff2678fee9ea7d10cc9ae6c05e722b41e3cb5bab23f92f487eb1b568",
+      "raw": "{\"ts\":\"2026-09-20T03:18:39.325Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1014\",\"sha_before\":\"5b63a440de6e\",\"sha_after\":\"5c1889bc871e\"}",
+      "event": {
+        "ts": "2026-09-20T03:18:39.325Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1014",
+        "sha_before": "5b63a440de6e",
+        "sha_after": "5c1889bc871e"
+      }
+    },
+    {
+      "line": 1113,
+      "sha256": "dc164ebe33cfe1fde1fe7b328b91b13ddbadc8eb3d088193528583f18620ff71",
+      "raw": "{\"ts\":\"2026-09-20T03:31:51.028Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1014\",\"evidence\":\"233项逐条分类CSV；196项治理误报消除，1项容量降WARN，36项原有效失败保留；全量reconcile 37 errors/1warning后修复新归档误报LED043并完整回归通过。保留原任务状态/回执，不动运行时；残余T916/T1015承接，详见docs/verification/t1014-reconcile-triage.md。\",\"sha_before\":\"afd7a9bac823\",\"sha_after\":\"147acb6f9025\"}",
+      "event": {
+        "ts": "2026-09-20T03:31:51.028Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1014",
+        "evidence": "233项逐条分类CSV；196项治理误报消除，1项容量降WARN，36项原有效失败保留；全量reconcile 37 errors/1warning后修复新归档误报LED043并完整回归通过。保留原任务状态/回执，不动运行时；残余T916/T1015承接，详见docs/verification/t1014-reconcile-triage.md。",
+        "sha_before": "afd7a9bac823",
+        "sha_after": "147acb6f9025"
+      }
+    },
+    {
+      "line": 1114,
+      "sha256": "a1c36d70a4148190e5e2c7e15ebabd83b39527423b32a0f83b0a6bbfbdc82da2",
+      "raw": "{\"ts\":\"2026-09-27T15:23:14.739Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1016\",\"sha_before\":\"7fdbaffb835c\",\"sha_after\":\"86bb276cbbe3\"}",
+      "event": {
+        "ts": "2026-09-27T15:23:14.739Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1016",
+        "sha_before": "7fdbaffb835c",
+        "sha_after": "86bb276cbbe3"
+      }
+    },
+    {
+      "line": 1115,
+      "sha256": "748a55e00fc8151ee264314040fd29caa40dc42725cfdc3054bdf24881297063",
+      "raw": "{\"ts\":\"2026-09-27T15:35:57.721Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1016\",\"evidence\":\"官方协议与ChatCut/WorkBuddy文档调研、源码交叉核查、独立只读审查完成；报告docs/research/2026-09-27-external-local-agents.md，本机Codex0.144.5 schema导出267份，仅只读非实连。git diff --check通过、pmem sync完成；全局reconcile仍30 errors/1 warning，T916/T1015既有欠债保留，详见evidence/t1016-reconcile.txt。本任务仅调研，不代表功能实现或产品验收。\",\"sha_before\":\"86bb276cbbe3\",\"sha_after\":\"7ced77a91fba\"}",
+      "event": {
+        "ts": "2026-09-27T15:35:57.721Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1016",
+        "evidence": "官方协议与ChatCut/WorkBuddy文档调研、源码交叉核查、独立只读审查完成；报告docs/research/2026-09-27-external-local-agents.md，本机Codex0.144.5 schema导出267份，仅只读非实连。git diff --check通过、pmem sync完成；全局reconcile仍30 errors/1 warning，T916/T1015既有欠债保留，详见evidence/t1016-reconcile.txt。本任务仅调研，不代表功能实现或产品验收。",
+        "sha_before": "86bb276cbbe3",
+        "sha_after": "7ced77a91fba"
+      }
+    },
+    {
+      "line": 1116,
+      "sha256": "215d9d3cd48ef67a2b2a570d34b5ce7b911f28cdf87011c669ffe936cf5c3e1d",
+      "raw": "{\"ts\":\"2026-09-30T09:24:08.552Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1017\",\"sha_before\":\"e64908179c8a\",\"sha_after\":\"f465e3bd0d5d\"}",
+      "event": {
+        "ts": "2026-09-30T09:24:08.552Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1017",
+        "sha_before": "e64908179c8a",
+        "sha_after": "f465e3bd0d5d"
+      }
+    },
+    {
+      "line": 1117,
+      "sha256": "e7265b763053a09f66270944264331ffe5ca8529172dc93d6bc87330d36d7c4f",
+      "raw": "{\"ts\":\"2026-10-02T12:10:14.321Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1019\",\"sha_before\":\"a98f6f53cacc\",\"sha_after\":\"baf75e7ff560\"}",
+      "event": {
+        "ts": "2026-10-02T12:10:14.321Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1019",
+        "sha_before": "a98f6f53cacc",
+        "sha_after": "baf75e7ff560"
+      }
+    },
+    {
+      "line": 1118,
+      "sha256": "791ac7cca41ea1d31b08cc32a96100ba4066a4a2c769268baf147e044a946717",
+      "raw": "{\"ts\":\"2026-10-02T14:31:24.231Z\",\"actor\":\"taskctl\",\"action\":\"block\",\"task\":\"T-1019\",\"reason\":\"实现已提交 c8052d4a；本地E2E与目标回归通过，正式frontend-validation旅程报告/契约及可核验RED证据缺失，不伪造PASS；全局类型/contract/boundary失败归T-1018，历史review/lesson对账归T-1015。详见docs/verification/t1019.md\",\"sha_before\":\"37dbefe4005f\",\"sha_after\":\"a6f100fe58dc\"}",
+      "event": {
+        "ts": "2026-10-02T14:31:24.231Z",
+        "actor": "taskctl",
+        "action": "block",
+        "task": "T-1019",
+        "reason": "实现已提交 c8052d4a；本地E2E与目标回归通过，正式frontend-validation旅程报告/契约及可核验RED证据缺失，不伪造PASS；全局类型/contract/boundary失败归T-1018，历史review/lesson对账归T-1015。详见docs/verification/t1019.md",
+        "sha_before": "37dbefe4005f",
+        "sha_after": "a6f100fe58dc"
+      }
+    },
+    {
+      "line": 1119,
+      "sha256": "fbcbaa3269bbcc12b3347a443649728fdfbcacf22e629cd0cbd07370d27def92",
+      "raw": "{\"ts\":\"2026-10-04T08:35:45.293Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1021\",\"sha_before\":\"1e0bdc78f676\",\"sha_after\":\"991b94842cd0\"}",
+      "event": {
+        "ts": "2026-10-04T08:35:45.293Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1021",
+        "sha_before": "1e0bdc78f676",
+        "sha_after": "991b94842cd0"
+      }
+    },
+    {
+      "line": 1160,
+      "sha256": "33a020c79efb640d0b7f792c06c3ffc3746e5da07f4957d49020175657009502",
+      "raw": "{\"ts\":\"2026-09-20T03:38:18.292Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1004\",\"sha_before\":\"147acb6f9025\",\"sha_after\":\"8abe9e06c862\"}",
+      "event": {
+        "ts": "2026-09-20T03:38:18.292Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1004",
+        "sha_before": "147acb6f9025",
+        "sha_after": "8abe9e06c862"
+      }
+    },
+    {
+      "line": 1161,
+      "sha256": "4e2e2b8e7d51ccbe4af8d81c84b80cfc9127ce0ae9249c0baa76495175e75ab3",
+      "raw": "{\"ts\":\"2026-09-20T03:54:43.232Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1004\",\"evidence\":\"8525ddff; contract agent-workbench 5/5 and typecheck; locked NomiFun e27bd5de Mac cargo check PASS, Windows dependency resolution PASS/native build unverified; reconcile 36 historical errors/1 warning per T-1014\",\"sha_before\":\"8abe9e06c862\",\"sha_after\":\"2d1ec956b8ec\"}",
+      "event": {
+        "ts": "2026-09-20T03:54:43.232Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1004",
+        "evidence": "8525ddff; contract agent-workbench 5/5 and typecheck; locked NomiFun e27bd5de Mac cargo check PASS, Windows dependency resolution PASS/native build unverified; reconcile 36 historical errors/1 warning per T-1014",
+        "sha_before": "8abe9e06c862",
+        "sha_after": "2d1ec956b8ec"
+      }
+    },
+    {
+      "line": 1163,
+      "sha256": "b705bea51d076db09595033883db3d35ac145febb3b4454bcc32d503f3966e6b",
+      "raw": "{\"ts\":\"2026-09-20T03:58:31.042Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1006\",\"sha_before\":\"62564b077fa4\",\"sha_after\":\"3822896b03b7\"}",
+      "event": {
+        "ts": "2026-09-20T03:58:31.042Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1006",
+        "sha_before": "62564b077fa4",
+        "sha_after": "3822896b03b7"
+      }
+    },
+    {
+      "line": 1165,
+      "sha256": "af9617facc87fab67142b37ca83625b29f6ce9521cc14720dcac247c5a5078f5",
+      "raw": "{\"ts\":\"2026-09-20T05:44:32.594Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1006\",\"evidence\":\"21479378；backend 宿主/真实子进程 7/7、ai-worker 网关/分页 10/10、进度重连/取消/费用账本通过。全局 reconcile 仍 36 ERROR+1 WARN：旧评审 T-916、历史教训 T-1015、前端 R2 T-1016，均非本任务写集；图片解析、>100万字符外置、真机/真实模型由 T-1008/1009/1012/1013 验收。\",\"sha_before\":\"8d2fa0cac929\",\"sha_after\":\"1a753444c1b3\"}",
+      "event": {
+        "ts": "2026-09-20T05:44:32.594Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1006",
+        "evidence": "21479378；backend 宿主/真实子进程 7/7、ai-worker 网关/分页 10/10、进度重连/取消/费用账本通过。全局 reconcile 仍 36 ERROR+1 WARN：旧评审 T-916、历史教训 T-1015、前端 R2 T-1016，均非本任务写集；图片解析、>100万字符外置、真机/真实模型由 T-1008/1009/1012/1013 验收。",
+        "sha_before": "8d2fa0cac929",
+        "sha_after": "1a753444c1b3"
+      }
+    },
+    {
+      "line": 1167,
+      "sha256": "b68f2247a78d733838f1d1da31791226e830b936f61d068c5663f3dc710d078c",
+      "raw": "{\"ts\":\"2026-09-20T15:25:47.933Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1009\",\"sha_before\":\"3367205bf487\",\"sha_after\":\"ebb83a8705ab\"}",
+      "event": {
+        "ts": "2026-09-20T15:25:47.933Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1009",
+        "sha_before": "3367205bf487",
+        "sha_after": "ebb83a8705ab"
+      }
+    },
+    {
+      "line": 1170,
+      "sha256": "f4850df513f8ac68305b6ef3197bf7300f3aef81f68ff7cfc5cfdb445c0c4a4c",
+      "raw": "{\"ts\":\"2026-09-20T17:19:23.277Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1016\",\"sha_before\":\"8877e096048a\",\"sha_after\":\"83b03ba6c5d5\"}",
+      "event": {
+        "ts": "2026-09-20T17:19:23.277Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1016",
+        "sha_before": "8877e096048a",
+        "sha_after": "83b03ba6c5d5"
+      }
+    },
+    {
+      "line": 1171,
+      "sha256": "7cae35fed6758518310c15904fe25b1d07a479e02f5013d0dc7ba54539550c79",
+      "raw": "{\"ts\":\"2026-09-20T17:27:12.390Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1016\",\"evidence\":\"bd824135；会话复用1/1、frontend typecheck、LED-047 157/157、boundary-scan 新增0；pmem sync；reconcile 仍有范围外16评审+18教训错误及1告警，分别由T-916/T-1015承接\",\"sha_before\":\"83b03ba6c5d5\",\"sha_after\":\"c0916fc1c5c6\"}",
+      "event": {
+        "ts": "2026-09-20T17:27:12.390Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1016",
+        "evidence": "bd824135；会话复用1/1、frontend typecheck、LED-047 157/157、boundary-scan 新增0；pmem sync；reconcile 仍有范围外16评审+18教训错误及1告警，分别由T-916/T-1015承接",
+        "sha_before": "83b03ba6c5d5",
+        "sha_after": "c0916fc1c5c6"
+      }
+    },
+    {
+      "line": 1172,
+      "sha256": "51aae8da53b03c1573fcdbb3bedfe4547230caf1aa0fc348c4fbc2a0964a7311",
+      "raw": "{\"ts\":\"2026-09-20T17:48:42.060Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1015\",\"sha_before\":\"c0916fc1c5c6\",\"sha_after\":\"bbd609b36844\"}",
+      "event": {
+        "ts": "2026-09-20T17:48:42.060Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1015",
+        "sha_before": "c0916fc1c5c6",
+        "sha_after": "bbd609b36844"
+      }
+    },
+    {
+      "line": 1173,
+      "sha256": "ff0ea3ddfdabc37e4c4b16f61d66b8254ab796dd8e1b673a771913278294cbe3",
+      "raw": "{\"ts\":\"2026-09-20T17:56:22.979Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1015\",\"evidence\":\"8a704a4f；19条原教训逐项核实，旧断言校准；主树语义门卫7/7、Worker33/33、backend213/213、启动安全11/11；pmem sync+reconcile 仍22错误/1告警：16旧评审T-916、6有效红门T-1017/1018/1019及T-1013承接，不宣称全绿\",\"sha_before\":\"68f855d6042f\",\"sha_after\":\"6e80991e92a2\"}",
+      "event": {
+        "ts": "2026-09-20T17:56:22.979Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1015",
+        "evidence": "8a704a4f；19条原教训逐项核实，旧断言校准；主树语义门卫7/7、Worker33/33、backend213/213、启动安全11/11；pmem sync+reconcile 仍22错误/1告警：16旧评审T-916、6有效红门T-1017/1018/1019及T-1013承接，不宣称全绿",
+        "sha_before": "68f855d6042f",
+        "sha_after": "6e80991e92a2"
+      }
+    },
+    {
+      "line": 1174,
+      "sha256": "0e32ece64d637057ce291d1a6d3fc4d149948d1bea176669e8f0041d9193d969",
+      "raw": "{\"ts\":\"2026-09-20T17:57:12.479Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1017\",\"sha_before\":\"6e80991e92a2\",\"sha_after\":\"509ec76aa425\"}",
+      "event": {
+        "ts": "2026-09-20T17:57:12.479Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1017",
+        "sha_before": "6e80991e92a2",
+        "sha_after": "509ec76aa425"
+      }
+    },
+    {
+      "line": 1175,
+      "sha256": "4025286869723357d7a043d95001845cfb9cb5070e044b0c42428242fee309f3",
+      "raw": "{\"ts\":\"2026-09-20T17:57:25.508Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1019\",\"sha_before\":\"509ec76aa425\",\"sha_after\":\"81bc3fa085f4\"}",
+      "event": {
+        "ts": "2026-09-20T17:57:25.508Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1019",
+        "sha_before": "509ec76aa425",
+        "sha_after": "81bc3fa085f4"
+      }
+    },
+    {
+      "line": 1176,
+      "sha256": "a6d97ff0f78cd1a34220c68dcd57ae5984f464d7d8a9a2e155873a524698fcf1",
+      "raw": "{\"ts\":\"2026-09-20T18:06:44.600Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1019\",\"evidence\":\"09ac82cb; T-900 成功候选确认按钮红绿回归；frontend 59/59、contract 3/3、backend 4/4、frontend typecheck、LED-042 PASS；pmem sync 完成。全局 reconcile 21 error/1 warning：16 份既有 review receipt 与范围外 LED-014/017/018/020/024，T-1019 对应 LED-042 PASS。\",\"sha_before\":\"81bc3fa085f4\",\"sha_after\":\"bff60bae0781\"}",
+      "event": {
+        "ts": "2026-09-20T18:06:44.600Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1019",
+        "evidence": "09ac82cb; T-900 成功候选确认按钮红绿回归；frontend 59/59、contract 3/3、backend 4/4、frontend typecheck、LED-042 PASS；pmem sync 完成。全局 reconcile 21 error/1 warning：16 份既有 review receipt 与范围外 LED-014/017/018/020/024，T-1019 对应 LED-042 PASS。",
+        "sha_before": "81bc3fa085f4",
+        "sha_after": "bff60bae0781"
+      }
+    },
+    {
+      "line": 1177,
+      "sha256": "aa680b87971a2c2ad1c7242446f59cd119bbd1c32682e710c05b62a058aa0d59",
+      "raw": "{\"ts\":\"2026-09-20T18:07:14.209Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1018\",\"sha_before\":\"bff60bae0781\",\"sha_after\":\"41910fdb91ce\"}",
+      "event": {
+        "ts": "2026-09-20T18:07:14.209Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1018",
+        "sha_before": "bff60bae0781",
+        "sha_after": "41910fdb91ce"
+      }
+    },
+    {
+      "line": 1178,
+      "sha256": "5f5082496d2f101f87ce60c13805af491964760b8c91d6407723064da251f99a",
+      "raw": "{\"ts\":\"2026-09-20T18:17:33.344Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1018\",\"evidence\":\"84a78ca1; LED-024 全量门 PASS：AI 11/11、后端 179/179、前端 12/12、Playwright 横竖屏预览 PASS；真实竖屏样例 MP4 ffprobe=24fps/360帧/15.000000秒，末段抽帧有画面字幕；pmem sync 完成。全局 reconcile 20 error/1 warning，剩余16份历史 review receipt 与范围外 LED-014/017/018/020；LED-024 PASS。\",\"sha_before\":\"41910fdb91ce\",\"sha_after\":\"d93a0938ba01\"}",
+      "event": {
+        "ts": "2026-09-20T18:17:33.344Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1018",
+        "evidence": "84a78ca1; LED-024 全量门 PASS：AI 11/11、后端 179/179、前端 12/12、Playwright 横竖屏预览 PASS；真实竖屏样例 MP4 ffprobe=24fps/360帧/15.000000秒，末段抽帧有画面字幕；pmem sync 完成。全局 reconcile 20 error/1 warning，剩余16份历史 review receipt 与范围外 LED-014/017/018/020；LED-024 PASS。",
+        "sha_before": "41910fdb91ce",
+        "sha_after": "d93a0938ba01"
+      }
+    },
+    {
+      "line": 1179,
+      "sha256": "e2b32597ccfd79c2b5e87eac0e439b647efc15a462484a4bea47027013aa6765",
+      "raw": "{\"ts\":\"2026-09-20T18:27:47.110Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1017\",\"evidence\":\"474ceaae; durable chat route 54/54, frontend typecheck PASS, LED-014/017/020 full guards PASS, backend necessary 296/296 and frontend related 175/175 in isolated candidate, boundary no NEW; pmem sync PASS. Main reconcile 17 error/1 warning: 16 historical review receipts (T-916), LED-018 (T-1013); T-1017 gates all PASS. Expanded unrelated creatoros.guide fixture 349/350 tracked separately.\",\"sha_before\":\"d93a0938ba01\",\"sha_after\":\"025f6b01946f\"}",
+      "event": {
+        "ts": "2026-09-20T18:27:47.110Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1017",
+        "evidence": "474ceaae; durable chat route 54/54, frontend typecheck PASS, LED-014/017/020 full guards PASS, backend necessary 296/296 and frontend related 175/175 in isolated candidate, boundary no NEW; pmem sync PASS. Main reconcile 17 error/1 warning: 16 historical review receipts (T-916), LED-018 (T-1013); T-1017 gates all PASS. Expanded unrelated creatoros.guide fixture 349/350 tracked separately.",
+        "sha_before": "d93a0938ba01",
+        "sha_after": "025f6b01946f"
+      }
+    },
+    {
+      "line": 1180,
+      "sha256": "f8f2b9450a8eb3e22242446c6f4da108c1b220d2171e6e3ce0db4a6661c4e9fe",
+      "raw": "{\"ts\":\"2026-09-20T18:28:24.767Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1020\",\"sha_before\":\"6cbdc74868c0\",\"sha_after\":\"93a34bda9fd6\"}",
+      "event": {
+        "ts": "2026-09-20T18:28:24.767Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1020",
+        "sha_before": "6cbdc74868c0",
+        "sha_after": "93a34bda9fd6"
+      }
+    },
+    {
+      "line": 1181,
+      "sha256": "9e8a5e14c0f69487da6381f80691f596ec50cf8927d9c1c9c1e916b6b455bc50",
+      "raw": "{\"ts\":\"2026-09-20T18:36:53.378Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1020\",\"evidence\":\"2bd9f760; 旧 creatoros.guide 租约夹具 RED 349/350 后按官方版本与正文修正，chat-turn-submission.service.test.ts 23/23 PASS，未放宽运行时校验；backend typecheck 仍仅13项既有测试错误，无本任务新增错误；pmem sync PASS；reconcile 17 error/1 warning 均为范围外16份评审回执(T-916)+LED-018(T-1013)。\",\"sha_before\":\"24f1ae3e811e\",\"sha_after\":\"09a1262932c2\"}",
+      "event": {
+        "ts": "2026-09-20T18:36:53.378Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1020",
+        "evidence": "2bd9f760; 旧 creatoros.guide 租约夹具 RED 349/350 后按官方版本与正文修正，chat-turn-submission.service.test.ts 23/23 PASS，未放宽运行时校验；backend typecheck 仍仅13项既有测试错误，无本任务新增错误；pmem sync PASS；reconcile 17 error/1 warning 均为范围外16份评审回执(T-916)+LED-018(T-1013)。",
+        "sha_before": "24f1ae3e811e",
+        "sha_after": "09a1262932c2"
+      }
+    },
+    {
+      "line": 1182,
+      "sha256": "e5534370e82a4f470c16976795aa8d0d2f8a5a9b01f865ed2a4f0597c220d595",
+      "raw": "{\"ts\":\"2026-09-21T05:14:52.616Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1009\",\"evidence\":\"实现 8718370e；安装验证 31c1ec68；contract 6/6、backend 37/37、frontend 47/47、frontend typecheck、boundary/orphan/LED 门卫通过；CreatorOS 1.2.0 已重装，DMG hdiutil 有效，CLI 自动 connected/full；全局 reconcile 保留 16 个范围外旧任务过期 review receipt 错误\",\"sha_before\":\"65f3bd711b48\",\"sha_after\":\"8b02af1e8445\"}",
+      "event": {
+        "ts": "2026-09-21T05:14:52.616Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1009",
+        "evidence": "实现 8718370e；安装验证 31c1ec68；contract 6/6、backend 37/37、frontend 47/47、frontend typecheck、boundary/orphan/LED 门卫通过；CreatorOS 1.2.0 已重装，DMG hdiutil 有效，CLI 自动 connected/full；全局 reconcile 保留 16 个范围外旧任务过期 review receipt 错误",
+        "sha_before": "65f3bd711b48",
+        "sha_after": "8b02af1e8445"
+      }
+    },
+    {
+      "line": 1183,
+      "sha256": "a09479f389cb5ca95879786b9d70996cb5d94fb09152bf1f9aec8d0da54256dc",
+      "raw": "{\"ts\":\"2026-09-21T05:46:01.242Z\",\"actor\":\"taskctl\",\"action\":\"start\",\"task\":\"T-1021\",\"sha_before\":\"492562ff25d9\",\"sha_after\":\"ea2718b41721\"}",
+      "event": {
+        "ts": "2026-09-21T05:46:01.242Z",
+        "actor": "taskctl",
+        "action": "start",
+        "task": "T-1021",
+        "sha_before": "492562ff25d9",
+        "sha_after": "ea2718b41721"
+      }
+    },
+    {
+      "line": 1184,
+      "sha256": "1f7f2fd05d8e971ffa3ff9fe8890eeb8f48d7777d738c69a165e7819efb34f42",
+      "raw": "{\"ts\":\"2026-09-21T07:04:52.265Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-1021\",\"evidence\":\"实现提交 526070b3；Contract 6/6、Backend 54/54、Frontend 47/47、真实 Mac E2E 8/8、Rust 原生导出 2/2、frontend typecheck、桌面打包与 sidecar 冒烟均通过；CreatorOS 1.2.0 已覆盖安装并启动，DMG/安装 sidecar 哈希核对通过，CLI full/258 operations/accounts/projects.list 冒烟通过。reconcile 的 16 项失败均为 T-915 等历史 review receipt 过期或待审，T-1021 边界、orphan 与相关 lesson gate 已通过，详见 docs/verification/t1021-t1009-full-acceptance.md。\",\"sha_before\":\"b947b49c451c\",\"sha_after\":\"776aaaeabb6c\"}",
+      "event": {
+        "ts": "2026-09-21T07:04:52.265Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-1021",
+        "evidence": "实现提交 526070b3；Contract 6/6、Backend 54/54、Frontend 47/47、真实 Mac E2E 8/8、Rust 原生导出 2/2、frontend typecheck、桌面打包与 sidecar 冒烟均通过；CreatorOS 1.2.0 已覆盖安装并启动，DMG/安装 sidecar 哈希核对通过，CLI full/258 operations/accounts/projects.list 冒烟通过。reconcile 的 16 项失败均为 T-915 等历史 review receipt 过期或待审，T-1021 边界、orphan 与相关 lesson gate 已通过，详见 docs/verification/t1021-t1009-full-acceptance.md。",
+        "sha_before": "b947b49c451c",
+        "sha_after": "776aaaeabb6c"
+      }
+    },
+    {
+      "line": 1185,
+      "sha256": "228cd6cf8486825fdea0eac9446fba889c38becc748dabcfb41bb603ccf491dd",
+      "raw": "{\"ts\":\"2026-09-21T11:23:15.415Z\",\"actor\":\"taskctl\",\"action\":\"complete\",\"task\":\"T-916\",\"evidence\":\"e4ec21a8 + 0ae6ca34；reviewctl audit PASS；backlog 工具测试 9/9；BACKLOG 46.4KB→25.5KB；reconcile 0 errors/0 warnings\",\"sha_before\":\"131d6ef458dd\",\"sha_after\":\"e2ee01120607\"}",
+      "event": {
+        "ts": "2026-09-21T11:23:15.415Z",
+        "actor": "taskctl",
+        "action": "complete",
+        "task": "T-916",
+        "evidence": "e4ec21a8 + 0ae6ca34；reviewctl audit PASS；backlog 工具测试 9/9；BACKLOG 46.4KB→25.5KB；reconcile 0 errors/0 warnings",
+        "sha_before": "131d6ef458dd",
+        "sha_after": "e2ee01120607"
+      }
+    }
+  ],
+  "preservedReviewEventIdentity": [
+    {
+      "line": 92,
+      "sha256": "9e77859f06dd2cf4d7a2e67da05e4d8aebe2196136a332e8afef272e04e95f69",
+      "taskId": "T-1017",
+      "specPath": "docs/features/t1017-content-radar-rewrite-first.md",
+      "specSha256": "a0a09a8085c289e95f8ad3c4353eaa86e48d751bcee0980b65c2223ba4ce3a14",
+      "reviewPath": "docs/features/t1017-content-radar-rewrite-first.review.md",
+      "verdict": "PASS",
+      "eventHash": "e22873248617ace9f5122e809047a6a219778b28619ed9c9c5afcd809818062f"
+    },
+    {
+      "line": 93,
+      "sha256": "cac487e8bec57462af5dc9257c4f5eedb61b4cca0e4875a17502ee56b0d45356",
+      "taskId": "T-1019",
+      "specPath": "docs/features/audience-task-topics/README.md",
+      "specSha256": "69449194d0a6ad4b44261bd1fe4a5a9e58cdfd15ca2796fb7fc400572990512f",
+      "reviewPath": "docs/features/audience-task-topics/README.review.md",
+      "verdict": "CONCERNS",
+      "eventHash": "ec78adb6fe8cfea9694425816d6de3e8e94abc5f9ab1c245c4c21fd7c4bc81d0"
+    },
+    {
+      "line": 94,
+      "sha256": "413fb287796a0bf91e3698816d124878937ad8380db22ef1a4f335fcd77d863a",
+      "taskId": "T-1019",
+      "specPath": "docs/features/audience-task-topics/README.md",
+      "specSha256": "ebe1ddffd22f72317a9760d77d43f6ef092ea79d90105826ec4adae8631b3215",
+      "reviewPath": "docs/features/audience-task-topics/README.review.md",
+      "verdict": "PASS",
+      "eventHash": "6083500293806a97449d462b12ec03e15e434463d252fbc8154e416d513163f5"
+    },
+    {
+      "line": 95,
+      "sha256": "58565dc19a8a77e8082e5f1fc212d4b3737065195edfe6544911fbbee0d90f34",
+      "taskId": "T-1019",
+      "specPath": "docs/features/audience-task-topics/README.md",
+      "specSha256": "3d48eb92600f082f6bee9dbb6da561ca04e01890fc0f3be06271286368847bca",
+      "reviewPath": "docs/features/audience-task-topics/README.review.md",
+      "verdict": "PASS",
+      "eventHash": "bb6ebedbe65b5c6a245d9722a78dab85f921bf0c7f3376ce51ebb66d689f0c47"
+    },
+    {
+      "line": 96,
+      "sha256": "f9e924cef46d68e2a548496f85fc679c3cdcb0f8ae507524038c2e4f83a409cf",
+      "taskId": "T-1021",
+      "specPath": "docs/features/t1021-cover-template-library.md",
+      "specSha256": "825fe08a89c54541e9029cbbbe5239f66c4f24df0a20e2d722e3420407cac587",
+      "reviewPath": "docs/features/t1021-cover-template-library.review.md",
+      "verdict": "CONCERNS",
+      "eventHash": "74020b7841fdaa236acfd676386ff342815b9b28d74af84a0be9ca4050a86245"
+    },
+    {
+      "line": 97,
+      "sha256": "816cdd11a9e85129411593e8cda9e04283bc2ac0f1f15959083034401d25553b",
+      "taskId": "T-1021",
+      "specPath": "docs/features/t1021-cover-template-library.md",
+      "specSha256": "9d6dc5d462bdbb513ef1d1a6986c3ddac0963480cfc8b745b6c9a7d48823831f",
+      "reviewPath": "docs/features/t1021-cover-template-library.review.md",
+      "verdict": "PASS",
+      "eventHash": "f82143a18bcd9db76ede725590000890251978b84182440874a9ca119f54dfdd"
+    },
+    {
+      "line": 100,
+      "sha256": "a2ea99b2618eb0ea28272dbba4ab7490d597e3f2001ed74d36e5860ffedc718f",
+      "taskId": "T-1021",
+      "specPath": "docs/features/t1021-cover-template-library.md",
+      "specSha256": "242b25c4f83f4030a8d9746e16754bc985a22eab91078f4e1ed6a9eb65b6a8c3",
+      "reviewPath": "docs/features/t1021-cover-template-library.review.md",
+      "verdict": "PASS",
+      "eventHash": "494552bf33ddd0e33bf270593b04388011dafa538f516a799a282db5926c4ac4"
+    }
+  ],
+  "mechanicalCandidate": {
+    "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1173-independent-control-review/candidate.json",
+    "sha256": "88a73797190ac1dc910a2cf53b7e9853d3cc4d13351b51c72dc2eb976e20269f",
+    "operations": 13,
+    "historySections": 13,
+    "expectedStaticEffects": {
+      "method": "私有候选文本的静态集合推导，未执行backlog-health/测试/CLI",
+      "activeDuplicateIds": [],
+      "activeArchivedReuse": [],
+      "remainingArchiveDuplicateIds": [
+        "T-357",
+        "T-356",
+        "T-488",
+        "T-489",
+        "T-627"
+      ],
+      "originalLiveBusinessStatesUnchanged": true,
+      "candidateBacklogBytes": 59477,
+      "backlogHardSizeThresholdNotRelaxed": 30720,
+      "expectedHealthNotClaimedPass": true,
+      "sizeStillSeparatelyOwnedBy": "T1171",
+      "remainingMalformedT1018Rows": []
+    },
+    "applied": false
+  },
+  "directRepresentationAllowed": [
+    "T1018同任务合一、长诊断第7/第8列完整外置，原完整行逐字存历史。",
+    "已核原Git来源的5不同执行/归档身份与T1016旧SDK归档身份使用source-commit精确别名；这些原审核列均—，不复制PASS。",
+    "T1004/1006/1009/1015/916以当前执行行作唯一索引，旧archive表示移为完整历史引用；当前业务状态/审核保持。",
+    "T1014相同归档行合一，完整原行/SHA保留。"
+  ],
+  "requiresOriginalTaskRevalidation": [
+    "T1004/1006/1009/1015/916若要把当前待办/进行中改成完成，须原任务当前scope/SPEC/证据独立复核与原taskctl流程；T1173不判业务状态。",
+    "T1017/1018/1019/1020/1021与T1016各不同来源的旧事件只属于原身份，任何当前准入/完成/alias验收须独立绑定原任务实际scope并真实复验。",
+    "T1009旧archive PASS[REV:a57fadb33099]不写入当前执行审核列，也不迁到新alias；完整原文本保留供原任务核对。",
+    "旧T357/T356/T488/T489/T627先独立核各Git来源与原事件/报告，再决定别名；此轮保UNKNOWN，不为门移除历史。"
+  ],
+  "unknowns": [
+    {
+      "id": "T-357",
+      "status": "UNKNOWN_PRECISE_SOURCE_IDENTITY",
+      "rowCount": 2,
+      "rows": [
+        {
+          "line": 78,
+          "title": "项目页三阶段 tab(脚本/制作视频/复盘)切换后选中态不跟手:从复盘切回脚本,内容已换、顶栏高亮仍停在「复盘」【bug·UI 状态·用户 2026-07-16 真机截图】",
+          "status": "✅ **已被 T-373 修复覆盖**(2026-07-17 主 agent 核对):T-373 根因=tab 高亮跟 project.currentStage(成熟度)而非正在查看的面,已改 selected 跟 isCurrent+根路由默认 script(project-stage-stepper/top-header),同一病症同一修;随 T-373 下批包真机验。",
+          "sha256": "728d2ea7be5b57003f8bb418c1e81e462e85a67c863287a3973f969315aa4329"
+        },
+        {
+          "line": 81,
+          "title": "采集逐字稿后处理:ASR 错字纠正 + 断句/分段换行(转写落库前过一遍)【功能·数据质量·用户 2026-07-16】",
+          "status": "✅ **代码完成+主 agent 亲验**(2026-07-17,e934f3a):收口点=runTranscribe processOne(ASR 产文本后 ensureTranscriptArtifact 前)一处生效,覆盖每日批量/T-374 单条/T-385 对话工具(同一 dispatch);benchmark 对标抓稿与收藏夹蒸馏走 transcribeOneAweme 原语**不覆盖**(边界明确,要覆盖另立任务);图集占位锚刻意跳过(测锁)。capability **复用 video.subtitles**(T-320a 同任务族,一处调优两处受益;否决 script.draft/review 语义漂移);模板复用 T-320a 条款+账号定位/标题可选专名参照;runStructuredNode 绑 {correctedText}。**保真护栏**:归一化(剔空白标点)后长度比 [0.90,1.10]+banded Levenshtein 编辑距离 ≤15%,超阈=模型越权改写→弃用落原文;失败诚实 applied:false+步骤注记,双 try/catch 转写链绝不因后处理挂。亲验:31 新测+ai-runtime 全量 61 文件 934 测绿+两端 tsc 净。**AI 行为待下批包真机复测**;阈值常量 FIDELITY_* 弱模型下可能需微调。",
+          "sha256": "4c7958a2159d33769be5d3fa4c567ba03c2e8c894a87bdb30b178749bc11558e"
+        }
+      ],
+      "action": "保留原归档完整行及当前WARN；此轮未读闭合各自Git引入/事件/报告绑定，不凭名称相异自动别名，更不删旧状态或PASS。",
+      "requiresIndependentOriginalOriginReview": true
+    },
+    {
+      "id": "T-356",
+      "status": "UNKNOWN_PRECISE_SOURCE_IDENTITY",
+      "rowCount": 2,
+      "rows": [
+        {
+          "line": 80,
+          "title": "白屏根因:本地 Whisper 推理阻塞 sidecar 主线程——转写批跑时全 app 无响应,切页即白屏【bug·阻断·真机证据 2026-07-16】",
+          "status": "✅ **代码已落地**(主 agent 2026-07-17 核对补记):multimodal-whisper-local.ts 推理已挪 **worker_threads 常驻单 worker**(spawnWorker 可注入单测;主线程只 await message);预警的打包坑已由 **T-383** 修掉(bundleXenovaTransformers 81 entry 闭包+HARD 自检 worker 同路径真加载)。本行原 🔨 系状态漏翻。**真机白屏复验**(转写批跑中切页不卡)随本批包(2026-07-17 20:10)验。",
+          "sha256": "9fbd1243d42eac97bb4102df6fa3318cea7c067cdcdbf345b6c8dc5a2dead273"
+        },
+        {
+          "line": 83,
+          "title": "项目复盘 tab 整顿 + 设置邮箱行下架【bug+UI·用户 2026-07-16 真机】",
+          "status": "✅ **代码完成+全测**(2026-07-16):④**根因=reviews transport list 只返 meta:{requestId},isList 端点 client envelope 校验(listMeta page/pageSize/total 必填)必抛 ZodError→readReviewHistory 静默 catch 成空→复盘记录永远空**(洞察写入全成功——真机 curl 证:用户那条 completed 复盘在库;dispatch 不做 envelope 校验故 curl 可读,坑只咬 RSC)。修=transport 补齐 listMeta+契约测试补 reviews.list 用例锚死 listEnvelope(T-053 加 op 时漏了)+readReviewHistory 吞错加 console.error 留痕。①邮箱行删(含测试)②热门作品发布列表整区删+死代码清零③AI 要点卡下架(与本期经验区同源冗余),裁决区头常驻「帮我复盘」+副标题写明「采纳后沉淀进知识库的经验区」(已核实 knowledge 页 T-118b 经验混排真在)。review+settings 186+backend reviews 32(+1 锚)全绿;四端 tsc 净;next build 过。**已装机(08:51 包)+真机 curl 五点全过**:复盘记录渲出用户那条「项目复盘 ·」条目/「还没有复盘记录」消失/AI 要点卡与热门作品列表零残留/采纳去处副标题在/设置邮箱行零命中;排查用测试复盘行已 PGlite 直删(库只剩用户真实数据)。原四子项:①设置「邮箱(登录标识唯一键不支持修改)」行删——产品已无邮箱概念(T-046 免登录/T-135 中性化)②复盘 tab「热门作品发布列表」删——单项目复盘页拉账号级全作品列表=凑数(同 chatbox-scope-tools-to-task 教训)③「AI 要点·本期复盘摘要」vs「本期经验可采纳沉淀」概念重叠,查清两者语义后整合成一条「要点→采纳成经验」流④**bug:复盘编辑「添加洞察」录入后没写进复盘记录** + 复盘沉淀的统一查看入口不明(经验库?)需给用户明确去处。",
+          "sha256": "9e0356676d6061902c002bc4373a0fdad155b0b90060cb7ae2a2df0f4310b47a"
+        }
+      ],
+      "action": "保留原归档完整行及当前WARN；此轮未读闭合各自Git引入/事件/报告绑定，不凭名称相异自动别名，更不删旧状态或PASS。",
+      "requiresIndependentOriginalOriginReview": true
+    },
+    {
+      "id": "T-488",
+      "status": "UNKNOWN_PRECISE_SOURCE_IDENTITY",
+      "rowCount": 2,
+      "rows": [
+        {
+          "line": 193,
+          "title": "删除项目脚本阶段重复的「导出素材包」按钮【体验·项目·用户 2026-07-23】",
+          "status": "✅ 已完成。脚本阶段不再展示导出入口；导出能力只保留在制作阶段，避免同一动作跨阶段重复。",
+          "sha256": "542818b67f3e9996266f60c10b24a051e0090d246bd3d719281cb1a1fb6a8262"
+        },
+        {
+          "line": 268,
+          "title": "抖音已在“网站登录保管库”登录，Copilot 读取视频仍返回 `needLogin`【bug·网页登录态·用户 2026-07-23】",
+          "status": "✅ 待办（用户已恢复）",
+          "sha256": "a14a435a5db4890a509c8e8015acf2d5c84a948bde5c20d8882ee80f449fc0b5"
+        }
+      ],
+      "action": "保留原归档完整行及当前WARN；此轮未读闭合各自Git引入/事件/报告绑定，不凭名称相异自动别名，更不删旧状态或PASS。",
+      "requiresIndependentOriginalOriginReview": true
+    },
+    {
+      "id": "T-489",
+      "status": "UNKNOWN_PRECISE_SOURCE_IDENTITY",
+      "rowCount": 2,
+      "rows": [
+        {
+          "line": 194,
+          "title": "模型配置把 ASR 调整为可选模型第一位，并在页面增加带截图的配置手册【体验·设置·用户 2026-07-23】",
+          "status": "✅ 已完成。ASR 已前置为可选模型第一项；必配区标题旁新增「配置手册」，提供真实字段说明、MiniMax/ASR 配置示意与常见错误。",
+          "sha256": "58a1fd27e564ee6fcf1411383f0523de30b1429a99c43399e13b3146eeb5cd5e"
+        },
+        {
+          "line": 267,
+          "title": "Windows updater `latest.json` 下载 URL 混入 runner 绝对路径【bug·桌面发布·CI 2026-07-23】",
+          "status": "✅ 待办",
+          "sha256": "be83b1fdd54a40e963c3df175f31c3e1e9db95be761059f652d410aa0624d96d"
+        }
+      ],
+      "action": "保留原归档完整行及当前WARN；此轮未读闭合各自Git引入/事件/报告绑定，不凭名称相异自动别名，更不删旧状态或PASS。",
+      "requiresIndependentOriginalOriginReview": true
+    },
+    {
+      "id": "T-627",
+      "status": "UNKNOWN_PRECISE_SOURCE_IDENTITY",
+      "rowCount": 2,
+      "rows": [
+        {
+          "line": 699,
+          "title": "定位最新飞书反馈“内容雷达生成选题卡卡住”【线上故障诊断·用户 2026-07-29】",
+          "status": "✅ 免审",
+          "sha256": "808376ebbb2d7a725d77f3a54589182a9ee6bcc67d3d15890488e001c431f6e5"
+        },
+        {
+          "line": 719,
+          "title": "CreatorOS 消费 Growth 渠道多模型数组【用户 2026-07-30 恢复】",
+          "status": "✅ 待办",
+          "sha256": "2022fd694e49c16697642264ee8cb4197dc5ae5f822ca9e842db277ea0f16a58"
+        }
+      ],
+      "action": "保留原归档完整行及当前WARN；此轮未读闭合各自Git引入/事件/报告绑定，不凭名称相异自动别名，更不删旧状态或PASS。",
+      "requiresIndependentOriginalOriginReview": true
+    }
+  ],
+  "findings": [
+    {
+      "id": "CTL-001",
+      "severity": "major",
+      "status": "confirmed_not_yet_applied",
+      "category": "representation",
+      "summary": "T1018两个执行同任务索引及八列长行需要机械合一/完整历史外置。"
+    },
+    {
+      "id": "CTL-002",
+      "severity": "major",
+      "status": "confirmed_candidate_only",
+      "category": "identity",
+      "summary": "10个执行/归档复用含不同任务与同任务状态快照，必须按来源分类，禁止统一伪迁ID或完成状态。"
+    },
+    {
+      "id": "CTL-003",
+      "severity": "concern",
+      "status": "preserved_unknown_business_status",
+      "category": "evidence",
+      "summary": "同任务执行待办与archive完成/审核只表示不同历史快照，未独立复验当前业务，不用旧完成重签当前。"
+    },
+    {
+      "id": "CTL-004",
+      "severity": "minor",
+      "status": "UNKNOWN_DEFERRED",
+      "category": "origin",
+      "summary": "五个原归档内部撞号本轮精确来源未闭合，保原WARN与全文。"
+    }
+  ],
+  "nonClaims": [
+    "backlog-health或完整canonical已通过",
+    "T1171容量问题已全部恢复",
+    "原业务任务完成/全功能/安装/model全绿",
+    "原PASS/complete迁新身份",
+    "真实真人平台/DB/profile执行"
+  ],
+  "repositoryWrites": false,
+  "testsValidatorsServicesCliDatabaseModelExecuted": false,
+  "privateWriteSet": [
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1173-independent-control-review/REVIEW.md",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1173-independent-control-review/REVIEW.json",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1173-independent-control-review/candidate.json"
+  ],
+  "historyPreservationPolicy": {
+    "byteDefinition": "raw字段等于原UTF-8完整表格行，不trim、不改竖线/空格/文案；行SHA明确不包含换行符。原文件SHA及原位置独立记录，完整文件在N/t1171-before及根T1171无损gzip/逐行映射保留。",
+    "lineShaExcludesTerminator": true,
+    "occurrenceMultiplicityPreserved": true,
+    "archiveLiveDuplicateRendering": "同任务archive索引仅转非执行历史指针；完整原行在BACKLOG-details新增历史段按原字节展示，不把旧完成重新变成当前完成。",
+    "differentIdentityRendering": "别名表格只按已核source commit改变ID表示并追加来源链接，其余原业务列保持；另历史段保原ID完整行，events/SPEC/报告/审核hash均不修改。",
+    "oldPassPolicy": "候选不同源aliases的原review全为—；T1009等原PASS仅承接在原完整历史，不搬入当前审核列或新身份。",
+    "noHistoryDeletionForGate": true,
+    "existingT1171ArchiveRetention": "本候选不改根已保留的原95.1KB看板gzip/逐行映射；仅新增T1173身份对应关系。"
+  },
+  "concurrentControlPreserved": {
+    "T1108AndT1117": [
+      {
+        "taskId": "T-1117",
+        "currentRawRow": "|T-1117|修复画布保存英文反馈与参考选择器名称展示遗漏|✅ 待办|PASS[REV:161a32c6331a]|PASS:32177b98fc54|[SPEC](docs/features/t1117-canvas-error-reference-preview.md)|当前main两条Chrome流程通过，但实际截图保存错误裸英文，参考已选卡仍长文件名；复用原中文反馈并闭合showIdentity=false全选择流程，精确file/保存/owner不变。独評、实际RED/GREEN及浏览器证据后修复；不代签模型或旧失败。|",
+        "sha256": "8c855c471dad3043f4bbc4a6e4af8746bdb2663a6715bdcd36df2b554f5915bf",
+        "candidatePreservesExactCurrentRow": true
+      },
+      {
+        "taskId": "T-1108",
+        "currentRawRow": "|T-1108|核对画布连线引用保存回读及浏览器短观察窗口|✅|PASS[REV:7725159d945d]|PASS:54ebbd993813|[实际缺陷](docs/features/t1108-canvas-public-observation.md) [详情](BACKLOG-details.md#t-1108)|见详情。|",
+        "sha256": "914c0342a5b3f9441fb1b3e51ae43f98766a42566c950eaf5446b0d8efe7ab67",
+        "candidatePreservesExactCurrentRow": true
+      }
+    ],
+    "detailsEofCleanup": "当前details实际读SHA与正文；根只删除本次工具多出的末尾1字节newline，报告未自行改details。",
+    "currentBaseSha256": {
+      "BACKLOG.md": "bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13",
+      "BACKLOG-archive.md": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8",
+      "BACKLOG-details.md": "2ee3a8173783e8e59787e5cfc641c87f423a2f1f70101fcfedbd72754f7397d3"
+    },
+    "oldBaseSha256": {
+      "BACKLOG.md": "ed557bb0f6ed46514891784db01ef5a3e6b9fbb7b88c5f8ff19047980e3c5d70",
+      "BACKLOG-archive.md": "d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8",
+      "BACKLOG-details.md": "8d329e868064d4eac6b365329d8db5646cf00d8e4fbede56036966b965f66da8"
+    },
+    "preconditionRejectedStaleBaseBeforeAnyWrite": true
+  },
+  "readSetRebaseChanges": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-details.md",
+      "oldSha256": "8d329e868064d4eac6b365329d8db5646cf00d8e4fbede56036966b965f66da8",
+      "currentReadSha256": "2ee3a8173783e8e59787e5cfc641c87f423a2f1f70101fcfedbd72754f7397d3"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "oldSha256": "ed557bb0f6ed46514891784db01ef5a3e6b9fbb7b88c5f8ff19047980e3c5d70",
+      "currentReadSha256": "bf8c9fbd338e2c0d4b019db497a77c234eeaa2ff7bb61e46687030989b742e13"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/events.ndjson",
+      "oldSha256": "14f8e06969449b05278eb9a53b659752c556dd3d4f02f54c520f2c17ccd76182",
+      "currentReadSha256": "1f755b288e4e77c51b6e86a3fd29bef22030cb8e9338caaa84727019ccd4345d"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "head": "3d4444934a618542747dd9839a299c6d769adad1",
+  "viewedAt": "2026-10-09T21:22:30.048445+00:00",
+  "rootActuallyViewed": true,
+  "count": 20,
+  "captures": [
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/exact-before-confirm.png",
+      "sha256": "e3d3b6faf8b222377b48752950b2d4c8a975ffdca6ad9b075227212a75d156d8"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/gallery-preview-1024x680.png",
+      "sha256": "9471c5933444cbd0ea44a3529c7e3ddae6a83178d5dcccb220645081e65e44ab"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/gallery-preview-1366x900.png",
+      "sha256": "96099c1aa5c171ee2efa452089673c31755fb3c7ca0f718b39ebe8d35cb09daa"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/gallery-preview-390x450.png",
+      "sha256": "cfb523f6e04ed72d0da2b70bcd82797988c1f16a4d08f46640ed3aa97c5970c1"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/gallery-preview-390x900.png",
+      "sha256": "4058da18c10f0c2f98067047c45c213168e35781af05b18ff571540c81009ff1"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/gallery-preview-512x340.png",
+      "sha256": "dbeba54003512a29f1514f6f5662666bc28ed549cbdd417bbc054c5c7539553a"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/gallery-preview-683x450.png",
+      "sha256": "14ad02f0cc6b829d7011a3bed474cd9b615d2d225e3c8abe3f83d4d5690b05a5"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/landscape-1024x680.png",
+      "sha256": "1c790b87c431f7b46dc7181b72aeccfca716622f8967e5b5d7c45482ead964e1"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/landscape-1366x900.png",
+      "sha256": "01f0cf39ef81424d579c90d42c2049391cb5e8f46aab544460443bb4caed72d1"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/landscape-390x450.png",
+      "sha256": "44ab9c79ec8b9c50a151ddc0db0aa6aadc54b11950144e7935b73661bf9a44e8"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/landscape-390x900.png",
+      "sha256": "151af625d89e7781799e99cc42eaf6eba60cd7609303d1c71ca70b8f63e33080"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/landscape-512x340.png",
+      "sha256": "e7cb5aafcda911ca641221e3e0815b94bcd89777378811e2fad342995c8c5dba"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/landscape-683x450.png",
+      "sha256": "086f51d2bbb704c6b3c93b0d031d43335af69dddfad335bc87785d888a8bf828"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/portrait-1024x680.png",
+      "sha256": "0d1f3fb59585c80a8a34000a8db59e1a6e1368083983d18b83990bc1ba586fe5"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/portrait-1366x900.png",
+      "sha256": "6f463afb87a2526644e8e70052feffb5b869b26ea17996379f91317655b30e59"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/portrait-390x450.png",
+      "sha256": "f4e49ada17ada3ab4473d82096d1108d7246001322f14f22ec0ddfdf09dc825a"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/portrait-390x900.png",
+      "sha256": "aeeaa245a06794d90bf077595f81139885043e7474b6bd0fba049880b964d285"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/portrait-512x340.png",
+      "sha256": "f8629ff2feed8b49776e5ecfb5819b69eda534a38dd8d5a77ff0852e5839bc0b"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/portrait-683x450.png",
+      "sha256": "f3d94790f99019f6d22898a764a93bd1e56b52cf456c21064b1e165aa3093402"
+    },
+    {
+      "path": "docs/verification/t1148/revalidation-3d444493/t1140/screenshots/read-error.png",
+      "sha256": "626792ef85e4e53a0eeff6e06696e3ac40fbfcaba075111c0381da7b371333ac"
+    }
+  ],
+  "findings": [],
+  "scope": "根本轮实际看20张六视口截图；横竖图与确认/取消可见，极低窗口正文滚动后预览正常。画布素材正文允许滚动，非宣称全部内容同时可见；一次503错误夹具声明，真实上传/保存/get/reload/back未替代。旧16:58截图排除。非原生App/模型/扫码/200%人工测试。"
+}

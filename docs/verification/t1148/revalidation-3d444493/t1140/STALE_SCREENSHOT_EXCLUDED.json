@@ -1,0 +1,6 @@
+{
+  "path": "docs/verification/t1140/screenshots/unchanged-gallery-preview.png",
+  "sha256": "98e41642fab10d978c5923205761159586f2fc2bd828109cab25b5e695c4b6ec",
+  "mtime": "2026-10-09T16:58:52.728786+00:00",
+  "reason": "旧截图不在当前两份capture列表内；不是本轮截图，保留原文件，不纳入当前验收。"
+}

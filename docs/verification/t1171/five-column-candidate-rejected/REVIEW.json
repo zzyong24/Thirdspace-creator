@@ -1,0 +1,1029 @@
+{
+  "schema": "creatoros-independent-control-representation-review/v1",
+  "task": "T-1171",
+  "reviewedAt": "2026-10-09T21:17:48.500335+00:00",
+  "stage": "4-build",
+  "head": "3d4444934a618542747dd9839a299c6d769adad1",
+  "reviewKind": "independent-read-only-five-column-index-admission",
+  "verdict": "REJECTED_NON_EQUIVALENT_CURRENT_CONSUMERS",
+  "summary": "直接将更旧执行行改为现暂停池五列不能等价准入：pmem要求任务表头，否则丢开放任务；context-compile缺任务表头退回cell[1]，把状态当任务名。taskctl/frontend-validation按列名可保审验/doc，但不足以证明全消费者等价。容量只静态估计，不实施，不改消费者/validator，不探索其它方案。T1171仍未完成、原硬30KB和真实失败保留。",
+  "readSet": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md",
+      "sha256": "e547d27b13733bb1d210fd06edbb6983218bcb631ffca334523843b9e28d6b6c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-details.md",
+      "sha256": "dfd17d106c8eeebd802f35566778e6991fc8e02e316ab6e1cba66987ca086132"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "727a62a830a6b389db96e6d5ad56ab8dbf8cb109d78a3d6a0e60e2e991783b5a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT.md",
+      "sha256": "6d883e890575bb996f9de014bdefefcb3597a96a663172e5e64e2626a85ed6b0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT_CONTEXT.md",
+      "sha256": "a74ec6498a8e06fe574f86ec96c51a99076672b717d103b26b25578bd2a1ed3c"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1171-current-backlog-compaction.md",
+      "sha256": "348e7a1ce926b17cdde02352625366098aa0360b1217aa827db7d095a4f2a058"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/backlog-health.mjs",
+      "sha256": "96e5b52bc15585a724f023a1b6b4652c3be0a97f54ff5e30c09437d63d92be36"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/context-compile.mjs",
+      "sha256": "42bb4e2ef5888b1707d667d41bad7ad0afebd8d4255064197854a46ee57d6022"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/frontend-validation.mjs",
+      "sha256": "47c79d66e687b913d3d9a848dda50429f551bae071646d5efbed9263e1c38727"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/pmem.mjs",
+      "sha256": "75e170f1186186266089b38f400796f016436b0143a7fdc2685af9b1cd605441"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/taskctl.mjs",
+      "sha256": "f5d9660c87023b1320ba3703bd3b7ef6df9044356b271f6751d0343ea366e65d"
+    }
+  ],
+  "proposalScope": {
+    "GE1062": "保原7列及所有状态审核验收/SPEC链接",
+    "LT1062": "拟5列ID/状态/审核/验收/文档，title和一句话完整历史外置",
+    "businessStatesUnchangedRequired": true,
+    "originalEventsReportsImmutable": true,
+    "directSpecAndJourneyLinksRequired": true
+  },
+  "consumerReview": [
+    {
+      "path": "orchestrator/process/taskctl.mjs",
+      "lines": [
+        138,
+        147,
+        149,
+        150,
+        151,
+        152,
+        203,
+        237,
+        238,
+        256,
+        274
+      ],
+      "result": "STATIC_HEADER_COMPATIBLE_FOR_FIVE_COLUMNS",
+      "reason": "按真实表头读取ID/status/review/acceptance/doc；review/acceptance仍required，原SPEC/review receipt与frontend journey gate继续读原doc，不可改为—绕过。未执行真实taskctl，未签运行PASS。"
+    },
+    {
+      "path": "orchestrator/process/frontend-validation.mjs",
+      "lines": [
+        571,
+        581,
+        583,
+        584,
+        585,
+        593,
+        594,
+        743,
+        749,
+        754,
+        766
+      ],
+      "result": "STATIC_HEADER_COMPATIBLE_FOR_FIVE_COLUMNS",
+      "reason": "按表头保status/acceptance/doc，待验与PASS原receipt/completion/contract约束不会因列数变5消失。未执行验证。"
+    },
+    {
+      "path": "orchestrator/process/pmem.mjs",
+      "lines": [
+        58,
+        60,
+        65,
+        66,
+        75
+      ],
+      "result": "INCOMPATIBLE_BLOCKING",
+      "reason": "readBacklogTasks要求columns.title>=0；五列表头无任务，所有该表行continue。现143个旧开放/进行中/阻断任务将从derived开放任务集合消失，不等价。现暂停池不自动派发不授权把旧开放任务隐去。"
+    },
+    {
+      "path": "orchestrator/process/context-compile.mjs",
+      "lines": [
+        94,
+        102,
+        104,
+        111,
+        113,
+        114,
+        115,
+        117
+      ],
+      "result": "INCOMPATIBLE_BLOCKING",
+      "reason": "缺任务表头时fallbackIdx=1，五列cell[1]是状态；缺一句话时fallback最后cell为文档，title/目标摘要/原行knowledge命中发生漂移。没有从details恢复title的这条解析。"
+    }
+  ],
+  "actualStaticMeasurement": {
+    "schema": "creatoros-read-only-rejected-index-measurement/v1",
+    "task": "T-1171",
+    "observedAt": "2026-10-09T21:17:48.499292+00:00",
+    "head": "3d4444934a618542747dd9839a299c6d769adad1",
+    "backlogSha256": "727a62a830a6b389db96e6d5ad56ab8dbf8cb109d78a3d6a0e60e2e991783b5a",
+    "currentBacklogBytes": 59487,
+    "currentBacklogKiB": 58.0927734375,
+    "hardThresholdBytes": 30720,
+    "originalSevenColumnRows": 216,
+    "originalExistingFiveColumnRows": 78,
+    "retainedGE1062SevenColumnRows": 57,
+    "proposedOlderSevenToFiveRows": 159,
+    "titleBytesRemoved": 11033,
+    "summaryBytesRemoved": 7712,
+    "delimiterBytesRemoved": 318,
+    "hypotheticalRawLowerBoundBytes": 40424,
+    "mixedSchemaTransitions": 5,
+    "headerOverheadLowerBytes": 280,
+    "headerOverheadUpperBytes": 405,
+    "hypotheticalWithHeaderByteRange": [
+      40704,
+      40829
+    ],
+    "sourceHistoryLinkAndMappingOverheadExcludedFromLowerBound": true,
+    "rawLowerBoundUnder30KiB": false,
+    "lowerBoundMethod": "只在内存从原7列去掉title及一句话，保原ID/状态/审核/验收/文档；未写候选BACKLOG、不执行消费者。混合新旧区另需正确表头；完整原行历史/引用/SHA映射会再增加成本。该数字不能证明合法实施后的体积。",
+    "pmemWouldDropCurrentlyOpenOlderRows": 143,
+    "pmemDroppedIdSample": [
+      "T-1018",
+      "T-1026",
+      "T-1027",
+      "T-1025",
+      "T-1024",
+      "T-1023",
+      "T-1021",
+      "T-1020",
+      "T-1017",
+      "T-1015"
+    ],
+    "contextCompileCounterexample": {
+      "id": "T-1018",
+      "originalTaskTitle": "清理本轮测试暴露的全局类型与边界欠债",
+      "fiveColumnCells": [
+        "T-1018",
+        "📋 待办",
+        "—",
+        "待验",
+        "[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018) [完整历史](BACKLOG-details.md#t1173-t1018-global-debt-history)"
+      ],
+      "actualHeaderFallbackTaskName": "📋 待办",
+      "actualHeaderFallbackOneLiner": "[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018) [完整历史](BACKLOG-details.md#t1173-t1018-global-debt-history)",
+      "documentCellStillRetained": true
+    },
+    "consumersExecuted": false,
+    "candidateAdmitted": false,
+    "candidateApplied": false
+  },
+  "measurementArtifact": {
+    "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-five-column-index-review/measurement.json",
+    "sha256": "ef70c5ad930a71f69fd3cef2b53fb140aed1d5b51feff6b8e0b7aab5a7fea6a9"
+  },
+  "finalReadProtectedGE1062Rows": [
+    {
+      "id": "T-1173",
+      "rawRow": "|T-1173|复核历史看板撞号与畸形字段|🔨 待办|—|—|[实际诊断](docs/features/t1173-historical-backlog-identity-collisions.md)|原健康命令已证实T1018重复及执行/归档复用；保原行和事件，独立核来源再修表示，不删待办或伪迁PASS。|",
+      "rowSha256": "b6fa32b27c71a7cc4c1ce553916557a0a1dc94462f40ae3e378655c887425bf3",
+      "allOriginalSevenCells": [
+        "T-1173",
+        "复核历史看板撞号与畸形字段",
+        "🔨 待办",
+        "—",
+        "—",
+        "[实际诊断](docs/features/t1173-historical-backlog-identity-collisions.md)",
+        "原健康命令已证实T1018重复及执行/归档复用；保原行和事件，独立核来源再修表示，不删待办或伪迁PASS。"
+      ]
+    },
+    {
+      "id": "T-1172",
+      "rawRow": "|T-1172|校正本轮完整校验缺少隔离PG上下文|✅ 待办|—|—|[实际诊断](docs/features/t1172-current-canonical-isolated-pg-context.md)|本轮原canonical40错误，新增LED052来自遗漏两项显式隔离配置；保原exit1，用原隔离公共runner复验，不改门/产品或拼接全绿。|",
+      "rowSha256": "dd5aac21b338e971cbf25a998e2f178583462f90999f8d2a8d9559f23623d56d",
+      "allOriginalSevenCells": [
+        "T-1172",
+        "校正本轮完整校验缺少隔离PG上下文",
+        "✅ 待办",
+        "—",
+        "—",
+        "[实际诊断](docs/features/t1172-current-canonical-isolated-pg-context.md)",
+        "本轮原canonical40错误，新增LED052来自遗漏两项显式隔离配置；保原exit1，用原隔离公共runner复验，不改门/产品或拼接全绿。"
+      ]
+    },
+    {
+      "id": "T-1171",
+      "rawRow": "|T-1171|无损压缩当前超限任务看板|🔨 待办|—|—|[实际失败](docs/features/t1171-current-backlog-compaction.md)|当前健康门RUNAWAY；只用原受支持归档/详情外置，任务状态、原文和失败责任保留，原健康复验，不凭归档销审核债。|",
+      "rowSha256": "9a5bb9ec810b641d769c5ad2717546440a87ef01f4802ae611fce9c6a010a778",
+      "allOriginalSevenCells": [
+        "T-1171",
+        "无损压缩当前超限任务看板",
+        "🔨 待办",
+        "—",
+        "—",
+        "[实际失败](docs/features/t1171-current-backlog-compaction.md)",
+        "当前健康门RUNAWAY；只用原受支持归档/详情外置，任务状态、原文和失败责任保留，原健康复验，不凭归档销审核债。"
+      ]
+    },
+    {
+      "id": "T-1170",
+      "rawRow": "|T-1170|无损归档原浏览器失败上下文并恢复提交检查|✅ 待办|—|—|[实际失败](docs/features/t1170-raw-browser-evidence-storage.md)|新增原PW上下文摘录含三行尾空格使staged diff真实exit2；原字节/SHA私有加gzip无损保留，不改原manifest/失败或Git检查；产品写集为空。|",
+      "rowSha256": "bce67c0494a113088171384c57f161bd62ebce1395ca01630da71569f5eb30c5",
+      "allOriginalSevenCells": [
+        "T-1170",
+        "无损归档原浏览器失败上下文并恢复提交检查",
+        "✅ 待办",
+        "—",
+        "—",
+        "[实际失败](docs/features/t1170-raw-browser-evidence-storage.md)",
+        "新增原PW上下文摘录含三行尾空格使staged diff真实exit2；原字节/SHA私有加gzip无损保留，不改原manifest/失败或Git检查；产品写集为空。"
+      ]
+    },
+    {
+      "id": "T-1169",
+      "rawRow": "|T-1169|修复账号转组弹窗关闭后焦点丢失|✅ 待办|PASS[REV:6b4388bed640]|—|[实际走查与SPEC](docs/features/t1169-account-transfer-focus-return.md)|独立Cua确认丢焦并正式审/start；真实6RED含三转组，最终51组件PASS、原Chrome六次Esc回焦、切组/脱离DOM守卫和174LED通过；独立局部PASS，最终Gate/安装待验。|",
+      "rowSha256": "d3f7d296f1c1804b126e64dfc6e2bd7291943836ecc9aa5e5bcc7e08be03a74b",
+      "allOriginalSevenCells": [
+        "T-1169",
+        "修复账号转组弹窗关闭后焦点丢失",
+        "✅ 待办",
+        "PASS[REV:6b4388bed640]",
+        "—",
+        "[实际走查与SPEC](docs/features/t1169-account-transfer-focus-return.md)",
+        "独立Cua确认丢焦并正式审/start；真实6RED含三转组，最终51组件PASS、原Chrome六次Esc回焦、切组/脱离DOM守卫和174LED通过；独立局部PASS，最终Gate/安装待验。"
+      ]
+    },
+    {
+      "id": "T-1168",
+      "rawRow": "|T-1168|统一原生报表身份恢复态的提示与主操作|✅ 待办|PASS[REV:5d38b98b8f17]|—|[实际视觉与SPEC](docs/features/t1168-native-report-recovery-actions.md)|原冲突提示/红次级恢复与32px保留证据，正式审/start后恢复态和cap优先RED；最终51组件、Chrome24px/一致主动作与0副作用、174LED及独立局部PASS；最终Gate/真人待验。|",
+      "rowSha256": "45634e66d57908a6719c4b5daa8a67f686f2e1a49291e6b5329cc38b71fb78c1",
+      "allOriginalSevenCells": [
+        "T-1168",
+        "统一原生报表身份恢复态的提示与主操作",
+        "✅ 待办",
+        "PASS[REV:5d38b98b8f17]",
+        "—",
+        "[实际视觉与SPEC](docs/features/t1168-native-report-recovery-actions.md)",
+        "原冲突提示/红次级恢复与32px保留证据，正式审/start后恢复态和cap优先RED；最终51组件、Chrome24px/一致主动作与0副作用、174LED及独立局部PASS；最终Gate/真人待验。"
+      ]
+    },
+    {
+      "id": "T-1167",
+      "rawRow": "|T-1167|修复采集终态等待在途续租无法返回|✅ 待办|PASS[REV:40609910e1a7]|—|[独立反例与SPEC](docs/features/t1167-collector-pending-renewal-finalization.md)|原finally等pending心跳已按独评6RED/原63GREEN修复，当前原execute终态不等失控续租且晚结果守卫保留；全timeout仅旧27静态失败/运行时166PASS，当前窄复核PASS，不代签其它端口或真人。|",
+      "rowSha256": "319a15399693a9408c07cfaf81eaaaacfde530c12b90addbb27763fbe1485ba8",
+      "allOriginalSevenCells": [
+        "T-1167",
+        "修复采集终态等待在途续租无法返回",
+        "✅ 待办",
+        "PASS[REV:40609910e1a7]",
+        "—",
+        "[独立反例与SPEC](docs/features/t1167-collector-pending-renewal-finalization.md)",
+        "原finally等pending心跳已按独评6RED/原63GREEN修复，当前原execute终态不等失控续租且晚结果守卫保留；全timeout仅旧27静态失败/运行时166PASS，当前窄复核PASS，不代签其它端口或真人。"
+      ]
+    },
+    {
+      "id": "T-1166",
+      "rawRow": "|T-1166|校正新报告旅程有限串行外层预算|✅ 待办|PASS[REV:04e1fdc238d0]|—|[独立预算检查与SPEC](docs/features/t1166-report-journey-outer-budget.md)|新case25,200,000ms/runner26,400,000ms覆盖有限串行加清理，内层120秒/0retry不变；61路径冻结当前Chrome79秒exit0，独立预算复核PASS；旧27静态欠债仍exit1。|",
+      "rowSha256": "cac4431f21c08855c891c4356515457e1bcd123a28758d793e47bcf365399f03",
+      "allOriginalSevenCells": [
+        "T-1166",
+        "校正新报告旅程有限串行外层预算",
+        "✅ 待办",
+        "PASS[REV:04e1fdc238d0]",
+        "—",
+        "[独立预算检查与SPEC](docs/features/t1166-report-journey-outer-budget.md)",
+        "新case25,200,000ms/runner26,400,000ms覆盖有限串行加清理，内层120秒/0retry不变；61路径冻结当前Chrome79秒exit0，独立预算复核PASS；旧27静态欠债仍exit1。"
+      ]
+    },
+    {
+      "id": "T-1165",
+      "rawRow": "|T-1165|修复平台身份拒绝在正式HTTP链路丢失错误码与扫码恢复|✅ 待办|PASS[REV:e2674ba1ac3b]|—|[实际缺陷与SPEC](docs/features/t1165-platform-scope-error-envelope.md)|保原Chrome52秒400string失败和trace，固定已有SCOPE_MISSING原400进入合同；正式独评/真实RED→69GREEN，当前Chrome原链恢复可见/0副作用，窄复核PASS；最终Gate与真人待验。|",
+      "rowSha256": "d9c50d1ee7d198562f68260abbb1815eac993d020d6e0c11f7c115fc7e9a0b77",
+      "allOriginalSevenCells": [
+        "T-1165",
+        "修复平台身份拒绝在正式HTTP链路丢失错误码与扫码恢复",
+        "✅ 待办",
+        "PASS[REV:e2674ba1ac3b]",
+        "—",
+        "[实际缺陷与SPEC](docs/features/t1165-platform-scope-error-envelope.md)",
+        "保原Chrome52秒400string失败和trace，固定已有SCOPE_MISSING原400进入合同；正式独评/真实RED→69GREEN，当前Chrome原链恢复可见/0副作用，窄复核PASS；最终Gate与真人待验。"
+      ]
+    },
+    {
+      "id": "T-1164",
+      "rawRow": "|T-1164|校正独立审核输入绑定与证据字段|✅ 待办|—|—|[实际诊断](docs/features/t1164-review-input-binding-and-evidence-kind.md)|保原非法packet拒绝/不同SPEC读集；独立现字节重读正规record0，原verifyReviewReceipt核当前六份PASS，完整audit原23历史错误保留；未改门/产品，最终canonical待验。|",
+      "rowSha256": "9e63b7c9ace7a2462d925801d43b88ee08d7c41b3221182ed60f9454600c2a75",
+      "allOriginalSevenCells": [
+        "T-1164",
+        "校正独立审核输入绑定与证据字段",
+        "✅ 待办",
+        "—",
+        "—",
+        "[实际诊断](docs/features/t1164-review-input-binding-and-evidence-kind.md)",
+        "保原非法packet拒绝/不同SPEC读集；独立现字节重读正规record0，原verifyReviewReceipt核当前六份PASS，完整audit原23历史错误保留；未改门/产品，最终canonical待验。"
+      ]
+    },
+    {
+      "id": "T-1161",
+      "rawRow": "|T-1161|核对微信账号转组与隐藏管理入口|✅ 待办|PASS[REV:22a46ffc1285]|—|[SPEC](docs/features/t1161-preserve-wechat-account-management.md)|原截断diff误读已澄清，无凭误读改产品；独立Cua实际展开及Chrome六窗口转组入口确认，另发现真实丢焦交T1169修；原CONCERNS保留，真人转组/扫码未执行。|",
+      "rowSha256": "4c97c2e56e39cb670759d32f6c45ebacfe8f075c398999f95fcac0bce47fc4d7",
+      "allOriginalSevenCells": [
+        "T-1161",
+        "核对微信账号转组与隐藏管理入口",
+        "✅ 待办",
+        "PASS[REV:22a46ffc1285]",
+        "—",
+        "[SPEC](docs/features/t1161-preserve-wechat-account-management.md)",
+        "原截断diff误读已澄清，无凭误读改产品；独立Cua实际展开及Chrome六窗口转组入口确认，另发现真实丢焦交T1169修；原CONCERNS保留，真人转组/扫码未执行。"
+      ]
+    },
+    {
+      "id": "T-1159",
+      "rawRow": "|T-1159|在当前main整合微信原生报表、绑定归属与调度闭包|🔨 待办|PASS[REV:914cad514a19]|待验|[SPEC](docs/features/t1159-current-wechat-native-report-integration.md) · [验收合同](docs/verification/t1159/PAGE_SPEC.md)|T1124剩余56路径，来源293d统计页导航UNKNOWN/0报告/两实验用尽；独评后冻结语义移植、当前隔离公共链验收，保纯组/保存/调度与原研究暂停，不代签真人微信或安装。|",
+      "rowSha256": "c570b7bdbb5a5d10953ec78cd21c7d5121ed263c1c64ae404903b7b0aa1b57ef",
+      "allOriginalSevenCells": [
+        "T-1159",
+        "在当前main整合微信原生报表、绑定归属与调度闭包",
+        "🔨 待办",
+        "PASS[REV:914cad514a19]",
+        "待验",
+        "[SPEC](docs/features/t1159-current-wechat-native-report-integration.md) · [验收合同](docs/verification/t1159/PAGE_SPEC.md)",
+        "T1124剩余56路径，来源293d统计页导航UNKNOWN/0报告/两实验用尽；独评后冻结语义移植、当前隔离公共链验收，保纯组/保存/调度与原研究暂停，不代签真人微信或安装。"
+      ]
+    },
+    {
+      "id": "T-1155",
+      "rawRow": "|T-1155|核对浏览器导航时本地服务连接中断日志|⏸️ 待办|—|—|[实际诊断](docs/features/t1155-browser-navigation-connection-abort.md)|当前三轮原日志aborted/ECONNRESET及uncaughtException，主要断言失败另有原因；保原日志，核请求/进程与后续公开操作，不猜根因或屏蔽错误。|",
+      "rowSha256": "7f3b58ed28125fcd4bd49ba27d4fcc2b9ccb0f73223f3fe24c68960b0621bc17",
+      "allOriginalSevenCells": [
+        "T-1155",
+        "核对浏览器导航时本地服务连接中断日志",
+        "⏸️ 待办",
+        "—",
+        "—",
+        "[实际诊断](docs/features/t1155-browser-navigation-connection-abort.md)",
+        "当前三轮原日志aborted/ECONNRESET及uncaughtException，主要断言失败另有原因；保原日志，核请求/进程与后续公开操作，不猜根因或屏蔽错误。"
+      ]
+    },
+    {
+      "id": "T-1149",
+      "rawRow": "|T-1149|在当前main整合封面用途与图片页组统一画幅|🔨 待办|PASS[REV:0a91f954eb8f]|待验|[SPEC](docs/features/t1149-current-cover-group-aspect.md)|T1124独评确认来源四路径仍缺；保T1141旧任务/有效比例及T1117引用保存，逐段移植用途、用户统一选择和能力交集；单页不支持不阻断其它合法生成，当前独评后RED/GREEN与公开回读。|",
+      "rowSha256": "2c42e6ff5737376986af6816ea4c043557cd9af7b12f33712dcf5583a87bfbf4",
+      "allOriginalSevenCells": [
+        "T-1149",
+        "在当前main整合封面用途与图片页组统一画幅",
+        "🔨 待办",
+        "PASS[REV:0a91f954eb8f]",
+        "待验",
+        "[SPEC](docs/features/t1149-current-cover-group-aspect.md)",
+        "T1124独评确认来源四路径仍缺；保T1141旧任务/有效比例及T1117引用保存，逐段移植用途、用户统一选择和能力交集；单页不支持不阻断其它合法生成，当前独评后RED/GREEN与公开回读。"
+      ]
+    },
+    {
+      "id": "T-1148",
+      "rawRow": "|T-1148|核对本轮共享页面修改后的旧验收记录失效|🔨 待办|—|—|[实际诊断](docs/features/t1148-current-frontend-receipt-drift.md)|当前efe9全canonical1093秒exit1/42ERROR，原39保留，新T1136/1117/1108源码绑定失效；保原报告/事件，当前素材先正式补验，旧范围最终源码复验，不改验证器或伪换head。|",
+      "rowSha256": "3e66f956bf2de4ba50a384327c18ab052540a5d45dbbc06630fd9ae9e34135b6",
+      "allOriginalSevenCells": [
+        "T-1148",
+        "核对本轮共享页面修改后的旧验收记录失效",
+        "🔨 待办",
+        "—",
+        "—",
+        "[实际诊断](docs/features/t1148-current-frontend-receipt-drift.md)",
+        "当前efe9全canonical1093秒exit1/42ERROR，原39保留，新T1136/1117/1108源码绑定失效；保原报告/事件，当前素材先正式补验，旧范围最终源码复验，不改验证器或伪换head。"
+      ]
+    },
+    {
+      "id": "T-1144",
+      "rawRow": "|T-1144|核对素材旅程完成后测试进程未退出|🔨 待办|—|—|[实际诊断](docs/features/t1144-picker-worker-cleanup.md)|T1140两例PASS但worker停后300秒不退出，整轮371.938秒exit1；保原失败和归属快照，定位实际清理等待，不缩超时/force退出/忽略全局错误。|",
+      "rowSha256": "e6f0493f65d89355b4ad4278f91fd7429b43f223e2884c29dae1fda320c111fa",
+      "allOriginalSevenCells": [
+        "T-1144",
+        "核对素材旅程完成后测试进程未退出",
+        "🔨 待办",
+        "—",
+        "—",
+        "[实际诊断](docs/features/t1144-picker-worker-cleanup.md)",
+        "T1140两例PASS但worker停后300秒不退出，整轮371.938秒exit1；保原失败和归属快照，定位实际清理等待，不缩超时/force退出/忽略全局错误。"
+      ]
+    },
+    {
+      "id": "T-1140",
+      "rawRow": "|T-1140|优化低高度窗口的素材浏览与预览空间|🔨 待办|PASS[REV:2a0be12aac16]|待验|[当前观察](docs/features/t1140-picker-low-height-preview.md) · [验收合同](docs/verification/t1140/PAGE_SPEC.md)|当前683×450主体预览空间被原上下双滚动区挤压；按钮和取消回读通过，AssetPicker源未改。保截图后精确SPEC独评优化，不称选择失败或已修。|",
+      "rowSha256": "09c26bf25c006d2799a4a2fcab6e91589cc21d75a6aeb724df5ea8edb6da7190",
+      "allOriginalSevenCells": [
+        "T-1140",
+        "优化低高度窗口的素材浏览与预览空间",
+        "🔨 待办",
+        "PASS[REV:2a0be12aac16]",
+        "待验",
+        "[当前观察](docs/features/t1140-picker-low-height-preview.md) · [验收合同](docs/verification/t1140/PAGE_SPEC.md)",
+        "当前683×450主体预览空间被原上下双滚动区挤压；按钮和取消回读通过，AssetPicker源未改。保截图后精确SPEC独评优化，不称选择失败或已修。"
+      ]
+    },
+    {
+      "id": "T-1136",
+      "rawRow": "|T-1136|在当前main修复长项目与平台账号撑宽排期弹窗|✅ 待办|PASS[REV:db7fe4526b24]|PASS:bb71e533cae7|[SPEC](docs/features/t1136-calendar-dialog-current-integration.md)|T1124来源两条布局缺失；仅共享Dialog单列收缩与排期断点及必要select收缩，先独评/当前Chrome真实尺寸RED，再原公共选择保存回读和相邻消费者验证；不签旧来源或全功能。|",
+      "rowSha256": "1693f673842f77f1c6fdabdfe3307965fb29fcab49ba130ff8c80d880bd8cedd",
+      "allOriginalSevenCells": [
+        "T-1136",
+        "在当前main修复长项目与平台账号撑宽排期弹窗",
+        "✅ 待办",
+        "PASS[REV:db7fe4526b24]",
+        "PASS:bb71e533cae7",
+        "[SPEC](docs/features/t1136-calendar-dialog-current-integration.md)",
+        "T1124来源两条布局缺失；仅共享Dialog单列收缩与排期断点及必要select收缩，先独评/当前Chrome真实尺寸RED，再原公共选择保存回读和相邻消费者验证；不签旧来源或全功能。"
+      ]
+    },
+    {
+      "id": "T-1135",
+      "rawRow": "|T-1135|核对安装版粗剪成片解码画面比原素材偏暗|⏸️ 待办|—|—|[实际诊断](docs/features/t1135-installed-render-color-fidelity.md)|已批准r7中性成片正式exact-file下载/245帧解码通过，但源+6.76秒三处背景RGB17/36/57变为0/19/44；先核原工程与编码色彩/公共渲染路径，根因未知，不重提渲染或改原稿/媒体；修产品前精确SPEC独评。|",
+      "rowSha256": "d09c3fdbc659b801dcd0bb5a0cc6d5fe4d6eac258b50e23f161d1bf7020891b4",
+      "allOriginalSevenCells": [
+        "T-1135",
+        "核对安装版粗剪成片解码画面比原素材偏暗",
+        "⏸️ 待办",
+        "—",
+        "—",
+        "[实际诊断](docs/features/t1135-installed-render-color-fidelity.md)",
+        "已批准r7中性成片正式exact-file下载/245帧解码通过，但源+6.76秒三处背景RGB17/36/57变为0/19/44；先核原工程与编码色彩/公共渲染路径，根因未知，不重提渲染或改原稿/媒体；修产品前精确SPEC独评。"
+      ]
+    },
+    {
+      "id": "T-1124",
+      "rawRow": "|T-1124|核对本轮新增来源分支未合入main的源码并闭合整合|🔨 待办|—|—|[实际诊断](docs/features/t1124-current-worktree-source-gap.md)|T1080删除前只读再盘点：canvas来源17条源码/测试路径main缺失，chart来源1条缺失，其它58条不同不能直接算遗漏；保留来源与活跃树，逐项核main替代及新增SPEC/独评，禁止ours丢源码或代签全合并。先交付当前已复核包继续验收，本轮新增功能不冒称已入包。|",
+      "rowSha256": "6d73090f22b1d416d2bdd4fa240bf25f97a0cf0cd533bc963b98ee9f38a7c47a",
+      "allOriginalSevenCells": [
+        "T-1124",
+        "核对本轮新增来源分支未合入main的源码并闭合整合",
+        "🔨 待办",
+        "—",
+        "—",
+        "[实际诊断](docs/features/t1124-current-worktree-source-gap.md)",
+        "T1080删除前只读再盘点：canvas来源17条源码/测试路径main缺失，chart来源1条缺失，其它58条不同不能直接算遗漏；保留来源与活跃树，逐项核main替代及新增SPEC/独评，禁止ours丢源码或代签全合并。先交付当前已复核包继续验收，本轮新增功能不冒称已入包。"
+      ]
+    },
+    {
+      "id": "T-1117",
+      "rawRow": "|T-1117|修复画布保存英文反馈与参考选择器名称展示遗漏|✅ 待办|PASS[REV:161a32c6331a]|PASS:32177b98fc54|[SPEC](docs/features/t1117-canvas-error-reference-preview.md)|当前main两条Chrome流程通过，但实际截图保存错误裸英文，参考已选卡仍长文件名；复用原中文反馈并闭合showIdentity=false全选择流程，精确file/保存/owner不变。独評、实际RED/GREEN及浏览器证据后修复；不代签模型或旧失败。|",
+      "rowSha256": "8c855c471dad3043f4bbc4a6e4af8746bdb2663a6715bdcd36df2b554f5915bf",
+      "allOriginalSevenCells": [
+        "T-1117",
+        "修复画布保存英文反馈与参考选择器名称展示遗漏",
+        "✅ 待办",
+        "PASS[REV:161a32c6331a]",
+        "PASS:32177b98fc54",
+        "[SPEC](docs/features/t1117-canvas-error-reference-preview.md)",
+        "当前main两条Chrome流程通过，但实际截图保存错误裸英文，参考已选卡仍长文件名；复用原中文反馈并闭合showIdentity=false全选择流程，精确file/保存/owner不变。独評、实际RED/GREEN及浏览器证据后修复；不代签模型或旧失败。"
+      ]
+    },
+    {
+      "id": "T-1118",
+      "rawRow": "|T-1118|核对本机验收原始日志目录消失|📋 待办|—|—|[实际诊断](docs/features/t1118-verification-directory-disappearance.md)|T1117实际RED/GREEN后，原验收父目录突然不存在；七次包装命令exit2未执行内层验证。保工具实际结果与已提交工件，原因UNKNOWN；新隔离目录继续验证，不重造旧日志或触用户数据。|",
+      "rowSha256": "584d9faf5fb77d81f0475a4c8d707129fa2393fa8e323496fcce5843dd34d2ea",
+      "allOriginalSevenCells": [
+        "T-1118",
+        "核对本机验收原始日志目录消失",
+        "📋 待办",
+        "—",
+        "—",
+        "[实际诊断](docs/features/t1118-verification-directory-disappearance.md)",
+        "T1117实际RED/GREEN后，原验收父目录突然不存在；七次包装命令exit2未执行内层验证。保工具实际结果与已提交工件，原因UNKNOWN；新隔离目录继续验证，不重造旧日志或触用户数据。"
+      ]
+    },
+    {
+      "id": "T-1116",
+      "rawRow": "|T-1116|核对稿件并发保存回归在本轮完整对账中的再次失败|🔨 待办|—|—|[实际诊断](docs/features/t1116-artifact-cas-global-regression.md)|T1114新增相对失败LED027，原41失败保留；实际全局没有保存内层断言，先原两段命令逐段取得真实失败，核CAS/事务/初始化预算。未确认产品根因，不删除竞争或版本断言，不能称已修或全功能PASS。|",
+      "rowSha256": "26577d4c923fef3ae591b376df4a1293c4829684c7f15f86b2bfc1b29a3317c9",
+      "allOriginalSevenCells": [
+        "T-1116",
+        "核对稿件并发保存回归在本轮完整对账中的再次失败",
+        "🔨 待办",
+        "—",
+        "—",
+        "[实际诊断](docs/features/t1116-artifact-cas-global-regression.md)",
+        "T1114新增相对失败LED027，原41失败保留；实际全局没有保存内层断言，先原两段命令逐段取得真实失败，核CAS/事务/初始化预算。未确认产品根因，不删除竞争或版本断言，不能称已修或全功能PASS。"
+      ]
+    },
+    {
+      "id": "T-1101",
+      "rawRow": "|T-1101|修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集|🔨|PASS[REV:146ff2046c2c]|待验|[SPEC](docs/features/t1101-canvas-binding-collection.md)|用户2026-10-09截图明确要求：素材只显示预览；生成中禁止重复提交、已有结果再生成需确认；图片连线传递默认参考；扫码入口放平台能力表，删除刷新和下方重复框；三平台独立采集错峰执行。来源f97a80da已完成；main重新初审和组合验收，原PASS不代签当前树。不发布、不改真实Cookie。|",
+      "rowSha256": "2a871e9f9f38095fc804788b8f41650b20c5e7ba596a6376276af53f19613396",
+      "allOriginalSevenCells": [
+        "T-1101",
+        "修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集",
+        "🔨",
+        "PASS[REV:146ff2046c2c]",
+        "待验",
+        "[SPEC](docs/features/t1101-canvas-binding-collection.md)",
+        "用户2026-10-09截图明确要求：素材只显示预览；生成中禁止重复提交、已有结果再生成需确认；图片连线传递默认参考；扫码入口放平台能力表，删除刷新和下方重复框；三平台独立采集错峰执行。来源f97a80da已完成；main重新初审和组合验收，原PASS不代签当前树。不发布、不改真实Cookie。"
+      ]
+    },
+    {
+      "id": "T-1101-global-gates",
+      "rawRow": "|T-1101-global-gates|核对独立main工作树全局对账失败及历史收据漂移|📋 待办|—|—|[根因记录](docs/verification/t1101/global-gates.md)|前置对账76项失败含未装依赖阶段环境、历史审核收据和教训检查；本轮安装依赖后重跑真实Gate。范围外旧类型/契约/短预算仍关联T-1018/T-1081；不得补拍历史PASS。|",
+      "rowSha256": "51caee812a522d66394c24bddff82abd996ea0d941a2a70c07eabc4eea2400dc",
+      "allOriginalSevenCells": [
+        "T-1101-global-gates",
+        "核对独立main工作树全局对账失败及历史收据漂移",
+        "📋 待办",
+        "—",
+        "—",
+        "[根因记录](docs/verification/t1101/global-gates.md)",
+        "前置对账76项失败含未装依赖阶段环境、历史审核收据和教训检查；本轮安装依赖后重跑真实Gate。范围外旧类型/契约/短预算仍关联T-1018/T-1081；不得补拍历史PASS。"
+      ]
+    },
+    {
+      "id": "T-1108",
+      "rawRow": "|T-1108|核对画布连线引用保存回读及浏览器短观察窗口|✅|PASS[REV:7725159d945d]|PASS:54ebbd993813|[实际缺陷](docs/features/t1108-canvas-public-observation.md) [详情](BACKLOG-details.md#t-1108)|见详情。|",
+      "rowSha256": "914c0342a5b3f9441fb1b3e51ae43f98766a42566c950eaf5446b0d8efe7ab67",
+      "allOriginalSevenCells": [
+        "T-1108",
+        "核对画布连线引用保存回读及浏览器短观察窗口",
+        "✅",
+        "PASS[REV:7725159d945d]",
+        "PASS:54ebbd993813",
+        "[实际缺陷](docs/features/t1108-canvas-public-observation.md) [详情](BACKLOG-details.md#t-1108)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1109",
+      "rawRow": "|T-1109|修复超时验证入口默认10秒初始化导致原测试未执行|🔨|PASS[REV:a85dda74b249]|待验|[SPEC](docs/features/t1109-timeout-verification-default-budget.md)|实际timeout-policy额外backend beforeAll10秒超时，25例skip；原静态27保留。仅明确真实Vitest test/hook至少120秒，保原断言/退出码/更长局部预算，不删除Gate或改构建。先独评再修公共入口。|",
+      "rowSha256": "7b13e8026e0140136d8085449e0f76718ad8590c887b6eb513b7603a2e5ca74c",
+      "allOriginalSevenCells": [
+        "T-1109",
+        "修复超时验证入口默认10秒初始化导致原测试未执行",
+        "🔨",
+        "PASS[REV:a85dda74b249]",
+        "待验",
+        "[SPEC](docs/features/t1109-timeout-verification-default-budget.md)",
+        "实际timeout-policy额外backend beforeAll10秒超时，25例skip；原静态27保留。仅明确真实Vitest test/hook至少120秒，保原断言/退出码/更长局部预算，不删除Gate或改构建。先独评再修公共入口。"
+      ]
+    },
+    {
+      "id": "T-1110",
+      "rawRow": "|T-1110|核对浏览器验收开发资源ChunkLoadError与测试状态准备竞态|📋 待办|—|—|[实际缺陷](docs/features/t1110-browser-development-resource-diagnosis.md)|用户要求有问题建task；fa09真实两条旅程0PASS/2FAIL，绑定页ChunkLoadError无法加载，第一例旧状态被仍运行页面自动保存覆盖。原trace/log保留；后者在T1108原范围先离开再准备，前者根因未知，核真实静态响应/开发缓存和并发，不删断言或用旧PASS代签。|",
+      "rowSha256": "da2102ce12ea3ad08f27af7c5e1adb68303c59cf4e9f55f6bf5edc29bb412a92",
+      "allOriginalSevenCells": [
+        "T-1110",
+        "核对浏览器验收开发资源ChunkLoadError与测试状态准备竞态",
+        "📋 待办",
+        "—",
+        "—",
+        "[实际缺陷](docs/features/t1110-browser-development-resource-diagnosis.md)",
+        "用户要求有问题建task；fa09真实两条旅程0PASS/2FAIL，绑定页ChunkLoadError无法加载，第一例旧状态被仍运行页面自动保存覆盖。原trace/log保留；后者在T1108原范围先离开再准备，前者根因未知，核真实静态响应/开发缓存和并发，不删断言或用旧PASS代签。"
+      ]
+    },
+    {
+      "id": "T-1107",
+      "rawRow": "|T-1107|核对平台公共接口新增操作与发布归属回归失败|🔨|PASS[REV:9c9181db2c1c]|待验|[实际缺陷](docs/features/t1107-platform-public-regression.md)|全功能验收额外公共真链24例实际22PASS/2FAIL：账号操作数5变6，发布锚冲突首轮200而旧断言期待拒绝；重试又409。先核main合并前基线与真实组/项目归属，再独评修复产品或过期夹具；保原断言/失败/权限，不删除历史洗绿。|",
+      "rowSha256": "bc5cecd384c89bac64fdc110be7f5563b997370e6a525b59b6a334b5b6035477",
+      "allOriginalSevenCells": [
+        "T-1107",
+        "核对平台公共接口新增操作与发布归属回归失败",
+        "🔨",
+        "PASS[REV:9c9181db2c1c]",
+        "待验",
+        "[实际缺陷](docs/features/t1107-platform-public-regression.md)",
+        "全功能验收额外公共真链24例实际22PASS/2FAIL：账号操作数5变6，发布锚冲突首轮200而旧断言期待拒绝；重试又409。先核main合并前基线与真实组/项目归属，再独评修复产品或过期夹具；保原断言/失败/权限，不删除历史洗绿。"
+      ]
+    },
+    {
+      "id": "T-1105",
+      "rawRow": "|T-1105|修复共享资源面板失效读取后持续加载|🔨|PASS[REV:675552d2d02f]|待验|[SPEC](docs/features/t1105-shared-resource-loading.md) · [实际缺陷](docs/features/t1105-shared-resource-loading-diagnosis.md)|T1101额外Chrome走查展开共享资源停在加载，console出现组上下文拒绝；原失败保留。先在main复现epoch/单在途/重开，再独评修，不放宽跨组权限或把扫码PASS代签该面板。|",
+      "rowSha256": "94138be0e8bd39ab5bb7ea03d61f4012b5186d6c74b235082710a8d58df4a0c8",
+      "allOriginalSevenCells": [
+        "T-1105",
+        "修复共享资源面板失效读取后持续加载",
+        "🔨",
+        "PASS[REV:675552d2d02f]",
+        "待验",
+        "[SPEC](docs/features/t1105-shared-resource-loading.md) · [实际缺陷](docs/features/t1105-shared-resource-loading-diagnosis.md)",
+        "T1101额外Chrome走查展开共享资源停在加载，console出现组上下文拒绝；原失败保留。先在main复现epoch/单在途/重开，再独评修，不放宽跨组权限或把扫码PASS代签该面板。"
+      ]
+    },
+    {
+      "id": "T-1103",
+      "rawRow": "|T-1103|排查Pi联合提案反复遗漏完整图文参数|🔨|—|—|[实际缺陷](docs/features/t1103-pi-joint-argument-diagnosis.md) [详情](BACKLOG-details.md#t-1103)|见详情。|",
+      "rowSha256": "10275973d78dc91d6f5bee0dc93717dcb0efbf1f786ff8d8c6001bcd6975700d",
+      "allOriginalSevenCells": [
+        "T-1103",
+        "排查Pi联合提案反复遗漏完整图文参数",
+        "🔨",
+        "—",
+        "—",
+        "[实际缺陷](docs/features/t1103-pi-joint-argument-diagnosis.md) [详情](BACKLOG-details.md#t-1103)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1102",
+      "rawRow": "|T-1102|排查并恢复本地安装首次运行时展开失败|🔨|—|—|[诊断与边界](docs/features/t1102-installed-runtime-extraction.md) [详情](BACKLOG-details.md#t-1102)|见详情。|",
+      "rowSha256": "488a81293f8b3c9da8dc145a8494552239014be9224ed05a6b93f998d81012ee",
+      "allOriginalSevenCells": [
+        "T-1102",
+        "排查并恢复本地安装首次运行时展开失败",
+        "🔨",
+        "—",
+        "—",
+        "[诊断与边界](docs/features/t1102-installed-runtime-extraction.md) [详情](BACKLOG-details.md#t-1102)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1094",
+      "rawRow": "|T-1094|修复部分完成AI任务公开查询状态合同缺口|🔨|PASS[REV:5d2c91b81b45]|—|[SPEC](docs/features/t1094-public-partial-task-status.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) [详情](BACKLOG-details.md#t-1094)|见详情。|",
+      "rowSha256": "c8f94acd5fa64ae73e99b40b4406ebf7e0627d9e3df0e3be3d2edf9ce17f1eb1",
+      "allOriginalSevenCells": [
+        "T-1094",
+        "修复部分完成AI任务公开查询状态合同缺口",
+        "🔨",
+        "PASS[REV:5d2c91b81b45]",
+        "—",
+        "[SPEC](docs/features/t1094-public-partial-task-status.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) [详情](BACKLOG-details.md#t-1094)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1096",
+      "rawRow": "|T-1096|核对文章工作流与任务父归属旧回归断言的实际漂移|📋|—|—|[当场基线](docs/verification/t1094/RELATED_BASELINE_DIAGNOSIS.md)|T1094正式回归文章9FAIL/任务6FAIL；原main770037原测试同名同因复现。先核用户确认的联合创作入口、保存回读与组父归属，再独评是否修fixture或真实代码；原断言/owner不洗绿，不恢复已删快转入口。|",
+      "rowSha256": "19048143f3aa8244da6a89dc75a603d45cc35a5042cf38da5f14f2b14835444f",
+      "allOriginalSevenCells": [
+        "T-1096",
+        "核对文章工作流与任务父归属旧回归断言的实际漂移",
+        "📋",
+        "—",
+        "—",
+        "[当场基线](docs/verification/t1094/RELATED_BASELINE_DIAGNOSIS.md)",
+        "T1094正式回归文章9FAIL/任务6FAIL；原main770037原测试同名同因复现。先核用户确认的联合创作入口、保存回读与组父归属，再独评是否修fixture或真实代码；原断言/owner不洗绿，不恢复已删快转入口。"
+      ]
+    },
+    {
+      "id": "T-1099",
+      "rawRow": "|T-1099|修复工具明确业务拒绝回执缺失与末次失败被算成功|⏸️|PASS[REV:b5aa667d8485]|—|[SPEC](docs/features/t1099-tool-domain-recovery.md) · [实际缺陷](docs/features/t1099-tool-domain-recovery-diagnosis.md) [详情](BACKLOG-details.md#t-1099)|见详情。|",
+      "rowSha256": "dc3105d066b5f62ff4e14c109d080686506ef65a4683134d51fa2fc838334db5",
+      "allOriginalSevenCells": [
+        "T-1099",
+        "修复工具明确业务拒绝回执缺失与末次失败被算成功",
+        "⏸️",
+        "PASS[REV:b5aa667d8485]",
+        "—",
+        "[SPEC](docs/features/t1099-tool-domain-recovery.md) · [实际缺陷](docs/features/t1099-tool-domain-recovery-diagnosis.md) [详情](BACKLOG-details.md#t-1099)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1098",
+      "rawRow": "|T-1098|核对安装重启后的定期同步失败与采集未启动|📋|—|—|[缺陷登记](docs/features/t1098-installed-scheduled-failure-diagnosis.md)|用户要求发现问题及时建task；T1095真启动日志两scheduled.intelligence.sync为failed，另账号定期采集Error。保原ID与真实失败，先核公开归属/原回执/启动前事实后独评修复，不猜关联、清历史或重发。|",
+      "rowSha256": "32f22df52b820b1f90579369f64feea959430d600ab15f77b24f34046eeab6db",
+      "allOriginalSevenCells": [
+        "T-1098",
+        "核对安装重启后的定期同步失败与采集未启动",
+        "📋",
+        "—",
+        "—",
+        "[缺陷登记](docs/features/t1098-installed-scheduled-failure-diagnosis.md)",
+        "用户要求发现问题及时建task；T1095真启动日志两scheduled.intelligence.sync为failed，另账号定期采集Error。保原ID与真实失败，先核公开归属/原回执/启动前事实后独评修复，不猜关联、清历史或重发。"
+      ]
+    },
+    {
+      "id": "T-1097",
+      "rawRow": "|T-1097|修复文章编导参考资料与候选审读保护缺口|📋|—|—|[缺陷诊断](docs/features/t1097-article-director-options-diagnosis.md)|用户要求有问题及时建task修复；T1096确认身份/文档只接不可触达旧generate，当前联合未接；事实替换对照及未请求元数据保护也需当前链实证。核真实来源与审读后独评闭合，不恢复旧快转，不把旧恢复/checkbox测试当新链通过。|",
+      "rowSha256": "e634c6a1c42a608e3efd0a5680fdfc20256098b6b912474cd7a6c0ebecb17205",
+      "allOriginalSevenCells": [
+        "T-1097",
+        "修复文章编导参考资料与候选审读保护缺口",
+        "📋",
+        "—",
+        "—",
+        "[缺陷诊断](docs/features/t1097-article-director-options-diagnosis.md)",
+        "用户要求有问题及时建task修复；T1096确认身份/文档只接不可触达旧generate，当前联合未接；事实替换对照及未请求元数据保护也需当前链实证。核真实来源与审读后独评闭合，不恢复旧快转，不把旧恢复/checkbox测试当新链通过。"
+      ]
+    },
+    {
+      "id": "T-1095",
+      "rawRow": "|T-1095|验证Pi联合创作必填nullable字段遵循与原任务恢复方法|⏸️|PASS[REV:b3b9dda4753e]|—|[SPEC](docs/features/t1095-tool-parameter-recovery.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) [详情](BACKLOG-details.md#t-1095)|见详情。|",
+      "rowSha256": "3e92d32d50fb486368ff1d5e85bfe7c2c54283a31fe3e28c50a4c20ce60668bc",
+      "allOriginalSevenCells": [
+        "T-1095",
+        "验证Pi联合创作必填nullable字段遵循与原任务恢复方法",
+        "⏸️",
+        "PASS[REV:b3b9dda4753e]",
+        "—",
+        "[SPEC](docs/features/t1095-tool-parameter-recovery.md) · [当场诊断](docs/verification/t1093/FOLLOWUP_DIAGNOSIS.md) [详情](BACKLOG-details.md#t-1095)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1093",
+      "rawRow": "|T-1093|校准编导数字参数、联合首次读取与真实候选失败恢复|🔨|PASS[REV:267bf399a6b1]|—|[SPEC](docs/features/t1093-director-method-recovery.md)|T1091真实安装6候选通过/2失败；Pi整数发字符串被拒后仍称就绪、联合首读猜错可省略digest。只改功能方法提示，不放宽schema/回执/owner/旧任务或重发未知；正式独评后RED/GREEN及新包真实Pi复验，旧失败保留。|",
+      "rowSha256": "3158c3fcebbdbefc305f9ee4e5d318c582475093cc8abbb5b2d37c8074473842",
+      "allOriginalSevenCells": [
+        "T-1093",
+        "校准编导数字参数、联合首次读取与真实候选失败恢复",
+        "🔨",
+        "PASS[REV:267bf399a6b1]",
+        "—",
+        "[SPEC](docs/features/t1093-director-method-recovery.md)",
+        "T1091真实安装6候选通过/2失败；Pi整数发字符串被拒后仍称就绪、联合首读猜错可省略digest。只改功能方法提示，不放宽schema/回执/owner/旧任务或重发未知；正式独评后RED/GREEN及新包真实Pi复验，旧失败保留。"
+      ]
+    },
+    {
+      "id": "T-1091",
+      "rawRow": "|T-1091|补齐公开编导消息的Codex选择与文章图文视频目标定位并安装验收|🔨|PASS[REV:dcd0b932fca7]|—|[SPEC](docs/features/t1091-public-director-context.md) [详情](BACKLOG-details.md#t-1091)|见详情。|",
+      "rowSha256": "0ec0edebe6006cfff3f5218e8b388eafc3e561e036a61db3e3df58b3c4167434",
+      "allOriginalSevenCells": [
+        "T-1091",
+        "补齐公开编导消息的Codex选择与文章图文视频目标定位并安装验收",
+        "🔨",
+        "PASS[REV:dcd0b932fca7]",
+        "—",
+        "[SPEC](docs/features/t1091-public-director-context.md) [详情](BACKLOG-details.md#t-1091)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1092",
+      "rawRow": "|T-1092|核对联合创作旧集成测试未解包可信回执的契约漂移|📋|—|—|[当场基线证据](docs/verification/t1091/CREATION_BASELINE_DIAGNOSIS.md)|T1091扩大回归154PASS/2FAIL，旧main隔离同2FAIL；原第104行严格parse含__creatorosOutcome的展示投影，页面先经原解包器。先独评实际旧断言/回执协议再校准，保可信元数据与两稿内容断言，不改生产schema或洗掉失败。本轮不实施。|",
+      "rowSha256": "024c8af10ce08e3566ff632d721646bb5780e333148fc42d034da6e36bce46bf",
+      "allOriginalSevenCells": [
+        "T-1092",
+        "核对联合创作旧集成测试未解包可信回执的契约漂移",
+        "📋",
+        "—",
+        "—",
+        "[当场基线证据](docs/verification/t1091/CREATION_BASELINE_DIAGNOSIS.md)",
+        "T1091扩大回归154PASS/2FAIL，旧main隔离同2FAIL；原第104行严格parse含__creatorosOutcome的展示投影，页面先经原解包器。先独评实际旧断言/回执协议再校准，保可信元数据与两稿内容断言，不改生产schema或洗掉失败。本轮不实施。"
+      ]
+    },
+    {
+      "id": "T-1072-owned-devices",
+      "rawRow": "|T-1072-owned-devices|配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口|🔨 待办|PASS[REV:eb8de221287b]|待验|[SPEC](docs/features/t1072-owned-devices.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-aed1560bebc24ab1)。|",
+      "rowSha256": "d007c219787a97936bc7cb7911edb0e5ffd9afd0f9b4717bf82f5acdbed8ba62",
+      "allOriginalSevenCells": [
+        "T-1072-owned-devices",
+        "配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口",
+        "🔨 待办",
+        "PASS[REV:eb8de221287b]",
+        "待验",
+        "[SPEC](docs/features/t1072-owned-devices.md)",
+        "原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-aed1560bebc24ab1)。"
+      ]
+    },
+    {
+      "id": "T-1066-timeout-policy",
+      "rawRow": "|T-1066-timeout-policy|全系统统一两分钟超时下限、嵌套预算与Skill防复发|⏸️ 待办|PASS[REV:13310516269c]|待验|[SPEC](docs/features/t1066-timeout-policy.md) [详情](BACKLOG-details.md#t-1066-timeout-policy)|见详情。|",
+      "rowSha256": "c39211e7191bce2c9143746b5d25ab10ecde71f2323634a02442a38c363e7bbd",
+      "allOriginalSevenCells": [
+        "T-1066-timeout-policy",
+        "全系统统一两分钟超时下限、嵌套预算与Skill防复发",
+        "⏸️ 待办",
+        "PASS[REV:13310516269c]",
+        "待验",
+        "[SPEC](docs/features/t1066-timeout-policy.md) [详情](BACKLOG-details.md#t-1066-timeout-policy)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1067-skill-verification",
+      "rawRow": "|T-1067-skill-verification|清理通用产品流程Skill既有公开分发校验债务|📋 待办|—|待验|[根因证据](docs/verification/t1066/SKILL_VERIFICATION.md) [详情](BACKLOG-details.md#t-1067-skill-verification)|见详情。|",
+      "rowSha256": "ef957da3c57d33d85f3493baa6b8b2ab64677c7fac56f769ab112699179c8c25",
+      "allOriginalSevenCells": [
+        "T-1067-skill-verification",
+        "清理通用产品流程Skill既有公开分发校验债务",
+        "📋 待办",
+        "—",
+        "待验",
+        "[根因证据](docs/verification/t1066/SKILL_VERIFICATION.md) [详情](BACKLOG-details.md#t-1067-skill-verification)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1080",
+      "rawRow": "|T-1080|汇总全部本地worktree代码到main并清理闲置目录后构建|⏸️ 待办|—|—|[SPEC](docs/features/t1080-local-main-worktree-consolidation.md)|用户2026-10-08明确授权全部代码本地合并至主分支、清理不用的worktree再构建，构建无需备份。先逐树核HEAD/未提交/使用情况并保留Git来源，解决冲突和验证后只删除已保留代码且未占用的目录；保留活跃会话、真实数据与既有备份，不push/tag/发布。|",
+      "rowSha256": "c213a5cb544692bc9a089a4adb0e809ce2d4cc3f9672b67d70ca3bf7e5867553",
+      "allOriginalSevenCells": [
+        "T-1080",
+        "汇总全部本地worktree代码到main并清理闲置目录后构建",
+        "⏸️ 待办",
+        "—",
+        "—",
+        "[SPEC](docs/features/t1080-local-main-worktree-consolidation.md)",
+        "用户2026-10-08明确授权全部代码本地合并至主分支、清理不用的worktree再构建，构建无需备份。先逐树核HEAD/未提交/使用情况并保留Git来源，解决冲突和验证后只删除已保留代码且未占用的目录；保留活跃会话、真实数据与既有备份，不push/tag/发布。"
+      ]
+    },
+    {
+      "id": "T-1083",
+      "rawRow": "|T-1083|复核流程升级后的旧任务写集通配符兼容缺口|📋 待办|—|—|[根因证据](docs/verification/t1080/post-package-progress-block-failure.json)|progress原block命令实际exit2：T1026的docs/verification/t1026*被3.29路径校验拒绝，未写进度；taskctl已真实记T1080阻断。先盘点旧glob实际允许写集、独立复核等价迁移，不放宽guard或手改状态，本轮未实施。|",
+      "rowSha256": "609973ed4950823ad8842c1db91fb224ec7e9d56618884fe172b1ff6a5be3f71",
+      "allOriginalSevenCells": [
+        "T-1083",
+        "复核流程升级后的旧任务写集通配符兼容缺口",
+        "📋 待办",
+        "—",
+        "—",
+        "[根因证据](docs/verification/t1080/post-package-progress-block-failure.json)",
+        "progress原block命令实际exit2：T1026的docs/verification/t1026*被3.29路径校验拒绝，未写进度；taskctl已真实记T1080阻断。先盘点旧glob实际允许写集、独立复核等价迁移，不放宽guard或手改状态，本轮未实施。"
+      ]
+    },
+    {
+      "id": "T-1082",
+      "rawRow": "|T-1082|复核合并来源任务的当前评审与UI验收记录归属|📋 待办|—|—|[SPEC](docs/features/t1082-source-receipt-revalidation.md)|本地main真实出包后对账新增7项：5个source/alias缺当前review链event、2个agent-recovery alias缺completion；原来源链/报告保留不代签当前验收，按真实独立审核和UI旅程闭环，不重哈希旧链、不复制PASS。|",
+      "rowSha256": "cf052d3de33ba679cb2f10880cb428a75e29c70d79bb8a4125f21438154c7936",
+      "allOriginalSevenCells": [
+        "T-1082",
+        "复核合并来源任务的当前评审与UI验收记录归属",
+        "📋 待办",
+        "—",
+        "—",
+        "[SPEC](docs/features/t1082-source-receipt-revalidation.md)",
+        "本地main真实出包后对账新增7项：5个source/alias缺当前review链event、2个agent-recovery alias缺completion；原来源链/报告保留不代签当前验收，按真实独立审核和UI旅程闭环，不重哈希旧链、不复制PASS。"
+      ]
+    },
+    {
+      "id": "T-1081",
+      "rawRow": "|T-1081|核对整合后原主线的14处短执行预算与超时扫描误报|📋 待办|—|待验|[根因证据](docs/verification/t1080/timeout-static-dispositions-corrected.json)|完整超时门实际exit1：14条既有短执行/有限观察来自原main/client，另13条为冻结编辑器调度/动画、已取消清理、TTL或已归一消费者；先按真实消费者复核，不改vendor洗绿、不延长取消。来源与原失败留存；本轮优先合并和出包，此任务尚未实施。|",
+      "rowSha256": "2d26eed11574bc21c19bdc5ac03deaf286eaa35f2e3e7a0df3e3803ecb593ef4",
+      "allOriginalSevenCells": [
+        "T-1081",
+        "核对整合后原主线的14处短执行预算与超时扫描误报",
+        "📋 待办",
+        "—",
+        "待验",
+        "[根因证据](docs/verification/t1080/timeout-static-dispositions-corrected.json)",
+        "完整超时门实际exit1：14条既有短执行/有限观察来自原main/client，另13条为冻结编辑器调度/动画、已取消清理、TTL或已归一消费者；先按真实消费者复核，不改vendor洗绿、不延长取消。来源与原失败留存；本轮优先合并和出包，此任务尚未实施。"
+      ]
+    },
+    {
+      "id": "T-1077",
+      "rawRow": "|T-1077|修复采纳与作品素材读取的项目返回值|🔨 待办|PASS[REV:a36209c19783]|待验|[SPEC](docs/features/t1077-material-parent-port.md) [详情](BACKLOG-details.md#t-1077)|见详情。|",
+      "rowSha256": "c1b5a6c4cefd887d979eadaf9cd8eb97fd78e4a96742acc754c293fa209ecf7e",
+      "allOriginalSevenCells": [
+        "T-1077",
+        "修复采纳与作品素材读取的项目返回值",
+        "🔨 待办",
+        "PASS[REV:a36209c19783]",
+        "待验",
+        "[SPEC](docs/features/t1077-material-parent-port.md) [详情](BACKLOG-details.md#t-1077)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1075",
+      "rawRow": "|T-1075|修复安装验收发现的素材标签观察与纯组生图证明|🔨 待办|PASS[REV:73a6052db08f]|—|[SPEC](docs/features/t1075-installed-ai-observation-gaps.md) [详情](BACKLOG-details.md#t-1075)|见详情。|",
+      "rowSha256": "68ede01dde90ae377754eeaaac0447d96f4ae8d696cdd76530c70e2046b757fe",
+      "allOriginalSevenCells": [
+        "T-1075",
+        "修复安装验收发现的素材标签观察与纯组生图证明",
+        "🔨 待办",
+        "PASS[REV:73a6052db08f]",
+        "—",
+        "[SPEC](docs/features/t1075-installed-ai-observation-gaps.md) [详情](BACKLOG-details.md#t-1075)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1074",
+      "rawRow": "|T-1074|全面验收与补齐AI助手系统操作、工具开放性和功能提示词|🔨 待办|PASS[REV:b19144c34cab]|待验|[SPEC](docs/features/t1074-ai-system-operations.md) [详情](BACKLOG-details.md#t-1074)|见详情。|",
+      "rowSha256": "422f7f174e4e843d21bf6a243dbca7df0bca10ee51cdb1e97eefe101da160b3b",
+      "allOriginalSevenCells": [
+        "T-1074",
+        "全面验收与补齐AI助手系统操作、工具开放性和功能提示词",
+        "🔨 待办",
+        "PASS[REV:b19144c34cab]",
+        "待验",
+        "[SPEC](docs/features/t1074-ai-system-operations.md) [详情](BACKLOG-details.md#t-1074)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1071",
+      "rawRow": "|T-1071|修复账号绑定和页面Tab切换卡顿|🔨 待办|PASS[REV:a53e25bf48df]|待验|[SPEC](docs/features/t1071-navigation-latency.md) [详情](BACKLOG-details.md#t-1071)|见详情。|",
+      "rowSha256": "950b8fdc976f8a0883e833e3a1eecc00b99cbcf664b0730db99d1b0bfb6a9b67",
+      "allOriginalSevenCells": [
+        "T-1071",
+        "修复账号绑定和页面Tab切换卡顿",
+        "🔨 待办",
+        "PASS[REV:a53e25bf48df]",
+        "待验",
+        "[SPEC](docs/features/t1071-navigation-latency.md) [详情](BACKLOG-details.md#t-1071)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1070",
+      "rawRow": "|T-1070|打通Codex执行与编导精调，脚本一键生成文章和图文|🔨 待办|PASS[REV:b195ac203ec0]|待验|[SPEC](docs/features/t1070-director-script-workflow.md) [详情](BACKLOG-details.md#t-1070)|见详情。|",
+      "rowSha256": "76e980f385b6b0b3705c63db52eb693a91001d2a8bf798d0c1ae3434ef147af9",
+      "allOriginalSevenCells": [
+        "T-1070",
+        "打通Codex执行与编导精调，脚本一键生成文章和图文",
+        "🔨 待办",
+        "PASS[REV:b195ac203ec0]",
+        "待验",
+        "[SPEC](docs/features/t1070-director-script-workflow.md) [详情](BACKLOG-details.md#t-1070)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1069",
+      "rawRow": "|T-1069|修复安装版素材导入慢与跨Tab丢失，重设计素材选择并补多平台绑定入口|🔨 待办|PASS[REV:19bad8ef6f93]|待验|[SPEC](docs/features/t1069-installed-media-and-binding.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e350e6053e05749b)。|",
+      "rowSha256": "5fd9bd5fa2fabccedf8cb6a0b0ff466a7d980d7057d53d009f25bdabd9018ae4",
+      "allOriginalSevenCells": [
+        "T-1069",
+        "修复安装版素材导入慢与跨Tab丢失，重设计素材选择并补多平台绑定入口",
+        "🔨 待办",
+        "PASS[REV:19bad8ef6f93]",
+        "待验",
+        "[SPEC](docs/features/t1069-installed-media-and-binding.md)",
+        "原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e350e6053e05749b)。"
+      ]
+    },
+    {
+      "id": "T-1066",
+      "rawRow": "|T-1066|落实本地客户端优先出包并移除人为构建超时|⏸️ 待办|PASS[REV:0d40d8466937]|—|[SPEC](docs/features/t1066-local-package-build-only.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d6ce9166621c4243)。|",
+      "rowSha256": "767f17a17e1c95d0f79ac047749544af29574b832aa78f9397d57158cd0c0314",
+      "allOriginalSevenCells": [
+        "T-1066",
+        "落实本地客户端优先出包并移除人为构建超时",
+        "⏸️ 待办",
+        "PASS[REV:0d40d8466937]",
+        "—",
+        "[SPEC](docs/features/t1066-local-package-build-only.md)",
+        "原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-d6ce9166621c4243)。"
+      ]
+    },
+    {
+      "id": "T-1062",
+      "rawRow": "|T-1062|汇总各会话改动统一提交并打包本地客户端，逐项验收含Skill粗剪|🔨 待办|PASS[REV:5912ba60da16]|待验|[SPEC](docs/features/t1062-consolidated-local-client-acceptance.md) · [测试预算补充](docs/features/t1062-backend-test-harness.md) · [安装渲染修复补充](docs/features/t1062-installed-render-skill-owner.md) [详情](BACKLOG-details.md#t-1062) [详情](BACKLOG-details.md#t-1062) [详情](BACKLOG-details.md#t-1062)|见详情。|",
+      "rowSha256": "c5244eaf9ecba2af85fe3a79504ea0f0baa35a9dc6f673c4b104a567a4ec8421",
+      "allOriginalSevenCells": [
+        "T-1062",
+        "汇总各会话改动统一提交并打包本地客户端，逐项验收含Skill粗剪",
+        "🔨 待办",
+        "PASS[REV:5912ba60da16]",
+        "待验",
+        "[SPEC](docs/features/t1062-consolidated-local-client-acceptance.md) · [测试预算补充](docs/features/t1062-backend-test-harness.md) · [安装渲染修复补充](docs/features/t1062-installed-render-skill-owner.md) [详情](BACKLOG-details.md#t-1062) [详情](BACKLOG-details.md#t-1062) [详情](BACKLOG-details.md#t-1062)",
+        "见详情。"
+      ]
+    },
+    {
+      "id": "T-1063",
+      "rawRow": "|T-1063|修正流程工具误拒合法字面方括号文件路径|🔨 待办|PASS[REV:4d99824da112]|待验|[SPEC](docs/features/t1063-orchestrator-literal-path-boundary.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-ef8386b2a0a060cc)。|",
+      "rowSha256": "ef7e176c4633cd7619d1443b9aa4c5f733b6061e3ceaeecf8459cbb6e94b85c6",
+      "allOriginalSevenCells": [
+        "T-1063",
+        "修正流程工具误拒合法字面方括号文件路径",
+        "🔨 待办",
+        "PASS[REV:4d99824da112]",
+        "待验",
+        "[SPEC](docs/features/t1063-orchestrator-literal-path-boundary.md)",
+        "原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-ef8386b2a0a060cc)。"
+      ]
+    }
+  ],
+  "stoppedFurtherAlternativesAtRootInstruction": true,
+  "businessMetadataRemovedOrTasksDeleted": false,
+  "repositoryOrConsumersModified": false,
+  "testsValidatorsServicesCliDatabaseModelExecuted": false,
+  "findings": [
+    {
+      "id": "IDX-001",
+      "severity": "major",
+      "status": "confirmed",
+      "category": "consumer-compatibility",
+      "summary": "pmem漏掉五列表格中的旧开放任务。"
+    },
+    {
+      "id": "IDX-002",
+      "severity": "major",
+      "status": "confirmed",
+      "category": "context-identity",
+      "summary": "context-compile把状态当任务名、doc当一句话。"
+    }
+  ],
+  "nonClaims": [
+    "五列候选实施准入",
+    "健康门/容量恢复PASS",
+    "原任务业务全绿",
+    "完整Gate/包/安装/模型成功"
+  ],
+  "remainingBoundary": "不实施五列或修改消费者/validator；保所有任务、元信息和旧证据，T1171硬30KB未闭合如实未完成。"
+}

@@ -14,3 +14,11 @@ flowchart LR
  B --> C[独立复核必要整合范围]
  C --> D[合并验证后才清理闲置树]
 ```
+
+## 最终来源闭包与实际清理（2026-10-09 UTC）
+
+当前main 3d444493经过独立A来源闭包复核：80路径分别证明冻结移植、主线已审替代或当前有据差异，unintegratedProductPaths及unknownProductDifferences为空。新增微信、封面用途、排期布局各由T1159/T1149/T1136精确SPEC和当前审核实施。该证据证明源码整合，不能把来源旧业务PASS迁到当前树，也不代表来源HEAD成为main祖先或所有功能已通过。
+
+两个闲置来源目录已普通worktree remove实际exit0，不使用force、不删来源分支；canvas末尾生成的对账统计先保于来源23c3bedc提交，来源293d历史对象仍可达。152份原忽略验收文件逐字节/SHA保留在私有验收目录。完整open-file占用为空，活跃主目录、main集成树和t188保持。实际收据见docs/verification/t1124/current-source-cleanup。不备份用户App/库、不清原媒体。
+
+源码缺口和闲置目录闭合不代签T1159真人微信/安装启动；独立B确认真实profile启动暂未准入，离线构建和隔离验证仍可进行。全局canonical原40项失败保留，具体缺陷仍按原任务负责。

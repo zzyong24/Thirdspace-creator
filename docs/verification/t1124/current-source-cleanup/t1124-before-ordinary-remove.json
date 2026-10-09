@@ -1,0 +1,24 @@
+{
+  "observedAt": "2026-10-09T21:05:25.553232+00:00",
+  "roots": [
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator",
+      "head": "23c3bedc0e8216e20b67f39c653e34a3dfdd508e",
+      "branch": "codex/t1101-canvas-binding",
+      "clean": true
+    },
+    {
+      "root": "/Users/zyongzhu/.codex/worktrees/chart-cover-labels/Thirdspace-creator",
+      "head": "454e9241a2adb107f3beb224914bc3273c063bee",
+      "branch": "codex/t1106-chart-cover-labels",
+      "clean": true
+    }
+  ],
+  "openFileMatches": [],
+  "preservedOriginalEvidenceFiles": 152,
+  "sourceCacheOnlyCommit": "23c3bedc",
+  "sourceCodeClosureHead": "3d4444934a618542747dd9839a299c6d769adad1",
+  "branchesDeleted": false,
+  "forceUsed": false,
+  "appDatabaseBackup": false
+}

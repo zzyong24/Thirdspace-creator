@@ -1,0 +1,21 @@
+{
+  "observedAt": "2026-10-09T21:10:02.482022+00:00",
+  "actualFailureReceipt": {
+    "argv": [
+      "python3",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source-3d-final.py",
+      "--self-test"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-09T21:09:31.694403+00:00",
+    "finishedAt": "2026-10-09T21:09:32.167984+00:00",
+    "exitCode": 1,
+    "elapsedSeconds": 0.47344341600546613,
+    "logSha256": "7fb83d55a21fd8952dbd28317de4c9f532bd30b1582670d62d17c40fdf458093"
+  },
+  "path": "BACKLOG-details.md",
+  "beforeSha256": "8d329e868064d4eac6b365329d8db5646cf00d8e4fbede56036966b965f66da8",
+  "afterSha256": "2ee3a8173783e8e59787e5cfc641c87f423a2f1f70101fcfedbd72754f7397d3",
+  "removedBytes": 1,
+  "contentRowsUnchanged": true
+}
