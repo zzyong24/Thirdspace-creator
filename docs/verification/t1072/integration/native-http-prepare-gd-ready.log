@@ -1,0 +1,12 @@
+   Compiling creatoros-desktop v1.2.0 (/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend/src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.38s
+     Running unittests src/lib.rs (frontend/src-tauri/target/debug/deps/creatoros_desktop_lib-24e8f3d9e8947476)
+
+running 1 test
+test owned_devices::http_lab::live_loopback_owned_device_consumer ... {"fields":[{"ascii":true,"bytes":9,"challengeFormat":false,"chars":9,"key":"client","machineFormat":false,"type":"string"},{"ascii":true,"bytes":43,"challengeFormat":true,"chars":43,"key":"codeChallenge","machineFormat":false,"type":"string"},{"ascii":true,"bytes":4,"challengeFormat":false,"chars":4,"key":"codeChallengeMethod","machineFormat":false,"type":"string"},{"ascii":false,"bytes":29,"challengeFormat":false,"chars":17,"key":"deviceLabel","machineFormat":false,"type":"string"},{"ascii":true,"bytes":15,"challengeFormat":false,"chars":15,"key":"intent","machineFormat":false,"type":"string"},{"ascii":true,"bytes":32,"challengeFormat":false,"chars":32,"key":"machineId","machineFormat":true,"type":"string"},{"ascii":true,"bytes":9,"challengeFormat":false,"chars":9,"key":"productRef","machineFormat":false,"type":"string"},{"ascii":true,"bytes":9,"challengeFormat":false,"chars":9,"key":"projectKey","machineFormat":false,"type":"string"}],"identity":{"productRef":"creatoros","projectKey":"creatoros"},"phase":"prepareRequestMetadata","secretExposure":false}
+{"deviceSecretBytes":43,"expiresAt":"2026-10-09T07:07:00.387Z","phase":"createdResponseMetadata","pollIntervalSeconds":5,"referenceFormatValid":true,"registrationRef":"LDR_2c53f897124140b3bac5474979b6611b","remainingMs":599978,"secretExposure":false,"userCode":"Z7C1-RH1V"}
+{"created":true,"expiresAt":"2026-10-09T07:07:00.387Z","phase":"prepare","previousExpiredCapsulePreserved":true,"registrationRef":"LDR_2c53f897124140b3bac5474979b6611b","secretExposure":false,"userCode":"Z7C1-RH1V"}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 205 filtered out; finished in 0.07s
+
