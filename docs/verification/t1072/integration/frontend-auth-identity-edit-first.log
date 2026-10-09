@@ -1,0 +1,74 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:5588) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/app/api/v1/auth/auth-routes.test.ts > POST /api/v1/auth/login > with valid creds(注册用户)→ 200, sets HttpOnly session cookie + user DTO
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/app/api/v1/auth/auth-routes.test.ts > POST /api/v1/auth/login > with a wrong password → 401 AuthenticationError envelope, no cookie
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/app/api/v1/auth/auth-routes.test.ts > POST /api/v1/auth/login > with a malformed body → 400 ValidationError envelope
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/app/api/v1/auth/auth-routes.test.ts > GET /api/v1/auth/me > with a valid session cookie → 200 + that session's user(注册用户)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/app/api/v1/auth/auth-routes.test.ts > GET /api/v1/auth/me > without a cookie → 200 直通本机主用户(T-046 单机免登录)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/app/api/v1/auth/auth-routes.test.ts > GET /api/v1/auth/me > with a garbage cookie → 200 直通本机主用户(失效 token 与无 token 同路径)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/app/api/v1/auth/auth-routes.test.ts > POST /api/v1/auth/logout > clears the cookie and revokes the session(撤销后旧 cookie 走单机直通,不再 401)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/app/api/v1/auth/auth-routes.test.ts > POST /api/v1/auth/logout > is idempotent — logout with no cookie → 200
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/app/api/v1/auth/auth-routes.test.ts (8 tests | 8 failed) 7801ms
+     × with valid creds(注册用户)→ 200, sets HttpOnly session cookie + user DTO 1326ms
+     × with a wrong password → 401 AuthenticationError envelope, no cookie 933ms
+     × with a malformed body → 400 ValidationError envelope 935ms
+     × with a valid session cookie → 200 + that session's user(注册用户) 930ms
+     × without a cookie → 200 直通本机主用户(T-046 单机免登录) 982ms
+     × with a garbage cookie → 200 直通本机主用户(失效 token 与无 token 同路径) 905ms
+     × clears the cookie and revokes the session(撤销后旧 cookie 走单机直通,不再 401) 904ms
+     × is idempotent — logout with no cookie → 200 884ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/app/api/v1/auth/auth-routes.test.ts > POST /api/v1/auth/login > with valid creds(注册用户)→ 200, sets HttpOnly session cookie + user DTO
+ FAIL  src/app/api/v1/auth/auth-routes.test.ts > POST /api/v1/auth/login > with a wrong password → 401 AuthenticationError envelope, no cookie
+ FAIL  src/app/api/v1/auth/auth-routes.test.ts > POST /api/v1/auth/login > with a malformed body → 400 ValidationError envelope
+ FAIL  src/app/api/v1/auth/auth-routes.test.ts > GET /api/v1/auth/me > with a valid session cookie → 200 + that session's user(注册用户)
+ FAIL  src/app/api/v1/auth/auth-routes.test.ts > GET /api/v1/auth/me > without a cookie → 200 直通本机主用户(T-046 单机免登录)
+ FAIL  src/app/api/v1/auth/auth-routes.test.ts > GET /api/v1/auth/me > with a garbage cookie → 200 直通本机主用户(失效 token 与无 token 同路径)
+ FAIL  src/app/api/v1/auth/auth-routes.test.ts > POST /api/v1/auth/logout > clears the cookie and revokes the session(撤销后旧 cookie 走单机直通,不再 401)
+ FAIL  src/app/api/v1/auth/auth-routes.test.ts > POST /api/v1/auth/logout > is idempotent — logout with no cookie → 200
+AssertionError: expected 'user-p-1' not to be 'user-p-1' // Object.is equality
+ ❯ src/app/api/v1/auth/auth-routes.test.ts:78:28
+     76|   expect(localOwnerId).toBe(owner.userId);
+     77|   expect(localOwnerId).not.toBe("");
+     78|   expect(localOwnerId).not.toBe(CANONICAL_USER_ID);
+       |                            ^
+     79| });
+     80|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed (8)
+   Start at  14:13:12
+   Duration  13.73s (transform 3.72s, setup 132ms, import 5.12s, tests 7.80s, environment 481ms)
+
