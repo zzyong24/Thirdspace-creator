@@ -6,7 +6,7 @@ const configuration=typeof __t1110RootConfiguration==='undefined'?{}:__t1110Root
 const serverFile=configuration.serverFile,label=configuration.label;
 if(!serverFile||!label)throw Error('须root显式提供隔离server state和已分配的同空间测试Page label；不自动占用真人平台p1');
 const server=JSON.parse(await fs.readFile(serverFile,'utf8'));
-assert.equal(server.schema,'t1110-ego-server/v1');assert.equal(new URL(server.origin).hostname,'[::1]');
+assert.equal(server.schema,'t1110-ego-server/v1');assert.equal(new URL(server.origin).hostname,'localhost');
 assert.ok(path.basename(server.root).startsWith('creatoros-t1110-shadow-'));assert.equal(server.execution,'fixture-only-no-platform-proof');
 server.output=path.join(server.output,`run-${Date.now()}-${crypto.randomUUID().slice(0,8)}`);await fs.mkdir(path.join(server.output,'screenshots'),{recursive:true});
 const task=await taskSpace(20);assert.equal(task.spaceId,20);const page=task.page(label);
@@ -14,7 +14,7 @@ const previousUrl=await page.url();if(previousUrl!=='about:blank'&&new URL(previ
 // 当前Ego会话不开放Browser.getVersion；记录实际页UA及其证据来源，不伪称取得Browser域版本。
 const version=await page.evaluate(()=>({source:'navigator.userAgent',userAgent:navigator.userAgent}));
 const witness=JSON.parse(await fs.readFile(server.normalizedWitness,'utf8'));
-const startedAt=new Date().toISOString(),captures=[],steps=[],browserErrors=[],external=[],requestLog=[];
+const startedAt=new Date().toISOString(),captures=[],steps=[],browserErrors=[],external=[],nonHttpRequests=[],unparseableNetworkRequests=[],preJourneyEvents=[],requestLog=[];
 let outcome='not-run',groups,controls={defaultMode:'running',accounts:{}};
 const sourceSha=async relative=>crypto.createHash('sha256').update(await fs.readFile(path.join(server.repo,relative))).digest('hex');
 const command=(args)=>cp.execFileSync('git',args,{cwd:server.repo,encoding:'utf8',timeout:120000}).trim();
@@ -24,7 +24,7 @@ const setControl=async(accountId,change)=>{controls.accounts[accountId]={...cont
 const record=async(action,detail={})=>{steps.push({at:new Date().toISOString(),action,...detail,fixtureCallCount:(await calls()).length});console.log(`T1110候选实际步骤：${action}`);};
 async function poll(check,description){const end=Date.now()+120000;while(Date.now()<end){if(await check())return;await new Promise(done=>setTimeout(done,100));}throw Error(description+'未在120秒预算内满足');}
 async function dispatch(id,input,scope={},allowRejected=false){
-  // Node公开HTTP不读取Ego Cookie；只打本次::1临时根，不打root 31410或真实平台。
+  // Node公开HTTP不读取Ego Cookie；只打本次localhost临时根，不打root 31410或真实平台。
   const response=await fetch(`${server.origin}/api/v1/dispatch`,{method:'POST',headers:{'content-type':'application/json',...(scope.groupId?{'x-group-id':scope.groupId}:{}),...(scope.accountId?{'x-account-id':scope.accountId}:{})},body:JSON.stringify({id,input}),signal:AbortSignal.timeout(120000)});
   const envelope=await response.json();requestLog.push({at:new Date().toISOString(),id,input,scope,httpStatus:response.status});
   if(allowRejected)return {status:response.status,envelope};assert.ok(response.ok,`${id}公开服务HTTP ${response.status}`);return envelope.data;
@@ -34,14 +34,19 @@ async function clickButton(name){await page.click(selector(name),{timeout:120000
 async function textVisible(text){await page.waitForFunction(text=>[...document.querySelectorAll('body *')].some(e=>e.textContent?.trim()===text&&e.getBoundingClientRect().width>0&&getComputedStyle(e).display!=='none'),text,{timeout:120000});}
 async function buttonState(name,disabled){await page.waitForFunction(({name,disabled})=>[...document.querySelectorAll('button')].some(b=>b.textContent?.trim()===name&&b.disabled===disabled),{name,disabled},{timeout:120000});}
 async function noDialog(){await page.waitForFunction(()=>!document.querySelector('[role="dialog"]'),undefined,{timeout:120000});}
-async function drainEvents(){
+// SEMANTIC_BOUNDARY_ALLOW: 按标准URL协议/源分类诊断，不推断业务语义；opaque origin不能当作HTTP外联。
+async function drainEvents({baseline=false}={}){
   for(const event of await page.events()){
-    const method=event.method??event.type,params=event.params??event;
-    if(method==='Runtime.exceptionThrown')browserErrors.push(params.exceptionDetails?.text??'浏览器Runtime exception');
-    const request=params.request;
-    if(method==='Network.requestWillBeSent'&&request?.url){const url=new URL(request.url);if(['data:','blob:','about:'].includes(url.protocol))continue;
-      const comparable=url.protocol==='ws:'?url.origin.replace(/^ws:/,'http:'):url.origin;
-      if(comparable!==server.origin)external.push({origin:url.origin,method:request.method});
+    const method=event.method??event.type,params=event.params??event,request=params.request;
+    if(baseline&&!request?.url){preJourneyEvents.push({type:method});continue;}
+    if(!baseline&&method==='Runtime.exceptionThrown')browserErrors.push(params.exceptionDetails?.text??'浏览器Runtime exception');
+    if(method==='Network.requestWillBeSent'&&request?.url){
+      let url;try{url=new URL(request.url);}catch{const row={protocol:null,origin:null,method:request.method,type:method};(baseline?preJourneyEvents:unparseableNetworkRequests).push(row);continue;}
+      const row={protocol:url.protocol,origin:url.origin,method:request.method};
+      if(baseline){preJourneyEvents.push({...row,type:method});continue;}
+      if(!['http:','https:','ws:','wss:'].includes(url.protocol)){nonHttpRequests.push(row);continue;}
+      const comparable=url.protocol==='ws:'?url.origin.replace(/^ws:/,'http:'):url.protocol==='wss:'?url.origin.replace(/^wss:/,'https:'):url.origin;
+      if(comparable!==server.origin)external.push({...row,comparableOrigin:comparable});
       if(url.origin===server.origin&&url.pathname==='/api/v1/dispatch'&&request.postData){let body;try{body=JSON.parse(request.postData);}catch{}if(body)requestLog.push({at:new Date().toISOString(),surface:'Ego page request',id:body.id,input:body.input});}
     }
   }
@@ -117,10 +122,12 @@ async function checkReports(account,width){
 }
 try {
   assert.equal(command(['rev-parse','HEAD']),server.head);for(const source of server.sourceWitness)assert.equal(await sourceSha(source.path),source.sha256);
+  // 仅清空并单列本Page已有buffer；监视开始后的首页事件沿正常drain记录，不丢弃。
+  await drainEvents({baseline:true});
   await page.cdp('Runtime.enable',{}, {timeout:120000});await page.cdp('Network.enable',{}, {timeout:120000});
   // 只作用本测试Page；不清Cookie/cache/profile，不改其它Page。外网尝试仍逐事件记为失败。
   await page.cdp('Network.setBlockedURLs',{urls:['https://*','wss://*']},{timeout:120000});
-  await page.goto(server.origin,{waitUntil:'domcontentloaded',timeout:120000});await page.events();
+  await page.goto(server.origin,{waitUntil:'domcontentloaded',timeout:120000});await drainEvents();
   const staging=await dispatch('accountGroups.create',{body:{name:'微信页面验收临时登记组',idempotencyKey:crypto.randomUUID()}});
   const A=await makeGroup('A',staging),B=await makeGroup('B',staging);groups={staging,A,B};await fs.writeFile(path.join(server.output,'public-fixture.json'),JSON.stringify({groups,identityProof:false,scope:'真实公开服务临时登记/转组/回读；不是微信身份proof'},null,2)+'\n');
   await page.evaluate(id=>{localStorage.setItem('creatoros:current-group',id);localStorage.removeItem('creatoros:current-account');document.cookie='creatoros_current_account=; Path=/; Max-Age=0; SameSite=Lax';document.cookie=`creatoros_current_group=${encodeURIComponent(id)}; Path=/; SameSite=Lax`;},A.id);
@@ -157,13 +164,13 @@ try {
     await setControl(other.id,{canCollect:false});await page.reload({waitUntil:'domcontentloaded',timeout:120000});await textVisible('当前平台的数据同步暂不可用，已有报表仍可查看。');await buttonState('同步数据',true);const disabledCount=(await starts(other.id)).length;await page.evaluate(()=>[...document.querySelectorAll('button')].find(b=>b.textContent?.trim()==='同步数据').click());assert.equal((await starts(other.id)).length,disabledCount);await capture(`capability-disabled-${width}`,['AC-WECHAT-STATE']);await record('能力read fixture：canCollect=false保已取得报表，禁提交，不制造身份proof',{width});await setControl(other.id,{canCollect:true});
     const emptyAccount=B.accounts.find(a=>a.platform==='wechatOfficial');await setControl(emptyAccount.id,{mode:'empty'});await openMember(emptyAccount);await textVisible('尚无后台报表，可点击“同步数据”读取当前账号数据。');await capture(`empty-${width}`,['AC-WECHAT-REPORT']);await record('read fixture：真实空报表提示，没有把空数据补成指标',{width});await switchGroup(A);
   }
-  await drainEvents();assert.deepEqual(browserErrors,[]);assert.deepEqual(external,[]);assert.equal(command(['rev-parse','HEAD']),server.head);for(const source of server.sourceWitness)assert.equal(await sourceSha(source.path),source.sha256);outcome='passed';
+  await drainEvents();assert.deepEqual(browserErrors,[]);assert.deepEqual(external,[]);assert.deepEqual(unparseableNetworkRequests,[]);assert.equal(command(['rev-parse','HEAD']),server.head);for(const source of server.sourceWitness)assert.equal(await sourceSha(source.path),source.sha256);outcome='passed';
 }catch(error){outcome='failed';steps.push({at:new Date().toISOString(),action:'当场失败',error:String(error.stack??error)});await capture('failure',['AC-WECHAT-STATE']).catch(()=>{});process.exitCode=1;throw error;
 }finally{
   for(const accountId of Object.keys(controls.accounts)){controls.accounts[accountId].getGate=null;controls.accounts[accountId].startGate=null;}await fs.writeFile(server.control,JSON.stringify(controls));
   const scope='同一Ego空间20/指定隔离Page、完整影子Next正式路由SSR/原组件与真实公开账号组服务；报表为私人实下载脱敏代表投影，原始值/日期/单位保留，text/opaqueId脱敏；服务read及执行状态为fixture，未绑定微信/认证/实时采集；真实平台下载证据由root另记';
   await fs.writeFile(path.join(server.output,'actual-visible-copy.json'),JSON.stringify({schema:'frontend-visible-copy/v1',task_id:'T-1110',commit_sha:server.head,evidence_scope:scope,source_witness:server.sourceWitness,captures},null,2)+'\n');
-  await fs.writeFile(path.join(server.output,'journey-results.json'),JSON.stringify({task_id:'T-1110',outcome,startedAt,completedAt:new Date().toISOString(),browser:version,ego:{spaceId:task.spaceId,pageLabel:page.label},evidence_scope:scope,serverState:serverFile,data_witness:{mode:witness.mode,sourcePackSha256:witness.sourcePackSha256,observationRole:witness.observationRole,witnesses:witness.witnesses},steps,requests:requestLog,calls:await calls(),browserErrors,external,source_witness:server.sourceWitness,receiptWritten:false},null,2)+'\n');
+  await fs.writeFile(path.join(server.output,'journey-results.json'),JSON.stringify({task_id:'T-1110',outcome,startedAt,completedAt:new Date().toISOString(),browser:version,ego:{spaceId:task.spaceId,pageLabel:page.label},evidence_scope:scope,serverState:serverFile,data_witness:{mode:witness.mode,sourcePackSha256:witness.sourcePackSha256,observationRole:witness.observationRole,witnesses:witness.witnesses},steps,requests:requestLog,calls:await calls(),browserErrors,external,nonHttpRequests,unparseableNetworkRequests,preJourneyEvents,source_witness:server.sourceWitness,receiptWritten:false},null,2)+'\n');
   await page.cdp('Network.setBlockedURLs',{urls:[]},{timeout:120000}).catch(()=>{});
   // root仍在同一个用户目标工作，不能由此子旅程finish整个空间或关闭真人Page；root统一收尾。
   console.log({task_id:'T-1110',outcome,evidence:server.output,frontendReceipt:'未写PASS；root须检查当场截图/后置条件/控制面'});console.log(await page.snapshot());

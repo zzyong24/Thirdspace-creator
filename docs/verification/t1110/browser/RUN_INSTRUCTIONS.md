@@ -22,7 +22,7 @@ NativeReportPayload来自private-witness-projection.json的reports数组，纯�
 
 ## root执行命令
 
-以下候选未执行。根目录与脚本正式落点变化时root同步调整。启动Next用::1:31411，与root 127.0.0.1:31410和其选择cookie/localStorage分开，沿原loopback guard支持的地址，不改安全守卫。数据库、登录目录、平台根、runtime、master-key file全部新临时目录，子进程不继承用户数据库/模型secret/session环境。
+以下候选未执行。根目录与脚本正式落点变化时root同步调整。启动Next listener与origin统一localhost:31411，与root 127.0.0.1:31410和其选择cookie/localStorage分开，沿原loopback guard支持的地址，不改安全守卫。数据库、登录目录、平台根、runtime、master-key file全部新临时目录，子进程不继承用户数据库/模型secret/session环境。
 
 ```bash
 cd /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator
@@ -43,7 +43,7 @@ T1110_EGO_SERVER_STATE=/tmp/creatoros-t1110-shadow-<本次后缀>/ego-server-sta
 
 如果root需要稳定allowlist候选入口，可在正式落点使用`node docs/verification/t1110/browser/execute-ego-journey.mjs`，环境仍显式提供上述server state与Page；wrapper继承root正常Ego授权环境（不输出、不用于Next），只把同一脚本交ego-browser nodejs，最大120分钟，不新建/claim空间。frontend Gate外层必须覆盖实际运行与清理预算；启动服务/完成用户控制另由root管，缺Page/server时真实失败，不输出假PASS。
 
-public-fixture-seed.mjs仍可单独给root自己31410隔离服务建测试记录；fetch的ok/status已修成标准Response属性。本轮未执行该seed。影子完整旅程有自己的独立::1真实public seed，绝不操作31410。
+public-fixture-seed.mjs仍可单独给root自己31410隔离服务建测试记录；fetch的ok/status已修成标准Response属性。本轮未执行该seed。影子完整旅程有自己的独立localhost真实public seed，绝不操作31410。
 
 ## 当场证据与root复核
 
@@ -62,3 +62,5 @@ T1110_EGO_SERVER_STATE=/tmp/creatoros-t1110-shadow-<本次后缀>/ego-server-sta
 ```
 
 执行入口通过脚本字面量只传入隔离server state路径与Page label；Ego服务进程不会继承shell自定义环境变量。状态schema在shadow spread之后设置，原错误文件与首次未进入页面的失败日志保留。准备1440秒覆盖4次git检查、archive/tar、5次复制和校验收尾。
+
+QA网络诊断按http/https/ws/wss记录protocol+origin+method，ws按http、wss按https核同源；其他协议单列nonHttpRequests，不凭origin=null判外联。开始监视前本Page已有buffer另存preJourneyEvents；监视后的首页事件正常记录。URL无法解析时记录unparseableNetworkRequests并拒绝全绿。localhost只声明隔离root的127.0.0.1 origin/cookie，不声称独立于其它localhost应用或新的browser profile。旧IPv6 server-state不用于新旅程，冻结新HEAD后准备新state与root指定空白Page。
