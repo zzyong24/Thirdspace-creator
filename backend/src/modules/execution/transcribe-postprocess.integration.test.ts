@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import { resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { afterAll, beforeAll, expect, it, vi } from 'vitest';
-import { createDb, aiTasks, executionTasks, projects, eq, type Db } from '@creatoros/backend';
+import { createDb, aiTasks, aiTaskSteps, executionTasks, projects, eq, sql, type Db } from '@creatoros/backend';
 import { transcribePostprocessResultSchema, transcribePostprocessPlanSchema, type AsrRequest, type WorkerPort } from '@creatoros/contract/execution-worker';
 import { runTranscribeInWorker } from '../../../../ai-worker/src/execution/transcribe-worker-run';
 import { runTranscribePostprocessInWorker } from '../../../../ai-worker/src/execution/transcribe-postprocess-run';
@@ -30,7 +30,7 @@ beforeAll(async () => { const opened = await createDb(); db = opened.db; close =
 afterAll(async () => close?.());
 type Mode = 'sse' | 'json' | 'reject' | 'bad-output' | 'fidelity' | 'unconfigured' | 'budget' | 'disconnect' | 'cancel';
 
-async function fixture(mode: Mode) {
+async function fixture(mode: Mode, extraIds: string[] = []) {
   const id = `postprocess-${++sequence}`, awemeId = `video-${sequence}`, now = () => new Date().toISOString();
   const ctx = { userId: 'synthetic-user', accountId: 'synthetic-account', requestId: id, source: 'user' as const };
   let requests = 0;
@@ -55,8 +55,8 @@ async function fixture(mode: Mode) {
   const bytes = new Uint8Array([1, 2, 3]);
   const identity = { protocol: 'qwen-chat-audio.v1' as const, provider: 'qwen', model: 'fixture-asr', endpointDigest: digest('https://example.invalid/v1/chat/completions'), language: 'zh' };
   const plan = { schemaVersion: 1, identity, audioDigest: digest(bytes), audioByteLength: bytes.byteLength };
-  const input = { kind: 'transcribe.douyin' as const, awemeIds: [awemeId], language: 'zh', configuration: { kind: 'audio' as const, provider: 'qwen', model: 'fixture-asr', baseUrl: null } };
-  await db.insert(aiTasks).values({ id, userId: ctx.userId, accountId: ctx.accountId, taskType: input.kind, idempotencyKey: id, inputData: { awemeIds: [awemeId] }, requestedAt: now() });
+  const input = { kind: 'transcribe.douyin' as const, awemeIds: [awemeId, ...extraIds], language: 'zh', configuration: { kind: 'audio' as const, provider: 'qwen', model: 'fixture-asr', baseUrl: null } };
+  await db.insert(aiTasks).values({ id, userId: ctx.userId, accountId: ctx.accountId, taskType: input.kind, idempotencyKey: id, inputData: { awemeIds: input.awemeIds }, requestedAt: now() });
   const bound = await createExecutionAuthorityService(db).bindAiTask(ctx, id);
   await db.update(executionTasks).set({ payload: { aiTaskId: id, modelInput: input,
     transcribeAudioInputs: { [awemeId]: { schemaVersion: 1, state: 'ready', storageKey: 'synthetic-input', audioDigest: plan.audioDigest, audioByteLength: bytes.byteLength } },
@@ -268,4 +268,158 @@ it('原作品数组顺序改变拒绝保存，不能把有序binding改成集合
     await db.update(executionTasks).set({ payload: { ...f.payload, modelInput: { ...f.input, awemeIds: [...originalIds].reverse() } } }).where(eq(executionTasks.id, f.ref.executionTaskId));
     await assertRejectedWithoutReplay(f);
   } finally { await f.cleanup(); }
+});
+
+// T208 观察真实 Host 保存的步骤；不改变原回执/正文/账本/完整Worker断言。
+const t208Steps = (id:string) => db.select().from(aiTaskSteps).where(eq(aiTaskSteps.aiTaskId,id));
+const t208Rows = async (f:Awaited<ReturnType<typeof fixture>>, ref=f.ref) => ({
+ execution:(await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId)))[0]!,
+ business:(await db.select().from(aiTasks).where(eq(aiTasks.id,f.id)))[0]!,
+ steps:await t208Steps(f.id),calls:(await f.ledger.inspect(ref)).calls,
+});
+it.each(['json','unconfigured'] as const)('T208 真实冻结applied/reason保存步骤，双save和complete同键不重发：%s',async mode=>{
+ const f=await receiptGuardFixture(mode);
+ try{
+  const beforeCalls=(await f.ledger.inspect(f.ref)).calls,requests=f.requests;
+  const note=f.result.applied?'纠错+断句完成':`后处理未执行:${f.result.reason}`;
+  expect(await f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId})).toMatchObject({status:'saved'});const savedOnce=await t208Rows(f);
+  expect(await f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId})).toMatchObject({status:'saved'});expect(await t208Rows(f)).toEqual(savedOnce);
+  const steps=await t208Steps(f.id);expect(steps).toHaveLength(1);
+  expect(steps[0]).toMatchObject({id:`transcribe:${f.ref.executionTaskId}:${f.awemeId}:saved`,aiTaskId:f.id,stepNo:1,kind:'transcribe',toolCalls:[],text:`作品 ${f.awemeId}：逐字稿已保存，${note}`});
+  const artifacts=createArtifactsService({db,now:f.now,nextId:f.nextId}),outputs=(await artifacts.listProjectArtifacts(f.ctx,f.projectId)).filter(row=>row.artifactType==='output_script');
+  expect(outputs).toHaveLength(1);const versions=await artifacts.listVersions(f.ctx,outputs[0]!.id);expect(versions).toHaveLength(2);expect(versions.find(row=>row.id===outputs[0]!.currentVersionId)?.contentText).toBe(f.result.transcript);
+  expect(await f.workflow.complete(f.ref,{})).toEqual({status:'succeeded'});const first=await t208Rows(f);
+  expect(first.steps).toHaveLength(2);expect(first.steps.find(row=>row.id.endsWith(':summary'))).toMatchObject({id:`transcribe:${f.ref.executionTaskId}:summary`,aiTaskId:f.id,stepNo:2,kind:'transcribe',toolCalls:[],text:'转写完成 1 条，已有逐字稿跳过 0 条，图集跳过 0 条，转写失败 0 条，未找到对应作品 0 条'});
+  expect(first.business.status).toBe('succeeded');expect(first.execution.status).toBe('succeeded');
+  expect(await f.workflow.complete(f.ref,{})).toEqual({status:'succeeded'});expect(await t208Rows(f)).toEqual(first);
+  expect(f.requests).toBe(requests);expect(first.calls).toEqual(beforeCalls);expect(await artifacts.listVersions(f.ctx,outputs[0]!.id)).toEqual(versions);
+ }finally{await f.cleanup();}
+});
+it.each([false,true])('T208 额外receipt仅合法形状排除计数，畸形仍strict拒绝：%s',async malformed=>{
+ const f=await receiptGuardFixture();
+ try{
+  await f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId});const before=await t208Rows(f),payload=before.execution.payload as Record<string,unknown>;
+  const extra=malformed?{awemeId:'outside',status:'failed',projectId:null,error:'合成失败',unexpected:true}:{awemeId:'outside',status:'failed',projectId:null,error:'合成失败'};
+  await db.update(executionTasks).set({payload:{...payload,transcribeItems:{...(payload.transcribeItems as Record<string,unknown>),outside:extra}}}).where(eq(executionTasks.id,f.ref.executionTaskId));
+  if(malformed){await expect(f.workflow.complete(f.ref,{})).rejects.toThrow();const after=await t208Rows(f);expect(after.steps).toEqual(before.steps);expect(after.execution.status).toBe('running');expect(after.business.status).toBe(before.business.status);}
+  else{expect(await f.workflow.complete(f.ref,{})).toEqual({status:'succeeded'});expect((await t208Steps(f.id)).find(row=>row.id.endsWith(':summary'))?.text).toBe('转写完成 1 条，已有逐字稿跳过 0 条，图集跳过 0 条，转写失败 0 条，未找到对应作品 0 条');}
+  expect(f.requests).toBe(0);expect((await f.ledger.inspect(f.ref)).calls).toEqual(before.calls);
+ }finally{await f.cleanup();}
+});
+// CHECK在真实合成PGlite插入端抛错；不mock成功回执、不用onConflict吞掉错误。
+async function t208BlockStep(id:string){
+ const name=`t208_block_${++sequence}`;if(!/^[A-Za-z0-9_:.-]+$/.test(id))throw Error('合成步骤ID非预期安全形状');
+ await db.execute(sql.raw(`ALTER TABLE ai_task_steps ADD CONSTRAINT ${name} CHECK (id <> '${id}')`));
+ return ()=>db.execute(sql.raw(`ALTER TABLE ai_task_steps DROP CONSTRAINT ${name}`));
+}
+it('T208 item步骤插入失败同事务回滚工件/receipt，移除故障后原键恢复不重发',async()=>{
+ const f=await receiptGuardFixture();let unblock:(()=>Promise<unknown>)|undefined;
+ try{
+  const before=await t208Rows(f),artifacts=createArtifactsService({db,now:f.now,nextId:f.nextId});
+  unblock=await t208BlockStep(`transcribe:${f.ref.executionTaskId}:${f.awemeId}:saved`);
+  await expect(f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId})).rejects.toThrow(/t208_block/);
+  expect(await t208Rows(f)).toEqual(before);expect(await artifacts.listProjectArtifacts(f.ctx,f.projectId)).toHaveLength(0);expect(f.requests).toBe(0);
+  await unblock();unblock=undefined;
+  expect(await f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId})).toMatchObject({status:'saved'});expect(await f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId})).toMatchObject({status:'saved'});
+  expect(await t208Steps(f.id)).toHaveLength(1);const outputs=(await artifacts.listProjectArtifacts(f.ctx,f.projectId)).filter(row=>row.artifactType==='output_script');expect(outputs).toHaveLength(1);const versions=await artifacts.listVersions(f.ctx,outputs[0]!.id);expect(versions).toHaveLength(2);expect(versions.find(row=>row.id===outputs[0]!.currentVersionId)?.contentText).toBe(original);expect((await f.ledger.inspect(f.ref)).calls).toEqual(before.calls);expect(f.requests).toBe(0);
+ }finally{await unblock?.();await f.cleanup();}
+});
+it('T208 summary插入失败同事务保原running和receipt，原键重结算只一条summary',async()=>{
+ const f=await receiptGuardFixture();let unblock:(()=>Promise<unknown>)|undefined;
+ try{
+  await f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId});const before=await t208Rows(f),artifacts=createArtifactsService({db,now:f.now,nextId:f.nextId}),outputs=await artifacts.listProjectArtifacts(f.ctx,f.projectId);
+  unblock=await t208BlockStep(`transcribe:${f.ref.executionTaskId}:summary`);
+  await expect(f.workflow.complete(f.ref,{})).rejects.toThrow(/t208_block/);expect(await t208Rows(f)).toEqual(before);expect(await artifacts.listProjectArtifacts(f.ctx,f.projectId)).toEqual(outputs);expect(f.requests).toBe(0);
+  await unblock();unblock=undefined;expect(await f.workflow.complete(f.ref,{})).toEqual({status:'succeeded'});const settled=await t208Rows(f);expect(settled.steps).toHaveLength(2);expect(settled.steps.filter(row=>row.id.endsWith(':summary'))).toHaveLength(1);expect(settled.business.status).toBe('succeeded');expect(settled.execution.status).toBe('succeeded');expect(settled.execution.payload).toEqual(before.execution.payload);expect(settled.calls).toEqual(before.calls);
+  expect(await f.workflow.complete(f.ref,{})).toEqual({status:'succeeded'});expect(await t208Rows(f)).toEqual(settled);expect(f.requests).toBe(0);
+ }finally{await unblock?.();await f.cleanup();}
+});
+it('T208 旧已保存步骤与终态回放不补写或覆盖历史说明',async()=>{
+ const f=await receiptGuardFixture();
+ try{
+  await f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId});const itemId=`transcribe:${f.ref.executionTaskId}:${f.awemeId}:saved`;
+  await db.update(aiTaskSteps).set({text:'历史步骤保留原样'}).where(eq(aiTaskSteps.id,itemId));const before=await t208Rows(f);
+  expect(await f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId})).toMatchObject({status:'saved'});expect(await t208Rows(f)).toEqual(before);
+  await db.update(executionTasks).set({status:'succeeded'}).where(eq(executionTasks.id,f.ref.executionTaskId));await db.update(aiTasks).set({status:'succeeded'}).where(eq(aiTasks.id,f.id));const oldTerminal=await t208Rows(f);
+  expect(await f.workflow.complete(f.ref,{})).toEqual({status:'succeeded'});expect(await t208Rows(f)).toEqual(oldTerminal);expect(oldTerminal.steps).toHaveLength(1);expect(oldTerminal.steps[0]?.text).toBe('历史步骤保留原样');expect(f.requests).toBe(0);
+ }finally{await f.cleanup();}
+});
+it('T208 deadline拒新保存但已有全确认receipt合法settlement仍沿原语义',async()=>{
+ const f=await receiptGuardFixture();
+ try{
+  const past=new Date(Date.now()-1).toISOString();await db.update(executionTasks).set({deadlineAt:past}).where(eq(executionTasks.id,f.ref.executionTaskId));const before=await t208Rows(f);
+  await expect(f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId})).rejects.toThrow();expect(await t208Rows(f)).toEqual(before);expect(before.steps).toHaveLength(0);
+  // 以另一全新合成fixture验证合法到期settlement；失败任务不续期。
+  await expect(f.workflow.complete(f.ref,{})).rejects.toThrow();expect(await t208Steps(f.id)).toHaveLength(0);expect(f.requests).toBe(0);
+ }finally{await f.cleanup();}
+ const g=await receiptGuardFixture();try{await g.workflow.saveArtifact(g.ref,{awemeId:g.awemeId});const before=await t208Rows(g);await db.update(executionTasks).set({deadlineAt:new Date(Date.now()-1).toISOString()}).where(eq(executionTasks.id,g.ref.executionTaskId));expect(await g.workflow.complete(g.ref,{})).toEqual({status:'succeeded'});expect((await t208Steps(g.id)).filter(row=>row.id.endsWith(':summary'))).toHaveLength(1);expect((await g.ledger.inspect(g.ref)).calls).toEqual(before.calls);expect(g.requests).toBe(0);}finally{await g.cleanup();}
+});
+it.each(['reserved','started','unknown'] as const)('T208 未确认调用阻止summary和终态：%s',async status=>{
+ const f=await receiptGuardFixture();
+ try{
+  await f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId});const call=await f.ledger.reserve(f.ref,{operationKey:'t208:pending',kind:'model',inputDigest:digest('t208-synthetic-call'),reservedTokens:1});
+  if(status!=='reserved'){await f.ledger.start(f.ref,call.id);if(status==='unknown')await f.ledger.settle(f.ref,call.id,{status:'unknown'});}
+  const before=await t208Rows(f);await expect(f.workflow.complete(f.ref,{})).rejects.toThrow(/未确认/);expect(await t208Rows(f)).toEqual(before);expect(before.steps).toHaveLength(1);expect(f.requests).toBe(0);
+ }finally{await f.cleanup();}
+});
+it.each(['cancelled','paused','unknown_result'] as const)('T208 原非running拒绝summary不覆盖控制状态：%s',async status=>{
+ const f=await receiptGuardFixture();try{await f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId});await db.update(executionTasks).set({status}).where(eq(executionTasks.id,f.ref.executionTaskId));const before=await t208Rows(f);await expect(f.workflow.complete(f.ref,{})).rejects.toThrow(/停止/);expect(await t208Rows(f)).toEqual(before);expect(before.steps).toHaveLength(1);expect(f.requests).toBe(0);}finally{await f.cleanup();}
+});
+it.each(['owner','workspace','fence'] as const)('T208 原属主scope和执行凭证拒绝无新步骤：%s',async field=>{
+ const f=await receiptGuardFixture();try{await f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId});if(field==='owner')await db.update(aiTasks).set({userId:'other-owner'}).where(eq(aiTasks.id,f.id));if(field==='workspace')await db.update(aiTasks).set({accountId:'other-workspace'}).where(eq(aiTasks.id,f.id));const before=await t208Rows(f);await expect(f.workflow.complete(field==='fence'?{...f.ref,fenceToken:'stale-synthetic-fence'}:f.ref,{})).rejects.toThrow();expect(await t208Rows(f)).toEqual(before);expect(before.steps).toHaveLength(1);expect(f.requests).toBe(0);}finally{await f.cleanup();}
+});
+
+it('T208 原公开retry同execution新attempt恢复时保旧成功与历史，最新summary准确且同代幂等',async()=>{
+ const sibling=`t208-recovery-image-${++sequence}`,f=await fixture('json',[sibling]);
+ try{
+  const stamp=f.now(),projectId=`retry-success-${f.id}`,siblingProjectId=`retry-image-${f.id}`;
+  const parents:Array<{id:string;externalId:string}>=[{id:projectId,externalId:f.awemeId},{id:siblingProjectId,externalId:sibling}];
+  for(const {id,externalId}of parents)await db.insert(projects).values({id,userId:f.ctx.userId,accountId:f.ctx.accountId,title:'原任务隔离恢复作品',source:'imported',platformRef:{platform:'douyin',externalId},creationMode:'talking_head',status:'active',currentStage:'script',startedAt:stamp,createdAt:stamp,updatedAt:stamp});
+  const result=await runTranscribePostprocessInWorker(f.awemeId,new AbortController().signal,f.call);expect(result).toEqual({applied:true,transcript:corrected});expect(f.requests).toBe(1);
+  expect(await f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId})).toMatchObject({status:'saved',projectId});
+  await f.workflow.recordSource(f.ref,{awemeId:sibling,source:{kind:'image-album'}});
+  await f.workflow.failItem(f.ref,{awemeId:sibling,error:'合成明确作品失败'});
+  expect(await f.workflow.complete(f.ref,{})).toEqual({status:'failed'});const failed=await t208Rows(f),oldSummary=failed.steps.find(row=>row.id===`transcribe:${f.ref.executionTaskId}:summary`);
+  expect(oldSummary).toMatchObject({stepNo:3,text:'转写完成 1 条，已有逐字稿跳过 0 条，图集跳过 0 条，转写失败 1 条，未找到对应作品 0 条'});
+  const artifacts=createArtifactsService({db,now:f.now,nextId:f.nextId});
+  const successFacts=await artifacts.listProjectArtifacts(f.ctx,projectId),successVersions=await Promise.all(successFacts.map(row=>artifacts.listVersions(f.ctx,row.id)));
+  const [queued]=await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:'retry',idempotencyKey:`retry-${f.id}`});expect(queued).toMatchObject({id:f.ref.executionTaskId,status:'queued'});
+  const [pending]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId));expect(pending?.payload).toEqual(failed.execution.payload);expect(pending?.deadlineAt).toBe(failed.execution.deadlineAt);
+  const claim=await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:'same-task-recovery',leaseSeconds:300});if(!claim)throw Error('原合法retry没有领取');
+  const ref={executionTaskId:f.ref.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};expect(ref.attempt).toBe(f.ref.attempt+1);
+  await expect(f.workflow.complete(f.ref,{})).rejects.toThrow(); // 旧fence不能写新summary。
+  expect(await f.workflow.prepareItem(ref,{awemeId:f.awemeId})).toMatchObject({receipt:{status:'saved',projectId}});
+  expect(await f.workflow.saveArtifact(ref,{awemeId:f.awemeId})).toMatchObject({status:'saved',projectId});
+  expect(await f.workflow.saveArtifact(ref,{awemeId:sibling})).toMatchObject({status:'image-album',projectId:siblingProjectId});
+  expect(await f.workflow.complete(ref,{})).toEqual({status:'succeeded'});const completed=await t208Rows(f,ref);
+  expect(completed.execution.status).toBe('succeeded');expect(completed.business.status).toBe('succeeded');expect(completed.execution.deadlineAt).toBe(failed.execution.deadlineAt);expect(completed.calls).toEqual(failed.calls);expect(f.requests).toBe(1);
+  expect(await artifacts.listProjectArtifacts(f.ctx,projectId)).toEqual(successFacts);expect(await Promise.all(successFacts.map(row=>artifacts.listVersions(f.ctx,row.id)))).toEqual(successVersions);
+  expect(completed.steps.find(row=>row.id===oldSummary!.id)).toEqual(oldSummary);expect(completed.steps.filter(row=>row.id.endsWith(':failed'))).toEqual(failed.steps.filter(row=>row.id.endsWith(':failed')));
+  expect(await f.workflow.complete(ref,{})).toEqual({status:'succeeded'});expect(await t208Rows(f,ref)).toEqual(completed);expect(f.requests).toBe(1);
+  const summaries=completed.steps.filter(row=>row.id.includes(':summary'));expect(summaries).toHaveLength(2);
+  const current=summaries.find(row=>row.id===`transcribe:${ref.executionTaskId}:summary:attempt:${ref.attempt}`);expect(current).toMatchObject({kind:'transcribe',toolCalls:[],text:'转写完成 1 条，已有逐字稿跳过 0 条，图集跳过 1 条，转写失败 0 条，未找到对应作品 0 条'});
+  expect(current!.stepNo).toBeGreaterThan(Math.max(...completed.steps.filter(row=>row.id!==current!.id).map(row=>row.stepNo)));
+ }finally{await f.cleanup();}
+});
+
+it('T208 attempt2 summary真实CHECK失败保两表和旧历史，移除精确故障后原键恢复且同代回放零新增',async()=>{
+ const sibling=`t208-insert-recovery-image-${++sequence}`,f=await fixture('unconfigured',[sibling]);let unblock:(()=>Promise<unknown>)|undefined;
+ try{
+  const stamp=f.now(),projectId=`insert-success-${f.id}`,siblingProjectId=`insert-image-${f.id}`;
+  const parents:Array<{id:string;externalId:string}>=[{id:projectId,externalId:f.awemeId},{id:siblingProjectId,externalId:sibling}];
+  for(const {id,externalId}of parents)await db.insert(projects).values({id,userId:f.ctx.userId,accountId:f.ctx.accountId,title:'原任务插入故障恢复作品',source:'imported',platformRef:{platform:'douyin',externalId},creationMode:'talking_head',status:'active',currentStage:'script',startedAt:stamp,createdAt:stamp,updatedAt:stamp});
+  await runTranscribePostprocessInWorker(f.awemeId,new AbortController().signal,f.call);await f.workflow.saveArtifact(f.ref,{awemeId:f.awemeId});await f.workflow.recordSource(f.ref,{awemeId:sibling,source:{kind:'image-album'}});await f.workflow.failItem(f.ref,{awemeId:sibling,error:'合成明确作品失败'});expect(await f.workflow.complete(f.ref,{})).toEqual({status:'failed'});
+  const failed=await t208Rows(f);await f.tasks.command(f.ctx,{taskIds:[f.ref.executionTaskId],command:'retry',idempotencyKey:`insert-retry-${f.id}`});const claim=await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:'same-task-insert-recovery',leaseSeconds:300});if(!claim)throw Error('原retry领取失败');const ref={executionTaskId:f.ref.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};expect(ref.attempt).toBe(f.ref.attempt+1);
+  expect(await f.workflow.saveArtifact(ref,{awemeId:sibling})).toMatchObject({status:'image-album',projectId:siblingProjectId});
+  const before=await t208Rows(f,ref),artifacts=createArtifactsService({db,now:f.now,nextId:f.nextId});
+  const facts=await artifacts.listProjectArtifacts(f.ctx,projectId),versions=await Promise.all(facts.map(row=>artifacts.listVersions(f.ctx,row.id))),imageFacts=await artifacts.listProjectArtifacts(f.ctx,siblingProjectId),imageVersions=await Promise.all(imageFacts.map(row=>artifacts.listVersions(f.ctx,row.id)));
+  expect(before.execution.status).toBe('running');expect(before.business.status).toBe('failed');expect(before.execution.deadlineAt).toBe(failed.execution.deadlineAt);expect(before.calls).toEqual(failed.calls);
+  const summaryId=`transcribe:${ref.executionTaskId}:summary:attempt:${ref.attempt}`;unblock=await t208BlockStep(summaryId);
+  await expect(f.workflow.complete(ref,{})).rejects.toThrow(/t208_block/);expect(await t208Rows(f,ref)).toEqual(before);
+  expect(await artifacts.listProjectArtifacts(f.ctx,projectId)).toEqual(facts);expect(await Promise.all(facts.map(row=>artifacts.listVersions(f.ctx,row.id)))).toEqual(versions);expect(await artifacts.listProjectArtifacts(f.ctx,siblingProjectId)).toEqual(imageFacts);expect(await Promise.all(imageFacts.map(row=>artifacts.listVersions(f.ctx,row.id)))).toEqual(imageVersions);expect(f.requests).toBe(0);
+  await unblock();unblock=undefined;expect(await f.workflow.complete(ref,{})).toEqual({status:'succeeded'});const after=await t208Rows(f,ref);
+  expect(after.execution.status).toBe('succeeded');expect(after.business.status).toBe('succeeded');expect(after.execution.payload).toEqual(before.execution.payload);expect(after.execution.deadlineAt).toBe(before.execution.deadlineAt);expect(after.calls).toEqual(before.calls);expect(after.steps.filter(row=>row.id!==summaryId)).toEqual(before.steps);expect(after.steps.filter(row=>row.id===summaryId)).toHaveLength(1);
+  const summary=after.steps.find(row=>row.id===summaryId)!;expect(summary.text).toBe('转写完成 1 条，已有逐字稿跳过 0 条，图集跳过 1 条，转写失败 0 条，未找到对应作品 0 条');expect(summary.stepNo).toBeGreaterThan(Math.max(...before.steps.map(row=>row.stepNo)));
+  expect(await f.workflow.complete(ref,{})).toEqual({status:'succeeded'});expect(await t208Rows(f,ref)).toEqual(after);expect(f.requests).toBe(0);expect(await artifacts.listProjectArtifacts(f.ctx,projectId)).toEqual(facts);expect(await artifacts.listProjectArtifacts(f.ctx,siblingProjectId)).toEqual(imageFacts);
+ }finally{await unblock?.();await f.cleanup();}
 });

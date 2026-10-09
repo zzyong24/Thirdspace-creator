@@ -1,8 +1,8 @@
 import {z} from 'zod';
 import {isDeepStrictEqual} from 'node:util';
-import {eq,executionTasks,executionCalls,aiTasks,aiTaskSteps,type Db} from '@creatoros/backend';
+import {eq,desc,executionTasks,executionCalls,aiTasks,aiTaskSteps,type Db} from '@creatoros/backend';
 import type {RequestContext} from '@creatoros/contract';
-import {workerPortInputSchemas,transcribeSourceSchema,transcribeItemReceiptSchema,type ExecutionRef,type WorkerPort} from '@creatoros/contract/execution-worker';
+import {workerPortInputSchemas,transcribeSourceSchema,transcribeItemReceiptSchema,type ExecutionRef,type WorkerPort,type TranscribePostprocessResult} from '@creatoros/contract/execution-worker';
 import {createTranscriptArtifactService} from '../projects/transcript-artifact.service';
 import {createExecutionLeaseService} from './execution-lease.service';
 import {bindTranscribeExecution,type TranscribeExecutionScope} from './transcribe-execution-binding';
@@ -20,9 +20,10 @@ export function createExecutionTranscribeWorkflowService(db:Db,deps:TranscribeWo
  const access=<T>(ref:ExecutionRef,awemeId:string,fn:(scope:TranscribeExecutionScope,state:Awaited<ReturnType<typeof bindTranscribeExecution>>)=>Promise<T>)=>leases.withLease(ref,'admission',async scope=>fn(scope,await bindTranscribeExecution(scope,awemeId)));
  const entries=(payload:Record<string,unknown>)=>z.record(z.string(),transcribeItemReceiptSchema).parse(payload.transcribeItems??{});
  const sources=(payload:Record<string,unknown>)=>z.record(z.string(),transcribeSourceSchema).parse(payload.transcribeSources??{});
- async function store(scope:TranscribeExecutionScope,state:Awaited<ReturnType<typeof bindTranscribeExecution>>,receipt:Receipt){
+ async function store(scope:TranscribeExecutionScope,state:Awaited<ReturnType<typeof bindTranscribeExecution>>,receipt:Receipt,postprocess?:TranscribePostprocessResult){
+  const note=receipt.status==='saved'&&postprocess?(postprocess.applied?'纠错+断句完成':`后处理未执行:${postprocess.reason}`):null;
   await scope.tx.update(executionTasks).set({payload:{...state.payload,transcribeItems:{...entries(state.payload),[receipt.awemeId]:receipt}}}).where(eq(executionTasks.id,scope.task.id));
-  await scope.tx.insert(aiTaskSteps).values({id:`transcribe:${scope.task.id}:${receipt.awemeId}:${receipt.status}`,aiTaskId:state.business.id,stepNo:state.input.awemeIds.indexOf(receipt.awemeId)+1,kind:receipt.status==='failed'?'error':'transcribe',text:`作品 ${receipt.awemeId}：${receipt.error??({existing:'已有逐字稿，已跳过重复识别',saved:'逐字稿已保存','image-album':'图集作品，无口播音频','no-project':'未找到对应作品，未保存',failed:'转写失败'}[receipt.status])}`,toolCalls:[],createdAt:deps.now()}).onConflictDoNothing();
+  await scope.tx.insert(aiTaskSteps).values({id:`transcribe:${scope.task.id}:${receipt.awemeId}:${receipt.status}`,aiTaskId:state.business.id,stepNo:state.input.awemeIds.indexOf(receipt.awemeId)+1,kind:receipt.status==='failed'?'error':'transcribe',text:`作品 ${receipt.awemeId}：${receipt.error??({existing:'已有逐字稿，已跳过重复识别',saved:'逐字稿已保存','image-album':'图集作品，无口播音频','no-project':'未找到对应作品，未保存',failed:'转写失败'}[receipt.status])}${note?`，${note}`:''}`,toolCalls:[],createdAt:deps.now()}).onConflictDoNothing();
   return receipt;
  }
  const service={
@@ -56,7 +57,7 @@ export function createExecutionTranscribeWorkflowService(db:Db,deps:TranscribeWo
     if(album&&sources(state.payload)[awemeId]?.kind!=='image-album')throw new ConflictError('图集来源已变化');
     if(!album){const frozen=(state.payload.transcribePostprocess as Record<string,{result?:unknown}>|undefined)?.[awemeId]?.result;if(!isDeepStrictEqual(frozen,post))throw new ConflictError('后处理最终正文与原回执不符');}
     const bound=await createTranscriptArtifactService({db:scope.tx as unknown as Db,now:deps.now,nextId:deps.nextId}).ensure(scope.context,{awemeId,transcript:album?'(图集作品,无口播音频)':post!.transcript,source:album?'image-album':'transcribed',...(album?{skipMasterScript:true}:{})});
-    signal?.throwIfAborted();return store(scope,state,{awemeId,status:bound.status==='skipped'&&bound.reason==='no-imported-project'?'no-project':album?'image-album':'saved',projectId:'projectId'in bound?bound.projectId??null:null,error:null});
+    signal?.throwIfAborted();return store(scope,state,{awemeId,status:bound.status==='skipped'&&bound.reason==='no-imported-project'?'no-project':album?'image-album':'saved',projectId:'projectId'in bound?bound.projectId??null:null,error:null},post??undefined);
    });
    if(result.projectId&&!album&&deps.onTranscriptReady){try{signal?.throwIfAborted();await deps.onTranscriptReady(initial.context,{awemeId,projectId:result.projectId});}catch{/* 派生任务失败不能反转已保存事实。 */}}
    return result;
@@ -77,6 +78,13 @@ export function createExecutionTranscribeWorkflowService(db:Db,deps:TranscribeWo
    if(['succeeded','failed'].includes(scope.task.status))return {status};
    if(scope.task.status!=='running')throw new ConflictError('当前转写已停止，不能覆盖终态');
    const stamp=deps.now(),message=failed?`${failed} 个作品转写失败，已保存其它完成结果`:null;
+   // 仅汇总原冻结作品的真实回执；不从异常正文猜分类，不新增业务结果。
+   const receipts=state.input.awemeIds.map(id=>saved[id]!);
+   const count=(kind:Receipt['status'])=>receipts.filter(receipt=>receipt.status===kind).length;
+   const summaryId=`transcribe:${scope.task.id}:summary${scope.task.attempt>1?`:attempt:${scope.task.attempt}`:''}`;
+   const [lastStep]=await scope.tx.select({stepNo:aiTaskSteps.stepNo}).from(aiTaskSteps).where(eq(aiTaskSteps.aiTaskId,state.business.id)).orderBy(desc(aiTaskSteps.stepNo)).limit(1);
+   const summaryStepNo=Math.max(state.input.awemeIds.length,lastStep?.stepNo??0)+1;
+   await scope.tx.insert(aiTaskSteps).values({id:summaryId,aiTaskId:state.business.id,stepNo:summaryStepNo,kind:'transcribe',text:`转写完成 ${count('saved')} 条，已有逐字稿跳过 ${count('existing')} 条，图集跳过 ${count('image-album')} 条，转写失败 ${count('failed')} 条，未找到对应作品 ${count('no-project')} 条`,toolCalls:[],createdAt:stamp}).onConflictDoNothing();
    await scope.tx.update(aiTasks).set({status,completedAt:stamp,errorMessage:message,leaseOwner:null,leaseToken:null,leaseExpiresAt:null}).where(eq(aiTasks.id,state.business.id));
    await scope.tx.update(executionTasks).set({status,leaseOwner:null,leaseExpiresAt:null,heartbeatAt:null,retryAt:null,retryOfCallId:null,lastErrorCode:failed?'TRANSCRIBE_ITEMS_FAILED':null,lastErrorMessage:message,updatedAt:stamp}).where(eq(executionTasks.id,scope.task.id));return {status};
   });},

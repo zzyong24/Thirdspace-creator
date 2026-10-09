@@ -48,14 +48,14 @@ beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.
 afterAll(async()=>close());
 beforeEach(()=>{injected.source.mockReset();injected.extract.mockReset();injected.wait.mockReset();injected.restoreCalls.mockReset();injected.restoreFailure=false;injected.wait.mockImplementation(async(_ms,_value,options)=>{options.signal?.throwIfAborted();});});
 afterEach(async()=>{for(const server of servers.splice(0)){server.closeAllConnections();await new Promise<void>(resolve=>server.close(()=>resolve()));}});
-type Options={ids:string[];album?:string[];existing?:boolean;restoreFailure?:boolean;streamFailure?:string;streamTimes?:number;local?:boolean;noCloud?:boolean;invalidCloud?:boolean;cooldown?:'retry'|'over-cap'|'no-port'|'cancel';post?:'applied'|'declined'|'throw'|'absent'|'unknown'|'cancel';cancel?:'asr'|'stream'|'probe'|'post';probeValue?:boolean;readyFailure?:boolean};
+type Options={ids:string[];album?:string[];existing?:boolean;existingIds?:string[];missingProjects?:string[];restoreFailure?:boolean;streamFailure?:string;streamTimes?:number;local?:boolean;noCloud?:boolean;invalidCloud?:boolean;cooldown?:'retry'|'over-cap'|'no-port'|'cancel';post?:'applied'|'declined'|'throw'|'absent'|'unknown'|'cancel';cancel?:'asr'|'stream'|'probe'|'post';probeValue?:boolean;readyFailure?:boolean};
 async function fixture(options:Options){
  const id=nextId('task'),ctx:RequestContext={userId:'runner-owner',accountId:id,requestId:id,source:'user'},controller=new AbortController();
  const spec:MultimodalSpec=options.noCloud?localWhisperSpec():{kind:'audio',provider:'siliconflow',model:'FunAudioLLM/SenseVoiceSmall',baseUrl:null,token:'synthetic-key'};
  await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:'transcribe.douyin',idempotencyKey:id,inputData:{awemeIds:options.ids},requestedAt:now(),requestFingerprint:'sha256:'+'a'.repeat(64)});
- for(const awemeId of options.ids)await db.insert(projects).values({id:`project-${id}-${awemeId}`,userId:ctx.userId,accountId:ctx.accountId,title:'隔离导入作品',source:'imported',platformRef:{platform:'douyin',externalId:awemeId},creationMode:'talking_head',status:'active',currentStage:'script',startedAt:now(),createdAt:now(),updatedAt:now()});
+ for(const awemeId of options.ids.filter(id=>!options.missingProjects?.includes(id)))await db.insert(projects).values({id:`project-${id}-${awemeId}`,userId:ctx.userId,accountId:ctx.accountId,title:'隔离导入作品',source:'imported',platformRef:{platform:'douyin',externalId:awemeId},creationMode:'talking_head',status:'active',currentStage:'script',startedAt:now(),createdAt:now(),updatedAt:now()});
  const artifact=createTranscriptArtifactService({db,now,nextId});
- if(options.existing)for(const awemeId of options.ids)await artifact.ensure(ctx,{awemeId,transcript:'已有真实逐字稿',source:'transcribed'});
+ for(const awemeId of options.existing?options.ids:options.existingIds??[])await artifact.ensure(ctx,{awemeId,transcript:'已有真实逐字稿',source:'transcribed'});
  const resolveSpec=vi.fn(async()=>spec),mapped=await createTranscribeBusinessExecutionService(db,{budget:{maxCalls:20,maxTokens:100000,deadlineMs:120000},resolveSpec}).prepare(ctx,id);
  if(!mapped.executionTaskId)throw Error('当前任务未绑定真实执行');
  const tasks=createPersistentTaskService(db),claim=await tasks.claimTask({taskId:mapped.executionTaskId,workerId:'runner-worker'});
@@ -193,3 +193,20 @@ it('冷却等待可立即取消，不等待到期、不重新抓取',async()=>{c
 it.each([true,false])('已存事实探测返回 %s 时取消，不再启动恢复或取流',async(hasTranscript)=>{const f=await fixture({ids:['existing'],cancel:'probe',probeValue:hasTranscript});await expect(f.run()).rejects.toMatchObject({name:'AbortError'});expect(injected.restoreCalls).not.toHaveBeenCalled();expect(injected.source).not.toHaveBeenCalled();expect(f.call.mock.calls.some(row=>row[0]==='failTranscribeItem')).toBe(false);});
 it('后处理取消传播 signal 并阻止落稿和下一作品',async()=>{const f=await fixture({ids:['one','two'],cancel:'post'});await expect(f.run()).rejects.toMatchObject({name:'AbortError'});expect(await f.texts()).toHaveLength(0);expect(injected.source).toHaveBeenCalledTimes(1);expect(f.call.mock.calls.filter(row=>row[0]==='prepareTranscribePostprocess').every(row=>row[2]===f.controller.signal)).toBe(true);expect(f.call.mock.calls.some(row=>row[0]==='failTranscribeItem')).toBe(false);});
 it('后处理结果未知不能记成原文成功，也不继续下一作品',async()=>{const f=await fixture({ids:['one','two'],post:'unknown'});expect(await f.run()).toEqual({status:'unknown_result'});expect(await f.texts()).toHaveLength(0);expect(injected.source).toHaveBeenCalledTimes(1);expect(f.call.mock.calls.some(row=>row[0]==='failTranscribeItem')).toBe(false);expect((await f.rows()).execution.status).toBe('unknown_result');});
+
+// T208 仅新增原 Host 步骤维护验证；上方原30库存的输入与断言保持原样。
+it('T208 实际Worker五类回执汇总按原作品排序，同键结算不增加步骤或调用',async()=>{
+ const ids=['already','album','saved','broken','missing'];
+ const f=await fixture({ids,existingIds:['already'],album:['album'],streamFailure:'broken',missingProjects:['missing']});
+ expect(await f.run()).toEqual({status:'failed'}); // 维持原完整批次终态，不借此修改partial。
+ const before=await f.rows(),payload=before.execution.payload as {transcribeItems:Record<string,{awemeId:string;status:string}>};
+ expect(ids.map(id=>payload.transcribeItems[id]?.status)).toEqual(['existing','image-album','saved','failed','no-project']);
+ const summary=before.steps.filter(row=>row.id===`transcribe:${f.ref.executionTaskId}:summary`);
+ expect(summary).toHaveLength(1);expect(summary[0]).toMatchObject({aiTaskId:f.id,stepNo:6,kind:'transcribe',toolCalls:[],text:'转写完成 1 条，已有逐字稿跳过 1 条，图集跳过 1 条，转写失败 1 条，未找到对应作品 1 条'});
+ expect(before.steps).toHaveLength(6);
+ for(const [index,id] of ids.entries())expect(before.steps.find(row=>row.id===`transcribe:${f.ref.executionTaskId}:${id}:${payload.transcribeItems[id]!.status}`)).toMatchObject({aiTaskId:f.id,stepNo:index+1});
+ for(const id of ['already','album','broken','missing'])expect(before.steps.find(row=>row.id.startsWith(`transcribe:${f.ref.executionTaskId}:${id}:`))?.text).not.toContain('后处理未执行:');
+ expect(f.fetcher).toHaveBeenCalledTimes(2);expect(f.modelRequests).toBe(0);expect(before.calls.map(row=>row.status)).toEqual(['settled','settled']);
+ expect(await f.call('completeTranscribeTask',{})).toEqual({status:'failed'});
+ const after=await f.rows();expect(after.steps).toEqual(before.steps);expect(after.calls).toEqual(before.calls);expect(after.execution.payload).toEqual(before.execution.payload);expect(f.fetcher).toHaveBeenCalledTimes(2);
+});
