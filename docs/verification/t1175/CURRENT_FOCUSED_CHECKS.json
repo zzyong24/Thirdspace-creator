@@ -184,5 +184,6 @@
   ],
   "red": "三失败24PASS，原全局retry x2保留",
   "green": "2files61PASS；LED0478files174PASS；frontend类型/boundary/semantic/orphan exit0，orphan仍100warnings；浏览器实际页面待验",
-  "outsideGlobalCanonical": "原3d完整exit1/40ERROR保留，任务T1081/T1082/T1101-global-gates等未代签"
+  "outsideGlobalCanonical": "原3d完整exit1/40ERROR保留，任务T1081/T1082/T1101-global-gates等未代签",
+  "subsequentEvidence": "本记录捕获时浏览器待验；后续实际包/403中文/原retry200/独立补核及当前完整32失败见BOUNDED_CLOSURE与CURRENT_CANONICAL，原records不改签。"
 }

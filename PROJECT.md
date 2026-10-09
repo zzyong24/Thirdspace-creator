@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ d414dcb3
+LAST_SYNCED: main @ 5a1929ca
 
 ## 这是什么(定位)
 
@@ -23,8 +23,6 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
-- [wip] T-1175 修复工作区恢复态直接显示英文权限错误
-- [wip] T-1174 核对随包浏览器验收误选缺失的headless shell
 - [wip] T-1171 无损压缩当前超限任务看板
 - [wip] T-1159 在当前main整合微信原生报表、绑定归属与调度闭包
 - [wip] T-1149 在当前main整合封面用途与图片页组统一画幅

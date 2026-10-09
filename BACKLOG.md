@@ -9,7 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1175|修复工作区恢复态直接显示英文权限错误|🔨 待办|PASS[REV:18cfdcb37bc5]|—|[真实截图与SPEC](docs/features/t1175-workspace-recovery-feedback.md)|d414隔离负向检查403正确拒绝，但恢复态露英文；只复用已有中文反馈，保原安全/重试/初始化与实际失败，精确审核后修。|
+|T-1175|修复工作区恢复态直接显示英文权限错误|✅ 待办|PASS[REV:18cfdcb37bc5]|—|[真实截图与SPEC](docs/features/t1175-workspace-recovery-feedback.md)|已审两文件display修复入main5a；61+174回归及随包403中文→原retry200→主页通过，独立包复核PASS；完整32旧标识保原任务，不代签真人/全功能。|
 |T-1174|核对随包浏览器验收误选缺失的headless shell|✅ 待办|—|—|[实际失败](docs/features/t1174-packaged-browser-verification-context.md)|d414包完整性/签名通过，根驱动原smoke实际exit1找headless_shell-1223；保原失败，核随包full Chromium与消费者，不猜缺包或改原断言。|
 |T-1173|复核历史看板撞号与畸形字段|✅ 待办|—|—|[实际诊断](docs/features/t1173-historical-backlog-identity-collisions.md)|原健康命令已证实T1018重复及执行/归档复用；保原行和事件，独立核来源再修表示，不删待办或伪迁PASS。|
 |T-1172|校正本轮完整校验缺少隔离PG上下文|✅ 待办|—|—|[实际诊断](docs/features/t1172-current-canonical-isolated-pg-context.md)|本轮原canonical40错误，新增LED052来自遗漏两项显式隔离配置；保原exit1，用原隔离公共runner复验，不改门/产品或拼接全绿。|

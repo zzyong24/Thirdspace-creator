@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "commit",
+    "-m",
+    "fix: 统一工作区恢复反馈并保留权限与重试行为"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-09T21:49:31.067767+00:00",
+  "finishedAt": "2026-10-09T21:49:31.242629+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.17453625000780448,
+  "logSha256": "6b2e2601d538418a79278d726532d94a1a6d0656bfe47c7a507d26a816aae642"
+}

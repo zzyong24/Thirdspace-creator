@@ -1,0 +1,10 @@
+{
+  "head": "5a1929ca98ab6cba8cb8b3a4020ece68faaff2b8",
+  "startedAt": "2026-10-09T21:56:21.082Z",
+  "finishedAt": "2026-10-09T21:56:31.363Z",
+  "actualOriginalVerifier": true,
+  "forbiddenNeedlesAbsent": true,
+  "embeddedPublicKeyMatches": true,
+  "sourceAndAppTarChecked": true,
+  "privateKeyPrinted": false
+}

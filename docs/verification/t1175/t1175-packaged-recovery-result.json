@@ -1,0 +1,42 @@
+{
+  "head": "5a1929ca98ab6cba8cb8b3a4020ece68faaff2b8",
+  "startedAt": "2026-10-09T21:56:34.192Z",
+  "finishedAt": "2026-10-09T21:56:53.859Z",
+  "observed": {
+    "httpStatus": 200,
+    "renderedUrl": "http://127.0.0.1:61606/",
+    "executablePath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/browsers/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+    "executableSha256": "2447c7bdea8e8ad38b52594f1ba53e18821c05445e8a07ad1cf3b0f23931d89d",
+    "recoveryText": "工作区暂时未能打开。\n\n登录状态已失效或没有权限,请重新登录后再试。\n\n重试打开工作区\n账号组与绑定账号\n设置",
+    "initialDenied": true,
+    "groupReads": [
+      {
+        "operation": "accountGroups.list",
+        "status": 403
+      },
+      {
+        "operation": "accountGroups.list",
+        "status": 200
+      }
+    ],
+    "retryOpenedWorkspace": true,
+    "workspaceErrorCount": 0,
+    "browserHydrated": true,
+    "pageErrorCount": 0,
+    "browserVersion": "148.0.7778.96",
+    "pageTextSha256": "a2b6e69ad24b9f1e9bf30617f8cefe7b703e43955b6afd83237545bfa6d0d25d",
+    "dispatchStatus": 404,
+    "masterKeyDevelopmentFallback": false,
+    "sidecarExit": {
+      "code": 143,
+      "signal": null
+    }
+  },
+  "nodeExecutable": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+  "isolationRoot": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1175-recovery-isolation-02IBe7",
+  "nativeApp": false,
+  "realUserDataUsed": false,
+  "modelCalled": false,
+  "realPlatformCalled": false,
+  "scope": "T1175当前随包Node/full Chromium1280×720真实公共403恢复中文；之后才提供与现Rust相同格式的新随机握手，点原重试，原账号组list200才开放真实隔离主页。没有mock/模型/真人profile/数据库直写；不签原生App/真人激活/全功能。"
+}

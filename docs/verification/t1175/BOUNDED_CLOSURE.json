@@ -1,0 +1,206 @@
+{
+  "schema": "t1175-bounded-closure/v1",
+  "sourceHead": "5a1929ca98ab6cba8cb8b3a4020ece68faaff2b8",
+  "recordedAt": "2026-10-09T21:58:14.429951+00:00",
+  "freezeOriginalRawSha256": "6e72ad34f9cc33413ac16bd4f86aefa6aa883f8cab3dfcdbd9c2407174deccc4",
+  "reviewedNarrowDelta": {
+    "task": "T-1175",
+    "reportSha256": "81342c41d5857d9f52624ff57b979a3e211f38663e685ce8391e7471bb5985c2",
+    "readSetSha256": "c353bdfe258108777fe9956aa1acafff570d742e9d4740b909366dfd5f23deae",
+    "approvedBindings": {
+      "frontend/src/components/shell/workspace-initialization.tsx": "a70c883b68a2c9e13aae29304d90205ac7821f7e3ee0aac68a5ccf3a84281b99",
+      "frontend/src/components/shell/workspace-initialization.test.tsx": "7635a2986b7a1534f336db673f155060891260e2a0809a6e875d7e74913911b3"
+    }
+  },
+  "trackedSourceCount": 14124,
+  "trackedSourceHashChanges": [],
+  "artifactPath": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "artifactSha256": "1c9278135e77f22e9861c43eab006bdc8db3ffeafa2c8833c5ed073e72d1eb05",
+  "artifactBytes": 841300012,
+  "hdiutilVerify": 0,
+  "codesignVerify": 0,
+  "signature": "ad-hoc",
+  "notarized": false,
+  "exactPackagedBrowserBytes": {
+    "path": "frontend/browsers/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+    "bytes": 68624,
+    "sha256": "2447c7bdea8e8ad38b52594f1ba53e18821c05445e8a07ad1cf3b0f23931d89d",
+    "matchesCurrentRuntime": true
+  },
+  "browserObserved": {
+    "httpStatus": 200,
+    "renderedUrl": "http://127.0.0.1:61606/",
+    "executablePath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/browsers/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+    "executableSha256": "2447c7bdea8e8ad38b52594f1ba53e18821c05445e8a07ad1cf3b0f23931d89d",
+    "recoveryText": "工作区暂时未能打开。\n\n登录状态已失效或没有权限,请重新登录后再试。\n\n重试打开工作区\n账号组与绑定账号\n设置",
+    "initialDenied": true,
+    "groupReads": [
+      {
+        "operation": "accountGroups.list",
+        "status": 403
+      },
+      {
+        "operation": "accountGroups.list",
+        "status": 200
+      }
+    ],
+    "retryOpenedWorkspace": true,
+    "workspaceErrorCount": 0,
+    "browserHydrated": true,
+    "pageErrorCount": 0,
+    "browserVersion": "148.0.7778.96",
+    "pageTextSha256": "a2b6e69ad24b9f1e9bf30617f8cefe7b703e43955b6afd83237545bfa6d0d25d",
+    "dispatchStatus": 404,
+    "masterKeyDevelopmentFallback": false,
+    "sidecarExit": {
+      "code": 143,
+      "signal": null
+    }
+  },
+  "rootActuallyViewed": [
+    "t1175-packaged-recovery-before-retry.png",
+    "t1175-packaged-recovery-page.png"
+  ],
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "nativeAppStarted": false,
+  "installedToApplications": false,
+  "actualUserDataOrModelUsed": false,
+  "userAppOrDataBackedUp": false,
+  "originalFailedReceiptsPreserved": true,
+  "outsideGlobalCanonical": "原3d完整971.517秒exit1/40ERROR保留，不改签全绿。新局部/类型/边界/语义/孤儿/LED047与当前前端audit通过。原全局源审核/静态超时欠债归原任务。",
+  "realProfileBoundary": "T1159原SPEC53–57及独立B：来源研究两实验/0报告，真人profile自动调度未获当前启动准入；不签安装、真人扫码/采集或全功能。",
+  "records": [
+    {
+      "argv": [
+        "git",
+        "commit",
+        "-m",
+        "fix: 统一工作区恢复反馈并保留权限与重试行为"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T21:49:31.067767+00:00",
+      "finishedAt": "2026-10-09T21:49:31.242629+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 0.17453625000780448,
+      "logSha256": "6b2e2601d538418a79278d726532d94a1a6d0656bfe47c7a507d26a816aae642"
+    },
+    {
+      "argv": [
+        "python3",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source-t1175.py",
+        "--self-test"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T21:49:37.585312+00:00",
+      "finishedAt": "2026-10-09T21:49:44.747481+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 7.16184529196471,
+      "logSha256": "8ed1df9e49807e1512caffafb175d4a05c1256d531c2ccd577e92c0b99984660"
+    },
+    {
+      "argv": [
+        "python3",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/package-freeze-source-t1175.py"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T21:49:45.730436+00:00",
+      "finishedAt": "2026-10-09T21:50:04.172061+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 18.441204832983203,
+      "logSha256": "52ab0a9bae65f5ade51263375b87d9c5d1634b985931f799d27dec16d49c88e9"
+    },
+    {
+      "argv": [
+        "pnpm",
+        "-C",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "scripts/desktop/package-local.test.mjs",
+        "scripts/desktop/desktop-release-workflow.test.mjs",
+        "scripts/desktop/notarize.test.mjs",
+        "scripts/desktop/tauri-signing-config.test.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T21:49:45.730450+00:00",
+      "finishedAt": "2026-10-09T21:49:47.751160+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 2.020340582996141,
+      "logSha256": "1446f5daf891b2e0b39876016a8bae3d4721b249af06f13996acd2fd05d87705"
+    },
+    {
+      "argv": [
+        "env",
+        "CREATOROS_LOCAL_SKIP_INSTALL=1",
+        "pnpm",
+        "-C",
+        "frontend",
+        "desktop:package-local"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T21:50:07.749223+00:00",
+      "finishedAt": "2026-10-09T21:56:09.538460+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 361.78603550000116,
+      "logSha256": "fd809626ed74afe3b527bdcff697720852964bb0815ad16dac3f120ce9ab15ff"
+    },
+    {
+      "argv": [
+        "python3",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1175-offline-package-inspect.py"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T21:56:20.974747+00:00",
+      "finishedAt": "2026-10-09T21:56:37.019108+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 16.04398704203777,
+      "logSha256": "4dc113b69d83b3fb0fdfff2ce8fb92926c56e180ba751483b95ffa7c1a80a4d6"
+    },
+    {
+      "argv": [
+        "node",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1175-package-verdict-scan.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T21:56:20.974733+00:00",
+      "finishedAt": "2026-10-09T21:56:31.372216+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 10.397124500013888,
+      "logSha256": "f29176a29f551cd1648e1ee475d6de2eb631c8a069675f8fd3c473107f42588f"
+    },
+    {
+      "argv": [
+        "frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1175-packaged-recovery-probe.mjs"
+      ],
+      "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "startedAt": "2026-10-09T21:56:20.974735+00:00",
+      "finishedAt": "2026-10-09T21:56:53.872794+00:00",
+      "exitCode": 0,
+      "elapsedSeconds": 32.89751912502106,
+      "logSha256": "f55f4a26fc7ed9e1d38462bdbbfee3f2271b14a590d49a189426932ffb8958a7"
+    }
+  ],
+  "currentFullCanonical": {
+    "sourceHead": "5a1929ca98ab6cba8cb8b3a4020ece68faaff2b8",
+    "exitCode": 1,
+    "elapsedSeconds": 1101.5300179169863,
+    "errors": 32,
+    "warnings": 1,
+    "logSha256": "20408be0bca5ffef9a5415bdb35c2d9054d02058e776ad5da76ff0cd21317140",
+    "newOrChangedErrorMarkers": [],
+    "productSourcePathChanges": [],
+    "existingOwnerMap": "CURRENT_FAILURE_OWNERS.json"
+  },
+  "independentPostPackageReview": {
+    "reportSha256": "d32bb94f6ef0a337ba5795805dd8a29d6a39334e71a507e4f128a91f2d58fd9d",
+    "readSetSha256": "cec786902e192f9666c9f146e3b9f3d87169572c142fe3c41156b68d4bdc30bb",
+    "scope": "PASS_BOUNDED_PACKAGED_RECOVERY_ONLY；不签完整Gate/原生App/真人"
+  },
+  "formalTaskCompleteReceipt": "t1175-complete.receipt.json",
+  "finalFrontendAuditReceipt": "t1175-final-frontend-audit.receipt.json"
+}
