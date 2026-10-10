@@ -4607,7 +4607,14 @@ dispatchIntelligenceRun});
   const privateFailureImageDir=process.env.NODE_ENV==='development'?process.env.CREATOROS_WECHAT_PRIVATE_FAILURE_IMAGE_DIR:undefined;
   const wechatSource=(await import('@creatoros/ai-worker/platform/wechat-browser-source')).createWechatBrowserSource({...wechatWitnesses,...(privateFailureImageDir?{privateFailureImageDir}:{})});
   const localBindingAvailable=(platform:string)=>['xiaohongshu','kuaishou','wechatVideo','wechatOfficial'].includes(platform)&&!!localBindingStages[platform as keyof typeof localBindingStages];
+  // 与启动使用同一现存证明，公开只读不触发采集或任务恢复。
+  const collectionPlanEvidence = async (c:RequestContext, account:{id:string;platform:string}) => {
+    if(await accountGroupService.hasVerifiedBinding(c,account.id))return true;
+    if((account.platform==='kuaishou'||account.platform==='xiaohongshu')&&await platformCollectionService.hasCredentialEvidence(c,account.id))return true;
+    return account.platform==='douyin'&&await hasLegacyDouyinCredentialEvidence(await douyinAuthDirFor(account.id,undefined,c.userId));
+  };
   const platformAccountService = createPlatformAccountService({
+    collectionPlanEvidence,
     bindingCapabilities:async()=>["douyin","kuaishou","wechatVideo","wechatOfficial","xiaohongshu"].map(platform=>({platform:platform as import("@creatoros/contract").PlatformAccountCapabilitiesResource["platform"],bind:(platform==="douyin"||localBindingAvailable(platform))?{available:true,reason:"已接入平台登录与真实身份读取",method:"qr" as const}:{available:false,reason:"尚未接入该平台身份绑定",method:"none" as const},collect:{available:platform==="douyin"||localBindingAvailable(platform),reason:(platform==="douyin"||localBindingAvailable(platform))?(platform==="wechatVideo"||platform==="wechatOfficial"?"已接入后台原生报表采集":"已接入作品与明细采集"):"尚未接入该平台自动采集"},publish:{available:false,reason:"尚未接入自动发布"},draft:{available:false,reason:"尚未接入平台草稿保存"},manual:{available:true,reason:"可登记账号、导出物料与录入真实发布记录"}})),
     db,
     now: deps.now,
@@ -5677,12 +5684,7 @@ FAVORITES_PROMOTE_PER_RUN
       membership:(c,id)=>accountGroupService.forAccount(c,id),
       group:(c,id)=>accountGroupService.get(c,id),
       capabilities:c=>platformAccountService.getBindingCapabilities(c),
-      hasCredentialEvidence:async(c,account)=>{
-        if(await accountGroupService.hasVerifiedBinding(c,account.id))return true;
-        if((account.platform==='kuaishou'||account.platform==='xiaohongshu')&&await platformCollectionService.hasCredentialEvidence(c,account.id))return true;
-        // 已授权实际账号目录的旧凭据证明；手动填外部ID不能替代它。
-        return account.platform==='douyin'&&await hasLegacyDouyinCredentialEvidence(await douyinAuthDirFor(account.id,undefined,c.userId));
-      },
+      hasCredentialEvidence:collectionPlanEvidence,
       seedGroup:async c=>{await seedWinVideoTutor(knowledgeService,c,{taxonomyService:startupTaxonomy});await fixupWinVideoTutorModuleTags(knowledgeService,startupTaxonomy,c);},
       ensureSharedJobs:c=>ensureStartupJobs(c,false),
       ensurePrivateJobs:(c,a)=>ensureStartupJobs(c,true,a.platform),

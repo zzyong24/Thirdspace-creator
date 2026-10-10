@@ -6,7 +6,7 @@ import {
   platformId,
   platformAccountStatus,
 } from "../primitives";
-import { platformAccountResource, platformAccountCapabilitiesResource,accountBindingStart,accountBindingResource } from "../resources/platform-accounts";
+import { platformAccountResource, accountCollectionPlanReadinessResource, platformAccountCapabilitiesResource,accountBindingStart,accountBindingResource } from "../resources/platform-accounts";
 
 const accountParams = z.object({ accountId: id });
 // New platforms require T-1020's identity-verified bind flow. The legacy manual
@@ -16,6 +16,10 @@ const legacyManualPlatformId = platformId.exclude(["wechatOfficialAccount"]);
 // SPEC §13 "平台账号 (platform-account)" group (七步 §7.1, contract v0.4).
 // Stores a secret *reference*, never a raw token.
 export const platformAccountOperations = {
+  getAccountCollectionPlanReadiness: defineEndpoint({
+    id: "accounts.collectionPlanReadiness", method: "GET", path: "/accounts/:accountId/collection-plan-readiness",
+    params: accountParams, response: accountCollectionPlanReadinessResource, fr: ["FR-ACCOUNT-COLLECTION-PLAN-READINESS"],
+  }),
   startAccountBinding:defineEndpoint({id:"accounts.bind.start",method:"POST",path:"/accounts/bindings",body:accountBindingStart,response:accountBindingResource,fr:["FR-ACCOUNT-BIND"]}),
   getAccountBinding:defineEndpoint({id:"accounts.bind.status",method:"GET",path:"/accounts/bindings/:runId",params:z.object({runId:id}),response:accountBindingResource,fr:["FR-ACCOUNT-BIND"]}),
   cancelAccountBinding:defineEndpoint({id:"accounts.bind.cancel",method:"POST",path:"/accounts/bindings/:runId/cancel",params:z.object({runId:id}),response:accountBindingResource,fr:["FR-ACCOUNT-BIND"]}),

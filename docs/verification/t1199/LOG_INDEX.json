@@ -1,0 +1,114 @@
+[
+  {
+    "task": "t1199",
+    "file": "automations-errors-final.log.gz",
+    "sha256OfOriginalLog": "3bc30f0acd98a287ff94c30d070e961241cce2ac6aad4df1f32df89386fe14b8",
+    "bytes": 1445,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1199",
+    "file": "readiness-history-verified.log.gz",
+    "sha256OfOriginalLog": "2abb078340f2a74ce0527acf36bd5c736af2573006a70e19bee71d3ced41f20c",
+    "bytes": 239,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1199",
+    "file": "readiness-regression.log.gz",
+    "sha256OfOriginalLog": "a05d08d27cc0afbe13f7f2edee8e1c3cfb2a3732d537b6593c7df9a55844869b",
+    "bytes": 239,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1199",
+    "file": "contract.log.gz",
+    "sha256OfOriginalLog": "fe189722edd0f921edc92919751368b232dc7a8abefa7cf622bbfa01a428ba1e",
+    "bytes": 237,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1199",
+    "file": "led-047-verified-final.log.gz",
+    "sha256OfOriginalLog": "14cf44bbcf1e9201c64476eda56efc5dc210af08bc8d849ce221ae23427a82e2",
+    "bytes": 1637,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1199",
+    "file": "typecheck-verified-final.log.gz",
+    "sha256OfOriginalLog": "d194836fdb7301327cebf61c0ef6f58e07b4fdfecb926461248316937abce86e",
+    "bytes": 182,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1199",
+    "file": "boundary-verified.log.gz",
+    "sha256OfOriginalLog": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+    "bytes": 779,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1199",
+    "file": "orphan-final.log.gz",
+    "sha256OfOriginalLog": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+    "bytes": 15862,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1199",
+    "file": "lint-review-final.log.gz",
+    "sha256OfOriginalLog": "2fdfb66eaa03e83079c7256ecc029285aed3eaebc255253dbd34b8fc5fe96662",
+    "bytes": 11108,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1199",
+    "file": "automations-first.log.gz",
+    "sha256OfOriginalLog": "14d3fca2ddf1e909d194289560489566aa9049f2dad3bbd4e182e8b50d716249",
+    "bytes": 103752,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1199",
+    "file": "proof-context-red.log.gz",
+    "sha256OfOriginalLog": "c429fd8e7c7cde597df43d77cdcf83693f74e66397a95fa1a11a4d2298e53733",
+    "bytes": 1394,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1199",
+    "file": "proof-context-green.log.gz",
+    "sha256OfOriginalLog": "f2455bb655cc318e650126b103ee5aacd1a503dbf621f2d4c84c0f1bd61cb943",
+    "bytes": 237,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1199",
+    "file": "review-gaps-red.log.gz",
+    "sha256OfOriginalLog": "fd70475cab11577bbe1257f5e3a4ca13ba4219474781ea67970760fdbd5d37a9",
+    "bytes": 46442,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1199",
+    "file": "form-late-red.log.gz",
+    "sha256OfOriginalLog": "5a67664a1248e0bf17e8e9a8b9f2166046473ebd391b02847742aed0f24ca526",
+    "bytes": 3089,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1200",
+    "file": "knowledge-regressions-first.log.gz",
+    "sha256OfOriginalLog": "7506f92eb4a2285a97346f17d63e8fb86001b089c93a8658431631651a3ae224",
+    "bytes": 14261,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  },
+  {
+    "task": "t1200",
+    "file": "knowledge-regressions-final.log.gz",
+    "sha256OfOriginalLog": "8c7e208fc2a241c28e59fbbf835e39bbdf180c947840c1e4195a278ca9189df8",
+    "bytes": 3101,
+    "note": "原始输出；命令和退出状态以本轮实际工具回执为准，不补造缺失字段"
+  }
+]

@@ -19,6 +19,7 @@ import type { PlatformAccountService } from "./platform-account.service";
 
 export const PLATFORM_ACCOUNT_OP_IDS = [
   "accounts.list",
+  "accounts.collectionPlanReadiness",
   "accounts.bindingCapabilities",
   "accounts.create",
   "accounts.get",
@@ -40,6 +41,10 @@ export function createPlatformAccountTransport(
       const p = (params ?? {}) as { accountId?: string };
 
       switch (endpoint.id) {
+        case "accounts.collectionPlanReadiness": {
+          const data = await service.getCollectionPlanReadiness(ctx, p.accountId ?? "");
+          return {data, meta: {requestId}};
+        }
         case "accounts.bindingCapabilities":{const data=await service.getBindingCapabilities(ctx);return {data,meta:{requestId,page:1,pageSize:Math.max(1,data.length),total:data.length}};}
         case "accounts.list": {
           const q = (query ?? {}) as {

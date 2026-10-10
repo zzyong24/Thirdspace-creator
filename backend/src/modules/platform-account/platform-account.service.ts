@@ -32,6 +32,8 @@ import { OwnershipError, ValidationError } from "./platform-account.errors";
 const VALID_PLATFORMS = new Set<string>(platformId.options);
 
 export interface ServiceDeps {
+  /** 只返回既有默认计划的证明，不暴露凭据或宣称当前登录。 */
+  collectionPlanEvidence?: (ctx: RequestContext, account: PlatformAccountResource) => Promise<boolean>;
   bindingCapabilities?: (ctx:RequestContext)=>Promise<import("@creatoros/contract").PlatformAccountCapabilitiesResource[]>;
   db: Db;
   now: () => string;
@@ -62,6 +64,7 @@ export interface ListAccountsQuery {
 }
 
 export interface PlatformAccountService {
+  getCollectionPlanReadiness(ctx: RequestContext, accountId: string): Promise<import("@creatoros/contract").AccountCollectionPlanReadinessResource>;
   getBindingCapabilities(ctx:RequestContext):Promise<import("@creatoros/contract").PlatformAccountCapabilitiesResource[]>;
   listAccounts(
     ctx: RequestContext,
@@ -158,6 +161,17 @@ export function createPlatformAccountService(
   }
 
   return {
+    async getCollectionPlanReadiness(ctx, accountId) {
+      const account = toPlatformAccountDto(await repoFor(ctx).getAccount(accountId));
+      const membership = await createAccountGroupService({db, now, nextId}).forAccount(ctx, accountId);
+      if (!ctx.groupId || membership.groupId !== ctx.groupId) throw new OwnershipError("账号不在当前账号组");
+      const capabilities = await deps.bindingCapabilities?.(ctx);
+      const capability = capabilities?.find(row => row.platform === account.platform);
+      const evidence = account.status === "active" && deps.collectionPlanEvidence
+        ? (await deps.collectionPlanEvidence({...ctx, accountId, membershipVersion:membership.version}, account) ? "verified" : "missing") : "unknown";
+      return { accountId, platform: account.platform, status: account.status,
+        collectAvailable: capability?.collect.available ?? null, planEvidence: evidence };
+    },
     async getBindingCapabilities(ctx){return deps.bindingCapabilities?.(ctx)??[];},
     async listAccounts(ctx, query) {
       const { rows, total } = await repoFor(ctx).listAccounts(query);

@@ -33,6 +33,8 @@
  */
 
 import * as React from "react";
+import {ENDPOINTS, createClient, type AccountCollectionPlanReadinessResource} from "@creatoros/contract";
+import {createHttpTransport, HttpTransportError, type FrozenWorkspaceScope} from "@/lib/http-transport";
 import { useRouter } from "next/navigation";
 import { useAccountsChanged } from "@/lib/account-events";
 import {
@@ -59,6 +61,11 @@ import {
 
 import { client } from "@/lib/contract-client";
 import { cn } from "@/lib/utils";
+import {describeUserError} from "@/lib/ai-error-humanize";
+function describeAutomationError(error:unknown,fallback:string){
+  if(error instanceof HttpTransportError&&error.details.reason==="account_archived")return "此账号已归档，可查看历史；恢复账号后再管理计划。";
+  return describeUserError(error,fallback);
+}
 import { notifyAccountsChanged } from "@/lib/account-events";
 import { Switch } from "@/components/ui/switch";
 
@@ -173,7 +180,7 @@ const RUN_STATUS_META: Record<
   failed: { label: "失败", icon: AlertTriangle, tone: "text-destructive" },
   // needs_reconnect 醒目:琥珀强调 + 边框底色(T-032b ③),让用户一眼知道要去扫码,别当普通失败略过。
   needs_reconnect: {
-    label: "需重连抖音",
+    label: "需重连账号",
     icon: RefreshCw,
     tone: "text-amber-600",
   },
@@ -391,11 +398,29 @@ export interface CurrentAccountBadge {
   readonly handle: string;
 }
 
+export interface AutomationAccount extends CurrentAccountBadge {
+  readonly platform: string;
+  readonly status: "active" | "archived";
+  readonly readiness?: AccountCollectionPlanReadinessResource;
+  readonly readinessError?: string;
+}
+const EMPTY_AUTOMATION_ACCOUNTS:readonly AutomationAccount[]=[];
+const PLATFORM_LABELS:Record<string,string>={douyin:"抖音",kuaishou:"快手",xiaohongshu:"小红书",wechatVideo:"视频号",wechatOfficial:"公众号",wechatOfficialAccount:"公众号",x:"X"};
+const isSharedKind=(kind:string)=>kind==="topic.daily"||kind==="intelligence.sync";
+// SEMANTIC_BOUNDARY_ALLOW: 固定平台协议的普通创建白名单，非意图理解或内容选择。
+function canCreateKind(kind:string, target:AutomationAccount|null) {
+  if(kind==="topic.daily")return true;
+  if(!target || target.status!=="active" || target.readiness?.planEvidence!=="verified" || target.readiness.collectAvailable!==true)return false;
+  return kind==="self.metrics"&&["douyin","xiaohongshu","kuaishou","wechatVideo","wechatOfficial"].includes(target.platform) || kind==="comments"&&target.platform==="douyin";
+}
+
 export function JobRow({
   job,
   latestRun,
   channelThrottle,
   currentAccount,
+  runReadError,
+  toggleError,
   onToggle,
   onOpenDetail,
   onEdit,
@@ -409,6 +434,8 @@ export function JobRow({
   readonly latestRun: JobRunResource | null;
   /** [T-332 S4·§6.3] 当前号(渲行内归属号 badge);null = 未解析到,不渲不猜。 */
   readonly currentAccount?: CurrentAccountBadge | null;
+  readonly runReadError?: string;
+  readonly toggleError?: string;
   // T-038c:该 job 对应网关 channel 的实时退避快照(cooldown 时显限流横幅);null = 未知/未拉到。
   readonly channelThrottle: ChannelThrottle | null;
   readonly onToggle: (enabled: boolean) => void;
@@ -479,7 +506,7 @@ export function JobRow({
           {/* [T-332 S4·§6.3] 归属号 badge:列表虽已按当前号 strict 过滤,行上仍标归属
               (运行详情/通知里要能看出是哪个号的任务);若数据异常混进非当前号行,
               诚实标「其他账号」把问题暴露出来,绝不伪装。 */}
-          {job.accountId ? (
+          {job.accountId && !isSharedKind(job.sourceKind) ? (
             <span
               data-slot="automation-account-badge"
               data-testid="automation-account-badge"
@@ -489,9 +516,11 @@ export function JobRow({
               <AtSign className="size-3" aria-hidden="true" />
               {currentAccount && job.accountId === currentAccount.id
                 ? currentAccount.handle
-                : "其他账号"}
+                : "账号信息未读取"}
             </span>
-          ) : null}
+          ) : <span className="text-xs text-muted-foreground">组内共享</span>}
+          {toggleError ? <span role="alert" className="text-xs text-destructive">{toggleError}</span> : null}
+          {runReadError ? <span role="alert" className="text-xs text-destructive">{runReadError}</span> : null}
           {/* [T-152] running 态:行内实时进度(阶段 + 累计条数 + 进度条)。点作业名进抽屉看 2s 轮询刷新。 */}
           {running && rowProgress ? (
             <RunProgressBar progress={rowProgress} />
@@ -536,7 +565,7 @@ export function JobRow({
           data-slot="automation-last-run"
           className="text-[11px] text-muted-foreground tabular-nums"
         >
-          上次：{lastRunAt ? formatDateTime(lastRunAt,job.target.scheduleTimezone === "Asia/Shanghai" ? "Asia/Shanghai" : undefined) : "尚未运行"}
+          上次：{lastRunAt ? formatDateTime(lastRunAt,job.target.scheduleTimezone === "Asia/Shanghai" ? "Asia/Shanghai" : undefined) : runReadError ? "读取失败" : latestRun ? "记录未提供时间" : "尚未运行"}
         </span>
         <span
           data-slot="automation-next-run"
@@ -955,7 +984,11 @@ export function CreateJobDialog({
   prefill,
   mode = "create",
   job = null,
+  allowedKinds,
+  targetLabel,
 }: {
+  readonly allowedKinds?: readonly SourceKind[];
+  readonly targetLabel?: string;
   readonly open: boolean;
   readonly onOpenChange: (v: boolean) => void;
   /** 提交回调:create 模式装配新建入参;edit 模式装配更新入参(sourceKind 恒为原值)。 */
@@ -983,6 +1016,7 @@ export function CreateJobDialog({
   const [cadenceUnresolved, setCadenceUnresolved] = React.useState(false);
   const [targetValue, setTargetValue] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
+  const [formError,setFormError]=React.useState<string|null>(null);
 
   const meta = SOURCE_META[sourceKind];
   // [T-258] target 字段可见性:仅「有 per-job 手动 target」的源(SOURCE_META 覆盖的 3 个)才显示。
@@ -992,16 +1026,22 @@ export function CreateJobDialog({
   const showTargetField = isEdit
     ? !!(job && ['self.metrics','comments'].includes(job.sourceKind))
     : ['self.metrics','comments'].includes(sourceKind);
-  const canSubmit = name.trim().length > 0 && !submitting && !cadenceUnresolved && (isEdit||['self.metrics','comments','topic.daily'].includes(sourceKind));
+  const canSubmit = name.trim().length > 0 && !submitting && !cadenceUnresolved && (isEdit||(allowedKinds??['self.metrics','comments','topic.daily']).includes(sourceKind));
 
   // 打开弹窗时应用一次预填(模板卡 / 空白新建 / 编辑预填)。open 由 false→true 触发。
   const prevOpenRef = React.useRef(false);
+  const formEpoch=React.useRef(0);
+  const formAlive=React.useRef(true);
+  React.useEffect(()=>{formAlive.current=true;return()=>{formAlive.current=false;formEpoch.current++;};},[]);
   React.useEffect(() => {
+    if(open!==prevOpenRef.current)formEpoch.current++;
     if (open && !prevOpenRef.current) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 弹窗由关闭转打开时按外部 job/prefill 快照初始化表单
+      setFormError(null);
+      setSubmitting(false);
       if (isEdit && job) {
         // 编辑:从被编辑作业预填。频率用 compileCronToCadence 反解;反解失败(null)诚实
         // 降级:编辑器落回缺省值 + 标记 unresolved(UI 提示重选,重选前禁保存)。
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- 弹窗由关闭转打开时按外部 job/prefill 快照初始化表单
         setName(job.name);
         setPrompt(job.prompt ?? "");
         const known = SOURCE_META[job.sourceKind as SourceKind];
@@ -1028,6 +1068,8 @@ export function CreateJobDialog({
 
   const submit = React.useCallback(async () => {
     if (!canSubmit) return;
+    const originalEpoch=formEpoch.current;
+    setFormError(null);
     setSubmitting(true);
     try {
       // 友好频率 → cron(内部实现,不露用户)。
@@ -1050,9 +1092,11 @@ export function CreateJobDialog({
         prompt: prompt.trim(),
         target,
       });
-      onOpenChange(false);
+      if(formAlive.current&&formEpoch.current===originalEpoch)onOpenChange(false);
+    } catch (error) {
+      if(formAlive.current&&formEpoch.current===originalEpoch)setFormError(describeAutomationError(error,"保存未完成，请重试"));
     } finally {
-      setSubmitting(false);
+      if(formAlive.current&&formEpoch.current===originalEpoch)setSubmitting(false);
     }
   }, [
     canSubmit,
@@ -1095,6 +1139,8 @@ export function CreateJobDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-2">
+          {targetLabel ? <p className="text-sm text-muted-foreground">目标：{targetLabel}{isEdit ? "" : "；每日选题属于账号组。"}</p> : null}
+          {formError ? <p role="alert" className="text-sm text-destructive">{formError}</p> : null}
           {/* name */}
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-foreground">任务名称</span>
@@ -1150,8 +1196,8 @@ export function CreateJobDialog({
                 <SelectValue placeholder="选择抓取内容" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="self.metrics">作品数据同步</SelectItem>
-                <SelectItem value="comments">作品评论同步</SelectItem>
+                {!allowedKinds||allowedKinds.includes("self.metrics") ? <SelectItem value="self.metrics">作品数据同步</SelectItem> : null}
+                {!allowedKinds||allowedKinds.includes("comments") ? <SelectItem value="comments">作品评论同步</SelectItem> : null}
                 <SelectItem value="topic.daily">
                   每日自动选题(需配文本模型)
                 </SelectItem>
@@ -1232,13 +1278,14 @@ export function CreateJobDialog({
 
 // ── 运行详情抽屉(读 jobRuns.listByJob + 选中 run 的 ai_task_steps)───────────────
 
-export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pending=false,requestError=null}: {
+export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pending=false,requestError=null,contractClient=client}: {
  readonly job: ScheduledJobResource|null;
  readonly open: boolean;
  readonly onOpenChange:(v:boolean)=>void;
  readonly preferredRunId?:string|null;
  readonly pending?:boolean;
  readonly requestError?:string|null;
+ readonly contractClient?: typeof client;
 }) {
  const [runs,setRuns]=React.useState<JobRunResource[]>([]);
  const [loading,setLoading]=React.useState(false);
@@ -1253,11 +1300,11 @@ export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pendi
   setRuns([]);setSelectedRunId(preferredRunId);setSteps([]);setLoading(true);setReadError(null);
   async function read(){
    try {
-    const value=await client.listJobRunsByJob({params:{jobId:job!.id},query:{page:1,pageSize:50},body:undefined});
+    const value=await contractClient.listJobRunsByJob({params:{jobId:job!.id},query:{page:1,pageSize:50},body:undefined});
     if(!active)return;
     const rows=(Array.isArray(value)?value:[]) as JobRunResource[];
     if(preferredRunId&&!rows.some(r=>r.id===preferredRunId)){
-     const requested=await client.getJobRun({params:{runId:preferredRunId},query:undefined,body:undefined});
+     const requested=await contractClient.getJobRun({params:{runId:preferredRunId},query:undefined,body:undefined});
      if(!active)return;
      if(requested.jobId===job!.id)rows.unshift(requested as JobRunResource);
     }
@@ -1266,7 +1313,7 @@ export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pendi
    }catch{if(active){setLoading(false);setReadError('运行记录读取失败，正在重试');timer=setTimeout(read,4000);}}
   }
   void read();return()=>{active=false;clearTimeout(timer);};
- },[open,job?.id,preferredRunId]);
+ },[open,job?.id,preferredRunId,contractClient]);
  const selectedRun=runs.find(r=>r.id===selectedRunId)??null;
  React.useEffect(()=>{
   setSteps([]);setStepsLoading(false);
@@ -1275,11 +1322,11 @@ export function RunDetailDialog({job,open,onOpenChange,preferredRunId=null,pendi
   const taskId=selectedRun.aiTaskId,running=selectedRun.status==='running';
   setStepsLoading(true);
   async function read(){try{
-   const rows=await client.listTaskSteps({params:{taskId},query:undefined,body:undefined});
+   const rows=await contractClient.listTaskSteps({params:{taskId},query:undefined,body:undefined});
    if(active){setSteps(Array.isArray(rows)?rows as TaskStep[]:[]);setStepsLoading(false);if(running)timer=setTimeout(read,2000);}
   }catch{if(active){setStepsLoading(false);if(running)timer=setTimeout(read,4000);}}}
   void read();return()=>{active=false;clearTimeout(timer);};
- },[open,job?.id,selectedRun?.id,selectedRun?.aiTaskId,selectedRun?.status]);
+ },[open,job?.id,selectedRun?.id,selectedRun?.aiTaskId,selectedRun?.status,contractClient]);
  const selectRun=(run:JobRunResource)=>setSelectedRunId(run.id);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1445,7 +1492,11 @@ export function TemplateCards({
   onPick,
   jobs = [],
   onEnableExisting,
+  targetAccount,
+  enforceTarget = false,
 }: {
+  readonly targetAccount?: AutomationAccount | null;
+  readonly enforceTarget?: boolean;
   readonly onPick: (tpl: CollectionTemplate) => void;
   /** [T-367] 现存 job 列表(island 透传),按 sourceKind 查重定「已存在」态。 */
   readonly jobs?: ReadonlyArray<ScheduledJobResource>;
@@ -1456,10 +1507,11 @@ export function TemplateCards({
   const existingBySourceKind = React.useMemo(() => {
     const m = new Map<string, ScheduledJobResource>();
     for (const job of jobs) {
+      if (enforceTarget && !isSharedKind(job.sourceKind) && job.accountId !== targetAccount?.id) continue;
       if (!m.has(job.sourceKind)) m.set(job.sourceKind, job);
     }
     return m;
-  }, [jobs]);
+  }, [jobs,targetAccount,enforceTarget]);
   return (
     <section
       data-slot="automation-templates"
@@ -1474,7 +1526,7 @@ export function TemplateCards({
         </span>
       </div>
       <div className="grid gap-2 lg:grid-cols-2">
-        {COLLECTION_TEMPLATES.map((tpl) => {
+        {COLLECTION_TEMPLATES.filter(tpl => !enforceTarget || canCreateKind(tpl.sourceKind,targetAccount??null) || existingBySourceKind.has(tpl.sourceKind)).map((tpl) => {
           const Icon =
             SOURCE_META[tpl.sourceKind]?.icon ??
             EXTRA_SOURCE_ICONS[tpl.sourceKind] ??
@@ -1539,12 +1591,37 @@ export function TemplateCards({
 export function AutomationsIsland({
   jobs,
   currentAccount = null,
+  accounts = EMPTY_AUTOMATION_ACCOUNTS,
+  groupName,
+  scope,
 }: {
+  readonly accounts?: readonly AutomationAccount[];
+  readonly groupName?: string;
+  readonly scope?: FrozenWorkspaceScope;
   readonly jobs: ReadonlyArray<ScheduledJobResource>;
   /** [T-332 S4·§6.3] 当前号(server 页解析);null = 未选号/解析失败 → 显引导不猜。 */
   readonly currentAccount?: CurrentAccountBadge | null;
 }) {
   const router = useRouter();
+  const [platformFilter,setPlatformFilter]=React.useState("all");
+  const [accountFilter,setAccountFilter]=React.useState("all");
+  const [createTarget,setCreateTarget]=React.useState<AutomationAccount|null>(null);
+  const [latestReadErrors,setLatestReadErrors]=React.useState<Record<string,string>>({});
+  const frozenGroupId=scope?.groupId;
+  const scoped=scope!==undefined;
+  const getClient=React.useCallback((accountId:string|null)=>scoped
+    ? createClient(ENDPOINTS,createHttpTransport("/api/v1",{groupId:frozenGroupId,accountId})) : client,[frozenGroupId,scoped]);
+  const getHistoryClient=React.useCallback((accountId:string|null)=>getClient(
+    accounts.some(account=>account.id===accountId&&account.status==="archived")?null:accountId
+  ),[accounts,getClient]);
+  const [toggleErrors,setToggleErrors]=React.useState<Record<string,string>>({});
+  const selectedTarget=accounts.find(a=>a.id===accountFilter)??null;
+  const visibleJobs=jobs.filter(job=> {
+    if(isSharedKind(job.sourceKind))return true;
+    const account=accounts.find(a=>a.id===job.accountId);
+    return (accountFilter==="all"||job.accountId===accountFilter)&&(platformFilter==="all"||account?.platform===platformFilter);
+  });
+
   // [Bug-7 T-020] 跨页失效广播:settings / account-manager / automations 本岛 loginDouyin
   // 成功后 dispatch 'creatoros:accounts-changed' → 这里 router.refresh() 立刻拉 server 数据,
   // 让每行 latestRuns 翻篇(needs_reconnect 红标消失)、job 列表反映新绑定的号。
@@ -1560,16 +1637,9 @@ export function AutomationsIsland({
     null,
   );
   const [detailOpen, setDetailOpen] = React.useState(false);
+  const detailClient=React.useMemo(()=>getHistoryClient(detailJob?.accountId??null),[getHistoryClient,detailJob?.accountId]);
   const [detailRunId,setDetailRunId]=React.useState<string|null>(null);
   const [runError,setRunError]=React.useState<string|null>(null);
-  const pendingRequests=React.useRef(new Set<string>());
-  const detailEpoch=React.useRef(0);
-  const alive=React.useRef(true);
-  const accountKey=currentAccount?.id??jobs.map(j=>j.id).join('|');
-  const accountRef=React.useRef(accountKey);accountRef.current=accountKey;
-  React.useEffect(()=>{alive.current=true;return()=>{alive.current=false;detailEpoch.current++;};},[]);
-  React.useEffect(()=>{detailEpoch.current++;setDetailOpen(false);setDetailJob(null);setDetailRunId(null);setPendingRunNowId(null);setRunError(null);},[accountKey]);
-  const changeDetailOpen=React.useCallback((value:boolean)=>{if(!value)detailEpoch.current++;setDetailOpen(value);},[]);
   // T-248 编辑弹窗:被编辑作业 + 开关(复用 CreateJobDialog 的 edit 模式)。
   const [editJob, setEditJob] = React.useState<ScheduledJobResource | null>(
     null,
@@ -1595,26 +1665,32 @@ export function AutomationsIsland({
     Partial<Record<DouyinChannel, ChannelThrottle>>
   >({});
 
+  const pendingRequests=React.useRef(new Set<string>());
+  const detailEpoch=React.useRef(0);
+  const alive=React.useRef(true);
+  const accountKey=scope?.groupId??currentAccount?.id??jobs.map(j=>j.id).join('|');
+  const accountRef=React.useRef(accountKey);accountRef.current=accountKey;
+  React.useEffect(()=>{alive.current=true;return()=>{alive.current=false;detailEpoch.current++;};},[]);
+  React.useEffect(()=>{detailEpoch.current++;setDetailOpen(false);setDetailJob(null);setDetailRunId(null);setPendingRunNowId(null);setRunError(null);setCreateOpen(false);setEditOpen(false);setToggleErrors({});},[accountKey]);
+  const changeDetailOpen=React.useCallback((value:boolean)=>{if(!value)detailEpoch.current++;setDetailOpen(value);},[]);
   // 批量拉每个 job 的最近一次 run(jobRuns.listByJob limit 1)。
-  const fetchLatestRuns = React.useCallback(async (): Promise<
-    Record<string, JobRunResource | null>
-  > => {
+  const fetchLatestRuns = React.useCallback(async () => {
     const entries = await Promise.all(
       jobs.map(async (job) => {
         try {
-          const rows = (await client.listJobRunsByJob({
+          const rows = (await getHistoryClient(job.accountId??null).listJobRunsByJob({
             params: { jobId: job.id },
             query: { page: 1, pageSize: 1 },
             body: undefined,
           })) as unknown as JobRunResource[];
-          return [job.id, Array.isArray(rows) && rows[0] ? rows[0] : null] as const;
+          return {id:job.id,run:Array.isArray(rows)&&rows[0]?rows[0]:null,error:null};
         } catch {
-          return [job.id, null] as const;
+          return {id:job.id,run:null,error:"最近运行记录读取失败"};
         }
       }),
     );
-    return Object.fromEntries(entries);
-  }, [jobs]);
+    return {runs:Object.fromEntries(entries.map(e=>[e.id,e.run])),errors:Object.fromEntries(entries.filter(e=>e.error).map(e=>[e.id,e.error!]))};
+  }, [jobs,getHistoryClient]);
 
   // LED-047/T987: 单在途；隐藏页面暂停，回来立即刷新。空闲不持续抢占本地服务。
   React.useEffect(() => {
@@ -1627,9 +1703,9 @@ export function AutomationsIsland({
       const next = await fetchLatestRuns();
       inFlight = false;
       if (!active) return;
-      setLatestRuns(next);
+      setLatestRuns(next.runs);setLatestReadErrors(next.errors);
       if (document.hidden) return;
-      const delay = refreshOnReturn ? 0 : Object.values(next).some(run => run?.status === "running") ? 4000 : 15000;
+      const delay = refreshOnReturn ? 0 : Object.values(next.runs).some(run => run?.status === "running") ? 4000 : 15000;
       refreshOnReturn = false;
       timer = setTimeout(read, delay);
     }
@@ -1649,8 +1725,10 @@ export function AutomationsIsland({
   React.useEffect(() => {
     let cancelled = false;
     void (async () => {
+      setThrottleByChannel({});
       try {
-        const res = (await client.throttleStatusDouyin({
+        if(scoped && (selectedTarget?.platform!=="douyin"))return;
+        const res = (await getClient(selectedTarget?.id??currentAccount?.id??null).throttleStatusDouyin({
           params: undefined,
           query: undefined,
           body: undefined,
@@ -1673,23 +1751,27 @@ export function AutomationsIsland({
     return () => {
       cancelled = true;
     };
-  }, [jobs]);
+  }, [jobs,getClient,scoped,selectedTarget?.id,selectedTarget?.platform,currentAccount?.id]);
 
   const toggle = React.useCallback(
     async (job: ScheduledJobResource, enabled: boolean) => {
+      const originalScope=accountRef.current;
       setPendingToggleId(job.id);
+      setToggleErrors(previous=>({...previous,[job.id]:""}));
       try {
-        await client.setScheduledJobEnabled({
+        await getClient(job.accountId??null).setScheduledJobEnabled({
           params: { jobId: job.id },
           query: undefined,
           body: { enabled },
         });
-        router.refresh();
+        if(alive.current&&accountRef.current===originalScope)router.refresh();
+      } catch(error) {
+        if(alive.current&&accountRef.current===originalScope)setToggleErrors(previous=>({...previous,[job.id]:describeAutomationError(error,"任务开关保存失败，请重试")}));
       } finally {
-        setPendingToggleId(null);
+        if(alive.current&&accountRef.current===originalScope)setPendingToggleId(null);
       }
     },
-    [router],
+    [router,getClient],
   );
 
   const create = React.useCallback(
@@ -1700,7 +1782,9 @@ export function AutomationsIsland({
       prompt: string;
       target?: Record<string, unknown>;
     }) => {
-      await client.createScheduledJob({
+      const originalScope=accountRef.current;
+      if(scope && !canCreateKind(input.sourceKind,createTarget))throw new Error("请选择已验证且可采集的目标账号，或创建组内每日选题");
+      await getClient(isSharedKind(input.sourceKind)?null:createTarget?.id??currentAccount?.id??null).createScheduledJob({
         params: undefined,
         query: undefined,
         body: {
@@ -1714,9 +1798,9 @@ export function AutomationsIsland({
           toolGrants: [], // 偏只读 + 落库,首版空;工具授权由执行层(D3)约束
         },
       });
-      router.refresh();
+      if(alive.current&&accountRef.current===originalScope)router.refresh();
     },
-    [router],
+    [router,getClient,createTarget,scope,currentAccount?.id],
   );
 
   // T-248 编辑保存:调 scheduledJobs.update(PATCH,只传可改字段;sourceKind 契约不可改
@@ -1730,7 +1814,8 @@ export function AutomationsIsland({
       target?: Record<string, unknown>;
     }) => {
       if (!editJob) return;
-      await client.updateScheduledJob({
+      const originalScope=accountRef.current;
+      await getClient(editJob.accountId??null).updateScheduledJob({
         params: { jobId: editJob.id },
         query: undefined,
         body: {
@@ -1740,19 +1825,20 @@ export function AutomationsIsland({
           ...(input.target !== undefined ? { target: input.target } : {}),
         },
       });
-      router.refresh();
+      if(alive.current&&accountRef.current===originalScope)router.refresh();
     },
-    [router, editJob],
+    [router, editJob,getClient],
   );
 
   // T-248:行内「编辑」→ 打开编辑弹窗(预填该作业)。
   const openEdit = React.useCallback((job: ScheduledJobResource) => {
     setEditJob(job);
     setEditOpen(true);
-  }, []);
+  }, [setEditOpen]);
 
   // 从模板入手(SPEC §8.1):点模板卡 → 装配预填 → 打开新建弹窗。
   const openFromTemplate = React.useCallback((tpl: CollectionTemplate) => {
+    setCreateTarget(selectedTarget);
     setPrefill({
       name: tpl.title,
       prompt: tpl.prompt,
@@ -1760,7 +1846,7 @@ export function AutomationsIsland({
       cadence: tpl.cadence,
     });
     setCreateOpen(true);
-  }, []);
+  }, [selectedTarget,setCreateOpen]);
 
   // [T-367] 已存在 kind 的模板卡被点 → 不 create:disabled 的既有 job 直接启用(复用
   //   setScheduledJobEnabled toggle 链,router.refresh 翻篇),已启用的只滚动定位到那行,
@@ -1777,9 +1863,10 @@ export function AutomationsIsland({
 
   // 空白新建:清预填后打开。
   const openBlank = React.useCallback(() => {
-    setPrefill(null);
+    setCreateTarget(selectedTarget);
+    setPrefill(scope&&!canCreateKind("self.metrics",selectedTarget)?{sourceKind:"topic.daily"}:null);
     setCreateOpen(true);
-  }, []);
+  }, [selectedTarget,scope,setCreateOpen]);
 
   const openDetail = React.useCallback((job: ScheduledJobResource) => {
     detailEpoch.current++;setDetailRunId(null);setRunError(null);
@@ -1795,13 +1882,13 @@ export function AutomationsIsland({
    const current=()=>alive.current&&accountRef.current===account&&detailEpoch.current===epoch;
    setPendingRunNowId(job.id);setRunError(null);setDetailRunId(null);setDetailJob(job);setDetailOpen(true);
    try {
-    const response=await client.runScheduledJobNow({params:{jobId:job.id},query:undefined,body:{}});
+    const response=await getClient(job.accountId??null).runScheduledJobNow({params:{jobId:job.id},query:undefined,body:{}});
     if(!current())return;
     if(!response.jobRunId)throw Error('尚未取得运行记录，请查看历史运行后再试');
     setDetailRunId(response.jobRunId);
    }catch(error){if(current())setRunError(error instanceof Error?error.message:'运行未能开始，请重试');}
    finally{pendingRequests.current.delete(job.id);if(alive.current&&accountRef.current===account)setPendingRunNowId(id=>id===job.id?null:id);}
-  },[]);
+  },[getClient]);
 
   // D4「扫码绑定」恢复(SPEC §6):某 job 最近 run 是 needs_reconnect → 弹 Chromium 扫码
   // (ingestion.douyin.login,复用 calibration 现成登录链)→ 成功后 runNow 触发一次恢复。
@@ -1816,11 +1903,40 @@ export function AutomationsIsland({
 
   return (
     <section data-testid="automations-region" className="flex flex-col gap-4">
+      {scope?.groupId ? <section aria-label="账号组任务范围" className="rounded-panel border border-border bg-surface p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="mr-auto text-sm font-semibold">{groupName??"当前账号组"}</h2>
+          <label className="flex items-center gap-2 text-sm">平台
+            <select aria-label="筛选媒体平台" className="h-9 rounded-control border border-border bg-surface px-3" value={platformFilter} onChange={e=>{setPlatformFilter(e.target.value);setAccountFilter("all");}}>
+              <option value="all">全部媒体</option>
+              {[...new Set(accounts.map(a=>a.platform))].map(platform=><option key={platform} value={platform}>{PLATFORM_LABELS[platform]??platform}</option>)}
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm">账号
+            <select aria-label="筛选平台账号" className="h-9 max-w-full rounded-control border border-border bg-surface px-3" value={accountFilter} onChange={e=>setAccountFilter(e.target.value)}>
+              <option value="all">全部账号</option>
+              {accounts.filter(a=>platformFilter==="all"||a.platform===platformFilter).map(a=><option key={a.id} value={a.id}>{PLATFORM_LABELS[a.platform]??a.platform} · {a.handle}{a.status==="archived"?"（已归档）":""}</option>)}
+            </select>
+          </label>
+        </div>
+        <p className="mt-2 text-sm text-muted-foreground">共享任务保留在所有筛选中；选择具体账号后，可管理该账号的采集计划。</p>
+        <ul className="mt-3 flex flex-wrap gap-2" aria-label="组内账号计划状态">
+          {accounts.filter(a=>(platformFilter==="all"||a.platform===platformFilter)&&(accountFilter==="all"||a.id===accountFilter)).map(a=>{
+            const count=jobs.filter(j=>j.accountId===a.id&&!isSharedKind(j.sourceKind)).length;
+            const reason=a.readinessError ?? (a.status==="archived"?"已归档，保留历史任务":count?`${count} 条采集计划`:a.readiness?.planEvidence==="missing"?"尚未建立采集计划；缺少默认计划的验证证明":a.readiness?.collectAvailable===false?"尚未建立采集计划；采集能力未装配":a.readiness?.planEvidence!=="verified"||a.readiness.collectAvailable!==true?"尚未建立采集计划；资格尚未确认":"尚未建立采集计划；选择此账号可创建");
+            return <li key={a.id} className="min-w-0 rounded-control border border-border px-3 py-2 text-sm"><span className="font-medium">{PLATFORM_LABELS[a.platform]??a.platform} · {a.handle}</span><p className={a.readinessError?"text-destructive":"text-muted-foreground"}>{reason}</p>{!count&&a.readiness?.planEvidence==="missing"?<a href="/accounts" className="text-brand hover:underline">去账号绑定</a>:null}</li>;
+          })}
+          {!accounts.length?<li className="text-sm text-muted-foreground">当前账号组没有平台账号。<a href="/accounts" className="text-brand hover:underline">添加平台账号</a></li>:null}
+        </ul>
+      </section> : null}
+
       {/* 从模板入手(WorkBuddy 式)。[T-367] 透传现存 jobs 查重:已存在 kind 的卡显
           「已存在」态,点它启用/定位既有 job,不再建第二条。 */}
       <TemplateCards
         onPick={openFromTemplate}
         jobs={jobs}
+        targetAccount={selectedTarget}
+        enforceTarget={!!scope}
         onEnableExisting={enableExisting}
       />
 
@@ -1835,7 +1951,7 @@ export function AutomationsIsland({
               我的自动化
             </h2>
             <span className="rounded-full bg-surface-subtle px-2.5 py-1 text-xs text-muted-foreground">
-              共 {jobs.length} 个任务
+              {scope && visibleJobs.length !== jobs.length ? `当前 ${visibleJobs.length} / 全组 ${jobs.length} 个任务` : `共 ${jobs.length} 个任务`}
             </span>
             <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
               {jobs.filter((job) => job.enabled).length} 个已启用
@@ -1847,24 +1963,7 @@ export function AutomationsIsland({
             ) : null}
           </div>
           <span className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            {/* [T-332 S4·§6.3] 当前号 badge:明示「列表只显当前号的任务」(切号 = 切工作区)。 */}
-            {currentAccount ? (
-              <span
-                data-testid="automations-current-account"
-                data-account-id={currentAccount.id}
-                className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-medium text-brand"
-              >
-                <AtSign className="size-3" aria-hidden="true" />
-                仅当前号 {currentAccount.handle}
-              </span>
-            ) : (
-              <span
-                data-testid="automations-no-account"
-                className="inline-flex items-center gap-1 rounded-full bg-surface-subtle px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
-              >
-                未选择账号 —— 在左下角切换器选号后查看该号任务
-              </span>
-            )}
+            {scope?.groupId ? <span data-testid="automations-current-group">{groupName??"当前账号组"} · 全组任务</span> : currentAccount ? <span data-testid="automations-current-account" data-account-id={currentAccount.id}>{currentAccount.handle}</span> : <span data-testid="automations-no-account">请选择账号组查看任务</span>}
           </span>
         </div>
         <button
@@ -1879,7 +1978,7 @@ export function AutomationsIsland({
       </div>
 
       {/* 列表 */}
-      {jobs.length === 0 ? (
+      {visibleJobs.length === 0 ? (
         <div
           data-slot="automations-empty"
           className="flex flex-col items-center gap-3 rounded-card border border-dashed border-border bg-surface py-16 text-center"
@@ -1896,7 +1995,7 @@ export function AutomationsIsland({
                   任务;这里为空通常是「还没绑号/没选号」,给对应引导而不是干瘪的 0。 */}
               {currentAccount
                 ? "从上方开启作品自动同步，持续更新指标、评论、流量来源和视频内容；也可以安排每日选题。"
-                : "任务按抖音号隔离。先在左下角切换器绑定/选择一个抖音号 —— 绑号时系统会自动建好该号的日常采集任务。"}
+                : "当前筛选没有账号采集任务。共享任务仍显示；选择具体账号查看计划资格与可创建模板。"}
             </p>
           </div>
           <button
@@ -1921,14 +2020,17 @@ export function AutomationsIsland({
             <span className="text-right">操作</span>
           </div>
           <ul className="divide-y divide-border" role="list">
-            {jobs.map((job) => (
+            {visibleJobs.map((job) => (
               // [T-367] data-job-id:模板卡「已存在」态点击后滚动定位锚点。
               <li key={job.id} data-job-id={job.id} className="list-none">
                 <JobRow
                   job={job}
-                  currentAccount={currentAccount}
+                  currentAccount={scope ? (()=>{const a=accounts.find(a=>a.id===job.accountId);return a?{id:a.id,handle:`${PLATFORM_LABELS[a.platform]??a.platform} · ${a.handle}`}:null;})():currentAccount}
+                  runReadError={latestReadErrors[job.id]}
+                  toggleError={toggleErrors[job.id]}
                   latestRun={latestRuns[job.id] ?? null}
                   channelThrottle={(() => {
+                    if(scope&&accounts.find(a=>a.id===job.accountId)?.platform!=="douyin")return null;
                     const channel = channelForSourceKind(job.sourceKind);
                     return channel ? throttleByChannel[channel] ?? null : null;
                   })()}
@@ -1952,6 +2054,8 @@ export function AutomationsIsland({
         onOpenChange={setCreateOpen}
         onCreate={create}
         prefill={prefill}
+        allowedKinds={scope ? (["self.metrics","comments","topic.daily"] as SourceKind[]).filter(kind=>canCreateKind(kind,createTarget)) : undefined}
+        targetLabel={scope ? createTarget?`${PLATFORM_LABELS[createTarget.platform]??createTarget.platform} · ${createTarget.handle}`:"组内共享" : undefined}
       />
       {/* T-248 编辑弹窗:复用同一表单组件的 edit 模式,提交走 scheduledJobs.update。 */}
       <CreateJobDialog
@@ -1960,6 +2064,7 @@ export function AutomationsIsland({
         open={editOpen}
         onOpenChange={setEditOpen}
         onCreate={update}
+        targetLabel={scope ? isSharedKind(editJob?.sourceKind??"") ? "组内共享" : (()=>{const target=accounts.find(a=>a.id===editJob?.accountId);return target?`${PLATFORM_LABELS[target.platform]??target.platform} · ${target.handle}`:"账号信息未读取";})() : undefined}
       />
       <RunDetailDialog
         job={detailJob}
@@ -1968,6 +2073,7 @@ export function AutomationsIsland({
         preferredRunId={detailRunId}
         pending={pendingRunNowId===detailJob?.id}
         requestError={runError}
+        contractClient={detailClient}
       />
     </section>
   );

@@ -219,6 +219,7 @@ export const WORKSPACE_OPERATION_SCOPES = {
   "accounts.bind.status": "group",
   "accounts.bind.cancel": "group",
   "accounts.bindingCapabilities": "user",
+  "accounts.collectionPlanReadiness": "group",
   "accounts.list": "user",
   "accounts.create": "group",
   "accounts.get": "platform-account",

@@ -120,7 +120,7 @@ describe("AutomationsIsland — 列表渲染", () => {
       />,
     );
     const head = screen.getByTestId("automations-current-account");
-    expect(head.textContent).toContain("仅当前号 @主号");
+    expect(head.textContent).toContain("@主号");
     const rowBadge = screen.getByTestId("automation-account-badge");
     expect(rowBadge.textContent).toContain("@主号");
     expect(rowBadge).toHaveAttribute("data-account-id", "acct-a");
@@ -130,7 +130,7 @@ describe("AutomationsIsland — 列表渲染", () => {
     render(<AutomationsIsland jobs={[]} currentAccount={null} />);
     expect(screen.getByTestId("automations-no-account")).toBeInTheDocument();
     expect(
-      screen.getByText(/先在左下角切换器绑定\/选择一个抖音号/),
+      screen.getByText(/当前筛选没有账号采集任务/),
     ).toBeInTheDocument();
   });
 
@@ -143,7 +143,7 @@ describe("AutomationsIsland — 列表渲染", () => {
     );
     expect(
       screen.getByTestId("automation-account-badge").textContent,
-    ).toContain("其他账号");
+    ).toContain("账号信息未读取");
   });
 
   it("有作业:渲染 name / source 中文 / 友好频率(非裸 cron)/ 上次·下次", () => {
@@ -910,7 +910,7 @@ describe("RunDetailDialog — 运行详情读 runs + steps", () => {
     ]);
     render(<RunDetailDialog job={makeJob()} open onOpenChange={vi.fn()} />);
     await waitFor(() =>
-      expect(screen.getByText("需重连抖音")).toBeInTheDocument(),
+      expect(screen.getByText("需重连账号")).toBeInTheDocument(),
     );
   });
 });
@@ -928,7 +928,7 @@ describe("T-032b — 采集反馈结果文案分档", () => {
     // 诚实:状态徽标是「完成」,不是失败/需重连
     expect(screen.getByText("完成")).toBeInTheDocument();
     expect(screen.queryByText("失败")).not.toBeInTheDocument();
-    expect(screen.queryByText("需重连抖音")).not.toBeInTheDocument();
+    expect(screen.queryByText("需重连账号")).not.toBeInTheDocument();
   });
 
   it("succeeded 且 itemsNew>0 → 「✅ 新增 N 条」", async () => {
@@ -956,7 +956,7 @@ describe("T-032b — 采集反馈结果文案分档", () => {
       expect(screen.getByText(/需重连账号 · 去扫码绑定/)).toBeInTheDocument(),
     );
     // 选中该 run → error 文案用琥珀底(data-slot=automation-run-error),不是红失败色
-    fireEvent.click(screen.getByText("需重连抖音"));
+    fireEvent.click(screen.getByText("需重连账号"));
     await waitFor(() => {
       const errEl = document.querySelector(
         '[data-slot="automation-run-error"]',

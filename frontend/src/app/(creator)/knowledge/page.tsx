@@ -1,4 +1,4 @@
-/** 知识库默认为真实资料书架；课程和高级视图保留原契约与深链。 */
+/** 统一知识工作区；各内容视图沿既有真实合同按需加载。 */
 import {KnowledgeLibrary} from "@/features/knowledge/knowledge-library";
 import {readLibrary,type LibraryReader} from "@/features/knowledge/knowledge-library-data";
 import { KnowledgePage } from "@/features/knowledge/knowledge-page";

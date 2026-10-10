@@ -9104,6 +9104,183 @@
           "git diff --check"
         ]
       }
+    },
+    "T-1199": {
+      "task_id": "T-1199",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/features/t1199-bound-platform-scheduled-visibility.md",
+        "frontend/src/features/automations/**",
+        "backend/src/modules/scheduling/**",
+        "backend/src/application/scheduling/**",
+        "backend/src/modules/accounts/**",
+        "backend/src/modules/account-groups/**",
+        "backend/src/modules/ai-runtime/scheduled-collection-scheduler.ts",
+        "contract/src/operations/scheduling.ts",
+        "contract/src/resources/scheduling.ts",
+        "backend/src/modules/platform-account/**",
+        "frontend/src/server/persistence-client.ts",
+        "contract/src/operations/platform-accounts.ts",
+        "contract/src/resources/platform-accounts.ts"
+      ],
+      "write_set": [
+        "docs/features/t1199-bound-platform-scheduled-visibility.md",
+        "docs/verification/t1199/**",
+        "orchestrator/context/T-1199.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "contract/src/resources/platform-accounts.ts",
+        "contract/src/operations/platform-accounts.ts",
+        "contract/src/index.ts",
+        "backend/src/modules/platform-account/platform-account.service.ts",
+        "backend/src/modules/platform-account/platform-account.transport.ts",
+        "backend/src/modules/platform-account/collection-plan-readiness.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/app/(creator)/automations/page.tsx",
+        "frontend/src/features/automations/automations-page.tsx",
+        "frontend/src/features/automations/automations-island.tsx",
+        "frontend/src/features/automations/automations-page.test.tsx",
+        "frontend/src/features/automations/automations-group-scope.test.tsx",
+        "frontend/src/features/automations/automations-island.test.tsx",
+        "contract/src/cli-policy.ts",
+        "contract/src/workspace-operation-scope.ts",
+        "contract/tests/cli-policy.test.ts",
+        "contract/tests/workspace-operation-scope.test.ts",
+        "frontend/src/features/automations/automations-edit.test.tsx",
+        "frontend/src/lib/request-context.server.test.ts",
+        "backend/src/modules/scheduling/scheduling.service.test.ts"
+      ],
+      "verify": {
+        "implementation": [
+          "git diff --check"
+        ]
+      },
+      "scope_note": "当前SPEC独评PASS SHA 5c945016，root串行精确写集；只读计划资格和全组呈现，不改变私有权限、历史任务或自动执行。"
+    },
+    "T-1200": {
+      "task_id": "T-1200",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "BACKLOG.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/features/t1200-knowledge-workspace-redesign.md",
+        "frontend/src/features/knowledge/**",
+        "frontend/src/app/(creator)/knowledge/**",
+        "frontend/src/styles/tokens.css",
+        "frontend/src/components/**",
+        "backend/src/modules/knowledge/**",
+        "backend/src/application/knowledge.ts",
+        "contract/src/operations/knowledge.ts",
+        "contract/src/resources/knowledge.ts"
+      ],
+      "write_set": [
+        "docs/features/t1200-knowledge-workspace-redesign.md",
+        "docs/verification/t1200/**",
+        "orchestrator/context/T-1200.md",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/process/modules.config.json",
+        "frontend/src/features/knowledge/knowledge-workspace-header.tsx",
+        "frontend/src/features/knowledge/knowledge-library.tsx",
+        "frontend/src/features/knowledge/knowledge-page.tsx",
+        "frontend/src/features/knowledge/knowledge-interactive-region.tsx",
+        "frontend/src/features/knowledge/knowledge-page.test.tsx",
+        "frontend/src/features/knowledge/knowledge-workspace-header.test.tsx",
+        "frontend/src/features/knowledge/knowledge-experience-merge.test.tsx",
+        "frontend/src/features/knowledge/knowledge-tag-filter.test.tsx",
+        "frontend/src/app/(creator)/knowledge/page.tsx",
+        "frontend/src/app/(creator)/shell-router.tsx",
+        "frontend/src/app/(creator)/shell-router.test.ts"
+      ],
+      "verify": {
+        "implementation": [
+          "git diff --check",
+          "pnpm --dir frontend exec vitest run src/features/knowledge src/app/\\(creator\\)/shell-router.test.ts"
+        ]
+      },
+      "scope_note": "用户已授权整体知识工作区重设计，当前SPEC独评PASS；主会话串行，精确产品写集11文件，不改服务或数据所有权。"
+    },
+    "T-1201": {
+      "task_id": "T-1201",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1201-knowledge-graph-error-contract.md",
+        "frontend/src/features/knowledge/knowledge-graph-view.tsx",
+        "frontend/src/lib/ai-error-humanize.ts"
+      ],
+      "write_set": [
+        "frontend/src/features/knowledge/knowledge-graph-view.test.tsx",
+        "docs/features/t1201-knowledge-graph-error-contract.md",
+        "docs/verification/t1201/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json"
+      ],
+      "verify": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/features/knowledge/knowledge-graph-view.test.tsx"
+        ]
+      },
+      "scope_note": "独评PASS e9b1c533，只校准确切既有人话测试，保原400fixture/guard/无写；root串行。"
+    },
+    "T-1202": {
+      "task_id": "T-1202",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1202-automation-cadence-error-contract.md",
+        "frontend/src/features/automations/automations-island.tsx"
+      ],
+      "write_set": [
+        "frontend/src/features/automations/automations-edit.test.tsx",
+        "docs/features/t1202-automation-cadence-error-contract.md",
+        "docs/verification/t1202/**",
+        "BACKLOG.md",
+        "PROJECT.md",
+        "orchestrator/events.ndjson",
+        "orchestrator/process/modules.config.json"
+      ],
+      "verify": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/features/automations/automations-edit.test.tsx"
+        ]
+      },
+      "scope_note": "独评PASS 2268aac2，仅既有确切人话测试，保复杂排期锁/用户重选/精确新cron/原保存次数，root串行。"
     }
   }
 }

@@ -40,6 +40,7 @@ import {
 } from "@/lib/http-transport";
 import { describeUserError } from "@/lib/ai-error-humanize";
 import { openCopilotLocally } from "@/lib/copilot-navigation";
+import { KnowledgeWorkspaceHeader } from "./knowledge-workspace-header";
 import { KnowledgeDetailPreview } from "./knowledge-detail-preview";
 import { KnowledgeDumpZone, distillCopilotHref } from "./knowledge-dump-zone";
 import {
@@ -117,7 +118,13 @@ function KnowledgeLibraryWorkspace({
   }
   const [moreOpen, setMoreOpen] = React.useState(false);
   const [directoryOpen, setDirectoryOpen] = React.useState(false);
-  const [modal, setModal] = React.useState<Modal>(null);
+  const [modal, setModal] = React.useState<Modal>(() => search.get("add") === "1" ? "add" : null);
+  React.useEffect(() => {
+    if (search.get("add") !== "1") return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("add");
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+  }, [search]);
   const [modalTarget, setModalTarget] = React.useState<LibraryItem | null>(
     null,
   );
@@ -432,51 +439,14 @@ function KnowledgeLibraryWorkspace({
   return (
     <main
       data-page="knowledge-library"
-      className="flex min-w-0 flex-col gap-5 text-sm"
+      className="flex h-full min-h-0 min-w-0 flex-col gap-4 text-sm"
     >
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="mb-1 flex items-center gap-2 text-muted-foreground">
-            <BookOpen className="size-4" />
-            知识库
-          </div>
-          <h1 className="text-xl font-semibold tracking-tight">资料书架</h1>
-          <p className="mt-1 text-muted-foreground">
-            保存完整资料，找到原文，带到创作里。
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <details className="relative">
-            <summary className="cursor-pointer rounded-md border border-border bg-surface px-3 py-2">
-              更多知识视图
-            </summary>
-            <nav className="absolute right-0 z-20 mt-2 flex w-52 flex-col gap-1 rounded-xl border border-border bg-surface p-2 shadow-lg">
-              <Link
-                className="rounded-md p-2 hover:bg-muted"
-                href="/knowledge?view=course"
-              >
-                IP 实战课
-              </Link>
-              <Link
-                className="rounded-md p-2 hover:bg-muted"
-                href="/knowledge?view=advanced"
-              >
-                经验、关系图与标签
-              </Link>
-            </nav>
-          </details>
-          <Button
-            ref={addButton}
-            size="lg"
-            disabled={busy}
-            onClick={() => open("add")}
-          >
-            <Plus />
-            添加资料
-          </Button>
-        </div>
-      </header>
-      <div className="grid min-h-[580px] min-w-0 overflow-hidden rounded-2xl border border-border bg-surface md:h-[calc(100dvh-230px)] md:min-h-[460px] md:grid-cols-[150px_240px_minmax(0,1fr)] xl:grid-cols-[180px_300px_minmax(0,1fr)]">
+      <KnowledgeWorkspaceHeader activeView="library" action={
+        <Button ref={addButton} disabled={busy} onClick={() => open("add")}>
+          <Plus />添加资料
+        </Button>
+      } />
+      <div className="grid min-h-0 min-w-0 flex-1 overflow-y-auto rounded-panel border border-border bg-surface md:overflow-hidden md:grid-cols-[160px_280px_minmax(0,1fr)] xl:grid-cols-[184px_320px_minmax(0,1fr)]">
         <aside
           aria-label="资料目录"
           className="flex flex-col gap-5 overflow-y-auto border-b border-border bg-surface-subtle/40 p-4 md:border-r md:border-b-0"
@@ -580,7 +550,7 @@ function KnowledgeLibraryWorkspace({
         </aside>
         <section
           aria-label="资料列表"
-          className="flex min-h-0 min-w-0 flex-col border-b border-border md:border-r md:border-b-0"
+          className="flex max-h-96 min-h-64 min-w-0 flex-col border-b border-border md:max-h-none md:min-h-0 md:border-r md:border-b-0"
         >
           <div className="border-b border-border p-4">
             <div className="mb-3 flex items-center justify-between gap-2">
@@ -717,11 +687,11 @@ function KnowledgeLibraryWorkspace({
         </section>
         <section
           aria-label="资料原文"
-          className="min-h-0 min-w-0 overflow-y-auto"
+          className="min-h-80 min-w-0 md:min-h-0 md:overflow-y-auto"
         >
           {selected ? (
             <>
-              <header className="border-b border-border p-5 lg:p-6">
+              <header className="sticky top-0 z-10 border-b border-border bg-surface p-5 lg:p-6">
                 <p className="mb-2 text-muted-foreground">
                   {libraryTypeLabel(selected.knowledgeType)} ·{" "}
                   {selected.sourceMetadata?.fileName
@@ -824,7 +794,7 @@ function KnowledgeLibraryWorkspace({
                   </Link>
                 )}
               </header>
-              <div className="p-5 lg:p-6">
+              <div className="mx-auto w-full max-w-4xl p-5 lg:p-6">
                 <KnowledgeDetailPreview
                   key={`${selected.id}:${selected.currentRevisionId}:${revision}`}
                   knowledgeId={selected.id}
@@ -852,8 +822,7 @@ function KnowledgeLibraryWorkspace({
           )}
         </section>
       </div>
-      <div className="min-h-6" aria-live="polite">
-        {" "}
+      <div className="shrink-0 empty:hidden" aria-live="polite">
         {notice && (
           <p role="status" className="text-success">
             {notice}

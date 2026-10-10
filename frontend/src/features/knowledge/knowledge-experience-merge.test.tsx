@@ -342,7 +342,7 @@ describe("[T-119] 分页控件渲染", () => {
       '[data-slot="recent-pagination-next"]',
     );
     expect(next).not.toBeNull();
-    expect(next!.getAttribute("href")).toBe("/knowledge?page=2");
+    expect(next!.getAttribute("href")).toBe("/knowledge?view=advanced&page=2");
     cleanup();
 
     // 单页(5 条)→ 无分页控件。

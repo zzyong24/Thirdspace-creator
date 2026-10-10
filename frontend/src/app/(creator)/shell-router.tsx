@@ -78,6 +78,7 @@ interface RouteResolution {
  */
 const CONTENT_FILL_ROUTES: ReadonlySet<string> = new Set([
   "/topics",
+  "/knowledge",
   "/positioning",
   "/intelligence",
 ]);

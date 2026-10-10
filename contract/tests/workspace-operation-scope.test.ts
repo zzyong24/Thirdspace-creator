@@ -38,3 +38,9 @@ describe("账号组操作归属契约",()=>{
   expect(scopes["settings.reporting.get"]).toBe("user");
  });
 });
+
+it("T1199 计划资格属于组，真实账号成员由后端再次验证",()=>{
+ expect(scopes["accounts.collectionPlanReadiness"]).toBe("group");
+ expect(scopes["accounts.get"]).toBe("platform-account");
+ expect(scopes["platforms.collections.start"]).toBe("platform-account");
+});

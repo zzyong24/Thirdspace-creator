@@ -203,7 +203,7 @@ describe("KNOW-13 标签筛选", () => {
       '[data-slot="knowledge-tag-filter-clear"]',
     );
     expect(clear).not.toBeNull();
-    expect(clear!.getAttribute("href")).toBe("/knowledge");
+    expect(clear!.getAttribute("href")).toBe("/knowledge?view=advanced");
 
     // 列表只显该标签条目。
     const rows = container.querySelectorAll(
@@ -218,7 +218,7 @@ describe("KNOW-13 标签筛选", () => {
     );
     expect(chipLink).not.toBeNull();
     expect(chipLink!.getAttribute("href")).toBe(
-      `/knowledge?tag=${encodeURIComponent("选题")}`,
+      `/knowledge?view=advanced&tag=${encodeURIComponent("选题")}`,
     );
   });
 

@@ -350,3 +350,5 @@ export * from "./resources/work-creation";
 export * from "./resources/ai-public-message";
 
 export * from "./resources/platform-native-reports";
+
+export {accountCollectionPlanReadinessResource, type AccountCollectionPlanReadinessResource} from "./resources/platform-accounts";

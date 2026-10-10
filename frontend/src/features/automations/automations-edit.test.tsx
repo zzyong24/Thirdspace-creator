@@ -226,10 +226,9 @@ describe("T-248 — 任务编辑弹窗", () => {
     await waitFor(() =>
       expect(screen.getByText("编辑采集任务")).toBeInTheDocument(),
     );
-    // 降级提示(明示原 cron)+ 保存禁用
+    // 既有人话明确要求重新选择；未选择前保存禁用
     const notice = screen.getByTestId("automation-cadence-unresolved");
-    expect(notice.textContent).toContain("无法反解");
-    expect(notice.textContent).toContain("0 9 * * 1,3");
+    expect(notice.textContent).toBe("当前执行计划无法在这里编辑，请重新选择执行时间后保存。");
     const saveBtn = screen
       .getByText("保存修改")
       .closest("button") as HTMLButtonElement;
@@ -332,4 +331,34 @@ describe("T-248 — 模板死分支删除(D8a 已翻真)", () => {
     );
     expect(onPick).toHaveBeenCalledTimes(1);
   });
+});
+
+it('新开另一表单清除旧错误，每次明确重试清旧错误并保当前输入',async()=>{
+ const onCreate=vi.fn().mockRejectedValueOnce(new Error('第一次保存失败')).mockResolvedValueOnce(undefined);
+ const props={open:true,onOpenChange:vi.fn(),onCreate,mode:'edit' as const,job:makeJob()};
+ const view=render(<CreateJobDialog {...props}/>);
+ fireEvent.click(screen.getByRole('button',{name:'保存修改'}));
+ await waitFor(()=>expect(screen.getByRole('alert')).toHaveTextContent('第一次保存失败'));
+ view.rerender(<CreateJobDialog {...props} open={false}/>);
+ view.rerender(<CreateJobDialog {...props} job={makeJob({id:'job-2',name:'另一个目标'})}/>);
+ await waitFor(()=>expect(screen.queryByRole('alert')).toBeNull());
+ fireEvent.click(screen.getByRole('button',{name:'保存修改'}));
+ await waitFor(()=>expect(onCreate).toHaveBeenCalledTimes(2));
+ expect(onCreate.mock.calls[1]![0].name).toBe('另一个目标');
+});
+
+it.each(['resolve','reject'] as const)('外部关闭后换目标重开，旧请求%s不关新表单或回写错误',async outcome=>{
+ let resolve!:()=>void,reject!:(error:Error)=>void;
+ const pending=new Promise<void>((yes,no)=>{resolve=yes;reject=no;});
+ const onCreate=vi.fn(()=>pending),onOpenChange=vi.fn();
+ const props={open:true,onOpenChange,onCreate,mode:'edit' as const,job:makeJob()};
+ const view=render(<CreateJobDialog {...props}/>);
+ fireEvent.click(screen.getByRole('button',{name:'保存修改'}));
+ await waitFor(()=>expect(onCreate).toHaveBeenCalledOnce());
+ view.rerender(<CreateJobDialog {...props} open={false}/>);
+ view.rerender(<CreateJobDialog {...props} job={makeJob({id:'new-target',name:'新的目标'})}/>);
+ if(outcome==='resolve')resolve();else reject(new Error('旧目标迟到失败'));
+ await waitFor(()=>expect(screen.getByRole('button',{name:'保存修改'})).toBeEnabled());
+ expect(onOpenChange).not.toHaveBeenCalled();expect(screen.queryByRole('alert')).toBeNull();
+ expect(screen.getByDisplayValue('新的目标')).toBeInTheDocument();
 });

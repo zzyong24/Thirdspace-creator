@@ -6,6 +6,7 @@ describe("isContentFillRoute", () => {
   it("opts the multi-column workbench routes into fixed-height fill mode", () => {
     expect(isContentFillRoute("/topics")).toBe(true);
     expect(isContentFillRoute("/positioning")).toBe(true);
+    expect(isContentFillRoute("/knowledge")).toBe(true);
   });
 
   it("leaves simple pages on the default (PageScrollArea) whole-page scroll", () => {

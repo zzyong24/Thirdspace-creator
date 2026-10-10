@@ -420,3 +420,19 @@ describe("scheduling service", () => {
     await expect(svc.getRunScheduledFor(ctxA,'missing-run')).rejects.toBeInstanceOf(OwnershipError);
   });
 });
+
+it('T1199归档成员历史沿真实纯组守卫读取，跨组与跨用户仍拒绝',async()=>{
+ const {db,client}=await createDb();try{
+  const f=await realGroupFixture(db);
+  const job=await f.owner.createJob(f.b,{name:'归档前任务',sourceKind:'self.metrics',schedule:'5 */2 * * *'});
+  const run=await f.owner.createRun(f.b,{jobId:job.id});
+  await f.accounts.archiveAccount(f.b,f.b.accountId!);
+  const runs=await f.owner.listRunsByJob(f.groupOnly,job.id,{limit:50,offset:0});
+  expect(runs.rows.map(row=>row.id)).toEqual([run.id]);
+  expect(await f.owner.getRun(f.groupOnly,run.id)).toEqual(run);
+  for(const bad of [{...f.groupOnly,groupId:'foreign'},{...f.groupOnly,userId:'foreign'}]){
+   await expect(f.owner.listRunsByJob(bad,job.id,{limit:50,offset:0})).rejects.toBeInstanceOf(OwnershipError);
+   await expect(f.owner.getRun(bad,run.id)).rejects.toBeInstanceOf(OwnershipError);
+  }
+ }finally{await client.close();}
+});

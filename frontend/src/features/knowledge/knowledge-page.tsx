@@ -32,7 +32,7 @@
  */
 
 import * as React from "react";
-import Link from "next/link";
+import { KnowledgeWorkspaceHeader } from "./knowledge-workspace-header";
 
 import {
   EmptyState,
@@ -50,14 +50,8 @@ import { KnowledgeDumpZone } from "./knowledge-dump-zone";
 import { KnowledgeInteractiveRegion } from "./knowledge-interactive-region";
 import { KnowledgeCourseReader } from "./knowledge-course-reader";
 import { getBuiltInCourseLesson } from "./built-in-ip-course.server";
-import {
-  KnowledgeFileWorkspace,
-  type KnowledgeWorkspaceVm,
-} from "./knowledge-file-workspace";
+import type { KnowledgeWorkspaceVm } from "./knowledge-file-workspace";
 
-// [T-546] 文件工作区能力与数据模型先完整保留，只暂停页面入口；后续 UI 迭代时
-// 直接恢复此开关，不删除组件、不改知识库数据。
-const SHOW_KNOWLEDGE_FILE_WORKSPACE = false;
 // [T-118b gate-F4]「记一条经验」入口并入知识库(与已验证经验库同处)。复用经验
 // 模块的 Copilot 深链入口组件(client,走 ?copilot=open&surface=experience 就地
 // 开浮层,与页面路径解耦)—— 手录一条经验走同一 learning.capture 链路。
@@ -198,10 +192,10 @@ export async function KnowledgePage({
         data-knowledge-id="knowledge-root"
         data-knowledge-view="course"
         data-page-state="default"
-        className="flex flex-col gap-5"
+        className="flex h-full min-h-0 flex-col gap-4"
       >
-        <KnowledgeSectionNav activeView="course" />
-        <KnowledgeCourseReader lesson={lesson} />
+        <KnowledgeWorkspaceHeader activeView="course" />
+        <div className="min-h-0 flex-1 overflow-y-auto"><KnowledgeCourseReader lesson={lesson} /></div>
       </main>
     );
   }
@@ -230,71 +224,36 @@ export async function KnowledgePage({
       data-page="knowledge"
       data-knowledge-id="knowledge-root"
       data-page-state={state}
-      className="flex flex-col gap-section-gap"
+      className="flex h-full min-h-0 flex-col gap-4"
     >
-      <KnowledgeSectionNav activeView="knowledge" />
-      {/* T-062c 知识倾倒场:录入主入口(AI 归类确认门 + 手动补录),页面顶部常驻。
-          空库也要能倒(否则空账号无录入口),仅 loading/error 不渲。 */}
-      {state === "default" || state === "empty" ? <KnowledgeDumpZone /> : null}
-      {SHOW_KNOWLEDGE_FILE_WORKSPACE &&
-      (state === "default" || state === "empty") &&
-      vm.workspace ? (
-        <KnowledgeFileWorkspace workspace={vm.workspace} />
-      ) : null}
-      {/* T-092 评论回流:倾倒场旁常驻入口(三级去噪门;signals 0 行诚实空态引导采集)。 */}
-      {state === "default" || state === "empty" ? (
-        <KnowledgeCommentBackflow />
-      ) : null}
+      <KnowledgeWorkspaceHeader activeView="advanced" />
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
       {state === "loading" ? (
         <LoadingState label="正在加载知识库…" rows={5} />
       ) : state === "error" ? (
         <ErrorState error={vm.error} />
       ) : state === "empty" ? (
-        <EmptyState
-          title="这个账号的知识库还是空的"
-          // [T-332 S4·§6.2] C-01 A 案:知识库按账号独立 —— 空态明示「切号 = 换库」,
-          // 录入入口(倾倒场)已常驻上方,这里指过去。
-          description="知识库按账号独立:每个抖音号一套库,切号即切库。把这个号的笔记、金句、逐字稿倒进上方的倾倒场,AI 自动归类后确认入库。"
-        />
+        <><KnowledgeCaptureTools /><EmptyState
+          title="这个工作区还没有资料或经验"
+          description="添加资料，或展开录入与整理，记录一条创作经验。"
+        /></>
       ) : (
-        <KnowledgeInteractiveRegion viewModel={vm} />
+        <KnowledgeInteractiveRegion viewModel={vm} captureTools={<KnowledgeCaptureTools />} />
       )}
+      </div>
     </main>
   );
 }
 
-function KnowledgeSectionNav({
-  activeView,
-}: {
-  readonly activeView: "course" | "knowledge";
-}) {
+/** 原录入器持续挂载，收起不会清草稿、候选或任务状态。 */
+function KnowledgeCaptureTools() {
   return (
-    <nav
-      aria-label="知识库视图"
-      className="flex w-fit items-center gap-1 rounded-full border border-stone-200 bg-white p-1 shadow-sm"
-    >
-      <Link
-        href="/knowledge?view=knowledge"
-        aria-current={activeView === "knowledge" ? "page" : undefined}
-        className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-          activeView === "knowledge"
-            ? "bg-stone-900 text-white"
-            : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
-        }`}
-      >
-        我的知识
-      </Link>
-      <Link
-        href="/knowledge?view=course"
-        aria-current={activeView === "course" ? "page" : undefined}
-        className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-          activeView === "course"
-            ? "bg-stone-900 text-white"
-            : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
-        }`}
-      >
-        IP 实战课
-      </Link>
-    </nav>
+    <details className="group min-w-0 shrink-0 open:basis-full" data-slot="knowledge-capture-tools">
+      <summary className="w-fit cursor-pointer rounded-control border border-border bg-surface px-3 py-2 text-sm font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">录入与整理</summary>
+      <div className="mt-3 max-h-[50dvh] overflow-y-auto rounded-panel border border-border bg-surface p-4">
+        <KnowledgeDumpZone />
+        <div className="mt-3"><KnowledgeCommentBackflow /></div>
+      </div>
+    </details>
   );
 }

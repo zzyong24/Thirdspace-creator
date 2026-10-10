@@ -30,7 +30,7 @@
  */
 
 import * as React from "react";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within, fireEvent } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
@@ -85,13 +85,13 @@ async function renderKnowledge(overrides: Partial<KnowledgePageProps> = {}) {
 }
 
 describe("KnowledgePage", () => {
-  it("知识库排在第一个 Tab，IP 实战课排在第二个 Tab", async () => {
+  it("资料、经验和课程使用同一导航且不携带其他视图参数", async () => {
     await renderKnowledge();
     const tabs = screen.getByRole("navigation", { name: "知识库视图" });
     const links = Array.from(tabs.querySelectorAll("a")).map((node) =>
       node.textContent?.trim(),
     );
-    expect(links).toEqual(["我的知识", "IP 实战课"]);
+    expect(links).toEqual(["资料库", "经验与关联", "IP 实战课"]);
   });
   afterEach(() => {
     cleanup();
@@ -152,13 +152,13 @@ describe("KnowledgePage", () => {
     ).not.toBeNull();
   });
 
-  it("renders exactly four KnowledgeMetric cards in a single row", async () => {
+  it("呈现四项真实计数且不再用四张大卡占阅读区", async () => {
     const { container } = await renderKnowledge();
     const row = container.querySelector(
       '[data-slot="knowledge-metrics"]',
     ) as HTMLElement;
     expect(row).not.toBeNull();
-    const cards = row.querySelectorAll('[data-slot="metric-card"]');
+    const cards = row.querySelectorAll('[data-slot="knowledge-count"]');
     expect(cards).toHaveLength(4);
   });
 
@@ -171,15 +171,15 @@ describe("KnowledgePage", () => {
     expect(row.textContent ?? "").not.toContain("规划中");
   });
 
-  it("renders the three-column KnowledgeGrid (Category / Table / InsightRail) in spec order", async () => {
+  it("资料列表在先，整理侧栏保留分类和原洞察", async () => {
     const { container } = await renderKnowledge();
     const grid = container.querySelector(
       '[data-slot="knowledge-grid"]',
     ) as HTMLElement;
     expect(grid).not.toBeNull();
     const expectedSlots = [
-      "category-panel",
       "recent-knowledge-table",
+      "category-panel",
       "insight-rail",
     ];
     const orderedNodes = expectedSlots.map((slot) =>
@@ -251,7 +251,9 @@ describe("KnowledgePage", () => {
     const { container } = await renderKnowledge({
       viewModel: { ...base, graph },
     });
-    // 力导向关系图视图已复原(探索主面)。
+    // 默认先看真实列表，图谱切换仍可用。
+    expect(container.querySelector('[data-slot="recent-knowledge-table"]')).not.toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: "关系图" }));
     expect(
       container.querySelector('[data-slot="knowledge-graph-view"]'),
     ).not.toBeNull();

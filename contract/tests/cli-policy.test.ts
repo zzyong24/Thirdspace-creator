@@ -44,3 +44,7 @@ describe("T-843 CLI operation policy", () => {
     expect(policies['analytics.comments.retry']).toMatchObject({effect:'write',confirmation:'apply',asyncTask:false,idempotency:'gateway'});
   });
 });
+
+it("T1199 默认计划资格为公开只读且无确认或异步任务",()=>{
+ expect(CLI_OPERATION_POLICIES["accounts.collectionPlanReadiness"]).toMatchObject({effect:"read",confirmation:"none",asyncTask:false,idempotency:"not_applicable"});
+});

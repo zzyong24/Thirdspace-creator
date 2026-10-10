@@ -9,6 +9,12 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1199|查明并修复账号组内其他已绑定媒体定时任务不可见|🔨 待办|—|待验|[SPEC](docs/features/t1199-bound-platform-scheduled-visibility.md)|用户本轮安装验收：其他已绑定媒体定时任务未显示。先公开只读核真实绑定、任务及页面筛选，再限定修复；保账号归属、原任务ID/排期/历史，不重开暂停研究或自动重复采集。|
+|T-1200|整体重设计知识库工作区并统一新旧操作入口|🔨 待办|—|待验|[SPEC](docs/features/t1200-knowledge-workspace-redesign.md)|用户明确拒绝新旧UI拼接、未铺满与当前排版，要求整体重新设计。沿已认可原版品牌及oil-ui-pro，统一资料浏览、检索、阅读、录入、引用与经验入口，真实视觉/操作验证，不迁移或删除现有知识数据。|
+|T-1201|核对知识图谱错误提示回归的旧原始异常断言|🔨 待办|—|—|[实际诊断](docs/features/t1201-knowledge-graph-error-contract.md)|T1200实际知识回归19文件148例中147PASS、1FAIL；原图谱测试期望原始无LLM凭据字符串，当前组件显示人话错误。保失败，先核真实错误合同，不削弱断言或改产品洗绿。|
+|T-1202|核对自动化复杂排期编辑的旧术语断言|🔨 待办|—|—|[实际诊断](docs/features/t1202-automation-cadence-error-contract.md)|T1199自动化原回归113PASS6FAIL，五例为本任务多平台文案已授权变化，另复杂cron旧期待无法反解而实际已有用户友好说明。保失败，先核合同，不改时间或删除保存保护。|
+|T-1203|消除自动化既有React编译与effect静态检查欠债|📋 待办|—|待验|[实际诊断](docs/features/t1203-automation-react-lint-debt.md)|T1199实lint触发旧effects/ref等错误，HEAD stdin基线也失败。保真实结果，新增依赖/声明先修，既有静态债单列；不得关闭规则或删切组/轮询保护洗绿。|
+|T-1204|核对本轮全局对账29项失败及新增触发项|📋 待办|—|—|[实际诊断](docs/features/t1204-current-reconcile-failures.md)|T1199/T1200本轮完整reconcile --concise实际exit1，29ERROR/0WARN；输出仅保前5项，其余24未打印，不能猜成旧24项。保原日志与统计，核看板过大、旧receipt及LED041/057等真实失败，不修改门卫或洗绿；父任务仍待验。|
 |T-1080|汇总全部本地worktree代码到main并清理闲置目录后构建|✅ 待办|—|—|[SPEC](docs/features/t1080-local-main-worktree-consolidation.md)|用户2026-10-08明确授权全部代码本地合并至主分支、清理不用的worktree再构建，构建无需备份。先逐树核HEAD/未提交/使用情况并保留Git来源，解决冲突和验证后只删除已保留代码且未占用的目录；保留活跃会话、真实数据与既有备份，不push/tag/发布。|
 |T-1198|校准归档检查的显式隔离PG验收环境|✅ 待办|—|—|[实际诊断](docs/features/t1198-isolated-archive-gate-environment.md)|T1080完整reconcile新增LED052缺环境；只接既有55422隔离PG，保原失败，原三套与归档PG族不能skip，不改产品/断言或用户库。|
 |T-1197|核对旧外部MCP窄权限配对来源与当前账号组兼容|📋 待办|—|待验|[SPEC](docs/features/t1197-external-agent-pairing-source-convergence.md)|T1080独立分支审计实发现71d2cc77未投用配对源码缺口；原来源与27文件保留，先核授权/账号组/凭据及0101同号迁移，不恢复已淘汰ACP、不假称全CLI等价窄grant。|

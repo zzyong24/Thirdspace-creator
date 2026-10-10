@@ -75,6 +75,7 @@ const READ_OPERATIONS = [
   "accounts.get",
   "accounts.list",
   "accounts.bindingCapabilities",
+  "accounts.collectionPlanReadiness",
   "accounts.bind.status",
   "ai.conversations.list",
   "ai.conversations.messages.list",

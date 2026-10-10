@@ -24,6 +24,7 @@ export default async function Page() {
       // [T-332 S4] 当前号 id 来自 RSC ctx(S3 current-account cookie)——页面据此渲
       // 「当前号 badge」并把作业列表明确标注为「仅当前号」(§6.3)。
       currentAccountId={session.ctx.accountId ?? null}
+      scope={{groupId:session.ctx.groupId ?? null,accountId:session.ctx.accountId ?? null}}
     />
   );
 }
