@@ -1,0 +1,27 @@
+{
+  "recordedAt": "2026-10-10T05:08:25.422591+00:00",
+  "deletedOldPackagingDirectories": [
+    {
+      "path": "/Users/zyongzhu/Applications/CreatorOS-backups",
+      "deleted": true,
+      "logicalBytes": 6148,
+      "fileCount": 1,
+      "reason": "已核内容只为空目录或.DS_Store，旧测试包装遗留"
+    },
+    {
+      "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0-34935220088",
+      "deleted": true,
+      "logicalBytes": 0,
+      "fileCount": 0,
+      "reason": "已核内容只为空目录或.DS_Store，旧测试包装遗留"
+    }
+  ],
+  "deletedDirectoryCount": 2,
+  "logicalBytesRemoved": 6148,
+  "oldInstalledAppReplaced": true,
+  "keptCurrentDmg": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "keptInstalledApp": "/Applications/CreatorOS.app",
+  "keptCurrentBuildArtifacts": true,
+  "dataLogsEvidenceSourcesNotDeleted": true,
+  "otherOldInstallersFoundInInventory": false
+}

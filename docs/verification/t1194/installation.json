@@ -1,0 +1,75 @@
+{
+  "startedAt": "2026-10-10T05:06:10.290161+00:00",
+  "launchedAt": "2026-10-10T05:06:14.941172+00:00",
+  "finishedAt": "2026-10-10T05:06:15.156372+00:00",
+  "sourceHead": "4b10e89e226cd16ed12744d6c885931d3a09f0dd",
+  "artifactSha256": "d91079d6542407a6f5c3232f35cd815cfaff259c51fa9e40e5ccf030eb10a1d1",
+  "target": "/Applications/CreatorOS.app",
+  "version": "1.2.0",
+  "shellSha256": "6660986e09570348f8b5cf87e0f3385a5c922636c5742780fbf83be65d53f6bf",
+  "runtimeTarSha256": "23e72d02e3ff2c2a00a74801b00e8a375d5689e19517bccaabcc9d637b44da1f",
+  "oldShellSha256": "acfec3e9b648396793b1f8ba3c5e9cb982b82f93b0603b1395d5bfabca89ceac",
+  "oldRuntimeTarSha256": "8288886e315d4c53dcc76661177199b2ff5f8b12d1f39248040cfef39ea4f710",
+  "originalNativePids": [],
+  "newNativePids": [
+    46836
+  ],
+  "noBackup": true,
+  "forceKill": false,
+  "commands": [
+    {
+      "argv": [
+        "ditto",
+        "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app",
+        "/Applications/.CreatorOS.app.installing-t1194-46808"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.7135397079982795,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "codesign",
+        "--verify",
+        "--deep",
+        "--strict",
+        "--verbose=2",
+        "/Applications/.CreatorOS.app.installing-t1194-46808"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.4855611249804497,
+      "stdout": "",
+      "stderr": "--prepared:/Applications/.CreatorOS.app.installing-t1194-46808/Contents/MacOS/creatoros-server\n--validated:/Applications/.CreatorOS.app.installing-t1194-46808/Contents/MacOS/creatoros-server\n/Applications/.CreatorOS.app.installing-t1194-46808: valid on disk\n/Applications/.CreatorOS.app.installing-t1194-46808: satisfies its Designated Requirement\n"
+    },
+    {
+      "argv": [
+        "codesign",
+        "--verify",
+        "--deep",
+        "--strict",
+        "--verbose=2",
+        "/Applications/CreatorOS.app"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.4591272920370102,
+      "stdout": "",
+      "stderr": "--prepared:/Applications/CreatorOS.app/Contents/MacOS/creatoros-server\n--validated:/Applications/CreatorOS.app/Contents/MacOS/creatoros-server\n/Applications/CreatorOS.app: valid on disk\n/Applications/CreatorOS.app: satisfies its Designated Requirement\n"
+    },
+    {
+      "argv": [
+        "open",
+        "--stdout",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1194-install/native.stdout.log",
+        "--stderr",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1194-install/native.stderr.log",
+        "/Applications/CreatorOS.app"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.08508270897436887,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "boundary": "只签替换安装与真实进程；服务和主页面加载另核"
+}

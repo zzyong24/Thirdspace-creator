@@ -1,0 +1,56 @@
+{
+  "startedAt": "2026-10-10T05:08:08.463545+00:00",
+  "finishedAt": "2026-10-10T05:08:09.599760+00:00",
+  "sourceHead": "4b10e89e226cd16ed12744d6c885931d3a09f0dd",
+  "connected": true,
+  "access": "full",
+  "nativePid": 46836,
+  "nativeCommand": "46836     1 /Applications/CreatorOS.app/Contents/MacOS/CreatorOS",
+  "serviceProcesses": [
+    {
+      "pid": 47036,
+      "ppid": 46836,
+      "command": "next-server (v16.2.9)",
+      "listenPort": 57122
+    }
+  ],
+  "mainPageLoadRecords": [
+    "[CreatorOS] MAIN_PAGE_LOAD_FINISHED http://127.0.0.1:57122/"
+  ],
+  "installedRuntimeStamp": "sha256:23e72d02e3ff2c2a00a74801b00e8a375d5689e19517bccaabcc9d637b44da1f",
+  "cliRecords": [
+    {
+      "argv": [
+        "/Users/zyongzhu/.local/bin/creatoros",
+        "status"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.3538151669781655,
+      "logSha256": "58ce8412ff1f53a1eded95ea0e1a84656dbc04c5aae79afe3ac6558c3f856719",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1194-install/status-v2.log"
+    },
+    {
+      "argv": [
+        "/Users/zyongzhu/.local/bin/creatoros",
+        "access",
+        "status"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.6512192910304293,
+      "logSha256": "00e21c29105e9389ea54e7fd14a77a3fc0eea72c258083db1328f195c2ec45d0",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1194-install/access-v2.log"
+    }
+  ],
+  "startupMarkers": [
+    "[license] CHANNEL_RUNTIME_DIGEST_MISMATCH",
+    "[sidecar] [CreatorOS] SIDECAR_STARTUP_VERIFIED",
+    "[client-config] phase=config_sync reason=unknown trigger=startup status=blocked http_status=502",
+    "[sidecar] [ai-task-runner] taskId=ai-task-69d4c1de-785 taskType=scheduled.intelligence.sync status=failed finishReason=null usage=null candidateCount=0",
+    "[CreatorOS] MAIN_PAGE_LOAD_FINISHED http://127.0.0.1:57122/",
+    "[sidecar] [client-config] {\"phase\":\"refresh\",\"status\":\"failed\",\"errorCode\":\"CLIENT_CONFIG_ACCESS_CHANGED\",\"retryable\":false}",
+    "[sidecar] [client-config] {\"phase\":\"config_sync\",\"reason\":\"security_error\",\"trigger\":\"bootstrap\",\"status\":\"blocked\",\"errorCode\":\"CLIENT_CONFIG_ACCESS_CHANGED\"}"
+  ],
+  "explicitNewModelCalls": 0,
+  "explicitBusinessWrites": 0,
+  "boundary": "真实安装版主进程、直属HTTP监听、公开健康与HTTP首页完成事件；非屏幕眼验或全功能验收。原首探针PID误解失败完整保留。"
+}

@@ -1,0 +1,123 @@
+{
+  "recordedAt": "2026-10-10T05:09:44.977482+00:00",
+  "archived": [
+    {
+      "path": "inventory.json",
+      "bytes": 2673,
+      "sha256": "2658c22a936b838ff3f0276ac191e2748786d21f493300ec566c2dc701a2bac8"
+    },
+    {
+      "path": "installation.json",
+      "bytes": 2951,
+      "sha256": "cd8636acc700e0670cadeb0da419cd3aa24a57efac52a9c5524aae6939c4597c"
+    },
+    {
+      "path": "install-run.json",
+      "bytes": 458,
+      "sha256": "183eb1a9882cbe01503c27500f1c9dd7d4dc808b3ed5cd6837c69ae7bc58ad17"
+    },
+    {
+      "path": "install-run.log",
+      "bytes": 1208,
+      "sha256": "3577c62340434d3672306ff4bd119ba704060882787842ee77d35cd70b031f5c"
+    },
+    {
+      "path": "install.py",
+      "bytes": 4634,
+      "sha256": "5cd9939ea98f12583d6f8ad223350241ba7571d16fbc6e548b3ffaee7776dd2d"
+    },
+    {
+      "path": "cleanup.json",
+      "bytes": 912,
+      "sha256": "fdfd0a1c1ef2686af61ab6cdc380a3e81abf1a15d7a356a99dfa86b4073413b4"
+    },
+    {
+      "path": "startup-run.json",
+      "bytes": 463,
+      "sha256": "2272f21e502b5d836cd1f62bbe3f3be9a1c15a9804c4473db90aa25e16fdec7f"
+    },
+    {
+      "path": "startup-run.log",
+      "bytes": 516,
+      "sha256": "9fc5d67e5d6bacc2f1ae83886d4900bd0ca06c1e35b8310c19436c05f75897f2"
+    },
+    {
+      "path": "probe-startup.py",
+      "bytes": 3875,
+      "sha256": "7de96465f29dff8e02c3da2bf394cda76b0ad97219524bb63edf2ff60d978dbc"
+    },
+    {
+      "path": "startup-v2-run.json",
+      "bytes": 468,
+      "sha256": "df082bf2c6ad113fef6cb3c9c7a41c7adfd28ed9f49926288040c93ee051071e"
+    },
+    {
+      "path": "startup-v2-run.log",
+      "bytes": 960,
+      "sha256": "32aa83fbd5d9a09b9a6f3a242fe7e7268ffc4b3c8d821ba49b470202f7f59c9b"
+    },
+    {
+      "path": "probe-startup-v2.py",
+      "bytes": 3662,
+      "sha256": "7ba056f6ac44155abbbbd56f53e85536bdf2333e7ec3ac1c818501b2f6a8db5e"
+    },
+    {
+      "path": "startup-v2.json",
+      "bytes": 2458,
+      "sha256": "944cde8c979ff69a0bd2507571ad1e524307b475d788305f7b48d66425d175b5"
+    },
+    {
+      "path": "status-v2.log",
+      "bytes": 199,
+      "sha256": "58ce8412ff1f53a1eded95ea0e1a84656dbc04c5aae79afe3ac6558c3f856719"
+    },
+    {
+      "path": "access-v2.log",
+      "bytes": 114,
+      "sha256": "00e21c29105e9389ea54e7fd14a77a3fc0eea72c258083db1328f195c2ec45d0"
+    },
+    {
+      "path": "version.log",
+      "bytes": 72,
+      "sha256": "723837e3890e565c5ac5e7c82efb65855144dcf6765e9e95083859078cd9dd86"
+    },
+    {
+      "path": "help.log",
+      "bytes": 1005,
+      "sha256": "5c1eb89edfd4c73ba524c297d6eeebbefccaf7a47b98913e71a282a4edb2be84"
+    }
+  ],
+  "privateRetainedAtSnapshot": [
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1194-install/native.stderr.log",
+      "bytesAtSnapshot": 2911,
+      "sha256AtSnapshot": "714dc0668b377420f55d6f89f398fd08a019702164c55a79a03889bab95e8351",
+      "liveLog": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1194-install/native.stdout.log",
+      "bytesAtSnapshot": 1895,
+      "sha256AtSnapshot": "832523a06f6e52b478e54da990808a9409a6ee640aafba83ab33ca4bc07ddde1",
+      "liveLog": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1194-install/operations.log",
+      "bytesAtSnapshot": 9747201,
+      "sha256AtSnapshot": "e79164601ed6e06773444fdc457f4815b64f88441d1457bd4a427b098eca50f8",
+      "liveLog": false
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1194-install/status-1.log",
+      "bytesAtSnapshot": 199,
+      "sha256AtSnapshot": "58ce8412ff1f53a1eded95ea0e1a84656dbc04c5aae79afe3ac6558c3f856719",
+      "liveLog": false
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1194-install/access.log",
+      "bytesAtSnapshot": 114,
+      "sha256AtSnapshot": "00e21c29105e9389ea54e7fd14a77a3fc0eea72c258083db1328f195c2ec45d0",
+      "liveLog": false
+    }
+  ],
+  "privateLogSHAIsSnapshotNotFutureFinal": true
+}

@@ -1,0 +1,67 @@
+{
+  "roots": [
+    "/Applications",
+    "/Users/zyongzhu/Applications",
+    "/Users/zyongzhu/Downloads",
+    "/Users/zyongzhu/Desktop",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle"
+  ],
+  "items": [
+    {
+      "path": "/Applications/CreatorOS.app",
+      "symlink": false,
+      "logicalBytes": 846710731,
+      "modifiedNs": 1791548373157753346,
+      "CFBundleIdentifier": "cloud.aitongban.creatoros",
+      "CFBundleShortVersionString": "1.2.0",
+      "CFBundleVersion": "1.2.0",
+      "CFBundleExecutable": "CreatorOS",
+      "Contents/MacOS/CreatorOSSha256": "acfec3e9b648396793b1f8ba3c5e9cb982b82f93b0603b1395d5bfabca89ceac",
+      "Contents/Resources/sidecar.tar.gzSha256": "8288886e315d4c53dcc76661177199b2ff5f8b12d1f39248040cfef39ea4f710",
+      "fileCount": 7
+    },
+    {
+      "path": "/Users/zyongzhu/Applications/CreatorOS-backups",
+      "symlink": false,
+      "logicalBytes": 6148,
+      "modifiedNs": 1788860098397122883,
+      "fileCount": 1
+    },
+    {
+      "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0-34935220088",
+      "symlink": false,
+      "logicalBytes": 0,
+      "modifiedNs": 1789965698898631268,
+      "fileCount": 0
+    },
+    {
+      "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+      "symlink": false,
+      "logicalBytes": 841223134,
+      "modifiedNs": 1791604627268394392,
+      "sha256": "d91079d6542407a6f5c3232f35cd815cfaff259c51fa9e40e5ccf030eb10a1d1"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app",
+      "symlink": false,
+      "logicalBytes": 849721236,
+      "modifiedNs": 1791604581854425637,
+      "CFBundleIdentifier": "cloud.aitongban.creatoros",
+      "CFBundleShortVersionString": "1.2.0",
+      "CFBundleVersion": "1.2.0",
+      "CFBundleExecutable": "CreatorOS",
+      "Contents/MacOS/CreatorOSSha256": "6660986e09570348f8b5cf87e0f3385a5c922636c5742780fbf83be65d53f6bf",
+      "Contents/Resources/sidecar.tar.gzSha256": "23e72d02e3ff2c2a00a74801b00e8a375d5689e19517bccaabcc9d637b44da1f",
+      "fileCount": 7
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/dmg/CreatorOS_1.2.0_aarch64.dmg",
+      "symlink": false,
+      "logicalBytes": 841223134,
+      "modifiedNs": 1791604626007304076,
+      "sha256": "d91079d6542407a6f5c3232f35cd815cfaff259c51fa9e40e5ccf030eb10a1d1"
+    }
+  ],
+  "unrelatedDataNotScanned": true
+}

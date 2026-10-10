@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1194-install/probe-startup.py", line 38, in <module>
+    assert service and service[0]['ppid'] in [x['pid'] for x in native],('服务不是本轮原生客户端子进程',service)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('服务不是本轮原生客户端子进程', [{'pid': 46836, 'ppid': 1, 'command': '/Applications/CreatorOS.app/Contents/MacOS/CreatorOS'}])

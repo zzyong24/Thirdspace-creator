@@ -9,6 +9,9 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1196|排查新安装版启动配置同步502与运行摘要拒绝|📋 待办|—|—|[实际诊断](docs/features/t1196-installed-config-sync-502.md)|T1194新包真启动HTTP首页正常、CLI连接正常；同时日志CHANNEL_RUNTIME_DIGEST_MISMATCH、展示副本同步502、config_sync blocked502。保失败和已激活事实，核真实同步消费者/返回来源，不猜网络或绕过摘要/验签，不重置激活。|
+|T-1195|校准安装验收探针的公开PID和首页事件边界|✅ 待办|—|—|[诊断与校准](docs/features/t1195-installed-startup-probe-pid.md)|T1194首探针错误把status.pid当服务PID，真实值为安装版主PID，15.006秒exit1；只校准私有验收驱动，绑定主进程/直属HTTP监听及HTTP首页事件，排除tauri启动页；原失败不覆写，不改产品。|
+|T-1194|安装当前新包并清理旧测试安装包与App副本|✅ 待办|—|—|[操作SPEC](docs/features/t1194-install-current-clean-old-packages.md)|用户2026-10-10明确要求安装当前新包并删除旧测试安装包；仅安装已核验的d91079d6本地1.2.0包，无需重建或备份。逐项核归属后清理旧制品/空包装目录，保账号、项目、素材、激活、日志、证据和源码；验证实际原生启动，不代签全功能。|
 |T-1193|核对结果待确认时的重复发送暗示与恢复状态可读性|📋 待办|—|—|[实际诊断](docs/features/t1193-copilot-unknown-request-presentation.md)|fresh视觉及独立receipt确认等待回执时同原话预填、生成disabled=false；POST仍1，未签重复请求。另核真实字号与短高分段阅读，先精确独评，不清新草稿或阻断合法创作。|
 |T-1192|核对作品精调公共链的消息结果断言|📋 待办|—|—|[实际诊断](docs/features/t1192-work-editor-message-outcome-diagnosis.md)|当场公共链11PASS4FAIL；联合两例归T1092，另Pi/Codex精调完整output相等失败。先核可信回执投影与长候选正文，不删除回执/schema/完整性保护洗绿。|
 |T-1191|核对编导发送前准备失败与恢复入口|🔨 待办|PASS[REV:ad518ff0cf03]|—|[实际诊断](docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md)|T1187接口校准后原20例14PASS6FAIL；首条消息未发时准备错误提示自动恢复，effect却要求已有消息。核可信准备/提交状态及原任务恢复，不改名宽松化断言。|

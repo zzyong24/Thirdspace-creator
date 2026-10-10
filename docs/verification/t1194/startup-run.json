@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "python3",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1194-install/probe-startup.py"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T05:06:51.106509+00:00",
+  "finishedAt": "2026-10-10T05:07:06.113124+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 15.0064042499871,
+  "logSha256": "9fc5d67e5d6bacc2f1ae83886d4900bd0ca06c1e35b8310c19436c05f75897f2"
+}

@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "usage": "creatoros status | access status|revoke | operations list|describe <op> | call <op> --input <json|@file|-> [--group <id>|--use-default-group] [--account <id>|--use-default-account] | tasks get|wait <taskId> --group <id> [--account <id>] | artifacts export <taskId> --artifact <artifactId> --artifact-version <positiveInt> --format raw|preview|png|pdf --output <localPath> --account <id> | accounts list|current|use <id> | groups list|current|use <id> | douyin status|login|refresh|import | mcp serve",
+  "artifactExport": "通过 workbench.artifacts.render 只读导出；显式 --output 无需 --apply，已有文件不会覆盖。filename 仅作建议展示。",
+  "taskWaitFlags": "tasks wait <taskId>：--timeout 最短 120 秒，省略表示持续观察；--poll-interval 是轮询间隔。等待结束不取消后台任务，应继续观察原 taskId。",
+  "writeFlags": "--apply --idempotency-key <key>",
+  "impactFlags": "--confirm-impact <真实账号或实体ID>"
+}
