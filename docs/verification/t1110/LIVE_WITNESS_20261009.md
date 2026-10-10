@@ -138,3 +138,9 @@ EXP-2实际一次快照为officialOriginMatch=true、reportPathMatch=false、pat
 第二候选Next在确认终态后，经state PID/PGID/精确命令归属核验SIGTERM；当场已知候选Next0、受管Chrome应用0。三个私图目录均实际为空，经uid/0700/canonical path核验后rmdir删除，私有日志保留；详见 [清理证据](section-research-cleanup-20261010.json)。生产69的worker源码/测试/composition摘要不变，研究候选未合入；不停止安装App或用户浏览器，不改profile/身份或手工释放租约。
 
 研究卡仍researching，OPEN仍有效，最多两次实验已经用尽；无现场research_verify_commands，未恢复、未validated、未T1110 PASS。Ego空间20实际仍agentDelegatedToUser，root未takeOver或调用Page；已请求用户交回同空间后只读核对当前后台入口。旧QA clone已转研究，prepared69仍撤销，当前1366/1024产品UI旅程继续待验。
+
+## 2026-10-10 用户继续后的原浏览器续接
+
+用户答复“继续”后，root实际takeOver原Ego20；公众号p1设置页仍可读一个AppID，摘要与原研究身份一致。原源worktree已被清理，app从保留分支23c3bedc建立新隔离worktree，未修改主checkout或迁移Cookie。当前公众号的多设置入口只是条件性协议疑点，静态独评确认fixture未覆盖不同action菜单；实际p3链接计数读取失败，不能宣布原绑定56根因已查明。
+
+视频号旧用户来源页p6只读evaluate触发真实15秒SDK安全超时（不补拍为120秒）；原页reload的120000ms预算实际耗尽，未关闭用户Page。随后p3只读CDP在Runtime 120000/request 150000预算下仍RequestTimeout，没有任何链接计数结果，不重试或切新空间。当前只证明研究页面读取阻塞，不能据pathname/login或超时推断产品Cookie失效。没有新公共任务、报表提交或生产实现改动；上次已知public0仍引用原时间，不冒称本次回读。当前研究OPEN、两个原生实验已用尽，需人工恢复原窗口后才能继续只读取证。

@@ -196,7 +196,7 @@
     "productionCandidateApplied": false,
     "cleanupEvidence": "docs/verification/t1110/section-research-cleanup-20261010.json",
     "diagnosticServiceRunning": false,
-    "originalBrowserSpaceOwnership": "agentDelegatedToUser; waiting for explicit handback",
+    "originalBrowserSpaceOwnership": "agent after user handback; manual recovery handoff pending",
     "researchGateAudit": {
       "command": "node orchestrator/process/research-gate.mjs audit",
       "actualExitCode": 0,
@@ -216,7 +216,11 @@
       "sha256": "f580582895969096db09235345dc2b90864c782ab1d0300d0f5787c24b334ba0",
       "result": "文档、真实终态和摘要一致；不签validated、真实采集或UI通过",
       "productionApproval": false
-    }
+    },
+    "continuationEvidence": "docs/verification/t1110/readonly-continuation-20261010.json",
+    "continuationState": "blocked-by-unresponsive-original-research-pages",
+    "officialEntryAmbiguity": "conditional source/test gap; live fullHref count not obtained",
+    "productPublicRereadThisTurn": false
   },
   "latestPublicReportsCount": 0,
   "lastPublicResultObservedAt": "2026-10-09T17:23:42Z"
