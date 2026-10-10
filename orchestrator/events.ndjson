@@ -1440,3 +1440,4 @@
 {"ts":"2026-10-10T05:08:59.893Z","actor":"taskctl","action":"start","task":"T-1195","sha_before":"7fd52108428b","sha_after":"34d783f1c0ab"}
 {"ts":"2026-10-10T05:09:46.735Z","actor":"taskctl","action":"complete","task":"T-1195","evidence":"docs/verification/t1194/REPORT.md；首探针15.006404秒exit1原日志保留，公开PID绑定原生主进程/直属HTTP/排除tauri页；校准真实复验1.257406秒exit0，产品未改","sha_before":"34d783f1c0ab","sha_after":"6d5cd9f888e0"}
 {"ts":"2026-10-10T05:09:46.883Z","actor":"taskctl","action":"complete","task":"T-1194","evidence":"docs/verification/t1194/REPORT.md；安装5.049880秒exit0、deep/strict签名与双SHA一致；实际主PID46836/子服务47036/HTTP首页完成与公开connected；2旧包装目录已删除，无备份；保T1196配置502及原全局23ERROR/1WARN，不代签全功能","sha_before":"6d5cd9f888e0","sha_after":"86e3eb8d496a"}
+{"ts":"2026-10-10T08:42:48.229Z","actor":"taskctl","action":"resume","task":"T-1080","reason":"用户2026-10-10再次明确全部本地代码汇总/闲置工作区及旧制品清理/重新打包；本轮当场核源码与占用，不扩大原研究预算。已有暂停不属于本次整合依赖，保全局失败和真实数据。","sha_before":"88990fc9d457","sha_after":"2f52e6061dee"}

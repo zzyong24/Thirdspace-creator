@@ -9,6 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1080|汇总全部本地worktree代码到main并清理闲置目录后构建|🔨 待办|—|—|[SPEC](docs/features/t1080-local-main-worktree-consolidation.md)|用户2026-10-08明确授权全部代码本地合并至主分支、清理不用的worktree再构建，构建无需备份。先逐树核HEAD/未提交/使用情况并保留Git来源，解决冲突和验证后只删除已保留代码且未占用的目录；保留活跃会话、真实数据与既有备份，不push/tag/发布。|
 |T-1196|排查新安装版启动配置同步502与运行摘要拒绝|📋 待办|—|—|[实际诊断](docs/features/t1196-installed-config-sync-502.md)|T1194新包真启动HTTP首页正常、CLI连接正常；同时日志CHANNEL_RUNTIME_DIGEST_MISMATCH、展示副本同步502、config_sync blocked502。保失败和已激活事实，核真实同步消费者/返回来源，不猜网络或绕过摘要/验签，不重置激活。|
 |T-1195|校准安装验收探针的公开PID和首页事件边界|✅ 待办|—|—|[诊断与校准](docs/features/t1195-installed-startup-probe-pid.md)|T1194首探针错误把status.pid当服务PID，真实值为安装版主PID，15.006秒exit1；只校准私有验收驱动，绑定主进程/直属HTTP监听及HTTP首页事件，排除tauri启动页；原失败不覆写，不改产品。|
 |T-1194|安装当前新包并清理旧测试安装包与App副本|✅ 待办|—|—|[操作SPEC](docs/features/t1194-install-current-clean-old-packages.md)|用户2026-10-10明确要求安装当前新包并删除旧测试安装包；仅安装已核验的d91079d6本地1.2.0包，无需重建或备份。逐项核归属后清理旧制品/空包装目录，保账号、项目、素材、激活、日志、证据和源码；验证实际原生启动，不代签全功能。|
@@ -52,7 +53,6 @@
 |T-1066-timeout-policy|全系统统一两分钟超时下限、嵌套预算与Skill防复发|⏸️ 待办|PASS[REV:13310516269c]|待验|[SPEC](docs/features/t1066-timeout-policy.md) [详情](BACKLOG-details.md#t-1066-timeout-policy)|见详情。|
 |T-1067-skill-verification|清理通用产品流程Skill既有公开分发校验债务|📋 待办|—|待验|[根因证据](docs/verification/t1066/SKILL_VERIFICATION.md) [详情](BACKLOG-details.md#t-1067-skill-verification)|见详情。|
 |T-1018|清理本轮测试暴露的全局类型与边界欠债|📋 待办|—|待验|[实测证据](docs/verification/t1017-rewrite-first.md) [详情](BACKLOG-details.md#t-1018) [完整历史](BACKLOG-details.md#t1173-t1018-global-debt-history)|见详情。|
-|T-1080|汇总全部本地worktree代码到main并清理闲置目录后构建|⏸️ 待办|—|—|[SPEC](docs/features/t1080-local-main-worktree-consolidation.md)|用户2026-10-08明确授权全部代码本地合并至主分支、清理不用的worktree再构建，构建无需备份。先逐树核HEAD/未提交/使用情况并保留Git来源，解决冲突和验证后只删除已保留代码且未占用的目录；保留活跃会话、真实数据与既有备份，不push/tag/发布。|
 |T-1083|复核流程升级后的旧任务写集通配符兼容缺口|📋 待办|—|—|[根因证据](docs/verification/t1080/post-package-progress-block-failure.json)|progress原block命令实际exit2：T1026的docs/verification/t1026*被3.29路径校验拒绝，未写进度；taskctl已真实记T1080阻断。先盘点旧glob实际允许写集、独立复核等价迁移，不放宽guard或手改状态，本轮未实施。|
 |T-1082|复核合并来源任务的当前评审与UI验收记录归属|📋 待办|—|—|[SPEC](docs/features/t1082-source-receipt-revalidation.md)|本地main真实出包后对账新增7项：5个source/alias缺当前review链event、2个agent-recovery alias缺completion；原来源链/报告保留不代签当前验收，按真实独立审核和UI旅程闭环，不重哈希旧链、不复制PASS。|
 |T-1081|核对整合后原主线的14处短执行预算与超时扫描误报|📋 待办|—|待验|[根因证据](docs/verification/t1080/timeout-static-dispositions-corrected.json)|完整超时门实际exit1：14条既有短执行/有限观察来自原main/client，另13条为冻结编辑器调度/动画、已取消清理、TTL或已归一消费者；先按真实消费者复核，不改vendor洗绿、不延长取消。来源与原失败留存；本轮优先合并和出包，此任务尚未实施。|
