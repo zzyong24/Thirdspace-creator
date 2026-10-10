@@ -1,0 +1,236 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-mkuAIB
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 predev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> node ../ai-worker/scripts/build.mjs
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexJsonRpcConnection.ts:27:93:
+[2m[WebServer] [22m      27 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexCli.ts:29:89:
+[2m[WebServer] [22m      29 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 dev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> next dev --hostname 127.0.0.1 --port 3895
+[2m[WebServer] [22m
+[2m[WebServer] [22m[1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
+[2m[WebServer] [22m- Local:         http://127.0.0.1:3895
+[2m[WebServer] [22m- Network:       http://127.0.0.1:3895
+[2m[WebServer] [22m- Environments: .env.local
+[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 305ms
+[2m[WebServer] [22m[CreatorOS] SIDECAR_STARTUP_VERIFIED
+[2m[WebServer] [22m
+[2m[WebServer] [22m GET / [32m200[39m in 21.3s[2m (next.js: 2.1s, proxy.ts: 126ms, application-code: 19.1s)[22m
+
+Running 1 test using 1 worker
+
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-mkuAIB
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 793ms[2m (next.js: 758ms, proxy.ts: 8ms, application-code: 27ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 1786µs, proxy.ts: 2ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 1189µs, proxy.ts: 1503µs, application-code: 23ms)[22m
+[2m[WebServer] [22m GET /projects/project-ba5fc099-11/review [32m200[39m in 3.6s[2m (next.js: 2.6s, proxy.ts: 3ms, application-code: 993ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1983µs, proxy.ts: 4ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 55ms[2m (next.js: 15ms, proxy.ts: 11ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 70ms[2m (next.js: 43ms, proxy.ts: 13ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 82ms[2m (next.js: 56ms, proxy.ts: 15ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 98ms[2m (next.js: 66ms, proxy.ts: 17ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 113ms[2m (next.js: 82ms, proxy.ts: 18ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 112ms[2m (next.js: 5ms, proxy.ts: 94ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 17ms, proxy.ts: 4ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 28ms, proxy.ts: 5ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 55ms[2m (next.js: 38ms, proxy.ts: 5ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 1214µs, proxy.ts: 1378µs, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 1523µs, proxy.ts: 2ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1655µs, proxy.ts: 2ms, application-code: 11ms)[22m
+[2m[WebServer] [22m[36m[browser][39m [describeUserError] [31mError: {"error":"T954_SMOKE_MODEL_NOT_INVOKED"}[39m
+[2m[WebServer] [22m[31m    at async AICopilotContent.useLayoutEffect (src/features/copilot/ai-copilot-content.tsx:1738:132)
+[2m[WebServer] [22m    at DraftChatRail (src/features/draft-workbench/draft-chat-rail.tsx:40:9)
+[2m[WebServer] [22m    at StageChatWrapper (src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx:269:15)
+[2m[WebServer] [22m    at ProjectIdLayout (src/app/(creator)/projects/[projectId]/layout.tsx:99:9)[39m
+[2m[WebServer] [22m  1736 | ...
+[2m[WebServer] [22m  1737 | ...ationTarget:request.creationTarget}:{})};preparedTargets.current=targets;
+[2m[WebServer] [22m> 1738 | ...sionStorage.removeItem(receiptStorageKey);await sendMessage({text});return;}
+[2m[WebServer] [22m       |                                              ^
+[2m[WebServer] [22m  1739 | ...()??null;quickFunctionKeyRef.current=null;
+[2m[WebServer] [22m  1740 | ...eadUrlRef.current=null;
+[2m[WebServer] [22m  1741 | ...stedFn?{functionKey:requestedFn}:{}),...(webReadUrl?{webReadUrl}:{}),...(Object.keys(... [2m(src/lib/ai-error-humanize.ts:292:13)[22m
+[2m[WebServer] [22m[36m[browser][39m [describeUserError] [31mError: {"error":"T954_SMOKE_MODEL_NOT_INVOKED"}[39m
+[2m[WebServer] [22m[31m    at async AICopilotContent.useLayoutEffect (src/features/copilot/ai-copilot-content.tsx:1738:132)
+[2m[WebServer] [22m    at DraftChatRail (src/features/draft-workbench/draft-chat-rail.tsx:40:9)
+[2m[WebServer] [22m    at StageChatWrapper (src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx:269:15)
+[2m[WebServer] [22m    at ProjectIdLayout (src/app/(creator)/projects/[projectId]/layout.tsx:99:9)[39m
+[2m[WebServer] [22m  1736 | ...
+[2m[WebServer] [22m  1737 | ...ationTarget:request.creationTarget}:{})};preparedTargets.current=targets;
+[2m[WebServer] [22m> 1738 | ...sionStorage.removeItem(receiptStorageKey);await sendMessage({text});return;}
+[2m[WebServer] [22m       |                                              ^
+[2m[WebServer] [22m  1739 | ...()??null;quickFunctionKeyRef.current=null;
+[2m[WebServer] [22m  1740 | ...eadUrlRef.current=null;
+[2m[WebServer] [22m  1741 | ...stedFn?{functionKey:requestedFn}:{}),...(webReadUrl?{webReadUrl}:{}),...(Object.keys(... [2m(src/lib/ai-error-humanize.ts:292:13)[22m
+[2m[WebServer] [22m[36m[browser][39m [describeUserError] [31mError: {"error":"T954_SMOKE_MODEL_NOT_INVOKED"}[39m
+[2m[WebServer] [22m[31m    at DraftChatRail (src/features/draft-workbench/draft-chat-rail.tsx:40:9)
+[2m[WebServer] [22m    at StageChatWrapper (src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx:269:15)
+[2m[WebServer] [22m    at ProjectIdLayout (src/app/(creator)/projects/[projectId]/layout.tsx:99:9)[39m
+[2m[WebServer] [22m  38 |       {editorState?.target?<p role="status" className="mb-2 rounded-lg bg-surface-subtle p...
+[2m[WebServer] [22m  39 |       <React.Suspense fallback={null}>
+[2m[WebServer] [22m> 40 |         <AICopilotContent
+[2m[WebServer] [22m     |         ^
+[2m[WebServer] [22m  41 |           embed={{
+[2m[WebServer] [22m  42 |             surface: "project",
+[2m[WebServer] [22m  43 |             selection: { kind: "project", id: projectId, title: projectTitle }, [2m(src/lib/ai-error-humanize.ts:292:13)[22m
+[2m[WebServer] [22m[36m[browser][39m [describeUserError] [31mError: {"error":"T954_SMOKE_MODEL_NOT_INVOKED"}[39m
+[2m[WebServer] [22m[31m    at DraftChatRail (src/features/draft-workbench/draft-chat-rail.tsx:40:9)
+[2m[WebServer] [22m    at StageChatWrapper (src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx:269:15)
+[2m[WebServer] [22m    at ProjectIdLayout (src/app/(creator)/projects/[projectId]/layout.tsx:99:9)[39m
+[2m[WebServer] [22m  38 |       {editorState?.target?<p role="status" className="mb-2 rounded-lg bg-surface-subtle p...
+[2m[WebServer] [22m  39 |       <React.Suspense fallback={null}>
+[2m[WebServer] [22m> 40 |         <AICopilotContent
+[2m[WebServer] [22m     |         ^
+[2m[WebServer] [22m  41 |           embed={{
+[2m[WebServer] [22m  42 |             surface: "project",
+[2m[WebServer] [22m  43 |             selection: { kind: "project", id: projectId, title: projectTitle }, [2m(src/lib/ai-error-humanize.ts:292:13)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 3ms, proxy.ts: 6ms, application-code: 14ms)[22m
+[2m[WebServer] [22m[36m[browser][39m [describeUserError] [31mError: {"error":"T954_SMOKE_MODEL_NOT_INVOKED"}[39m
+[2m[WebServer] [22m[31m    at DraftChatRail (src/features/draft-workbench/draft-chat-rail.tsx:40:9)
+[2m[WebServer] [22m    at StageChatWrapper (src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx:269:15)
+[2m[WebServer] [22m    at ProjectIdLayout (src/app/(creator)/projects/[projectId]/layout.tsx:99:9)[39m
+[2m[WebServer] [22m  38 |       {editorState?.target?<p role="status" className="mb-2 rounded-lg bg-surface-subtle p...
+[2m[WebServer] [22m  39 |       <React.Suspense fallback={null}>
+[2m[WebServer] [22m> 40 |         <AICopilotContent
+[2m[WebServer] [22m     |         ^
+[2m[WebServer] [22m  41 |           embed={{
+[2m[WebServer] [22m  42 |             surface: "project",
+[2m[WebServer] [22m  43 |             selection: { kind: "project", id: projectId, title: projectTitle }, [2m(src/lib/ai-error-humanize.ts:292:13)[22m
+[2m[WebServer] [22m[36m[browser][39m [describeUserError] [31mError: {"error":"T954_SMOKE_MODEL_NOT_INVOKED"}[39m
+[2m[WebServer] [22m[31m    at DraftChatRail (src/features/draft-workbench/draft-chat-rail.tsx:40:9)
+[2m[WebServer] [22m    at StageChatWrapper (src/app/(creator)/projects/[projectId]/stage-chat-wrapper.tsx:269:15)
+[2m[WebServer] [22m    at ProjectIdLayout (src/app/(creator)/projects/[projectId]/layout.tsx:99:9)[39m
+[2m[WebServer] [22m  38 |       {editorState?.target?<p role="status" className="mb-2 rounded-lg bg-surface-subtle p...
+[2m[WebServer] [22m  39 |       <React.Suspense fallback={null}>
+[2m[WebServer] [22m> 40 |         <AICopilotContent
+[2m[WebServer] [22m     |         ^
+[2m[WebServer] [22m  41 |           embed={{
+[2m[WebServer] [22m  42 |             surface: "project",
+[2m[WebServer] [22m  43 |             selection: { kind: "project", id: projectId, title: projectTitle }, [2m(src/lib/ai-error-humanize.ts:292:13)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 84ms[2m (next.js: 65ms, proxy.ts: 5ms, application-code: 14ms)[22m
+  ✘  1 [e2e] › tests/e2e/t954-director-review.spec.ts:10:5 › T954 无发布数据的真实复盘页面可用，补采返回空结果，诊断入口不强制成功经验 (12.1s)
+
+
+  1) [e2e] › tests/e2e/t954-director-review.spec.ts:10:5 › T954 无发布数据的真实复盘页面可用，补采返回空结果，诊断入口不强制成功经验 ─
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('region', { name: '流量来源' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('region', { name: '流量来源' })[22m
+
+
+      43 |  expect(JSON.stringify(payload.messages)).toContain('没有足够依据可以没有经验候选');
+      44 |  await page.setViewportSize({width:1024,height:768});
+    > 45 |  await expect(traffic).toBeVisible();
+         |                        ^
+      46 |  expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);
+      47 |  await page.screenshot({path:testInfo.outputPath('t954-review-empty-narrow.png'),fullPage:true});
+      48 | });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/t954-director-review.spec.ts:45:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/t954-fixed-output/e2e-t954-director-review-T-0c233-实复盘页面可用，补采返回空结果，诊断入口不强制成功经验-e2e/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-6eea6190f7b2a3d02786-4f1facc9b1626026cf85 (image/png) ─────────────────────
+    ../docs/verification/t1207/t954-fixed-output/e2e-t954-director-review-T-0c233-实复盘页面可用，补采返回空结果，诊断入口不强制成功经验-e2e/attachments/t1207-6eea6190f7b2a3d02786-4f1facc9b1626026cf85-7d6109eacc98c7d45332766b377bdaf52dd790c1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/t954-fixed-output/e2e-t954-director-review-T-0c233-实复盘页面可用，补采返回空结果，诊断入口不强制成功经验-e2e/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/t954-fixed-output/e2e-t954-director-review-T-0c233-实复盘页面可用，补采返回空结果，诊断入口不强制成功经验-e2e/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/t954-fixed-output/e2e-t954-director-review-T-0c233-实复盘页面可用，补采返回空结果，诊断入口不强制成功经验-e2e/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [e2e] › tests/e2e/t954-director-review.spec.ts:10:5 › T954 无发布数据的真实复盘页面可用，补采返回空结果，诊断入口不强制成功经验 ──

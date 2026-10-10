@@ -1,0 +1,2269 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 predev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> node ../ai-worker/scripts/build.mjs
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexJsonRpcConnection.ts:27:93:
+[2m[WebServer] [22m      27 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexCli.ts:29:89:
+[2m[WebServer] [22m      29 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 dev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> next dev --hostname 127.0.0.1 --port 3891
+[2m[WebServer] [22m
+[2m[WebServer] [22m[1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
+[2m[WebServer] [22m- Local:         http://127.0.0.1:3891
+[2m[WebServer] [22m- Network:       http://127.0.0.1:3891
+[2m[WebServer] [22m- Environments: .env.local
+[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 306ms
+[2m[WebServer] [22m[CreatorOS] SIDECAR_STARTUP_VERIFIED
+[2m[WebServer] [22m
+[2m[WebServer] [22m GET / [32m200[39m in 19.7s[2m (next.js: 2.2s, proxy.ts: 138ms, application-code: 17.4s)[22m
+
+Running 52 tests using 1 worker
+
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET / [32m200[39m in 119ms[2m (next.js: 6ms, proxy.ts: 6ms, application-code: 108ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 933ms[2m (next.js: 911ms, proxy.ts: 3ms, application-code: 18ms)[22m
+  ✓   1 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › dashboard (/) renders the main region (2.6s)
+[2m[WebServer] [22m GET / [32m200[39m in 104ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 99ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 2ms, proxy.ts: 7ms, application-code: 18ms)[22m
+  ✘   2 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › dashboard (/) matches the reference image (2.9s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /projects [32m200[39m in 183ms[2m (next.js: 32ms, proxy.ts: 2ms, application-code: 149ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1307µs, proxy.ts: 1723µs, application-code: 7ms)[22m
+  ✓   3 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › projects (/projects) renders the main region (1.1s)
+[2m[WebServer] [22m GET /projects [32m200[39m in 69ms[2m (next.js: 1949µs, proxy.ts: 2ms, application-code: 65ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 6ms)[22m
+  ✘   4 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › projects (/projects) matches the reference image (2.2s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /projects/ai-native-browser [32m200[39m in 2.1s[2m (next.js: 1855ms, proxy.ts: 2ms, application-code: 219ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1512µs, proxy.ts: 2ms, application-code: 7ms)[22m
+  ✓   5 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › project-overview (/projects/ai-native-browser) renders the main region (3.1s)
+[2m[WebServer] [22m GET /projects/ai-native-browser [32m200[39m in 109ms[2m (next.js: 12ms, proxy.ts: 1629µs, application-code: 95ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 1400µs, proxy.ts: 2ms, application-code: 13ms)[22m
+  ✘   6 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › project-overview (/projects/ai-native-browser) matches the reference image (2.4s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /projects/ai-native-browser/research [32m200[39m in 1493ms[2m (next.js: 1411ms, proxy.ts: 3ms, application-code: 79ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1157µs, proxy.ts: 1747µs, application-code: 7ms)[22m
+  ✓   7 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › research-workspace (/projects/ai-native-browser/research) renders the main region (2.4s)
+[2m[WebServer] [22m GET /projects/ai-native-browser/research [32m200[39m in 81ms[2m (next.js: 4ms, proxy.ts: 1886µs, application-code: 75ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1474µs, proxy.ts: 2ms, application-code: 6ms)[22m
+  ✘   8 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › research-workspace (/projects/ai-native-browser/research) matches the reference image (1.7s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /projects/ai-native-browser/planning [32m200[39m in 1501ms[2m (next.js: 1358ms, proxy.ts: 1808µs, application-code: 142ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1439µs, proxy.ts: 1706µs, application-code: 7ms)[22m
+  ✓   9 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › planning-workspace (/projects/ai-native-browser/planning) renders the main region (2.4s)
+[2m[WebServer] [22m GET /projects/ai-native-browser/planning [32m200[39m in 84ms[2m (next.js: 4ms, proxy.ts: 1919µs, application-code: 78ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1476µs, proxy.ts: 1991µs, application-code: 7ms)[22m
+  ✘  10 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › planning-workspace (/projects/ai-native-browser/planning) matches the reference image (1.7s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /projects/ai-native-browser/script [32m200[39m in 1508ms[2m (next.js: 1433ms, proxy.ts: 1902µs, application-code: 73ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1348µs, proxy.ts: 6ms, application-code: 6ms)[22m
+  ✓  11 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › script-workspace (/projects/ai-native-browser/script) renders the main region (2.4s)
+[2m[WebServer] [22m GET /projects/ai-native-browser/script [32m200[39m in 127ms[2m (next.js: 4ms, proxy.ts: 1478µs, application-code: 122ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 2ms, proxy.ts: 6ms, application-code: 9ms)[22m
+  ✘  12 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › script-workspace (/projects/ai-native-browser/script) matches the reference image (2.2s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /projects/ai-native-browser/publishing [32m200[39m in 1462ms[2m (next.js: 1378ms, proxy.ts: 2ms, application-code: 83ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1500µs, proxy.ts: 1774µs, application-code: 6ms)[22m
+  ✓  13 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › publishing-workspace (/projects/ai-native-browser/publishing) renders the main region (2.4s)
+[2m[WebServer] [22m GET /projects/ai-native-browser/publishing [32m200[39m in 77ms[2m (next.js: 4ms, proxy.ts: 1613µs, application-code: 72ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1554µs, proxy.ts: 3ms, application-code: 7ms)[22m
+  ✘  14 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › publishing-workspace (/projects/ai-native-browser/publishing) matches the reference image (2.3s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m[review] readReviewHistory 读失败(诚实空,但这不是正常态): Error [AccountRequiredError]: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)
+[2m[WebServer] [22m    at requireAccountId (../backend/src/errors.ts:85:11)
+[2m[WebServer] [22m    at workspaceKey (../backend/src/workspace-scope.ts:10:51)
+[2m[WebServer] [22m    at requireWorkspace (../backend/src/workspace-scope.ts:12:87)
+[2m[WebServer] [22m    at Object.listOutputIdsByProject (../backend/src/modules/projects/projects.service.ts:1709:23)
+[2m[WebServer] [22m    at Object.verifyProjectOwned (src/server/persistence-client.ts:2516:31)
+[2m[WebServer] [22m    at Object.listReviews (../backend/src/modules/reviews/reviews.service.ts:202:22)
+[2m[WebServer] [22m    at Object.request (../backend/src/modules/reviews/reviews.transport.ts:59:41)
+[2m[WebServer] [22m    at Object.request (../backend/src/application/transport.ts:100:37)
+[2m[WebServer] [22m  [90m83 |[0m ): string {
+[2m[WebServer] [22m  [90m84 |[0m   [36mif[0m (!accountId) {
+[2m[WebServer] [22m[31m[1m>[0m [90m85 |[0m     [36mthrow[0m [36mnew[0m [33mAccountRequiredError[0m(
+[2m[WebServer] [22m  [90m   |[0m           [31m[1m^[0m
+[2m[WebServer] [22m  [90m86 |[0m       [32m`AccountRequiredError: [0m${what[32m} requires a selected account (ctx.accountId missing)`[0m,
+[2m[WebServer] [22m  [90m87 |[0m     );
+[2m[WebServer] [22m  [90m88 |[0m   } {
+[2m[WebServer] [22m  code: [32m'AccountRequiredError'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET /projects/ai-native-browser/review [32m200[39m in 2.6s[2m (next.js: 2.2s, proxy.ts: 1649µs, application-code: 339ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 31ms[2m (next.js: 13ms, proxy.ts: 3ms, application-code: 15ms)[22m
+  ✓  15 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › analytics-review (/projects/ai-native-browser/review) renders the main region (3.7s)
+[2m[WebServer] [22m[review] readReviewHistory 读失败(诚实空,但这不是正常态): Error [AccountRequiredError]: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)
+[2m[WebServer] [22m    at requireAccountId (../backend/src/errors.ts:85:11)
+[2m[WebServer] [22m    at workspaceKey (../backend/src/workspace-scope.ts:10:51)
+[2m[WebServer] [22m    at requireWorkspace (../backend/src/workspace-scope.ts:12:87)
+[2m[WebServer] [22m    at Object.listOutputIdsByProject (../backend/src/modules/projects/projects.service.ts:1709:23)
+[2m[WebServer] [22m    at Object.verifyProjectOwned (src/server/persistence-client.ts:2516:31)
+[2m[WebServer] [22m    at Object.listReviews (../backend/src/modules/reviews/reviews.service.ts:202:22)
+[2m[WebServer] [22m    at Object.request (../backend/src/modules/reviews/reviews.transport.ts:59:41)
+[2m[WebServer] [22m    at Object.request (../backend/src/application/transport.ts:100:37)
+[2m[WebServer] [22m  [90m83 |[0m ): string {
+[2m[WebServer] [22m  [90m84 |[0m   [36mif[0m (!accountId) {
+[2m[WebServer] [22m[31m[1m>[0m [90m85 |[0m     [36mthrow[0m [36mnew[0m [33mAccountRequiredError[0m(
+[2m[WebServer] [22m  [90m   |[0m           [31m[1m^[0m
+[2m[WebServer] [22m  [90m86 |[0m       [32m`AccountRequiredError: [0m${what[32m} requires a selected account (ctx.accountId missing)`[0m,
+[2m[WebServer] [22m  [90m87 |[0m     );
+[2m[WebServer] [22m  [90m88 |[0m   } {
+[2m[WebServer] [22m  code: [32m'AccountRequiredError'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET /projects/ai-native-browser/review [32m200[39m in 143ms[2m (next.js: 4ms, proxy.ts: 1649µs, application-code: 137ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1729µs, proxy.ts: 3ms, application-code: 9ms)[22m
+  ✘  16 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › analytics-review (/projects/ai-native-browser/review) matches the reference image (2.4s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /knowledge [32m200[39m in 222ms[2m (next.js: 86ms, proxy.ts: 1484µs, application-code: 135ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 14ms, proxy.ts: 1699µs, application-code: 6ms)[22m
+  ✓  17 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › knowledge (/knowledge) renders the main region (1.2s)
+[2m[WebServer] [22m GET /knowledge [32m200[39m in 76ms[2m (next.js: 12ms, proxy.ts: 1583µs, application-code: 63ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1425µs, proxy.ts: 2ms, application-code: 7ms)[22m
+  ✘  18 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › knowledge (/knowledge) matches the reference image (2.3s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /assets [32m200[39m in 147ms[2m (next.js: 30ms, proxy.ts: 1566µs, application-code: 115ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 1720µs, proxy.ts: 10ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 12ms, proxy.ts: 10ms, application-code: 5ms)[22m
+  ✓  19 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › assets (/assets) renders the main region (1.2s)
+[2m[WebServer] [22m GET /assets [32m200[39m in 68ms[2m (next.js: 1733µs, proxy.ts: 1830µs, application-code: 65ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1907µs, proxy.ts: 2ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 9ms, proxy.ts: 2ms, application-code: 6ms)[22m
+  ✘  20 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › assets (/assets) matches the reference image (2.3s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /publishing [32m200[39m in 119ms[2m (next.js: 32ms, proxy.ts: 1617µs, application-code: 85ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1322µs, proxy.ts: 3ms, application-code: 6ms)[22m
+  ✓  21 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › publishing-center (/publishing) renders the main region (1.1s)
+[2m[WebServer] [22m GET /publishing [32m200[39m in 72ms[2m (next.js: 1979µs, proxy.ts: 1933µs, application-code: 68ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 2ms, proxy.ts: 1996µs, application-code: 7ms)[22m
+  ✘  22 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › publishing-center (/publishing) matches the reference image (2.2s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /experience [32m200[39m in 107ms[2m (next.js: 21ms, proxy.ts: 2ms, application-code: 83ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 67ms[2m (next.js: 1274µs, proxy.ts: 60ms, application-code: 6ms)[22m
+  ✓  23 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › experience (/experience) renders the main region (1.1s)
+[2m[WebServer] [22m GET /experience [32m200[39m in 97ms[2m (next.js: 2ms, proxy.ts: 1601µs, application-code: 93ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1566µs, proxy.ts: 1833µs, application-code: 6ms)[22m
+  ✘  24 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › experience (/experience) matches the reference image (2.3s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /search [32m200[39m in 157ms[2m (next.js: 34ms, proxy.ts: 2ms, application-code: 121ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1697µs, proxy.ts: 1817µs, application-code: 7ms)[22m
+  ✓  25 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › search (/search) renders the main region (1.1s)
+[2m[WebServer] [22m GET /search [32m200[39m in 95ms[2m (next.js: 1846µs, proxy.ts: 1862µs, application-code: 92ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1413µs, proxy.ts: 1819µs, application-code: 6ms)[22m
+  ✘  26 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › search (/search) matches the reference image (2.3s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /settings [32m200[39m in 645ms[2m (next.js: 80ms, proxy.ts: 1813µs, application-code: 562ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 9ms, proxy.ts: 2ms, application-code: 8ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 14ms[2m (next.js: 5ms, proxy.ts: 5ms, application-code: 4ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 9ms, proxy.ts: 6ms, application-code: 13ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 34ms[2m (next.js: 24ms, proxy.ts: 6ms, application-code: 4ms)[22m
+[2m[WebServer] [22m POST /api/web-session [32m200[39m in 142ms[2m (next.js: 62ms, proxy.ts: 5ms, application-code: 75ms)[22m
+[2m[WebServer] [22m POST /api/web-session [32m200[39m in 143ms[2m (next.js: 130ms, proxy.ts: 8ms, application-code: 5ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 154ms[2m (next.js: 10ms, proxy.ts: 133ms, application-code: 11ms)[22m
+  ✘  27 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › settings (/settings) renders the main region (6.6s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /settings [32m200[39m in 228ms[2m (next.js: 3ms, proxy.ts: 5ms, application-code: 220ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 19ms, proxy.ts: 4ms, application-code: 19ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 103ms[2m (next.js: 5ms, proxy.ts: 94ms, application-code: 4ms)[22m
+[2m[WebServer] [22m POST /api/web-session [32m200[39m in 108ms[2m (next.js: 9ms, proxy.ts: 94ms, application-code: 5ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 116ms[2m (next.js: 14ms, proxy.ts: 94ms, application-code: 8ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 31ms[2m (next.js: 14ms, proxy.ts: 13ms, application-code: 4ms)[22m
+[2m[WebServer] [22m POST /api/web-session [32m200[39m in 35ms[2m (next.js: 8ms, proxy.ts: 23ms, application-code: 4ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 13ms, proxy.ts: 23ms, application-code: 8ms)[22m
+  ✘  28 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › settings (/settings) matches the reference image (6.2s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error [AccountRequiredError]: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)
+[2m[WebServer] [22m    at requireAccountId (../backend/src/errors.ts:85:11)
+[2m[WebServer] [22m    at workspaceKey (../backend/src/workspace-scope.ts:10:51)
+[2m[WebServer] [22m    at requireWorkspace (../backend/src/workspace-scope.ts:12:87)
+[2m[WebServer] [22m    at Object.getDashboardSummary (../backend/src/modules/projects/projects.service.ts:1798:23)
+[2m[WebServer] [22m    at Object.getDashboardSummary (../backend/src/application/queries/dashboard.ts:31:45)
+[2m[WebServer] [22m    at Object.getDashboard (../backend/src/modules/query-services/query-services.service.ts:90:27)
+[2m[WebServer] [22m    at Object.getDashboard (../backend/src/application/queries/dashboard.ts:432:24)
+[2m[WebServer] [22m    at Object.request (../backend/src/modules/query-services/query-services.transport.ts:68:45)
+[2m[WebServer] [22m    at Object.request (../backend/src/application/transport.ts:100:37)
+[2m[WebServer] [22m  [90m83 |[0m ): string {
+[2m[WebServer] [22m  [90m84 |[0m   [36mif[0m (!accountId) {
+[2m[WebServer] [22m[31m[1m>[0m [90m85 |[0m     [36mthrow[0m [36mnew[0m [33mAccountRequiredError[0m(
+[2m[WebServer] [22m  [90m   |[0m           [31m[1m^[0m
+[2m[WebServer] [22m  [90m86 |[0m       [32m`AccountRequiredError: [0m${what[32m} requires a selected account (ctx.accountId missing)`[0m,
+[2m[WebServer] [22m  [90m87 |[0m     );
+[2m[WebServer] [22m  [90m88 |[0m   } {
+[2m[WebServer] [22m  code: [32m'AccountRequiredError'[39m,
+[2m[WebServer] [22m  digest: [32m'1664152375'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET /projects/new [32m200[39m in 256ms[2m (next.js: 37ms, proxy.ts: 1664µs, application-code: 217ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 9ms[2m (next.js: 1311µs, proxy.ts: 1960µs, application-code: 6ms)[22m
+  ✓  29 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › new-project-overlay (/projects/new) renders the main region (1.2s)
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error [AccountRequiredError]: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)
+[2m[WebServer] [22m    at requireAccountId (../backend/src/errors.ts:85:11)
+[2m[WebServer] [22m    at workspaceKey (../backend/src/workspace-scope.ts:10:51)
+[2m[WebServer] [22m    at requireWorkspace (../backend/src/workspace-scope.ts:12:87)
+[2m[WebServer] [22m    at Object.getDashboardSummary (../backend/src/modules/projects/projects.service.ts:1798:23)
+[2m[WebServer] [22m    at Object.getDashboardSummary (../backend/src/application/queries/dashboard.ts:31:45)
+[2m[WebServer] [22m    at Object.getDashboard (../backend/src/modules/query-services/query-services.service.ts:90:27)
+[2m[WebServer] [22m    at Object.getDashboard (../backend/src/application/queries/dashboard.ts:432:24)
+[2m[WebServer] [22m    at Object.request (../backend/src/modules/query-services/query-services.transport.ts:68:45)
+[2m[WebServer] [22m    at Object.request (../backend/src/application/transport.ts:100:37)
+[2m[WebServer] [22m  [90m83 |[0m ): string {
+[2m[WebServer] [22m  [90m84 |[0m   [36mif[0m (!accountId) {
+[2m[WebServer] [22m[31m[1m>[0m [90m85 |[0m     [36mthrow[0m [36mnew[0m [33mAccountRequiredError[0m(
+[2m[WebServer] [22m  [90m   |[0m           [31m[1m^[0m
+[2m[WebServer] [22m  [90m86 |[0m       [32m`AccountRequiredError: [0m${what[32m} requires a selected account (ctx.accountId missing)`[0m,
+[2m[WebServer] [22m  [90m87 |[0m     );
+[2m[WebServer] [22m  [90m88 |[0m   } {
+[2m[WebServer] [22m  code: [32m'AccountRequiredError'[39m,
+[2m[WebServer] [22m  digest: [32m'1664152375'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET /projects/new [32m200[39m in 123ms[2m (next.js: 2ms, proxy.ts: 1730µs, application-code: 119ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 9ms[2m (next.js: 1861µs, proxy.ts: 1567µs, application-code: 6ms)[22m
+  ✘  30 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › new-project-overlay (/projects/new) matches the reference image (2.5s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /?copilot=open [32m200[39m in 90ms[2m (next.js: 3ms, proxy.ts: 1608µs, application-code: 86ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 9ms[2m (next.js: 1244µs, proxy.ts: 1904µs, application-code: 6ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.conversations.list","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 10ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 4ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.list","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 12ms[2m (next.js: 7ms, proxy.ts: 3ms, application-code: 3ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.list","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 48ms[2m (next.js: 40ms, proxy.ts: 3ms, application-code: 5ms)[22m
+[2m[WebServer] [22m[36m[browser][39m [copilot] scope fallback recovery failed: [31mHttpTransportError: HttpTransport: 428 for ai.conversations.list: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)[39m
+[2m[WebServer] [22m[31m    at <unknown> (HttpTransportError: HttpTransport: 428 for ai.conversations.list: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing))
+[2m[WebServer] [22m    at Object.request (src/lib/http-transport.ts:210:15)
+[2m[WebServer] [22m    at async client.<computed> [as listConversations] (../contract/src/client.ts:60:19)
+[2m[WebServer] [22m    at async AICopilotContent.useEffect (src/features/copilot/ai-copilot-content.tsx:2006:23)[39m
+[2m[WebServer] [22m  208 |           /* 非 JSON body,忽略 */
+[2m[WebServer] [22m  209 |         }
+[2m[WebServer] [22m> 210 |         throw new HttpTransportError(
+[2m[WebServer] [22m      |               ^
+[2m[WebServer] [22m  211 |           `HttpTransport: ${res.status} for ${endpoint.id}${detail}`,
+[2m[WebServer] [22m  212 |           { status: res.status, code, details },
+[2m[WebServer] [22m  213 |         ); [2m(src/features/copilot/ai-copilot-content.tsx:2022:17)[22m
+  ✓  31 [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › ai-copilot-overlay (/?copilot=open) renders the main region (1.3s)
+[2m[WebServer] [22m GET /?copilot=open [32m200[39m in 89ms[2m (next.js: 1389µs, proxy.ts: 1314µs, application-code: 87ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 9ms[2m (next.js: 1526µs, proxy.ts: 1610µs, application-code: 6ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.conversations.list","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 10ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 4ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.list","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 13ms[2m (next.js: 7ms, proxy.ts: 3ms, application-code: 3ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.list","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 17ms[2m (next.js: 10ms, proxy.ts: 3ms, application-code: 4ms)[22m
+[2m[WebServer] [22m[36m[browser][39m [copilot] scope fallback recovery failed: [31mHttpTransportError: HttpTransport: 428 for ai.conversations.list: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)[39m
+[2m[WebServer] [22m[31m    at <unknown> (HttpTransportError: HttpTransport: 428 for ai.conversations.list: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing))
+[2m[WebServer] [22m    at Object.request (src/lib/http-transport.ts:210:15)
+[2m[WebServer] [22m    at async client.<computed> [as listConversations] (../contract/src/client.ts:60:19)
+[2m[WebServer] [22m    at async AICopilotContent.useEffect (src/features/copilot/ai-copilot-content.tsx:2006:23)[39m
+[2m[WebServer] [22m  208 |           /* 非 JSON body,忽略 */
+[2m[WebServer] [22m  209 |         }
+[2m[WebServer] [22m> 210 |         throw new HttpTransportError(
+[2m[WebServer] [22m      |               ^
+[2m[WebServer] [22m  211 |           `HttpTransport: ${res.status} for ${endpoint.id}${detail}`,
+[2m[WebServer] [22m  212 |           { status: res.status, code, details },
+[2m[WebServer] [22m  213 |         ); [2m(src/features/copilot/ai-copilot-content.tsx:2022:17)[22m
+  ✘  32 [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › ai-copilot-overlay (/?copilot=open) matches the reference image (2.8s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /?copilot=open [32m200[39m in 98ms[2m (next.js: 1943µs, proxy.ts: 1594µs, application-code: 95ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1533µs, proxy.ts: 1828µs, application-code: 7ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.conversations.list","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 11ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 5ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.list","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 15ms[2m (next.js: 8ms, proxy.ts: 4ms, application-code: 4ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ai.tasks.list","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 22ms[2m (next.js: 12ms, proxy.ts: 4ms, application-code: 6ms)[22m
+[2m[WebServer] [22m[36m[browser][39m [copilot] scope fallback recovery failed: [31mHttpTransportError: HttpTransport: 428 for ai.conversations.list: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)[39m
+[2m[WebServer] [22m[31m    at <unknown> (HttpTransportError: HttpTransport: 428 for ai.conversations.list: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing))
+[2m[WebServer] [22m    at Object.request (src/lib/http-transport.ts:210:15)
+[2m[WebServer] [22m    at async client.<computed> [as listConversations] (../contract/src/client.ts:60:19)
+[2m[WebServer] [22m    at async AICopilotContent.useEffect (src/features/copilot/ai-copilot-content.tsx:2006:23)[39m
+[2m[WebServer] [22m  208 |           /* 非 JSON body,忽略 */
+[2m[WebServer] [22m  209 |         }
+[2m[WebServer] [22m> 210 |         throw new HttpTransportError(
+[2m[WebServer] [22m      |               ^
+[2m[WebServer] [22m  211 |           `HttpTransport: ${res.status} for ${endpoint.id}${detail}`,
+[2m[WebServer] [22m  212 |           { status: res.status, code, details },
+[2m[WebServer] [22m  213 |         ); [2m(src/features/copilot/ai-copilot-content.tsx:2022:17)[22m
+  ✘  33 [visual] › tests/visual/pages/ai-copilot.spec.ts:17:7 › AI Copilot dialog (visual) › renders the centered dialog on the home route (6.3s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m[review] readReviewHistory 读失败(诚实空,但这不是正常态): Error [AccountRequiredError]: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)
+[2m[WebServer] [22m    at requireAccountId (../backend/src/errors.ts:85:11)
+[2m[WebServer] [22m    at workspaceKey (../backend/src/workspace-scope.ts:10:51)
+[2m[WebServer] [22m    at requireWorkspace (../backend/src/workspace-scope.ts:12:87)
+[2m[WebServer] [22m    at Object.listOutputIdsByProject (../backend/src/modules/projects/projects.service.ts:1709:23)
+[2m[WebServer] [22m    at Object.verifyProjectOwned (src/server/persistence-client.ts:2516:31)
+[2m[WebServer] [22m    at Object.listReviews (../backend/src/modules/reviews/reviews.service.ts:202:22)
+[2m[WebServer] [22m    at Object.request (../backend/src/modules/reviews/reviews.transport.ts:59:41)
+[2m[WebServer] [22m    at Object.request (../backend/src/application/transport.ts:100:37)
+[2m[WebServer] [22m  [90m83 |[0m ): string {
+[2m[WebServer] [22m  [90m84 |[0m   [36mif[0m (!accountId) {
+[2m[WebServer] [22m[31m[1m>[0m [90m85 |[0m     [36mthrow[0m [36mnew[0m [33mAccountRequiredError[0m(
+[2m[WebServer] [22m  [90m   |[0m           [31m[1m^[0m
+[2m[WebServer] [22m  [90m86 |[0m       [32m`AccountRequiredError: [0m${what[32m} requires a selected account (ctx.accountId missing)`[0m,
+[2m[WebServer] [22m  [90m87 |[0m     );
+[2m[WebServer] [22m  [90m88 |[0m   } {
+[2m[WebServer] [22m  code: [32m'AccountRequiredError'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET /projects/project-podcast-launch/review [32m200[39m in 118ms[2m (next.js: 5ms, proxy.ts: 1677µs, application-code: 111ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1870µs, proxy.ts: 1767µs, application-code: 9ms)[22m
+  ✘  34 [visual] › tests/visual/pages/analytics-review.spec.ts:18:7 › Analytics & Review page › renders the analytics review structure on the /projects/:projectId/review route (6.1s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /assets [32m200[39m in 76ms[2m (next.js: 4ms, proxy.ts: 4ms, application-code: 68ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 5ms, proxy.ts: 3ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 15ms, proxy.ts: 3ms, application-code: 7ms)[22m
+  ✘  35 [visual] › tests/visual/pages/assets.spec.ts:19:7 › Assets Center page › renders the assets structure on the /assets route (6.5s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET / [32m200[39m in 87ms[2m (next.js: 3ms, proxy.ts: 1728µs, application-code: 83ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1382µs, proxy.ts: 2ms, application-code: 8ms)[22m
+  ✘  36 [visual] › tests/visual/pages/dashboard.spec.ts:16:7 › 今日台 page › renders the action-queue structure on the root route (6.0s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /experience [32m200[39m in 74ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 69ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 9ms[2m (next.js: 1431µs, proxy.ts: 1812µs, application-code: 6ms)[22m
+  ✘  37 [visual] › tests/visual/pages/experience.spec.ts:17:7 › 经验裁决台 page › renders the adjudication workbench on the /experience route (5.9s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 1354µs, proxy.ts: 1865µs, application-code: 13ms)[22m
+[2m[WebServer] [22m GET /intelligence [32m200[39m in 238ms[2m (next.js: 30ms, proxy.ts: 3ms, application-code: 206ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 1447µs, proxy.ts: 2ms, application-code: 13ms)[22m
+[2m[WebServer] [22m GET /intelligence [32m200[39m in 84ms[2m (next.js: 1981µs, proxy.ts: 7ms, application-code: 75ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1796µs, proxy.ts: 2ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 11ms, proxy.ts: 2ms, application-code: 9ms)[22m
+  ✓  38 [visual] › tests/visual/pages/intelligence-dark.spec.ts:49:7 › T-520 内容雷达暗色与响应式结构 › 窄桌面单栏、宽桌面三栏，暗色侧栏取主题 token (1.6s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 3ms, proxy.ts: 1831µs, application-code: 8ms)[22m
+[2m[WebServer] [22m GET /intelligence [32m200[39m in 131ms[2m (next.js: 1625µs, proxy.ts: 1340µs, application-code: 128ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1758µs, proxy.ts: 5ms, application-code: 15ms)[22m
+[2m[WebServer] [22m GET /intelligence [32m200[39m in 95ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 91ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1620µs, proxy.ts: 2ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 11ms, proxy.ts: 2ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1502µs, proxy.ts: 1688µs, application-code: 11ms)[22m
+  ✓  39 [visual] › tests/visual/pages/intelligence-dark.spec.ts:91:7 › T-520 内容雷达暗色与响应式结构 › 来源弹窗可滚动、选项换行，关键操作不依赖 hover (1.7s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1309µs, proxy.ts: 1582µs, application-code: 9ms)[22m
+[2m[WebServer] [22m GET /intelligence [32m200[39m in 154ms[2m (next.js: 1945µs, proxy.ts: 2ms, application-code: 150ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1358µs, proxy.ts: 2ms, application-code: 17ms)[22m
+[2m[WebServer] [22m GET /intelligence [32m200[39m in 96ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 91ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1793µs, proxy.ts: 2ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 11ms, proxy.ts: 2ms, application-code: 7ms)[22m
+  ✓  40 [visual] › tests/visual/pages/intelligence-dark.spec.ts:114:7 › T-622 内容雷达筛选排序真机布局 › 最小桌面宽度仍能看到并操作两个筛选和排序 (1.4s)
+[2m[WebServer] [22m GET /knowledge [32m200[39m in 70ms[2m (next.js: 3ms, proxy.ts: 1524µs, application-code: 66ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1712µs, proxy.ts: 1653µs, application-code: 16ms)[22m
+[2m[WebServer] [22m GET /knowledge [32m200[39m in 47ms[2m (next.js: 1788µs, proxy.ts: 1680µs, application-code: 44ms)[22m
+  ✘  41 [visual] › tests/visual/pages/knowledge.spec.ts:19:7 › Knowledge & Memory page › renders the knowledge structure on the /knowledge route (6.1s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error [AccountRequiredError]: AccountRequiredError: legacy workspace requires a selected account (ctx.accountId missing)
+[2m[WebServer] [22m    at requireAccountId (../backend/src/errors.ts:85:11)
+[2m[WebServer] [22m    at workspaceKey (../backend/src/workspace-scope.ts:10:51)
+[2m[WebServer] [22m    at requireWorkspace (../backend/src/workspace-scope.ts:12:87)
+[2m[WebServer] [22m    at Object.getDashboardSummary (../backend/src/modules/projects/projects.service.ts:1798:23)
+[2m[WebServer] [22m    at Object.getDashboardSummary (../backend/src/application/queries/dashboard.ts:31:45)
+[2m[WebServer] [22m    at Object.getDashboard (../backend/src/modules/query-services/query-services.service.ts:90:27)
+[2m[WebServer] [22m    at Object.getDashboard (../backend/src/application/queries/dashboard.ts:432:24)
+[2m[WebServer] [22m    at Object.request (../backend/src/modules/query-services/query-services.transport.ts:68:45)
+[2m[WebServer] [22m    at Object.request (../backend/src/application/transport.ts:100:37)
+[2m[WebServer] [22m  [90m83 |[0m ): string {
+[2m[WebServer] [22m  [90m84 |[0m   [36mif[0m (!accountId) {
+[2m[WebServer] [22m[31m[1m>[0m [90m85 |[0m     [36mthrow[0m [36mnew[0m [33mAccountRequiredError[0m(
+[2m[WebServer] [22m  [90m   |[0m           [31m[1m^[0m
+[2m[WebServer] [22m  [90m86 |[0m       [32m`AccountRequiredError: [0m${what[32m} requires a selected account (ctx.accountId missing)`[0m,
+[2m[WebServer] [22m  [90m87 |[0m     );
+[2m[WebServer] [22m  [90m88 |[0m   } {
+[2m[WebServer] [22m  code: [32m'AccountRequiredError'[39m,
+[2m[WebServer] [22m  digest: [32m'1664152375'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET /projects/new [32m200[39m in 133ms[2m (next.js: 3ms, proxy.ts: 2ms, application-code: 129ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1821µs, proxy.ts: 4ms, application-code: 16ms)[22m
+[2m[WebServer] [22m GET /projects/new [32m200[39m in 118ms[2m (next.js: 1956µs, proxy.ts: 2ms, application-code: 114ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 6ms, proxy.ts: 5ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 5ms, proxy.ts: 2ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 36ms[2m (next.js: 5ms, proxy.ts: 14ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 47ms[2m (next.js: 23ms, proxy.ts: 15ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 69ms[2m (next.js: 33ms, proxy.ts: 15ms, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1230µs, proxy.ts: 1413µs, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1195µs, proxy.ts: 1594µs, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 3ms, proxy.ts: 2ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 30ms[2m (next.js: 20ms, proxy.ts: 4ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 11ms, proxy.ts: 4ms, application-code: 10ms)[22m
+  ✘  42 [visual] › tests/visual/pages/new-project-overlay.spec.ts:19:7 › New Project overlay (visual) › renders the centered dialog on the /projects/new route (6.5s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /projects/project-ainativebrowser/planning [32m200[39m in 79ms[2m (next.js: 6ms, proxy.ts: 1832µs, application-code: 72ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 2ms, proxy.ts: 1733µs, application-code: 17ms)[22m
+[2m[WebServer] [22m GET /projects/project-ainativebrowser/planning [32m200[39m in 64ms[2m (next.js: 3ms, proxy.ts: 5ms, application-code: 56ms)[22m
+[2m[WebServer] [22m GET /projects/project-ainativebrowser [32m200[39m in 69ms[2m (next.js: 5ms, proxy.ts: 2ms, application-code: 61ms)[22m
+[2m[WebServer] [22m GET /projects/project-ainativebrowser [32m200[39m in 70ms[2m (next.js: 19ms, proxy.ts: 2ms, application-code: 49ms)[22m
+  ✘  43 [visual] › tests/visual/pages/planning.spec.ts:18:7 › Planning Workspace page › renders the planning workspace structure on the /projects/:projectId/planning route (6.0s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /projects/project-ainativebrowser [32m200[39m in 88ms[2m (next.js: 4ms, proxy.ts: 1901µs, application-code: 82ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1604µs, proxy.ts: 2ms, application-code: 15ms)[22m
+[2m[WebServer] [22m GET /projects/project-ainativebrowser [32m200[39m in 66ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 61ms)[22m
+  ✘  44 [visual] › tests/visual/pages/project-overview.spec.ts:18:7 › Project Overview page › renders the project overview structure on the /projects/:projectId route (5.9s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /projects [32m200[39m in 72ms[2m (next.js: 3ms, proxy.ts: 1963µs, application-code: 67ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1485µs, proxy.ts: 1962µs, application-code: 15ms)[22m
+[2m[WebServer] [22m GET /projects [32m200[39m in 66ms[2m (next.js: 1998µs, proxy.ts: 2ms, application-code: 62ms)[22m
+  ✘  45 [visual] › tests/visual/pages/projects.spec.ts:17:7 › Projects page › renders the projects structure on the /projects route (6.2s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /publishing [32m200[39m in 74ms[2m (next.js: 3ms, proxy.ts: 1600µs, application-code: 69ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 1304µs, proxy.ts: 3ms, application-code: 14ms)[22m
+[2m[WebServer] [22m GET /publishing [32m200[39m in 129ms[2m (next.js: 1947µs, proxy.ts: 1598µs, application-code: 125ms)[22m
+  ✘  46 [visual] › tests/visual/pages/publishing-center.spec.ts:19:7 › Publishing Center page › renders the publishing center structure on the /publishing route (6.3s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /projects/project-ainativebrowser/publishing [32m200[39m in 77ms[2m (next.js: 5ms, proxy.ts: 1702µs, application-code: 70ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 3ms, proxy.ts: 2ms, application-code: 17ms)[22m
+[2m[WebServer] [22m GET /projects/project-ainativebrowser/publishing [32m200[39m in 95ms[2m (next.js: 3ms, proxy.ts: 1860µs, application-code: 91ms)[22m
+[2m[WebServer] [22m GET /projects/project-ainativebrowser [32m200[39m in 82ms[2m (next.js: 7ms, proxy.ts: 4ms, application-code: 71ms)[22m
+[2m[WebServer] [22m GET /projects/project-ainativebrowser [32m200[39m in 81ms[2m (next.js: 20ms, proxy.ts: 4ms, application-code: 57ms)[22m
+  ✘  47 [visual] › tests/visual/pages/publishing-workspace.spec.ts:19:7 › Publishing Workspace page › renders the publishing workspace structure on the /projects/:projectId/publishing route (6.0s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /projects/project-ainativebrowser/research [32m200[39m in 86ms[2m (next.js: 6ms, proxy.ts: 2ms, application-code: 78ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1446µs, proxy.ts: 3ms, application-code: 18ms)[22m
+[2m[WebServer] [22m GET /projects/project-ainativebrowser/research [32m200[39m in 53ms[2m (next.js: 2ms, proxy.ts: 1704µs, application-code: 49ms)[22m
+[2m[WebServer] [22m GET /projects/project-ainativebrowser [32m200[39m in 74ms[2m (next.js: 5ms, proxy.ts: 3ms, application-code: 67ms)[22m
+[2m[WebServer] [22m GET /projects/project-ainativebrowser [32m200[39m in 75ms[2m (next.js: 15ms, proxy.ts: 3ms, application-code: 57ms)[22m
+  ✘  48 [visual] › tests/visual/pages/research.spec.ts:18:7 › Research Workspace page › renders the research workspace structure on the /projects/:projectId/research route (6.0s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /projects/project-ainativebrowser/script [32m200[39m in 80ms[2m (next.js: 6ms, proxy.ts: 2ms, application-code: 72ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1389µs, proxy.ts: 3ms, application-code: 16ms)[22m
+[2m[WebServer] [22m GET /projects/project-ainativebrowser/script [32m200[39m in 55ms[2m (next.js: 4ms, proxy.ts: 1994µs, application-code: 49ms)[22m
+[2m[WebServer] [22m GET /projects/project-ainativebrowser [32m200[39m in 70ms[2m (next.js: 6ms, proxy.ts: 3ms, application-code: 61ms)[22m
+[2m[WebServer] [22m GET /projects/project-ainativebrowser [32m200[39m in 70ms[2m (next.js: 19ms, proxy.ts: 3ms, application-code: 48ms)[22m
+  ✘  49 [visual] › tests/visual/pages/script.spec.ts:18:7 › Script Workspace page › renders the script workspace structure on the /projects/:projectId/script route (6.0s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /search [32m200[39m in 74ms[2m (next.js: 3ms, proxy.ts: 2ms, application-code: 69ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 1355µs, proxy.ts: 3ms, application-code: 16ms)[22m
+[2m[WebServer] [22m GET /search [32m200[39m in 59ms[2m (next.js: 1675µs, proxy.ts: 1657µs, application-code: 56ms)[22m
+  ✘  50 [visual] › tests/visual/pages/search.spec.ts:19:7 › Global Search page › renders the global search structure on the /search route (6.3s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /search?q=AI [32m200[39m in 74ms[2m (next.js: 3ms, proxy.ts: 1930µs, application-code: 69ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 1510µs, proxy.ts: 1693µs, application-code: 14ms)[22m
+[2m[WebServer] [22m GET /search?q=AI [32m200[39m in 74ms[2m (next.js: 3ms, proxy.ts: 1575µs, application-code: 70ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 12ms[2m (next.js: 1873µs, proxy.ts: 2ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 10ms, proxy.ts: 2ms, application-code: 5ms)[22m
+  ✘  51 [visual] › tests/visual/pages/search.spec.ts:114:7 › Global Search page › URL ?q=... is reflected in the search input value (6.0s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-l1i0pp
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET /settings [32m200[39m in 272ms[2m (next.js: 4ms, proxy.ts: 2ms, application-code: 267ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 54ms[2m (next.js: 17ms, proxy.ts: 7ms, application-code: 30ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 24ms[2m (next.js: 15ms, proxy.ts: 6ms, application-code: 3ms)[22m
+[2m[WebServer] [22m POST /api/web-session [32m200[39m in 31ms[2m (next.js: 11ms, proxy.ts: 14ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 43ms[2m (next.js: 17ms, proxy.ts: 15ms, application-code: 12ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 46ms[2m (next.js: 29ms, proxy.ts: 14ms, application-code: 3ms)[22m
+[2m[WebServer] [22m POST /api/web-session [32m200[39m in 56ms[2m (next.js: 28ms, proxy.ts: 18ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 57ms[2m (next.js: 37ms, proxy.ts: 11ms, application-code: 9ms)[22m
+[2m[WebServer] [22m GET /settings [32m200[39m in 137ms[2m (next.js: 5ms, proxy.ts: 40ms, application-code: 92ms)[22m
+  ✘  52 [visual] › tests/visual/pages/settings.spec.ts:17:7 › Settings page › renders the settings structure on the /settings route (6.7s)
+
+
+  1) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › dashboard (/) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      110903 pixels (ratio 0.08 of all image pixels) are different.
+
+      Snapshot: reference-dashboard.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-dashboard.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 110903 pixels (ratio 0.08 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 110903 pixels (ratio 0.08 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-dashboard (image/png) ─────────────────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-dashboard.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-17def-matches-the-reference-image-visual/reference-dashboard-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-17def-matches-the-reference-image-visual/reference-dashboard-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-17def-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-c582cb46369c2a145e75 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-17def-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-c582cb46369c2a145e75-d170d8d495f119563910c48f203ae0c364a8b1dc.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-17def-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-17def-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-17def-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › projects (/projects) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      97881 pixels (ratio 0.07 of all image pixels) are different.
+
+      Snapshot: reference-projects.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-projects.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 97881 pixels (ratio 0.07 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 97881 pixels (ratio 0.07 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-projects (image/png) ──────────────────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-projects.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-0c561-matches-the-reference-image-visual/reference-projects-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-0c561-matches-the-reference-image-visual/reference-projects-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-0c561-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-94e3f8c72578b194dea8 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-0c561-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-94e3f8c72578b194dea8-d26c3dab4f44748f9249d19210bab113bfac30c1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-0c561-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-0c561-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-0c561-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › project-overview (/projects/ai-native-browser) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      74139 pixels (ratio 0.05 of all image pixels) are different.
+
+      Snapshot: reference-project-overview.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-project-overview.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 74139 pixels (ratio 0.05 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 74139 pixels (ratio 0.05 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-project-overview (image/png) ──────────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-project-overview.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6a0f6-matches-the-reference-image-visual/reference-project-overview-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6a0f6-matches-the-reference-image-visual/reference-project-overview-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6a0f6-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-42703063d75b86089fee (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6a0f6-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-42703063d75b86089fee-23686e4209995f90620afc37f0ed493b1fb6ce71.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6a0f6-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6a0f6-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6a0f6-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › research-workspace (/projects/ai-native-browser/research) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      87671 pixels (ratio 0.06 of all image pixels) are different.
+
+      Snapshot: reference-research-workspace.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-research-workspace.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 87671 pixels (ratio 0.06 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 87671 pixels (ratio 0.06 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-research-workspace (image/png) ────────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-research-workspace.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-60294-matches-the-reference-image-visual/reference-research-workspace-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-60294-matches-the-reference-image-visual/reference-research-workspace-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-60294-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-f35fb10c0b9e56349bc6 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-60294-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-f35fb10c0b9e56349bc6-426f643af6e5f6380979bae787356a63f269ac15.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-60294-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-60294-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-60294-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › planning-workspace (/projects/ai-native-browser/planning) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      92314 pixels (ratio 0.06 of all image pixels) are different.
+
+      Snapshot: reference-planning-workspace.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-planning-workspace.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 92314 pixels (ratio 0.06 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 92314 pixels (ratio 0.06 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-planning-workspace (image/png) ────────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-planning-workspace.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f6e31-matches-the-reference-image-visual/reference-planning-workspace-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f6e31-matches-the-reference-image-visual/reference-planning-workspace-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f6e31-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-763bcde5a25494f17718 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f6e31-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-763bcde5a25494f17718-acaaa876a234c901907640abc79ff380392426b0.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f6e31-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f6e31-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f6e31-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › script-workspace (/projects/ai-native-browser/script) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      85271 pixels (ratio 0.06 of all image pixels) are different.
+
+      Snapshot: reference-script-workspace.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-script-workspace.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 85271 pixels (ratio 0.06 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 85271 pixels (ratio 0.06 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-script-workspace (image/png) ──────────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-script-workspace.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-2661f-matches-the-reference-image-visual/reference-script-workspace-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-2661f-matches-the-reference-image-visual/reference-script-workspace-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-2661f-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-0da84f4bad7ad3284cb6 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-2661f-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-0da84f4bad7ad3284cb6-7ec2bd8f5c29034b1944f76a9e4a66a1edc41327.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-2661f-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-2661f-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-2661f-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › publishing-workspace (/projects/ai-native-browser/publishing) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      168476 pixels (ratio 0.11 of all image pixels) are different.
+
+      Snapshot: reference-publishing-workspace.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-publishing-workspace.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 168476 pixels (ratio 0.11 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 168476 pixels (ratio 0.11 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-publishing-workspace (image/png) ──────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-publishing-workspace.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-dcb7b-matches-the-reference-image-visual/reference-publishing-workspace-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-dcb7b-matches-the-reference-image-visual/reference-publishing-workspace-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-dcb7b-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-80f9efb9da096c413fa5 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-dcb7b-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-80f9efb9da096c413fa5-dd73389e9ee48726984ed453447275d3468bf442.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-dcb7b-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-dcb7b-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-dcb7b-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › analytics-review (/projects/ai-native-browser/review) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      106828 pixels (ratio 0.07 of all image pixels) are different.
+
+      Snapshot: reference-analytics-review.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-analytics-review.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 106828 pixels (ratio 0.07 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 106828 pixels (ratio 0.07 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-analytics-review (image/png) ──────────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-analytics-review.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-00cc8-matches-the-reference-image-visual/reference-analytics-review-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-00cc8-matches-the-reference-image-visual/reference-analytics-review-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-00cc8-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-3cc9d53c7a86ef131afd (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-00cc8-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-3cc9d53c7a86ef131afd-621b79f66d611b9f4cf6a00608a27d7ddd5601dc.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-00cc8-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-00cc8-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-00cc8-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  9) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › knowledge (/knowledge) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      73657 pixels (ratio 0.05 of all image pixels) are different.
+
+      Snapshot: reference-knowledge.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-knowledge.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 73657 pixels (ratio 0.05 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 73657 pixels (ratio 0.05 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-knowledge (image/png) ─────────────────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-knowledge.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-36c8b-matches-the-reference-image-visual/reference-knowledge-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-36c8b-matches-the-reference-image-visual/reference-knowledge-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-36c8b-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-9a049737885cd32d27f9 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-36c8b-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-9a049737885cd32d27f9-06a7cf00770b8ab6fa99549a3c52fd40e6b3cdb8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-36c8b-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-36c8b-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-36c8b-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › assets (/assets) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      286683 pixels (ratio 0.19 of all image pixels) are different.
+
+      Snapshot: reference-assets.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-assets.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 286683 pixels (ratio 0.19 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 286683 pixels (ratio 0.19 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-assets (image/png) ────────────────────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-assets.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-7b19c-matches-the-reference-image-visual/reference-assets-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-7b19c-matches-the-reference-image-visual/reference-assets-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-7b19c-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-0b5401231e2becc0fb45 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-7b19c-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-0b5401231e2becc0fb45-34d7602d647c4d9cb42e0f69d3d716a062dab36b.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-7b19c-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-7b19c-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-7b19c-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  11) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › publishing-center (/publishing) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      111472 pixels (ratio 0.08 of all image pixels) are different.
+
+      Snapshot: reference-publishing-center.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-publishing-center.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 111472 pixels (ratio 0.08 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 111472 pixels (ratio 0.08 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-publishing-center (image/png) ─────────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-publishing-center.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-3c3c9-matches-the-reference-image-visual/reference-publishing-center-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-3c3c9-matches-the-reference-image-visual/reference-publishing-center-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-3c3c9-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-bad7308103ee1281488e (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-3c3c9-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-bad7308103ee1281488e-d808d13052f0a2a9b142605643f0620a0f424d5f.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-3c3c9-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-3c3c9-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-3c3c9-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  12) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › experience (/experience) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      83384 pixels (ratio 0.06 of all image pixels) are different.
+
+      Snapshot: reference-experience.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-experience.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 83384 pixels (ratio 0.06 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 83384 pixels (ratio 0.06 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-experience (image/png) ────────────────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-experience.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-57c4f-matches-the-reference-image-visual/reference-experience-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-57c4f-matches-the-reference-image-visual/reference-experience-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-57c4f-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-a9339107148d4cf00c2f (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-57c4f-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-a9339107148d4cf00c2f-12ce1cf3983a95553d966fdd80e70788e3d5b84d.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-57c4f-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-57c4f-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-57c4f-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  13) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › search (/search) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      185629 pixels (ratio 0.12 of all image pixels) are different.
+
+      Snapshot: reference-search.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-search.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 185629 pixels (ratio 0.12 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 185629 pixels (ratio 0.12 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-search (image/png) ────────────────────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-search.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-b6156-matches-the-reference-image-visual/reference-search-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-b6156-matches-the-reference-image-visual/reference-search-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-b6156-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-b42999792dd702d23643 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-b6156-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-b42999792dd702d23643-9e2ca08c892a91b5ef5ba111864af2f48cae011f.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-b6156-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-b6156-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-b6156-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  14) [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › settings (/settings) renders the main region
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator:  locator('main[data-app="creatoros"]')
+    Expected: visible
+    Received: hidden
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('main[data-app="creatoros"]')[22m
+    [2m    13 × locator resolved to <main data-app="creatoros" data-page="settings" data-settings-id="settings-root" class="flex flex-col gap-section-gap"></main>[22m
+    [2m       - unexpected value "hidden"[22m
+
+
+      35 |       await page.goto(route.pathname);
+      36 |       const main = page.locator('main[data-app="creatoros"]');
+    > 37 |       await expect(main).toBeVisible();
+         |                          ^
+      38 |     });
+      39 |
+      40 |     test(`${route.id} (${route.pathname}) matches the reference image`, async ({
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:37:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-12046-ngs-renders-the-main-region-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-e63384523d2d26cf7876-41a8ecd00253b2dfe9c7 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-12046-ngs-renders-the-main-region-visual/attachments/t1207-e63384523d2d26cf7876-41a8ecd00253b2dfe9c7-56160970d5489c2ea96e69103cfce9fb5fe82171.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-12046-ngs-renders-the-main-region-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-12046-ngs-renders-the-main-region-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-12046-ngs-renders-the-main-region-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  15) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › settings (/settings) matches the reference image
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator:  locator('main[data-app="creatoros"]')
+    Expected: visible
+    Received: hidden
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('main[data-app="creatoros"]')[22m
+    [2m    13 × locator resolved to <main data-app="creatoros" data-page="settings" data-settings-id="settings-root" class="flex flex-col gap-section-gap"></main>[22m
+    [2m       - unexpected value "hidden"[22m
+
+
+      42 |     }) => {
+      43 |       await page.goto(route.pathname);
+    > 44 |       await expect(page.locator('main[data-app="creatoros"]')).toBeVisible();
+         |                                                                ^
+      45 |
+      46 |       // Wait for fonts/layout to settle. We use networkidle rather
+      47 |       // than a hard sleep so the test stays fast on green paths.
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:44:64
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-31d10-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-e63384523d2d26cf7876-862275567e7a5fd2a655 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-31d10-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-862275567e7a5fd2a655-4850341ffbfacf110589a4dad4a127bdc5bfe517.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-31d10-matches-the-reference-image-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-31d10-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-31d10-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  16) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › new-project-overlay (/projects/new) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      869582 pixels (ratio 0.56 of all image pixels) are different.
+
+      Snapshot: reference-new-project-overlay.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-new-project-overlay.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 869582 pixels (ratio 0.56 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 869582 pixels (ratio 0.56 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-new-project-overlay (image/png) ───────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-new-project-overlay.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6cd78-matches-the-reference-image-visual/reference-new-project-overlay-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6cd78-matches-the-reference-image-visual/reference-new-project-overlay-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6cd78-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-4f39cdfb91757044887f (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6cd78-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-4f39cdfb91757044887f-f5bf45dba3a61b735b06a3cabea3f9b87e926fbd.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6cd78-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6cd78-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-6cd78-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  17) [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › ai-copilot-overlay (/?copilot=open) matches the reference image
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveScreenshot[2m([22m[32mexpected[39m[2m)[22m failed
+
+      270834 pixels (ratio 0.18 of all image pixels) are different.
+
+      Snapshot: reference-ai-copilot-overlay.png
+
+    Call log:
+    [2m  - Expect "toHaveScreenshot(reference-ai-copilot-overlay.png)" with timeout 5000ms[22m
+    [2m    - verifying given screenshot expectation[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - 270834 pixels (ratio 0.18 of all image pixels) are different.[22m
+    [2m  - waiting 100ms before taking screenshot[22m
+    [2m  - taking page screenshot[22m
+    [2m    - disabled all CSS animations[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+    [2m  - captured a stable screenshot[22m
+    [2m  - 270834 pixels (ratio 0.18 of all image pixels) are different.[22m
+
+
+      55 |       // a directory it knows about — we use the test-results path
+      56 |       // to keep behaviour identical to the project default.
+    > 57 |       await expect(page).toHaveScreenshot(`reference-${route.id}.png`, {
+         |                          ^
+      58 |         fullPage: false,
+      59 |         maxDiffPixelRatio: 0.005,
+      60 |       });
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/all-pages.spec.ts:57:26
+
+    attachment #1: reference-ai-copilot-overlay (image/png) ────────────────────────────────────────
+    Expected: tests/visual/__screenshots__/reference-images/reference-ai-copilot-overlay.png
+    Received: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f5867-matches-the-reference-image-visual/reference-ai-copilot-overlay-actual.png
+    Diff:     ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f5867-matches-the-reference-image-visual/reference-ai-copilot-overlay-diff.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f5867-matches-the-reference-image-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: t1207-e63384523d2d26cf7876-0f3b775121199fc42799 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f5867-matches-the-reference-image-visual/attachments/t1207-e63384523d2d26cf7876-0f3b775121199fc42799-cf18ab0b58b6aea0cbaecd543a17aee0315511e1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f5867-matches-the-reference-image-visual/error-context.md
+
+    attachment #5: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f5867-matches-the-reference-image-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-all-pages-Visual-ma-f5867-matches-the-reference-image-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  18) [visual] › tests/visual/pages/ai-copilot.spec.ts:17:7 › AI Copilot dialog (visual) › renders the centered dialog on the home route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoContainText[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator: getByRole('dialog')
+    Expected substring: [32m"你的个人创作 Copilot"[39m
+    Received string:    [31m"AI 助手AI 助手描述你的目标，我来帮你规划下一步新对话历史记录未关联项目 · 输入 @ 引用一个项目在画布中打开描述你的目标，我来帮你规划下一步试试「基于最近评论出 5 个选题」，或用下方推荐指令开聊。添加文件或图片也可拖到这里；图片识别效果取决于当前模型分析机会生成脚本寻找素材生成图片素材生成视频素材生成封面发布复盘⌘/Ctrl ↩ 发送 · Enter 换行清空生成按 Esc 关闭 · ↑↓ 切换 · Enter 执行"[39m
+    Timeout: 5000ms
+
+    Call log:
+    [2m  - Expect "toContainText" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('dialog')[22m
+    [2m    14 × locator resolved to <div role="dialog" tabindex="-1" aria-modal="true" aria-label="AI 助手" data-slot="overlay-panel" data-overlay-panel="copilot" class="relative z-10 flex max-h-[calc(100vh-48px)] max-w-[calc(100vw-48px)] flex-none flex-col gap-3 overflow-hidden rounded-2xl bg-surface p-6 text-foreground shadow-2xl focus:outline-none">…</div>[22m
+    [2m       - unexpected value "AI 助手AI 助手描述你的目标，我来帮你规划下一步新对话历史记录未关联项目 · 输入 @ 引用一个项目在画布中打开描述你的目标，我来帮你规划下一步试试「基于最近评论出 5 个选题」，或用下方推荐指令开聊。添加文件或图片也可拖到这里；图片识别效果取决于当前模型分析机会生成脚本寻找素材生成图片素材生成视频素材生成封面发布复盘⌘/Ctrl ↩ 发送 · Enter 换行清空生成按 Esc 关闭 · ↑↓ 切换 · Enter 执行"[22m
+
+
+      28 |
+      29 |     // Header slots present.
+    > 30 |     await expect(dialog).toContainText("你的个人创作 Copilot");
+         |                          ^
+      31 |     await expect(
+      32 |       page.locator('[data-slot="ai-copilot-close"]'),
+      33 |     ).toBeVisible();
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/ai-copilot.spec.ts:30:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-ai-copilot-AI-a4565-ed-dialog-on-the-home-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-28fb1c55d3320343a241-38b19dd11df599353866 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-ai-copilot-AI-a4565-ed-dialog-on-the-home-route-visual/attachments/t1207-28fb1c55d3320343a241-38b19dd11df599353866-4848c396c639712902ef221831d97ffd5ca4592e.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-ai-copilot-AI-a4565-ed-dialog-on-the-home-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-ai-copilot-AI-a4565-ed-dialog-on-the-home-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-ai-copilot-AI-a4565-ed-dialog-on-the-home-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  19) [visual] › tests/visual/pages/analytics-review.spec.ts:18:7 › Analytics & Review page › renders the analytics review structure on the /projects/:projectId/review route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveCount[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  locator('[data-slot="header-stage-stepper"] li')
+    Expected: [32m6[39m
+    Received: [31m2[39m
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toHaveCount" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-slot="header-stage-stepper"] li')[22m
+    [2m    14 × locator resolved to 2 elements[22m
+    [2m       - unexpected value "2"[22m
+
+
+      34 |       '[data-slot="header-stage-stepper"] li',
+      35 |     );
+    > 36 |     await expect(stepperItems).toHaveCount(6);
+         |                                ^
+      37 |     const activeStage = page.locator(
+      38 |       '[data-slot="header-stage-stepper"] [data-status="in_progress"]',
+      39 |     );
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/analytics-review.spec.ts:36:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-analytics-rev-45f98-ects-projectId-review-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-5845c0740f3c8ad28d95-12dd4969627bec187e38 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-analytics-rev-45f98-ects-projectId-review-route-visual/attachments/t1207-5845c0740f3c8ad28d95-12dd4969627bec187e38-24aec848a9fa4d45210a50bbdaa841bdf20df1bd.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-analytics-rev-45f98-ects-projectId-review-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-analytics-rev-45f98-ects-projectId-review-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-analytics-rev-45f98-ects-projectId-review-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  20) [visual] › tests/visual/pages/assets.spec.ts:19:7 › Assets Center page › renders the assets structure on the /assets route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveCount[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  locator('main[data-page="assets"]')
+    Expected: [32m1[39m
+    Received: [31m0[39m
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toHaveCount" with timeout 5000ms[22m
+    [2m  - waiting for locator('main[data-page="assets"]')[22m
+    [2m    14 × locator resolved to 0 elements[22m
+    [2m       - unexpected value "0"[22m
+
+
+      41 |     // The main <main data-page="assets"> region exists exactly once.
+      42 |     const main = page.locator('main[data-page="assets"]');
+    > 43 |     await expect(main).toHaveCount(1);
+         |                        ^
+      44 |
+      45 |     // AssetToolbar (search input present).
+      46 |     const toolbar = main.locator('[data-slot="asset-toolbar"]');
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/assets.spec.ts:43:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-assets-Assets-a1a2e-ructure-on-the-assets-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-3ca8bcbc0a4850866990-69fde517b3ad618b5237 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-assets-Assets-a1a2e-ructure-on-the-assets-route-visual/attachments/t1207-3ca8bcbc0a4850866990-69fde517b3ad618b5237-589da4f4989a78046a20dd4f0e29bc6bf290153d.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-assets-Assets-a1a2e-ructure-on-the-assets-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-assets-Assets-a1a2e-ructure-on-the-assets-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-assets-Assets-a1a2e-ructure-on-the-assets-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  21) [visual] › tests/visual/pages/dashboard.spec.ts:16:7 › 今日台 page › renders the action-queue structure on the root route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-slot="today-queue"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-slot="today-queue"]')[22m
+
+
+      21 |     // 主体:行动队列(有数据渲行,全空渲引导空态 —— 二者必居其一,绝不空白)。
+      22 |     const queue = page.locator('[data-slot="today-queue"]');
+    > 23 |     await expect(queue).toBeVisible();
+         |                         ^
+      24 |     const rows = queue.locator('[data-slot="today-action"]');
+      25 |     const empty = queue.locator('[data-slot="today-queue-empty"]');
+      26 |     expect((await rows.count()) > 0 || (await empty.count()) === 1).toBe(true);
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/dashboard.spec.ts:23:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-dashboard-今日台-2c0a2-structure-on-the-root-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-08752b806088b402ee77-f2c07842ceda70adfa03 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-dashboard-今日台-2c0a2-structure-on-the-root-route-visual/attachments/t1207-08752b806088b402ee77-f2c07842ceda70adfa03-4753f2980fa86034ea8857e4cdaf7fc8f09cb822.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-dashboard-今日台-2c0a2-structure-on-the-root-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-dashboard-今日台-2c0a2-structure-on-the-root-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-dashboard-今日台-2c0a2-structure-on-the-root-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  22) [visual] › tests/visual/pages/experience.spec.ts:17:7 › 经验裁决台 page › renders the adjudication workbench on the /experience route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoContainText[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator: locator('[data-slot="header-page-heading"]')
+    Expected substring: [32m"经验沉淀"[39m
+    Received string:    [31m""[39m
+    Timeout: 5000ms
+
+    Call log:
+    [2m  - Expect "toContainText" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-slot="header-page-heading"]')[22m
+    [2m    14 × locator resolved to <div class="min-w-0 flex-1" data-slot="header-page-heading"></div>[22m
+    [2m       - unexpected value ""[22m
+
+
+      24 |     await expect(header).toHaveAttribute("data-mode", "global");
+      25 |     const heading = page.locator('[data-slot="header-page-heading"]');
+    > 26 |     await expect(heading).toContainText("经验沉淀");
+         |                           ^
+      27 |
+      28 |     // Exactly one AppShell — no second Sidebar/TopHeader.
+      29 |     await expect(page.locator('[data-slot="app-shell"]')).toHaveCount(1);
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/experience.spec.ts:26:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-experience-经验-afd4c-nch-on-the-experience-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-aa75ce3727329a3caff4-68d02abff100af42ad0c (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-experience-经验-afd4c-nch-on-the-experience-route-visual/attachments/t1207-aa75ce3727329a3caff4-68d02abff100af42ad0c-ad77422a206d570866495d81a5595617be18b0ac.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-experience-经验-afd4c-nch-on-the-experience-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-experience-经验-afd4c-nch-on-the-experience-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-experience-经验-afd4c-nch-on-the-experience-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  23) [visual] › tests/visual/pages/knowledge.spec.ts:19:7 › Knowledge & Memory page › renders the knowledge structure on the /knowledge route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveCount[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  locator('main[data-page="knowledge"]')
+    Expected: [32m1[39m
+    Received: [31m0[39m
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toHaveCount" with timeout 5000ms[22m
+    [2m  - waiting for locator('main[data-page="knowledge"]')[22m
+    [2m    14 × locator resolved to 0 elements[22m
+    [2m       - unexpected value "0"[22m
+
+
+      42 |     // The main <main data-page="knowledge"> region exists exactly once.
+      43 |     const main = page.locator('main[data-page="knowledge"]');
+    > 44 |     await expect(main).toHaveCount(1);
+         |                        ^
+      45 |
+      46 |     // KnowledgeToolbar (search input present).
+      47 |     const toolbar = page.locator('[data-slot="knowledge-toolbar"]');
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/knowledge.spec.ts:44:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-knowledge-Kno-b0f95-ture-on-the-knowledge-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-486fbb919734504a83c7-e2455cceb299cd7a8401 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-knowledge-Kno-b0f95-ture-on-the-knowledge-route-visual/attachments/t1207-486fbb919734504a83c7-e2455cceb299cd7a8401-bfb12e3d47d86419a56a9c862a345ceef9b2d344.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-knowledge-Kno-b0f95-ture-on-the-knowledge-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-knowledge-Kno-b0f95-ture-on-the-knowledge-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-knowledge-Kno-b0f95-ture-on-the-knowledge-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  24) [visual] › tests/visual/pages/new-project-overlay.spec.ts:19:7 › New Project overlay (visual) › renders the centered dialog on the /projects/new route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-testid="new-project-platform"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-testid="new-project-platform"]')[22m
+
+
+      44 |     await expect(
+      45 |       page.locator('[data-testid="new-project-platform"]'),
+    > 46 |     ).toBeVisible();
+         |       ^
+      47 |     await expect(
+      48 |       page.locator('[data-testid="new-project-content-type"]'),
+      49 |     ).toBeVisible();
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/new-project-overlay.spec.ts:46:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-new-project-o-3b2f3-g-on-the-projects-new-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-cdf8d96ff0f0354eb3ea-e776a5b65f350776c2a5 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-new-project-o-3b2f3-g-on-the-projects-new-route-visual/attachments/t1207-cdf8d96ff0f0354eb3ea-e776a5b65f350776c2a5-ed72bb58bd3e76dd410f28b10e92a4331f17ade3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-new-project-o-3b2f3-g-on-the-projects-new-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-new-project-o-3b2f3-g-on-the-projects-new-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-new-project-o-3b2f3-g-on-the-projects-new-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  25) [visual] › tests/visual/pages/planning.spec.ts:18:7 › Planning Workspace page › renders the planning workspace structure on the /projects/:projectId/planning route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-slot="app-top-header"]').getByRole('button', { name: /进入下一步:脚本撰写/ })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-slot="app-top-header"]').getByRole('button', { name: /进入下一步:脚本撰写/ })[22m
+
+
+      33 |     await expect(
+      34 |       header.getByRole("button", { name: /进入下一步:脚本撰写/ }),
+    > 35 |     ).toBeVisible();
+         |       ^
+      36 |
+      37 |     // The six-stage stepper in canonical order.
+      38 |     const stepperItems = page.locator(
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/planning.spec.ts:35:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-planning-Plan-f243a-ts-projectId-planning-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-f8cfcf2db64f7909e0f4-163824a128add2abd2e8 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-planning-Plan-f243a-ts-projectId-planning-route-visual/attachments/t1207-f8cfcf2db64f7909e0f4-163824a128add2abd2e8-83c0732c441dcdb026fa9cff6de44f1794f4cbd0.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-planning-Plan-f243a-ts-projectId-planning-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-planning-Plan-f243a-ts-projectId-planning-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-planning-Plan-f243a-ts-projectId-planning-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  26) [visual] › tests/visual/pages/project-overview.spec.ts:18:7 › Project Overview page › renders the project overview structure on the /projects/:projectId route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('heading', { name: /AI Native Browser 深度解析/, level: 1 })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('heading', { name: /AI Native Browser 深度解析/, level: 1 })[22m
+
+
+      27 |         name: /AI Native Browser 深度解析/,
+      28 |       }),
+    > 29 |     ).toBeVisible();
+         |       ^
+      30 |
+      31 |     // The full-width progress card with the six-stage stepper.
+      32 |     const progressCard = page.locator(
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/project-overview.spec.ts:29:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-project-overv-f012b-he-projects-projectId-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-4ac99b6fcdaedef03bac-854dd39dd6bf6f3b2401 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-project-overv-f012b-he-projects-projectId-route-visual/attachments/t1207-4ac99b6fcdaedef03bac-854dd39dd6bf6f3b2401-d7b90cb9a0e161551e7b9d69cee48a929a69dee7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-project-overv-f012b-he-projects-projectId-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-project-overv-f012b-he-projects-projectId-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-project-overv-f012b-he-projects-projectId-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  27) [visual] › tests/visual/pages/projects.spec.ts:17:7 › Projects page › renders the projects structure on the /projects route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-slot="app-top-header"]').getByRole('button', { name: '筛选项目' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-slot="app-top-header"]').getByRole('button', { name: '筛选项目' })[22m
+
+
+      31 |     const header = page.locator('[data-slot="app-top-header"]');
+      32 |     await expect(header.getByRole("link", { name: "搜索项目" })).toBeVisible();
+    > 33 |     await expect(header.getByRole("button", { name: "筛选项目" })).toBeVisible();
+         |                                                                ^
+      34 |     await expect(header.getByRole("link", { name: /新建项目/ })).toBeVisible();
+      35 |
+      36 |     // Seven status tabs in the locked order.
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/projects.spec.ts:33:64
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-projects-Proj-512b6-cture-on-the-projects-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-64da6a2a1195bf8d4630-154c16becb295f2f1bbd (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-projects-Proj-512b6-cture-on-the-projects-route-visual/attachments/t1207-64da6a2a1195bf8d4630-154c16becb295f2f1bbd-5f8d18182ac4b945933399a5233b9c6f7919ad3e.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-projects-Proj-512b6-cture-on-the-projects-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-projects-Proj-512b6-cture-on-the-projects-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-projects-Proj-512b6-cture-on-the-projects-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  28) [visual] › tests/visual/pages/publishing-center.spec.ts:19:7 › Publishing Center page › renders the publishing center structure on the /publishing route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('main[data-page="publishing-center"]').locator('[data-slot="content-type-tabs"]')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('main[data-page="publishing-center"]').locator('[data-slot="content-type-tabs"]')[22m
+
+
+      55 |     await expect(
+      56 |       main.locator('[data-slot="content-type-tabs"]'),
+    > 57 |     ).toBeVisible();
+         |       ^
+      58 |
+      59 |     // PublishingToolbar (search input).
+      60 |     await expect(
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/publishing-center.spec.ts:57:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-publishing-ce-936cc-ure-on-the-publishing-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-039546c8f0ec20a3f27b-2fa2cc55cab19ccd83b4 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-publishing-ce-936cc-ure-on-the-publishing-route-visual/attachments/t1207-039546c8f0ec20a3f27b-2fa2cc55cab19ccd83b4-20bd6e8612b45348a8b60603a055d51b4450ac5f.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-publishing-ce-936cc-ure-on-the-publishing-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-publishing-ce-936cc-ure-on-the-publishing-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-publishing-ce-936cc-ure-on-the-publishing-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  29) [visual] › tests/visual/pages/publishing-workspace.spec.ts:19:7 › Publishing Workspace page › renders the publishing workspace structure on the /projects/:projectId/publishing route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-slot="app-top-header"]').getByRole('button', { name: /查看数据/ })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-slot="app-top-header"]').getByRole('button', { name: /查看数据/ })[22m
+
+
+      34 |     await expect(
+      35 |       header.getByRole("button", { name: /查看数据/ }),
+    > 36 |     ).toBeVisible();
+         |       ^
+      37 |
+      38 |     // The six-stage stepper in canonical order with Publishing active.
+      39 |     const stepperItems = page.locator(
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/publishing-workspace.spec.ts:36:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-publishing-wo-71bc2--projectId-publishing-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-071504da32e44d1f8ae6-322b18ca0537553c3984 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-publishing-wo-71bc2--projectId-publishing-route-visual/attachments/t1207-071504da32e44d1f8ae6-322b18ca0537553c3984-9919a52f818ded749fbdaf3e770b0b2190bd30a6.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-publishing-wo-71bc2--projectId-publishing-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-publishing-wo-71bc2--projectId-publishing-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-publishing-wo-71bc2--projectId-publishing-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  30) [visual] › tests/visual/pages/research.spec.ts:18:7 › Research Workspace page › renders the research workspace structure on the /projects/:projectId/research route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-slot="app-top-header"]').getByRole('button', { name: /进入下一步:策划构思/ })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-slot="app-top-header"]').getByRole('button', { name: /进入下一步:策划构思/ })[22m
+
+
+      33 |     await expect(
+      34 |       header.getByRole("button", { name: /进入下一步:策划构思/ }),
+    > 35 |     ).toBeVisible();
+         |       ^
+      36 |
+      37 |     // The six-stage stepper in canonical order.
+      38 |     const stepperItems = page.locator(
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/research.spec.ts:35:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-research-Rese-842ba-ts-projectId-research-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-c0258ca7683e14b83393-c8ef5c408deb4b2bcc5c (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-research-Rese-842ba-ts-projectId-research-route-visual/attachments/t1207-c0258ca7683e14b83393-c8ef5c408deb4b2bcc5c-3f0c822279849bfd19d7e7d2a8a9c5ceca9bc46f.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-research-Rese-842ba-ts-projectId-research-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-research-Rese-842ba-ts-projectId-research-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-research-Rese-842ba-ts-projectId-research-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  31) [visual] › tests/visual/pages/script.spec.ts:18:7 › Script Workspace page › renders the script workspace structure on the /projects/:projectId/script route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('[data-slot="app-top-header"]').getByRole('button', { name: /进入下一步:拍摄制作/ })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('[data-slot="app-top-header"]').getByRole('button', { name: /进入下一步:拍摄制作/ })[22m
+
+
+      33 |     await expect(
+      34 |       header.getByRole("button", { name: /进入下一步:拍摄制作/ }),
+    > 35 |     ).toBeVisible();
+         |       ^
+      36 |
+      37 |     // The six-stage stepper in canonical order with Script active.
+      38 |     const stepperItems = page.locator(
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/script.spec.ts:35:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-script-Script-23614-ects-projectId-script-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-218f11ee2f19ca4695b9-10f44b74cbb3e6a383c8 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-script-Script-23614-ects-projectId-script-route-visual/attachments/t1207-218f11ee2f19ca4695b9-10f44b74cbb3e6a383c8-077ba0aff7cbacf7f109654b955ec4db85cf25bc.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-script-Script-23614-ects-projectId-script-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-script-Script-23614-ects-projectId-script-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-script-Script-23614-ects-projectId-script-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  32) [visual] › tests/visual/pages/search.spec.ts:19:7 › Global Search page › renders the global search structure on the /search route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator:  locator('main[data-page="search"]').locator('[data-slot="project-result-section"]')
+    Expected: visible
+    Received: hidden
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('main[data-page="search"]').locator('[data-slot="project-result-section"]')[22m
+    [2m    14 × locator resolved to <div data-slot="project-result-section" class="grid grid-cols-1 gap-card-gap sm:grid-cols-2 lg:grid-cols-3"></div>[22m
+    [2m       - unexpected value "hidden"[22m
+
+
+      69 |       '[data-slot="project-result-section"]',
+      70 |     );
+    > 71 |     await expect(projectSection).toBeVisible();
+         |                                  ^
+      72 |     const projectCards = projectSection.locator(
+      73 |       '[data-slot="project-result-card"]',
+      74 |     );
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/search.spec.ts:71:34
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-search-Global-fa803-ructure-on-the-search-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-46061a80166742056f87-1d0ca41f47552c85feb5 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-search-Global-fa803-ructure-on-the-search-route-visual/attachments/t1207-46061a80166742056f87-1d0ca41f47552c85feb5-33d9a922d342880b344e626abb05aeaf2d5228f9.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-search-Global-fa803-ructure-on-the-search-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-search-Global-fa803-ructure-on-the-search-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-search-Global-fa803-ructure-on-the-search-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  33) [visual] › tests/visual/pages/search.spec.ts:114:7 › Global Search page › URL ?q=... is reflected in the search input value
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveValue[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator: locator('main[data-page="search"]').locator('[data-slot="search-page-input"]')
+    Expected: [32m"AI"[39m
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toHaveValue" with timeout 5000ms[22m
+    [2m  - waiting for locator('main[data-page="search"]').locator('[data-slot="search-page-input"]')[22m
+
+
+      118 |     const main = page.locator('main[data-page="search"]');
+      119 |     const input = main.locator('[data-slot="search-page-input"]');
+    > 120 |     await expect(input).toHaveValue("AI");
+          |                         ^
+      121 |   });
+      122 | });
+      123 |
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/search.spec.ts:120:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-search-Global-4fe8b-d-in-the-search-input-value-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-46061a80166742056f87-39c67a46bae4d339d917 (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-search-Global-4fe8b-d-in-the-search-input-value-visual/attachments/t1207-46061a80166742056f87-39c67a46bae4d339d917-661708f72ff42ed18f89db416b4bedbd6e689fb4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-search-Global-4fe8b-d-in-the-search-input-value-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-search-Global-4fe8b-d-in-the-search-input-value-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-search-Global-4fe8b-d-in-the-search-input-value-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  34) [visual] › tests/visual/pages/settings.spec.ts:17:7 › Settings page › renders the settings structure on the /settings route
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveAttribute[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator: getByRole('navigation', { name: '主要导航' }).locator('[aria-current="page"]')
+    Expected: [32m"/settings"[39m
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toHaveAttribute" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('navigation', { name: '主要导航' }).locator('[aria-current="page"]')[22m
+
+
+      37 |     const nav = page.getByRole("navigation", { name: "主要导航" });
+      38 |     const active = nav.locator('[aria-current="page"]');
+    > 39 |     await expect(active).toHaveAttribute("href", "/settings");
+         |                          ^
+      40 |
+      41 |     // The contextual card variant is `assistant` (NOT `storage`).
+      42 |     const assistant = page.locator(
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/visual/pages/settings.spec.ts:39:26
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-settings-Sett-06150-cture-on-the-settings-route-visual/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-1c39bb2c189c4131152c-70b31086f0a6414fdf6e (image/png) ─────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-settings-Sett-06150-cture-on-the-settings-route-visual/attachments/t1207-1c39bb2c189c4131152c-70b31086f0a6414fdf6e-6ab019a6d7c62069685ce4272f69adae9e0f52ab.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/visual-output/visual-pages-settings-Sett-06150-cture-on-the-settings-route-visual/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/visual-output/visual-pages-settings-Sett-06150-cture-on-the-settings-route-visual/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/visual-output/visual-pages-settings-Sett-06150-cture-on-the-settings-route-visual/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  34 failed
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › dashboard (/) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › projects (/projects) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › project-overview (/projects/ai-native-browser) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › research-workspace (/projects/ai-native-browser/research) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › planning-workspace (/projects/ai-native-browser/planning) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › script-workspace (/projects/ai-native-browser/script) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › publishing-workspace (/projects/ai-native-browser/publishing) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › analytics-review (/projects/ai-native-browser/review) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › knowledge (/knowledge) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › assets (/assets) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › publishing-center (/publishing) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › experience (/experience) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › search (/search) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:32:9 › Visual matrix (Task 26) › settings (/settings) renders the main region
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › settings (/settings) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › new-project-overlay (/projects/new) matches the reference image
+    [visual] › tests/visual/all-pages.spec.ts:40:9 › Visual matrix (Task 26) › ai-copilot-overlay (/?copilot=open) matches the reference image
+    [visual] › tests/visual/pages/ai-copilot.spec.ts:17:7 › AI Copilot dialog (visual) › renders the centered dialog on the home route
+    [visual] › tests/visual/pages/analytics-review.spec.ts:18:7 › Analytics & Review page › renders the analytics review structure on the /projects/:projectId/review route
+    [visual] › tests/visual/pages/assets.spec.ts:19:7 › Assets Center page › renders the assets structure on the /assets route
+    [visual] › tests/visual/pages/dashboard.spec.ts:16:7 › 今日台 page › renders the action-queue structure on the root route
+    [visual] › tests/visual/pages/experience.spec.ts:17:7 › 经验裁决台 page › renders the adjudication workbench on the /experience route
+    [visual] › tests/visual/pages/knowledge.spec.ts:19:7 › Knowledge & Memory page › renders the knowledge structure on the /knowledge route
+    [visual] › tests/visual/pages/new-project-overlay.spec.ts:19:7 › New Project overlay (visual) › renders the centered dialog on the /projects/new route
+    [visual] › tests/visual/pages/planning.spec.ts:18:7 › Planning Workspace page › renders the planning workspace structure on the /projects/:projectId/planning route
+    [visual] › tests/visual/pages/project-overview.spec.ts:18:7 › Project Overview page › renders the project overview structure on the /projects/:projectId route
+    [visual] › tests/visual/pages/projects.spec.ts:17:7 › Projects page › renders the projects structure on the /projects route
+    [visual] › tests/visual/pages/publishing-center.spec.ts:19:7 › Publishing Center page › renders the publishing center structure on the /publishing route
+    [visual] › tests/visual/pages/publishing-workspace.spec.ts:19:7 › Publishing Workspace page › renders the publishing workspace structure on the /projects/:projectId/publishing route
+    [visual] › tests/visual/pages/research.spec.ts:18:7 › Research Workspace page › renders the research workspace structure on the /projects/:projectId/research route
+    [visual] › tests/visual/pages/script.spec.ts:18:7 › Script Workspace page › renders the script workspace structure on the /projects/:projectId/script route
+    [visual] › tests/visual/pages/search.spec.ts:19:7 › Global Search page › renders the global search structure on the /search route
+    [visual] › tests/visual/pages/search.spec.ts:114:7 › Global Search page › URL ?q=... is reflected in the search input value
+    [visual] › tests/visual/pages/settings.spec.ts:17:7 › Settings page › renders the settings structure on the /settings route
+  18 passed (3.8m)

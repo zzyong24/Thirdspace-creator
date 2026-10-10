@@ -1,0 +1,199 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-L8fWj1
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 predev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> node ../ai-worker/scripts/build.mjs
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexJsonRpcConnection.ts:27:93:
+[2m[WebServer] [22m      27 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexCli.ts:29:89:
+[2m[WebServer] [22m      29 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 dev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> next dev --hostname 127.0.0.1 --port 3893
+[2m[WebServer] [22m
+[2m[WebServer] [22m[1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
+[2m[WebServer] [22m- Local:         http://127.0.0.1:3893
+[2m[WebServer] [22m- Network:       http://127.0.0.1:3893
+[2m[WebServer] [22m- Environments: .env.local
+[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 345ms
+[2m[WebServer] [22m[CreatorOS] SIDECAR_STARTUP_VERIFIED
+[2m[WebServer] [22m
+[2m[WebServer] [22m GET / [32m200[39m in 19.0s[2m (next.js: 2.0s, proxy.ts: 133ms, application-code: 16.9s)[22m
+
+Running 1 test using 1 worker
+
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-L8fWj1
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m GET / [32m200[39m in 238ms[2m (next.js: 111ms, proxy.ts: 6ms, application-code: 120ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 907ms[2m (next.js: 874ms, proxy.ts: 4ms, application-code: 30ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 3ms, proxy.ts: 5ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 52ms[2m (next.js: 16ms, proxy.ts: 5ms, application-code: 31ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 3ms, proxy.ts: 6ms, application-code: 25ms)[22m
+[2m[WebServer] [22m GET / [32m200[39m in 190ms[2m (next.js: 31ms, proxy.ts: 8ms, application-code: 152ms)[22m
+[2m[WebServer] [22m GET /projects/project-d425ef9d-10/production?outputId=output-d425ef9d-21 [32m200[39m in 2.8s[2m (next.js: 2.2s, proxy.ts: 11ms, application-code: 566ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 2ms, proxy.ts: 1966µs, application-code: 9ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 5ms, proxy.ts: 27ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 53ms[2m (next.js: 14ms, proxy.ts: 27ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 62ms[2m (next.js: 25ms, proxy.ts: 28ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 93ms[2m (next.js: 57ms, proxy.ts: 28ms, application-code: 8ms)[22m
+[2m[WebServer] [22mError: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m uncaughtException: Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m uncaughtException:  Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 31ms[2m (next.js: 10ms, proxy.ts: 9ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 22ms, proxy.ts: 6ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 309ms[2m (next.js: 14ms, proxy.ts: 24ms, application-code: 271ms)[22m
+[2m[WebServer] [22m PUT /api/v1/blob/groups/grp-d425ef9d-7/projects/%E8%A7%86%E9%A2%91%E5%88%87Tab%E9%AA%8C%E6%94%B6-f9d-10/%E7%B4%A0%E6%9D%90/uploads/objkey-d425ef9d-38-%E4%B8%AD%E6%80%A7%E8%A7%86%E9%A2%91%E7%AC%AC%E4%B8%80%E6%AE%B5.mp4?exp=1791654364161&token=a98ef8b3bf7db0a5179f6e5646bb47047365c38bffb1e095e5e49d992989c365&scope=eyJ1c2VySWQiOiJ1c2VyLWQ0MjVlZjlkLTEiLCJncm91cElkIjoiZ3JwLWQ0MjVlZjlkLTciLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 2.4s[2m (next.js: 2.3s, application-code: 82ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 162ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 158ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 1539µs, proxy.ts: 2ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 1687µs, proxy.ts: 1957µs, application-code: 20ms)[22m
+[2m[WebServer] [22m PUT /api/v1/blob/groups/grp-d425ef9d-7/projects/%E8%A7%86%E9%A2%91%E5%88%87Tab%E9%AA%8C%E6%94%B6-f9d-10/%E7%B4%A0%E6%9D%90/uploads/objkey-d425ef9d-47-%E4%B8%AD%E6%80%A7%E8%A7%86%E9%A2%91%E7%AC%AC%E4%BA%8C%E6%AE%B5.mp4?exp=1791654366865&token=b22becc5fab76bc602300e7c235877f9562a32b34acf4fd7eb104f159064bc37&scope=eyJ1c2VySWQiOiJ1c2VyLWQ0MjVlZjlkLTEiLCJncm91cElkIjoiZ3JwLWQ0MjVlZjlkLTciLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 24ms[2m (next.js: 3ms, application-code: 21ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 101ms[2m (next.js: 3ms, proxy.ts: 1638µs, application-code: 96ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 1359µs, proxy.ts: 1856µs, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1607µs, proxy.ts: 1708µs, application-code: 11ms)[22m
+[2m[WebServer] [22m GET /projects/project-d425ef9d-10 [32m200[39m in 1768ms[2m (next.js: 1626ms, proxy.ts: 1861µs, application-code: 140ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 5ms, proxy.ts: 10ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 17ms, proxy.ts: 9ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 9ms, proxy.ts: 28ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 12ms, proxy.ts: 8ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 31ms[2m (next.js: 10ms, proxy.ts: 14ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 21ms, proxy.ts: 3ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 30ms, proxy.ts: 4ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1570µs, proxy.ts: 1929µs, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 55ms[2m (next.js: 1252µs, proxy.ts: 2ms, application-code: 52ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1609µs, proxy.ts: 1885µs, application-code: 15ms)[22m
+[2m[WebServer] [22m GET /projects/project-d425ef9d-10/production?outputId=output-d425ef9d-21 [32m200[39m in 156ms[2m (next.js: 5ms, proxy.ts: 1798µs, application-code: 149ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1438µs, proxy.ts: 2ms, application-code: 11ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 15ms, proxy.ts: 18ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 49ms[2m (next.js: 23ms, proxy.ts: 18ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 60ms[2m (next.js: 31ms, proxy.ts: 18ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 57ms[2m (next.js: 42ms, proxy.ts: 7ms, application-code: 7ms)[22m
+[2m[WebServer] [22mError: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m uncaughtException: Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m uncaughtException:  Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 10ms, proxy.ts: 14ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 36ms[2m (next.js: 20ms, proxy.ts: 9ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1341µs, proxy.ts: 1847µs, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 32ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 40ms[2m (next.js: 16ms, proxy.ts: 4ms, application-code: 20ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-d425ef9d-7/projects/%E8%A7%86%E9%A2%91%E5%88%87Tab%E9%AA%8C%E6%94%B6-f9d-10/%E7%B4%A0%E6%9D%90/uploads/objkey-d425ef9d-38-%E4%B8%AD%E6%80%A7%E8%A7%86%E9%A2%91%E7%AC%AC%E4%B8%80%E6%AE%B5.mp4?exp=1791654371971&token=05527ad60f89e1d7909f4edd7b16b7305402eb5abf666992ad4824ed6781e57a&scope=eyJ1c2VySWQiOiJ1c2VyLWQ0MjVlZjlkLTEiLCJncm91cElkIjoiZ3JwLWQ0MjVlZjlkLTciLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 24ms[2m (next.js: 3ms, application-code: 22ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-d425ef9d-7/projects/%E8%A7%86%E9%A2%91%E5%88%87Tab%E9%AA%8C%E6%94%B6-f9d-10/%E7%B4%A0%E6%9D%90/uploads/objkey-d425ef9d-38-%E4%B8%AD%E6%80%A7%E8%A7%86%E9%A2%91%E7%AC%AC%E4%B8%80%E6%AE%B5.mp4?exp=1791654371973&token=2050c264fc8c27cbfd30fa7b232bc6d33f212742597581168b9c6c71090233c7&scope=eyJ1c2VySWQiOiJ1c2VyLWQ0MjVlZjlkLTEiLCJncm91cElkIjoiZ3JwLWQ0MjVlZjlkLTciLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 14ms[2m (next.js: 1014µs, application-code: 13ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-d425ef9d-7/projects/%E8%A7%86%E9%A2%91%E5%88%87Tab%E9%AA%8C%E6%94%B6-f9d-10/%E7%B4%A0%E6%9D%90/uploads/objkey-d425ef9d-38-%E4%B8%AD%E6%80%A7%E8%A7%86%E9%A2%91%E7%AC%AC%E4%B8%80%E6%AE%B5.mp4?exp=1791654371971&token=05527ad60f89e1d7909f4edd7b16b7305402eb5abf666992ad4824ed6781e57a&scope=eyJ1c2VySWQiOiJ1c2VyLWQ0MjVlZjlkLTEiLCJncm91cElkIjoiZ3JwLWQ0MjVlZjlkLTciLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 33ms[2m (next.js: 1299µs, application-code: 32ms)[22m
+[2m[WebServer] [22m GET /api/v1/blob/groups/grp-d425ef9d-7/projects/%E8%A7%86%E9%A2%91%E5%88%87Tab%E9%AA%8C%E6%94%B6-f9d-10/%E7%B4%A0%E6%9D%90/uploads/objkey-d425ef9d-38-%E4%B8%AD%E6%80%A7%E8%A7%86%E9%A2%91%E7%AC%AC%E4%B8%80%E6%AE%B5.mp4?exp=1791654371973&token=2050c264fc8c27cbfd30fa7b232bc6d33f212742597581168b9c6c71090233c7&scope=eyJ1c2VySWQiOiJ1c2VyLWQ0MjVlZjlkLTEiLCJncm91cElkIjoiZ3JwLWQ0MjVlZjlkLTciLCJhY2NvdW50SWQiOm51bGx9 [32m200[39m in 15ms[2m (next.js: 2ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 15ms[2m (next.js: 1658µs, proxy.ts: 3ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 60ms[2m (next.js: 7ms, proxy.ts: 18ms, application-code: 35ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 10ms)[22m
+  ✓  1 [e2e] › tests/e2e/t1069-media-tab-session.spec.ts:12:5 › 本地视频逐个导入、未保存切Tab返回、保存刷新保留原素材和工程 (42.7s)
+
+  1 passed (1.1m)

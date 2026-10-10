@@ -1,0 +1,681 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-miDmu7
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 predev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> node ../ai-worker/scripts/build.mjs
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexJsonRpcConnection.ts:27:93:
+[2m[WebServer] [22m      27 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexCli.ts:29:89:
+[2m[WebServer] [22m      29 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 dev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> next dev --hostname 127.0.0.1 --port 3888
+[2m[WebServer] [22m
+[2m[WebServer] [22m[1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
+[2m[WebServer] [22m- Local:         http://127.0.0.1:3888
+[2m[WebServer] [22m- Network:       http://127.0.0.1:3888
+[2m[WebServer] [22m- Environments: .env.local
+[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 365ms
+[2m[WebServer] [22m[CreatorOS] SIDECAR_STARTUP_VERIFIED
+[2m[WebServer] [22m
+[2m[WebServer] [22m GET / [32m200[39m in 21.4s[2m (next.js: 3.0s, proxy.ts: 140ms, application-code: 18.3s)[22m
+
+Running 29 tests using 1 worker
+
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-miDmu7
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 918ms[2m (next.js: 882ms, proxy.ts: 7ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1933µs, proxy.ts: 2ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 1392µs, proxy.ts: 1861µs, application-code: 23ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 49ms[2m (next.js: 1393µs, proxy.ts: 1609µs, application-code: 46ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 1216µs, proxy.ts: 2ms, application-code: 38ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1300µs, proxy.ts: 1584µs, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 1184µs, proxy.ts: 1679µs, application-code: 13ms)[22m
+[2m[WebServer] [22m[page-read] operation=pages.groupOverview.get durationMs=224
+[2m[WebServer] [22m GET / [32m200[39m in 935ms[2m (next.js: 4ms, proxy.ts: 4ms, application-code: 927ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 4ms, proxy.ts: 3ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 4ms, proxy.ts: 4ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 16ms, proxy.ts: 4ms, application-code: 26ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 66ms[2m (next.js: 53ms, proxy.ts: 4ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 84ms[2m (next.js: 62ms, proxy.ts: 5ms, application-code: 18ms)[22m
+  ✓   1 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「首页」/ 显示真实主内容 (2.5s)
+[2m[WebServer] [22m[37m[1m○[22m[39m Compiling /overview ...
+[2m[WebServer] [22m GET /overview [32m200[39m in 6.1s[2m (next.js: 5.9s, proxy.ts: 1506µs, application-code: 249ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 2ms, proxy.ts: 6ms, application-code: 30ms)[22m
+  ✓   2 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「创作者总览」/overview 显示真实主内容 (7.5s)
+[2m[WebServer] [22m GET /positioning [32m200[39m in 504ms[2m (next.js: 60ms, proxy.ts: 8ms, application-code: 436ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 16ms[2m (next.js: 1458µs, proxy.ts: 3ms, application-code: 11ms)[22m
+  ✘   3 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「定位中心」/positioning 显示真实主内容 (7.0s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-miDmu7
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 1469µs, proxy.ts: 3ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1470µs, proxy.ts: 1483µs, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 50ms[2m (next.js: 3ms, proxy.ts: 1610µs, application-code: 46ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 43ms[2m (next.js: 1529µs, proxy.ts: 4ms, application-code: 38ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 1196µs, proxy.ts: 1572µs, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 1314µs, proxy.ts: 4ms, application-code: 13ms)[22m
+[2m[WebServer] [22m GET /intelligence [32m200[39m in 251ms[2m (next.js: 51ms, proxy.ts: 1790µs, application-code: 199ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1494µs, proxy.ts: 6ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 1961µs, proxy.ts: 5ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 17ms, proxy.ts: 3ms, application-code: 8ms)[22m
+  ✓   4 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「内容雷达」/intelligence 显示真实主内容 (1.4s)
+[2m[WebServer] [22m GET /topics [32m200[39m in 218ms[2m (next.js: 34ms, proxy.ts: 1855µs, application-code: 182ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1896µs, proxy.ts: 1925µs, application-code: 15ms)[22m
+  ✘   5 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「选题」/topics 显示真实主内容 (6.2s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-miDmu7
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 1109µs, proxy.ts: 1519µs, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1315µs, proxy.ts: 1518µs, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 58ms[2m (next.js: 1486µs, proxy.ts: 2ms, application-code: 54ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 64ms[2m (next.js: 1620µs, proxy.ts: 1787µs, application-code: 61ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 1546µs, proxy.ts: 1839µs, application-code: 20ms)[22m
+[2m[WebServer] [22m GET /projects [32m200[39m in 1262ms[2m (next.js: 47ms, proxy.ts: 2ms, application-code: 1212ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 30ms[2m (next.js: 4ms, proxy.ts: 4ms, application-code: 22ms)[22m
+  ✓   6 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「项目」/projects 显示真实主内容 (2.5s)
+[2m[WebServer] [22m GET /knowledge [32m200[39m in 240ms[2m (next.js: 36ms, proxy.ts: 1973µs, application-code: 202ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 4ms, proxy.ts: 3ms, application-code: 16ms)[22m
+  ✓   7 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「知识库」/knowledge 显示真实主内容 (1.3s)
+[2m[WebServer] [22m GET /assets [32m200[39m in 625ms[2m (next.js: 26ms, proxy.ts: 1613µs, application-code: 597ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1815µs, proxy.ts: 2ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 12ms, proxy.ts: 2ms, application-code: 14ms)[22m
+  ✓   8 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「素材中心」/assets 显示真实主内容 (1.7s)
+[2m[WebServer] [22m GET /canvases [32m200[39m in 108ms[2m (next.js: 22ms, proxy.ts: 1669µs, application-code: 85ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1340µs, proxy.ts: 2ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 10ms[2m (next.js: 1672µs, proxy.ts: 1749µs, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 6ms, proxy.ts: 7ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 13ms, proxy.ts: 6ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 21ms, proxy.ts: 6ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 56ms[2m (next.js: 32ms, proxy.ts: 6ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 81ms[2m (next.js: 68ms, proxy.ts: 6ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 89ms[2m (next.js: 75ms, proxy.ts: 6ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 7ms, proxy.ts: 4ms, application-code: 17ms)[22m
+  ✓   9 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「创作画布」/canvases 显示真实主内容 (1.4s)
+[2m[WebServer] [22m GET /publishing [32m200[39m in 240ms[2m (next.js: 20ms, proxy.ts: 1478µs, application-code: 219ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1382µs, proxy.ts: 2ms, application-code: 15ms)[22m
+  ✓  10 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「发布中心」/publishing 显示真实主内容 (1.3s)
+[2m[WebServer] [22m[37m[1m○[22m[39m Compiling /daily-report ...
+[2m[WebServer] [22m GET /daily-report [32m200[39m in 5.2s[2m (next.js: 4.5s, proxy.ts: 1344µs, application-code: 679ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1695µs, proxy.ts: 2ms, application-code: 18ms)[22m
+  ✓  11 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「运营分析」/daily-report 显示真实主内容 (6.3s)
+[2m[WebServer] [22m GET /automations [32m200[39m in 1887ms[2m (next.js: 16ms, proxy.ts: 1681µs, application-code: 1870ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 42ms[2m (next.js: 4ms, proxy.ts: 15ms, application-code: 23ms)[22m
+  ✓  12 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「自动化」/automations 显示真实主内容 (5.3s)
+[2m[WebServer] [22m GET /settings [32m200[39m in 877ms[2m (next.js: 119ms, proxy.ts: 2ms, application-code: 756ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 48ms[2m (next.js: 13ms, proxy.ts: 4ms, application-code: 32ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 22ms[2m (next.js: 5ms, proxy.ts: 9ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 71ms[2m (next.js: 49ms, proxy.ts: 9ms, application-code: 13ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m428[39m in 76ms[2m (next.js: 62ms, proxy.ts: 9ms, application-code: 5ms)[22m
+[2m[WebServer] [22m POST /api/web-session [32m200[39m in 104ms[2m (next.js: 40ms, proxy.ts: 9ms, application-code: 55ms)[22m
+[2m[WebServer] [22m POST /api/web-session [32m200[39m in 126ms[2m (next.js: 112ms, proxy.ts: 9ms, application-code: 5ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 128ms[2m (next.js: 26ms, proxy.ts: 92ms, application-code: 10ms)[22m
+  ✘  13 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「设置」/settings 显示真实主内容 (7.4s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-miDmu7
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 1577µs, proxy.ts: 1521µs, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 1373µs, proxy.ts: 3ms, application-code: 22ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 51ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 46ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 1502µs, proxy.ts: 1889µs, application-code: 43ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 1486µs, proxy.ts: 1844µs, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 1286µs, proxy.ts: 2ms, application-code: 14ms)[22m
+[2m[WebServer] [22m GET /accounts [32m200[39m in 229ms[2m (next.js: 44ms, proxy.ts: 1912µs, application-code: 183ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 21ms[2m (next.js: 1567µs, proxy.ts: 1845µs, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 5ms, proxy.ts: 3ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 52ms[2m (next.js: 24ms, proxy.ts: 3ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 61ms[2m (next.js: 50ms, proxy.ts: 4ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 65ms[2m (next.js: 27ms, proxy.ts: 9ms, application-code: 29ms)[22m
+  ✓  14 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:126:7 › T-1207 补充真实页面路由矩阵 › 账号管理页可以打开 (1.6s)
+[2m[WebServer] [22m[36m[browser][39m A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+[2m[WebServer] [22m
+[2m[WebServer] [22m- A server/client branch `if (typeof window !== 'undefined')`.
+[2m[WebServer] [22m- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+[2m[WebServer] [22m- Date formatting in a user's locale which doesn't match the server.
+[2m[WebServer] [22m- External changing data without sending a snapshot of it along with the HTML.
+[2m[WebServer] [22m- Invalid HTML tag nesting.
+[2m[WebServer] [22m
+[2m[WebServer] [22mIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+[2m[WebServer] [22m
+[2m[WebServer] [22mhttps://react.dev/link/hydration-mismatch
+[2m[WebServer] [22m
+[2m[WebServer] [22m  ...
+[2m[WebServer] [22m    <SegmentViewNode type="page" pagePath="(creator)/...">
+[2m[WebServer] [22m      <SegmentTrieNode>
+[2m[WebServer] [22m      <AccountsRoutePage>
+[2m[WebServer] [22m        <AccountManagerPage>
+[2m[WebServer] [22m          <AccountManagerView viewModel={{groups:[...], ...}}>
+[2m[WebServer] [22m            <AccountGroupManager initialGroups={[...]} initialAccounts={[...]}>
+[2m[WebServer] [22m              <main data-testid="account-ma..." data-slot="account-ma..." className="flex min-w...">
+[2m[WebServer] [22m                <header>
+[2m[WebServer] [22m                <div className="grid min-w...">
+[2m[WebServer] [22m                  <aside className="flex min-w...">
+[2m[WebServer] [22m                    <SectionCard title="账号组">
+[2m[WebServer] [22m                      <Card role="region" aria-labelledby="section-ca..." data-slot="section-card" ...>
+[2m[WebServer] [22m                        <div data-slot="section-card" data-size="default" className={"group/ca..."} role="region" ...>
+[2m[WebServer] [22m                          <CardHeader>
+[2m[WebServer] [22m                          <CardContent className="text-sm">
+[2m[WebServer] [22m                            <div data-slot="card-content" className="px-(--card...">
+[2m[WebServer] [22m                              <div className="flex flex-...">
+[2m[WebServer] [22m                                <label className="flex gap-2...">
+[2m[WebServer] [22m                                  <input
+[2m[WebServer] [22m                                    type="checkbox"
+[2m[WebServer] [22m                                    checked={false}
+[2m[WebServer] [22m                                    onChange={function onChange}
+[2m[WebServer] [22m-                                   style={{caret-color:"transparent"}}
+[2m[WebServer] [22m                                  >
+[2m[WebServer] [22m                                  ...
+[2m[WebServer] [22m                                <ul>
+[2m[WebServer] [22m                                <label>
+[2m[WebServer] [22m                                <Input id="new-group-..." value="" onChange={function onChange} disabled={false} ...>
+[2m[WebServer] [22m                                  <input
+[2m[WebServer] [22m                                    type={undefined}
+[2m[WebServer] [22m                                    data-slot="input"
+[2m[WebServer] [22m                                    className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5..."
+[2m[WebServer] [22m                                    id="new-group-name"
+[2m[WebServer] [22m                                    value=""
+[2m[WebServer] [22m                                    onChange={function onChange}
+[2m[WebServer] [22m                                    disabled={false}
+[2m[WebServer] [22m                                    maxLength={120}
+[2m[WebServer] [22m-                                   style={{caret-color:"transparent"}}
+[2m[WebServer] [22m                                  >
+[2m[WebServer] [22m                                ...
+[2m[WebServer] [22m                  <div className="flex min-w...">
+[2m[WebServer] [22m                    ...
+[2m[WebServer] [22m                      <div data-slot="section-card" data-size="default" className={"group/ca..."} role="region" ...>
+[2m[WebServer] [22m                        <CardHeader>
+[2m[WebServer] [22m                        <CardContent className="text-sm">
+[2m[WebServer] [22m                          <div data-slot="card-content" className="px-(--card...">
+[2m[WebServer] [22m                            <div className="flex min-w...">
+[2m[WebServer] [22m                              <div className="flex flex-...">
+[2m[WebServer] [22m                                <label>
+[2m[WebServer] [22m                                <Input id="group-name" className="min-w-0 fl..." value="T-1207 隔离路..." disabled={false} ...>
+[2m[WebServer] [22m                                  <input
+[2m[WebServer] [22m                                    type={undefined}
+[2m[WebServer] [22m                                    data-slot="input"
+[2m[WebServer] [22m                                    className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 te..."
+[2m[WebServer] [22m                                    id="group-name"
+[2m[WebServer] [22m                                    value="T-1207 隔离路由验收组"
+[2m[WebServer] [22m                                    disabled={false}
+[2m[WebServer] [22m                                    onChange={function onChange}
+[2m[WebServer] [22m                                    maxLength={120}
+[2m[WebServer] [22m-                                   style={{caret-color:"transparent"}}
+[2m[WebServer] [22m                                  >
+[2m[WebServer] [22m                                ...
+[2m[WebServer] [22m                              ...
+[2m[WebServer] [22m                    <SectionCard>
+[2m[WebServer] [22m                    <SectionCard>
+[2m[WebServer] [22m                    <SectionCard>
+[2m[WebServer] [22m                    ...
+[2m[WebServer] [22m                      <div data-slot="section-card" data-size="default" className={"group/ca..."} role="region" ...>
+[2m[WebServer] [22m                        <CardHeader>
+[2m[WebServer] [22m                        <CardContent className="text-sm">
+[2m[WebServer] [22m                          <div data-slot="card-content" className="px-(--card...">
+[2m[WebServer] [22m                            <div className="flex min-w...">
+[2m[WebServer] [22m                              <div className="flex flex-...">
+[2m[WebServer] [22m                                <label className="flex items...">
+[2m[WebServer] [22m                                  <input
+[2m[WebServer] [22m                                    type="checkbox"
+[2m[WebServer] [22m                                    checked={false}
+[2m[WebServer] [22m                                    disabled={false}
+[2m[WebServer] [22m                                    onChange={function onChange}
+[2m[WebServer] [22m-                                   style={{caret-color:"transparent"}}
+[2m[WebServer] [22m                                  >
+[2m[WebServer] [22m                                  ...
+[2m[WebServer] [22m                                ...
+[2m[WebServer] [22m                              ...
+[2m[WebServer] [22m                    ...
+[2m[WebServer] [22m                ...
+[2m[WebServer] [22m    ...
+[2m[WebServer] [22m
+[2m[WebServer] [22m[36m[browser][39m [describeUserError] [31mError: 请先进入此账号组，再查看共享资源。[39m
+[2m[WebServer] [22m[31m    at ResourceGrantsPanel.useCallback[check] (src/features/platform-account/resource-grants-panel.tsx:22:128)
+[2m[WebServer] [22m    at ResourceGrantsPanel.useCallback[load] (src/features/platform-account/resource-grants-panel.tsx:34:5)[39m
+[2m[WebServer] [22m  20 | ...
+[2m[WebServer] [22m  21 | ...
+[2m[WebServer] [22m> 22 | ...&writeEpoch.current!==epoch.current))throw Error("请先进入此账号组，再查看共享资源。");...
+[2m[WebServer] [22m     |                                               ^
+[2m[WebServer] [22m  23 | ...
+[2m[WebServer] [22m  24 | ...
+[2m[WebServer] [22m  25 | ... [2m(src/lib/ai-error-humanize.ts:292:13)[22m
+[2m[WebServer] [22m GET /accounts/works?accountId=acct-f5f20467-186 [32m200[39m in 151ms[2m (next.js: 20ms, proxy.ts: 2ms, application-code: 129ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 36ms[2m (next.js: 4ms, proxy.ts: 6ms, application-code: 27ms)[22m
+  ✓  15 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:130:7 › T-1207 补充真实页面路由矩阵 › 当前账号的作品目录页可以打开 (6.1s)
+[2m[WebServer] [22m GET /calendar [32m200[39m in 3.1s[2m (next.js: 2.9s, proxy.ts: 4ms, application-code: 133ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 21ms)[22m
+[2m[WebServer] [22m GET /publishing [32m200[39m in 239ms[2m (next.js: 16ms, proxy.ts: 3ms, application-code: 221ms)[22m
+[2m[WebServer] [22m GET /publishing [32m200[39m in 240ms[2m (next.js: 4ms, proxy.ts: 3ms, application-code: 233ms)[22m
+  ✓  16 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:134:7 › T-1207 补充真实页面路由矩阵 › 发布中心日历子页可以打开 (4.8s)
+[2m[WebServer] [22m GET /projects/project-f5f20467-189 [32m200[39m in 3.8s[2m (next.js: 1738ms, proxy.ts: 1699µs, application-code: 2.1s)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1611µs, proxy.ts: 2ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 14ms[2m (next.js: 4ms, proxy.ts: 3ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 43ms[2m (next.js: 11ms, proxy.ts: 4ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 55ms[2m (next.js: 41ms, proxy.ts: 4ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 63ms[2m (next.js: 51ms, proxy.ts: 4ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 72ms[2m (next.js: 60ms, proxy.ts: 4ms, application-code: 8ms)[22m
+  ✓  17 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「主稿面」路由显示真实内容或有效重定向 (5.0s)
+[2m[WebServer] [22m GET /projects/project-f5f20467-189/research [32m200[39m in 1808ms[2m (next.js: 1651ms, proxy.ts: 1593µs, application-code: 155ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1546µs, proxy.ts: 1853µs, application-code: 18ms)[22m
+[2m[WebServer] [22m GET /projects/project-f5f20467-189 [32m200[39m in 191ms[2m (next.js: 7ms, proxy.ts: 5ms, application-code: 179ms)[22m
+[2m[WebServer] [22m GET /projects/project-f5f20467-189 [32m200[39m in 190ms[2m (next.js: 17ms, proxy.ts: 5ms, application-code: 168ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 155ms[2m (next.js: 53ms, proxy.ts: 79ms, application-code: 23ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 169ms[2m (next.js: 63ms, proxy.ts: 72ms, application-code: 34ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 207ms[2m (next.js: 105ms, proxy.ts: 72ms, application-code: 30ms)[22m
+  ✓  18 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「选题兼容入口」路由显示真实内容或有效重定向 (3.9s)
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET /projects/project-f5f20467-189/planning [32m200[39m in 1529ms[2m (next.js: 1429ms, proxy.ts: 4ms, application-code: 95ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 18ms)[22m
+[2m[WebServer] [22m GET /projects/project-f5f20467-189 [32m200[39m in 190ms[2m (next.js: 15ms, proxy.ts: 4ms, application-code: 170ms)[22m
+[2m[WebServer] [22m GET /projects/project-f5f20467-189 [32m200[39m in 191ms[2m (next.js: 25ms, proxy.ts: 4ms, application-code: 162ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 6ms, proxy.ts: 4ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 20ms, proxy.ts: 5ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 32ms, proxy.ts: 5ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 63ms[2m (next.js: 37ms, proxy.ts: 20ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 52ms[2m (next.js: 3ms, proxy.ts: 43ms, application-code: 7ms)[22m
+  ✓  19 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「计划兼容入口」路由显示真实内容或有效重定向 (3.2s)
+[2m[WebServer] [22m GET /projects/project-f5f20467-189/script [32m200[39m in 1582ms[2m (next.js: 1474ms, proxy.ts: 1558µs, application-code: 107ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1485µs, proxy.ts: 1739µs, application-code: 17ms)[22m
+[2m[WebServer] [22m GET /projects/project-f5f20467-189 [32m200[39m in 186ms[2m (next.js: 16ms, proxy.ts: 5ms, application-code: 165ms)[22m
+[2m[WebServer] [22m GET /projects/project-f5f20467-189 [32m200[39m in 187ms[2m (next.js: 5ms, proxy.ts: 5ms, application-code: 177ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 5ms, proxy.ts: 4ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 15ms, proxy.ts: 4ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 5ms, proxy.ts: 25ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 13ms, proxy.ts: 26ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 9ms, proxy.ts: 13ms, application-code: 7ms)[22m
+  ✓  20 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「脚本兼容入口」路由显示真实内容或有效重定向 (3.2s)
+[2m[WebServer] [22m GET /projects/project-f5f20467-189/publishing [32m200[39m in 1492ms[2m (next.js: 1403ms, proxy.ts: 1518µs, application-code: 87ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1488µs, proxy.ts: 1765µs, application-code: 18ms)[22m
+[2m[WebServer] [22m GET /projects/project-f5f20467-189 [32m200[39m in 171ms[2m (next.js: 7ms, proxy.ts: 2ms, application-code: 162ms)[22m
+[2m[WebServer] [22m GET /projects/project-f5f20467-189 [32m200[39m in 172ms[2m (next.js: 20ms, proxy.ts: 3ms, application-code: 148ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 9ms, proxy.ts: 9ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 15ms, proxy.ts: 11ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 43ms[2m (next.js: 6ms, proxy.ts: 22ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 54ms[2m (next.js: 21ms, proxy.ts: 22ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 70ms[2m (next.js: 33ms, proxy.ts: 22ms, application-code: 14ms)[22m
+  ✓  21 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「发布兼容入口」路由显示真实内容或有效重定向 (3.2s)
+[2m[WebServer] [22m GET /projects/project-f5f20467-189/review [32m200[39m in 2.0s[2m (next.js: 1429ms, proxy.ts: 2ms, application-code: 581ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 1447µs, proxy.ts: 2ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 24ms[2m (next.js: 7ms, proxy.ts: 5ms, application-code: 11ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 19ms, proxy.ts: 6ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 28ms, proxy.ts: 6ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 48ms[2m (next.js: 36ms, proxy.ts: 5ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 56ms[2m (next.js: 43ms, proxy.ts: 6ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 67ms[2m (next.js: 51ms, proxy.ts: 7ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 3ms, proxy.ts: 13ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 30ms[2m (next.js: 10ms, proxy.ts: 14ms, application-code: 6ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 47ms[2m (next.js: 25ms, proxy.ts: 14ms, application-code: 8ms)[22m
+  ✓  22 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「复盘页」路由显示真实内容或有效重定向 (3.7s)
+[2m[WebServer] [22m[37m[1m○[22m[39m Compiling /projects/[projectId]/work ...
+[2m[WebServer] [22m GET /projects/project-f5f20467-189/work [32m200[39m in 5.2s[2m (next.js: 5.0s, proxy.ts: 1502µs, application-code: 188ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 1950ms[2m (next.js: 1214ms, proxy.ts: 650ms, application-code: 86ms)[22m
+  ✓  23 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「组合创作工作台」路由显示真实内容或有效重定向 (8.8s)
+[2m[WebServer] [22m GET /projects/project-f5f20467-189/production?outputId=output-f5f20467-218 [32m200[39m in 1797ms[2m (next.js: 1541ms, proxy.ts: 3ms, application-code: 254ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 1828µs, proxy.ts: 2ms, application-code: 21ms)[22m
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 39ms[2m (next.js: 9ms, proxy.ts: 20ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 71ms[2m (next.js: 40ms, proxy.ts: 23ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 82ms[2m (next.js: 48ms, proxy.ts: 24ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 90ms[2m (next.js: 58ms, proxy.ts: 24ms, application-code: 8ms)[22m
+[2m[WebServer] [22mError: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m uncaughtException: Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m uncaughtException:  Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 12ms, proxy.ts: 24ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 50ms[2m (next.js: 19ms, proxy.ts: 23ms, application-code: 8ms)[22m
+  ✘  24 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「视频剪辑工作台」路由显示真实内容或有效重定向 (7.8s)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-miDmu7
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 4ms, proxy.ts: 5ms, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 18ms[2m (next.js: 3ms, proxy.ts: 1753µs, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1303µs, proxy.ts: 1476µs, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 69ms[2m (next.js: 1817µs, proxy.ts: 1557µs, application-code: 66ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 39ms[2m (next.js: 1257µs, proxy.ts: 1416µs, application-code: 36ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 19ms[2m (next.js: 1156µs, proxy.ts: 1516µs, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1212µs, proxy.ts: 1651µs, application-code: 10ms)[22m
+[2m[WebServer] [22m GET /projects/project-f5f20467-306/article?outputId=output-f5f20467-317 [32m200[39m in 1659ms[2m (next.js: 1506ms, proxy.ts: 1744µs, application-code: 152ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 23ms[2m (next.js: 1322µs, proxy.ts: 1537µs, application-code: 20ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 4ms, proxy.ts: 6ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 22ms, proxy.ts: 6ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 74ms[2m (next.js: 32ms, proxy.ts: 6ms, application-code: 36ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 84ms[2m (next.js: 69ms, proxy.ts: 6ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 168ms[2m (next.js: 156ms, proxy.ts: 6ms, application-code: 6ms)[22m
+  ✓  25 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:157:7 › T-1207 补充真实页面路由矩阵 › 文章工作台读取真实隔离文章作品 (7.8s)
+[2m[WebServer] [22m[37m[1m○[22m[39m Compiling /projects/[projectId]/image ...
+[2m[WebServer] [22m GET /projects/project-f5f20467-306/image [32m200[39m in 5.9s[2m (next.js: 5.5s, proxy.ts: 1852µs, application-code: 416ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 31ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 24ms)[22m
+[2m[WebServer] [22m GET /projects/project-f5f20467-306/outputs/output-f5f20467-326/image [32m200[39m in 1648ms[2m (next.js: 1468ms, proxy.ts: 4ms, application-code: 176ms)[22m
+[2m[WebServer] [22m GET /projects/project-f5f20467-306/outputs/output-f5f20467-326/image [32m200[39m in 1650ms[2m (next.js: 1470ms, proxy.ts: 3ms, application-code: 177ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 5ms, proxy.ts: 8ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 19ms, proxy.ts: 7ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 44ms[2m (next.js: 28ms, proxy.ts: 7ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 52ms[2m (next.js: 37ms, proxy.ts: 7ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 85ms[2m (next.js: 26ms, proxy.ts: 7ms, application-code: 53ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 94ms[2m (next.js: 78ms, proxy.ts: 7ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 111ms[2m (next.js: 73ms, proxy.ts: 29ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 115ms[2m (next.js: 82ms, proxy.ts: 27ms, application-code: 7ms)[22m
+  ✓  26 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:162:7 › T-1207 补充真实页面路由矩阵 › 图文工作台按真实隔离作品 ID 打开 (9.5s)
+[2m[WebServer] [22m GET /projects/project-f5f20467-306/outputs/output-f5f20467-326/image [32m200[39m in 173ms[2m (next.js: 4ms, proxy.ts: 1447µs, application-code: 167ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 1914µs, proxy.ts: 5ms, application-code: 22ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 6ms, proxy.ts: 6ms, application-code: 10ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 36ms[2m (next.js: 16ms, proxy.ts: 7ms, application-code: 13ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 53ms[2m (next.js: 31ms, proxy.ts: 7ms, application-code: 16ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 28ms[2m (next.js: 5ms, proxy.ts: 9ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 92ms[2m (next.js: 21ms, proxy.ts: 9ms, application-code: 62ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 98ms[2m (next.js: 83ms, proxy.ts: 7ms, application-code: 9ms)[22m
+  ✓  27 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:167:7 › T-1207 补充真实页面路由矩阵 › 图文深链按真实隔离作品 ID 打开 (1.4s)
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 128ms[2m (next.js: 112ms, proxy.ts: 7ms, application-code: 10ms)[22m
+[2m[WebServer] [22mError: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m uncaughtException: Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[31m[1m⨯[22m[39m uncaughtException:  Error: aborted
+[2m[WebServer] [22m    at [3mignore-listed frames[23m {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m GET /projects/project-f5f20467-306/outputs/output-f5f20467-335/video [32m200[39m in 3.5s[2m (next.js: 3.4s, proxy.ts: 1650µs, application-code: 130ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 101ms[2m (next.js: 8ms, proxy.ts: 6ms, application-code: 87ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 144ms[2m (next.js: 15ms, proxy.ts: 80ms, application-code: 48ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 135ms[2m (next.js: 61ms, proxy.ts: 60ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 64ms[2m (next.js: 2ms, proxy.ts: 5ms, application-code: 57ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 78ms[2m (next.js: 60ms, proxy.ts: 4ms, application-code: 15ms)[22m
+  ✓  28 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:172:7 › T-1207 补充真实页面路由矩阵 › 视频工作台按真实隔离作品 ID 打开 (4.9s)
+[2m[WebServer] [22m GET /canvases/ae2b4618-0e33-40ae-b2ac-998ee9ea8ce5 [32m200[39m in 1646ms[2m (next.js: 1529ms, proxy.ts: 3ms, application-code: 114ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 41ms[2m (next.js: 2ms, proxy.ts: 5ms, application-code: 34ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 17ms[2m (next.js: 5ms, proxy.ts: 3ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 14ms, proxy.ts: 4ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 21ms, proxy.ts: 4ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 78ms[2m (next.js: 19ms, proxy.ts: 14ms, application-code: 45ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 375ms[2m (next.js: 74ms, proxy.ts: 58ms, application-code: 243ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 388ms[2m (next.js: 319ms, proxy.ts: 58ms, application-code: 12ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 404ms[2m (next.js: 346ms, proxy.ts: 51ms, application-code: 7ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 369ms[2m (next.js: 355ms, proxy.ts: 5ms, application-code: 9ms)[22m
+  ✓  29 [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:177:7 › T-1207 补充真实页面路由矩阵 › 项目画布详情按真实隔离画布 ID 打开 (3.4s)
+
+
+  1) [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「定位中心」/positioning 显示真实主内容
+
+    Error: /positioning 主内容应可见
+
+    [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('main').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - /positioning 主内容应可见 with timeout 5000ms[22m
+    [2m  - waiting for locator('main').first()[22m
+
+
+      51 |   expect(response, `${pathname} 应有真实页面响应`).not.toBeNull();
+      52 |   expect(response!.status(), `${pathname} 不应返回 404/5xx`).toBe(200);
+    > 53 |   await expect(page.locator("main").first(), `${pathname} 主内容应可见`).toBeVisible();
+         |                                                                    ^
+      54 |   const mainText = (await page.locator("main").first().innerText()).trim();
+      55 |   expect(mainText.length, `${pathname} 主内容不能是空壳`).toBeGreaterThan(0);
+      56 |   expect(page.url(), `${pathname} 最终应停留在本地测试服务`).toMatch(/^http:\/\/127\.0\.0\.1:/);
+        at assertRealPage (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/t1207-supplemental-route-matrix.spec.ts:53:68)
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/t1207-supplemental-route-matrix.spec.ts:122:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-743d1-口「定位中心」-positioning-显示真实主内容-e2e/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-004934eeae7d0ea4287b-3fc60d737042980b2942 (image/png) ─────────────────────
+    ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-743d1-口「定位中心」-positioning-显示真实主内容-e2e/attachments/t1207-004934eeae7d0ea4287b-3fc60d737042980b2942-170aa9f3042a308050b477f4fe9860a4a3954ccc.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-743d1-口「定位中心」-positioning-显示真实主内容-e2e/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-743d1-口「定位中心」-positioning-显示真实主内容-e2e/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-743d1-口「定位中心」-positioning-显示真实主内容-e2e/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「选题」/topics 显示真实主内容
+
+    Error: /topics 主内容应可见
+
+    [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('main').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - /topics 主内容应可见 with timeout 5000ms[22m
+    [2m  - waiting for locator('main').first()[22m
+
+
+      51 |   expect(response, `${pathname} 应有真实页面响应`).not.toBeNull();
+      52 |   expect(response!.status(), `${pathname} 不应返回 404/5xx`).toBe(200);
+    > 53 |   await expect(page.locator("main").first(), `${pathname} 主内容应可见`).toBeVisible();
+         |                                                                    ^
+      54 |   const mainText = (await page.locator("main").first().innerText()).trim();
+      55 |   expect(mainText.length, `${pathname} 主内容不能是空壳`).toBeGreaterThan(0);
+      56 |   expect(page.url(), `${pathname} 最终应停留在本地测试服务`).toMatch(/^http:\/\/127\.0\.0\.1:/);
+        at assertRealPage (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/t1207-supplemental-route-matrix.spec.ts:53:68)
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/t1207-supplemental-route-matrix.spec.ts:122:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-5853f-由矩阵-侧栏入口「选题」-topics-显示真实主内容-e2e/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-004934eeae7d0ea4287b-690d27b4028991544aa4 (image/png) ─────────────────────
+    ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-5853f-由矩阵-侧栏入口「选题」-topics-显示真实主内容-e2e/attachments/t1207-004934eeae7d0ea4287b-690d27b4028991544aa4-d52e99df44c6a0ec73a54a5b8ab8986127bb034d.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-5853f-由矩阵-侧栏入口「选题」-topics-显示真实主内容-e2e/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-5853f-由矩阵-侧栏入口「选题」-topics-显示真实主内容-e2e/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-5853f-由矩阵-侧栏入口「选题」-topics-显示真实主内容-e2e/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「设置」/settings 显示真实主内容
+
+    Error: /settings 主内容应可见
+
+    [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator:  locator('main').first()
+    Expected: visible
+    Received: hidden
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - /settings 主内容应可见 with timeout 5000ms[22m
+    [2m  - waiting for locator('main').first()[22m
+    [2m    13 × locator resolved to <main data-app="creatoros" data-page="settings" data-settings-id="settings-root" class="flex flex-col gap-section-gap"></main>[22m
+    [2m       - unexpected value "hidden"[22m
+
+
+      51 |   expect(response, `${pathname} 应有真实页面响应`).not.toBeNull();
+      52 |   expect(response!.status(), `${pathname} 不应返回 404/5xx`).toBe(200);
+    > 53 |   await expect(page.locator("main").first(), `${pathname} 主内容应可见`).toBeVisible();
+         |                                                                    ^
+      54 |   const mainText = (await page.locator("main").first().innerText()).trim();
+      55 |   expect(mainText.length, `${pathname} 主内容不能是空壳`).toBeGreaterThan(0);
+      56 |   expect(page.url(), `${pathname} 最终应停留在本地测试服务`).toMatch(/^http:\/\/127\.0\.0\.1:/);
+        at assertRealPage (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/t1207-supplemental-route-matrix.spec.ts:53:68)
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/t1207-supplemental-route-matrix.spec.ts:122:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-531b7-阵-侧栏入口「设置」-settings-显示真实主内容-e2e/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-004934eeae7d0ea4287b-bb8a7a6b121c23d6c33a (image/png) ─────────────────────
+    ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-531b7-阵-侧栏入口「设置」-settings-显示真实主内容-e2e/attachments/t1207-004934eeae7d0ea4287b-bb8a7a6b121c23d6c33a-c64a5aef6c51c199f3206d5c2cb0700a186e8288.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-531b7-阵-侧栏入口「设置」-settings-显示真实主内容-e2e/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-531b7-阵-侧栏入口「设置」-settings-显示真实主内容-e2e/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-531b7-阵-侧栏入口「设置」-settings-显示真实主内容-e2e/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「视频剪辑工作台」路由显示真实内容或有效重定向
+
+    Error: /projects/project-f5f20467-189/production?outputId=output-f5f20467-218 主内容应可见
+
+    [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('main').first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - /projects/project-f5f20467-189/production?outputId=output-f5f20467-218 主内容应可见 with timeout 5000ms[22m
+    [2m  - waiting for locator('main').first()[22m
+
+
+      51 |   expect(response, `${pathname} 应有真实页面响应`).not.toBeNull();
+      52 |   expect(response!.status(), `${pathname} 不应返回 404/5xx`).toBe(200);
+    > 53 |   await expect(page.locator("main").first(), `${pathname} 主内容应可见`).toBeVisible();
+         |                                                                    ^
+      54 |   const mainText = (await page.locator("main").first().innerText()).trim();
+      55 |   expect(mainText.length, `${pathname} 主内容不能是空壳`).toBeGreaterThan(0);
+      56 |   expect(page.url(), `${pathname} 最终应停留在本地测试服务`).toMatch(/^http:\/\/127\.0\.0\.1:/);
+        at assertRealPage (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/t1207-supplemental-route-matrix.spec.ts:53:68)
+        at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/t1207-supplemental-route-matrix.spec.ts:153:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-907ac-阵-项目「视频剪辑工作台」路由显示真实内容或有效重定向-e2e/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: t1207-004934eeae7d0ea4287b-54a04dba81ddb46ea7f4 (image/png) ─────────────────────
+    ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-907ac-阵-项目「视频剪辑工作台」路由显示真实内容或有效重定向-e2e/attachments/t1207-004934eeae7d0ea4287b-54a04dba81ddb46ea7f4-82b3d6cf96ef2fca4e0fd41264a38162e03aa1b4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-907ac-阵-项目「视频剪辑工作台」路由显示真实内容或有效重定向-e2e/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-907ac-阵-项目「视频剪辑工作台」路由显示真实内容或有效重定向-e2e/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../docs/verification/t1207/route-matrix-output/e2e-t1207-supplemental-rou-907ac-阵-项目「视频剪辑工作台」路由显示真实内容或有效重定向-e2e/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4 failed
+    [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「定位中心」/positioning 显示真实主内容
+    [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「选题」/topics 显示真实主内容
+    [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「设置」/settings 显示真实主内容
+    [e2e] › tests/e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「视频剪辑工作台」路由显示真实内容或有效重定向
+  25 passed (2.8m)

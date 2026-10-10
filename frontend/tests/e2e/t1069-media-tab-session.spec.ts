@@ -1,5 +1,6 @@
 import {randomUUID,createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
 import {expect as baseExpect,test} from '../helpers/test-environment';
 const expect=baseExpect.configure({timeout:120_000});
 import type {Page} from '@playwright/test';
@@ -10,8 +11,8 @@ async function dispatch<T>(page:Page,id:string,input:unknown,groupId?:string):Pr
 }
 test('本地视频逐个导入、未保存切Tab返回、保存刷新保留原素材和工程',async({page,context,baseURL},info)=>{
  test.setTimeout(1_800_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);context.setDefaultTimeout(120_000);
- const bytes=readFileSync('/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1062-neutral-rough-media-qmk3a1mp/neutral-original-speed.mp4');
- expect(createHash('sha256').update(bytes).digest('hex')).toBe('e6c0f4e72741e8f37b369d9511311569df8ef6c4e07009f3c746c632fb0e2073');
+ const bytes=readFileSync(resolve(process.cwd(),'../output/content-samples/ai-copy-eval-loop/motion-preview.mp4'));
+ expect(createHash('sha256').update(bytes).digest('hex')).toBe('a116d9d135ca730df76dd4932f2cf0e5630e47b4094eff6d83af5f731aa1ac04');
  await page.goto('/');const group=await dispatch<{id:string}>(page,'accountGroups.create',{body:{name:`中性视频恢复-${fresh()}`,idempotencyKey:fresh()}});
  const project=await dispatch<{id:string}>(page,'projects.create',{body:{title:'视频切Tab验收',brief:'',contentType:'video'}},group.id);
  const output=await dispatch<{id:string}>(page,'projects.outputs.create',{params:{projectId:project.id},body:{title:'中性视频',contentType:'video',clientRequestId:fresh()}},group.id);

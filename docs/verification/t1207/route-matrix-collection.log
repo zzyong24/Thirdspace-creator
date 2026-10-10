@@ -1,0 +1,33 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-H86jFF
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+Listing tests:
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「首页」/ 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「创作者总览」/overview 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「定位中心」/positioning 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「内容雷达」/intelligence 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「选题」/topics 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「项目」/projects 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「知识库」/knowledge 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「素材中心」/assets 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「创作画布」/canvases 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「发布中心」/publishing 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「运营分析」/daily-report 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「自动化」/automations 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:121:9 › T-1207 补充真实页面路由矩阵 › 侧栏入口「设置」/settings 显示真实主内容
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:126:7 › T-1207 补充真实页面路由矩阵 › 账号管理页可以打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:130:7 › T-1207 补充真实页面路由矩阵 › 当前账号的作品目录页可以打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:134:7 › T-1207 补充真实页面路由矩阵 › 发布中心日历子页可以打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「主稿面」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「选题兼容入口」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「计划兼容入口」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「脚本兼容入口」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「发布兼容入口」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「复盘页」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「组合创作工作台」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:150:9 › T-1207 补充真实页面路由矩阵 › 项目「视频剪辑工作台」路由显示真实内容或有效重定向
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:157:7 › T-1207 补充真实页面路由矩阵 › 文章工作台读取真实隔离文章作品
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:162:7 › T-1207 补充真实页面路由矩阵 › 图文工作台按真实隔离作品 ID 打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:167:7 › T-1207 补充真实页面路由矩阵 › 图文深链按真实隔离作品 ID 打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:172:7 › T-1207 补充真实页面路由矩阵 › 视频工作台按真实隔离作品 ID 打开
+  [e2e] › e2e/t1207-supplemental-route-matrix.spec.ts:177:7 › T-1207 补充真实页面路由矩阵 › 项目画布详情按真实隔离画布 ID 打开
+Total: 29 tests in 1 file
