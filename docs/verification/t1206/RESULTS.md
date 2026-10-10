@@ -6,7 +6,7 @@
 
 实际删除 frontend/.next、frontend/src-tauri/sidecar、target/debug和release-fast的build/deps/.fingerprint/incremental/examples。目录统计20.03GiB，清理后文件系统可用由2.24→21.92GiB，实际差额19.68GiB；随后系统继续回收，3次采样均24.93GiB（df约25GiB）。系统swap自行从约24GiB缩小为20990–20998MiB，未删OS交换文件或执行purge。
 
-20秒3次采样，CreatorOS服务RSS0.921/0.924/0.924GiB，主进程0.044GiB；短窗口不证明无泄漏，也不签历史OOM根因。Codex Renderer2.687/2.693/2.815GiB，未关闭或强杀其它用户应用。已询问用户实际提示类型，仍需实际信息才能区分原先RAM弹窗/磁盘不足/卡顿。
+20秒3次采样，CreatorOS服务RSS0.921/0.924/0.924GiB，主进程0.044GiB；短窗口不证明无泄漏，也不签历史OOM根因。Codex Renderer2.687/2.693/2.815GiB，未关闭或强杀其它用户应用。用户随后明确回复“磁盘／存储空间不足”，本次确认是磁盘空间问题；构建中间目录20GiB未及时清理直接加重空间不足，本任务不再按RAM/OOM问题归因。
 
 清理后最新构建DMG与App精确哈希全部保持，CLI公开status connected true、installed、原生PID4372；产品源码diff为空。保留最终target/release-fast/bundle、源码、依赖、日志及原验收证据、用户数据、素材、激活、安装版运行时。无备份，无push/tag/发布，无新增产品代码；本次收尾确实此前未及时清理。
 

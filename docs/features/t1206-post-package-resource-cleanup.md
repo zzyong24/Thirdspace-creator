@@ -9,3 +9,5 @@ main忽略目录实际du：frontend/.next9.8GiB、frontend/src-tauri/target9.8Gi
 Downloads新DMG在当前du显示不存在，原因未知；不猜成用户删除、不恢复或重造。以本次构建bundle中的实际新DMG、App与安装版精确SHA核最新产物，保留它们。预先df、内存/进程、目录占用存私有证据；任何路径被运行进程使用则跳过并报告。清理完成重测df/目录/运行版CLI公开连接及App哈希、Git源码差异。只签回收磁盘空间；若RAM问题仍存在或RSS持续增长再登记精确性能任务，不清理OS swap或强杀用户其它App，不用purge冒充修复。
 
 无需产品TDD/视觉/接口/全量reconcile重复运行，本任务未改产品；既有全局29ERROR仍由T1204处理，不改签。taskctl必须记录start/complete；实际清理与验证证据提交，不创建备份副本。
+
+用户后续实际回复确认“磁盘／存储空间不足”；实际清理回收19.68GiB、系统随后可用24.93GiB，当前安装版及最新bundle制品保持。RAM/OOM无需作为本次已发生缺陷继续调查。
