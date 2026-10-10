@@ -164,3 +164,13 @@ EXP-2实际一次快照为officialOriginMatch=true、reportPathMatch=false、pat
 ## 2026-10-10 研究闭合与原任务恢复（实际）
 
 完整只读验证工件及独立CLOSE评审已保存。本轮第一次锁内登记（4996b0）因本地对输出摘要遗漏分隔换行而exit1；在追加事件前拒绝，BACKLOG/events未改。核实际验证器算法后，37ff86锁内重核22项输入/原OPEN/两实际输出/评审摘要均一致，仅追加真实兼容research_resume，BACKLOG字节不变。原OPEN与两次失败/取消实验保留，不重置次数。随后305fe7实际taskctl resume T-1110 exit0：⏸→🔨；faec7b实际research-gate audit exit0无OPEN。不是官方private validator/resume CLI执行，也不是产品绑定/采集/UI PASS。
+
+## 2026-10-10 DOM候选修正与原产品环境实际重启
+
+恢复后先新增formal source+内置witness两关键测试，actual2FAIL/retry0（新fixture原生Frame标签0而PageShadow标签1；OA起点落当前settingpage3href）。随后生产最小修正公众号当前页直读及视频号真实菜单、可见UI/运行时Frame两根关联，原身份/归属/窗口/文件完整性和runtime请求来源守卫不变。独评发现works注册response后才await根检查的具体问题，已移至注册前并关闭finding。
+
+首次合并运行含原fixture父window.location未模拟导航，Wujie用例实际180000ms测试超时；原日志不作GREEN。fixture按真正导航reconfigure修正后2关键GREEN。旧合法iframe正常选择新增可见性确认；保失败5字段probe，仅把healthy notCalled改为正常frameElement一次和报表evaluate一次/参数kind证据。原99+parser9实际108PASS，后新18case包括三份完整source、普通可见iframe、重复/跨根、prepare后变化、取消/原deadline晚响应。早期预算case只在onReport推进时间，独评指出不能代签新消费者；已删除该写法，最终按实际SDK/观察每段110000、启动1090000、身份470000、callback即时的合法慢成功例通过，不补拍该后加例前置RED。
+
+backend真实隔离公开DB+collector32PASS、公开绑定composition7PASS、worker类型exit0；boundary0新增/5基线、semantic通过、orphan0ERROR/100WARN。timeout-policy实际exit1仍原27静态短预算，动态组通过；不称全绿。见dom-correction-verification-20261010.json及独立源码/测试报告。
+
+原隔离产品PGlite/profile在新源码启动，scheduler显式关闭避免周期意外提交；ready 2026-10-10T04:07:21.853Z。当前公开回读（04:07:20.359Z请求起点）HTTP200：原视频号绑定succeeded/acct-3eba3525-70、reports0、原54仍failed0。此为当下读，不把研究Cookie迁入产品。当前尚未进行本修正后的真实新采集或新公众号QR。

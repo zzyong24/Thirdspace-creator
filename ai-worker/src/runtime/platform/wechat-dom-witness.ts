@@ -1,4 +1,4 @@
-import type {Frame,Page,Response,Request,Locator} from '@playwright/test';
+import type {Frame,Page,Response,Request,Locator,ElementHandle} from '@playwright/test';
 import type {NativeReportKind,NativeReportPayload} from '@creatoros/contract';
 import {setTimeout as delay} from 'node:timers/promises';
 import {WechatBrowserSourceError,type WechatCreatorPlatform,type WechatIdentityWitness,type WechatOperationControls,type WechatReportPageState,type WechatReportWitness,type WechatSectionObservation} from './wechat-browser-source';
@@ -67,32 +67,44 @@ export async function readWechatIdentityDom(page:Page,platform:WechatCreatorPlat
  },platform);
  return information?.displayName?{...information,platform,sourcePath:url.pathname}:null;
 }
+type RenderedShadow={pagePath:string;section:string};
 type WorksObservation={selection:NativeReportPayload['selection'];reportedRows:number};
-export async function readWechatReportDom(scope:Page|Frame,kind:NativeReportKind,works?:WorksObservation):Promise<WechatReportPageState|null>{
+export async function readWechatReportDom(scope:Page|Frame,kind:NativeReportKind,works?:WorksObservation,shadow?:RenderedShadow):Promise<WechatReportPageState|null>{
  const official=kind.startsWith('official'),platform=official?'wechatOfficial':'wechatVideo';
  const url=nativeUrl(scope.url(),origins[platform],platform);
  if(official&&url.pathname!==paths[kind]||!official&&url.pathname!==(kind==='channelsFollowers'?'/micro/statistic/follower':'/micro/statistic/post'))return null;
- const raw=await scope.evaluate(({kind,official})=>{
+ const raw=await scope.evaluate(({kind,official,shadow})=>{
   const visible=(node:Element)=>!node.closest('[hidden]')&&getComputedStyle(node).display!=='none'&&getComputedStyle(node).visibility!=='hidden'&&node.getClientRects().length>0;
-  if([...document.querySelectorAll('.ant-spin-spinning,.weui-desktop-loading')].some(visible))return null;
-  const dateCells=(selector:string)=>[...document.querySelectorAll(selector)].filter(visible).map(td=>td.textContent?.trim()??'').filter(v=>/^\d{4}[-/]\d{2}[-/]\d{2}$/.test(v)).map(v=>v.replaceAll('/','-'));
+  let root:Document|ShadowRoot=document;
+  if(shadow){
+   const parent=window.parent as Window & typeof globalThis;
+   if(parent.location.origin!=='https://channels.weixin.qq.com'||parent.location.pathname!==shadow.pagePath)return null;
+   const hosts=[...parent.document.querySelectorAll('wujie-app')].filter(node=>node.getClientRects().length>0&&!node.closest('[hidden]')&&parent.getComputedStyle(node).display!=='none'&&parent.getComputedStyle(node).visibility!=='hidden');
+   const rendered=hosts.length===1?hosts[0]!.shadowRoot:null;if(!rendered||rendered.mode!=='open')return null;
+   const nodes=[...document.querySelectorAll('*')].filter(node=>visible(node)&&node.textContent?.trim()===shadow.section&&![...node.children].some(child=>child.textContent?.trim()===shadow.section));
+   // Wujie会改写getRootNode/ownerDocument；原生contains才核实际可见根。
+   if(nodes.length!==1||!parent.Node.prototype.contains.call(rendered,nodes[0]!))return null;
+   root=rendered;
+  }
+  if([...root.querySelectorAll('.ant-spin-spinning,.weui-desktop-loading')].some(visible))return null;
+  const dateCells=(selector:string)=>[...root.querySelectorAll(selector)].filter(visible).map(td=>td.textContent?.trim()??'').filter(v=>/^\d{4}[-/]\d{2}[-/]\d{2}$/.test(v)).map(v=>v.replaceAll('/','-'));
   if(official){
-   const values=[...new Set([...document.querySelectorAll('input.weui-desktop-form__input')].filter(visible).map(input=>(input as HTMLInputElement).value).filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(v)))].sort();
+   const values=[...new Set([...root.querySelectorAll('input.weui-desktop-form__input')].filter(visible).map(input=>(input as HTMLInputElement).value).filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(v)))].sort();
    const label=kind==='officialContent'?'下载数据明细':'下载表格';
-   const links=[...document.querySelectorAll('a[href]')].filter(a=>visible(a)&&a.textContent?.trim()===label);
+   const links=[...root.querySelectorAll('a[href]')].filter(a=>visible(a)&&a.textContent?.trim()===label);
    if(values.length!==2||links.length!==1)return null;
    return {values,href:(links[0] as HTMLAnchorElement).href,dates:dateCells('table.weui-desktop-table__core-table td')};
   }
-  const filters=[...document.querySelectorAll('.filter-row')].filter(row=>visible(row)&&row.querySelector('.filter-extra'));
+  const filters=[...root.querySelectorAll('.filter-row')].filter(row=>visible(row)&&row.querySelector('.filter-extra'));
   if(filters.length!==1||!filters[0]!.querySelector('input[value="2"]:checked'))return null;
   const dates=dateCells('.ant-table-body td');
   if(kind==='channelsWorks'){
-   const counts=[...document.querySelectorAll('.card-title .info')].filter(visible).map(x=>/^共\s*(\d+)\s*条视频$/.exec(x.textContent?.trim()??''));
+   const counts=[...root.querySelectorAll('.card-title .info')].filter(visible).map(x=>/^共\s*(\d+)\s*条视频$/.exec(x.textContent?.trim()??''));
    if(counts.length!==1||!counts[0])return null;
    return {dates,reportedRows:Number(counts[0][1]),visibleRows:dates.length};
   }
   return {dates};
- },{kind,official});
+ },{kind,official,shadow});
  if(!raw)return null;
  if(official){
   if(!('values' in raw)||!raw.values||!('href' in raw)||!raw.href)return null;
@@ -149,7 +161,7 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
   },
   async read(page,platform,controls){
    if(platform==='wechatVideo')await page.goto(origins[platform]+'/platform',{waitUntil:'domcontentloaded',timeout:controls.timeoutMs()});
-   else{
+   else if(nativeUrl(page.url(),origins[platform],platform).pathname!=='/cgi-bin/settingpage'){
     const href=await observe(controls,async()=>{
      nativeUrl(page.url(),origins[platform],platform);
      const hrefs=await page.locator('a[href]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')).filter((v):v is string=>!!v));
@@ -165,30 +177,87 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
   if(platform!==(kind.startsWith('official')?'wechatOfficial':'wechatVideo'))return fail('REPORT_PLATFORM_MISMATCH','报表不属于当前平台');
   const current=nativeUrl(page.url(),origins[platform],platform),sourcePath=paths[kind];
   const target=windowFor((options.now??Date.now)(),kind==='channelsWorks');
-  const hrefs=await page.locator('a[href]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')).filter((v):v is string=>!!v));
-  const targets=hrefs.flatMap(href=>{try{const url=nativeUrl(href,current.href,platform);return url.pathname===sourcePath?[url.href]:[];}catch{return [];}});
-  const unique=[...new Set(targets)];if(unique.length>1)return fail('REPORT_LINK_AMBIGUOUS','原生报表入口不唯一');
-  if(platform==='wechatOfficial'&&!unique.length)return fail('REPORT_LINK_MISSING','当前页面没有原生报表入口');
-  await page.goto(unique[0]??origins[platform]+sourcePath,{waitUntil:'domcontentloaded',timeout:controls.timeoutMs()});
-  let scope:Page|Frame=page,works:WorksObservation|undefined;
+  if(platform==='wechatOfficial'){
+   const hrefs=await page.locator('a[href]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')).filter((v):v is string=>!!v));
+   const targets=hrefs.flatMap(href=>{try{const url=nativeUrl(href,current.href,platform);return url.pathname===sourcePath?[url.href]:[];}catch{return [];}});
+   const unique=[...new Set(targets)];if(unique.length>1)return fail('REPORT_LINK_AMBIGUOUS','原生报表入口不唯一');
+   if(!unique.length)return fail('REPORT_LINK_MISSING','当前页面没有原生报表入口');
+   await page.goto(unique[0]!,{waitUntil:'domcontentloaded',timeout:controls.timeoutMs()});
+  }else if(current.pathname!==sourcePath){
+   // 后台菜单实际href为javascript；仅操作唯一可见真实入口，不猜深链。
+   const entry=page.getByText(kind==='channelsFollowers'?'关注者数据':'视频数据',{exact:true}).filter({visible:true});
+   if(await entry.count()===0){
+    const centre=page.getByText('数据中心',{exact:true}).filter({visible:true});
+    await observe(controls,async()=>{const count=await centre.count();if(count>1)return fail('REPORT_LINK_AMBIGUOUS','原生报表入口不唯一');return count===1?true:null;},'REPORT_LINK_MISSING');
+    await centre.click({timeout:controls.timeoutMs()});
+   }
+   await observe(controls,async()=>{const count=await entry.count();if(count>1)return fail('REPORT_LINK_AMBIGUOUS','原生报表入口不唯一');return count===1?true:null;},'REPORT_LINK_MISSING');
+   await entry.click({timeout:controls.timeoutMs()});
+   await page.waitForURL(url=>url.origin===origins[platform]&&!url.username&&!url.password&&url.pathname===sourcePath,{timeout:controls.timeoutMs()});
+  }
+  let scope:Page|Frame=page,uiRoot:Page|Frame|Locator=page,works:WorksObservation|undefined,shadow:RenderedShadow|undefined;
+  let host:ElementHandle<Element>|null=null,frameElement:ElementHandle<Node>|undefined;
+  const rootReady=async()=>{
+   controls.signal.throwIfAborted();controls.timeoutMs();
+   if(platform!=='wechatVideo')return true;
+   if(nativeUrl(page.url(),origins[platform],platform).pathname!==sourcePath)return false;
+   const framePath=kind==='channelsFollowers'?'/micro/statistic/follower':'/micro/statistic/post';
+   const frames=page.frames().filter(frame=>{try{return nativeUrl(frame.url(),origins[platform],platform).pathname===framePath;}catch{return false;}});
+   if(frames.length!==1||frames[0]!==scope)return false;
+   if(host){
+    const same=await host.evaluate(node=>{
+     const visible=(node:Element)=>node.isConnected&&!node.closest('[hidden]')&&node.getClientRects().length>0&&getComputedStyle(node).display!=='none'&&getComputedStyle(node).visibility!=='hidden';
+     const hosts=[...document.querySelectorAll('wujie-app')].filter(visible);
+     return hosts.length===1&&hosts[0]===node&&node.shadowRoot?.mode==='open';
+    });controls.signal.throwIfAborted();if(!same)return false;
+    const associated=await scope.evaluate(({pagePath,section})=>{
+     const parent=window.parent as Window & typeof globalThis;
+     if(parent.location.origin!=='https://channels.weixin.qq.com'||parent.location.pathname!==pagePath)return false;
+     const visible=(node:Element)=>!node.closest('[hidden]')&&node.getClientRects().length>0&&getComputedStyle(node).display!=='none'&&getComputedStyle(node).visibility!=='hidden';
+     const hosts=[...parent.document.querySelectorAll('wujie-app')].filter(node=>node.getClientRects().length>0&&!node.closest('[hidden]')&&parent.getComputedStyle(node).display!=='none'&&parent.getComputedStyle(node).visibility!=='hidden');
+     const root=hosts.length===1?hosts[0]!.shadowRoot:null;
+     const nodes=[...document.querySelectorAll('*')].filter(node=>visible(node)&&node.textContent?.trim()===section&&![...node.children].some(child=>child.textContent?.trim()===section));
+     return !!root&&root.mode==='open'&&nodes.length===1&&parent.Node.prototype.contains.call(root,nodes[0]!);
+    },shadow!);controls.signal.throwIfAborted();return associated;
+   }
+   const visible=await frameElement?.isVisible();controls.signal.throwIfAborted();return visible===true;
+  };
+  const assertRoot=async()=>{if(!await rootReady())return fail('REPORT_NOT_READY','当前数据面板已变化，请查看原任务');};
   if(platform==='wechatVideo'){
    const framePath=kind==='channelsFollowers'?'/micro/statistic/follower':'/micro/statistic/post';
-   scope=await observe(controls,async()=>{const frames=page.frames().filter(frame=>{try{const u=nativeUrl(frame.url(),origins[platform],platform);return u.pathname===framePath;}catch{return false;}});return frames.length===1?frames[0]!:null;},'REPORT_PAGE_MISSING');
+   scope=await observe(controls,async()=>{const frames=page.frames().filter(frame=>{try{const u=nativeUrl(frame.url(),origins[platform],platform);return u.pathname===framePath;}catch{return false;}});if(frames.length>1)return fail('REPORT_PAGE_MISSING','原生报表页面不唯一');return frames.length===1?frames[0]!:null;},'REPORT_PAGE_MISSING');
+   uiRoot=scope;
    const section=kind==='channelsDaily'?'全部视频':kind==='channelsWorks'?'单篇视频':'关注者增长';
-   const exactTab=scope.getByText(section,{exact:true}),tab=exactTab.filter({visible:true});
-   try{await observe(controls,async()=>{const count=await tab.count();if(count>1)return fail('REPORT_SECTION_AMBIGUOUS','原生报表标签不唯一');return count===1?true:null;},'REPORT_SECTION_MISSING');}
-   catch(error){
+   let exactTab=scope.getByText(section,{exact:true}),tab=exactTab.filter({visible:true});
+   try{
+    await observe(controls,async()=>{
+     const hosts=page.locator('wujie-app').filter({visible:true}),hostCount=await hosts.count();
+     if(hostCount>1)return fail('REPORT_SECTION_AMBIGUOUS','原生数据面板不唯一');
+     if(hostCount===1&&!host){
+      const candidate=hosts.getByText(section,{exact:true}).filter({visible:true}),count=await candidate.count();
+      if(count>1)return fail('REPORT_SECTION_AMBIGUOUS','原生报表标签不唯一');
+      if(count===1){host=await hosts.elementHandle({timeout:controls.timeoutMs()});if(!host)return null;shadow={pagePath:sourcePath,section};uiRoot=hosts;exactTab=hosts.getByText(section,{exact:true});tab=exactTab.filter({visible:true});}
+     }
+     const count=await tab.count();controls.signal.throwIfAborted();
+     if(count>1)return fail('REPORT_SECTION_AMBIGUOUS','原生报表标签不唯一');
+     if(count!==1)return null;
+     if(host)return await rootReady()?true:null;
+     frameElement??=await (scope as Frame).frameElement();return await rootReady()?true:null;
+    },'REPORT_SECTION_MISSING');
+   }catch(error){
     controls.signal.throwIfAborted();
     if(!(error instanceof WechatBrowserSourceError)||error.code!=='REPORT_SECTION_MISSING')throw error;
-    try{const observation=await readMissingSectionObservation(scope as Frame,exactTab,tab,controls);controls.signal.throwIfAborted();controls.timeoutMs(120000);if(observation)error.observation=observation;}
+    // 原五字段仍严格来自同Frame；可见Shadow分支不拼接两种根的诊断。
+    if(!host)try{const observation=await readMissingSectionObservation(scope as Frame,exactTab,tab,controls);controls.signal.throwIfAborted();controls.timeoutMs(120000);if(observation)error.observation=observation;}
     catch{controls.signal.throwIfAborted();controls.timeoutMs(120000);}
     throw error;
    }
-   await tab.click({timeout:controls.timeoutMs()});
-   const thirty=scope.locator(detail+' label:has(input[value="2"])').filter({visible:true}),seven=scope.locator(detail+' label:has(input[value="1"])').filter({visible:true});
+   await assertRoot();await tab.click({timeout:controls.timeoutMs()});
+   const thirty=uiRoot.locator(detail+' label:has(input[value="2"])').filter({visible:true}),seven=uiRoot.locator(detail+' label:has(input[value="1"])').filter({visible:true});
    await observe(controls,async()=>await thirty.count()===1&&await seven.count()===1?true:null,'REPORT_WINDOW_MISSING');
-   await seven.click({timeout:controls.timeoutMs()});
+   await assertRoot();await seven.click({timeout:controls.timeoutMs()});
    if(kind==='channelsWorks'){
+    await assertRoot();
     const frame=scope as Frame,newRequests=new Set<Request>();
     const observeRequest=(request:Request)=>{try{if(request.frame()===frame)newRequests.add(request);}catch{/* 没有实际frame的无关请求不构成此窗口证据。 */}};
     page.on('request',observeRequest);
@@ -199,9 +268,9 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
      }catch{return false;}},{timeout:controls.timeoutMs()});void pending.catch(()=>{});
      await thirty.click({timeout:controls.timeoutMs()});works=await readChannelsWorksResponse(await pending,frame,controls);
     }finally{page.off('request',observeRequest);}
-   }else await thirty.click({timeout:controls.timeoutMs()});
+   }else{await assertRoot();await thirty.click({timeout:controls.timeoutMs()});}
   }
-  const read=()=>readWechatReportDom(scope,kind,works);
+  const read=async()=>{if(!await rootReady())return null;const state=await readWechatReportDom(scope,kind,works,shadow);controls.signal.throwIfAborted();return await rootReady()?state:null;};
   const state=await observe(controls,async()=>{
    const state=await read();if(!state)return null;
    if(platform==='wechatVideo'){
@@ -211,7 +280,7 @@ export function createVerifiedWechatDomWitnesses(options:{now?:()=>number}={}):{
    return state;
   },'REPORT_NOT_READY');
   const label=kind==='officialContent'?'下载数据明细':'下载表格';
-  const download=scope.getByText(label,{exact:true}).filter({visible:true});if(await download.count()!==1)return fail('REPORT_LINK_AMBIGUOUS','原生下载入口不唯一');
+  const download=uiRoot.getByText(label,{exact:true}).filter({visible:true});if(await download.count()!==1)return fail('REPORT_LINK_AMBIGUOUS','原生下载入口不唯一');
   return {scope,download,state,verify:async()=>{const latest=await read();controls.signal.throwIfAborted();if(!latest||JSON.stringify(latest)!==JSON.stringify(state))return fail('REPORT_NOT_READY','下载前原生日期或总数已变化，请查看原任务');}};
  }};
  return {identityWitness,reportWitness};

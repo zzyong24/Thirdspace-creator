@@ -248,7 +248,7 @@ describe('T1110 固定内部身份诊断与默认身份串行预算候选',()=>{
  });
  it.each([
   ['wechatOfficial','login',2450000],['wechatOfficial','readIdentity',2450000],['wechatOfficial','collectNativeReports',4850000],
-  ['wechatVideo','login',1970000],['wechatVideo','readIdentity',1970000],['wechatVideo','collectNativeReports',5570000],
+  ['wechatVideo','login',1970000],['wechatVideo','readIdentity',1970000],['wechatVideo','collectNativeReports',7370000],
  ] as const)('%s %s默认逐项计入身份串行预算（原end冻结）',async(platform,method,budget)=>{
   vi.useFakeTimers();vi.setSystemTime(Date.parse('2026-10-09T04:00:00Z'));
   try{
