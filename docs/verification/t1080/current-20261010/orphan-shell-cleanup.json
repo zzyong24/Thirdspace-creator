@@ -1,0 +1,19 @@
+{
+  "finishedAt": "2026-10-10T09:03:59.008809+00:00",
+  "sourcePreservingCommit": "c6dcbc9dc5f1b4b1add20e80d4e4c894850ca981",
+  "removedExactPaths": [
+    "/Users/zyongzhu/.codex/worktrees/101d/Thirdspace-creator/docs/assets/orchestrator-loop.html",
+    "/Users/zyongzhu/.codex/worktrees/101d/Thirdspace-creator/docs/assets",
+    "/Users/zyongzhu/.codex/worktrees/101d/Thirdspace-creator/docs",
+    "/Users/zyongzhu/.codex/worktrees/101d/Thirdspace-creator",
+    "/Users/zyongzhu/.codex/worktrees/101d",
+    "/Users/zyongzhu/.codex/worktrees/Thirdspace-creator/frontend/src/features/article/doocs-article-editor.tsx",
+    "/Users/zyongzhu/.codex/worktrees/Thirdspace-creator/frontend/src/features/article",
+    "/Users/zyongzhu/.codex/worktrees/Thirdspace-creator/frontend/src/features",
+    "/Users/zyongzhu/.codex/worktrees/Thirdspace-creator/frontend/src",
+    "/Users/zyongzhu/.codex/worktrees/Thirdspace-creator/frontend",
+    "/Users/zyongzhu/.codex/worktrees/Thirdspace-creator"
+  ],
+  "countOriginalSourceFiles": 2,
+  "mode": "原源码已在main Git逐字保留，仅unlink所核文件、rmdir空父壳"
+}

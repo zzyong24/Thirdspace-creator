@@ -5584,7 +5584,8 @@
         "docs/features/t1197-external-agent-pairing-source-convergence.md",
         "frontend/src/app/api/chat/route.test.ts",
         "orchestrator/process/semantic-boundary-scan.mjs",
-        "orchestrator/process/semantic-boundary-scan.test.mjs"
+        "orchestrator/process/semantic-boundary-scan.test.mjs",
+        "docs/features/t1198-isolated-archive-gate-environment.md"
       ],
       "verify_commands": {
         "implementation": [

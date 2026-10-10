@@ -1,0 +1,45 @@
+{
+  "roots": [
+    "/Users/zyongzhu/Downloads",
+    "/Users/zyongzhu/Desktop",
+    "/Users/zyongzhu/Workbase/Thirdspace-creator",
+    "/Users/zyongzhu/.codex/worktrees",
+    "/Applications"
+  ],
+  "exitCode": 0,
+  "items": [
+    {
+      "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+      "bytes": 841223134
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1060/workbuddy-package/creatoros-workbuddy-connector-0.1.0.zip",
+      "bytes": 8868
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/output/public-skills/creatoros-cli.zip",
+      "bytes": 12814
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/output/public-skills/creatoros-cli.zip",
+      "bytes": 12814
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/docs/verification/t1060/workbuddy-package/creatoros-workbuddy-connector-0.1.0.zip",
+      "bytes": 8868
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/output/public-skills/creatoros-cli.zip",
+      "bytes": 12814
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/dmg/CreatorOS_1.2.0_aarch64.dmg",
+      "bytes": 841223134
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/output/public-skills/creatoros-cli.zip",
+      "bytes": 12814
+    }
+  ],
+  "stderr": ""
+}

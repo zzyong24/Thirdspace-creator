@@ -1,0 +1,25 @@
+{
+  "mainHead": "b5d256c8287807f5a8d2115030b3672b54ba9c2b",
+  "sources": [
+    {
+      "sourceHead": "45ff5ff5e6676d32be38c834660bab88c238a2ba",
+      "mainHead": "b5d256c8287807f5a8d2115030b3672b54ba9c2b",
+      "ancestorExit": 0
+    },
+    {
+      "sourceHead": "a3bc947d4bcb70be5c14f11ff56639a54b184b31",
+      "mainHead": "b5d256c8287807f5a8d2115030b3672b54ba9c2b",
+      "ancestorExit": 0
+    },
+    {
+      "sourceHead": "db769ddc2968e373bb92e253f13fad9d0927ee08",
+      "mainHead": "b5d256c8287807f5a8d2115030b3672b54ba9c2b",
+      "ancestorExit": 0
+    }
+  ],
+  "ordinaryMergeParents": [
+    "679548cd83c70824fedca40ded4071179c792ddf",
+    "db769ddc2968e373bb92e253f13fad9d0927ee08"
+  ],
+  "worktreesAfterRemoval": "worktree /Users/zyongzhu/Workbase/Thirdspace-creator\nHEAD 45ff5ff5e6676d32be38c834660bab88c238a2ba\nbranch refs/heads/codex/t1062-account-group-snapshot\n\nworktree /Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator\nHEAD b5d256c8287807f5a8d2115030b3672b54ba9c2b\nbranch refs/heads/main\n\nworktree /Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator\nHEAD a3bc947d4bcb70be5c14f11ff56639a54b184b31\nbranch refs/heads/codex/t1110-wechat-evidence-continuation\n\n"
+}

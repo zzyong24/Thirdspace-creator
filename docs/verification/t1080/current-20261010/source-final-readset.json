@@ -1,0 +1,806 @@
+{
+  "schema": "t1080-source-final-readset/v1",
+  "taskId": "T-1080",
+  "baseHead": "4ecded9fab02e9bbccb9428629cc87fc1aa0741f",
+  "reviewedHead": "b5d256c8287807f5a8d2115030b3672b54ba9c2b",
+  "verdict": "PASS_SOURCE_AND_RECORDED_TESTS_ONLY",
+  "reviewedAt": "2026-10-10T09:38:59.964589+00:00",
+  "reviewer": "t1080_latest_source_audit 独立只读源码复核",
+  "repository": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "scopePaths": [
+    "frontend",
+    "backend",
+    "contract",
+    "ai-worker",
+    "mcp-server",
+    "tools",
+    "pnpm-lock.yaml",
+    "package.json",
+    "orchestrator/process/semantic-boundary-scan.mjs",
+    "orchestrator/process/semantic-boundary-scan.test.mjs"
+  ],
+  "findings": [],
+  "legacyOutstanding": [
+    {
+      "taskId": "T-1197",
+      "kind": "未完成旧配对功能",
+      "verdict": "NOT_IN_CURRENT_PRODUCT",
+      "sources": [
+        "71d2cc77",
+        "7d2087a8"
+      ],
+      "scope": "T1018 FR-EA-04持续窄授权paired MCP；源码/原SPEC/history保留不等于当前产品启用",
+      "compatibilityNeeds": [
+        "当前组级owner/workspace操作范围",
+        "短凭据/revision/撤销与不回落full",
+        "0101安装lineage及迁移收敛"
+      ],
+      "evidence": "source-audit-independent.md 旧配对功能真实缺口与兼容边界"
+    }
+  ],
+  "bindings": [
+    {
+      "path": "ai-worker/src/prompt/templates/topic-generate.ts",
+      "sha256": "9ac58a2527e801a95f802e08dc437af565871692d1f044505a30a1dcca03c1f5"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-browser-source.test.ts",
+      "sha256": "7121f68a9f57683af7d204c76eaf6b164488d0b23f96aa78d48fc65ac65fe72a"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+      "sha256": "f172f920fefc08a2c00d39e753eda97a0e0391369bc7064f60d2c6bd48403d0c"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts",
+      "sha256": "0ce97c9189927a16f5c8a7b2100c5294e9d066906337dca67d04284c454c9bb4"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+      "sha256": "10d7b940110ffc96316c2687bae539259c2ba22feabebde34a57d12144c1048b"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts",
+      "sha256": "b581ee9f3448ecc73aecd3a092d68c3d1faa0cf228b5eb611713843c554c1548"
+    },
+    {
+      "path": "backend/src/application/knowledge.ts",
+      "sha256": "d8a54df1e18cd5ebbc3d84f27078bab17f4a9f47633d7a00dfef859d61caf46c"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/topic-business-adapter.test.ts",
+      "sha256": "5c2eb574d43fb1cf0d2cf3cc4a2c32bfbbcae59a5537864baab7eaead90dee6f"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/topic-business-adapter.ts",
+      "sha256": "321fe476c9f84424391484fedf1c0cb4598ec6ecdb5d8c76ecc240adb5a28911"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/transcribe-runner.test.ts",
+      "sha256": "b6fe41ade4d4db010a99ed7e103d7cd66833735bf1c352b770ea2d108707f8b1"
+    },
+    {
+      "path": "backend/src/modules/artifacts/script-draft-target.service.ts",
+      "sha256": "0e59370b3b9a4b0b5129452899d809ebc6720494a0856ff6b7b0a1baa203a2ad"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-transcribe-source.service.ts",
+      "sha256": "963c4d41a397dd9becf83d9ca9988731d0d272442520b85321855cf4a273b825"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-transcribe-workflow.service.ts",
+      "sha256": "929f2dd63843b9871a221b0011ec5f8333c9d612b9187b0716c67ee2236f577b"
+    },
+    {
+      "path": "backend/src/modules/execution/execution.transport.test.ts",
+      "sha256": "aedbbbb00579b0e7a3d9905359de895629f85963dbae2ed4c33ac1f80f3f34c5"
+    },
+    {
+      "path": "backend/src/modules/execution/execution.transport.ts",
+      "sha256": "bfaf3d3df43cfb4cfc89e07a745ee1c6152498cdb46058140186ddfea277f6f1"
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "2a2729dbff4f84b28057b36c556ac998a8abc0c315cef2b2df5017f5bde0b270"
+    },
+    {
+      "path": "backend/src/modules/execution/transcribe-command-receipt.integration.test.ts",
+      "sha256": "94a28fc4b40bc8e09c560ff5a5c39abd8556f4ca73e0b58aa520f13ef1da4ba8"
+    },
+    {
+      "path": "backend/src/modules/execution/transcribe-command-receipt.ts",
+      "sha256": "31d6346df195b32c9b5c49e177788691f43e9dfd92b65146ac51bcd652859c0f"
+    },
+    {
+      "path": "backend/src/modules/execution/transcribe-postprocess.integration.test.ts",
+      "sha256": "51813b4e50139cccbe5f9c9d661ece8c0454d5602625b83feed6b267c451c39c"
+    },
+    {
+      "path": "backend/src/modules/execution/video-render/template.test.ts",
+      "sha256": "61fcd15b1f477f15cb7ead1da85ac035eb881495dde1d770746783c4556b0584"
+    },
+    {
+      "path": "backend/src/modules/execution/video-render/template.ts",
+      "sha256": "a808c1ee3e0d6840468a420849636a537d03db055c29e7eb11c3c55b0fea98fc"
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.acceptance.test.ts",
+      "sha256": "bfa6cb15123cd4ba9ed895f5bb23dc491d1692962258bf8796819e55ec1579eb"
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.contract.test.ts",
+      "sha256": "2dba003ad59c4966f8b5837cc0e996de1ab901bed5f11e7f95a29adfa5269e28"
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.repository.ts",
+      "sha256": "be0845d620c325ca22371fe84a8ac418d0197d0e14cef4a930d5e15daa7e6bdd"
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.service.test.ts",
+      "sha256": "39b9691aaf95ecfd1f922e721701082968ca914f5d0f6ed2450b311b4b145cae"
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.service.ts",
+      "sha256": "619ebad31d4f528ecd0cb6f57977e73ee61364ee96922a7d839dc9fc561fc418"
+    },
+    {
+      "path": "backend/src/modules/projects/transcript-artifact-ownership.integration.test.ts",
+      "sha256": "7c36cf8f2a2f3ff26b6f82af881e6d65ce4c8e440fecea598201a26740f555ea"
+    },
+    {
+      "path": "backend/src/modules/projects/transcript-artifact.service.ts",
+      "sha256": "056a0bd223f79d2deed7f237a1aa1ea291f523b6f3bebdb738588ed15686bce7"
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing.service.test.ts",
+      "sha256": "15554c193d3660ba164091b512c45a3b525de2690fb599853bb779f05b02ba55"
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing.service.ts",
+      "sha256": "959ca4b710482e2e5337832299f35b86d2fde53969b3fda939afed666a21c06f"
+    },
+    {
+      "path": "contract/src/cli-policy.ts",
+      "sha256": "b0aa3240150ff1aa1ca366a842e2670bf287c64a8a2629b3c7e849a7a91bd84b"
+    },
+    {
+      "path": "contract/src/operations/execution.ts",
+      "sha256": "bd0a8fb596afd005d1c303823d980a1cfa77f7d33756290dbe79e02cef4e97da"
+    },
+    {
+      "path": "contract/src/workspace-operation-scope.ts",
+      "sha256": "b7957c3ed4c0660c04791493a55838bc517f6ec2aa409de2ae4437276eb4470c"
+    },
+    {
+      "path": "contract/tests/execution-command-receipt-protocol.test.ts",
+      "sha256": "e13071d72ba30005c96485ed0dd6349aee1e993aa800fbcadf70faf3acbaad8d"
+    },
+    {
+      "path": "contract/tests/modules/execution.test.ts",
+      "sha256": "0970124578925aecf64346e19fa718f457f13c099b0863afa07e0ca46dfacd25"
+    },
+    {
+      "path": "contract/tests/registry.test.ts",
+      "sha256": "a26b8120063bded2b489ca198564a5ddbcbee9ec7d8ab73aacc8be913cd94d7d"
+    },
+    {
+      "path": "frontend/src-tauri/src/owned_devices.rs",
+      "sha256": "b4358d41e2f33a044568238d2d7d02b974ea7c14e192694e0bd1e789e18dbe36"
+    },
+    {
+      "path": "frontend/src-tauri/src/owned_devices_http_lab.rs",
+      "sha256": "dafa16fb56893e4d13d59262202dfc5c89ba04e7cd202e2af3f69569fbe40613"
+    },
+    {
+      "path": "frontend/src/app/(creator)/knowledge/page.tsx",
+      "sha256": "5829acc679c7a9838e017a3d2f8bd82608084ba6c5a3198426c98b995ef608d2"
+    },
+    {
+      "path": "frontend/src/app/activate/owned-device-panel.tsx",
+      "sha256": "eeec85ed714b08792d70385bedebad967d21abff9ed9bba81d130242b4ed44cb"
+    },
+    {
+      "path": "frontend/src/app/api/chat/route.test.ts",
+      "sha256": "98e5126dcaca87d96c7165bdbe5c73b13e037244973a94e31b5e5506be7324b7"
+    },
+    {
+      "path": "frontend/src/app/api/chat/route.ts",
+      "sha256": "c45e23ef619b9ad37947cb39440b63cb7de4d252c24cb52b2c8298d8d8c59f39"
+    },
+    {
+      "path": "frontend/src/app/api/v1/dispatch/transcribe-command-legacy-dispatch.test.ts",
+      "sha256": "64bf400c266053816319e6e258d676fb0fc820e92caf904f186c2b543b1e6ddd"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "sha256": "fafd6d5bd345d53607b1b0a8aeedc9d9ada88171918dfa4cb04fe05fa6ecfe01"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+      "sha256": "f0359d37a6a4d85ada788920ac4eb36a11dce20aedd09916a44885abc59ec87e"
+    },
+    {
+      "path": "frontend/src/features/copilot/transcribe-task-progress.test.tsx",
+      "sha256": "a675318208594dbefcfc733970e57e82bd0da2ca0c2ec3d29fe29fc2c3acfde9"
+    },
+    {
+      "path": "frontend/src/features/copilot/transcribe-task-progress.tsx",
+      "sha256": "e3e110eca09f05c3f38714316f4e512cbf39d1e8655e95c446b6d252c2f4c58a"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/ammo-card-list.tsx",
+      "sha256": "cb57a59cd4c2e641cf1fa65f0dd1d6b4ffaecbffef6072c04e94bf5f94528811"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-workbench-data.test.ts",
+      "sha256": "9a607c4c7da15df87300e86ad2d61d72842ab5f09ee7e13aff4584475110f230"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-workbench-data.ts",
+      "sha256": "d59853925d6d38b154706b6bffc79d93f9716da980183a4e016fd3d530f62804"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-workbench-page.bug8.test.tsx",
+      "sha256": "d1bf36b93520120a9832adfd69e917861a7bdb992404573a5da215695ed141d9"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+      "sha256": "b0f3f01adcc96b3656a676ff1ef9e2fe73b8b0dc57b7e206d471f684a83abb50"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-workbench-transcript-state.test.ts",
+      "sha256": "84c7e31cbd9c23ba045784fafd6291665b621a708850d5a680f1fc8886d14eff"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/transcribe-now-button.test.tsx",
+      "sha256": "86b177fce42da131133698e5c125cbe475af491dbc36ce14533a561355a5cf76"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/transcribe-now-button.tsx",
+      "sha256": "a0163bf892064664ed0b8de11ffc2f2534704e457afa99adc9e3776312664c85"
+    },
+    {
+      "path": "frontend/src/features/knowledge/knowledge-detail-preview.tsx",
+      "sha256": "970a8320d506ef2b110dcb942cff8ae4a356fe9f0499e5a58cf7b8b3eef2cd74"
+    },
+    {
+      "path": "frontend/src/features/knowledge/knowledge-dump-zone.tsx",
+      "sha256": "c1b7c5b4bc9bd54b2c89103dad296d752032acf79e2b73b38704a1b872ec6f11"
+    },
+    {
+      "path": "frontend/src/features/knowledge/knowledge-library-data.test.ts",
+      "sha256": "2b3a4b5c67f37d106e8357037e1427062163fdc744378ed84d0a717ad4ba0afd"
+    },
+    {
+      "path": "frontend/src/features/knowledge/knowledge-library-data.ts",
+      "sha256": "9d39e11fc06097954a89cd3f0ae2886240370db77e928bd6ec64a8926c300f69"
+    },
+    {
+      "path": "frontend/src/features/knowledge/knowledge-library.tsx",
+      "sha256": "21c7dfb7fd2274a2b5fc04ab0073f005ec2b8dcd676c32494b289186eb69a3cd"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.test.tsx",
+      "sha256": "c266087764a9f05aae67744ea9de5d5f7a69091dc70ea71e460849d1bcfe7551"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.tsx",
+      "sha256": "1ce233432a8ef2fcec97c77a1379fc49853da616b01aa9cfe095a7c3a1809e19"
+    },
+    {
+      "path": "frontend/src/features/topics/audience-task-workspace.test.tsx",
+      "sha256": null
+    },
+    {
+      "path": "frontend/src/features/topics/audience-task-workspace.tsx",
+      "sha256": null
+    },
+    {
+      "path": "frontend/src/features/topics/topics-interactions.test.tsx",
+      "sha256": "612cee8281a28a599969b440042da9a2551388cdb0ec7485f6ffa59a9e5a9472"
+    },
+    {
+      "path": "frontend/src/features/topics/topics-page.tsx",
+      "sha256": "feec02275f1871cc3f94d918b8d2ed0c7b179472a30c9cddc418cf05add1f788"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "sha256": "34029a0519650bf37b22a41ef36cfbe1ecfd7f75df6c6f7221e537f91adda2cb"
+    },
+    {
+      "path": "frontend/src/server/transcribe-source-cooldown.integration.test.ts",
+      "sha256": "197955c4947d0b2b50e730b8d751fc10ab371f9eea646de183d8cb9daf691816"
+    },
+    {
+      "path": "frontend/tests/e2e/audience-task-topics.spec.ts",
+      "sha256": "e40b020ab87c15a1e77488712ade293c80ad79a5e0e92e0b7ceeadd72e336571"
+    },
+    {
+      "path": "frontend/tests/e2e/knowledge-library.spec.ts",
+      "sha256": "8eed8c2b0d52323d921b2f80da1d3cfa7c948e1c28d45f7ea94158f3b5ddb840"
+    },
+    {
+      "path": "orchestrator/process/semantic-boundary-scan.mjs",
+      "sha256": "1f86baf34c47969dbb269b5b8211bd96b4cbeea2e682b5a9751c739a93f535e4"
+    },
+    {
+      "path": "orchestrator/process/semantic-boundary-scan.test.mjs",
+      "sha256": "c995efdf6cfe55d440e77e1952627214e69ddb2d75e78bb0b7a36170b48a38d7"
+    },
+    {
+      "path": "tools/verification/t1110-research.mjs",
+      "sha256": "0af3df108810916f283844dc975d383c26645ddc7d3b2ebed108f209ee094f46"
+    },
+    {
+      "path": "tools/verification/t1110-scope-check.mjs",
+      "sha256": "d88ebcb3c11f34b0dc24d631b437160c1d152265a4a0c3d83adb3ce8878b3a83"
+    },
+    {
+      "path": "tools/verification/t1110-scope-observe.sh",
+      "sha256": "c1ee5509b4c41dd45f1ef3509b74cb7865a0eab8bd64ce214a431fcd5d3069e5"
+    }
+  ],
+  "sourcePaths": [
+    {
+      "path": "ai-worker/src/prompt/templates/topic-generate.ts",
+      "sha256": "9ac58a2527e801a95f802e08dc437af565871692d1f044505a30a1dcca03c1f5"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-browser-source.test.ts",
+      "sha256": "7121f68a9f57683af7d204c76eaf6b164488d0b23f96aa78d48fc65ac65fe72a"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+      "sha256": "f172f920fefc08a2c00d39e753eda97a0e0391369bc7064f60d2c6bd48403d0c"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts",
+      "sha256": "0ce97c9189927a16f5c8a7b2100c5294e9d066906337dca67d04284c454c9bb4"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+      "sha256": "10d7b940110ffc96316c2687bae539259c2ba22feabebde34a57d12144c1048b"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts",
+      "sha256": "b581ee9f3448ecc73aecd3a092d68c3d1faa0cf228b5eb611713843c554c1548"
+    },
+    {
+      "path": "backend/src/application/knowledge.ts",
+      "sha256": "d8a54df1e18cd5ebbc3d84f27078bab17f4a9f47633d7a00dfef859d61caf46c"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/topic-business-adapter.test.ts",
+      "sha256": "5c2eb574d43fb1cf0d2cf3cc4a2c32bfbbcae59a5537864baab7eaead90dee6f"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/topic-business-adapter.ts",
+      "sha256": "321fe476c9f84424391484fedf1c0cb4598ec6ecdb5d8c76ecc240adb5a28911"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/transcribe-runner.test.ts",
+      "sha256": "b6fe41ade4d4db010a99ed7e103d7cd66833735bf1c352b770ea2d108707f8b1"
+    },
+    {
+      "path": "backend/src/modules/artifacts/script-draft-target.service.ts",
+      "sha256": "0e59370b3b9a4b0b5129452899d809ebc6720494a0856ff6b7b0a1baa203a2ad"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-transcribe-source.service.ts",
+      "sha256": "963c4d41a397dd9becf83d9ca9988731d0d272442520b85321855cf4a273b825"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-transcribe-workflow.service.ts",
+      "sha256": "929f2dd63843b9871a221b0011ec5f8333c9d612b9187b0716c67ee2236f577b"
+    },
+    {
+      "path": "backend/src/modules/execution/execution.transport.test.ts",
+      "sha256": "aedbbbb00579b0e7a3d9905359de895629f85963dbae2ed4c33ac1f80f3f34c5"
+    },
+    {
+      "path": "backend/src/modules/execution/execution.transport.ts",
+      "sha256": "bfaf3d3df43cfb4cfc89e07a745ee1c6152498cdb46058140186ddfea277f6f1"
+    },
+    {
+      "path": "backend/src/modules/execution/persistent-task.service.ts",
+      "sha256": "2a2729dbff4f84b28057b36c556ac998a8abc0c315cef2b2df5017f5bde0b270"
+    },
+    {
+      "path": "backend/src/modules/execution/transcribe-command-receipt.integration.test.ts",
+      "sha256": "94a28fc4b40bc8e09c560ff5a5c39abd8556f4ca73e0b58aa520f13ef1da4ba8"
+    },
+    {
+      "path": "backend/src/modules/execution/transcribe-command-receipt.ts",
+      "sha256": "31d6346df195b32c9b5c49e177788691f43e9dfd92b65146ac51bcd652859c0f"
+    },
+    {
+      "path": "backend/src/modules/execution/transcribe-postprocess.integration.test.ts",
+      "sha256": "51813b4e50139cccbe5f9c9d661ece8c0454d5602625b83feed6b267c451c39c"
+    },
+    {
+      "path": "backend/src/modules/execution/video-render/template.test.ts",
+      "sha256": "61fcd15b1f477f15cb7ead1da85ac035eb881495dde1d770746783c4556b0584"
+    },
+    {
+      "path": "backend/src/modules/execution/video-render/template.ts",
+      "sha256": "a808c1ee3e0d6840468a420849636a537d03db055c29e7eb11c3c55b0fea98fc"
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.acceptance.test.ts",
+      "sha256": "bfa6cb15123cd4ba9ed895f5bb23dc491d1692962258bf8796819e55ec1579eb"
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.contract.test.ts",
+      "sha256": "2dba003ad59c4966f8b5837cc0e996de1ab901bed5f11e7f95a29adfa5269e28"
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.repository.ts",
+      "sha256": "be0845d620c325ca22371fe84a8ac418d0197d0e14cef4a930d5e15daa7e6bdd"
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.service.test.ts",
+      "sha256": "39b9691aaf95ecfd1f922e721701082968ca914f5d0f6ed2450b311b4b145cae"
+    },
+    {
+      "path": "backend/src/modules/knowledge/knowledge.service.ts",
+      "sha256": "619ebad31d4f528ecd0cb6f57977e73ee61364ee96922a7d839dc9fc561fc418"
+    },
+    {
+      "path": "backend/src/modules/projects/transcript-artifact-ownership.integration.test.ts",
+      "sha256": "7c36cf8f2a2f3ff26b6f82af881e6d65ce4c8e440fecea598201a26740f555ea"
+    },
+    {
+      "path": "backend/src/modules/projects/transcript-artifact.service.ts",
+      "sha256": "056a0bd223f79d2deed7f237a1aa1ea291f523b6f3bebdb738588ed15686bce7"
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing.service.test.ts",
+      "sha256": "15554c193d3660ba164091b512c45a3b525de2690fb599853bb779f05b02ba55"
+    },
+    {
+      "path": "backend/src/modules/publishing/publishing.service.ts",
+      "sha256": "959ca4b710482e2e5337832299f35b86d2fde53969b3fda939afed666a21c06f"
+    },
+    {
+      "path": "contract/src/cli-policy.ts",
+      "sha256": "b0aa3240150ff1aa1ca366a842e2670bf287c64a8a2629b3c7e849a7a91bd84b"
+    },
+    {
+      "path": "contract/src/operations/execution.ts",
+      "sha256": "bd0a8fb596afd005d1c303823d980a1cfa77f7d33756290dbe79e02cef4e97da"
+    },
+    {
+      "path": "contract/src/workspace-operation-scope.ts",
+      "sha256": "b7957c3ed4c0660c04791493a55838bc517f6ec2aa409de2ae4437276eb4470c"
+    },
+    {
+      "path": "contract/tests/execution-command-receipt-protocol.test.ts",
+      "sha256": "e13071d72ba30005c96485ed0dd6349aee1e993aa800fbcadf70faf3acbaad8d"
+    },
+    {
+      "path": "contract/tests/modules/execution.test.ts",
+      "sha256": "0970124578925aecf64346e19fa718f457f13c099b0863afa07e0ca46dfacd25"
+    },
+    {
+      "path": "contract/tests/registry.test.ts",
+      "sha256": "a26b8120063bded2b489ca198564a5ddbcbee9ec7d8ab73aacc8be913cd94d7d"
+    },
+    {
+      "path": "frontend/src-tauri/src/owned_devices.rs",
+      "sha256": "b4358d41e2f33a044568238d2d7d02b974ea7c14e192694e0bd1e789e18dbe36"
+    },
+    {
+      "path": "frontend/src-tauri/src/owned_devices_http_lab.rs",
+      "sha256": "dafa16fb56893e4d13d59262202dfc5c89ba04e7cd202e2af3f69569fbe40613"
+    },
+    {
+      "path": "frontend/src/app/(creator)/knowledge/page.tsx",
+      "sha256": "5829acc679c7a9838e017a3d2f8bd82608084ba6c5a3198426c98b995ef608d2"
+    },
+    {
+      "path": "frontend/src/app/activate/owned-device-panel.tsx",
+      "sha256": "eeec85ed714b08792d70385bedebad967d21abff9ed9bba81d130242b4ed44cb"
+    },
+    {
+      "path": "frontend/src/app/api/chat/route.test.ts",
+      "sha256": "98e5126dcaca87d96c7165bdbe5c73b13e037244973a94e31b5e5506be7324b7"
+    },
+    {
+      "path": "frontend/src/app/api/chat/route.ts",
+      "sha256": "c45e23ef619b9ad37947cb39440b63cb7de4d252c24cb52b2c8298d8d8c59f39"
+    },
+    {
+      "path": "frontend/src/app/api/v1/dispatch/transcribe-command-legacy-dispatch.test.ts",
+      "sha256": "64bf400c266053816319e6e258d676fb0fc820e92caf904f186c2b543b1e6ddd"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "sha256": "fafd6d5bd345d53607b1b0a8aeedc9d9ada88171918dfa4cb04fe05fa6ecfe01"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+      "sha256": "f0359d37a6a4d85ada788920ac4eb36a11dce20aedd09916a44885abc59ec87e"
+    },
+    {
+      "path": "frontend/src/features/copilot/transcribe-task-progress.test.tsx",
+      "sha256": "a675318208594dbefcfc733970e57e82bd0da2ca0c2ec3d29fe29fc2c3acfde9"
+    },
+    {
+      "path": "frontend/src/features/copilot/transcribe-task-progress.tsx",
+      "sha256": "e3e110eca09f05c3f38714316f4e512cbf39d1e8655e95c446b6d252c2f4c58a"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/ammo-card-list.tsx",
+      "sha256": "cb57a59cd4c2e641cf1fa65f0dd1d6b4ffaecbffef6072c04e94bf5f94528811"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-workbench-data.test.ts",
+      "sha256": "9a607c4c7da15df87300e86ad2d61d72842ab5f09ee7e13aff4584475110f230"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-workbench-data.ts",
+      "sha256": "d59853925d6d38b154706b6bffc79d93f9716da980183a4e016fd3d530f62804"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-workbench-page.bug8.test.tsx",
+      "sha256": "d1bf36b93520120a9832adfd69e917861a7bdb992404573a5da215695ed141d9"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+      "sha256": "b0f3f01adcc96b3656a676ff1ef9e2fe73b8b0dc57b7e206d471f684a83abb50"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/draft-workbench-transcript-state.test.ts",
+      "sha256": "84c7e31cbd9c23ba045784fafd6291665b621a708850d5a680f1fc8886d14eff"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/transcribe-now-button.test.tsx",
+      "sha256": "86b177fce42da131133698e5c125cbe475af491dbc36ce14533a561355a5cf76"
+    },
+    {
+      "path": "frontend/src/features/draft-workbench/transcribe-now-button.tsx",
+      "sha256": "a0163bf892064664ed0b8de11ffc2f2534704e457afa99adc9e3776312664c85"
+    },
+    {
+      "path": "frontend/src/features/knowledge/knowledge-detail-preview.tsx",
+      "sha256": "970a8320d506ef2b110dcb942cff8ae4a356fe9f0499e5a58cf7b8b3eef2cd74"
+    },
+    {
+      "path": "frontend/src/features/knowledge/knowledge-dump-zone.tsx",
+      "sha256": "c1b7c5b4bc9bd54b2c89103dad296d752032acf79e2b73b38704a1b872ec6f11"
+    },
+    {
+      "path": "frontend/src/features/knowledge/knowledge-library-data.test.ts",
+      "sha256": "2b3a4b5c67f37d106e8357037e1427062163fdc744378ed84d0a717ad4ba0afd"
+    },
+    {
+      "path": "frontend/src/features/knowledge/knowledge-library-data.ts",
+      "sha256": "9d39e11fc06097954a89cd3f0ae2886240370db77e928bd6ec64a8926c300f69"
+    },
+    {
+      "path": "frontend/src/features/knowledge/knowledge-library.tsx",
+      "sha256": "21c7dfb7fd2274a2b5fc04ab0073f005ec2b8dcd676c32494b289186eb69a3cd"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.test.tsx",
+      "sha256": "c266087764a9f05aae67744ea9de5d5f7a69091dc70ea71e460849d1bcfe7551"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.tsx",
+      "sha256": "1ce233432a8ef2fcec97c77a1379fc49853da616b01aa9cfe095a7c3a1809e19"
+    },
+    {
+      "path": "frontend/src/features/topics/audience-task-workspace.test.tsx",
+      "sha256": null
+    },
+    {
+      "path": "frontend/src/features/topics/audience-task-workspace.tsx",
+      "sha256": null
+    },
+    {
+      "path": "frontend/src/features/topics/topics-interactions.test.tsx",
+      "sha256": "612cee8281a28a599969b440042da9a2551388cdb0ec7485f6ffa59a9e5a9472"
+    },
+    {
+      "path": "frontend/src/features/topics/topics-page.tsx",
+      "sha256": "feec02275f1871cc3f94d918b8d2ed0c7b179472a30c9cddc418cf05add1f788"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "sha256": "34029a0519650bf37b22a41ef36cfbe1ecfd7f75df6c6f7221e537f91adda2cb"
+    },
+    {
+      "path": "frontend/src/server/transcribe-source-cooldown.integration.test.ts",
+      "sha256": "197955c4947d0b2b50e730b8d751fc10ab371f9eea646de183d8cb9daf691816"
+    },
+    {
+      "path": "frontend/tests/e2e/audience-task-topics.spec.ts",
+      "sha256": "e40b020ab87c15a1e77488712ade293c80ad79a5e0e92e0b7ceeadd72e336571"
+    },
+    {
+      "path": "frontend/tests/e2e/knowledge-library.spec.ts",
+      "sha256": "8eed8c2b0d52323d921b2f80da1d3cfa7c948e1c28d45f7ea94158f3b5ddb840"
+    },
+    {
+      "path": "orchestrator/process/semantic-boundary-scan.mjs",
+      "sha256": "1f86baf34c47969dbb269b5b8211bd96b4cbeea2e682b5a9751c739a93f535e4"
+    },
+    {
+      "path": "orchestrator/process/semantic-boundary-scan.test.mjs",
+      "sha256": "c995efdf6cfe55d440e77e1952627214e69ddb2d75e78bb0b7a36170b48a38d7"
+    },
+    {
+      "path": "tools/verification/t1110-research.mjs",
+      "sha256": "0af3df108810916f283844dc975d383c26645ddc7d3b2ebed108f209ee094f46"
+    },
+    {
+      "path": "tools/verification/t1110-scope-check.mjs",
+      "sha256": "d88ebcb3c11f34b0dc24d631b437160c1d152265a4a0c3d83adb3ce8878b3a83"
+    },
+    {
+      "path": "tools/verification/t1110-scope-observe.sh",
+      "sha256": "c1ee5509b4c41dd45f1ef3509b74cb7865a0eab8bd64ce214a431fcd5d3069e5"
+    }
+  ],
+  "bindingCount": 75,
+  "deletedCount": 2,
+  "candidateExactPathCount": 48,
+  "registeredWorktreeHeads": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+      "head": "45ff5ff5e6676d32be38c834660bab88c238a2ba",
+      "branch": "refs/heads/codex/t1062-account-group-snapshot",
+      "ancestorOfReviewedHead": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+      "head": "b5d256c8287807f5a8d2115030b3672b54ba9c2b",
+      "branch": "refs/heads/main",
+      "ancestorOfReviewedHead": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator",
+      "head": "a3bc947d4bcb70be5c14f11ff56639a54b184b31",
+      "branch": "refs/heads/codex/t1110-wechat-evidence-continuation",
+      "ancestorOfReviewedHead": true
+    }
+  ],
+  "validationReceipts": [
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/primary-backend-tests.json",
+      "exitCode": 0,
+      "logSha256": "75b6fd12259bf392f82e03dbe027a0a181b6289f0ce8aea292af28d3ebbf14ef",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/completion-contract-tests.json",
+      "exitCode": 0,
+      "logSha256": "2b606bb1a55038f329eeb25228c939f7c7c7bbca8fceca7348f054f72ee0a208",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/wechat-worker-tests.json",
+      "exitCode": 0,
+      "logSha256": "ec6a8e1b72861db9ae1e2cc7ff0f8d5c82285f4ac7bf8cd3ff14c5c53b166495",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/wechat-ui-tests.json",
+      "exitCode": 0,
+      "logSha256": "9d1ade00ed2c388c78cb56d62f3f028b64913e4602611e3d35eb0ec2e69d023f",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/wechat-public-service-tests.json",
+      "exitCode": 0,
+      "logSha256": "9ce852f5ac4679141e33bc7fc17b431539caefb9676042bb17ac7498f1674e66",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/semantic-source-shim-regressions.json",
+      "exitCode": 0,
+      "logSha256": "17bb46b7655928f5054ae61498fdf24ad8fb22e8fd5ec333996463d2ddeecdcb",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/completion-backend-followup-tests.json",
+      "exitCode": 0,
+      "logSha256": "fcd4638542f7423ff66cfb43a1863809f6b1a532826053ad223689e094580d68",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/completion-frontend-followup-tests.json",
+      "exitCode": 0,
+      "logSha256": "8b2a6aaeec9e221ae83298630af5e21d5b24d7e251d1b5a609c35489253de08b",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/completion-runner-summary-tests.json",
+      "exitCode": 0,
+      "logSha256": "a643bf420e423e4f95e28a6cf79849f69fd84bbe45fb2e81ae59ca4c38a711bb",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/backend-types-followup.json",
+      "exitCode": 0,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/frontend-types.json",
+      "exitCode": 0,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/led047-current-tests.json",
+      "exitCode": 0,
+      "logSha256": "f27755fa42526e15f59907d59210a95db48ffce4bce689f546be53b69a728e57",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/package-basic-tests.json",
+      "exitCode": 0,
+      "logSha256": "2b84ac10c6d9cd32372869b90331ac0e10bcb34ff6246afbb5023c20e6511cdc",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/native-owned-device-isolated-v2-tests.json",
+      "exitCode": 0,
+      "logSha256": "46ef0c3456a44bf6e073b07992e972bac34dae56583387c1b32ef6167aa287f9",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/current-boundary.json",
+      "exitCode": 0,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    },
+    {
+      "receiptPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/current-orphan.json",
+      "exitCode": 0,
+      "logSha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "logBytesVerified": true,
+      "executedBy": "root",
+      "reviewerExecuted": false
+    }
+  ],
+  "validationLimitations": [
+    "本reviewer没有执行服务/数据库/模型/真人/安装版E2E；测试回执来自root实际wrapper/log且读取校验SHA",
+    "backend首次2失败、frontend首次4失败及backend tsc失败原证据保留；修复后实际重跑单列",
+    "backend回执100通过/2跳过；原生设备隔离模块17通过，不冒称完整桌面或Windows验收",
+    "full reconcile仍由root实际运行，未以此源码PASS代签全库Gate",
+    "微信/上传研究保持暂停，工具脚本仅来源保留，未执行真人研究",
+    "旧t1191只覆盖旧产品基线，不能签本轮新增路径"
+  ]
+}

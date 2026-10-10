@@ -29,3 +29,6 @@
 |current-source-pmem-sync|0|5.763|ce47e163ac5f7d8dd2851ae33593d3ebed3ffed02db5b7bae1d699db8fc49abd|
 |current-boundary|0|0.548|e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855|
 |current-orphan|0|0.26|ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e|
+
+补实测：同一隔离进程配置仅测试profile显式打开debug_assertions以编译原只测试HTTP lab；18PASS/1真人实验IGNORED，原release17PASS保留。未使用--ignored，正式打包profile不继承临时测试环境。命令原日志SHA256 b79021f39191a89d81a48b04ec63c029223d1e2be10fdf44fc467db9f7828624。
+原暂存diff-check在历史来源patch/rawlog原字节上exit2(109行输出)，产品范围cached diff-check实际exit0；原证据不为满足空白检查重写。

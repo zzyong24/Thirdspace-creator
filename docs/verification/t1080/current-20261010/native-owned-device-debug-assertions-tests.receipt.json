@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "python3",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/native-tests-isolated-debug-assertions.py"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T09:36:26.650820+00:00",
+  "finishedAt": "2026-10-10T09:39:28.962907+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 182.31078329094453,
+  "logSha256": "b79021f39191a89d81a48b04ec63c029223d1e2be10fdf44fc467db9f7828624"
+}

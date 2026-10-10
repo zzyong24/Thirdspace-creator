@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "node",
+    "docs/verification/t1022/run-archive-guard.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T09:59:31.922303+00:00",
+  "finishedAt": "2026-10-10T09:59:32.024611+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 0.10214362503029406,
+  "logSha256": "f4cd905fd0060a512850ddbb9751a080e2f84b8be7ba71fa6d041adbe6d22d83"
+}

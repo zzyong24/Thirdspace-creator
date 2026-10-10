@@ -1,0 +1,33 @@
+{
+  "observedAt": "2026-10-10T08:58:08.467437+00:00",
+  "removedEmptyWrappers": [
+    "/Users/zyongzhu/.codex/worktrees/t1005-file-plan-proof",
+    "/Users/zyongzhu/.codex/worktrees/t1005-plan-recovery",
+    "/Users/zyongzhu/.codex/worktrees/t1006-progress",
+    "/Users/zyongzhu/.codex/worktrees/t1007-command",
+    "/Users/zyongzhu/.codex/worktrees/t1007-ipc",
+    "/Users/zyongzhu/.codex/worktrees/t1007-windows",
+    "/Users/zyongzhu/.codex/worktrees/t1007-windows-command",
+    "/Users/zyongzhu/.codex/worktrees/t1009-html-export-chain",
+    "/Users/zyongzhu/.codex/worktrees/t1009-relative-assets",
+    "/Users/zyongzhu/.codex/worktrees/t188-creator-devices"
+  ],
+  "skipped": [],
+  "historicalSourcePreserved": [
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/101d/Thirdspace-creator/docs/assets/orchestrator-loop.html",
+      "preservedPath": "docs/verification/t1080/current-20261010/historical-source/orphan-101d/docs/assets/orchestrator-loop.html",
+      "sha256": "681c732a6d127c644e16597a692d533f2bac01419b3daec718e925097ff98891",
+      "bytes": 37810,
+      "role": "历史原文件；未覆盖当前产品实现；目录删除前等待commit"
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/Thirdspace-creator/frontend/src/features/article/doocs-article-editor.tsx",
+      "preservedPath": "docs/verification/t1080/current-20261010/historical-source/orphan-unnamed/frontend/src/features/article/doocs-article-editor.tsx",
+      "sha256": "23934f349877f19daad6fa06b6cd1153650e5b1b4d736ccdef91e0de6547aac9",
+      "bytes": 11124,
+      "role": "历史原文件；未覆盖当前产品实现；目录删除前等待commit"
+    }
+  ],
+  "note": "仅rmdir真实空壳；历史源码原目录尚未删除"
+}

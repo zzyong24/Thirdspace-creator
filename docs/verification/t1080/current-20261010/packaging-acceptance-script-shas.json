@@ -1,0 +1,22 @@
+[
+  {
+    "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/package-freeze-source-current.py",
+    "sha256": "d111026216e15802a49189f614328de9f9a7a5d289d323ac2cec9aa6b8226482"
+  },
+  {
+    "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/package_acceptance_common.py",
+    "sha256": "82f8ad9eaff3c912af2ac40917172ef06acf29c995bb6ce3f32baedcdcf71899"
+  },
+  {
+    "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/offline-package-inspect.py",
+    "sha256": "bf728852eba9e15c38426fd935af52d664ba455467186c688676a4dba5222d6a"
+  },
+  {
+    "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/install-current/install.py",
+    "sha256": "4fc1e482c95aecb44685ef818fc6e72d114bb5de8cb480b17e82d238571c138b"
+  },
+  {
+    "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/install-current/probe-startup-v2.py",
+    "sha256": "fabac819e0afa1edb1a2caa672eace1709c0ddccc7b3127bda1556d8cd30aa60"
+  }
+]

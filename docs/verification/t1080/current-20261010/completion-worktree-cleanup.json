@@ -1,0 +1,15 @@
+{
+  "scanExit": 0,
+  "elapsedSeconds": 24.804406791052315,
+  "hits": [],
+  "candidate": "/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator",
+  "sourceHead": "db769ddc2968e373bb92e253f13fad9d0927ee08",
+  "sourceStatus": "",
+  "unknownIgnoredPaths": [],
+  "ignoredGeneratedCount": 122501,
+  "originalEvidenceManifest": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/completion-originals-preserved.json",
+  "removed": true,
+  "force": false,
+  "backupCreated": false,
+  "emptyWrapperRemoved": true
+}

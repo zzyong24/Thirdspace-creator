@@ -1,0 +1,91 @@
+{
+  "taskId": "T-1080",
+  "reviewType": "PRIVATE_PACKAGING_ACCEPTANCE_SCRIPTS_INDEPENDENT_STATIC",
+  "reviewedAt": "2026-10-10T10:00:16.373919+00:00",
+  "reviewer": "t1080_latest_source_audit",
+  "repositoryHeadObserved": "b5d256c8287807f5a8d2115030b3672b54ba9c2b",
+  "sourceReviewedHead": "b5d256c8287807f5a8d2115030b3672b54ba9c2b",
+  "verdict": "PASS_STATIC_SCRIPT_REVIEW_ONLY",
+  "findings": [],
+  "bindings": [
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/package-freeze-source-current.py",
+      "sha256": "d111026216e15802a49189f614328de9f9a7a5d289d323ac2cec9aa6b8226482"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/package_acceptance_common.py",
+      "sha256": "82f8ad9eaff3c912af2ac40917172ef06acf29c995bb6ce3f32baedcdcf71899"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/offline-package-inspect.py",
+      "sha256": "bf728852eba9e15c38426fd935af52d664ba455467186c688676a4dba5222d6a"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/install-current/install.py",
+      "sha256": "4fc1e482c95aecb44685ef818fc6e72d114bb5de8cb480b17e82d238571c138b"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/install-current/probe-startup-v2.py",
+      "sha256": "fabac819e0afa1edb1a2caa672eace1709c0ddccc7b3127bda1556d8cd30aa60"
+    }
+  ],
+  "evidenceBindings": [
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/packaging-acceptance-script-shas.json",
+      "sha256": "3d194e185d0d11919823edaa78015aa40cee3f91fd27dd3731b5e99a4cd8443b"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/packaging-acceptance-README.md",
+      "sha256": "79e6b865ea9c663f2c57f3b5ceea956d6ddc7d4be3b3b515efa6cbfa00d78e0d"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/source-final-readset.json",
+      "sha256": "6b2e44ae17a3bdd813fc1e1faaea94a7264702fa6a7b6258c2e195798dd504c9"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/source-final-review.md",
+      "sha256": "5f5992365119ee418b04c71afe4b22d5d15cae36d49a6632b956cf6c5c190685"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/freeze-negative-fixtures.json",
+      "sha256": "19d3aacbf04c074bd6c4da04a4be262c8b20bbcdde5ffe84ea1b6a4ea8be86bd"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/freeze-negative-fixtures.log",
+      "sha256": "f8158d47087c1e7c4d748c73d24eefbdd8715b3150b66b5bc1273a42487e599a"
+    }
+  ],
+  "reportPath": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/packaging-acceptance-scripts-independent-review.md",
+  "reportSha256": "fec181613bdfce77011b05e4a3c181052beca7989f06e65cefefe56706793779",
+  "sourceFinalReadsetUnchangedSha256": "6b2e44ae17a3bdd813fc1e1faaea94a7264702fa6a7b6258c2e195798dd504c9",
+  "sourceFinalReviewUnchangedSha256": "5f5992365119ee418b04c71afe4b22d5d15cae36d49a6632b956cf6c5c190685",
+  "sourceScopeCount": 10,
+  "sourceBindingCount": 75,
+  "sourceDeletionCount": 2,
+  "staticChecks": {
+    "fullTextReadAllFive": true,
+    "manifestShaMatchesAllFive": true,
+    "astParseAllFive": true,
+    "originalFiveStrongPatternsLiteralBytesEqual": true,
+    "recordedFixtureControlLogShaMatches": true,
+    "recordedFixtureFilesAccepted": 3,
+    "recordedNegativeControlsRejected": 18
+  },
+  "executedByReviewer": {
+    "importScripts": false,
+    "freeze": false,
+    "selfTest": false,
+    "build": false,
+    "offlineInspection": false,
+    "installation": false,
+    "nativeStartup": false,
+    "modelOrPlatform": false,
+    "database": false
+  },
+  "limitations": [
+    "只签固定五脚本的独立静态审查，实际构建与制品/安装/启动须另有真实执行记录",
+    "不代签屏幕眼验、全功能、真人平台研究或用户最终验收",
+    "T1197旧配对未进入当前产品仍单列，不并入功能PASS",
+    "按私有新收据顺序执行与本表固定字节是本结论适用前提"
+  ]
+}
