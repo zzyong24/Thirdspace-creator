@@ -1,0 +1,230 @@
+{
+  "scope": "本次临时独立产品PGlite环境，真实public API；研究profile没有被迁移",
+  "binding": {
+    "http": 200,
+    "observedAt": "2026-10-09T14:27:51.680Z",
+    "runId": "execution-task-3eba3525-15",
+    "platform": "wechatVideo",
+    "status": "succeeded",
+    "accountId": "acct-3eba3525-70",
+    "error": null,
+    "platformIdentitySha256": "24866f23b434a6cd0036756fa03e575529a50623c67b38d9e1b232fade378d75"
+  },
+  "attempts": [
+    {
+      "name": "original-window",
+      "http": 200,
+      "attemptId": "collection-5d521b69-104",
+      "status": "failed",
+      "committedPages": 0,
+      "reasonCode": "EXPORT_FAILED",
+      "startedAt": "2026-10-09T14:41:15.801Z",
+      "updatedAt": "2026-10-09T14:41:37.579Z"
+    },
+    {
+      "name": "render-wait",
+      "http": 200,
+      "attemptId": "collection-dfe56a37-49",
+      "status": "failed",
+      "committedPages": 0,
+      "reasonCode": "EXPORT_FAILED",
+      "startedAt": "2026-10-09T14:50:58.757Z",
+      "updatedAt": "2026-10-09T14:53:25.876Z"
+    },
+    {
+      "name": "section-diagnostic",
+      "http": 200,
+      "attemptId": "collection-8d52aafb-55",
+      "status": "failed",
+      "committedPages": 0,
+      "reasonCode": "EXPORT_FAILED",
+      "startedAt": "2026-10-09T14:57:03.870Z",
+      "updatedAt": "2026-10-09T14:57:26.941Z"
+    },
+    {
+      "name": "fixed-navigation-classification",
+      "http": 200,
+      "attemptId": "collection-34ba48c1-55",
+      "status": "failed",
+      "committedPages": 0,
+      "reasonCode": "EXPORT_FAILED",
+      "startedAt": "2026-10-09T15:07:08.057Z",
+      "updatedAt": "2026-10-09T15:09:35.536Z",
+      "diagnostic": {
+        "stage": "prepare",
+        "kind": "channelsDaily",
+        "code": "REPORT_SECTION_MISSING"
+      }
+    },
+    {
+      "name": "fixed-five-field-observation",
+      "http": 200,
+      "attemptId": "collection-b33854fc-50",
+      "accountId": "acct-3eba3525-70",
+      "capability": "nativeReports",
+      "status": "failed",
+      "generation": 2,
+      "committedPages": 0,
+      "completeCatalogGeneration": null,
+      "reasonCode": "EXPORT_FAILED",
+      "startedAt": "2026-10-09T15:45:20.782Z",
+      "updatedAt": "2026-10-09T15:47:45.773Z",
+      "diagnostic": {
+        "stage": "prepare",
+        "kind": "channelsDaily",
+        "code": "REPORT_SECTION_MISSING",
+        "observation": {
+          "exactTabCount": 0,
+          "visibleTabCount": 0,
+          "frameElementVisible": false,
+          "documentReadyState": "complete",
+          "bodyTextLength": 162
+        }
+      }
+    },
+    {
+      "name": "default-off-private-image-explicitly-configured",
+      "http": 200,
+      "attemptId": "collection-35c561b7-54",
+      "accountId": "acct-3eba3525-70",
+      "capability": "nativeReports",
+      "status": "failed",
+      "generation": 2,
+      "committedPages": 0,
+      "completeCatalogGeneration": null,
+      "reasonCode": "EXPORT_FAILED",
+      "startedAt": "2026-10-09T16:36:10.068Z",
+      "updatedAt": "2026-10-09T16:38:31.910Z",
+      "diagnostic": {
+        "platform": "wechatVideo",
+        "stage": "prepare",
+        "kind": "channelsDaily",
+        "code": "REPORT_SECTION_MISSING",
+        "exceptionName": "WechatBrowserSourceError",
+        "observation": {
+          "exactTabCount": 0,
+          "visibleTabCount": 0,
+          "frameElementVisible": false,
+          "documentReadyState": "complete",
+          "bodyTextLength": 162
+        }
+      },
+      "privateImage": {
+        "configured": true,
+        "pngCount": 0,
+        "partCount": 0,
+        "skipReason": "unknown",
+        "screenshotWitness": false
+      }
+    }
+  ],
+  "allReportsSaved": false,
+  "officialProductBinding": "not-yet-succeeded",
+  "browserJourney": "待验；最后prepared69未运行，因研究复用clone已停止且prepared状态撤销，仍无当前真实页面操作PASS",
+  "officialAttempts": [
+    {
+      "runId": "execution-task-34ba48c1-61",
+      "status": "failed",
+      "accountId": null,
+      "startedAt": "2026-10-09T15:14:14.769Z",
+      "updatedAt": "2026-10-09T15:16:09.248Z",
+      "rootCause": "unknown-no-binding-stage-diagnostic",
+      "error": "微信后台页面或原生下载暂未完成，请查看原任务"
+    },
+    {
+      "runId": "execution-task-a1e2c022-51",
+      "groupId": "grp-4eb3a857-5",
+      "platform": "wechatOfficial",
+      "status": "failed",
+      "accountId": null,
+      "error": "微信后台数据尚未就绪，请查看原任务",
+      "createdAt": "2026-10-09T15:30:41.690Z",
+      "updatedAt": "2026-10-09T15:39:18.698Z",
+      "http": 200,
+      "diagnostic": {
+        "stage": "readIdentity",
+        "code": "IDENTITY_MISSING"
+      }
+    },
+    {
+      "runId": "execution-task-b8119204-56",
+      "groupId": "grp-4eb3a857-5",
+      "platform": "wechatOfficial",
+      "status": "failed",
+      "accountId": null,
+      "error": "微信后台数据尚未就绪，请查看原任务",
+      "createdAt": "2026-10-09T16:20:40.520Z",
+      "updatedAt": "2026-10-09T16:29:01.037Z",
+      "http": 200,
+      "diagnostic": {
+        "stage": "readIdentity",
+        "code": "ENTRY_NOT_READY"
+      },
+      "humanScanConfirmationReceived": false,
+      "scope": "未收到本次新窗口扫码完成回复；不判断Cookie或平台故障"
+    }
+  ],
+  "identityPhaseTests": {
+    "passed": 80,
+    "browserProof": false
+  },
+  "research": {
+    "state": "open-paused",
+    "card": "docs/research/t1110-wechat-statistics-visible-section.md",
+    "failureFamily": "wechat-statistics-visible-section",
+    "experimentsRun": 2,
+    "maxExperiments": 2,
+    "experimentResults": [
+      {
+        "id": "EXP-1",
+        "artifact": "docs/verification/t1110/section-exp1-result.json",
+        "status": "cancelled",
+        "committedPages": 0
+      },
+      {
+        "id": "EXP-2",
+        "artifact": "docs/verification/t1110/section-exp2-result.json",
+        "status": "failed",
+        "reasonCode": "EXPORT_FAILED",
+        "committedPages": 0
+      }
+    ],
+    "currentFinding": "official homepage before capture; report route did not remain selected",
+    "navigationCause": "unverified",
+    "cardValidated": false,
+    "researchVerifyCommandsExecuted": false,
+    "productionCandidateApplied": false,
+    "cleanupEvidence": "docs/verification/t1110/section-research-cleanup-20261010.json",
+    "diagnosticServiceRunning": false,
+    "originalBrowserSpaceOwnership": "agent; actual user handback and takeOver space20",
+    "researchGateAudit": {
+      "command": "node orchestrator/process/research-gate.mjs audit",
+      "actualExitCode": 0,
+      "actualToolChunk": "a75c4f",
+      "output": "研究门有效暂停: T-1110",
+      "meaning": "仅确认有效暂停，不是validated或产品PASS"
+    },
+    "verifyKeyConfiguration": {
+      "file": "orchestrator/process/reconcile.config.json",
+      "actualToolChunk": "a4933f",
+      "mechanismCommandPresent": false,
+      "boundaryCommandPresent": false,
+      "commandsExecuted": false
+    },
+    "independentEvidenceReview": {
+      "artifact": "docs/verification/t1110/section-results-independent-review.md",
+      "sha256": "f580582895969096db09235345dc2b90864c782ab1d0300d0f5787c24b334ba0",
+      "result": "文档、真实终态和摘要一致；不签validated、真实采集或UI通过",
+      "productionApproval": false
+    },
+    "continuationEvidence": "docs/verification/t1110/readonly-continuation-20261010.json",
+    "continuationState": "official-settings-page-counterexample-confirmed; video-recovered-but-quick-login-did-not-enter-backend",
+    "officialEntryAmbiguity": "当前p1设置页3个不同完整href，index/index/function；p3发表页唯一入口。当前reader反例已证，不代签旧56。",
+    "productPublicRereadThisTurn": false,
+    "handbackEvidence": "docs/verification/t1110/handback-20261010.json",
+    "officialCorrectionState": "最小方案已静态独立核对；OPEN暂停下未改生产/未运行必要TDD",
+    "videoResearchLoginState": "本人微信快捷登录点击已返回，身份元素观察120000ms超时，当前快照仍登录页；需用户手动完成；不代签产品Cookie过期"
+  },
+  "latestPublicReportsCount": 0,
+  "lastPublicResultObservedAt": "2026-10-09T17:23:42Z"
+}

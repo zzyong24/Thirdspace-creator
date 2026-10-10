@@ -1,0 +1,149 @@
+{
+  "schema": "t1110-close-isolated-negative-probes/v2",
+  "root": "/tmp/t1110-close-final-fixtures-z0wzq8nc",
+  "sharedVerifierSha256": "0af3df108810916f283844dc975d383c26645ddc7d3b2ebed108f209ee094f46",
+  "method": "复制最终实源码与卡/证据；保持配置精确命令，仅PATH内Ego与git为明确合成替身，无任何真实浏览器/API；source漂移在git末次检查后发生",
+  "results": [
+    {
+      "case": "valid_synthetic_control",
+      "expected": "accept",
+      "actual": "accept",
+      "exitCode": 0,
+      "matchesExpectation": true,
+      "backlogEventsUnchanged": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true,
+      "inputIncludesProductionSource": true,
+      "inputIncludesSpec": true
+    },
+    {
+      "case": "wrong_open_family",
+      "expected": "reject",
+      "actual": "reject",
+      "exitCode": 1,
+      "matchesExpectation": true,
+      "backlogEventsUnchanged": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true
+    },
+    {
+      "case": "wrong_evidence_hash",
+      "expected": "reject",
+      "actual": "reject",
+      "exitCode": 1,
+      "matchesExpectation": true,
+      "backlogEventsUnchanged": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true
+    },
+    {
+      "case": "missing_command",
+      "expected": "reject",
+      "actual": "reject",
+      "exitCode": 1,
+      "matchesExpectation": true,
+      "backlogEventsUnchanged": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true
+    },
+    {
+      "case": "replacement_exit0_command",
+      "expected": "reject",
+      "actual": "reject",
+      "exitCode": 1,
+      "matchesExpectation": true,
+      "backlogEventsUnchanged": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true
+    },
+    {
+      "case": "high_impact_unapproved",
+      "expected": "reject",
+      "actual": "reject",
+      "exitCode": 1,
+      "matchesExpectation": true,
+      "backlogEventsUnchanged": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true
+    },
+    {
+      "case": "status_not_validated",
+      "expected": "reject",
+      "actual": "reject",
+      "exitCode": 1,
+      "matchesExpectation": true,
+      "backlogEventsUnchanged": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true
+    },
+    {
+      "case": "evidence_drift_after_source_check",
+      "expected": "reject",
+      "actual": "reject",
+      "exitCode": 1,
+      "matchesExpectation": true,
+      "backlogEventsUnchanged": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true
+    },
+    {
+      "case": "source_drift_after_source_check",
+      "expected": "reject",
+      "actual": "reject",
+      "exitCode": 1,
+      "matchesExpectation": true,
+      "backlogEventsUnchanged": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true
+    },
+    {
+      "case": "spec_drift_after_source_check",
+      "expected": "reject",
+      "actual": "reject",
+      "exitCode": 1,
+      "matchesExpectation": true,
+      "backlogEventsUnchanged": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true
+    },
+    {
+      "case": "config_drift_after_source_check",
+      "expected": "reject",
+      "actual": "reject",
+      "exitCode": 1,
+      "matchesExpectation": true,
+      "backlogEventsUnchanged": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true
+    },
+    {
+      "case": "observation_wrong_origin",
+      "expected": "reject",
+      "actual": "reject",
+      "exitCode": 1,
+      "matchesExpectation": true,
+      "backlogEventsUnchanged": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true
+    },
+    {
+      "case": "observation_wrong_shadow_association",
+      "expected": "reject",
+      "actual": "reject",
+      "exitCode": 1,
+      "matchesExpectation": true,
+      "backlogEventsUnchanged": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true
+    },
+    {
+      "case": "scope-no-json-private-error",
+      "expected": "reject_without_raw_marker",
+      "exitCode": 1,
+      "rawPrivateMarkerCopiedToStderr": false,
+      "matchesExpectation": true,
+      "browserApiExecuted": false,
+      "fixtureOnly": true
+    }
+  ]
+}

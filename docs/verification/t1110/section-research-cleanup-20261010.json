@@ -1,0 +1,51 @@
+{
+  "schema": "t1110-section-research-cleanup/v1",
+  "observedAt": "2026-10-09T17:27:14.806Z",
+  "experimentsRun": 2,
+  "maximumExperiments": 2,
+  "candidateNextProcessCount": 0,
+  "ownedProfileChromeApplicationCount": 0,
+  "privateImageDirectories": [
+    {
+      "label": "production-explicit-opt-in",
+      "uidMatches": true,
+      "mode": "0700",
+      "canonicalPathValidated": true,
+      "pngCount": 0,
+      "partCount": 0,
+      "otherCount": 0,
+      "emptyDirectoryRemoved": true
+    },
+    {
+      "label": "EXP-1",
+      "uidMatches": true,
+      "mode": "0700",
+      "canonicalPathValidated": true,
+      "pngCount": 0,
+      "partCount": 0,
+      "otherCount": 0,
+      "emptyDirectoryRemoved": true
+    },
+    {
+      "label": "EXP-2",
+      "uidMatches": true,
+      "mode": "0700",
+      "canonicalPathValidated": true,
+      "pngCount": 0,
+      "partCount": 0,
+      "otherCount": 0,
+      "emptyDirectoryRemoved": true
+    }
+  ],
+  "sharedProductionSource": {
+    "sourceCommit": "69ac739d8e355037eb7e3a8a9e3eb1249dfd0361",
+    "wechatSourceSha256": "ec7c53bc4c83bb57b8f707acd2ba1602f6722f9626c6a3843f8b3031814df19a",
+    "wechatTestSha256": "5ebd88a30eec2b59b799fe138661533695afd8a1019c456d9239bb27e13a9bd1",
+    "compositionSha256": "ab11053526e4f2a4f71b45fad6e012b5215a1502d4d5124a8e4db4b5d0457dd8",
+    "candidateApplied": false
+  },
+  "defaultDiagnosticServiceRunning": false,
+  "researchBrowserSpace": "user-controlled; no Page operation or takeover performed",
+  "taskStatus": "paused; research gate open",
+  "formalProfileReleaseReceipt": "EXP-2 reached normal checkout and natural terminal; no separate signed receipt inspection"
+}

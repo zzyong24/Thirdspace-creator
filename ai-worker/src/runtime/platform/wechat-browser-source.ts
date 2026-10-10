@@ -32,6 +32,16 @@ const IDENTITY_READER_BUDGETS:Record<WechatCreatorPlatform,readonly number[]>={
  wechatOfficial:[480000,120000,480000], // 设置入口观察、设置页导航、AppID/名称观察。
  wechatVideo:[120000,480000], // 普通首页导航、稳定ID/名称观察。
 };
+// 按实际串行阶段计预算；response与30天点击、download事件与点击分别并行。
+const REPORT_STAGE_BUDGETS:Record<WechatCreatorPlatform,readonly number[]>={
+ wechatOfficial:Array.from({length:10},()=>120000),
+ wechatVideo:[
+  120000,120000,120000,120000,120000, // 数据中心观察/点击、子菜单观察/点击、父路由等待。
+  120000,120000,120000, // runtime Frame、可见UI根/标签关联观察、标签点击。
+  120000,120000,120000,120000, // 日期控件观察、7天点击、30天点击/响应、实际数据ready。
+  120000,120000,120000, // href、点击/下载事件、失败后同Frame probe余量。
+ ],
+};
 // SEMANTIC_BOUNDARY_ALLOW: 固定错误协议与诊断脱敏，不推断内容或登录状态。
 const diagnosticCodes=new Set(['BROWSER_OPERATION_FAILED','BROWSER_STOP_UNCONFIRMED','DOWNLOAD_EMPTY','DOWNLOAD_FAILED','EXECUTION_DEADLINE_EXCEEDED','EXECUTION_DEADLINE_INVALID','EXECUTION_TIMEOUT_INVALID','FILENAME_INVALID','FILENAME_MISSING','IDENTITY_MISSING','ENTRY_NOT_READY','FIELDS_NOT_READY','IDENTITY_SOURCE_INVALID','IDENTITY_WITNESS_MISSING','LOGIN_REQUIRED','REPORT_LINK_MISSING','REPORT_LINK_AMBIGUOUS','REPORT_NOT_READY','REPORT_PAGE_MISSING','REPORT_SECTION_MISSING','REPORT_SECTION_AMBIGUOUS','REPORT_PLATFORM_MISMATCH','REPORT_TOO_LARGE','REPORT_WINDOW_INVALID','REPORT_WINDOW_MISSING','REPORT_WITNESS_MISSING','REPORT_RESPONSE_INVALID','SOURCE_URL_INVALID','WRONG_PLATFORM_IDENTITY']);
 const diagnosticNames=new Set(['Error','TimeoutError','TypeError','ReferenceError','SyntaxError','WechatBrowserSourceError']);
@@ -288,7 +298,8 @@ export function createWechatBrowserSource(deps:{identityWitness?:WechatIdentityW
   readIdentity(platform:WechatCreatorPlatform,directory:string,expectedIdentity:string,controls:WechatBrowserControls={}):Promise<WechatCreatorIdentity>{if(!expectedIdentity.trim())return rejectBeforeOpen(controls,new WechatBrowserSourceError('IDENTITY_MISSING','原绑定缺少稳定身份'));return withProfile(platform,directory,true,controls,[STARTUP_BUDGET_MS,120000,...IDENTITY_READER_BUDGETS[platform],120000],(_context,page,op,trace)=>{trace.stage='readIdentity';return identity(page,platform,op,expectedIdentity);});},
   async collectNativeReports(platform:WechatCreatorPlatform,directory:string,expectedIdentity:string,controls:WechatBrowserControls={},onReport?:(report:WechatNativeDownload)=>Promise<void>):Promise<WechatNativeDownload[]>{
    if(!expectedIdentity.trim())return rejectBeforeOpen(controls,new WechatBrowserSourceError('IDENTITY_MISSING','原绑定缺少稳定身份'));
-   return withProfile(platform,directory,true,controls,[STARTUP_BUDGET_MS,120000,...IDENTITY_READER_BUDGETS[platform],...kinds[platform].flatMap(()=>Array.from({length:10},()=>120000)),120000],async(context,page,op,trace)=>{
+   // 视频号菜单最多五段替代原一次goto；同根观察并入原标签观察，另留一次失败probe余量。原持久deadline仍裁剪整链。
+   return withProfile(platform,directory,true,controls,[STARTUP_BUDGET_MS,120000,...IDENTITY_READER_BUDGETS[platform],...kinds[platform].flatMap(()=>REPORT_STAGE_BUDGETS[platform]),120000],async(context,page,op,trace)=>{
     trace.stage='readIdentity';await identity(page,platform,op,expectedIdentity);if(!deps.reportWitness)return fail('REPORT_WITNESS_MISSING','尚未核实原生报表的页面选择与就绪观察');
     const reports:WechatNativeDownload[]=[];
     for(const kind of kinds[platform]){

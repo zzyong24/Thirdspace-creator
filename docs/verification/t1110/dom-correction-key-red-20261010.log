@@ -1,0 +1,60 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/ai-worker
+
+ ❯ src/runtime/platform/wechat-wujie-regression.test.ts (2 tests | 2 failed) 156ms
+     × 隐藏Frame原生标签0但同Page唯一可见Shadow标签1：日报字节应交回原callback 144ms
+     × 公开login起步实际落在settingpage且存在3个设置href：直接读唯一AppID而不重走入口 11ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/platform/wechat-wujie-regression.test.ts > T1110 Wujie分离DOM与当前公众号设置页：正式source回归（合成浏览器） > 隐藏Frame原生标签0但同Page唯一可见Shadow标签1：日报字节应交回原callback
+AssertionError: expected WechatBrowserSourceError: 微信后台数据尚未就绪，请查看原… { …(2) } to be WechatBrowserSourceError: 首份交回后的明确合成截停 { …(2) } // Object.is equality
+
+- Expected
++ Received
+
+  WechatBrowserSourceError {
+-   "message": "首份交回后的明确合成截停",
+-   "code": "SYNTHETIC_AFTER_FIRST_REPORT",
+-   "observation": undefined,
++   "message": "微信后台数据尚未就绪，请查看原任务",
++   "code": "REPORT_SECTION_MISSING",
++   "observation": {
++     "bodyTextLength": 0,
++     "documentReadyState": "complete",
++     "exactTabCount": 0,
++     "frameElementVisible": false,
++     "visibleTabCount": 0,
++   },
+    "name": "WechatBrowserSourceError",
+  }
+
+ ❯ src/runtime/platform/wechat-wujie-regression.test.ts:130:20
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/runtime/platform/wechat-wujie-regression.test.ts > T1110 Wujie分离DOM与当前公众号设置页：正式source回归（合成浏览器） > 公开login起步实际落在settingpage且存在3个设置href：直接读唯一AppID而不重走入口
+AssertionError: promise rejected "WechatBrowserSourceError: 微信后台数据尚未就绪，请查看原… { …(2) }" instead of resolving
+ ❯ src/runtime/platform/wechat-wujie-regression.test.ts:140:150
+
+
+Caused by: WechatBrowserSourceError: 微信后台数据尚未就绪，请查看原任务
+ ❯ fail src/runtime/platform/wechat-dom-witness.ts:12:55
+ ❯ observe src/runtime/platform/wechat-dom-witness.ts:28:156
+ ❯ Object.read src/runtime/platform/wechat-dom-witness.ts:153:16
+ ❯ identity src/runtime/platform/wechat-browser-source.ts:277:18
+ ❯ bounded src/runtime/platform/wechat-browser-source.ts:153:13
+ ❯ withProfile src/runtime/platform/wechat-browser-source.ts:262:11
+ ❯ src/runtime/platform/wechat-wujie-regression.test.ts:140:4
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'ENTRY_NOT_READY', observation: undefined }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  11:59:13
+   Duration  841ms (transform 89ms, setup 0ms, import 546ms, tests 156ms, environment 0ms)
+

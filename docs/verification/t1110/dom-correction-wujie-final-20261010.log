@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/ai-worker
+
+
+ Test Files  1 passed (1)
+      Tests  18 passed (18)
+   Start at  12:09:23
+   Duration  2.53s (transform 86ms, setup 0ms, import 720ms, tests 1.66s, environment 0ms)
+

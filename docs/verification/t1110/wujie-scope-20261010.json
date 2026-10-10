@@ -1,0 +1,47 @@
+{
+  "observedAt": "2026-10-10T03:47:34.204Z",
+  "space": 20,
+  "page": "p6",
+  "ownership": "agent",
+  "method": "CDP Runtime.evaluate in parent main realm; native Document prototype versus Wujie-proxied iframe document",
+  "runtimeTimeoutMs": 120000,
+  "requestTimeoutMs": 150000,
+  "value": {
+    "officialOrigin": true,
+    "path": "/platform/statistic/post",
+    "readyState": "complete",
+    "visibleWujieHosts": 1,
+    "shadowMode": "open",
+    "shadowCounts": [
+      1,
+      1,
+      1
+    ],
+    "shadowVisibleCounts": [
+      1,
+      1,
+      1
+    ],
+    "frames": [
+      {
+        "path": "/micro/statistic/post",
+        "visible": false,
+        "display": "none",
+        "nativeCounts": [
+          0,
+          0,
+          0
+        ],
+        "proxyCounts": [
+          1,
+          1,
+          1
+        ],
+        "nativeBodyLength": 0,
+        "proxyBodyLength": 601,
+        "proxyLabelsBelongToVisibleShadow": true,
+        "nativeLabelRootMatchesVisibleShadow": true
+      }
+    ]
+  }
+}

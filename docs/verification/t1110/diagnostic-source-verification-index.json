@@ -1,0 +1,95 @@
+{
+  "scope": "root当场工具退出值与完整日志；RED继承vitest retry配置；wrong-path35仅两个文件，真人同步未完成",
+  "executions": [
+    {
+      "path": "docs/verification/t1110/section-complete.log",
+      "sha256": "53f11063c5204168e18b2b92aa7c6ee227e68c9f750c598a31ba616f9f2679ee",
+      "exitCode": 0,
+      "passedTests": 45
+    },
+    {
+      "path": "docs/verification/t1110/section-frontend-type.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "passedTests": null
+    },
+    {
+      "path": "docs/verification/t1110/navigation-diagnostic-red.log",
+      "sha256": "f034f0e0716a34b8b3fb039fc694c2ddb024352dd774523ab01d7f17b57e073b",
+      "exitCode": 1,
+      "passedTests": 0
+    },
+    {
+      "path": "docs/verification/t1110/navigation-diagnostic-final.log",
+      "sha256": "4185a29dd40adea03536a906f30191daf299861237a865ee19482e7454f83d86",
+      "exitCode": 0,
+      "passedTests": 49
+    },
+    {
+      "path": "docs/verification/t1110/diagnostic-red.log",
+      "sha256": "5d6e588676db36753ab5791c6e4933cd79a3c00288d9f5b7e537537f03f9ba55",
+      "exitCode": 1,
+      "passedTests": 0
+    },
+    {
+      "path": "docs/verification/t1110/diagnostic-extra-red.log",
+      "sha256": "200c492d584809b1daa36f9437f1accea6506a977a7e698768683cd9f576c479",
+      "exitCode": 1,
+      "passedTests": 0
+    },
+    {
+      "path": "docs/verification/t1110/diagnostic-stop-red.log",
+      "sha256": "0e263d70b459992a285df1df75b6cddce39e8a70d94068afb386c44d3d309fab",
+      "exitCode": 1,
+      "passedTests": 0
+    },
+    {
+      "path": "docs/verification/t1110/diagnostic-worker-final.log",
+      "sha256": "6a923f552ccc205ac0978b63591daae6bd3bc083f1f2ebe66f7aa49f3ca95837",
+      "exitCode": 0,
+      "passedTests": 42
+    },
+    {
+      "path": "docs/verification/t1110/diagnostic-worker-type.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "passedTests": null
+    },
+    {
+      "path": "docs/verification/t1110/diagnostic-frontend-type.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "passedTests": null
+    },
+    {
+      "path": "docs/verification/t1110/render-ready-red.log",
+      "sha256": "064b29ce252bc8b4f4d6c3631361703947afe8fb1e5c5f8c6dd8599450de36c4",
+      "exitCode": 1,
+      "passedTests": 11
+    },
+    {
+      "path": "docs/verification/t1110/render-ready-complete.log",
+      "sha256": "eb9ed2d61499baa006593d7f2d62286ea30bc23dab4be69f65c5edfe1423cee2",
+      "exitCode": 0,
+      "passedTests": 44
+    },
+    {
+      "path": "docs/verification/t1110/render-ready-type.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "passedTests": null
+    },
+    {
+      "path": "docs/verification/t1110/render-ready-wrong-path-partial.log",
+      "sha256": "8911b013309612a9fa1cc40c5f58aa1af31684e4009ea3e0ab639349f1d9938e",
+      "exitCode": 0,
+      "passedTests": 35
+    },
+    {
+      "path": "docs/verification/t1110/navigation-worker-type.log",
+      "exitCode": 0,
+      "passedTests": null,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

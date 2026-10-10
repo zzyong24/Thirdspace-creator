@@ -78,3 +78,16 @@ it('T1169真实成员回读移除触发器后关闭不对脱离DOM的按钮回�
  await act(async()=>{fireEvent.keyDown(document,{key:'Escape',code:'Escape'});});await act(async()=>{await new Promise(resolve=>setTimeout(resolve,0));});
  expect(focused).not.toHaveBeenCalled();expect(screen.queryByRole('dialog')).toBeNull();expect(api.previewAccountGroupTransfer).not.toHaveBeenCalled();expect(api.transferAccountGroupMember).not.toHaveBeenCalled();focused.mockRestore();
 });
+
+it.each([['wechatOfficial','公众号'],['wechatVideo','视频号']] as const)('T1110 %s扫码弹窗按Escape关闭后回到原表格按钮',async(platform,label)=>{
+ sessionStorage.clear();
+ api.getPlatformAccountCapabilities.mockResolvedValue([{platform,bind:{available:true,reason:'真实端口已装配',method:'qr'},collect:{available:true,reason:'原生报表'},publish:{available:false,reason:'未接入'},draft:{available:false,reason:'未接入'},manual:{available:true,reason:'可登记'}}]);
+ renderManager();
+ const trigger=await within(await screen.findByRole('table',{name:'各平台能力'})).findByRole('button',{name:`扫码绑定${label}账号`});
+ await waitFor(()=>expect(trigger).toBeEnabled());trigger.focus();fireEvent.click(trigger);
+ const dialog=await screen.findByRole('dialog',{name:`扫码绑定${label}账号`});
+ fireEvent.keyDown(dialog,{key:'Escape'});
+ await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+ await waitFor(()=>expect(trigger).toHaveFocus());
+ expect(api.loginDouyin).not.toHaveBeenCalled();
+});

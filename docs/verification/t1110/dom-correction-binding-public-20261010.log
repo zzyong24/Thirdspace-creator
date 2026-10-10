@@ -1,0 +1,11 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/frontend
+
+(node:24054) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  12:05:03
+   Duration  35.74s (transform 5.76s, setup 207ms, import 7.67s, tests 26.94s, environment 408ms)
+

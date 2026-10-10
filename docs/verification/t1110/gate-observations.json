@@ -1,0 +1,905 @@
+{
+  "schema": "creatoros-test-observations/v1",
+  "task_id": "T-1110",
+  "recorded_at": "2026-10-09T11:03:53.803117+00:00",
+  "parent_commit": "dc61f1d6e492643756da0b63e627d58d51aced75",
+  "spec_receipt": "b6b7772b74ff",
+  "source_sha256": {
+    "contract/src/resources/platform-native-reports.ts": "077fc070629dab475a2257aea907215a1b83a575983e33afb5d3aced19576c53",
+    "backend/drizzle/0131_platform_native_reports.sql": "36a411fb6ee7a77923090fa346ed768365fa548746fa62d4735f561bf0a5e84f",
+    "backend/src/modules/platform-collection/platform-collection.service.ts": "1c234861a4316a6bd6e9d375c6af4af43447b7c8f7131c5950d3d456a2f35ef9",
+    "backend/src/application/collection/wechat-native-collector.ts": "b9fa83367356c6a5e3d0ae2e188c4290eb9058ad280b562939ea4b03d808839e",
+    "backend/src/application/scheduling/platform-collector.ts": "55560f2a87a8c2720bc29a5cd5067ed978f98ebeae673ea57f0fe23fbe9c7364",
+    "backend/src/application/platform-collection/periodic.ts": "303cc7cfe430a790b642fc119097d750a05c9d2f74eb308d1758a901477c2d40",
+    "ai-worker/src/runtime/platform/wechat-native-report-parser.ts": "a0a24e154e7c2028174575d1a44f2c14af1595acddc54ce1dee5ddad038c15a9",
+    "ai-worker/src/runtime/platform/wechat-browser-source.ts": "13b8006988bd09ac05c8e6b7d7ba6fa3b44eae7627e147a2b4d136e2e6dc7e48",
+    "frontend/src/server/persistence-client.ts": "2350fef8ab9056f538b42fa747238b92e9c6febb58f843f8d2d997605bcde15e",
+    "frontend/src/features/platform-account/native-report-panel.tsx": "c79e758d4821cfb1e01f407999e83d75f84c71ac234e85b08853ee52764d2bec",
+    "backend/src/modules/platform-collection/platform-native-reports.integration.test.ts": "921df76da8eea73b310acd33876c1ce5cdfef84a74125a9d6e1626ba27864919"
+  },
+  "observations": [
+    {
+      "output_file": "contract-limit-green.log",
+      "exit_code": 0,
+      "raw_output_sha256": "d112c552a75debab7cc62f773b8a827c7f1195137c955df6d4b669eb3b2450a8",
+      "commands_visible_in_output": [
+        "> @creatoros/contract@0.4.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/contract",
+        "> vitest run tests/platform-native-reports.test.ts --retry=0"
+      ],
+      "captured_facts": [
+        "Test Files  1 passed (1)",
+        "Tests  5 passed (5)",
+        "Start at  18:46:25",
+        "Duration  499ms (transform 71ms, setup 0ms, import 164ms, tests 60ms, environment 0ms)"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "worker-final-green.log",
+      "exit_code": 0,
+      "raw_output_sha256": "994de9a38ec33afdf5cebeaa939f72b0d7bc0c4b2753262c8f7141dd308fe2c7",
+      "commands_visible_in_output": [
+        "> @creatoros/ai-worker@0.1.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/ai-worker",
+        "> vitest run src/runtime/platform/wechat-browser-source.test.ts src/runtime/platform/wechat-native-report-parser.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000"
+      ],
+      "captured_facts": [
+        "Test Files  2 passed (2)",
+        "Tests  24 passed (24)",
+        "Start at  18:54:10",
+        "Duration  3.14s (transform 1.66s, setup 0ms, import 2.85s, tests 568ms, environment 0ms)"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "native-final-regression.log",
+      "exit_code": 0,
+      "raw_output_sha256": "ee484b503f22e2dbef3bbf9c65c2dbc6ceea5718f36b89c6557563614707673b",
+      "commands_visible_in_output": [
+        "> @creatoros/backend@0.1.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend",
+        "> vitest run src/modules/platform-collection/platform-native-reports.integration.test.ts src/application/collection/wechat-native-collector.test.ts src/application/platform-collection/periodic.test.ts src/application/scheduling/platform-collector.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000"
+      ],
+      "captured_facts": [
+        "Test Files  4 passed (4)",
+        "Tests  47 passed (47)",
+        "Start at  18:59:06",
+        "Duration  83.76s (transform 13.03s, setup 0ms, import 20.16s, tests 67.76s, environment 0ms)"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "ui-final-green.log",
+      "exit_code": 0,
+      "raw_output_sha256": "7d0532a7297b02b12cf0bddde03871cc724cef03afc98786e3579f334dd20e8a",
+      "commands_visible_in_output": [
+        "> creatoros-frontend@1.2.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend",
+        "> vitest run src/features/platform-account/native-report-panel.test.tsx src/features/platform-account/native-report-page.test.tsx src/features/platform-account/account-group-manager.test.tsx src/features/platform-account/account-binding-panel.test.tsx --retry=0 --testTimeout=180000 --hookTimeout=180000"
+      ],
+      "captured_facts": [
+        "Test Files  4 passed (4)",
+        "Tests  57 passed (57)",
+        "Start at  18:49:25",
+        "Duration  5.82s (transform 3.24s, setup 1.50s, import 6.00s, tests 3.27s, environment 4.56s)"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "legacy-binding-collection.log",
+      "exit_code": 0,
+      "raw_output_sha256": "33db7858900abbefb334fb596b083d8b4c9f6263da0508902b49d00995b6517b",
+      "commands_visible_in_output": [
+        "> @creatoros/backend@0.1.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend",
+        "> vitest run src/modules/platform-collection/platform-collection.integration.test.ts src/modules/platform-collection/platform-bind.integration.test.ts src/modules/platform-collection/platform-collection.transport.integration.test.ts src/modules/platform-account/account-binding.integration.test.ts src/modules/platform-account/account-binding-commit.integration.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000"
+      ],
+      "captured_facts": [
+        "Test Files  5 passed (5)",
+        "Tests  59 passed (59)",
+        "Start at  18:52:33",
+        "Duration  104.75s (transform 17.52s, setup 0ms, import 28.95s, tests 254.19s, environment 1ms)"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "binding-observation-green.log",
+      "exit_code": 0,
+      "raw_output_sha256": "674d7241a4e0f9c5c11f58eebc40734a8236654646e79973ed817e37fa52894c",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "Test Files  1 passed (1)",
+        "Tests  12 passed (12)",
+        "Start at  18:26:22",
+        "Duration  162.61s (transform 25.90s, setup 1.69s, import 33.58s, tests 126.75s, environment 0ms)"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "schedule-green.log",
+      "exit_code": 0,
+      "raw_output_sha256": "cdc125fa77208b84fdfa154716f52d85a05e908ee1b602a30816fd5f9a1c26d2",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "Test Files  4 passed (4)",
+        "Tests  44 passed (44)",
+        "Start at  18:17:05",
+        "Duration  38.90s (transform 27.57s, setup 0ms, import 36.16s, tests 220ms, environment 2ms)"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "migration-final.log",
+      "exit_code": 0,
+      "raw_output_sha256": "1056d780029811fd8df1876babe08f729897c246a7262e426321829a69e92cb8",
+      "commands_visible_in_output": [
+        "> @creatoros/backend@0.1.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend",
+        "> vitest run src/migration-convergence.test.ts -t 'public createDb|全新库|补充兼容|补充冻结|T1110迁移后' --retry=0 --testTimeout=180000 --hookTimeout=180000"
+      ],
+      "captured_facts": [
+        "Test Files  1 passed (1)",
+        "Tests  16 passed | 6 skipped (22)",
+        "Start at  18:46:26",
+        "Duration  168.47s (transform 1.79s, setup 0ms, import 2.66s, tests 165.40s, environment 0ms)"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "led047.log",
+      "exit_code": 0,
+      "raw_output_sha256": "67cf7f1e137a14c2c2e55000bcf7d7c4456be3a1e879489614a52805c2de0d66",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "Test Files  8 passed (8)",
+        "Tests  174 passed (174)",
+        "Start at  18:26:51",
+        "Duration  125.79s (transform 59.40s, setup 4.21s, import 72.59s, tests 23.03s, environment 21.23s)"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "contract-final-typecheck.log",
+      "exit_code": 0,
+      "raw_output_sha256": "21a30249438ada290f424f945913e55af42828a1c8926bdb39316b39992a10a3",
+      "commands_visible_in_output": [
+        "> @creatoros/contract@0.4.0 typecheck /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/contract",
+        "> tsc --noEmit"
+      ],
+      "captured_facts": [],
+      "role": "verification"
+    },
+    {
+      "output_file": "backend-final-gate-typecheck.log",
+      "exit_code": 0,
+      "raw_output_sha256": "bd43cdc1fea6d34f59c91ccabb017a0d493d878613f593e969cd2d0b503b6cdc",
+      "commands_visible_in_output": [
+        "> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend",
+        "> tsc --noEmit"
+      ],
+      "captured_facts": [],
+      "role": "verification"
+    },
+    {
+      "output_file": "frontend-final-gate-typecheck.log",
+      "exit_code": 0,
+      "raw_output_sha256": "9160a027ad9c295edbd18f486946f927d7253961c2b29bc4c12e15dea399a389",
+      "commands_visible_in_output": [
+        "> creatoros-frontend@1.2.0 typecheck /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend",
+        "> next typegen && tsc --noEmit"
+      ],
+      "captured_facts": [
+        "✓ Types generated successfully"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "worker-final-typecheck.log",
+      "exit_code": 0,
+      "raw_output_sha256": "5ede27c831cd531d5db5d6d3168185b27337cce2d5b124b5a95c3e7219cf1bc8",
+      "commands_visible_in_output": [
+        "> @creatoros/ai-worker@0.1.0 typecheck /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/ai-worker",
+        "> tsc --noEmit"
+      ],
+      "captured_facts": [],
+      "role": "verification"
+    },
+    {
+      "output_file": "boundary-final.log",
+      "exit_code": 0,
+      "raw_output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "commands_visible_in_output": [],
+      "captured_facts": [],
+      "role": "verification"
+    },
+    {
+      "output_file": "semantic-final.log",
+      "exit_code": 0,
+      "raw_output_sha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "✓ 语义职责边界：创作匹配走 Skill，确定性启发式均有显式边界"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "orphan-final.log",
+      "exit_code": 0,
+      "raw_output_sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "✓ [OK] control artifact present: ID_REGISTRY.md",
+        "✓ [OK] control artifact present: TRACEABILITY_MATRIX.md",
+        "✓ [OK] parsed 612 canonical IDs from ID_REGISTRY.",
+        "✓ [OK] parsed 48 canonical traceability rows.",
+        "✓ [OK] downstream→upstream: all 167 downstream ids exist and trace to upstream intent.",
+        "✓ [OK] chain OK: FR-069,DEC-019,FLOW-023 → realizing + test (status RISK).",
+        "✓ [OK] chain OK: DEC-CR-003,DEC-CR-005,DEC-CR-008,DEC-CR-012,FR-CR-003,FR-CR-004,FR-CR-005,FR-CR-006,FR-CR-015,NFR-CR-003,NFR-CR-004,NFR-CR-005,NFR-CR-007,FLOW-CR-001 → realizing + test (status PLANNED).",
+        "✓ [OK] chain OK: DEC-CR-013,FR-CR-008,FLOW-CR-004 → realizing + test (status PLANNED).",
+        "✓ [OK] chain OK: DEC-CR-009,DEC-CR-013,FR-CR-009,NFR-CR-011,FLOW-CR-002 → realizing + test (status PLANNED).",
+        "✓ [OK] chain OK: DEC-CR-010,DEC-CR-013,FR-CR-010,FLOW-CR-003 → realizing + test (status PLANNED).",
+        "✓ [OK] chain OK: FR-CR-011,FR-CR-014,DEC-CR-004,NFR-CR-001,NFR-CR-006,FLOW-CR-007 → realizing + test (status PLANNED).",
+        "✓ [OK] chain OK: DEC-CR-007,DEC-CR-014,DEC-CR-017,FR-CR-022,NFR-CR-008,FLOW-CR-010 → realizing + test (status OK).",
+        "✓ [OK] chain OK: DEC-CR-018,FR-CR-023,NFR-CR-003,NFR-CR-005,FLOW-CR-001 → realizing + test (status OK).",
+        "✓ [OK] chain OK: FR-FDBR-01,FR-FDBR-02,FR-FDBR-03,FR-FDBR-04,FR-FDBR-05,FR-FDBR-06 → realizing + test (status OK).",
+        "✓ [OK] chain OK: DEC-TSB-001,FR-TSB-001,FR-TSB-002,FR-TSB-003,NFR-TSB-001,FLOW-TSB-001 → realizing + test (status OK).",
+        "✓ [OK] chain OK: DEC-TSL-001,FR-575-01,FR-575-02,FLOW-575-01 → realizing + test (status RISK).",
+        "✓ [OK] chain OK: FR-575-03,FR-575-04,FLOW-575-01 → realizing + test (status RISK).",
+        "✓ [OK] chain OK: DEC-TSL-001,FR-575-05,FR-575-06,FR-575-07,FLOW-575-02 → realizing + test (status RISK).",
+        "✓ [OK] chain OK: DEC-TSL-003,FR-575-08,FLOW-575-03 → realizing + test (status RISK).",
+        "✓ [OK] chain OK: DEC-SCHED-001,DEC-SCHED-002,FR-SCHED-001,FR-SCHED-002,FR-SCHED-003,FR-SCHED-004,FR-SCHED-005,FR-SCHED-006,FR-SCHED-007,NFR-SCHED-001,NFR-SCHED-002,NFR-SCHED-003,NFR-SCHED-004,FLOW-SCHED-001,FLOW-SCHED-002,FLOW-SCHED-003,FLOW-SCHED-004 → realizing + test (status OK).",
+        "✓ [OK] chain OK: DEC-MAUTH-001,FR-MAUTH-001,FR-MAUTH-002,FR-MAUTH-003,FR-MAUTH-004,FR-MAUTH-005,FR-MAUTH-006,NFR-MAUTH-001,NFR-MAUTH-002,FLOW-MAUTH-001,FLOW-MAUTH-002 → realizing + test (status RISK).",
+        "✓ [OK] chain OK: DEC-POS-623,FR-POS-623-001,FR-POS-623-002,FR-POS-623-003,FLOW-POS-623-001 → realizing + test (status OK).",
+        "✓ [OK] chain OK: DEC-POS-632,FR-POS-632-001,FLOW-POS-632-001 → realizing + test (status OK).",
+        "✓ [OK] chain OK: DEC-CLI-001,FR-CLI-01,FR-CLI-02,FR-CLI-03,FR-CLI-06,FR-CLI-07,FLOW-CLI-001 → realizing + test (status PLANNED).",
+        "✓ [OK] chain OK: DEC-CLI-001,FR-CLI-01,FR-CLI-02,FR-CLI-05,FLOW-CLI-002 → realizing + test (status PLANNED).",
+        "✓ [OK] chain OK: DEC-CLI-001,FR-CLI-01,FR-CLI-04,FR-CLI-06,FLOW-CLI-003 → realizing + test (status PLANNED).",
+        "✓ [OK] chain OK: DEC-CLI-001,FR-CLI-03,FR-CLI-05,FR-CLI-06,FR-CLI-08,FLOW-CLI-004 → realizing + test (status PLANNED).",
+        "✓ [OK] chain OK: DEC-VIDEO-055 → realizing + test (status OK).",
+        "✓ [OK] chain OK: DEC-VIDEO-056 → realizing + test (status OK).",
+        "✓ [OK] chain OK: DEC-MODEL-057 → realizing + test (status OK).",
+        "0 error(s), 100 warning(s).",
+        "✓ Orphan scan clean: every chain traces both directions."
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "pmem-sync.log",
+      "exit_code": 0,
+      "raw_output_sha256": "c85f7cf7a02e80626f58af464425a2529149ffbc16def8fc651c54f9d21c543f",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "✓ pmem sync 完成 → PROJECT.md (codex/t1101-canvas-binding @ dc61f1d6) · 边界剩余 5 · 开放任务 171 · codegraph 已刷新"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "contract-final-suite.log",
+      "exit_code": 1,
+      "raw_output_sha256": "5bf6cb12f40d660239b370f7bb22833d3c9316d201b7e4920f4f97f7fdcb72cb",
+      "commands_visible_in_output": [
+        "> @creatoros/contract@0.4.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/contract",
+        "> vitest run --retry=0 --testTimeout=180000 --hookTimeout=180000"
+      ],
+      "captured_facts": [
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes index.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes endpoints.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/account-groups.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/ai.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/analytics.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/articles.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/artifacts.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/assets.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/auth.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/benchmark.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/calibration.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/candidate.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/content-calendar.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/creative-canvas.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/creative-results.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/execution.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/favorites-folder.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/graphic-posts.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/ingestion.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/intelligence.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/knowledge.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/learnings.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/material-links.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/notifications.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/pages.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/platform-accounts.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/platform-collection.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/positioning.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/production.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/projects.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/publishing.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/review-gate.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/reviews.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/scheduling.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/search.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/settings.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/taxonomy.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/topic-attribution.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/trend-source.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/visual-templates.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/work-compositions.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/work-sources.ts before the public registry",
+        "FAIL  tests/registry.test.ts > endpoint registry > registers no routes outside SPEC §13",
+        "Test Files  2 failed | 70 passed (72)",
+        "Tests  43 failed | 402 passed (445)",
+        "Start at  18:46:28",
+        "Duration  40.57s (transform 26.66s, setup 0ms, import 77.20s, tests 48.45s, environment 7ms)"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "contract-head-baseline-retry.log",
+      "exit_code": 1,
+      "raw_output_sha256": "f184a652f030e4133d300c37d088f1c2f7f0d88fc69619551884d4d18ee528e2",
+      "commands_visible_in_output": [
+        "> @creatoros/contract@0.4.0 test /private/tmp/t1110-contract-baseline-sj5qz3/contract",
+        "> vitest run --retry=0 --testTimeout=180000 --hookTimeout=180000"
+      ],
+      "captured_facts": [
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes index.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes endpoints.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/account-groups.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/ai.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/analytics.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/articles.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/artifacts.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/assets.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/auth.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/benchmark.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/calibration.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/candidate.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/content-calendar.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/creative-canvas.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/creative-results.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/execution.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/favorites-folder.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/graphic-posts.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/ingestion.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/intelligence.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/knowledge.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/learnings.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/material-links.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/notifications.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/pages.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/platform-accounts.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/platform-collection.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/positioning.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/production.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/projects.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/publishing.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/review-gate.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/reviews.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/scheduling.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/search.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/settings.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/taxonomy.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/topic-attribution.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/trend-source.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/visual-templates.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/work-compositions.ts before the public registry",
+        "FAIL  tests/endpoint-bootstrap.test.mjs > contract module initialization from every real entry > initializes operations/work-sources.ts before the public registry",
+        "FAIL  tests/registry.test.ts > endpoint registry > registers no routes outside SPEC §13",
+        "Test Files  2 failed | 69 passed (71)",
+        "Tests  43 failed | 397 passed (440)",
+        "Start at  18:51:14",
+        "Duration  34.73s (transform 12.21s, setup 0ms, import 44.49s, tests 38.10s, environment 14ms)"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "timeout.log",
+      "exit_code": 1,
+      "raw_output_sha256": "465d25a8773ca0a0808d1d249ad2baf8c801c44a2128acddd1cfdee727c5ee0a",
+      "commands_visible_in_output": [
+        "验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node tools/timeout-policy/check.mjs",
+        "验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node --test tools/timeout-policy/check.test.mjs tools/timeout-policy/hyperframes.test.mjs",
+        "验证：pnpm --dir contract exec vitest run tests/timeout-policy.test.ts --retry=0",
+        "验证：pnpm --dir ai-worker exec vitest run src/execution/worker-timeout-policy.test.ts src/runtime/browser/chromium-guard-lifecycle.test.ts --retry=0",
+        "验证：pnpm --dir backend exec vitest run src/modules/execution/new-execution-budget.test.ts src/modules/execution/run-execution-task.test.ts src/modules/execution/execution-call-ledger.service.test.ts --retry=0",
+        "验证：pnpm --dir frontend exec vitest run src/features/knowledge/knowledge-dump-zone.test.tsx src/features/copilot/chat-thesis-card.test.tsx src/features/draft-workbench/content-direction-actions.test.tsx src/features/draft-workbench/script-review-gate.test.tsx src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts --retry=0",
+        "验证：pnpm --dir mcp-server test tests/cli.test.ts",
+        "> @creatoros/mcp-server@0.1.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/mcp-server",
+        "> vitest run tests/cli.test.ts",
+        "验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node --test tools/windows-closure-rat/render-probe-policy.test.mjs frontend/scripts/desktop/timeout-policy.node.mjs"
+      ],
+      "captured_facts": [
+        "Test Files  1 passed (1)",
+        "Tests  5 passed (5)",
+        "Start at  18:27:35",
+        "Duration  2.66s (transform 1.60s, setup 0ms, import 2.16s, tests 8ms, environment 0ms)",
+        "Test Files  2 passed (2)",
+        "Tests  20 passed (20)",
+        "Start at  18:27:39",
+        "Duration  7.45s (transform 5.56s, setup 0ms, import 7.25s, tests 143ms, environment 17ms)",
+        "FAIL  src/modules/execution/execution-call-ledger.service.test.ts > T-915 持久调用账本",
+        "Test Files  1 failed | 2 passed (3)",
+        "Tests  10 passed | 25 skipped (35)",
+        "Start at  18:27:48",
+        "Duration  59.13s (transform 58.54s, setup 0ms, import 80.57s, tests 45.16s, environment 0ms)",
+        "Test Files  6 passed (6)",
+        "Tests  68 passed (68)",
+        "Start at  18:28:49",
+        "Duration  8.64s (transform 7.61s, setup 3.93s, import 12.48s, tests 2.35s, environment 13.06s)",
+        "Test Files  1 passed (1)",
+        "Tests  27 passed (27)",
+        "Start at  18:28:58",
+        "Duration  3.31s (transform 1.28s, setup 0ms, import 2.06s, tests 982ms, environment 0ms)"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "timeout-ledger-followup.log",
+      "exit_code": 0,
+      "raw_output_sha256": "cd0d9feaa834012b7c66b0593ee65011b20f7606260ccf04071c63d159e3eae6",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "Test Files  1 passed (1)",
+        "Tests  25 passed (25)",
+        "Start at  18:30:29",
+        "Duration  24.29s (transform 8.94s, setup 0ms, import 12.75s, tests 11.00s, environment 41ms)"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "context-binding.log",
+      "exit_code": 2,
+      "raw_output_sha256": "d830d435d89b9bab21b0212d9ad00c354ee4aec2e172069f232e65188a9742ef",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "T-1026: write_set must contain only safe repo-relative files or terminal /** prefixes"
+      ],
+      "role": "verification"
+    },
+    {
+      "output_file": "contract-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "ba913094a73d0665ba8b3276fb4fa658a3112faac05b081c25929cc335bcad32",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  tests/platform-native-reports.test.ts [ tests/platform-native-reports.test.ts ]",
+        "Error: Cannot find module '../src/resources/platform-native-reports' imported from /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/contract/tests/platform-native-reports.test.ts",
+        "Test Files  1 failed (1)",
+        "Tests  no tests",
+        "Start at  17:55:13",
+        "Duration  331ms (transform 38ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "contract-limit-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "608d9adaefe994ee2449a311f7645b039474648ffb553fe657af098a816b3a79",
+      "commands_visible_in_output": [
+        "> @creatoros/contract@0.4.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/contract",
+        "> vitest run tests/platform-native-reports.test.ts --retry=0"
+      ],
+      "captured_facts": [
+        "FAIL  tests/platform-native-reports.test.ts > 微信原生报表契约 > 同一报表多个区块合计最多10000行，不以每表上限放大内存",
+        "Test Files  1 failed (1)",
+        "Tests  1 failed | 4 passed (5)",
+        "Start at  18:45:51",
+        "Duration  634ms (transform 77ms, setup 0ms, import 177ms, tests 50ms, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "browser-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "e0403ce85264a0575ee138bbdec468223b042548bd2e8f644fa46a9ecba0d450",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  src/runtime/platform/wechat-browser-source.test.ts [ src/runtime/platform/wechat-browser-source.test.ts ]",
+        "Error: Cannot find module './wechat-browser-source' imported from /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/ai-worker/src/runtime/platform/wechat-browser-source.test.ts",
+        "Test Files  1 failed (1)",
+        "Tests  no tests",
+        "Start at  18:17:39",
+        "Duration  669ms (transform 165ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "browser-followup-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "7be3544850544f38f5c0185c79757d8361c1655b5f137408984c43eb6474470e",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  src/runtime/platform/wechat-browser-source.test.ts > T1110 微信受管browser source（明确浏览器fixture） > 近30天旧7天表格不能用自身范围自证ready，等实际目标30天才交下载",
+        "FAIL  src/runtime/platform/wechat-browser-source.test.ts > T1110 微信受管browser source（明确浏览器fixture） > 下载结束瞬间取消，原异步下载不得晚交onReport",
+        "Test Files  1 failed (1)",
+        "Tests  2 failed | 15 skipped (17)",
+        "Start at  18:23:34",
+        "Duration  2.49s (transform 516ms, setup 0ms, import 611ms, tests 100ms, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "parser-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "3ff3aacb5426e533206554a0447099234243335155b3653846748c6263742ac9",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  src/runtime/platform/wechat-native-report-parser.test.ts [ src/runtime/platform/wechat-native-report-parser.test.ts ]",
+        "Error: Cannot find module './wechat-native-report-parser' imported from /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/ai-worker/src/runtime/platform/wechat-native-report-parser.test.ts",
+        "Test Files  1 failed (1)",
+        "Tests  no tests",
+        "Start at  18:11:14",
+        "Duration  2.41s (transform 325ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "executor-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "ca66aeac3c3e4d71cc152358fb989c30ee8af74959304d2e92dd04f012725f51",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  src/application/collection/wechat-native-collector.test.ts [ src/application/collection/wechat-native-collector.test.ts ]",
+        "Error: Cannot find module './wechat-native-collector' imported from /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend/src/application/collection/wechat-native-collector.test.ts",
+        "Test Files  1 failed (1)",
+        "Tests  no tests",
+        "Start at  18:24:16",
+        "Duration  14.00s (transform 9.61s, setup 0ms, import 0ms, tests 0ms, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "executor-bounded-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "2c0766c1b16a3eb48416cf6b6b3749c21596c31f00c6a1e54742497621e0c9de",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  src/application/collection/wechat-native-collector.test.ts [ src/application/collection/wechat-native-collector.test.ts ]",
+        "Error: Cannot find module './wechat-native-collector' imported from /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend/src/application/collection/wechat-native-collector.test.ts",
+        "Test Files  1 failed (1)",
+        "Tests  no tests",
+        "Start at  18:34:22",
+        "Duration  1.47s (transform 777ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "service-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "aff8ac221b8e2796434a393698df79f70dd0b1c6bea5b1abf3ccacdec16b6257",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  src/modules/platform-collection/platform-native-reports.integration.test.ts > 公开微信原生报表持久链 > start→原租约commit→公开read，0值/范围保真且不更新目录",
+        "FAIL  src/modules/platform-collection/platform-native-reports.integration.test.ts > 公开微信原生报表持久链 > 后续页失败保已写报告、同页重放幂等、内容变化冲突",
+        "FAIL  src/modules/platform-collection/platform-native-reports.integration.test.ts > 公开微信原生报表持久链 > 转组后晚提交拒绝，旧报告不删除或进入新组",
+        "Test Files  1 failed (1)",
+        "Tests  3 failed | 1 passed (4)",
+        "Start at  17:59:42",
+        "Duration  88.48s (transform 11.88s, setup 0ms, import 15.50s, tests 72.50s, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "service-review-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "62dd45d36855c943489f31301ea10e03b1f5b796fa93b614f87611c3c8273e44",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  src/modules/platform-collection/platform-native-reports.integration.test.ts > T1110同原字节空作品的不同选择窗口分别保留，不误冲突也不重写旧窗口",
+        "FAIL  src/modules/platform-collection/platform-native-reports.integration.test.ts > T1110微信原scheduled owner的needsAuth只在新证明后恢复同ID，错task和取消拒绝恢复",
+        "FAIL  src/modules/platform-collection/platform-native-reports.integration.test.ts > T1110微信取消/失败owner释放原run，paused/unknown真owner保原ID，伪造key不授权",
+        "Test Files  1 failed (1)",
+        "Tests  3 failed | 4 skipped (7)",
+        "Start at  18:37:29",
+        "Duration  17.88s (transform 3.22s, setup 0ms, import 5.35s, tests 12.36s, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "ui-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "2750f254fc8adbf4e554992e1bc41f5ecbe6b0539223fc9bb8c3245b3c58378e",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  src/features/platform-account/native-report-panel.test.tsx [ src/features/platform-account/native-report-panel.test.tsx ]",
+        "FAIL  src/features/platform-account/account-binding-panel.test.tsx > T1110 wechatOfficial扫码冻结真实微信平台而不调抖音入口",
+        "FAIL  src/features/platform-account/account-binding-panel.test.tsx > T1110 wechatVideo扫码冻结真实微信平台而不调抖音入口",
+        "FAIL  src/features/platform-account/account-group-manager.test.tsx > T1110 wechatOfficial真实扫码按钮在能力表中，组成员链接带显式accountId",
+        "FAIL  src/features/platform-account/account-group-manager.test.tsx > T1110 wechatVideo真实扫码按钮在能力表中，组成员链接带显式accountId",
+        "FAIL  src/features/platform-account/native-report-page.test.tsx > T1110显式同组微信成员使用真实成员版本读取原生报表，不依赖旧目录或默认号",
+        "FAIL  src/features/platform-account/native-report-page.test.tsx > T1110伪造其它组accountId不能取得原生报表",
+        "FAIL  src/features/platform-account/native-report-page.test.tsx > T1110报表读取失败仍进入微信恢复界面，不误报目录不完整",
+        "Test Files  4 failed (4)",
+        "Tests  7 failed | 25 passed (32)",
+        "Start at  18:15:49",
+        "Duration  51.20s (transform 11.55s, setup 3.29s, import 19.08s, tests 9.66s, environment 15.31s)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "ui-capability-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "785e2b776e755565ee2e5140e3efc6e97cf21e57876d7f5127d1b267f23137e1",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  src/features/platform-account/native-report-panel.test.tsx > T1110未核实浏览器身份端口时同步不可用，但已有报告仍可展开",
+        "Test Files  1 failed (1)",
+        "Tests  1 failed | 11 passed (12)",
+        "Start at  18:20:24",
+        "Duration  37.60s (transform 17.80s, setup 2.69s, import 25.32s, tests 1.97s, environment 5.63s)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "ui-deadline-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "77898ec4ccdf2484458e3bfec408e76c45b962709cb4e8b43ddb353e09aec1a6",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  src/features/platform-account/native-report-panel.test.tsx > T1110耗尽期限展示人话与显式重新同步，等待/核对/重进均不自动新建请求",
+        "FAIL  src/features/platform-account/native-report-panel.test.tsx > T1110仅用户点重新同步创建一次新key，保留报表并由新attempt承接取消",
+        "FAIL  src/features/platform-account/native-report-panel.test.tsx > T1110重新同步响应未知后核对新key，重进也不回到旧timeout或再次换key",
+        "FAIL  src/features/platform-account/native-report-panel.test.tsx > T1110长时间扫码后先恢复原key，真实timeout后才允许用户重新同步",
+        "FAIL  src/features/platform-account/native-report-panel.test.tsx > T1110能力不可用时耗尽任务也禁止重新同步，保留已有报表",
+        "Test Files  1 failed (1)",
+        "Tests  5 failed | 13 passed (18)",
+        "Start at  18:38:23",
+        "Duration  8.40s (transform 1.17s, setup 361ms, import 2.03s, tests 4.82s, environment 981ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "ui-rejection-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "fd7807e9358db68c2c48059454716cbd65fab97bc174d7a00d15c389e552a73a",
+      "commands_visible_in_output": [
+        "> creatoros-frontend@1.2.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend",
+        "> vitest run src/features/platform-account/native-report-panel.test.tsx --retry=0 --testTimeout=180000 --hookTimeout=180000"
+      ],
+      "captured_facts": [
+        "FAIL  src/features/platform-account/native-report-panel.test.tsx > T1110真实缺少绑定不是未知请求或Cookie失效；重进扫码真实读回后仍沿拒绝原意图",
+        "FAIL  src/features/platform-account/native-report-panel.test.tsx > T1110普通400拒绝展示既有可读错误，不提示登录或未知且手动重试沿原意图",
+        "FAIL  src/features/platform-account/native-report-panel.test.tsx > T1110普通403拒绝展示既有可读错误，不提示登录或未知且手动重试沿原意图",
+        "FAIL  src/features/platform-account/native-report-panel.test.tsx > T1110普通409拒绝展示既有可读错误，不提示登录或未知且手动重试沿原意图",
+        "FAIL  src/features/platform-account/native-report-panel.test.tsx > T1110缺少绑定后的采集能力关闭仍禁扫码和同步，不假定身份端口ready",
+        "Test Files  1 failed (1)",
+        "Tests  5 failed | 20 passed (25)",
+        "Start at  18:48:25",
+        "Duration  8.79s (transform 837ms, setup 317ms, import 1.51s, tests 5.86s, environment 653ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "schedule-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "e378cbaeac165d4b1d762d854ca54e29cd41d68bf0b31681192e7ed153f05246",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  src/modules/scheduling/private-collector-wechat-admission.test.ts > T1110 wechatOfficial只准入真实已支持的self.metrics，不授予评论、流量或内容补全能力",
+        "FAIL  src/modules/scheduling/private-collector-wechat-admission.test.ts > T1110 wechatVideo只准入真实已支持的self.metrics，不授予评论、流量或内容补全能力",
+        "FAIL  src/modules/ai-runtime/collection-bootstrap.test.ts > T1110五平台默认分钟按0/5/10/15/20错峰，微信只有原生报表同步，不建未支持评论流量任务",
+        "FAIL  src/application/scheduling/platform-collector.test.ts > T1110 wechatVideo只读取nativeReports并沿同一原task键恢复，不进入目录/旧指标",
+        "FAIL  src/application/scheduling/platform-collector.test.ts > T1110 wechatOfficial只读取nativeReports并沿同一原task键恢复，不进入目录/旧指标",
+        "FAIL  src/application/scheduling/platform-collector.test.ts > T1110 wechatVideo partial沿原task退避，实际needsAuth才要求扫码",
+        "FAIL  src/application/scheduling/platform-collector.test.ts > T1110 wechatOfficial partial沿原task退避，实际needsAuth才要求扫码",
+        "FAIL  src/application/workspace/startup.test.ts > 共享预设与任务只做一次，实际支持的平台与登录凭据同时满足才建私有采集",
+        "FAIL  src/application/workspace/startup.test.ts > 单个账号scope读取失败不阻断另一个真实账号和其它组",
+        "FAIL  src/application/workspace/startup.test.ts > T1110五平台按真实凭据补齐独立采集，保留共享组只初始化一次",
+        "FAIL  src/application/workspace/startup.test.ts > T1110 wechatVideo未有真实凭据不会因平台枚举存在就建采集任务",
+        "FAIL  src/application/workspace/startup.test.ts > T1110 wechatOfficial未有真实凭据不会因平台枚举存在就建采集任务",
+        "Test Files  4 failed (4)",
+        "Tests  12 failed | 32 passed (44)",
+        "Start at  18:15:49",
+        "Duration  53.25s (transform 36.71s, setup 0ms, import 49.75s, tests 233ms, environment 2ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "recovery-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "c48cd5d8fc4422d6a18c68b01db595d80104666dfa601f3f9d8614f24f9336f5",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  src/application/platform-collection/periodic.test.ts > T1110恢复入口只读微信原报表任务并解析当前成员scope，不产生第二周期",
+        "Test Files  1 failed (1)",
+        "Tests  1 failed | 5 passed (6)",
+        "Start at  18:22:28",
+        "Duration  1.30s (transform 157ms, setup 0ms, import 190ms, tests 44ms, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "public-chain.log",
+      "exit_code": 1,
+      "raw_output_sha256": "e2924a4256469001db667e85402f1025a5e3b3845908da076678788ec9795b8b",
+      "commands_visible_in_output": [
+        "> @creatoros/backend@0.1.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend",
+        "> vitest run src/modules/platform-collection/platform-native-reports.integration.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000"
+      ],
+      "captured_facts": [
+        "FAIL  src/modules/platform-collection/platform-native-reports.integration.test.ts > T1110第三报表坏格式经真实解析器失败，已提交两份可公开回读且不误报登录",
+        "FAIL  src/modules/platform-collection/platform-native-reports.integration.test.ts > T1110公开取消后的晚报告拒绝，原执行期限耗尽晚报告也不写入，已得报告均保留",
+        "Test Files  1 failed (1)",
+        "Tests  2 failed | 10 passed (12)",
+        "Start at  18:45:35",
+        "Duration  73.00s (transform 2.97s, setup 0ms, import 5.33s, tests 67.47s, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "public-chain-green.log",
+      "exit_code": 1,
+      "raw_output_sha256": "bcaab1baa67627fdaacb6fd9581b8eec415418dd4d9b74f4e801bc76afc10659",
+      "commands_visible_in_output": [
+        "> @creatoros/backend@0.1.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend",
+        "> vitest run src/modules/platform-collection/platform-native-reports.integration.test.ts src/application/collection/wechat-native-collector.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000"
+      ],
+      "captured_facts": [
+        "FAIL  src/modules/platform-collection/platform-native-reports.integration.test.ts > T1110公开取消后的晚报告拒绝，原执行期限耗尽晚报告也不写入，已得报告均保留",
+        "Test Files  1 failed | 1 passed (2)",
+        "Tests  1 failed | 27 passed (28)",
+        "Start at  18:48:23",
+        "Duration  55.35s (transform 4.74s, setup 0ms, import 9.14s, tests 48.28s, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "executor-close-heartbeat-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "3d27bfc54f48b71f5b57e843c5b7f442ab9d05450f2be48ddf99c726f768a382",
+      "commands_visible_in_output": [
+        "> @creatoros/backend@0.1.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend",
+        "> vitest run src/application/collection/wechat-native-collector.test.ts -t '解析失败后真实关闭' --retry=0 --testTimeout=180000 --hookTimeout=180000"
+      ],
+      "captured_facts": [
+        "FAIL  src/application/collection/wechat-native-collector.test.ts > 解析失败后真实关闭跨过心跳间隔，仍续原租约但不误报LEASE_LOST或续执行期限",
+        "Test Files  1 failed (1)",
+        "Tests  1 failed | 16 skipped (17)",
+        "Start at  18:55:49",
+        "Duration  2.13s (transform 940ms, setup 0ms, import 1.69s, tests 15ms, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "migration-receipt-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "f12dc4ddf55bd4e4012ae7848b6943f2693f997e5d99e89127ba1f61b8ac9aad",
+      "commands_visible_in_output": [],
+      "captured_facts": [
+        "FAIL  src/migration-convergence.test.ts > T1110迁移后必须有真实0131回执，旧完整前缀不得冒充新runtime已准备",
+        "Test Files  1 failed (1)",
+        "Tests  1 failed | 21 skipped (22)",
+        "Start at  18:30:29",
+        "Duration  14.89s (transform 475ms, setup 0ms, import 1.81s, tests 12.76s, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "recovery-deadline-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "11616de2d31641531e7057e5d23a8a24de134e18ca8b53f3aae9e2b878666b3c",
+      "commands_visible_in_output": [
+        "> @creatoros/backend@0.1.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend",
+        "> vitest run src/application/platform-collection/periodic.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000"
+      ],
+      "captured_facts": [
+        "FAIL  src/application/platform-collection/periodic.test.ts > T1110恢复扫描不会反复领取已真实TASK_TIMEOUT的微信原run，其余partial仍沿原ID恢复",
+        "Test Files  1 failed (1)",
+        "Tests  1 failed | 6 passed (7)",
+        "Start at  18:57:10",
+        "Duration  315ms (transform 31ms, setup 0ms, import 40ms, tests 12ms, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "schedule-deadline-protocol-red.log",
+      "exit_code": 1,
+      "raw_output_sha256": "97f1b0ea88bf6cfc6752db0ddeedd9f38be4f88373ed2c5b8f98158f406a8c8f",
+      "commands_visible_in_output": [
+        "> @creatoros/backend@0.1.0 test /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/backend",
+        "> vitest run src/application/scheduling/platform-collector.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000"
+      ],
+      "captured_facts": [
+        "FAIL  src/application/scheduling/platform-collector.test.ts > T1110 wechatVideo 原run期限已真实耗尽，调度不再次执行原run或无限continue",
+        "FAIL  src/application/scheduling/platform-collector.test.ts > T1110 wechatOfficial 原run期限已真实耗尽，调度不再次执行原run或无限continue",
+        "FAIL  src/application/scheduling/platform-collector.test.ts > T1110微信本次执行读回TASK_TIMEOUT后如实结束owner，不把已耗尽run当下一轮continue",
+        "Test Files  1 failed (1)",
+        "Tests  3 failed | 8 passed (11)",
+        "Start at  18:58:13",
+        "Duration  1.08s (transform 104ms, setup 0ms, import 134ms, tests 29ms, environment 0ms)"
+      ],
+      "role": "RED"
+    },
+    {
+      "output_file": "timeout-final-static.json",
+      "exit_code": 1,
+      "failure_count": 27,
+      "new_wechat_file_failure_count": 0,
+      "raw_output_sha256": "fe4f5e298c588601e956153d39043bf9103a5324c98611af54c18209b757c5f4"
+    },
+    {
+      "output_file": "private-file-result.ndjson",
+      "exit_code": 1,
+      "facts": [
+        {
+          "kind": "officialContent",
+          "status": "FAILED",
+          "code": "FILE_UNAVAILABLE"
+        },
+        {
+          "kind": "officialFollowers",
+          "status": "FAILED",
+          "code": "FILE_UNAVAILABLE"
+        },
+        {
+          "kind": "channelsDaily",
+          "status": "FAILED",
+          "code": "FILE_UNAVAILABLE"
+        },
+        {
+          "kind": "channelsFollowers",
+          "status": "FAILED",
+          "code": "FILE_UNAVAILABLE"
+        },
+        {
+          "kind": "channelsWorks",
+          "status": "FAILED",
+          "code": "FILE_UNAVAILABLE"
+        }
+      ]
+    },
+    {
+      "output_file": "public-transfer-green.log",
+      "exit_code": 0,
+      "raw_output_sha256": "882b33bd331356e93158706dd7163cc5ba9a8865789eca7866b4a66332100e84",
+      "captured_facts": [
+        "Test Files  1 passed (1)",
+        "Tests  2 passed | 12 skipped (14)",
+        "Start at  19:05:10",
+        "Duration  16.18s (transform 3.55s, setup 0ms, import 6.54s, tests 9.43s, environment 0ms)"
+      ]
+    },
+    {
+      "output_file": "task-review-receipt.json",
+      "exit_code": 0,
+      "raw_output_sha256": "e7be8038ac0cf21a76166013a74f2e767e6943dadb24a5d8a34021458cb5b21b"
+    },
+    {
+      "output_file": "led052-current-probe.log",
+      "exit_code": 1,
+      "raw_output_sha256": "47f76a672fdaa1329793d27c0ef888932c48bcac70f77e8fc5283affcf709c19",
+      "command": "node docs/verification/t1022/run-archive-guard.mjs",
+      "captured_facts": [
+        "缺CREATOROS_TEST_POSTGRES_URL时在运行测试前真实拒绝；不把skip作为PASS"
+      ]
+    }
+  ],
+  "reconcile": {
+    "status": "failed",
+    "exit_code": 1,
+    "error_count": 46,
+    "warning_count": 0,
+    "output_file": "reconcile.log",
+    "raw_output_sha256": "33ccab1ebfa0556902ca90b48f0161c35fbbd2beb5a0b0c746b824930e6824d1",
+    "detail_file": "reconcile-findings.json"
+  },
+  "remaining_required_evidence": [
+    "普通两微信后台稳定身份和实际日期/总数witness",
+    "产品独立profile真人扫码",
+    "五份私人实际导出当前解析器验收",
+    "1366/1024真实Chrome页面/状态/键盘旅程"
+  ],
+  "completion_claim": false,
+  "independent_code_review": {
+    "output_file": "INDEPENDENT_CODE_REVIEW.md",
+    "raw_output_sha256": "a90a015af37a6216d81125189b304ad94eb94df29835aff3b967207e69539549",
+    "result": "指定源码范围未发现新增确定性缺陷；不代签整体任务或真人、视觉Gate",
+    "reviewer": "/root/collection_audit"
+  },
+  "closure": {
+    "status": "blocked_pending_real_browser_evidence",
+    "taskctl_action": "block",
+    "taskctl_exit_code": 0,
+    "reason": "微信实际witness/扫码/实文件/Chrome旅程缺失；空间被用户接管，待明确继续；全局46ERROR及新增旧收据漂移已如实登记",
+    "recorded_at": "2026-10-09T11:17:50.106722+00:00",
+    "output_file": "task-block.log",
+    "raw_output_sha256": "a47fc17b5ca1ac497b88179cb61d4bde4502afdb6c746f1e60eb699129e15030",
+    "pmem_sync_exit_code": 0,
+    "pmem_output_file": "pmem-close.log",
+    "pmem_output_sha256": "c85f7cf7a02e80626f58af464425a2529149ffbc16def8fc651c54f9d21c543f"
+  }
+}

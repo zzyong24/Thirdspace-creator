@@ -1,0 +1,102 @@
+{
+  "observedAt": "2026-10-10T04:07:20.359Z",
+  "sourcePaths": [
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+      "sha256": "10d7b940110ffc96316c2687bae539259c2ba22feabebde34a57d12144c1048b"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+      "sha256": "f172f920fefc08a2c00d39e753eda97a0e0391369bc7064f60d2c6bd48403d0c"
+    }
+  ],
+  "researchRestored": {
+    "eventOnlyChunk": "37ff86",
+    "taskctlChunk": "305fe7",
+    "auditChunk": "faec7b"
+  },
+  "keyBehaviorRed": {
+    "tests": 2,
+    "failed": 2,
+    "log": "dom-correction-key-red-20261010.log",
+    "scope": "正式source+内置witness，明确合成浏览器，不是真人"
+  },
+  "worker126": {
+    "exitCode": 0,
+    "session": 26525,
+    "scope": "预算慢case随后修改，此为当时126PASS，不代签最新test字节"
+  },
+  "originalLegalIframeFinal": {
+    "exitCode": 0,
+    "tests": 28,
+    "session": 75907,
+    "scope": "原失败probe断言补等价正常选择与报表reader参数证据"
+  },
+  "publicNativeChain": {
+    "exitCode": 0,
+    "tests": 32,
+    "session": 96106,
+    "scope": "backend公开资源真实隔离DB＋collector；浏览器为明确fixture"
+  },
+  "publicBinding": {
+    "exitCode": 0,
+    "tests": 7,
+    "session": 39459
+  },
+  "typecheck": {
+    "exitCode": 0,
+    "session": 74994
+  },
+  "boundary": {
+    "exitCode": 0,
+    "remainingBaseline": 5
+  },
+  "semantic": {
+    "exitCode": 0
+  },
+  "orphan": {
+    "exitCode": 0,
+    "errors": 0,
+    "warnings": 100
+  },
+  "timeoutPolicy": {
+    "exitCode": 1,
+    "logSha256": "a4f4b460332d6fcfe6eae50d8f0998c4216144bf41d7a7f0bfc5f2f6561f0fce",
+    "remainingStaticShortBudgetCount": 27,
+    "scope": "原既有27项，动态组真实通过；不宣称全局PASS"
+  },
+  "currentPublicRead": {
+    "bindingHttp": 200,
+    "bindingStatus": "succeeded",
+    "accountId": "acct-3eba3525-70",
+    "reportsHttp": 200,
+    "reportsCount": 0,
+    "originalFailedCollectionId": "collection-35c561b7-54",
+    "originalStatus": "failed",
+    "originalPages": 0
+  },
+  "runtimeParentRead": {
+    "chunk": "a6b4e5",
+    "origin": true,
+    "path": true,
+    "visibleHostCount": 1,
+    "scope": "Ego研究页原iframe主realm，只读，不是产品profile"
+  },
+  "finalWorker": {
+    "tests": 126,
+    "exitCode": 0,
+    "session": 78375,
+    "log": "dom-correction-worker-final-all-20261010.log"
+  },
+  "finalTypecheck": {
+    "exitCode": 0,
+    "session": 63065
+  },
+  "finalNewCases": {
+    "tests": 18,
+    "exitCode": 0,
+    "log": "dom-correction-wujie-final-20261010.log",
+    "meta": "dom-correction-wujie-final-meta-20261010.json",
+    "budget": "真实消费者慢成功，仅支持该合法样例，后加例未补拍前置RED"
+  }
+}

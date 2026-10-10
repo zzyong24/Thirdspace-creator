@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "pnpm",
+    "-C",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/features/platform-account/account-binding-panel.test.tsx",
+    "src/features/platform-account/account-group-manager.test.tsx",
+    "src/features/platform-account/native-report-page.test.tsx",
+    "src/features/platform-account/native-report-panel.test.tsx",
+    "src/server/__module_integration__/local-platform-binding.persistence-client.test.ts",
+    "src/server/ingestion/account-binding-stage.integration.test.ts",
+    "--retry=0",
+    "--no-file-parallelism",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T09:01:43.220774+00:00",
+  "finishedAt": "2026-10-10T09:03:58.407475+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 135.18598479195498,
+  "logSha256": "9d1ade00ed2c388c78cb56d62f3f028b64913e4602611e3d35eb0ec2e69d023f"
+}

@@ -1,0 +1,5 @@
+# 微信后续源增量整合
+
+普通三方合并来源a3bc947d，保留来源原控制文件至source-wechat-control。此前293d4e98已由T1159主线适配的产品路径保当前实现（包括新雷达替代、迁移/归属和原生报告保护），本轮只补6d5dacf0的5个Worker文件及86e73907的扫码关闭回焦3段和2测试；原T1169转组回焦防卸载/切组保护原字节保留。工具目录3份原研究脚本作为来源历史保留，未运行。
+
+独立只读复核/root/t1080_latest_source_audit检查candidate.patch SHA2568f3fa45bcb24b7dfb5bfcd82f67789292f2f206806529c188b592e9678abcf65，无夹带控制与真人操作；当前staged产品精确7路径。当场实跑Worker4文件126项通过、frontend6文件86项通过、公开collector/admission2文件通过（细节见本目录真实receipt）。保原0报告/身份读取失败与研究暂停，不声称真人采集可用。

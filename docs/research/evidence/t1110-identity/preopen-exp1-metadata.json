@@ -1,0 +1,45 @@
+{
+  "family": "wechat-identity-operation-error",
+  "experiment": "EXP-1 pre-OPEN exploration; non-planned, not shared production TDD, not real-root-cause evidence",
+  "cwd": "/tmp/t1110-identity-diagnostic-candidate/ai-worker",
+  "runtime_cwd_from_log": "/private/tmp/t1110-identity-diagnostic-candidate/ai-worker",
+  "command": "pnpm exec vitest run src/runtime/platform/wechat-identity-diagnostic.test.ts --retry=0 --maxWorkers=1 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000 > /tmp/t1110-identity-diagnostic-candidate-red.log 2>&1",
+  "tool_session_id": 40093,
+  "exitCode": 1,
+  "result": {
+    "testFiles_failed": 1,
+    "tests_failed": 13,
+    "tests_passed": 1,
+    "tests_total": 14,
+    "vitest_version": "4.1.8",
+    "duration_seconds_from_log": 1.08
+  },
+  "times": {
+    "vitest_start_local": "2026-10-10 12:27:54 Asia/Shanghai",
+    "log_creation_utc": "2026-10-10T04:27:54.120432+00:00",
+    "log_last_write_utc": "2026-10-10T04:27:55.839319+00:00",
+    "process_start_utc": null,
+    "process_end_utc": null,
+    "limitation": "未采样shell进程起止；日志创建/末写精确时间不能冒充命令生命周期"
+  },
+  "baseline_head": "39dcfae6499c60222b31908411c391ee7a7d79f9",
+  "baseline_sha256": {
+    "ai-worker/src/runtime/platform/wechat-browser-source.ts": "f172f920fefc08a2c00d39e753eda97a0e0391369bc7064f60d2c6bd48403d0c",
+    "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "10d7b940110ffc96316c2687bae539259c2ba22feabebde34a57d12144c1048b"
+  },
+  "log": {
+    "path": "/tmp/t1110-identity-diagnostic-candidate-red.log",
+    "bytes": 11403,
+    "sha256": "04ab8d481bd10eb4d709105749be80562be32095e0404162d306c49f658e94a0"
+  },
+  "bounds": {
+    "synthetic_Page_Context_only": true,
+    "actual_browser_started": false,
+    "real_profile_access": false,
+    "real_account_access": false,
+    "shared_source_mutation": false,
+    "shared_production_TDD": false,
+    "real_failure_root_cause": "UNKNOWN",
+    "post_pause_execution": "no further tests/type/browser/service/API/state operations"
+  }
+}

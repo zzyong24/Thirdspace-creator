@@ -1,0 +1,55 @@
+{
+  "kind": "T1110-identity-diagnostic-tmp-candidate",
+  "shared_root": "/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator",
+  "source_baseline_head_at_initial_read": "39dcfae6499c60222b31908411c391ee7a7d79f9",
+  "shared_head_at_last_static_read": "86e73907dc0bfe3384b944fdab2545452da09731",
+  "files": [
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+      "baseline_sha256": "f172f920fefc08a2c00d39e753eda97a0e0391369bc7064f60d2c6bd48403d0c",
+      "candidate_sha256": "e748b8701e010d2a4cd7109d73bfc2287fed292a4fee2146a5fc9de424f378e2"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+      "baseline_sha256": "10d7b940110ffc96316c2687bae539259c2ba22feabebde34a57d12144c1048b",
+      "candidate_sha256": "9eedfeca552e4b6d508a9c57b22e0b8e794e57230b078311029198305e5a1025"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-identity-diagnostic.test.ts",
+      "candidate_sha256": "7fa6b8581a99feea6dff7a3241c19d36ff4f5e3971d8a82e1143633af3b495ab"
+    }
+  ],
+  "patches": [
+    {
+      "path": "/tmp/t1110-identity-diagnostic-tests-only.patch",
+      "sha256": "8fa7383eb1562c4b613b9fba1ea7db1d72aa330bdd88f7628f39af58eba208a1"
+    },
+    {
+      "path": "/tmp/t1110-identity-diagnostic-implementation.patch",
+      "sha256": "c98d4d01fdfa1324bfc4c1938cd156cf6448050023fe8ea7934bbdaee72fafcc"
+    }
+  ],
+  "execution": {
+    "candidate_tests_before_pause": "/tmp/t1110-identity-diagnostic-candidate-red.log",
+    "candidate_tests_before_pause_result": "13 FAIL / 1 PASS / 14, exit 1; baseline source; not shared-production RED",
+    "runner_harness_failure": "/tmp/t1110-identity-diagnostic-candidate-harness-failed.log; 0 tests; not RED",
+    "after_new_research_gate": "no tests, no typecheck, no browser, no service/API/task operations",
+    "final_candidate_changed_after_red": "only mock callback type annotations in tests; fixed source candidate added; neither GREEN nor type verified",
+    "pre_open_metadata": "/tmp/t1110-identity-diagnostic-preopen-exp1-metadata.json",
+    "candidate_red_log_sha256": "04ab8d481bd10eb4d709105749be80562be32095e0404162d306c49f658e94a0",
+    "static_patch_check": {
+      "command": "git apply --check /tmp/t1110-identity-diagnostic-tests-only.patch /tmp/t1110-identity-diagnostic-implementation.patch",
+      "exitCode": 0,
+      "scope": "only static patch compatibility; not type/test/GREEN"
+    }
+  },
+  "boundaries": {
+    "shared_source_write": false,
+    "browser": false,
+    "profile_read": false,
+    "database_read": false,
+    "state_or_event_write": false,
+    "real_failure_root_cause": "UNKNOWN"
+  },
+  "root_red_command": "pnpm --dir ai-worker exec vitest run src/runtime/platform/wechat-identity-diagnostic.test.ts --retry=0 --maxWorkers=1 --no-file-parallelism --testTimeout=180000 --hookTimeout=180000"
+}

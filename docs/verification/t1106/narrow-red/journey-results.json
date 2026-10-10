@@ -1,0 +1,72 @@
+{
+  "task_id": "T-1106",
+  "outcome": "failed",
+  "startedAt": "2026-10-09T04:46:53.920Z",
+  "completedAt": "2026-10-09T04:49:03.712Z",
+  "browser": "Google Chrome (Playwright channel chrome)",
+  "source_witness": [
+    {
+      "path": "frontend/src/features/intelligence/intelligence-workbench.tsx",
+      "sha256": "a95b7343118dfd8b469da94358decfe2929461ee250f7f4d96a38bbcf824cbfa"
+    },
+    {
+      "path": "frontend/src/features/intelligence/intelligence-display.ts",
+      "sha256": "52ff5fcb66f5c33f0094cbb19ca1f47d99fcfd97744e400ebcba8ff6243aa589"
+    },
+    {
+      "path": "frontend/src/features/intelligence/use-project-upgrade-queue.ts",
+      "sha256": "0474d5ffe5ccd73f31155de631a742322bda63bd6bfeed961cd4e3547a29889c"
+    }
+  ],
+  "evidence_scope": "隔离fixture仅证明前端操作链；不证明平台认证、模型运行或安装版任务恢复",
+  "steps": [
+    {
+      "at": "2026-10-09T04:47:02.996Z",
+      "action": "初始状态：历史失败明确，主要重试入口可用，内部术语已转为账号核对提示",
+      "fixtureCalls": [
+        {
+          "at": "2026-10-09T04:47:02.174Z",
+          "method": "listProjectUpgrades",
+          "input": {
+            "groupId": "grp_legacy_fixture-collector-t1106",
+            "page": 1
+          }
+        }
+      ]
+    },
+    {
+      "at": "2026-10-09T04:49:03.581Z",
+      "action": "失败",
+      "error": "Error: expect(locator).toBeDisabled() failed\n\nLocator:  getByTestId('radar-source-row-fixture-source-login-history').getByRole('button', { name: '扫码登录 Geo逸哥 的采集账号', exact: true })\nExpected: disabled\nReceived: enabled\nTimeout:  120000ms\n\nCall log:\n  - Expect \"to.be.disabled\" with timeout 120000ms\n  - waiting for getByTestId('radar-source-row-fixture-source-login-history').getByRole('button', { name: '扫码登录 Geo逸哥 的采集账号', exact: true })\n    199 × locator resolved to <button type=\"button\" data-slot=\"button\" aria-label=\"扫码登录 Geo逸哥 的采集账号\" title=\"扫码登录采集账号（也可先用已有登录状态重试）\" class=\"group/button inline-flex items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:rin…>…</button>\n        - unexpected value \"enabled\"\n\n    at captureRawStack (/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js:3130:17)\n    at callMatcherAsStep (/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12873:57)\n    at Object.toBeDisabled (/Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/matchers/expect.js:12863:23)\n    at /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/docs/verification/t1106/run-journey.mjs:102:78"
+    }
+  ],
+  "calls": [
+    {
+      "at": "2026-10-09T04:47:21.425Z",
+      "method": "listProjectUpgrades",
+      "input": {
+        "groupId": "grp_legacy_fixture-collector-t1106",
+        "page": 1
+      }
+    },
+    {
+      "at": "2026-10-09T04:47:21.425Z",
+      "method": "listItems",
+      "input": {
+        "groupId": "grp_legacy_fixture-collector-t1106",
+        "page": 1,
+        "pageSize": 100,
+        "sort": "published_desc"
+      }
+    },
+    {
+      "at": "2026-10-09T04:48:21.427Z",
+      "method": "listProjectUpgrades",
+      "input": {
+        "groupId": "grp_legacy_fixture-collector-t1106",
+        "page": 1
+      }
+    }
+  ],
+  "browserErrors": []
+}

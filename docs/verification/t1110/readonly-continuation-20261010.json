@@ -1,0 +1,115 @@
+{
+  "schema": "t1110-readonly-browser-continuation/v1",
+  "recordedAt": "2026-10-10T00:43:04.554Z",
+  "userAuthorization": "用户在交回原浏览器控制请求后答复继续",
+  "sourceHead": "23c3bedc0e8216e20b67f39c653e34a3dfdd508e",
+  "isolatedWorktreeRestored": true,
+  "sourceBranch": "codex/t1101-canvas-binding",
+  "space": {
+    "id": 20,
+    "takeOverActual": true,
+    "ownership": "agent",
+    "toolChunk": "21ca1e",
+    "newSpaceCreated": false,
+    "profilesInspected": false,
+    "lastVerifiedOwnership": "agent",
+    "handoffReceipt": "pending-user-recovery-handoff"
+  },
+  "officialSettings": {
+    "page": "p1",
+    "actualToolChunk": "6a4182",
+    "officialOrigin": true,
+    "currentSettingsPath": true,
+    "documentReadyState": "complete",
+    "visibleStableIdCount": 1,
+    "stableIdentitySha256": "56b7ddb9a2008cfefe09e731e8dcd3b6454a7b2636b908ff09802b05c4252952",
+    "matchesPriorResearchWitness": true,
+    "visibleSamePathMenuLabels": [
+      "账号设置",
+      "账号详情",
+      "功能设置"
+    ],
+    "fullHrefUniqueness": "尚未验证",
+    "productBindingProof": false
+  },
+  "videoOriginalPage": {
+    "page": "p6",
+    "openedBy": "unknown",
+    "adoptedExistingTab": true,
+    "initialInventoryPathCategory": "login",
+    "visibleLoginPrompt": "未确认",
+    "readFailure": {
+      "actualToolChunk": "91684d",
+      "code": "PageEvaluationTimeoutError",
+      "sdkSafetyTimeoutMs": 15000,
+      "executionStopped": "未确认",
+      "rootDisposition": "仅只读DOM，没有写操作；转原标签页reload，不重试evaluate"
+    },
+    "reloadFailure": {
+      "actualToolChunk": "4f8849",
+      "timeoutMs": 120000,
+      "waitUntil": "domcontentloaded",
+      "actualError": "page.reload timed out",
+      "stopConfirmed": "未取得",
+      "rootDisposition": "保留用户来源Page，不关闭或换新空间，需人工恢复页面"
+    },
+    "cookieExpired": "未证明"
+  },
+  "officialLinkCountRead": {
+    "page": "p3",
+    "operation": "page.cdp Runtime.evaluate，读取当前既有菜单；没有导航、下载或业务提交",
+    "cdpRuntimeTimeoutMs": 120000,
+    "cdpRequestTimeoutMs": 150000,
+    "state": "failed",
+    "publicTaskStarted": false,
+    "actualToolChunk": "db18fa",
+    "actualError": "CdpRequestTimeoutError: CDP request timed out: Runtime.evaluate",
+    "countResult": "未取得",
+    "executionStopped": "未确认",
+    "rootDisposition": "不重试或改用新空间；请求人工恢复原窗口"
+  },
+  "sourceReview": {
+    "artifact": "docs/verification/t1110/oa-entry-source-review-20261010.md",
+    "sha256": "4bdf87e51dbf3d955984a8a74749f48f5adda9a7264ec7702535036f598ae307",
+    "finding": "单设置入口fixture缺少同path不同action菜单；需现场validHrefCount/uniqueFullHrefCount才能证明歧义，不能代签原56原因"
+  },
+  "workflow": {
+    "stage": "4-build",
+    "contextPlanExitCode": 2,
+    "contextPlanError": "task T-1110 无法从 progress.json 唯一确定当前 pending/claimed step",
+    "contextPlanToolChunk": "69f56d",
+    "researchGateAuditExitCode": 0,
+    "auditMeaning": "仅有效暂停",
+    "auditToolChunk": "259060",
+    "cardStatus": "researching",
+    "nativeExperimentsRun": 2,
+    "nativeExperimentMaximum": 2,
+    "thirdNativeExperimentStarted": false,
+    "productionChanges": false,
+    "blockAttempt": {
+      "command": "node orchestrator/process/taskctl.mjs block T-1110 --reason <本次原页阻塞事实>",
+      "actualExitCode": 1,
+      "actualToolChunk": "046d74",
+      "actualReason": "任务 T-1110 已是 ⏸️ 搁置,无需重复 block",
+      "statusChanged": false,
+      "newBlockEventClaimed": false
+    }
+  },
+  "sharedProductionHashes": {
+    "source": "ec7c53bc4c83bb57b8f707acd2ba1602f6722f9626c6a3843f8b3031814df19a",
+    "domWitness": "039dc9abc6716b1efbbc0f60e3e4895da16a9318a973a7fbb3bfaf198dda26c7",
+    "composition": "ab11053526e4f2a4f71b45fad6e012b5215a1502d4d5124a8e4db4b5d0457dd8"
+  },
+  "lastKnownProductResults": {
+    "reference": "docs/verification/t1110/product-live-status-20261009.json",
+    "publicRereadThisTurn": false,
+    "serviceStartedThisTurn": false,
+    "originalFailuresPreserved": true
+  },
+  "limitations": [
+    "原研究公众号身份可读不等于产品profile已绑定或Cookie相同",
+    "视频号研究标签页login pathname和读取超时不能代签产品Cookie失效",
+    "不复制Cookie、不手改数据或释放profile租约",
+    "SDK safety timeout真实发生，未补拍成120秒观察；后续有预算的读取沿120000/150000执行"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "observedAt": "2026-10-10T04:28:35.702Z",
+  "sourcePaths": [
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+      "sha256": "f172f920fefc08a2c00d39e753eda97a0e0391369bc7064f60d2c6bd48403d0c"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+      "sha256": "10d7b940110ffc96316c2687bae539259c2ba22feabebde34a57d12144c1048b"
+    }
+  ],
+  "video": {
+    "attemptId": "collection-51a95619-62",
+    "status": "failed",
+    "reasonCode": "EXPORT_FAILED",
+    "committedPages": 0,
+    "startedAt": "2026-10-10T04:16:03.635Z",
+    "updatedAt": "2026-10-10T04:16:19.746Z",
+    "diagnostic": {
+      "stage": "readIdentity",
+      "code": "BROWSER_OPERATION_FAILED",
+      "exceptionName": "Error"
+    },
+    "rootCause": "UNKNOWN"
+  },
+  "official": {
+    "runId": "execution-task-51a95619-83",
+    "status": "failed",
+    "accountId": null,
+    "createdAt": "2026-10-10T04:20:13.211Z",
+    "updatedAt": "2026-10-10T04:26:12.188Z",
+    "diagnostic": {
+      "stage": "readIdentity",
+      "code": "BROWSER_OPERATION_FAILED",
+      "exceptionName": "Error"
+    },
+    "receivedThisScanReply": false,
+    "rootCause": "UNKNOWN"
+  },
+  "reportsCount": 0,
+  "authExpiredEvidence": false,
+  "newRetryIssuedAfterFailure": false,
+  "profileTransfer": false
+}

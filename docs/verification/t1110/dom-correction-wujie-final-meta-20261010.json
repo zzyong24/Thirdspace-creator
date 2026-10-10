@@ -1,0 +1,34 @@
+{
+  "kind": "T1110-Wujie-formal-source-synthetic-regression",
+  "head": "5f7648fa309fd4e5ab6df0ede5c32cda6e26ee79",
+  "startedAt": "2026-10-10T04:09:21.985333+00:00",
+  "before": {
+    "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts": "b581ee9f3448ecc73aecd3a092d68c3d1faa0cf228b5eb611713843c554c1548",
+    "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "10d7b940110ffc96316c2687bae539259c2ba22feabebde34a57d12144c1048b",
+    "ai-worker/src/runtime/platform/wechat-browser-source.ts": "f172f920fefc08a2c00d39e753eda97a0e0391369bc7064f60d2c6bd48403d0c"
+  },
+  "actualBrowser": false,
+  "stateWrite": false,
+  "eventWrite": false,
+  "budgetCase": "actual-source-consumers-each-in-original-budget;onReport-immediate;no-double-charge-for-native-listener",
+  "command": [
+    "pnpm",
+    "exec",
+    "vitest",
+    "run",
+    "src/runtime/platform/wechat-wujie-regression.test.ts",
+    "--retry=0",
+    "--maxWorkers=1",
+    "--no-file-parallelism",
+    "--testTimeout=180000",
+    "--hookTimeout=180000"
+  ],
+  "exitCode": 0,
+  "after": {
+    "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts": "b581ee9f3448ecc73aecd3a092d68c3d1faa0cf228b5eb611713843c554c1548",
+    "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "10d7b940110ffc96316c2687bae539259c2ba22feabebde34a57d12144c1048b",
+    "ai-worker/src/runtime/platform/wechat-browser-source.ts": "f172f920fefc08a2c00d39e753eda97a0e0391369bc7064f60d2c6bd48403d0c"
+  },
+  "finishedAt": "2026-10-10T04:09:25.636515+00:00",
+  "inputsUnchanged": true
+}

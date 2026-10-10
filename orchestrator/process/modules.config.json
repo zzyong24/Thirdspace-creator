@@ -5103,7 +5103,14 @@
         "frontend/tests/e2e/audience-task-topics.spec.ts",
         "frontend/tests/e2e/knowledge-library.spec.ts",
         "frontend/src/features/draft-workbench/draft-workbench-data.ts",
-        "docs/verification/t1080/current-20261010/**"
+        "docs/verification/t1080/current-20261010/**",
+        "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+        "ai-worker/src/runtime/platform/wechat-browser-source.test.ts",
+        "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+        "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts",
+        "ai-worker/src/runtime/platform/wechat-wujie-regression.test.ts",
+        "frontend/src/features/platform-account/account-group-manager.tsx",
+        "frontend/src/features/platform-account/account-group-manager.test.tsx"
       ],
       "verify_commands": {
         "implementation": [

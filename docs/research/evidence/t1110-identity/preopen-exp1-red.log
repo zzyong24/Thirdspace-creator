@@ -1,0 +1,287 @@
+
+ RUN  v4.1.8 /private/tmp/t1110-identity-diagnostic-candidate/ai-worker
+
+ ❯ src/runtime/platform/wechat-identity-diagnostic.test.ts (14 tests | 13 failed) 225ms
+     × loginProbe普通Error可区分，原非auth结果与真实close不变 64ms
+     × identityNavigation普通Error可区分，原非auth结果与真实close不变 63ms
+     × identityFields普通Error可区分，原非auth结果与真实close不变 11ms
+     × custom witness没有内部分段时只记identityRead，不能猜导航/字段阶段 5ms
+     × 固定SDK分类page.evaluate: Execution context was destroyed, most likely because of a navigation. Cookie=synthetic-secret-cookie token=synthetic-secret-token /synthetic-private-profile只回枚举，仍是原普通业务失败 9ms
+     × 固定SDK分类page.evaluate: ReferenceError: Cookie=synthetic-secret-cookie token=synthetic-secret-token /synthetic-private-profile只回枚举，仍是原普通业务失败 7ms
+     × 固定SDK分类frame.evaluate: TypeError: Cookie=synthetic-secret-cookie token=synthetic-secret-token /synthetic-private-profile只回枚举，仍是原普通业务失败 10ms
+     × 未匹配SDK固定前缀的Error不给JS类别，也不由正文关键词推断登录 8ms
+     × diagnostic回调抛错不改变原失败、关闭或停止确认 7ms
+     × custom witness晚mark或非法枚举不能回写已发送诊断或产生第二次回执 6ms
+     × 原取消在loginProbe期间优先，固定分段不吞cancel或泄漏原异常 5ms
+     × 原120000期限在fields等待期间优先，停止后晚fields不再发诊断 9ms
+     × 内置witness的内部mark回调错误不改真实身份结果或导航 8ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime/platform/wechat-identity-diagnostic.test.ts > T1110 身份内部固定分段诊断（正式source，明确合成浏览器） > loginProbe普通Error可区分，原非auth结果与真实close不变
+AssertionError: expected "vi.fn()" to be called with arguments: [ { platform: 'wechatVideo', …(4) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+      "code": "BROWSER_OPERATION_FAILED",
+      "exceptionName": "Error",
+-     "identityStep": "loginProbe",
+      "platform": "wechatVideo",
+      "stage": "readIdentity",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/runtime/platform/wechat-identity-diagnostic.test.ts:44:27
+     42|    await expect(f.run()).rejects.toMatchObject({code:'BROWSER_OPERATIO…
+     43|    expect(f.onDiagnostic).toHaveBeenCalledOnce();
+     44|    expect(f.onDiagnostic).toHaveBeenCalledWith({platform:'wechatVideo'…
+       |                           ^
+     45|    expectSafe(f.onDiagnostic.mock.calls);expect(f.onStopped).toHaveBee…
+     46|   }finally{f.dispose();}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/13]⎯
+
+ FAIL  src/runtime/platform/wechat-identity-diagnostic.test.ts > T1110 身份内部固定分段诊断（正式source，明确合成浏览器） > identityNavigation普通Error可区分，原非auth结果与真实close不变
+AssertionError: expected "vi.fn()" to be called with arguments: [ { platform: 'wechatVideo', …(4) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+      "code": "BROWSER_OPERATION_FAILED",
+      "exceptionName": "Error",
+-     "identityStep": "identityNavigation",
+      "platform": "wechatVideo",
+      "stage": "readIdentity",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/runtime/platform/wechat-identity-diagnostic.test.ts:44:27
+     42|    await expect(f.run()).rejects.toMatchObject({code:'BROWSER_OPERATIO…
+     43|    expect(f.onDiagnostic).toHaveBeenCalledOnce();
+     44|    expect(f.onDiagnostic).toHaveBeenCalledWith({platform:'wechatVideo'…
+       |                           ^
+     45|    expectSafe(f.onDiagnostic.mock.calls);expect(f.onStopped).toHaveBee…
+     46|   }finally{f.dispose();}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/13]⎯
+
+ FAIL  src/runtime/platform/wechat-identity-diagnostic.test.ts > T1110 身份内部固定分段诊断（正式source，明确合成浏览器） > identityFields普通Error可区分，原非auth结果与真实close不变
+AssertionError: expected "vi.fn()" to be called with arguments: [ { platform: 'wechatVideo', …(4) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+      "code": "BROWSER_OPERATION_FAILED",
+      "exceptionName": "Error",
+-     "identityStep": "identityFields",
+      "platform": "wechatVideo",
+      "stage": "readIdentity",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/runtime/platform/wechat-identity-diagnostic.test.ts:44:27
+     42|    await expect(f.run()).rejects.toMatchObject({code:'BROWSER_OPERATIO…
+     43|    expect(f.onDiagnostic).toHaveBeenCalledOnce();
+     44|    expect(f.onDiagnostic).toHaveBeenCalledWith({platform:'wechatVideo'…
+       |                           ^
+     45|    expectSafe(f.onDiagnostic.mock.calls);expect(f.onStopped).toHaveBee…
+     46|   }finally{f.dispose();}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/13]⎯
+
+ FAIL  src/runtime/platform/wechat-identity-diagnostic.test.ts > T1110 身份内部固定分段诊断（正式source，明确合成浏览器） > custom witness没有内部分段时只记identityRead，不能猜导航/字段阶段
+AssertionError: expected "vi.fn()" to be called with arguments: [ { platform: 'wechatVideo', …(4) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+      "code": "BROWSER_OPERATION_FAILED",
+      "exceptionName": "Error",
+-     "identityStep": "identityRead",
+      "platform": "wechatVideo",
+      "stage": "readIdentity",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/runtime/platform/wechat-identity-diagnostic.test.ts:49:144
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/13]⎯
+
+ FAIL  src/runtime/platform/wechat-identity-diagnostic.test.ts > T1110 身份内部固定分段诊断（正式source，明确合成浏览器） > 固定SDK分类page.evaluate: Execution context was destroyed, most likely because of a navigation. Cookie=synthetic-secret-cookie token=synthetic-secret-token /synthetic-private-profile只回枚举，仍是原普通业务失败
+AssertionError: expected "vi.fn()" to be called with arguments: [ { platform: 'wechatVideo', …(5) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+      "code": "BROWSER_OPERATION_FAILED",
+      "exceptionName": "Error",
+-     "failureKind": "EVALUATION_CONTEXT_DESTROYED",
+-     "identityStep": "identityFields",
+      "platform": "wechatVideo",
+      "stage": "readIdentity",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/runtime/platform/wechat-identity-diagnostic.test.ts:56:160
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/13]⎯
+
+ FAIL  src/runtime/platform/wechat-identity-diagnostic.test.ts > T1110 身份内部固定分段诊断（正式source，明确合成浏览器） > 固定SDK分类page.evaluate: ReferenceError: Cookie=synthetic-secret-cookie token=synthetic-secret-token /synthetic-private-profile只回枚举，仍是原普通业务失败
+ FAIL  src/runtime/platform/wechat-identity-diagnostic.test.ts > T1110 身份内部固定分段诊断（正式source，明确合成浏览器） > 固定SDK分类frame.evaluate: TypeError: Cookie=synthetic-secret-cookie token=synthetic-secret-token /synthetic-private-profile只回枚举，仍是原普通业务失败
+AssertionError: expected "vi.fn()" to be called with arguments: [ { platform: 'wechatVideo', …(5) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+      "code": "BROWSER_OPERATION_FAILED",
+      "exceptionName": "Error",
+-     "failureKind": "JAVASCRIPT_EVALUATION_FAILED",
+-     "identityStep": "identityFields",
+      "platform": "wechatVideo",
+      "stage": "readIdentity",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/runtime/platform/wechat-identity-diagnostic.test.ts:56:160
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/13]⎯
+
+ FAIL  src/runtime/platform/wechat-identity-diagnostic.test.ts > T1110 身份内部固定分段诊断（正式source，明确合成浏览器） > 未匹配SDK固定前缀的Error不给JS类别，也不由正文关键词推断登录
+AssertionError: expected { platform: 'wechatVideo', …(3) } to have property "identityStep" with value 'identityFields'
+
+- Expected:
+"identityFields"
+
++ Received:
+undefined
+
+ ❯ src/runtime/platform/wechat-identity-diagnostic.test.ts:59:298
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/13]⎯
+
+ FAIL  src/runtime/platform/wechat-identity-diagnostic.test.ts > T1110 身份内部固定分段诊断（正式source，明确合成浏览器） > diagnostic回调抛错不改变原失败、关闭或停止确认
+AssertionError: expected { platform: 'wechatVideo', …(3) } to have property "identityStep" with value 'loginProbe'
+
+- Expected:
+"loginProbe"
+
++ Received:
+undefined
+
+ ❯ src/runtime/platform/wechat-identity-diagnostic.test.ts:62:235
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/13]⎯
+
+ FAIL  src/runtime/platform/wechat-identity-diagnostic.test.ts > T1110 身份内部固定分段诊断（正式source，明确合成浏览器） > custom witness晚mark或非法枚举不能回写已发送诊断或产生第二次回执
+AssertionError: expected { platform: 'wechatVideo', …(3) } to have property "identityStep" with value 'identityRead'
+
+- Expected:
+"identityRead"
+
++ Received:
+undefined
+
+ ❯ src/runtime/platform/wechat-identity-diagnostic.test.ts:68:324
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/13]⎯
+
+ FAIL  src/runtime/platform/wechat-identity-diagnostic.test.ts > T1110 身份内部固定分段诊断（正式source，明确合成浏览器） > 原取消在loginProbe期间优先，固定分段不吞cancel或泄漏原异常
+AssertionError: expected Error: 明确原用户取消 to be undefined // Object.is equality
+
+- Expected:
+undefined
+
++ Received:
+Error {
+  "message": "明确原用户取消",
+}
+
+ ❯ src/runtime/platform/wechat-identity-diagnostic.test.ts:71:143
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/13]⎯
+
+ FAIL  src/runtime/platform/wechat-identity-diagnostic.test.ts > T1110 身份内部固定分段诊断（正式source，明确合成浏览器） > 原120000期限在fields等待期间优先，停止后晚fields不再发诊断
+AssertionError: expected { platform: 'wechatVideo', …(3) } to have property "identityStep" with value 'identityFields'
+
+- Expected:
+"identityFields"
+
++ Received:
+undefined
+
+ ❯ src/runtime/platform/wechat-identity-diagnostic.test.ts:76:192
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/13]⎯
+
+ FAIL  src/runtime/platform/wechat-identity-diagnostic.test.ts > T1110 身份内部固定分段诊断（正式source，明确合成浏览器） > 内置witness的内部mark回调错误不改真实身份结果或导航
+AssertionError: expected [] to deeply equal [ [ 'identityNavigation' ], …(1) ]
+
+- Expected
++ Received
+
+- [
+-   [
+-     "identityNavigation",
+-   ],
+-   [
+-     "identityFields",
+-   ],
+- ]
++ []
+
+ ❯ src/runtime/platform/wechat-identity-diagnostic.test.ts:83:30
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/13]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  13 failed | 1 passed (14)
+   Start at  12:27:54
+   Duration  1.08s (transform 87ms, setup 0ms, import 651ms, tests 225ms, environment 0ms)
+

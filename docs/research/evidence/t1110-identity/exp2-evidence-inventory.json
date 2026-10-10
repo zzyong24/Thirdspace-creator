@@ -1,0 +1,91 @@
+{
+  "schema": "t1110-research-evidence-inventory/v1",
+  "recordedAt": "2026-10-10T05:11:00.121Z",
+  "scope": "EXP1 and EXP2 actual; extra probe only proposed and independently statically reviewed, NOT_RUN",
+  "files": [
+    {
+      "path": "docs/research/evidence/t1110-identity/candidate-delivery.md",
+      "sha256": "e6065770c7ea488d0572390edd5e37aec5ef3b319d7cb7ff411489e69f7b53e1"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/candidate-implementation.patch",
+      "sha256": "c98d4d01fdfa1324bfc4c1938cd156cf6448050023fe8ea7934bbdaee72fafcc"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/candidate-manifest.json",
+      "sha256": "e1518c9b9e3a8a4bc96865ea7b58b89d42e4b2e25142ab14a2a3490504b7a9a6"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/candidate-tests.patch",
+      "sha256": "8fa7383eb1562c4b613b9fba1ea7db1d72aa330bdd88f7628f39af58eba208a1"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-cleanup-restoration.json",
+      "sha256": "5438b5bcc5c32dfbf35cbc34baf6cf88f7b9f3f81b7a8e1be29496ebeb81abfe"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-disk-instrument-recheck.md",
+      "sha256": "9599ddeba58ac8b9445471d59ffa534724e28739408d7517a005f23aae2768b6"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-disk-manifest.json",
+      "sha256": "3fa6fd6c454f575c67059fac9d559fbe5134210d4daaec484dad9076c6182c61"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-final-and-extra-probe-review.md",
+      "sha256": "573b4b5ab737468cdb0f2fb6a5a3a3dd60d910a6dc3d4610c6d06fc1ac97d275"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-fixed-events.ndjson",
+      "sha256": "d1be8aa50e85bcb26c62f7869f65f7fabe9b3d83bcc77836d531ce7dc6bbef38"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-instrument-review.md",
+      "sha256": "fb815a34f36abb6a173f6f3b26e1748e868b3a38bcd3d145ceb68586b7152f44"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-prepare-instrument.mjs",
+      "sha256": "9d5fd308fa9012f79900a312e539ccb5d5e2e487d9b058fc63e104e951533f2a"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-public-intent.mjs",
+      "sha256": "4ee7e622603ba42a7cf72672c222ff917029519ff5fe7cc704a2e47ecc425ff0"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-repair-instrument.mjs",
+      "sha256": "eb4d97aaf9f66827d174ecdd839c428e8e2ce0296dacef785dc3760b7512efad"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-result.json",
+      "sha256": "00f5769ea58f12a4f95ee29f5d4a673a834dc80ac278ab8ebe76796dde0ae773"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-runtime-variant-review.md",
+      "sha256": "5797fedc0104a5cc7d1cd87f4a97f5ae46a074f502a3cf8141df751a1e30f56c"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-sdk-fixed-protocol.json",
+      "sha256": "54f92bbd64ae740ea1b5c234a57d112fdbad2eceef0102286aeb6665378341bc"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-start-host.mjs",
+      "sha256": "a15fdaafd7a667a2ecfad43e5474aa8ee9362f377eb0aa7d8439f2c13b4dc844"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/inventory.json",
+      "sha256": "d3721d60124fc16b3df0c0a44de8bc3791cec5cff030d91d90452f7f37defb25"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/preopen-exp1-metadata.json",
+      "sha256": "431e540d1e4a0c34984ae1980db2b8bf1f47056dfce95826cd2779da67259361"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/preopen-exp1-red.log",
+      "sha256": "04ab8d481bd10eb4d709105749be80562be32095e0404162d306c49f658e94a0"
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/proposed-identity-shape-probe.ts",
+      "sha256": "24015bcca66136d8061623a3ac8281852d6ff086724ad430b36f47fde2037691"
+    }
+  ]
+}

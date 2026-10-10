@@ -1,0 +1,61 @@
+
+ RUN  v4.1.8 /private/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/t1106-baseline-q5rgp36w/frontend
+
+(node:16701) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/intelligence/intelligence-workbench.test.tsx (61 tests | 3 failed | 54 skipped) 5945ms
+     × [T-1022] 改写阶段暂时失败保留已有结果并由原任务自动恢复 1206ms
+     × [T-744] 成功但未采纳 时可直接重新生成改写稿，活动任务期间旧稿只读且不可误采纳 765ms
+     × [T-744] 已采纳且下游选题已淘汰 时可直接重新生成改写稿，活动任务期间旧稿只读且不可误采纳 483ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/intelligence/intelligence-workbench.test.tsx > T-482 内容雷达工作区 > [T-1022] 改写阶段暂时失败保留已有结果并由原任务自动恢复
+Error: expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <button
+  class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 w-full"
+  data-slot="button"
+  disabled=""
+  type="button"
+>
+  确认写入选题池
+</button> instead
+ ❯ src/features/intelligence/intelligence-workbench.test.tsx:2920:67
+    2918|     ).toBeInTheDocument();
+    2919|     expect(screen.queryByRole("button", { name: "重试生成选题卡" })).not.toBe…
+    2920|     expect(screen.queryByRole("button", { name: "确认写入选题池" })).not.toBe…
+       |                                                                   ^
+    2921|
+    2922|     expect(stub.previewTopic).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/features/intelligence/intelligence-workbench.test.tsx > T-482 内容雷达工作区 > [T-744] 成功但未采纳 时可直接重新生成改写稿，活动任务期间旧稿只读且不可误采纳
+ FAIL  src/features/intelligence/intelligence-workbench.test.tsx > T-482 内容雷达工作区 > [T-744] 已采纳且下游选题已淘汰 时可直接重新生成改写稿，活动任务期间旧稿只读且不可误采纳
+Error: expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <button
+  class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 w-full"
+  data-slot="button"
+  disabled=""
+  type="button"
+>
+  确认写入选题池
+</button> instead
+ ❯ src/features/intelligence/intelligence-workbench.test.tsx:3068:13
+    3066|       expect(
+    3067|         screen.queryByRole("button", { name: "确认写入选题池" }),
+    3068|       ).not.toBeInTheDocument();
+       |             ^
+    3069|       expect(screen.getByLabelText("选题候选标题")).toBeDisabled();
+    3070|       expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 4 passed | 54 skipped (61)
+   Start at  12:46:17
+   Duration  26.34s (transform 8.11s, setup 959ms, import 13.29s, tests 5.94s, environment 4.92s)
+

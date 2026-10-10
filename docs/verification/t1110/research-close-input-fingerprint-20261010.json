@@ -1,0 +1,15 @@
+{
+  "schema": "t1110-close-input-fingerprint/v1",
+  "fullValidationObservedAt": "2026-10-10T03:47:47.251Z",
+  "fullValidationSha256": "2a13bacebc99f762d269848510c4f2f412fc7838a87f326d5e596bedc51bb3fd",
+  "openSha256": "cdd51a96cca098f547217fe6aee8d28a286f808b039b9dc5ce037700b696c065",
+  "cardSha256": "445a6df493fedc352c0e8c4f5f35dee5e059ba91598161f2567b6e4f700bebbf",
+  "inputCount": 22,
+  "sortedInputSha256": "5c6b74abcd304de379f640739c607e62fef882980a8c95530d63636516a53c00",
+  "canonicalMethod": "SHA256(UTF8(JSON.stringify(sorted inputSha256 entries)))",
+  "currentInputMismatches": [],
+  "outputsVerified": true,
+  "realCommandsRunByThisAgent": false,
+  "independentProbes": "/tmp/t1110-close-final-fixtures-z0wzq8nc/summary.json",
+  "vendorResearchGateSha256": "75203cb538a65b776ee1b75db08b4335b4cbb29fd9e829792565f669891d9ab6"
+}

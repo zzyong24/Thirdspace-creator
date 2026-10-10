@@ -1,0 +1,4 @@
+{"schema":"t1110-identity-probe/v1","at":"2026-10-10T04:46:10.793Z","attemptId":"collection-db52c710-52","event":"profile-authorized-and-acquired"}
+{"schema":"t1110-identity-probe/v1","at":"2026-10-10T04:54:23.351Z","attemptId":"collection-db52c710-52","event":"diagnostic","diagnostic":{"platform":"wechatVideo","stage":"readIdentity","identityStep":"identityFields","code":"IDENTITY_MISSING","exceptionName":"WechatBrowserSourceError"}}
+{"schema":"t1110-identity-probe/v1","at":"2026-10-10T04:54:23.413Z","attemptId":"collection-db52c710-52","event":"physicalStopConfirmed"}
+{"schema":"t1110-identity-probe/v1","at":"2026-10-10T04:54:23.524Z","attemptId":"collection-db52c710-52","event":"identityRejected"}

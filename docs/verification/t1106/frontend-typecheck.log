@@ -1,0 +1,10 @@
+
+> creatoros-frontend@1.2.0 typecheck /Users/zyongzhu/.codex/worktrees/canvas-binding-fixes/Thirdspace-creator/frontend
+> next typegen && tsc --noEmit
+
+Generating route types...
+✓ Types generated successfully
+src/features/intelligence/intelligence-workbench.test.tsx(1679,5): error TS2322: Type 'Mock<() => Promise<unknown>>' is not assignable to type '(input: { sourceId: string; idempotencyKey: string; }) => Promise<StartRunResult>'.
+  Type 'Promise<unknown>' is not assignable to type 'Promise<StartRunResult>'.
+    Type 'unknown' is not assignable to type 'StartRunResult'.
+ ELIFECYCLE  Command failed with exit code 2.

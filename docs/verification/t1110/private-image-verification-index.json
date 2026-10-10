@@ -1,0 +1,73 @@
+{
+  "evidence": [
+    {
+      "path": "docs/verification/t1110/private-image-root-red.log",
+      "sha256": "eb52378d0faba8c9b0bdf53935108e7c88a87242f7ab39dd6002d6ebe51b6abe",
+      "scope": "生产前root实际3FAIL/104SKIP/107",
+      "toolExitCode": 1
+    },
+    {
+      "path": "docs/verification/t1110/private-cleanup-root-invalid-filter.log",
+      "sha256": "6b76be1f351a5d0e1db074ecd59e66f9c56e195aac1774f02b0a915cc61e79cd",
+      "scope": "错误filter全108SKIP；无行为执行，不作RED/PASS",
+      "toolExitCode": 0
+    },
+    {
+      "path": "docs/verification/t1110/private-cleanup-root-physical-red.log",
+      "sha256": "e1c7d6b0ef44206a537660503de0725089af5bb754f02cc2137813443cd0121d",
+      "scope": "已能真实生成图的原私图source上瞬时EIO残留实际1FAIL/107SKIP/108",
+      "toolExitCode": 1
+    },
+    {
+      "path": "docs/verification/t1110/private-image-root-green.log",
+      "sha256": "5bc3524ba715166bebdecc643a41d5b17690389f8929fe2858b9f07dca4986d1",
+      "scope": "最终根树三文件108PASS，retry0/maxWorkers1",
+      "toolExitCode": 0
+    },
+    {
+      "path": "docs/verification/t1110/private-image-root-worker-type.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "scope": "实际完整worker type exit0",
+      "toolExitCode": 0
+    },
+    {
+      "path": "docs/verification/t1110/private-image-root-frontend-type.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "scope": "实际完整frontend type exit0",
+      "toolExitCode": 0
+    },
+    {
+      "path": "docs/verification/t1110/private-image-initial-review.md",
+      "sha256": "9c5c8f6947b6f5afaa44b0793169692f1553631987fd09756c0d073bc841bbce",
+      "scope": "原独评具体清理缺口保留，未签PASS"
+    },
+    {
+      "path": "docs/verification/t1110/private-cleanup-independent-review.md",
+      "sha256": "d44bae84c6e6a3cf288a49b449daead71373cc10d55780dfc18f2247fcbfaf6e",
+      "scope": "修正独评；不代签root TDD/真人"
+    },
+    {
+      "path": "docs/verification/t1110/origin-network-author-audit.md",
+      "sha256": "7a36dba4000412559e75d73125d0d530ab2a0b3c6291b59a68befa5df86efb39",
+      "scope": "QA修复作者只读依据；不充独立review/页面PASS"
+    }
+  ],
+  "red": {
+    "failed": 3,
+    "skipped": 104,
+    "total": 107
+  },
+  "cleanupPhysicalRed": {
+    "failed": 1,
+    "skipped": 107,
+    "total": 108
+  },
+  "green": {
+    "passed": 108,
+    "files": 3,
+    "retry": 0
+  },
+  "productionApplied": true,
+  "browserProof": false,
+  "scope": "受信默认关闭worker私有截图；同原signal/end、只已核身份视频号prepare缺标签，文件清理有有限重试；OS永久故障仍需root私目录收尾；普通失败/业务提交/停止权不变"
+}

@@ -1,0 +1,115 @@
+diff --git a/ai-worker/src/runtime/platform/wechat-browser-source.ts b/ai-worker/src/runtime/platform/wechat-browser-source.ts
+--- a/ai-worker/src/runtime/platform/wechat-browser-source.ts
++++ b/ai-worker/src/runtime/platform/wechat-browser-source.ts
+@@ -11,7 +11,8 @@
+ 
+ export type WechatCreatorPlatform='wechatOfficial'|'wechatVideo';
+ export type WechatSectionObservation={exactTabCount:number;visibleTabCount:number;frameElementVisible:boolean;documentReadyState:'loading'|'interactive'|'complete';bodyTextLength:number};
+-export type WechatBrowserDiagnostic={platform:WechatCreatorPlatform;stage:'openProfile'|'navigate'|'readIdentity'|'prepare'|'download'|'submit';kind?:NativeReportKind;code:string;exceptionName:string;failureKind?:'NAVIGATION_ABORTED'|'CONNECTION_RESET'|'TUNNEL_CONNECTION_FAILED'|'TARGET_CLOSED';observation?:WechatSectionObservation};
++export type WechatIdentityStep='loginProbe'|'identityNavigation'|'identityFields'|'identityRead';
++export type WechatBrowserDiagnostic={platform:WechatCreatorPlatform;stage:'openProfile'|'navigate'|'readIdentity'|'prepare'|'download'|'submit';kind?:NativeReportKind;identityStep?:WechatIdentityStep;code:string;exceptionName:string;failureKind?:'NAVIGATION_ABORTED'|'CONNECTION_RESET'|'TUNNEL_CONNECTION_FAILED'|'TARGET_CLOSED'|'EVALUATION_CONTEXT_DESTROYED'|'JAVASCRIPT_EVALUATION_FAILED';observation?:WechatSectionObservation};
+ export type WechatBrowserControls={signal?:AbortSignal;deadlineAt?:string|null;timeoutMs?:number;onStopped?:()=>Promise<void>;onStopUnconfirmed?:(retry:()=>Promise<void>)=>void;onDiagnostic?:(event:WechatBrowserDiagnostic)=>void};
+ export type WechatNativeDownload={kind:NativeReportKind;bytes:Uint8Array;filename:string;sourcePath:NativeReportPayload['sourcePath'];selection:NativeReportPayload['selection'];expectedRows?:number};
+ export type WechatCreatorIdentity={platformIdentity:string;displayName:string;source:string};
+@@ -45,7 +46,8 @@
+ // SEMANTIC_BOUNDARY_ALLOW: 固定错误协议与诊断脱敏，不推断内容或登录状态。
+ const diagnosticCodes=new Set(['BROWSER_OPERATION_FAILED','BROWSER_STOP_UNCONFIRMED','DOWNLOAD_EMPTY','DOWNLOAD_FAILED','EXECUTION_DEADLINE_EXCEEDED','EXECUTION_DEADLINE_INVALID','EXECUTION_TIMEOUT_INVALID','FILENAME_INVALID','FILENAME_MISSING','IDENTITY_MISSING','ENTRY_NOT_READY','FIELDS_NOT_READY','IDENTITY_SOURCE_INVALID','IDENTITY_WITNESS_MISSING','LOGIN_REQUIRED','REPORT_LINK_MISSING','REPORT_LINK_AMBIGUOUS','REPORT_NOT_READY','REPORT_PAGE_MISSING','REPORT_SECTION_MISSING','REPORT_SECTION_AMBIGUOUS','REPORT_PLATFORM_MISMATCH','REPORT_TOO_LARGE','REPORT_WINDOW_INVALID','REPORT_WINDOW_MISSING','REPORT_WITNESS_MISSING','REPORT_RESPONSE_INVALID','SOURCE_URL_INVALID','WRONG_PLATFORM_IDENTITY']);
+ const diagnosticNames=new Set(['Error','TimeoutError','TypeError','ReferenceError','SyntaxError','WechatBrowserSourceError']);
+-type Trace=Pick<WechatBrowserDiagnostic,'stage'|'kind'>;
++type Trace=Pick<WechatBrowserDiagnostic,'stage'|'kind'|'identityStep'>;
++const identitySteps=new Set<WechatIdentityStep>(['loginProbe','identityNavigation','identityFields','identityRead']);
+ function protocolFailure(error:unknown):WechatBrowserDiagnostic['failureKind']{
+  if(!(error instanceof Error))return undefined;
+  // 固定Chromium/Playwright协议分类只帮助查错，不据此推断Cookie、账号或采集状态。
+@@ -53,6 +55,8 @@
+  if(error.message.includes('net::ERR_CONNECTION_RESET'))return 'CONNECTION_RESET';
+  if(error.message.includes('net::ERR_TUNNEL_CONNECTION_FAILED'))return 'TUNNEL_CONNECTION_FAILED';
+  if(error.message.includes('Target page, context or browser has been closed'))return 'TARGET_CLOSED';
++ if(/^(?:page|frame)\.evaluate(?:Handle)?: Execution context was destroyed(?:,|\.|$)/.test(error.message))return 'EVALUATION_CONTEXT_DESTROYED';
++ if(/^(?:page|frame)\.evaluate(?:Handle)?: (?:EvalError|RangeError|ReferenceError|SyntaxError|TypeError|URIError|Error):/.test(error.message))return 'JAVASCRIPT_EVALUATION_FAILED';
+  return undefined;
+ }
+ function sectionObservation(value:unknown):WechatSectionObservation|undefined{
+@@ -64,10 +68,14 @@
+  return {exactTabCount,visibleTabCount,frameElementVisible,documentReadyState,bodyTextLength};
+ }
+ function emitDiagnostic(controls:WechatBrowserControls,platform:WechatCreatorPlatform,trace:Trace,error:unknown){
+- try{const failureKind=protocolFailure(error),observation=platform==='wechatVideo'&&trace.stage==='prepare'&&trace.kind&&kinds.wechatVideo.includes(trace.kind)&&error instanceof WechatBrowserSourceError&&error.code==='REPORT_SECTION_MISSING'?sectionObservation(error.observation):undefined;controls.onDiagnostic?.({platform,...trace,code:error instanceof WechatBrowserSourceError&&diagnosticCodes.has(error.code)?error.code:'BROWSER_OPERATION_FAILED',exceptionName:error instanceof Error&&diagnosticNames.has(error.name)?error.name:'UnknownError',...(failureKind?{failureKind}:{}),...(observation?{observation}:{})});}catch{/* 诊断端口不能影响原错误、关闭或宿主停止确认。 */}
++ try{
++  const failureKind=protocolFailure(error),identityStep=trace.stage==='readIdentity'&&trace.identityStep&&identitySteps.has(trace.identityStep)?trace.identityStep:undefined;
++  const observation=platform==='wechatVideo'&&trace.stage==='prepare'&&trace.kind&&kinds.wechatVideo.includes(trace.kind)&&error instanceof WechatBrowserSourceError&&error.code==='REPORT_SECTION_MISSING'?sectionObservation(error.observation):undefined;
++  controls.onDiagnostic?.({platform,stage:trace.stage,...(trace.kind?{kind:trace.kind}:{}),...(identityStep?{identityStep}:{}),code:error instanceof WechatBrowserSourceError&&diagnosticCodes.has(error.code)?error.code:'BROWSER_OPERATION_FAILED',exceptionName:error instanceof Error&&diagnosticNames.has(error.name)?error.name:'UnknownError',...(failureKind?{failureKind}:{}),...(observation?{observation}:{})});
++ }catch{/* 诊断端口不能影响原错误、关闭或宿主停止确认。 */}
+ }
+ 
+-export interface WechatOperationControls{signal:AbortSignal;timeoutMs(requested?:number):number}
++export interface WechatOperationControls{signal:AbortSignal;timeoutMs(requested?:number):number;/** 内部固定诊断标记；不接受URL、正文或身份，不参与运行判断。 */onIdentityStep?:(step:'identityNavigation'|'identityFields')=>void}
+ /** 内部受信端口：只能读取普通账号信息页真实stable ID，不接受公开调用者assert的ID。
+  * 宿主装配已实测的普通页reader；默认缺失仍失败，不猜uin/session或昵称。
+  */
+@@ -282,9 +290,13 @@
+    if(context)await closeProfile(context,managed);
+   }
+  }
+- async function identity(page:Page,platform:WechatCreatorPlatform,op:WechatOperationControls,expected?:string,login=false):Promise<WechatCreatorIdentity>{
+-  if(!login&&await deps.identityWitness!.isLoggedOut(page,platform,op))return fail('LOGIN_REQUIRED','微信后台需要本人重新登录');
+-  const observed=await deps.identityWitness!.read(page,platform,op);op.signal.throwIfAborted();
++ async function identity(page:Page,platform:WechatCreatorPlatform,op:WechatOperationControls,trace:Trace,expected?:string,login=false):Promise<WechatCreatorIdentity>{
++  if(!login){trace.identityStep='loginProbe';if(await deps.identityWitness!.isLoggedOut(page,platform,op))return fail('LOGIN_REQUIRED','微信后台需要本人重新登录');}
++  trace.identityStep='identityRead';let acceptingStep=true;
++  const identityControls:WechatOperationControls={...op,onIdentityStep:step=>{if(acceptingStep&&!op.signal.aborted&&trace.stage==='readIdentity'&&(step==='identityNavigation'||step==='identityFields'))trace.identityStep=step;}};
++  let observed:Awaited<ReturnType<WechatIdentityWitness['read']>>;
++  try{observed=await deps.identityWitness!.read(page,platform,identityControls);}finally{acceptingStep=false;}
++  op.signal.throwIfAborted();
+   officialUrl(page.url(),origins[platform],platform);
+   if(!observed||observed.platform!==platform||!observed.platformIdentity.trim()||!observed.displayName.trim())return fail('IDENTITY_MISSING','未读到普通账号信息页的真实稳定身份');
+   if(!/^\/(?!\/)[^?#\x00-\x1f]*$/.test(observed.sourcePath))return fail('IDENTITY_SOURCE_INVALID','稳定身份来源必须是脱敏普通账号信息页面');
+@@ -294,13 +306,13 @@
+  return {
+   /** 宿主仅在实际身份和报表witness均装配时开放真实扫码/同步能力。 */
+   configured:Boolean(deps.identityWitness&&deps.reportWitness),
+-  login(platform:WechatCreatorPlatform,directory:string,controls:WechatBrowserControls={}):Promise<WechatCreatorIdentity>{return withProfile(platform,directory,false,controls,[STARTUP_BUDGET_MS,120000,...IDENTITY_READER_BUDGETS[platform],120000],(_context,page,op,trace)=>{trace.stage='readIdentity';return identity(page,platform,op,undefined,true);});},
+-  readIdentity(platform:WechatCreatorPlatform,directory:string,expectedIdentity:string,controls:WechatBrowserControls={}):Promise<WechatCreatorIdentity>{if(!expectedIdentity.trim())return rejectBeforeOpen(controls,new WechatBrowserSourceError('IDENTITY_MISSING','原绑定缺少稳定身份'));return withProfile(platform,directory,true,controls,[STARTUP_BUDGET_MS,120000,...IDENTITY_READER_BUDGETS[platform],120000],(_context,page,op,trace)=>{trace.stage='readIdentity';return identity(page,platform,op,expectedIdentity);});},
++  login(platform:WechatCreatorPlatform,directory:string,controls:WechatBrowserControls={}):Promise<WechatCreatorIdentity>{return withProfile(platform,directory,false,controls,[STARTUP_BUDGET_MS,120000,...IDENTITY_READER_BUDGETS[platform],120000],(_context,page,op,trace)=>{trace.stage='readIdentity';return identity(page,platform,op,trace,undefined,true);});},
++  readIdentity(platform:WechatCreatorPlatform,directory:string,expectedIdentity:string,controls:WechatBrowserControls={}):Promise<WechatCreatorIdentity>{if(!expectedIdentity.trim())return rejectBeforeOpen(controls,new WechatBrowserSourceError('IDENTITY_MISSING','原绑定缺少稳定身份'));return withProfile(platform,directory,true,controls,[STARTUP_BUDGET_MS,120000,...IDENTITY_READER_BUDGETS[platform],120000],(_context,page,op,trace)=>{trace.stage='readIdentity';return identity(page,platform,op,trace,expectedIdentity);});},
+   async collectNativeReports(platform:WechatCreatorPlatform,directory:string,expectedIdentity:string,controls:WechatBrowserControls={},onReport?:(report:WechatNativeDownload)=>Promise<void>):Promise<WechatNativeDownload[]>{
+    if(!expectedIdentity.trim())return rejectBeforeOpen(controls,new WechatBrowserSourceError('IDENTITY_MISSING','原绑定缺少稳定身份'));
+    // 视频号菜单最多五段替代原一次goto；同根观察并入原标签观察，另留一次失败probe余量。原持久deadline仍裁剪整链。
+    return withProfile(platform,directory,true,controls,[STARTUP_BUDGET_MS,120000,...IDENTITY_READER_BUDGETS[platform],...kinds[platform].flatMap(()=>REPORT_STAGE_BUDGETS[platform]),120000],async(context,page,op,trace)=>{
+-    trace.stage='readIdentity';await identity(page,platform,op,expectedIdentity);if(!deps.reportWitness)return fail('REPORT_WITNESS_MISSING','尚未核实原生报表的页面选择与就绪观察');
++    trace.stage='readIdentity';await identity(page,platform,op,trace,expectedIdentity);if(!deps.reportWitness)return fail('REPORT_WITNESS_MISSING','尚未核实原生报表的页面选择与就绪观察');
+     const reports:WechatNativeDownload[]=[];
+     for(const kind of kinds[platform]){
+      op.signal.throwIfAborted();
+diff --git a/ai-worker/src/runtime/platform/wechat-dom-witness.ts b/ai-worker/src/runtime/platform/wechat-dom-witness.ts
+--- a/ai-worker/src/runtime/platform/wechat-dom-witness.ts
++++ b/ai-worker/src/runtime/platform/wechat-dom-witness.ts
+@@ -46,6 +46,9 @@
+   })]);
+   controls.signal.throwIfAborted();controls.timeoutMs(120000);return observation;
+  }finally{if(timer)clearTimeout(timer);if(onAbort)controls.signal.removeEventListener('abort',onAbort);}
++}
++function markIdentityStep(controls:WechatOperationControls,step:'identityNavigation'|'identityFields'){
++ try{controls.onIdentityStep?.(step);}catch{/* 内部诊断回调错误不能改变原身份、导航或期限。 */}
+ }
+ export async function readWechatIdentityDom(page:Page,platform:WechatCreatorPlatform){
+  const url=nativeUrl(page.url(),origins[platform],platform);
+@@ -160,8 +163,9 @@
+    });
+   },
+   async read(page,platform,controls){
+-   if(platform==='wechatVideo')await page.goto(origins[platform]+'/platform',{waitUntil:'domcontentloaded',timeout:controls.timeoutMs()});
++   if(platform==='wechatVideo'){markIdentityStep(controls,'identityNavigation');await page.goto(origins[platform]+'/platform',{waitUntil:'domcontentloaded',timeout:controls.timeoutMs()});}
+    else if(nativeUrl(page.url(),origins[platform],platform).pathname!=='/cgi-bin/settingpage'){
++    markIdentityStep(controls,'identityNavigation');
+     const href=await observe(controls,async()=>{
+      nativeUrl(page.url(),origins[platform],platform);
+      const hrefs=await page.locator('a[href]').evaluateAll(nodes=>nodes.map(node=>node.getAttribute('href')).filter((v):v is string=>!!v));
+@@ -170,6 +174,7 @@
+     },'ENTRY_NOT_READY',480000);
+     await page.goto(href,{waitUntil:'domcontentloaded',timeout:controls.timeoutMs()});
+    }
++   markIdentityStep(controls,'identityFields');
+    return observe(controls,()=>readWechatIdentityDom(page,platform),platform==='wechatOfficial'?'FIELDS_NOT_READY':'IDENTITY_MISSING',480000);
+   },
+  };

@@ -1,0 +1,53 @@
+{
+  "schema": "t1110-research-experiment-result/v1",
+  "experiment": "EXP-1",
+  "sourceCommit": "69ac739d8e355037eb7e3a8a9e3eb1249dfd0361",
+  "candidateSha256": "ded9ba42304cbd8f4c617a74e00a794b1870ff76958e6f31cef2163a4c03f0fd",
+  "instrumentedSha256": "4937c08b3a94b6a0a1abf9dd2b0f94edf2d6a95b650e6ac42159cdee0042a84d",
+  "actualPublicTerminal": {
+    "http": 200,
+    "attemptId": "collection-1a160d69-49",
+    "accountId": "acct-3eba3525-70",
+    "capability": "nativeReports",
+    "status": "cancelled",
+    "generation": 2,
+    "committedPages": 0,
+    "completeCatalogGeneration": null,
+    "reasonCode": "CANCELLED",
+    "startedAt": "2026-10-09T16:58:13.744Z",
+    "updatedAt": "2026-10-09T17:04:56.705Z"
+  },
+  "diagnostic": {
+    "platform": "wechatVideo",
+    "stage": "prepare",
+    "kind": "channelsDaily",
+    "code": "REPORT_SECTION_MISSING",
+    "exceptionName": "WechatBrowserSourceError",
+    "observation": {
+      "exactTabCount": 0,
+      "visibleTabCount": 0,
+      "frameElementVisible": false,
+      "documentReadyState": "complete",
+      "bodyTextLength": 162
+    },
+    "privateImageStatus": "SKIPPED_CURRENT_PATH"
+  },
+  "readyMarkerObserved": false,
+  "downloadOrSubmitObserved": false,
+  "downloadAndSubmitCodeStopped": true,
+  "pngCount": 0,
+  "partCount": 0,
+  "interpretation": "当前官方origin/本次固定path的前或后校验不符，未证明是哪一项及拒绝时点。不是截图或保存函数失败；不能声称截图未执行或Cookie掉线。",
+  "naturalTerminal": "未得到自然收尾证据；诊断后仍running，显式取消了本次研究intent",
+  "stopEvidence": {
+    "ownedCandidateNextOsCount": 0,
+    "ownedProfileChromeApplicationCount": 0,
+    "formalProfileReleaseReceipt": "unknown-before-next-checkout",
+    "candidateServerStop": "实际SIGTERM后OS退出；不代签guard/onStopped链"
+  },
+  "invalidObservation": {
+    "previousNodeEvalCount": 1,
+    "reason": "node -e自身命令包含筛选字串，计数无效；后以实际Chrome应用command前缀核0，不补拍首采样"
+  },
+  "productionApplied": false
+}

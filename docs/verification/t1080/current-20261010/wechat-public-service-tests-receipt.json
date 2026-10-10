@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "pnpm",
+    "-C",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/application/collection/wechat-native-collector.test.ts",
+    "src/modules/scheduling/private-collector-wechat-admission.test.ts",
+    "--retry=0",
+    "--no-file-parallelism",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T09:01:43.220721+00:00",
+  "finishedAt": "2026-10-10T09:01:49.603495+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 6.382596291019581,
+  "logSha256": "9ce852f5ac4679141e33bc7fc17b431539caefb9676042bb17ac7498f1674e66"
+}

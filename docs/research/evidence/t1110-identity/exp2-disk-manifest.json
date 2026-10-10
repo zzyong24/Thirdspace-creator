@@ -1,0 +1,39 @@
+{
+  "preparedAt": "2026-10-10T04:41:15.054Z",
+  "repo": "/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator",
+  "shadow": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1110-shadow-caV4uV/source",
+  "experiment": "EXP-2 planned not executed",
+  "files": [
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+      "productionSha256": "f172f920fefc08a2c00d39e753eda97a0e0391369bc7064f60d2c6bd48403d0c",
+      "candidateSha256": "e748b8701e010d2a4cd7109d73bfc2287fed292a4fee2146a5fc9de424f378e2",
+      "researchInstrumentedSha256": "e85b51addfd0d0b84e7d04bf23820c73107db2ae3ec504c77758db43a7b6efe7"
+    },
+    {
+      "path": "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+      "productionSha256": "10d7b940110ffc96316c2687bae539259c2ba22feabebde34a57d12144c1048b",
+      "candidateSha256": "9eedfeca552e4b6d508a9c57b22e0b8e794e57230b078311029198305e5a1025"
+    },
+    {
+      "path": "frontend/src/server/persistence-client.ts",
+      "productionSha256": "ab11053526e4f2a4f71b45fad6e012b5215a1502d4d5124a8e4db4b5d0457dd8",
+      "candidateSha256": "4f9601f699bd8c25b60434eb2522b9bbf53e6897bbc6a5ce6e245f6c05c13448",
+      "change": "only collectReports delegates readIdentity then fixed stop; no reports fixture, no capability/proof alteration"
+    }
+  ],
+  "notes": [
+    "same original dataRoot, no credentials transferred",
+    "public nativeCollector authority and deadline remain",
+    "identity-only stop before report APIs",
+    "candidate GREEN/type NOT_RUN",
+    "fixed SDK booleans additional research-only instrumentation, absent production candidate"
+  ],
+  "instrumentReviewCorrection": {
+    "at": "2026-10-10T04:44:31.335Z",
+    "scope": "仅/tmp仪器，原intent未提交",
+    "issue": "await appendFile可延后原signal/停止链，void写可乱序；诊断console可能抛错",
+    "fix": "无异步I/O依赖；mark/protocol局部try catch，onStopped仍只await原options.onStopped；healthy/activeStop前原signal/deadline复核",
+    "nativeIntentSubmitted": false
+  }
+}

@@ -4,6 +4,16 @@ import type {Page,Frame,Response,BrowserContext,Download,Locator} from '@playwri
 import {describe,it,expect,vi} from 'vitest';
 import {readWechatIdentityDom,readWechatReportDom,readChannelsWorksResponse,createVerifiedWechatDomWitnesses} from './wechat-dom-witness';
 import {createWechatBrowserSource,type WechatOperationControls,WechatBrowserSourceError} from './wechat-browser-source';
+// 旧合法iframe夹具补齐真实父路由和菜单；不改变原标签、日期、响应断言。
+function channelsTestPage(config:Record<string,any>):Page{
+ let current=config.url();const originalLocator=config.locator,originalGoto=config.goto;
+ for(const frame of config.frames())if(!frame.frameElement)frame.frameElement=async()=>({isVisible:async()=>true,dispose:async()=>{}});
+ const page={...config,url:()=>current,goto:async(url:string,options:unknown)=>{current=url;await originalGoto?.(url,options);},
+  locator:(selector:string)=>selector==='wujie-app'?{filter(){return this;},count:async()=>0}:originalLocator(selector),
+  getByText:(text:string)=>({filter(){return this;},count:async()=>1,click:async()=>{if(text==='视频数据')current=channels+'/platform/statistic/post';if(text==='关注者数据')current=channels+'/platform/statistic/follower';}}),
+  waitForURL:async(predicate:(url:URL)=>boolean)=>{expect(predicate(new URL(current))).toBe(true);},
+ };return page as unknown as Page;
+}
 // 普通DOM和原生响应的合成协议夹具；不连接账户、不伪称真人扫码。
 function surface(html:string,url:string){
  const dom=new JSDOM(html,{url,runScripts:'outside-only'});
@@ -77,7 +87,7 @@ describe('T1110 已实测普通DOM协议（合成fixture）',()=>{
   const seven={filter:()=>seven,count:async()=>{expect(tabClicked).toBe(true);return ++sevenReads===1?0:1;},click:async()=>{events.push('7');}};
   const download={filter:()=>download,count:async()=>1};
   const frame={...s.page,locator:(selector:string)=>selector.includes('value="2"')?thirty:seven,getByText:(text:string)=>text==='下载表格'?download:tab} as unknown as Frame;
-  const page={url:()=>channels+'/platform',locator:()=>({evaluateAll:async()=>[]}),goto:async()=>{},frames:()=>[frame]} as unknown as Page;
+  const page=channelsTestPage({url:()=>channels+'/platform',locator:()=>({evaluateAll:async()=>[]}),goto:async()=>{},frames:()=>[frame]});
   const witness=createVerifiedWechatDomWitnesses({now:()=>Date.parse('2026-10-09T04:00:00Z')}).reportWitness;
   const result=await witness.prepare(page,'wechatVideo',kind,controls);
   expect(events).toEqual(['tab','7','30']);expect(tabReads).toBeGreaterThan(1);expect(thirtyReads).toBeGreaterThan(1);expect(sevenReads).toBeGreaterThan(1);
@@ -86,7 +96,7 @@ describe('T1110 已实测普通DOM协议（合成fixture）',()=>{
  it('重复可见报表标签明确拒绝，不点击第一项或继续选日期',async()=>{
   const click=vi.fn(),locator=vi.fn();const tab={filter:()=>tab,count:async()=>2,click};
   const frame={url:()=>channels+'/micro/statistic/post',getByText:()=>tab,locator} as unknown as Frame;
-  const page={url:()=>channels+'/platform',locator:()=>({evaluateAll:async()=>[]}),goto:async()=>{},frames:()=>[frame]} as unknown as Page;
+  const page=channelsTestPage({url:()=>channels+'/platform',locator:()=>({evaluateAll:async()=>[]}),goto:async()=>{},frames:()=>[frame]});
   await expect(createVerifiedWechatDomWitnesses().reportWitness.prepare(page,'wechatVideo','channelsDaily',controls)).rejects.toMatchObject({code:'REPORT_SECTION_AMBIGUOUS'});
   expect(click).not.toHaveBeenCalled();expect(locator).not.toHaveBeenCalled();
  });
@@ -104,7 +114,7 @@ describe('T1110 已实测普通DOM协议（合成fixture）',()=>{
   const off=vi.fn(()=>{listener=undefined;});
   // 此请求在监听前已发出：同窗旧response晚到，不能给这次点击签就绪。
   const earlier=response(1788969600,1791475200,13,{frame});
-  const page={url:()=>channels+'/platform',locator:()=>({evaluateAll:async()=>[]}),goto:async()=>{},frames:()=>[frame],on:(_event:string,fn:Function)=>{listener=fn;},off,waitForResponse:vi.fn((predicate:Function)=>{order.push('listen');return new Promise<Response>(resolve=>{emitThirty=()=>{expect(predicate(earlier)).toBe(false);expect(()=>listener?.({frame:()=>{throw Error('unrelated worker request has no frame');}})).not.toThrow();const fresh=response(1788969600,1791475200,13,{frame});listener?.(fresh.request());expect(predicate(fresh)).toBe(true);resolve(fresh);};});})} as unknown as Page;
+  const page=channelsTestPage({url:()=>channels+'/platform',locator:()=>({evaluateAll:async()=>[]}),goto:async()=>{},frames:()=>[frame],on:(_event:string,fn:Function)=>{listener=fn;},off,waitForResponse:vi.fn((predicate:Function)=>{order.push('listen');return new Promise<Response>(resolve=>{emitThirty=()=>{expect(predicate(earlier)).toBe(false);expect(()=>listener?.({frame:()=>{throw Error('unrelated worker request has no frame');}})).not.toThrow();const fresh=response(1788969600,1791475200,13,{frame});listener?.(fresh.request());expect(predicate(fresh)).toBe(true);resolve(fresh);};});})});
   // 选择后跨上海午夜仍沿本次已冻结的原生请求日期，不重新解释“今天”。
   const now=vi.fn().mockReturnValueOnce(Date.parse('2026-10-09T15:59:00Z')).mockReturnValue(Date.parse('2026-10-09T16:01:00Z'));
   const witness=createVerifiedWechatDomWitnesses({now}).reportWitness;
@@ -127,7 +137,7 @@ describe('T1110 已实测普通DOM协议（合成fixture）',()=>{
    const postDom=surface(html,channels+'/micro/statistic/post'),followerDom=surface(html,channels+'/micro/statistic/follower');
    const frames=[postDom,followerDom].map(s=>({...s.page,locator:()=>locator,getByText:()=>locator})) as unknown as Frame[];
    const main=surface(visible+'<h2 class="finder-nickname">合成本人</h2><span id="finder-uid-copy" class="finder-uniq-id" data-clipboard-text="synthetic-stable-id">synthetic-stable-id</span>',channels+'/platform');
-   const page={url:()=>current,goto:async(url:string)=>{current=url;},evaluate:main.page.evaluate,locator:()=>({evaluateAll:async()=>[]}),frames:()=>frames,on:vi.fn(),off:vi.fn(),waitForResponse:async()=>{entered();return pending;},waitForEvent:async()=>({failure:async()=>null,suggestedFilename:()=> 'fixture.csv',createReadStream:async()=>Readable.from([Buffer.from('明确fixture原生字节')])}) as unknown as Download} as unknown as Page;
+   const page=channelsTestPage({url:()=>current,goto:async(url:string)=>{current=url;},evaluate:main.page.evaluate,locator:()=>({evaluateAll:async()=>[]}),frames:()=>frames,on:vi.fn(),off:vi.fn(),waitForResponse:async()=>{entered();return pending;},waitForEvent:async()=>({failure:async()=>null,suggestedFilename:()=> 'fixture.csv',createReadStream:async()=>Readable.from([Buffer.from('明确fixture原生字节')])}) as unknown as Download});
    const onStopped=vi.fn(async()=>{}),close=vi.fn(async()=>{await onStopped();}),context={pages:()=>[page],close} as unknown as BrowserContext;
    const source=createWechatBrowserSource({...createVerifiedWechatDomWitnesses(),openProfile:async()=>context});
    const controller=new AbortController(),onReport=vi.fn(async()=>{});
@@ -155,7 +165,7 @@ function missingSectionFixture(mode:'ok'|'throw'|'pending'='ok',exactCount=1,fra
  const evaluate=vi.fn(async(fn:Function,arg:unknown)=>{entered();if(mode==='throw')throw Error('Cookie=fixture-private-cookie https://secret.invalid/token /private/profile');if(mode==='pending')return pending;return stats.page.evaluate(fn as never,arg);});
  const frame={url:()=>channels+'/micro/statistic/post',getByText:()=>exact,locator:vi.fn(),frameElement:vi.fn(async()=>handle),evaluate} as unknown as Frame;
  const main=surface(visible+'<h2 class="finder-nickname">合成本人</h2><span id="finder-uid-copy" class="finder-uniq-id" data-clipboard-text="synthetic-stable-id">synthetic-stable-id</span>',channels+'/platform');
- const page={url:()=>current,goto:async(url:string)=>{current=url;},evaluate:main.page.evaluate,locator:()=>({evaluateAll:async()=>[]}),frames:()=>[frame]} as unknown as Page;
+ const page=channelsTestPage({url:()=>current,goto:async(url:string)=>{current=url;},evaluate:main.page.evaluate,locator:()=>({evaluateAll:async()=>[]}),frames:()=>[frame]});
  const close=vi.fn(async()=>{await onStopped();}),context={pages:()=>[page],close} as unknown as BrowserContext;
  const witnesses=createVerifiedWechatDomWitnesses(),source=createWechatBrowserSource({...witnesses,openProfile:async()=>context});
  return {source,witnesses,page,frame,tab,exact,handle,evaluate,close,onStopped,onReport,onDiagnostic,probing,release:(value:unknown)=>release(value)};
@@ -194,10 +204,10 @@ describe('T1110 SECTION_MISSING一次受限失败观察候选',()=>{
  it('合法就绪路径不观察iframe失败快照，不改变原日期选择',async()=>{
   const days=Array.from({length:30},(_,i)=>new Date(Date.parse('2026-09-09T00:00:00Z')+i*86400000).toISOString().slice(0,10));
   const s=surface(visible+'<div class="filter-row"><div class="filter-extra"><a>下载表格</a></div><input value="2" type="radio" checked></div><div class="ant-table-body"><table>'+days.map(day=>'<tr><td>'+day+'</td></tr>').join('')+'</table></div>',channels+'/micro/statistic/post');
-  const locator={count:async()=>1,filter:()=>locator,click:vi.fn()},frameElement=vi.fn();const frame={...s.page,frameElement,locator:()=>locator,getByText:()=>locator} as unknown as Frame;
-  const page={url:()=>channels+'/platform',locator:()=>({evaluateAll:async()=>[]}),goto:async()=>{},frames:()=>[frame]} as unknown as Page;
+  const locator={count:async()=>1,filter:()=>locator,click:vi.fn()},frameElement=vi.fn(async()=>({isVisible:async()=>true,dispose:async()=>{}})),evaluate=vi.fn(s.page.evaluate);const frame={...s.page,evaluate,frameElement,locator:()=>locator,getByText:()=>locator} as unknown as Frame;
+  const page=channelsTestPage({url:()=>channels+'/platform',locator:()=>({evaluateAll:async()=>[]}),goto:async()=>{},frames:()=>[frame]});
   const result=await createVerifiedWechatDomWitnesses({now:()=>Date.parse('2026-10-09T04:00:00Z')}).reportWitness.prepare(page,'wechatVideo','channelsDaily',controls);
-  expect(result.state.selection).toMatchObject({startDate:'2026-09-09',endDate:'2026-10-08'});expect(result.state.dates).toHaveLength(30);expect(frameElement).not.toHaveBeenCalled();
+  expect(result.state.selection).toMatchObject({startDate:'2026-09-09',endDate:'2026-10-08'});expect(result.state.dates).toHaveLength(30);expect(frameElement).toHaveBeenCalledOnce();expect(evaluate).toHaveBeenCalledOnce();expect(evaluate.mock.calls[0]?.[1]).toMatchObject({kind:'channelsDaily'}); // 正常确认可见iframe与报表读取，未运行失败五字段probe。
  });
  it('重复标签没有失败观察，仍不点击不查日期',async()=>{
   const f=missingSectionFixture();vi.mocked(f.tab.count).mockResolvedValue(2);await expect(f.witnesses.reportWitness.prepare(f.page,'wechatVideo','channelsDaily',controls)).rejects.toMatchObject({code:'REPORT_SECTION_AMBIGUOUS'});expect(f.evaluate).not.toHaveBeenCalled();expect(f.frame.frameElement).not.toHaveBeenCalled();expect(f.tab.click).not.toHaveBeenCalled();expect(f.frame.locator).not.toHaveBeenCalled();

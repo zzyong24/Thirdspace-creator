@@ -1,0 +1,52 @@
+{
+  "baseline": "ee79dfc45e417157275bb2c51359de54d476ae26",
+  "evidence": [
+    {
+      "path": "docs/verification/t1110/identity-root-first-partial-red.log",
+      "sha256": "0d19ae58f09129f1844de3d677395e247a2b933d6e9fa0216e0522fb7ce255a1",
+      "toolExitCode": 1,
+      "scope": "首轮误写parser路径，只执行两文件71例；不当完整回归"
+    },
+    {
+      "path": "docs/verification/t1110/identity-root-red.log",
+      "sha256": "738fb3df20f2746b0dae7e95d9bc31fda715f04eb24bc79f879c8a3ba6032cf6",
+      "toolExitCode": 1,
+      "scope": "root生产修改前完整三文件80例，11FAIL/69PASS"
+    },
+    {
+      "path": "docs/verification/t1110/identity-root-green.log",
+      "sha256": "79a45988f8c38fad825eeae7b018d8616d1776252ecd0ba1961324a2533f407c",
+      "toolExitCode": 0,
+      "scope": "root应用生产后完整三文件80PASS，retry0/maxWorkers1"
+    },
+    {
+      "path": "docs/verification/t1110/identity-root-type.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "toolExitCode": 0,
+      "scope": "实际整worker包tsc noEmit exit0"
+    },
+    {
+      "path": "docs/verification/t1110/identity-independent-review.md",
+      "sha256": "b1f93b92b75df83a9c6a01ac9d7ff8b91637ac611f418d52ff68dc02a692ee18",
+      "scope": "独立源码与私有图设计审查，未签真人"
+    },
+    {
+      "path": "docs/verification/t1110/identity-root-timeout.log",
+      "sha256": "d3a162822ce97ace00351c1c8afd448808130d723e8e873451782f415902160d",
+      "toolExitCode": 1,
+      "scope": "完整timeout-policy actual exit1仅原27静态短预算；动态检查各组PASS含执行35例；不称全局全绿"
+    }
+  ],
+  "red": {
+    "failed": 11,
+    "passed": 69,
+    "total": 80
+  },
+  "green": {
+    "passed": 80,
+    "files": 3,
+    "retry": 0
+  },
+  "browserProof": false,
+  "scope": "公众号两段固定内部诊断、按真实reader串行消费者扩充默认预算；不更改公共错误/auth分类，不代签真人/共享guard预检"
+}

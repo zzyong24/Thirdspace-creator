@@ -1,0 +1,39 @@
+{
+  "schema": "t1110-research-host-cleanup/v1",
+  "requestedAt": "2026-10-10T05:01:48.042Z",
+  "researchHostPid": 41516,
+  "terminalAttemptId": "collection-db52c710-52",
+  "physicalStopMarkerAt": "2026-10-10T04:54:23.413Z",
+  "nativeIntentCount": 1,
+  "researchQuotaUsed": 2,
+  "productionSources": {
+    "ai-worker/src/runtime/platform/wechat-browser-source.ts": "f172f920fefc08a2c00d39e753eda97a0e0391369bc7064f60d2c6bd48403d0c",
+    "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "10d7b940110ffc96316c2687bae539259c2ba22feabebde34a57d12144c1048b",
+    "frontend/src/server/persistence-client.ts": "ab11053526e4f2a4f71b45fad6e012b5215a1502d4d5124a8e4db4b5d0457dd8"
+  },
+  "originalDataPreserved": true,
+  "researchHostStoppedAt": "2026-10-10T05:01:49.319Z",
+  "researchHostRemainingProcesses": 0,
+  "restored": {
+    "origin": "http://127.0.0.1:31410",
+    "pid": 45377,
+    "startedAt": "2026-10-10T05:01:49.323Z",
+    "readyAt": "2026-10-10T05:02:10.110Z",
+    "schedulerDisabled": true,
+    "backgroundDriversDisabled": true,
+    "publicReadHttp": [
+      200,
+      200,
+      200,
+      200,
+      200
+    ],
+    "researchStatus": "failed",
+    "originalVideoStatus": "failed",
+    "officialBindingStatus": "failed",
+    "officialAccountId": null,
+    "videoBindingStatus": "succeeded",
+    "reportCount": 0
+  },
+  "completedAt": "2026-10-10T05:02:11.126Z"
+}
