@@ -1,0 +1,32 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/topic-business-adapter.test.ts (12 tests | 1 failed) 22ms
+   × T-1074 新普通聊天、手动四依据和每日准备不再消费已配置网格 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/topic-business-adapter.test.ts > T-1074 新普通聊天、手动四依据和每日准备不再消费已配置网格
+AssertionError: expected '{"version":2,"positioningVersionId":"…' to be '' // Object.is equality
+
+- Expected
++ Received
+
++ {"version":2,"positioningVersionId":"position","config":{"audience":"已确认观众","platform":"","preparationMinutes":240,"audienceGrid":[{"id":"audience:0","text":"历史观众格","evidence":"hypothesis","sourceRefs":[],"version":1,"basis":"","publicQueryAllowed":false}],"industryGrid":[{"id":"industry:0","text":"历史行业格","evidence":"hypothesis","sourceRefs":[],"version":1,"basis":"","publicQueryAllowed":false}],"problems":[],"authorMaterials":[],"gridVersion":1,"audienceCenter":"","industryCenter":"","contextMaterialIds":null,"semanticPairs":[],"editorialPolicy":""},"rejected":[]}
+
+ ❯ src/modules/ai-runtime/topic-business-adapter.test.ts:259:46
+    257|  const business=createChatBusinessGenerationPreparation(deps);
+    258|  const prepared=await business.prepareTopic(ctx,{basis:'positioning'});
+    259|  expect(prepared.facets.audienceTaskContext).toBe('');
+       |                                              ^
+    260|  for(const basis of ['positioning','comments','knowledge','trend']){
+    261|   const frozen=await prepareTopicGenerateContext(ctx,task(basis),deps);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  21:51:30
+   Duration  5.17s (transform 3.10s, setup 0ms, import 4.97s, tests 22ms, environment 0ms)
+

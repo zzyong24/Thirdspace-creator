@@ -402,3 +402,21 @@ describe("knowledge.service — T-092 comment backflow anchors", () => {
     expect(item.sourceType).toBe("manual");
   });
 });
+
+
+describe("资料书架创建目标守卫", () => {
+  it("拒绝不存在和其他账号的文件夹且没有落库", async () => {
+    const foreign = await service.createFolder(ctxA2, {name:"另一账号文件夹"});
+    for(const folderId of ["missing-folder", foreign.id]) {
+      await expect(service.createKnowledge(ctxA,{title:"越界资料",content:"原文",folderId})).rejects.toThrow();
+    }
+    expect(await service.listKnowledge(ctxA)).toHaveLength(0);
+    const own=await service.createFolder(ctxA,{name:"本账号"});
+    expect((await service.createKnowledge(ctxA,{title:"有效资料",content:"完整正文",folderId:own.id})).folderId).toBe(own.id);
+  });
+  it("没有素材读取端口不能盲存assetId，普通手录仍可保存", async () => {
+    await expect(service.createKnowledge(ctxA,{title:"无效原文件",assetId:"missing-asset"})).rejects.toThrow();
+    expect(await service.listKnowledge(ctxA)).toHaveLength(0);
+    expect((await service.createKnowledge(ctxA,{title:"手录",content:"原文"})).assetId).toBeNull();
+  });
+});

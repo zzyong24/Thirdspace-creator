@@ -1,0 +1,8 @@
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/draft-workbench/draft-workbench-data.ts
+  4:10  warning  'client' import from '@/lib/contract-client.server' is restricted. `client` is the canonical-ctx singleton (SSR/test seam only) and leaks the canonical tenant's data. Derive the request ctx and use `createServerClient(session.ctx)` instead. See contract-client.server.ts  no-restricted-imports
+
+/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src/features/knowledge/knowledge-library.tsx
+  35:83  warning  The ref value 'readEpoch.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'readEpoch.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+✖ 2 problems (0 errors, 2 warnings)

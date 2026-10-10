@@ -1,0 +1,19 @@
+{
+  "observedAt": "2026-10-10T08:58:07.786737+00:00",
+  "files": [
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/101d/Thirdspace-creator/docs/assets/orchestrator-loop.html",
+      "preservedPath": "docs/verification/t1080/current-20261010/historical-source/orphan-101d/docs/assets/orchestrator-loop.html",
+      "sha256": "681c732a6d127c644e16597a692d533f2bac01419b3daec718e925097ff98891",
+      "bytes": 37810,
+      "role": "历史原文件；未覆盖当前产品实现；目录删除前等待commit"
+    },
+    {
+      "originalPath": "/Users/zyongzhu/.codex/worktrees/Thirdspace-creator/frontend/src/features/article/doocs-article-editor.tsx",
+      "preservedPath": "docs/verification/t1080/current-20261010/historical-source/orphan-unnamed/frontend/src/features/article/doocs-article-editor.tsx",
+      "sha256": "23934f349877f19daad6fa06b6cd1153650e5b1b4d736ccdef91e0de6547aac9",
+      "bytes": 11124,
+      "role": "历史原文件；未覆盖当前产品实现；目录删除前等待commit"
+    }
+  ]
+}

@@ -249,11 +249,20 @@ it("T-957 助手给子任务的建议不冒充优先用户指令",async()=>{
  expect(prepared.facets.basisContext).not.toContain("本次生成指令");
 });
 
-it('普通对话选题默认消费账号网格，保留策略认可及独立材料范围',async()=>{
+it('T-1074 新普通聊天、手动四依据和每日准备不再消费已配置网格',async()=>{
  const {emptyTopicWorkspaceConfig}=await import('@creatoros/contract');
- const context={version:2,positioningVersionId:'position',rejected:[],config:{...emptyTopicWorkspaceConfig(),audience:'已确认观众',editorialPolicy:'user_approved；认可策略，不认可所有候选'}};
- const business=createChatBusinessGenerationPreparation({...base,topicWorkspace:{getContext:async()=>context},assertProject:async()=>{},readTrend:vi.fn()});
+ const context={version:2,positioningVersionId:'position',rejected:[],config:{...emptyTopicWorkspaceConfig(),audience:'已确认观众',audienceGrid:[{id:'audience:0',text:'历史观众格',evidence:'hypothesis',sourceRefs:[],basis:'',publicQueryAllowed:false}],industryGrid:[{id:'industry:0',text:'历史行业格',evidence:'hypothesis',sourceRefs:[],basis:'',publicQueryAllowed:false}]}};
+ const getContext=vi.fn(async()=>context);
+ const deps={...base,topicWorkspace:{getContext},assertProject:async()=>{},readTrend:vi.fn()};
+ const business=createChatBusinessGenerationPreparation(deps);
  const prepared=await business.prepareTopic(ctx,{basis:'positioning'});
- expect(JSON.parse(prepared.facets.audienceTaskContext!)).toEqual(context);
+ expect(prepared.facets.audienceTaskContext).toBe('');
+ for(const basis of ['positioning','comments','knowledge','trend']){
+  const frozen=await prepareTopicGenerateContext(ctx,task(basis),deps);
+  expect(frozen.audienceTaskContext).toBeUndefined();
+ }
+ const daily=await prepareTopicGenerateContext(ctx,task('positioning'),deps,{mode:'daily'});
+ expect(daily.audienceTaskContext).toBeUndefined();
+ expect(getContext).not.toHaveBeenCalled();
  expect(prepared.facets.sourceReads).toBe('[]');
 });

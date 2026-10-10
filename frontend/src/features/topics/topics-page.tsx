@@ -1,4 +1,3 @@
-import { AudienceTaskWorkspace } from "./audience-task-workspace";
 /**
  * 选题中心 page (选题中心大改 · Slice 2 三栏重构) — the 选题情报 surface.
  *
@@ -243,7 +242,6 @@ export function TopicsView({
 
       {/* [T-242] AI 选题会 带 (一行紧凑排布 ——「手动加餐」定位,不与候选池抢视觉权重)。 */}
       <div className="shrink-0">
-        <AudienceTaskWorkspace />
         <TopicGenerateBand basis={overview.basis} pendingReview={pendingReview} />
       </div>
 

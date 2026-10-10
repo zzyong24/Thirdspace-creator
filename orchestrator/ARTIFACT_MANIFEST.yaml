@@ -64,7 +64,10 @@ stages:
     confirmation_required: false
     artifacts:
       - existing: "frontend/src"
-    notes: "迁移只映射既有成熟产品，不替代后续页面任务的设计与真机验收。"
+      - existing: "docs/features/t1075-knowledge-redesign/RESEARCH.md"
+      - existing: "docs/features/t1075-knowledge-redesign/style-explorer.html"
+      - existing: "docs/verification/t1075/DESIGN_REVIEW.md"
+    notes: "迁移只映射既有成熟产品，不替代后续页面任务的设计与真机验收。T-1075仅完成研究和A/B方向小样，候选待用户选择；未进入生产实现，未独立视觉评分，不继承本行历史passed为新设计PASS。"
 
   "4-build":
     status: "draft"
@@ -72,6 +75,8 @@ stages:
     gate_status: "not-run"
     confirmation_required: false
     artifacts:
+      - existing: "docs/features/t1074-remove-topic-grid.md"
+      - existing: "docs/verification/t1074/REPORT.md"
       - existing: "docs/features/t1022-account-group-workspace.md (原版增补页面约束独立复核PASS[REV:2f179f8d9380]；历史归属迁移待确认，未进入生产实现)"
       - existing: "docs/features/t1022-account-group-workspace/style-explorer.html (现状与用户指定的原版增补预览；A/B退出候选，非产品UI验收PASS)"
       - existing: "backend/src"

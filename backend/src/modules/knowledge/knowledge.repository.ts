@@ -500,6 +500,13 @@ function knowledgeRepository(db:Db,deps:RepoDeps,locked:boolean):KnowledgeReposi
     async create(userId, accountId, input) {
       if(!locked)return create(userId,accountId,repo=>repo.create(userId,accountId,input));
       await assertWritableWorkspace(db,{userId,...workspaceStamp(accountId),requestId:"knowledge-create",source:"user"});
+      if (input.folderId) {
+        const [folder] = await db.select().from(knowledgeFolders).where(and(
+          eq(knowledgeFolders.id, input.folderId), eq(knowledgeFolders.userId, userId),
+          workspaceFilter(knowledgeFolders, accountId), eq(knowledgeFolders.status, "active"),
+        ));
+        if (!folder) throw new OwnershipError("Folder not found");
+      }
       const now = deps.now();
       const itemId = deps.nextId("knowledge");
       const revId = deps.nextId("revision");

@@ -1526,6 +1526,7 @@ async function buildPersistence(): Promise<PersistenceBundle> {
   );
 
   const {knowledge,knowledgeService,search,searchService,knowledgeSearchRuntime,repairSeedTitles}=createKnowledgeApplication(db,deps,{
+    assertAssetReadable:async(c,id)=>{const asset=await assetsService.getAsset(c,id);if(asset.status!=="active")throw new OwnershipError("原文件不可用");return asset;},
     resolveEmbedSpec:c=>resolveEmbedSpec(c),
     embedTexts:(c,spec,texts,signal)=>embedTexts(c,spec,texts,signal),
   });

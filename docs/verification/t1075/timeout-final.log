@@ -1,0 +1,117 @@
+验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node tools/timeout-policy/check.mjs
+{
+  "ok": true,
+  "minimumExecutionMs": 120000,
+  "scannedFiles": 1747,
+  "failures": [],
+  "limits": "静态已知数值及默认回归；动态调用链、库默认、绝对deadline与观察终态由聚焦测试和逐条清单核对"
+}
+验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node --test tools/timeout-policy/check.test.mjs tools/timeout-policy/hyperframes.test.mjs
+✔ detects short request, browser default and abort timer consumers (6.215042ms)
+✔ does not turn polling, sleeps, TTL or shared remaining deadline into execution budgets (1.497958ms)
+✔ accepts normalized defaults and longer outer budget instead of bare numeric replacement (0.659542ms)
+✔ 锁定实际安装的同版本补丁，依赖升级必须重新核对内部等待 (2030.862292ms)
+✔ 实际安装的归一入口保留零值、拒绝非法值并明确覆盖页面默认 (3.969458ms)
+✔ 真实公共CLI拒绝一秒浏览器超时，错误单位为秒 (792.933959ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3188.725292
+验证：pnpm --dir contract exec vitest run tests/timeout-policy.test.ts --retry=0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  23:30:59
+   Duration  461ms (transform 152ms, setup 0ms, import 270ms, tests 6ms, environment 0ms)
+
+验证：pnpm --dir ai-worker exec vitest run src/execution/worker-timeout-policy.test.ts src/runtime/browser/chromium-guard-lifecycle.test.ts --retry=0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  2 passed (2)
+      Tests  20 passed (20)
+   Start at  23:31:01
+   Duration  2.09s (transform 1.05s, setup 0ms, import 1.92s, tests 69ms, environment 0ms)
+
+验证：pnpm --dir backend exec vitest run src/modules/execution/new-execution-budget.test.ts src/modules/execution/run-execution-task.test.ts src/modules/execution/execution-call-ledger.service.test.ts --retry=0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/new-execution-budget.test.ts (2 tests | 1 failed) 7977ms
+   × 新任务通过正式持久入队口冻结至少两分钟期限 5108ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/new-execution-budget.test.ts > 新任务通过正式持久入队口冻结至少两分钟期限
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/modules/execution/new-execution-budget.test.ts:7:1
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 33 passed (34)
+   Start at  23:31:05
+   Duration  23.70s (transform 22.87s, setup 0ms, import 35.00s, tests 17.56s, environment 0ms)
+
+该检查未通过：exit=1
+验证：pnpm --dir frontend exec vitest run src/features/knowledge/knowledge-dump-zone.test.tsx src/features/copilot/chat-thesis-card.test.tsx src/features/draft-workbench/content-direction-actions.test.tsx src/features/draft-workbench/script-review-gate.test.tsx src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts --retry=0
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:2254) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2257) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2253) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2255) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2256) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2258) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  6 passed (6)
+      Tests  67 passed (67)
+   Start at  23:31:29
+   Duration  3.62s (transform 2.59s, setup 3.40s, import 4.81s, tests 1.07s, environment 5.69s)
+
+验证：pnpm --dir mcp-server test tests/cli.test.ts
+
+> @creatoros/mcp-server@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/mcp-server
+> vitest run tests/cli.test.ts
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/mcp-server
+
+
+ Test Files  1 passed (1)
+      Tests  14 passed (14)
+   Start at  23:31:34
+   Duration  1.23s (transform 471ms, setup 0ms, import 824ms, tests 228ms, environment 0ms)
+
+验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node --test tools/windows-closure-rat/render-probe-policy.test.mjs frontend/scripts/desktop/timeout-policy.node.mjs
+✔ 短预算归一，更长不缩短，非法值明确拒绝 (0.853625ms)
+✔ 绝对deadline向内传播，最后剩余不能被floor重新延长 (0.204625ms)
+✔ 页面配置端口收到动作与导航两分钟策略 (0.995958ms)
+✔ 两个build-only消费者统一跳过外部依赖探针，正常验证传入两分钟 (2.612042ms)
+✔ 完整渲染探针无外层短帽子，已更长内层保留且拒绝非法配置 (335.226208ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 505.890291

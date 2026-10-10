@@ -1,0 +1,8 @@
+{
+  "command": "pnpm -C frontend exec vitest run src/features/knowledge/knowledge-library-data.test.ts src/features/draft-workbench/draft-workbench-data.test.ts src/features/topics/topics-interactions.test.tsx --testTimeout=120000 --hookTimeout=120000",
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "sessionId": 3051,
+  "exitCode": 0,
+  "output": "RUN v4.1.8\nTest Files 3 passed (3)\nTests 31 passed (31)\nStart at 16:50:37\nDuration 9.98s (transform 7.98s, setup 1.07s, import 11.78s, tests 572ms, environment 2.17s)\n",
+  "note": "从真实 session 3051 最终输出转录，未使用证据 wrapper；不是新运行也无完整起止时间。"
+}

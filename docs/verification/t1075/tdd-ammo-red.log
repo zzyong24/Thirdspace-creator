@@ -1,0 +1,24 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:66263) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/draft-workbench/draft-workbench-data.test.ts (1 test | 1 failed) 49ms
+     × 超过100条分页保留第101条和原先12条之外的知识 46ms (retry x2)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/draft-workbench/draft-workbench-data.test.ts > 稿面完整资料引用 > 超过100条分页保留第101条和原先12条之外的知识
+ FAIL  src/features/draft-workbench/draft-workbench-data.test.ts > 稿面完整资料引用 > 超过100条分页保留第101条和原先12条之外的知识
+ FAIL  src/features/draft-workbench/draft-workbench-data.test.ts > 稿面完整资料引用 > 超过100条分页保留第101条和原先12条之外的知识
+TypeError: readAmmo is not a function
+ ❯ src/features/draft-workbench/draft-workbench-data.test.ts:8:20
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  22:49:05
+   Duration  13.62s (transform 6.45s, setup 641ms, import 10.20s, tests 49ms, environment 1.72s)

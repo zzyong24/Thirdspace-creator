@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "pnpm",
+    "-C",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/knowledge/knowledge.service.test.ts",
+    "src/modules/knowledge/knowledge.contract.test.ts",
+    "src/modules/knowledge/knowledge.acceptance.test.ts",
+    "src/modules/ai-runtime/topic-business-adapter.test.ts",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T08:56:29.984760+00:00",
+  "finishedAt": "2026-10-10T08:58:10.495250+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 100.51134479098255,
+  "logSha256": "75b6fd12259bf392f82e03dbe027a0a181b6289f0ce8aea292af28d3ebbf14ef"
+}

@@ -1,0 +1,16 @@
+{
+  "baseline_commit": "a3aa81d1",
+  "baseline_method": "TypeScript CompilerHost读取基线已跟踪源码，排除本轮新增文件；不修改工作树",
+  "current_log": "docs/verification/t1075/backend-typecheck.log",
+  "baseline_log": "docs/verification/t1075/backend-typecheck-baseline.log",
+  "current_errors": 15,
+  "baseline_errors": 15,
+  "new_errors": [],
+  "resolved_errors": [],
+  "baseline_diagnostic_log_note": "TypeScript按源码展开泛型差异，计数以顶层诊断行为准",
+  "root_tasks": [
+    "T-1018",
+    "T-1015",
+    "T-916"
+  ]
+}

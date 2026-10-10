@@ -8,7 +8,7 @@ import type {
   KnowledgeRelationRow,
   KnowledgeFolderRow,
 } from "./knowledge.repository";
-import { InvalidTransitionError, ConflictError } from "./knowledge.errors";
+import { InvalidTransitionError, ConflictError, OwnershipError } from "./knowledge.errors";
 
 // [T-092] 从 sourceMetadata 提取评论幂等锚(signalExternalIds 字符串数组;
 // 缺失/形状不符 → [],创建按普通路径走)。
@@ -111,6 +111,7 @@ export interface KnowledgeService {
 
 export function createKnowledgeService(
   repo: KnowledgeRepository,
+  ports: { assertAssetReadable?: (ctx: RequestContext, assetId: string) => Promise<unknown> } = {},
 ): KnowledgeService {
   // [T-332 S2] 号维度断言 + 透传:ctx.accountId 属主已由 resolveRequestContext 校验
   // 可信;每个经 ctx 的入口(读+写)先 requireAccountId(SPEC §4.2:未选号 = 引导态
@@ -168,6 +169,10 @@ export function createKnowledgeService(
 
     async createKnowledge(ctx, input) {
       const accountId = workspaceKey(ctx);
+      if (input.assetId) {
+        if (!ports.assertAssetReadable) throw new OwnershipError("原文件不可访问");
+        await ports.assertAssetReadable(ctx, input.assetId);
+      }
       // [T-092] 回流层幂等(并发兜底):携 signalExternalIds 的 qa 创建,采纳前
       // 再校验一次已回流锚集合——任一锚已入库即拒(同义合并组任一评论已回流 =
       // 整组视为已回流,SPEC §2.3),ConflictError → 409,确认门标注「已入库」跳过。

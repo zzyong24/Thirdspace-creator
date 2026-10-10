@@ -17,8 +17,11 @@
  */
 
 import * as React from "react";
-import { TaskObservationNotice, useTaskObservation } from "@/components/ai/task-observation";
-import {openCopilotLocally} from "@/lib/copilot-navigation";
+import {
+  TaskObservationNotice,
+  useTaskObservation,
+} from "@/components/ai/task-observation";
+import { openCopilotLocally } from "@/lib/copilot-navigation";
 import { useRouter } from "next/navigation";
 import {
   CircleCheck,
@@ -39,17 +42,21 @@ import { ExperienceCaptureLink } from "@/features/experience/experience-interact
 import { type AtomType } from "./knowledge-atom-gate";
 
 // 兼容既有 import 面:确认门与两个纯函数已抽到 knowledge-atom-gate(T-094),原路径再导出。
-export { archiveTitleOf, assignKnowledgeTagsBestEffort } from "./knowledge-atom-gate";
+export {
+  archiveTitleOf,
+  assignKnowledgeTagsBestEffort,
+} from "./knowledge-atom-gate";
 
 // 手动补录 type 下拉 = 四原子 + reference(参考/存档)。旧五枚举录入侧退役(存量兼容仍在契约)。
 type ManualType = AtomType | "reference";
-const MANUAL_TYPE_OPTIONS: ReadonlyArray<{ value: ManualType; label: string }> = [
-  { value: "claim", label: "观点" },
-  { value: "evidence", label: "证据" },
-  { value: "quote", label: "金句" },
-  { value: "qa", label: "观众问题" },
-  { value: "reference", label: "参考" },
-];
+const MANUAL_TYPE_OPTIONS: ReadonlyArray<{ value: ManualType; label: string }> =
+  [
+    { value: "claim", label: "观点" },
+    { value: "evidence", label: "证据" },
+    { value: "quote", label: "金句" },
+    { value: "qa", label: "观众问题" },
+    { value: "reference", label: "参考" },
+  ];
 
 // 文本文件可本地直读；其他文档复用现有上传 + 正文提取链。
 const TEXT_FILE_RE = /\.(md|txt|markdown)$/i;
@@ -86,11 +93,17 @@ async function waitForExtractedText(
   taskId: string,
   pause: () => Promise<boolean>,
   isAlive: () => boolean,
+  reader: typeof client = client,
 ): Promise<string | null> {
   for (let attempt = 0; ; attempt += 1) {
     if (!isAlive()) return null;
-    if (attempt > 0 && attempt % DOCUMENT_EXTRACT_MAX_POLLS === 0 && !await pause()) return null;
-    const asset = (await client.getAsset({
+    if (
+      attempt > 0 &&
+      attempt % DOCUMENT_EXTRACT_MAX_POLLS === 0 &&
+      !(await pause())
+    )
+      return null;
+    const asset = (await reader.getAsset({
       params: { assetId },
       query: undefined,
       body: undefined,
@@ -102,7 +115,9 @@ async function waitForExtractedText(
     const text = asset.extractedText?.trim() ?? "";
     if (asset.extractStatus === "done" && text.length > 0) return text;
     if (asset.extractStatus === "unsupported") {
-      throw new Error("暂不支持解析这个文件格式；原文件已保存在素材库，未加入知识库。");
+      throw new Error(
+        "暂不支持解析这个文件格式；原文件已保存在素材库，未加入知识库。",
+      );
     }
     if (asset.extractStatus === "failed") {
       throw new Error(
@@ -110,7 +125,7 @@ async function waitForExtractedText(
       );
     }
 
-    const task = (await client.getTask({
+    const task = (await reader.getTask({
       params: { taskId },
       query: undefined,
       body: undefined,
@@ -150,7 +165,9 @@ export const DISTILL_GUIDE_PREFILL =
 export function distillCopilotHref(content: string): string {
   const text = content.trim();
   const prefill =
-    text && text.length <= DISTILL_PREFILL_MAX_CHARS ? text : DISTILL_GUIDE_PREFILL;
+    text && text.length <= DISTILL_PREFILL_MAX_CHARS
+      ? text
+      : DISTILL_GUIDE_PREFILL;
   return copilotDeepLink(
     "knowledge-distill",
     undefined,
@@ -167,18 +184,38 @@ const buttonCls =
 const selectCls =
   "h-8 rounded-md border border-border bg-surface px-2 text-[13px] text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40";
 
-export function KnowledgeDumpZone() {
+export function KnowledgeDumpZone({
+  importOnly = false,
+  folderId = null,
+  onSaved,
+  onBusyChange,
+  contractClient = client,
+  disabled = false,
+}: {
+  contractClient?: typeof client;
+  disabled?: boolean;
+  importOnly?: boolean;
+  folderId?: string | null;
+  onSaved?: (id?: string) => void;
+  onBusyChange?: (busy: boolean) => boolean | void;
+} = {}) {
+  const api = contractClient;
   const router = useRouter();
   const observation = useTaskObservation();
   const aliveRef = React.useRef(true);
   React.useEffect(() => {
     aliveRef.current = true;
-    return () => { aliveRef.current = false; };
+    return () => {
+      aliveRef.current = false;
+    };
   }, []);
   const [content, setContent] = React.useState("");
   const [dragActive, setDragActive] = React.useState(false);
-  const [busy, setBusy] = React.useState<"idle" | "saving" | "uploading">("idle");
+  const [busy, setBusy] = React.useState<"idle" | "saving" | "uploading">(
+    "idle",
+  );
   // 内联错误(手动补录/读文件失败落这;非 toast 即逝,原始输入保留 [gate-F2])。
+  const importLock = React.useRef(false);
   const [error, setError] = React.useState<string | null>(null);
   // 手动补录降级入口(最小字段 title + 正文;正文复用倾倒场输入框)。
   const [manualOpen, setManualOpen] = React.useState(false);
@@ -188,28 +225,36 @@ export function KnowledgeDumpZone() {
     React.useState<ImportDialogState | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const queueDocumentFiles = React.useCallback((files: ReadonlyArray<File>) => {
-    const supported = files.filter((file) => SUPPORTED_DOCUMENT_RE.test(file.name));
-    const rejected = files.filter((file) => !SUPPORTED_DOCUMENT_RE.test(file.name));
-    setDragActive(false);
-    if (supported.length === 0) {
-      setError("可导入 PDF、DOCX、Markdown 或 TXT 文件。");
-      return;
-    }
-    setError(
-      rejected.length > 0
-        ? `已选中 ${supported.length} 个可导入文件；${rejected.length} 个不支持的文件已跳过。`
-        : null,
-    );
-    setImportDialog({
-      files: supported,
-      phase: "confirm",
-      completed: 0,
-      succeeded: 0,
-      failures: [],
-      currentFileName: null,
-    });
-  }, []);
+  const queueDocumentFiles = React.useCallback(
+    (files: ReadonlyArray<File>) => {
+      if (disabled || busy !== "idle") return;
+      const supported = files.filter((file) =>
+        SUPPORTED_DOCUMENT_RE.test(file.name),
+      );
+      const rejected = files.filter(
+        (file) => !SUPPORTED_DOCUMENT_RE.test(file.name),
+      );
+      setDragActive(false);
+      if (supported.length === 0) {
+        setError("可导入 PDF、DOCX、Markdown 或 TXT 文件。");
+        return;
+      }
+      setError(
+        rejected.length > 0
+          ? `已选中 ${supported.length} 个可导入文件；${rejected.length} 个不支持的文件已跳过。`
+          : null,
+      );
+      setImportDialog({
+        files: supported,
+        phase: "confirm",
+        completed: 0,
+        succeeded: 0,
+        failures: [],
+        currentFileName: null,
+      });
+    },
+    [disabled, busy],
+  );
 
   const reset = React.useCallback(() => {
     setContent("");
@@ -222,8 +267,8 @@ export function KnowledgeDumpZone() {
   // [T-094] 「AI 蒸馏」→ 深链打开 Copilot(knowledge-distill 隔离桶):原文短则 prefill 带上,
   // 长则带引导话术在对话里粘。query-only href 使用本地历史就地开浮层(不跳页,bug #3 语义)。
   const handleDistill = React.useCallback(() => {
-    const href=distillCopilotHref(content);
-    if(!openCopilotLocally(href))router.push(href);
+    const href = distillCopilotHref(content);
+    if (!openCopilotLocally(href)) router.push(href);
   }, [router, content]);
 
   // 手动补录(不想走 AI / AI 不可用的降级路径):title + type + 正文直接存。
@@ -231,29 +276,56 @@ export function KnowledgeDumpZone() {
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       const title = manualTitle.trim();
-      if (!title || busy !== "idle") return;
+      if (!title || disabled || busy !== "idle") return;
       setBusy("saving");
       setError(null);
       try {
-        await client.createKnowledge({
+        await api.createKnowledge({
           params: undefined,
           query: undefined,
-          body: { title, knowledgeType: manualType, content: content.trim() },
+          body: {
+            title,
+            knowledgeType: manualType,
+            content,
+            ...(folderId ? { folderId } : {}),
+          },
         });
+        if (!aliveRef.current) return;
         reset();
+        onSaved?.();
         router.refresh();
       } catch (err) {
+        if (!aliveRef.current) return;
         setError(describeUserError(err, "存入知识库失败，请重试。"));
       } finally {
-        setBusy("idle");
+        if (aliveRef.current) setBusy("idle");
       }
     },
-    [manualTitle, manualType, busy, content, reset, router],
+    [
+      manualTitle,
+      manualType,
+      busy,
+      content,
+      reset,
+      router,
+      folderId,
+      onSaved,
+      disabled,
+      api,
+    ],
   );
 
   const handleDocumentFiles = React.useCallback(
     async (files: ReadonlyArray<File>) => {
-      if (files.length === 0 || busy !== "idle") return;
+      if (
+        files.length === 0 ||
+        disabled ||
+        busy !== "idle" ||
+        importLock.current
+      )
+        return;
+      if (onBusyChange?.(true) === false) return;
+      importLock.current = true;
       setBusy("uploading");
       setError(null);
       let succeeded = 0;
@@ -284,7 +356,7 @@ export function KnowledgeDumpZone() {
             throw new Error(`「${file.name}」超过 20MB 上限，请拆分后再传。`);
           }
           const mimeType = file.type || "application/octet-stream";
-          const upload = (await client.createUpload({
+          const upload = (await api.createUpload({
             params: undefined,
             query: undefined,
             body: {
@@ -304,9 +376,10 @@ export function KnowledgeDumpZone() {
               headers: { "content-type": mimeType },
               body: file,
             });
-            if (!put.ok) throw new Error(`上传「${file.name}」失败(${put.status})。`);
+            if (!put.ok)
+              throw new Error(`上传「${file.name}」失败(${put.status})。`);
           }
-          const asset = (await client.completeUpload({
+          const asset = (await api.completeUpload({
             params: { uploadId: upload.uploadId },
             query: undefined,
             body: { name: file.name },
@@ -314,14 +387,14 @@ export function KnowledgeDumpZone() {
           const assetId = asset.id || upload.assetId;
           let extractedContent: string;
           if (TEXT_FILE_RE.test(file.name)) {
-            extractedContent = (await readTextFile(file)).trim();
-            if (!extractedContent) {
+            extractedContent = await readTextFile(file);
+            if (!extractedContent.trim()) {
               throw new Error(
                 `「${file.name}」没有可导入的正文；原文件已保存在素材库，未加入知识库。`,
               );
             }
           } else {
-            const task = (await client.createAITask({
+            const task = (await api.createAITask({
               params: undefined,
               query: undefined,
               body: {
@@ -330,12 +403,18 @@ export function KnowledgeDumpZone() {
                 inputData: { assetId, fileName: file.name },
               },
             })) as unknown as { id: string };
-            const text = await waitForExtractedText(assetId, task.id, observation.pause, () => aliveRef.current);
+            const text = await waitForExtractedText(
+              assetId,
+              task.id,
+              observation.pause,
+              () => aliveRef.current,
+              api,
+            );
             if (text === null) return;
             extractedContent = text;
           }
           if (!aliveRef.current) return;
-          await client.createKnowledge({
+          await api.createKnowledge({
             params: undefined,
             query: undefined,
             body: {
@@ -345,7 +424,7 @@ export function KnowledgeDumpZone() {
               sourceType: "import",
               sourceMetadata: { fileName: file.name, mimeType },
               assetId,
-              folderId: null,
+              folderId,
             },
           });
           succeeded += 1;
@@ -377,6 +456,7 @@ export function KnowledgeDumpZone() {
         );
       }
       if (succeeded > 0) {
+        onSaved?.();
         router.refresh();
       }
       setImportDialog({
@@ -387,10 +467,21 @@ export function KnowledgeDumpZone() {
         failures,
         currentFileName: null,
       });
+      importLock.current = false;
+      onBusyChange?.(false);
       setBusy("idle");
       if (fileInputRef.current) fileInputRef.current.value = "";
     },
-    [busy, router, observation.pause],
+    [
+      busy,
+      router,
+      observation.pause,
+      folderId,
+      onSaved,
+      onBusyChange,
+      disabled,
+      api,
+    ],
   );
 
   // 拖放即开始上传；与按钮导入共用 handleDocumentFiles，但省去一次确认点击。
@@ -428,7 +519,9 @@ export function KnowledgeDumpZone() {
           }
         }}
         onDragLeave={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+          if (
+            !event.currentTarget.contains(event.relatedTarget as Node | null)
+          ) {
             setDragActive(false);
           }
         }}
@@ -439,140 +532,158 @@ export function KnowledgeDumpZone() {
           dragActive ? "border-brand bg-brand-soft/30" : "border-border",
         )}
       >
-      <div className="flex items-center gap-2 text-xs text-text-subtle">
-        <Inbox className="size-4 shrink-0" aria-hidden="true" />
-        把笔记、金句、逐字稿整段交给 AI 蒸馏成知识原子 —— 点「AI 蒸馏」在对话里粘原文,采纳后进知识库
-      </div>
-      <textarea
-        data-slot="knowledge-dump-input"
-        aria-label="粘贴文本或 URL，也可拖入 PDF、DOCX、Markdown 或 TXT 文件"
-        placeholder="粘贴文本 / URL，或把 PDF、DOCX、Markdown、TXT 文件拖进这个框…"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        rows={4}
-        className={cn(
-          inputCls,
-          "min-h-24 resize-y",
-          dragActive && "border-brand bg-brand-soft/30",
+        {!importOnly && (
+          <>
+            <div className="flex items-center gap-2 text-xs text-text-subtle">
+              <Inbox className="size-4 shrink-0" aria-hidden="true" />
+              把笔记、金句、逐字稿整段交给 AI 蒸馏成知识原子 —— 点「AI
+              蒸馏」在对话里粘原文,采纳后进知识库
+            </div>
+            <textarea
+              data-slot="knowledge-dump-input"
+              aria-label="粘贴文本或 URL，也可拖入 PDF、DOCX、Markdown 或 TXT 文件"
+              placeholder="粘贴文本 / URL，或把 PDF、DOCX、Markdown、TXT 文件拖进这个框…"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={4}
+              className={cn(
+                inputCls,
+                "min-h-24 resize-y",
+                dragActive && "border-brand bg-brand-soft/30",
+              )}
+            />
+          </>
         )}
-      />
-      {dragActive ? (
-        <div className="pointer-events-none absolute inset-3 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-brand bg-surface/95 text-sm font-medium text-brand shadow-sm">
-          松开即可上传并读取文件内容
-        </div>
-      ) : null}
+        {dragActive ? (
+          <div className="pointer-events-none absolute inset-3 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-brand bg-surface/95 text-sm font-medium text-brand shadow-sm">
+            松开即可上传并读取文件内容
+          </div>
+        ) : null}
 
-      {/* 内联错误(非 toast):读文件/手动补录失败落这,输入保留供重试 [gate-F2]。 */}
-      {error ? (
-        <p
-          data-slot="knowledge-dump-error"
-          role="alert"
-          className="rounded-md border border-destructive/40 bg-destructive/5 px-2.5 py-1.5 text-[12px] text-destructive"
-        >
-          {error}
-        </p>
-      ) : null}
+        {/* 内联错误(非 toast):读文件/手动补录失败落这,输入保留供重试 [gate-F2]。 */}
+        {error ? (
+          <p
+            data-slot="knowledge-dump-error"
+            role="alert"
+            className="rounded-md border border-destructive/40 bg-destructive/5 px-2.5 py-1.5 text-[12px] text-destructive"
+          >
+            {error}
+          </p>
+        ) : null}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          data-slot="knowledge-file-input"
-          accept=".pdf,.docx,.md,.markdown,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/markdown,text/plain"
-          className="sr-only"
-          aria-label="导入 PDF、DOCX 或 Markdown"
-          onChange={(event) => {
-            const files = Array.from(event.target.files ?? []);
-            event.target.value = "";
-            if (files.length === 0) return;
-            queueDocumentFiles(files);
-          }}
-        />
-        <button
-          type="button"
-          data-slot="knowledge-file-import"
-          disabled={busy !== "idle"}
-          onClick={() => fileInputRef.current?.click()}
-          className={cn(
-            buttonCls,
-            "gap-1.5 border border-border bg-surface text-foreground hover:bg-surface-subtle",
-          )}
-        >
-          <FileUp className="size-3.5" aria-hidden="true" />
-          {busy === "uploading" ? "正在导入…" : "导入 PDF / DOCX / Markdown"}
-        </button>
-        <button
-          type="button"
-          data-slot="knowledge-distill"
-          disabled={busy !== "idle"}
-          onClick={handleDistill}
-          className={cn(buttonCls, "gap-1.5 bg-brand text-brand-foreground hover:bg-brand/90")}
-        >
-          <Sparkles className="size-3.5" aria-hidden="true" />
-          AI 蒸馏(打开对话)
-        </button>
-        <button
-          type="button"
-          data-slot="knowledge-manual-entry"
-          aria-expanded={manualOpen}
-          disabled={busy !== "idle"}
-          onClick={() => setManualOpen((prev) => !prev)}
-          className={cn(
-            buttonCls,
-            "border border-border bg-surface text-foreground hover:bg-surface-subtle",
-          )}
-        >
-          手动补录
-        </button>
-        <ExperienceCaptureLink />
-      </div>
-
-      {/* 手动补录降级入口:最小字段 title + type,正文用倾倒场输入。 */}
-      {manualOpen ? (
-        <form
-          data-slot="knowledge-manual-form"
-          onSubmit={(e) => void handleManualSave(e)}
-          className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-surface p-2.5"
-        >
-          <label className="sr-only" htmlFor="knowledge-manual-title">
-            标题
-          </label>
+        <div className="flex flex-wrap items-center gap-2">
           <input
-            id="knowledge-manual-title"
-            data-slot="knowledge-manual-title"
-            type="text"
-            placeholder="标题(正文用上面的输入框)"
-            value={manualTitle}
-            onChange={(e) => setManualTitle(e.target.value)}
-            className={cn(inputCls, "h-8 min-w-0 flex-1 py-0")}
+            ref={fileInputRef}
+            disabled={disabled || busy !== "idle"}
+            type="file"
+            multiple
+            data-slot="knowledge-file-input"
+            accept=".pdf,.docx,.md,.markdown,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/markdown,text/plain"
+            className="sr-only"
+            aria-label="导入 PDF、DOCX 或 Markdown"
+            onChange={(event) => {
+              const files = Array.from(event.target.files ?? []);
+              event.target.value = "";
+              if (files.length === 0) return;
+              queueDocumentFiles(files);
+            }}
           />
-          <label className="sr-only" htmlFor="knowledge-manual-type">
-            类型
-          </label>
-          <select
-            id="knowledge-manual-type"
-            data-slot="knowledge-manual-type"
-            value={manualType}
-            onChange={(e) => setManualType(e.target.value as ManualType)}
-            className={selectCls}
-          >
-            {MANUAL_TYPE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
           <button
-            type="submit"
-            data-slot="knowledge-manual-save"
-            disabled={busy !== "idle" || manualTitle.trim().length === 0}
-            className={cn(buttonCls, "bg-brand text-brand-foreground hover:bg-brand/90")}
+            type="button"
+            data-slot="knowledge-file-import"
+            disabled={disabled || busy !== "idle"}
+            onClick={() => fileInputRef.current?.click()}
+            className={cn(
+              buttonCls,
+              "gap-1.5 border border-border bg-surface text-foreground hover:bg-surface-subtle",
+            )}
           >
-            直接存入
+            <FileUp className="size-3.5" aria-hidden="true" />
+            {busy === "uploading" ? "正在导入…" : "导入 PDF / DOCX / Markdown"}
           </button>
-        </form>
-      ) : null}
+          {!importOnly && (
+            <>
+              <button
+                type="button"
+                data-slot="knowledge-distill"
+                disabled={disabled || busy !== "idle"}
+                onClick={handleDistill}
+                className={cn(
+                  buttonCls,
+                  "gap-1.5 bg-brand text-brand-foreground hover:bg-brand/90",
+                )}
+              >
+                <Sparkles className="size-3.5" aria-hidden="true" />
+                AI 蒸馏(打开对话)
+              </button>
+              <button
+                type="button"
+                data-slot="knowledge-manual-entry"
+                aria-expanded={manualOpen}
+                disabled={disabled || busy !== "idle"}
+                onClick={() => setManualOpen((prev) => !prev)}
+                className={cn(
+                  buttonCls,
+                  "border border-border bg-surface text-foreground hover:bg-surface-subtle",
+                )}
+              >
+                手动补录
+              </button>
+              <ExperienceCaptureLink />
+            </>
+          )}
+        </div>
+
+        {/* 手动补录降级入口:最小字段 title + type,正文用倾倒场输入。 */}
+        {manualOpen ? (
+          <form
+            data-slot="knowledge-manual-form"
+            onSubmit={(e) => void handleManualSave(e)}
+            className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-surface p-2.5"
+          >
+            <label className="sr-only" htmlFor="knowledge-manual-title">
+              标题
+            </label>
+            <input
+              id="knowledge-manual-title"
+              data-slot="knowledge-manual-title"
+              type="text"
+              placeholder="标题(正文用上面的输入框)"
+              value={manualTitle}
+              onChange={(e) => setManualTitle(e.target.value)}
+              className={cn(inputCls, "h-8 min-w-0 flex-1 py-0")}
+            />
+            <label className="sr-only" htmlFor="knowledge-manual-type">
+              类型
+            </label>
+            <select
+              id="knowledge-manual-type"
+              data-slot="knowledge-manual-type"
+              value={manualType}
+              onChange={(e) => setManualType(e.target.value as ManualType)}
+              className={selectCls}
+            >
+              {MANUAL_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              data-slot="knowledge-manual-save"
+              disabled={
+                disabled || busy !== "idle" || manualTitle.trim().length === 0
+              }
+              className={cn(
+                buttonCls,
+                "bg-brand text-brand-foreground hover:bg-brand/90",
+              )}
+            >
+              直接存入
+            </button>
+          </form>
+        ) : null}
       </section>
       {importDialog ? (
         <div
@@ -630,22 +741,28 @@ export function KnowledgeDumpZone() {
                   ))}
                 </ul>
               ) : importDialog.phase === "running" ? (
-                observation.paused ? <p className="text-sm text-muted-foreground">原文件已保存；「{importDialog.currentFileName}」的正文解析尚未返回最终结果。</p> :
-                <div
-                  role="status"
-                  aria-live="polite"
-                  className="flex items-center gap-3 rounded-md bg-brand-soft/50 px-3 py-3 text-sm text-foreground"
-                >
-                  <LoaderCircle
-                    className="size-5 shrink-0 animate-spin text-brand"
-                    aria-hidden="true"
-                  />
-                  <span className="truncate">
-                    {importDialog.currentFileName
-                      ? `正在处理「${importDialog.currentFileName}」`
-                      : "正在收尾…"}
-                  </span>
-                </div>
+                observation.paused ? (
+                  <p className="text-sm text-muted-foreground">
+                    原文件已保存；「{importDialog.currentFileName}
+                    」的正文解析尚未返回最终结果。
+                  </p>
+                ) : (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="flex items-center gap-3 rounded-md bg-brand-soft/50 px-3 py-3 text-sm text-foreground"
+                  >
+                    <LoaderCircle
+                      className="size-5 shrink-0 animate-spin text-brand"
+                      aria-hidden="true"
+                    />
+                    <span className="truncate">
+                      {importDialog.currentFileName
+                        ? `正在处理「${importDialog.currentFileName}」`
+                        : "正在收尾…"}
+                    </span>
+                  </div>
+                )
               ) : (
                 <div className="space-y-3" aria-live="polite">
                   <div className="flex items-center gap-2 text-sm text-success">
@@ -697,6 +814,7 @@ export function KnowledgeDumpZone() {
                   <button
                     type="button"
                     data-slot="knowledge-import-confirm"
+                    disabled={disabled || busy !== "idle"}
                     onClick={() => void handleDocumentFiles(importDialog.files)}
                     className={cn(
                       buttonCls,

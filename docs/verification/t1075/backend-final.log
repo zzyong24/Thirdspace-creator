@@ -1,0 +1,50 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+ ❯ src/modules/knowledge/knowledge.contract.test.ts (13 tests | 13 failed) 63325ms
+     × knowledge.create / list / get → KnowledgeItemResource 18217ms
+     × knowledge.create with atom type + sourceNote → 契约往返 24319ms
+     × knowledge.revisions.create → KnowledgeRevisionResource 4098ms
+     × knowledge.relations.create → KnowledgeRelationResource (numeric strength) 2324ms
+     × knowledge.revisions.list → KnowledgeRevisionResource[] (head first, content readable) 1843ms
+     × knowledge.relations.list → KnowledgeRelationResource[] (numeric strength) 1770ms
+     × empty relations.list still satisfies the list envelope (pageSize ≥ 1) 1732ms
+     × covers all 7 op ids + unknown → UnsupportedOperationError 1382ms
+     × knowledge.relations.listAll → KnowledgeRelationResource[] over the list envelope 922ms
+     × empty relations.listAll still satisfies the list envelope (pageSize ≥ 1) 1337ms
+     × knowledge.create carries sourceType/sourceMetadata through the item resource 2963ms
+     × registry knows the new op id (10 ops total for this module) 1476ms
+     × creates nested folders and moves an imported knowledge document 923ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/knowledge/knowledge.contract.test.ts > knowledge.transport — 7-op contract conformance > knowledge.create / list / get → KnowledgeItemResource
+ FAIL  src/modules/knowledge/knowledge.contract.test.ts > knowledge.transport — 7-op contract conformance > knowledge.create with atom type + sourceNote → 契约往返
+ FAIL  src/modules/knowledge/knowledge.contract.test.ts > knowledge.transport — 7-op contract conformance > knowledge.revisions.create → KnowledgeRevisionResource
+ FAIL  src/modules/knowledge/knowledge.contract.test.ts > knowledge.transport — 7-op contract conformance > knowledge.relations.create → KnowledgeRelationResource (numeric strength)
+ FAIL  src/modules/knowledge/knowledge.contract.test.ts > knowledge.transport — 7-op contract conformance > knowledge.revisions.list → KnowledgeRevisionResource[] (head first, content readable)
+ FAIL  src/modules/knowledge/knowledge.contract.test.ts > knowledge.transport — 7-op contract conformance > knowledge.relations.list → KnowledgeRelationResource[] (numeric strength)
+ FAIL  src/modules/knowledge/knowledge.contract.test.ts > knowledge.transport — 7-op contract conformance > empty relations.list still satisfies the list envelope (pageSize ≥ 1)
+ FAIL  src/modules/knowledge/knowledge.contract.test.ts > knowledge.transport — 7-op contract conformance > covers all 7 op ids + unknown → UnsupportedOperationError
+ FAIL  src/modules/knowledge/knowledge.contract.test.ts > knowledge.transport — T-091/T-092 additive surface > knowledge.relations.listAll → KnowledgeRelationResource[] over the list envelope
+ FAIL  src/modules/knowledge/knowledge.contract.test.ts > knowledge.transport — T-091/T-092 additive surface > empty relations.listAll still satisfies the list envelope (pageSize ≥ 1)
+ FAIL  src/modules/knowledge/knowledge.contract.test.ts > knowledge.transport — T-091/T-092 additive surface > knowledge.create carries sourceType/sourceMetadata through the item resource
+ FAIL  src/modules/knowledge/knowledge.contract.test.ts > knowledge.transport — T-091/T-092 additive surface > registry knows the new op id (10 ops total for this module)
+ FAIL  src/modules/knowledge/knowledge.contract.test.ts > knowledge.transport — file workspace > creates nested folders and moves an imported knowledge document
+UploadValidationError: Invalid assetType: undefined
+ ❯ Object.createUpload src/modules/assets/assets.service.ts:508:15
+    506|       // SPEC §20 input validation (phase 1).
+    507|       if (!ASSET_TYPES.has(input.assetType)) {
+    508|         throw new UploadValidationError(`Invalid assetType: ${input.as…
+       |               ^
+    509|       }
+    510|       if (!input.mimeType || input.mimeType.trim() === "") {
+ ❯ src/modules/knowledge/knowledge.contract.test.ts:66:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/13]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  13 failed | 31 passed (44)
+   Start at  23:02:18
+   Duration  116.90s (transform 8.90s, setup 0ms, import 14.83s, tests 101.16s, environment 0ms)

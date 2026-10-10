@@ -1,0 +1,127 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1075-Lnw9Un
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 predev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> node ../ai-worker/scripts/build.mjs
+[2m[WebServer] [22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 dev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> next dev --hostname 127.0.0.1 --port 3196
+[2m[WebServer] [22m
+[2m[WebServer] [22m[1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
+[2m[WebServer] [22m- Local:         http://127.0.0.1:3196
+[2m[WebServer] [22m- Network:       http://127.0.0.1:3196
+[2m[WebServer] [22m- Environments: .env.local
+[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 879ms
+[2m[WebServer] [22m[CreatorOS] SIDECAR_STARTUP_VERIFIED
+[2m[WebServer] [22m
+[2m[WebServer] [22m[37m[1m○[22m[39m Compiling / ...
+[2m[WebServer] [22m GET / [32m200[39m in 32.3s[2m (next.js: 5.5s, proxy.ts: 375ms, application-code: 26.5s)[22m
+
+Running 2 tests using 1 worker
+
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1075-Lnw9Un
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 1516ms[2m (next.js: 1265ms, proxy.ts: 51ms, application-code: 199ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 54ms[2m (next.js: 4ms, proxy.ts: 7ms, application-code: 42ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 279ms[2m (next.js: 20ms, proxy.ts: 17ms, application-code: 242ms)[22m
+[2m[WebServer] [22m GET /knowledge [32m200[39m in 632ms[2m (next.js: 65ms, proxy.ts: 4ms, application-code: 562ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 136ms[2m (next.js: 5ms, proxy.ts: 31ms, application-code: 100ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 660ms[2m (next.js: 177ms, proxy.ts: 276ms, application-code: 207ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 246ms[2m (next.js: 4ms, proxy.ts: 208ms, application-code: 34ms)[22m
+[2m[WebServer] [22m[36m[browser][39m [describeUserError] [31mError: 资料已保存，列表暂未读回。请点击“重新读取已保存资料”。[39m
+[2m[WebServer] [22m[31m    at <unknown> (src/features/knowledge/knowledge-library.tsx:296:15)
+[2m[WebServer] [22m    at async run (src/features/knowledge/knowledge-library.tsx:226:7)
+[2m[WebServer] [22m    at async saveNew (src/features/knowledge/knowledge-library.tsx:276:5)[39m
+[2m[WebServer] [22m  294 |       if (!alive.current) return;
+[2m[WebServer] [22m  295 |       if (next.error || !next.items.some((x) => x.id === item.id))
+[2m[WebServer] [22m> 296 |         throw Error("资料已保存，列表暂未读回。请点击“重新读取已保存资料”。");
+[2m[WebServer] [22m      |               ^
+[2m[WebServer] [22m  297 |       navigate({
+[2m[WebServer] [22m  298 |         type: null,
+[2m[WebServer] [22m  299 |         folder: targetFolder, [2m(src/lib/ai-error-humanize.ts:292:13)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 68ms[2m (next.js: 6ms, proxy.ts: 36ms, application-code: 26ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 78ms[2m (next.js: 33ms, proxy.ts: 27ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 53ms[2m (next.js: 10ms, proxy.ts: 11ms, application-code: 33ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 144ms[2m (next.js: 38ms, proxy.ts: 56ms, application-code: 50ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 171ms[2m (next.js: 83ms, proxy.ts: 63ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 180ms[2m (next.js: 126ms, proxy.ts: 39ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 45ms[2m (next.js: 4ms, proxy.ts: 5ms, application-code: 36ms)[22m
+[2m[WebServer] [22m GET /knowledge?item=knowledge-1cceca07-22 [32m200[39m in 1619ms[2m (next.js: 15ms, proxy.ts: 13ms, application-code: 1592ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 158ms[2m (next.js: 14ms, proxy.ts: 34ms, application-code: 110ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 191ms[2m (next.js: 126ms, proxy.ts: 33ms, application-code: 32ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 225ms[2m (next.js: 157ms, proxy.ts: 37ms, application-code: 32ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 61ms[2m (next.js: 6ms, proxy.ts: 19ms, application-code: 36ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 3ms, proxy.ts: 4ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 161ms[2m (next.js: 3ms, proxy.ts: 13ms, application-code: 146ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 37ms[2m (next.js: 5ms, proxy.ts: 4ms, application-code: 27ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 25ms[2m (next.js: 2ms, proxy.ts: 3ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 33ms[2m (next.js: 5ms, proxy.ts: 10ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 47ms[2m (next.js: 22ms, proxy.ts: 11ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 48ms[2m (next.js: 10ms, proxy.ts: 4ms, application-code: 34ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 91ms[2m (next.js: 19ms, proxy.ts: 42ms, application-code: 30ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 124ms[2m (next.js: 45ms, proxy.ts: 47ms, application-code: 33ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 165ms[2m (next.js: 72ms, proxy.ts: 56ms, application-code: 37ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 22ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 108ms[2m (next.js: 13ms, proxy.ts: 34ms, application-code: 62ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 94ms[2m (next.js: 22ms, proxy.ts: 7ms, application-code: 65ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 151ms[2m (next.js: 108ms, proxy.ts: 18ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 32ms[2m (next.js: 5ms, proxy.ts: 10ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 125ms[2m (next.js: 4ms, proxy.ts: 22ms, application-code: 100ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 35ms[2m (next.js: 4ms, proxy.ts: 6ms, application-code: 25ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 58ms[2m (next.js: 11ms, proxy.ts: 16ms, application-code: 31ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 136ms[2m (next.js: 89ms, proxy.ts: 18ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 130ms[2m (next.js: 5ms, proxy.ts: 15ms, application-code: 110ms)[22m
+  ✘  1 [e2e] › tests/e2e/knowledge-library.spec.ts:53:7 › library-journey 1366 真实读写、整理与项目引用 (2.3m)
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t1075-Lnw9Un
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 190ms[2m (next.js: 55ms, proxy.ts: 29ms, application-code: 106ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 66ms[2m (next.js: 5ms, proxy.ts: 13ms, application-code: 47ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 64ms[2m (next.js: 5ms, proxy.ts: 3ms, application-code: 56ms)[22m
+[2m[WebServer] [22m GET /knowledge [32m200[39m in 495ms[2m (next.js: 8ms, proxy.ts: 4ms, application-code: 483ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 125ms[2m (next.js: 16ms, proxy.ts: 17ms, application-code: 93ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 167ms[2m (next.js: 6ms, proxy.ts: 16ms, application-code: 145ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 26ms[2m (next.js: 5ms, proxy.ts: 4ms, application-code: 17ms)[22m
+[2m[WebServer] [22m[36m[browser][39m [describeUserError] [31mError: 资料已保存，列表暂未读回。请点击“重新读取已保存资料”。[39m
+[2m[WebServer] [22m[31m    at <unknown> (src/features/knowledge/knowledge-library.tsx:296:15)
+[2m[WebServer] [22m    at async run (src/features/knowledge/knowledge-library.tsx:226:7)
+[2m[WebServer] [22m    at async saveNew (src/features/knowledge/knowledge-library.tsx:276:5)[39m
+[2m[WebServer] [22m  294 |       if (!alive.current) return;
+[2m[WebServer] [22m  295 |       if (next.error || !next.items.some((x) => x.id === item.id))
+[2m[WebServer] [22m> 296 |         throw Error("资料已保存，列表暂未读回。请点击“重新读取已保存资料”。");
+[2m[WebServer] [22m      |               ^
+[2m[WebServer] [22m  297 |       navigate({
+[2m[WebServer] [22m  298 |         type: null,
+[2m[WebServer] [22m  299 |         folder: targetFolder, [2m(src/lib/ai-error-humanize.ts:292:13)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 92ms[2m (next.js: 21ms, proxy.ts: 23ms, application-code: 48ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 105ms[2m (next.js: 69ms, proxy.ts: 18ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 72ms[2m (next.js: 10ms, proxy.ts: 18ms, application-code: 44ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 113ms[2m (next.js: 55ms, proxy.ts: 18ms, application-code: 40ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 146ms[2m (next.js: 96ms, proxy.ts: 21ms, application-code: 30ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 181ms[2m (next.js: 125ms, proxy.ts: 18ms, application-code: 38ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 5ms, proxy.ts: 6ms, application-code: 35ms)[22m
+[2m[WebServer] [22m GET /knowledge?item=knowledge-1cceca07-79 [32m200[39m in 626ms[2m (next.js: 16ms, proxy.ts: 11ms, application-code: 599ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 89ms[2m (next.js: 14ms, proxy.ts: 9ms, application-code: 67ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 132ms[2m (next.js: 80ms, proxy.ts: 13ms, application-code: 39ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 158ms[2m (next.js: 122ms, proxy.ts: 12ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 53ms[2m (next.js: 6ms, proxy.ts: 6ms, application-code: 41ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 30ms[2m (next.js: 6ms, proxy.ts: 9ms, application-code: 15ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 266ms[2m (next.js: 8ms, proxy.ts: 21ms, application-code: 238ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 9ms, proxy.ts: 8ms, application-code: 29ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 87ms[2m (next.js: 2ms, proxy.ts: 11ms, application-code: 74ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 85ms[2m (next.js: 13ms, proxy.ts: 15ms, application-code: 57ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 219ms[2m (next.js: 170ms, proxy.ts: 13ms, application-code: 35ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 116ms[2m (next.js: 30ms, proxy.ts: 35ms, application-code: 50ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 151ms[2m (next.js: 68ms, proxy.ts: 41ms, application-code: 42ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 275ms[2m (next.js: 129ms, proxy.ts: 45ms, application-code: 101ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 716ms[2m (next.js: 472ms, proxy.ts: 48ms, application-code: 197ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 313ms[2m (next.js: 3ms, proxy.ts: 239ms, application-code: 71ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 55ms[2m (next.js: 4ms, proxy.ts: 6ms, application-code: 45ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 38ms[2m (next.js: 4ms, proxy.ts: 7ms, application-code: 28ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 59ms[2m (next.js: 33ms, proxy.ts: 7ms, application-code: 19ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 29ms[2m (next.js: 5ms, proxy.ts: 6ms, application-code: 18ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 71ms[2m (next.js: 7ms, proxy.ts: 7ms, application-code: 57ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 58ms[2m (next.js: 5ms, proxy.ts: 7ms, application-code: 45ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 46ms[2m (next.js: 12ms, proxy.ts: 10ms, application-code: 24ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 82ms[2m (next.js: 49ms, proxy.ts: 12ms, application-code: 21ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 63ms[2m (next.js: 5ms, proxy.ts: 13ms, application-code: 44ms)[22m
