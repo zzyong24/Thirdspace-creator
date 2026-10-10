@@ -1,0 +1,28 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+ ❯ src/application/collection/cover-file-repair.test.ts (2 tests | 1 failed) 5836ms
+   × 真实临时文件删除后，经候选、补采、版本保存整链恢复可读图片，保留好封面 3764ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/application/collection/cover-file-repair.test.ts > 真实临时文件删除后，经候选、补采、版本保存整链恢复可读图片，保留好封面
+OwnershipError: 真实账号归属校验不可用
+ ❯ withTarget src/modules/publishing/publishing.service.ts:353:73
+    351|       return body(repoFor(ctx,tx as unknown as Db),tx);
+    352|     });
+    353|     if(!deps.membership||(ctx.groupId&&!deps.assertTargetAccount))thro…
+       |                                                                         ^
+    354|     // 平台枚举是账号不可变身份；先验端口可读库，成员版本仍在同锁内重验。
+    355|     await deps.assertTargetAccount?.(ctx,{accountId,platform});
+ ❯ Object.createImportedPublication src/modules/publishing/publishing.service.ts:1013:14
+ ❯ src/application/collection/cover-file-repair.test.ts:39:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 231 passed (232)
+   Start at  16:04:20
+   Duration  15.63s (transform 8.61s, setup 0ms, import 15.01s, tests 13.38s, environment 2ms)
+

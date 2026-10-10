@@ -1,0 +1,46 @@
+{
+  "schema": "t1072-integration-source/v1",
+  "baseline": "6b1322af",
+  "source_commits": [
+    "fd09b64bf7a190acfd5e8324f4aef3743f2d0060",
+    "6855ba140184cf443124e81583d584bdf157a518"
+  ],
+  "excluded_commit": "40a5eaf4",
+  "exact_blob_match": [
+    "frontend/src-tauri/build.rs",
+    "frontend/src-tauri/capabilities/remote-sidecar.json",
+    "frontend/src-tauri/permissions/owned-devices.toml",
+    "frontend/src-tauri/src/lib.rs",
+    "frontend/src-tauri/src/license.rs",
+    "frontend/src-tauri/src/owned_devices.rs",
+    "frontend/src/app/activate/owned-device-panel.test.tsx",
+    "frontend/src/app/activate/owned-device-panel.tsx",
+    "frontend/src/app/activate/page.tsx",
+    "frontend/src/features/settings/owned-device-connection.test.tsx",
+    "frontend/src/features/settings/owned-device-connection.tsx",
+    "frontend/src/features/settings/settings-interactive-region.tsx",
+    "frontend/src/lib/owned-devices.test.ts",
+    "frontend/src/lib/owned-devices.ts"
+  ],
+  "historical_spec_commit": "e8ec732c143615fa6d6dbaecc67e9aa57833a197",
+  "historical_events_imported": false,
+  "exact_blob_match_at_commit": "59acab77",
+  "subsequent_authorized_changes": [
+    {
+      "commit": "2a9389e5",
+      "reason": "当前实图发现桌面Input14px，精确修两处16px"
+    },
+    {
+      "commit": "c21c8086",
+      "reason": "仅debug隔离真实HTTP与cfg(test)驱动，专属CA且保留生产origin/验签"
+    },
+    {
+      "commit": "afa63af1",
+      "reason": "真实200 acknowledged证据与保存后ACK恢复"
+    },
+    {
+      "commit": "ea7a636e",
+      "reason": "真实HTTP发现Growth连接ref为LDR而非ActivityULID，已更新SPEC独立回执并真实红绿回归；driver明确canonical构建身份"
+    }
+  ]
+}

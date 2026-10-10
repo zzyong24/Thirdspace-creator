@@ -1,0 +1,20 @@
+{
+  "node": "v25.9.0",
+  "argv": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/ai-runtime/transcribe-runner.test.ts",
+    "-t",
+    "图集作品 →|后处理未执行\\(applied:false",
+    "--maxWorkers=1",
+    "--retry=0",
+    "--reporter=json",
+    "--outputFile=/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/docs/verification/t208/red-original-two.json"
+  ],
+  "timeout_override": false,
+  "head": "daa8cc7f0b785f83e37ae65be31c79749ce71217"
+}

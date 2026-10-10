@@ -3,7 +3,7 @@ import {afterAll,beforeAll,describe,expect,it,vi} from 'vitest';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {createDb,aiTasks,executionTasks,executionCalls,projects,eq,sql,type Db} from '@creatoros/backend';
+import {createDb,aiTasks,aiTaskSteps,executionTasks,executionCalls,projects,eq,sql,type Db} from '@creatoros/backend';
 import {workerPortInputSchemas,type WorkerPort} from '@creatoros/contract/execution-worker';
 import {runTranscribeAsrInWorker,createQwenAsrAdapter,type MultimodalSpec} from '@creatoros/ai-worker';
 import {createTranscribeBusinessExecutionService} from './transcribe-business-execution.service';
@@ -25,10 +25,10 @@ const budget={maxCalls:20,maxTokens:100000,deadlineMs:600000};
 const spec:MultimodalSpec={kind:'audio',provider:'qwen',model:'asr',baseUrl:null,token:'fixture-only'};
 beforeAll(async()=>{const opened=await createDb();db=opened.db;close=()=>opened.client.close();dir=await mkdtemp(join(tmpdir(),'t1062-transcribe-durable-'));});
 afterAll(async()=>{await close?.();await rm(dir,{recursive:true,force:true});});
-async function fixture(ids=['one'],opts:{readyFailure?:boolean;postSpecFailure?:boolean}={}){
+async function fixture(ids=['one'],opts:{readyFailure?:boolean;postSpecFailure?:boolean;missingProjects?:string[]}={}){
  const id=`durable-transcribe-${++seq}`,ctx={userId:id,accountId:id,requestId:id,source:'user' as const};
  await db.insert(aiTasks).values({id,userId:ctx.userId,accountId:ctx.accountId,taskType:'transcribe.douyin',idempotencyKey:id,inputData:{awemeIds:ids},requestedAt:now(),requestFingerprint:'sha256:'+'a'.repeat(64)});
- for(const awemeId of ids)await db.insert(projects).values({id:`${id}-${awemeId}`,userId:ctx.userId,accountId:ctx.accountId,title:awemeId,source:'imported',platformRef:{platform:'douyin',externalId:awemeId},brief:'',creationMode:'free',status:'active',currentStage:'analysis',startedAt:now(),createdAt:now(),updatedAt:now()});
+ for(const awemeId of ids.filter(id=>!opts.missingProjects?.includes(id)))await db.insert(projects).values({id:`${id}-${awemeId}`,userId:ctx.userId,accountId:ctx.accountId,title:awemeId,source:'imported',platformRef:{platform:'douyin',externalId:awemeId},brief:'',creationMode:'free',status:'active',currentStage:'analysis',startedAt:now(),createdAt:now(),updatedAt:now()});
  const business=createTranscribeBusinessExecutionService(db,{budget,resolveSpec:async()=>spec}),mapped=await business.prepare(ctx,id);
  if(!mapped.executionTaskId)throw Error('新fixture必须进入真实执行');
  const claim=await createPersistentTaskService(db).claimTask({taskId:mapped.executionTaskId,workerId:'isolated-fixture'});if(!claim)throw Error('真实claim失败');
@@ -119,3 +119,28 @@ describe('保留原失败分类',()=>{
  it('按消息归类解析/ffmpeg/验证码/其他，不作内容语义选择',()=>{expect(classifyTranscribeFailure('parseDouyinVideoUrl: 无法从 _ROUTER_DATA 中解析视频信息(item_list 为空)')).toBe('parse-failed');expect(classifyTranscribeFailure('parseAwemeDetail: aweme_detail 为空(作品不存在/不可见/接口风控)')).toBe('parse-failed');expect(classifyTranscribeFailure('fetchDouyinVideoUrl: iesdouyin HTTP 503 (aweme x)')).toBe('parse-failed');expect(classifyTranscribeFailure('streamAudioFromVideo: ffmpeg 非 0 退出 (code=1)')).toBe('ffmpeg');expect(classifyTranscribeFailure('fetchDouyinVideoUrlViaDetail: 作品页命中验证码,跳过 (aweme x)')).toBe('captcha');expect(classifyTranscribeFailure('ASR 返回空逐字稿')).toBe('other');});
  it('冷却原错误分类保持',()=>{expect(classifyTranscribeFailure('DouyinCooldownActiveError: 限流冷却中，960000ms')).toBe('cooldown');});
 });
+
+
+// T1080：T208来源五类汇总沿当前durable公共端口适配，不恢复旧backend Worker循环替身。
+it('T1080 五类真实持久回执按原作品排序汇总，同代结算不改步骤/调用或正文',async()=>{
+ const ids=['already','album','saved','broken','missing'];
+ const f=await fixture(ids,{missingProjects:['missing']});
+ const prior=await f.artifactService.createArtifact(f.ctx,{projectId:`${f.id}-already`,title:'已有真实逐字稿',artifactType:'output_script',stage:'analysis',initialContentText:'已有原文',initialContentData:{awemeId:'already',source:'transcribed'}});
+ expect((await f.workflow.prepareItem(f.ref,{awemeId:'already'})).receipt).toMatchObject({status:'existing',awemeId:'already'});
+ await f.workflow.recordSource(f.ref,{awemeId:'album',source:{kind:'image-album'}});
+ expect(await f.workflow.saveArtifact(f.ref,{awemeId:'album'})).toMatchObject({status:'image-album'});
+ expect(await f.save('saved')).toMatchObject({status:'saved'});
+ expect(await f.workflow.failItem(f.ref,{awemeId:'broken',error:'来源明确失败'})).toMatchObject({status:'failed'});
+ expect(await f.save('missing')).toMatchObject({status:'no-project'});
+ expect(await f.workflow.complete(f.ref,{})).toEqual({status:'failed'});
+ const rows=async()=>({execution:(await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId)))[0]!,steps:await db.select().from(aiTaskSteps).where(eq(aiTaskSteps.aiTaskId,f.id)),calls:await db.select().from(executionCalls).where(eq(executionCalls.executionTaskId,f.ref.executionTaskId))});
+ const before=await rows(),payload=before.execution.payload as {transcribeItems:Record<string,{awemeId:string;status:string}>};
+ expect(ids.map(id=>payload.transcribeItems[id]?.status)).toEqual(['existing','image-album','saved','failed','no-project']);
+ expect(before.steps).toHaveLength(6);
+ for(const [index,id] of ids.entries())expect(before.steps.find(row=>row.id===`transcribe:${f.ref.executionTaskId}:${id}:${payload.transcribeItems[id]!.status}`)).toMatchObject({aiTaskId:f.id,stepNo:index+1});
+ expect(before.steps.find(row=>row.id===`transcribe:${f.ref.executionTaskId}:summary`)).toMatchObject({aiTaskId:f.id,stepNo:6,kind:'transcribe',toolCalls:[],text:'转写完成 1 条，已有逐字稿跳过 1 条，图集跳过 1 条，转写失败 1 条，未找到对应作品 1 条'});
+ const original=await f.read('already'),saved=await f.read('saved');
+ expect(original.artifact.id).toBe(prior.id);expect(original.version?.contentText).toBe('已有原文');expect(saved.version?.contentText).toBe('真实端口原文');
+ expect(f.fetcher).toHaveBeenCalledTimes(2);expect(before.calls.map(row=>row.status)).toEqual(['settled','settled']);
+ expect(await f.workflow.complete(f.ref,{})).toEqual({status:'failed'});expect(await rows()).toEqual(before);expect(await f.read('already')).toEqual(original);expect(await f.read('saved')).toEqual(saved);expect(f.fetcher).toHaveBeenCalledTimes(2);
+},180000);

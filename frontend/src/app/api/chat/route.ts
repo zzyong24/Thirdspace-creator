@@ -494,13 +494,33 @@ export async function POST(req: Request): Promise<Response> {
       //     同内容的 user 行(上一轮流失败/中断,assistant 未落库),说明这条 user 已在库里,
       //     不重插。查失败(best-effort)→ 照常 insert(宁多勿丢)。
       const approvalContinuation=messages.at(-1)?.role==="assistant" && messages.at(-1)!.parts.some(part=>typeof part==="object" && part!==null && "state" in part && part.state==="approval-responded");
-      let skipInsert = approvalContinuation || (!workTarget && isExistingConversation && body.trigger === "regenerate-message");
+      let skipInsert = approvalContinuation;
       // 新编导重接原服务器 source ID；不能把同文、不同稿面误当一次请求。
       if(workTarget&&body.trigger==="regenerate-message"){
         const history=await runtime.ai.listMessages(ctx,conversationId);
         const saved=history.find(message=>message.id===body.messageId&&message.role==="user");
         if(!saved||saved.content!==userText||JSON.stringify(saved.attachments??[])!==JSON.stringify(attachmentIds))return NextResponse.json({code:"WORK_SOURCE_MESSAGE_INVALID",error:"找不到这次原请求，输入已保留。请先恢复当前对话的任务。"},{status:409});
         skipInsert=true;persistedUserMessageId=saved.id;
+      }
+      if (!skipInsert && !workTarget && isExistingConversation && body.trigger === "regenerate-message") {
+        // S6：这是已保存原输入的恢复，不把客户端消息ID或同文本新行当作新执行意图。
+        const history = await runtime.ai.listMessages(ctx, conversationId);
+        const source = [...history].reverse().find(message => message.role === "user");
+        const sourceAttachments = Array.isArray(source?.attachments) ? source.attachments : [];
+        if (!source) {
+          return NextResponse.json(
+            { error: "本轮请求准备或提交未完成，输入已保留。请重试；仍失败时请提供诊断日志。" },
+            { status: 400, headers: { "x-conversation-id": conversationId } },
+          );
+        }
+        if (source.content !== userText || JSON.stringify(sourceAttachments) !== JSON.stringify(attachmentIds)) {
+          return NextResponse.json(
+            { error: "原消息已变化或无法找到，请重新打开当前对话后再继续。", code: "CHAT_RETRY_SOURCE_MISMATCH" },
+            { status: 409 },
+          );
+        }
+        persistedUserMessageId = source.id;
+        skipInsert = true;
       }
       if (!skipInsert && !workTarget && isExistingConversation && body.trigger!=="regenerate-message") {
         try {

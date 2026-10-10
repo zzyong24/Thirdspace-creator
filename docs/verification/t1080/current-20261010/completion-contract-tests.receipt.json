@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "pnpm",
+    "-C",
+    "contract",
+    "exec",
+    "vitest",
+    "run",
+    "tests/execution-command-receipt-protocol.test.ts",
+    "tests/modules/execution.test.ts",
+    "tests/registry.test.ts",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T09:08:49.405019+00:00",
+  "finishedAt": "2026-10-10T09:08:54.114495+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 4.709436625009403,
+  "logSha256": "2b606bb1a55038f329eeb25228c939f7c7c7bbca8fceca7348f054f72ee0a208"
+}

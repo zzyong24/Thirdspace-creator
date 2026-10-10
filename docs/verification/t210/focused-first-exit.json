@@ -1,0 +1,11 @@
+{
+  "exit_code": 0,
+  "log_sha256": "b1966a57eddcdab263db104d8ca649ac14092142ffd16646a1c5050d2e2821a1",
+  "counts": {
+    "passed": 11,
+    "failed": 0,
+    "skipped": 25,
+    "pending": 0
+  },
+  "failed_cases": []
+}

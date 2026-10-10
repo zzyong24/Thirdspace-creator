@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "pnpm",
+    "-C",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/app/api/v1/dispatch/transcribe-command-legacy-dispatch.test.ts",
+    "src/features/copilot/ai-copilot-content.test.tsx",
+    "src/features/copilot/transcribe-task-progress.test.tsx",
+    "src/features/draft-workbench/draft-workbench-page.bug8.test.tsx",
+    "src/features/draft-workbench/draft-workbench-transcript-state.test.ts",
+    "src/features/draft-workbench/transcribe-now-button.test.tsx",
+    "src/server/transcribe-source-cooldown.integration.test.ts",
+    "src/app/api/chat/route.test.ts",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T09:08:49.404445+00:00",
+  "finishedAt": "2026-10-10T09:09:39.177007+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 49.772053082997445,
+  "logSha256": "571431f09de0d46953c903a6d11df869630eecf4f3b39bff6812bae54a2ec6e3"
+}

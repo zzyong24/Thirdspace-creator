@@ -1,0 +1,16 @@
+{
+  "boundary_exit": 1,
+  "violations": 7,
+  "registered_baseline": 5,
+  "outside_ratchet_baseline": 2,
+  "path": "frontend/src/features/copilot/live-chat-session.ts",
+  "current_sha256": "4adaa0e8062f6253812d1acb871a23f4f230916d008c0e2dc1d73d0e6f40b107",
+  "HEAD_sha256": "4adaa0e8062f6253812d1acb871a23f4f230916d008c0e2dc1d73d0e6f40b107",
+  "current_equals_PRE_T208_HEAD": true,
+  "symbols": [
+    "@ai-sdk/react",
+    "ai"
+  ],
+  "baseline_not_changed": true,
+  "source_not_in_T208_write_set": true
+}

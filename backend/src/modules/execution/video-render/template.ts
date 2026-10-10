@@ -759,21 +759,25 @@ function schedulePortraitSpeakerDirection(
     at: number,
   ): void => {
     if (from === to) return;
-    const remaining = f2(props.talkingHead.durationSec) - at;
-    if (remaining <= 0) return;
-    const transitionDuration = remaining >= 0.34 ? ".34" : fmt(remaining);
+    const end = f2(props.talkingHead.durationSec);
+    const start = f2(at);
+    if (start >= end) return;
+    // 先按现时间线百分秒网格求剩余量，避免 15-14.9 的浮点误差错误缩短 transition。
+    const remaining = (Math.round(end * 100) - Math.round(start * 100)) / 100;
+    const duration = f2(Math.min(0.34, remaining));
+    if (duration <= 0) return;
+    const durationText = duration === 0.34 ? ".34" : fmt(duration);
     const box = to === "pip" ? pip : full;
-    const layer = to === "pip" ? 945 : 900;
     if (to === "pip") {
       ctx.tweens.push(
-        `tl.set("#th",{zIndex:945},${fmt(at)});`,
-        `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:${transitionDuration},ease:"power3.inOut"},${fmt(at)});`,
+        `tl.set("#th",{zIndex:945},${fmt(start)});`,
+        `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:${durationText},ease:"power3.inOut"},${fmt(start)});`,
       );
       return;
     }
     ctx.tweens.push(
-      `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:${transitionDuration},ease:"power3.inOut"},${fmt(at)});`,
-      `tl.set("#th",{zIndex:900},${fmt(at + Number(transitionDuration))});`,
+      `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:${durationText},ease:"power3.inOut"},${fmt(start)});`,
+      `tl.set("#th",{zIndex:900},${fmt(Math.min(end, start + duration))});`,
     );
   };
 

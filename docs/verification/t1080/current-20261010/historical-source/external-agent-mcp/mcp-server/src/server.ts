@@ -1,0 +1,94 @@
+// MCP server 装配 —— 低层 Server API(tools/list + tools/call 两个 handler)。
+// 之所以不用高层 McpServer.registerTool:工具面是从 contract 批量生成的,inputSchema
+// 已经是现成 JSON Schema,低层 API 直接吐出即可,不需要再绕一遍 zod shape。
+
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
+import { buildTools, type McpToolDef } from "./tools";
+import {
+  DispatchClient,
+  DispatchError,
+  type DispatchCallOptions,
+  type DispatchInput,
+} from "./dispatch";
+import { getCliOperationPolicy } from "@creatoros/contract";
+
+export interface CreatorOsMcpServerOptions {
+  dispatchClient: DispatchClient;
+  allowedOperations?: () => Promise<ReadonlySet<string>>;
+}
+
+/** 装配一个 CreatorOS MCP Server(未连 transport;index.ts 负责接 stdio)。 */
+export function createCreatorOsMcpServer(
+  options: CreatorOsMcpServerOptions,
+): Server {
+  const { dispatchClient } = options;
+  const tools = buildTools();
+  const toolsByName = new Map<string, McpToolDef>(tools.map((t) => [t.name, t]));
+
+  const server = new Server(
+    { name: "creatoros", version: "0.1.0" },
+    { capabilities: { tools: {} } },
+  );
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => {
+    const allowed=await options.allowedOperations?.();
+    return {tools: tools.filter(tool => !allowed || allowed.has(tool.opId)).map(({ name, description, inputSchema, annotations }) => ({
+      name, description, inputSchema: inputSchema as { type: "object" }, annotations,
+    }))};
+  });
+
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const tool = toolsByName.get(request.params.name);
+    if (!tool) {
+      return {
+        content: [
+          { type: "text" as const, text: `未知工具:${request.params.name}` },
+        ],
+        isError: true,
+      };
+    }
+    if(options.allowedOperations && !(await options.allowedOperations()).has(tool.opId))return {content:[{type:"text" as const,text:"OP_NOT_GRANTED"}],isError:true};
+    const args = (request.params.arguments ?? {}) as DispatchInput & {
+      _creatoros?: DispatchCallOptions;
+    };
+    const { _creatoros, ...input } = args;
+    try {
+      const policy = getCliOperationPolicy(tool.opId);
+      if (!policy) throw new Error(`operation 缺 CLI policy: ${tool.opId}`);
+      if (policy.effect !== "read") {
+        if (_creatoros?.apply !== true) throw new Error(`${tool.opId} 必须显式 apply=true。`);
+        if (!_creatoros.idempotencyKey?.trim()) {
+          throw new Error(`${tool.opId} 必须提供 idempotencyKey。`);
+        }
+        if (policy.confirmation === "confirm_impact" && !_creatoros.confirmImpact?.trim()) {
+          throw new Error(`${tool.opId} 必须提供 confirmImpact。`);
+        }
+      }
+      const envelope = await dispatchClient.dispatch(tool.opId, input, _creatoros);
+      return {
+        content: [
+          { type: "text" as const, text: JSON.stringify(envelope, null, 2) },
+        ],
+      };
+    } catch (err) {
+      // dispatch 层错误(4xx/5xx/网络)转成 MCP tool error,而非协议级异常 ——
+      // 让调用方 AI 拿到可读的失败原因继续推理。
+      const message =
+        err instanceof DispatchError
+          ? err.message
+          : err instanceof Error
+            ? `dispatch ${tool.opId} 失败:${err.message}(dev server 是否在运行?CREATOROS_BASE_URL 是否正确?)`
+            : String(err);
+      return {
+        content: [{ type: "text" as const, text: message }],
+        isError: true,
+      };
+    }
+  });
+
+  return server;
+}

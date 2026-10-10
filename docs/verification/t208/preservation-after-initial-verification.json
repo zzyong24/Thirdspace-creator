@@ -1,0 +1,35 @@
+{
+  "protected_old_dirty_byte_equal": {
+    "PROJECT.md": true,
+    "docs/features/t1072-owned-devices.md": true,
+    "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md": true,
+    "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md": true,
+    "docs/verification/t1072/integration/ENGINE.md": true,
+    "docs/verification/t1072/integration/TEST_ENGINEERING_RECOVERY.md": true,
+    "orchestrator/.lessons-stats.json": true,
+    "orchestrator/ARTIFACT_MANIFEST.yaml": true,
+    "orchestrator/CHANGE_IMPACT.md": true,
+    "orchestrator/context/T-915.md": true,
+    "orchestrator/review-events.ndjson": true,
+    "AGENTS.md": true,
+    "orchestrator/process/.skill-version": true
+  },
+  "old_control_objects": {
+    "orchestrator/DECISION_LOG.md": {
+      "old_prefix_byte_equal": true
+    },
+    "orchestrator/events.ndjson": {
+      "old_prefix_byte_equal": true
+    },
+    "BACKLOG.md": {
+      "old_rows_byte_equal": true
+    },
+    "orchestrator/process/modules.config.json": {
+      "old_objects_deep_equal": true
+    },
+    "orchestrator/progress.json": {
+      "old_objects_deep_equal": true
+    }
+  },
+  "original_telemetry_byte_equal": true
+}

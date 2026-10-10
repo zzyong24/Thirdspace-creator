@@ -1,0 +1,12 @@
+{
+  "schema": "t1072-backend-typecheck-comparison/v1",
+  "baselineHead": "6b1322af",
+  "candidateHead": "8b8d6d1eaa3a965da67d61a0513dfcba2f3e0c29",
+  "baselineExitCode": 2,
+  "candidateExitCode": 2,
+  "baselineErrors": 12,
+  "candidateErrors": 12,
+  "diagnosticsByteEqual": true,
+  "uncommittedTestFixtureSha256": "c741727ef632ee5b5ca8fca6034cf05f8dd3704cd8f934b8654a4c0b408b31f0",
+  "meaning": "双方均未通过；本轮新增类型错误已修，剩余真实共同12项不能当PASS"
+}

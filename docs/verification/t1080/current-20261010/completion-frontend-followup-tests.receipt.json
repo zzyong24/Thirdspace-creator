@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "pnpm",
+    "-C",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/app/api/v1/dispatch/transcribe-command-legacy-dispatch.test.ts",
+    "src/features/copilot/ai-copilot-content.test.tsx",
+    "src/app/api/chat/route.test.ts",
+    "--retry=0",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T09:27:12.300792+00:00",
+  "finishedAt": "2026-10-10T09:27:33.314747+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 21.013676500006113,
+  "logSha256": "8b2a6aaeec9e221ae83298630af5e21d5b24d7e251d1b5a609c35489253de08b"
+}

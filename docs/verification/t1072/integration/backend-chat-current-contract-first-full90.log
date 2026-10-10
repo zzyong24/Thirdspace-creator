@@ -1,0 +1,166 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+stderr | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-guide] optional guide unavailable { code: 'CREATOROS_GUIDE_UNAVAILABLE', reason: 'missing' }
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-tool] name=creatoros.guide ok durationMs=1
+
+stderr | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-guide] optional guide unavailable { code: 'CREATOROS_GUIDE_UNAVAILABLE', reason: 'version' }
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+stderr | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-guide] optional guide unavailable { code: 'CREATOROS_GUIDE_UNAVAILABLE', reason: 'overlay' }
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+stderr | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-guide] optional guide unavailable { code: 'CREATOROS_GUIDE_UNAVAILABLE', reason: 'content' }
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+stderr | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-guide] optional guide unavailable { code: 'CREATOROS_GUIDE_UNAVAILABLE', reason: 'missing' }
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+stderr | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-guide] optional guide unavailable { code: 'CREATOROS_GUIDE_UNAVAILABLE', reason: 'version' }
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+stderr | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-guide] optional guide unavailable { code: 'CREATOROS_GUIDE_UNAVAILABLE', reason: 'overlay' }
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+stderr | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-guide] optional guide unavailable { code: 'CREATOROS_GUIDE_UNAVAILABLE', reason: 'content' }
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+[chat-tool] name=creatoros.guide ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > [T-081⑤] honestyBlock — 工具边界诚实 > [T-098] system 注入「指针权/禁逐字复述清单」规则
+[chat-tool] name=skill.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > [T-081⑤] honestyBlock — 工具边界诚实 > [T-098] system 注入「指针权/禁逐字复述清单」规则
+[chat-tool] name=skill.read error durationMs=0 class=Error reason=unknown message="SKILL_NOT_IN_FROZEN_CATALOG"
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > [T-081⑤] honestyBlock — 工具边界诚实 > [T-098] system 注入「指针权/禁逐字复述清单」规则
+[chat-tool] name=skill.read error durationMs=0 class=Error reason=unknown message="SKILL_OFFSET_OUT_OF_RANGE"
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > [T-081⑤] honestyBlock — 工具边界诚实 > [T-098] system 注入「指针权/禁逐字复述清单」规则
+[chat-tool] name=skill.read error durationMs=0 class=Error reason=unknown message="SKILL_OFFSET_OUT_OF_RANGE"
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > [T-081⑤] honestyBlock — 工具边界诚实 > [T-098] system 注入「指针权/禁逐字复述清单」规则
+[chat-tool] name=context.materials ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > [T-256a] 环境感知能力认知 — honesty 第 13 条 > system 注入第 13 条:能探测已装工具 + 列工作区目录,缺工具诚实引导、只读不装不跑命令
+[chat-tool] name=skill.read ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > [T-256a] 环境感知能力认知 — honesty 第 13 条 > system 注入第 13 条:能探测已装工具 + 列工作区目录,缺工具诚实引导、只读不装不跑命令
+[chat-tool] name=skill.read error durationMs=0 class=Error reason=unknown message="SKILL_NOT_IN_FROZEN_CATALOG"
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > [T-256a] 环境感知能力认知 — honesty 第 13 条 > system 注入第 13 条:能探测已装工具 + 列工作区目录,缺工具诚实引导、只读不装不跑命令
+[chat-tool] name=skill.read error durationMs=0 class=Error reason=unknown message="SKILL_OFFSET_OUT_OF_RANGE"
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > [T-256a] 环境感知能力认知 — honesty 第 13 条 > system 注入第 13 条:能探测已装工具 + 列工作区目录,缺工具诚实引导、只读不装不跑命令
+[chat-tool] name=skill.read error durationMs=0 class=Error reason=unknown message="SKILL_OFFSET_OUT_OF_RANGE"
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > [T-256a] 环境感知能力认知 — honesty 第 13 条 > system 注入第 13 条:能探测已装工具 + 列工作区目录,缺工具诚实引导、只读不装不跑命令
+[chat-tool] name=local.tools ok durationMs=0
+
+stdout | src/modules/ai-runtime/chat-assembly.test.ts > [T-256a] 环境感知能力认知 — honesty 第 13 条 > system 注入第 13 条:能探测已装工具 + 列工作区目录,缺工具诚实引导、只读不装不跑命令
+[chat-tool] name=local.workspace ok durationMs=0
+
+ ❯ src/modules/ai-runtime/chat-assembly.test.ts (90 tests | 3 failed) 2049ms
+     × [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结 221ms
+     × [T-098] system 注入「指针权/禁逐字复述清单」规则 4ms
+     × system 注入第 13 条:能探测已装工具 + 列工作区目录,缺工具诚实引导、只读不装不跑命令 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770/T-928] 可选说明不可用只隔离说明工具，原账号与主 Skill 仍严格冻结
+AssertionError: expected { kind: 'creatoros.guide', …(6) } to match object { kind: 'creatoros.guide', …(2) }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "error": null,
+    "kind": "creatoros.guide",
+    "version": "v1",
+  }
+
+ ❯ src/modules/ai-runtime/chat-assembly.test.ts:662:63
+    660|     const valid = await runWithEffectiveSkillSnapshot(officialChatSnap…
+    661|       () => prepareChatAssembly(ctx, {surface:"topics"}, deps));
+    662|     expect(await executeNative(valid, "creatoros.guide", {})).toMatchO…
+       |                                                               ^
+    663|       kind:"creatoros.guide", version:"v1", error:null,
+    664|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/modules/ai-runtime/chat-assembly.test.ts > [T-081⑤] honestyBlock — 工具边界诚实 > [T-098] system 注入「指针权/禁逐字复述清单」规则
+AssertionError: expected { kind: 'context.materials', …(3) } to match object { kind: 'context.materials', …(1) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "error": null,
+    "kind": "context.materials",
+  }
+
+ ❯ src/modules/ai-runtime/chat-assembly.test.ts:1380:70
+    1378|     expect(a.system).not.toContain("只有指针权");
+    1379|     expect(bodies["method.research"]).toContain("只有标题、简介或搜索摘要时标为待核实线索"…
+    1380|     expect(await executeNative(a,"context.materials",{query:"RAG"})).t…
+       |                                                                      ^
+    1381|   });
+    1382|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/modules/ai-runtime/chat-assembly.test.ts > [T-256a] 环境感知能力认知 — honesty 第 13 条 > system 注入第 13 条:能探测已装工具 + 列工作区目录,缺工具诚实引导、只读不装不跑命令
+AssertionError: expected { kind: 'local.workspace', …(2) } to match object { kind: 'local.workspace', …(2) }
+
+- Expected
++ Received
+
+  {
+-   "dirs": [
+-     "/isolated/approved",
+-   ],
+-   "error": null,
++   "dirs": [],
++   "error": "这一步未能完成，原因尚未确认。请先确认是否已有结果，再决定是否重试。",
+    "kind": "local.workspace",
+  }
+
+ ❯ src/modules/ai-runtime/chat-assembly.test.ts:1695:64
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 87 passed (90)
+   Start at  17:39:14
+   Duration  6.74s (transform 2.84s, setup 0ms, import 4.52s, tests 2.05s, environment 0ms)
+

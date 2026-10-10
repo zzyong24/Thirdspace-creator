@@ -1,0 +1,134 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:6279) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/__module_integration__/assets.persistence-client.test.ts > assets ops registered in the composite transport > assets.usage.list returns the 用料链 edges referencing the asset (用料反查)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/__module_integration__/assets.persistence-client.test.ts (7 tests | 1 failed) 7195ms
+     × assets.usage.list returns the 用料链 edges referencing the asset (用料反查) 922ms
+(node:6467) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/__module_integration__/data-foundation-prefer-real.persistence-client.test.ts > 数据底座 §1.4 — pages.dashboard.get 优先读真 / fixture 兜底 > 优先读真:种入 imported 真项目后,最近发布让 fixture 让位、只出真实导入作品
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/__module_integration__/data-foundation-prefer-real.persistence-client.test.ts (3 tests | 1 failed) 3225ms
+     × 优先读真:种入 imported 真项目后,最近发布让 fixture 让位、只出真实导入作品 938ms
+(node:6492) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/__module_integration__/production.persistence-client.test.ts > production ops registered in the composite transport > get → put → segment → export → complete round-trips over the shared store
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/__module_integration__/production.persistence-client.test.ts (3 tests | 1 failed) 3127ms
+     × get → put → segment → export → complete round-trips over the shared store 937ms
+(node:6521) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/__module_integration__/publishing.persistence-client.test.ts > publishing ops registered in the composite transport > create → list → revise → transition(published) round-trips over the shared store
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/__module_integration__/publishing.persistence-client.test.ts > publishing ops registered in the composite transport > outputs.publications.register 落 published+external_id 且幂等(同 external key 返回既有行)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/__module_integration__/publishing.persistence-client.test.ts (3 tests | 2 failed) 3195ms
+     × create → list → revise → transition(published) round-trips over the shared store 956ms
+     × outputs.publications.register 落 published+external_id 且幂等(同 external key 返回既有行) 985ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/__module_integration__/assets.persistence-client.test.ts > assets ops registered in the composite transport > assets.usage.list returns the 用料链 edges referencing the asset (用料反查)
+OwnershipError: Project not found: project-ainativebrowser
+ ❯ Object.get ../backend/src/modules/projects/projects.repository.ts:273:21
+    271|       );
+    272|     const row = rows[0];
+    273|     if (!row) throw new OwnershipError(`Project not found: ${projectId…
+       |                     ^
+    274|     return row;
+    275|   }
+ ❯ assertParent ../backend/src/modules/material-links/material-links.service.ts:120:19
+ ❯ Object.create ../backend/src/modules/material-links/material-links.service.ts:140:7
+ ❯ Object.request ../backend/src/modules/material-links/material-links.transport.ts:66:27
+ ❯ Object.request src/lib/page-read-cache.server.ts:109:18
+ ❯ src/server/__module_integration__/assets.persistence-client.test.ts:198:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/server/__module_integration__/data-foundation-prefer-real.persistence-client.test.ts > 数据底座 §1.4 — pages.dashboard.get 优先读真 / fixture 兜底 > 优先读真:种入 imported 真项目后,最近发布让 fixture 让位、只出真实导入作品
+OwnershipError: OwnershipError: platform account not found: acct-of-user-zyongzhu
+ ❯ Object.getAccount ../backend/src/modules/platform-account/platform-account.repository.ts:104:13
+    102|     const row = rows[0];
+    103|     if (!row) {
+    104|       throw new OwnershipError(
+       |             ^
+    105|         `OwnershipError: platform account not found: ${accountId}`,
+    106|       );
+ ❯ Object.assertOwnedAccount ../backend/src/modules/platform-account/platform-account.service.ts:224:19
+ ❯ withTarget ../backend/src/modules/publishing/publishing.service.ts:355:5
+ ❯ Object.request ../backend/src/modules/publishing/publishing.transport.ts:163:23
+ ❯ Object.request src/lib/page-read-cache.server.ts:109:18
+ ❯ src/server/__module_integration__/data-foundation-prefer-real.persistence-client.test.ts:146:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/server/__module_integration__/production.persistence-client.test.ts > production ops registered in the composite transport > get → put → segment → export → complete round-trips over the shared store
+OwnershipError: Asset not found
+ ❯ requireAsset ../backend/src/modules/assets/assets.service.ts:221:21
+    219|     const accountId = workspaceKey(ctx);
+    220|     const row = await repo.getAsset(ctx.userId, assetId, accountId);
+    221|     if (!row) throw new OwnershipError("Asset not found");
+       |                     ^
+    222|     return row;
+    223|   }
+ ❯ Object.completeExport ../backend/src/modules/production/production.service.ts:380:7
+ ❯ Object.request ../backend/src/modules/production/production.transport.ts:180:23
+ ❯ Object.request src/lib/page-read-cache.server.ts:109:18
+ ❯ src/server/__module_integration__/production.persistence-client.test.ts:123:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/server/__module_integration__/publishing.persistence-client.test.ts > publishing ops registered in the composite transport > create → list → revise → transition(published) round-trips over the shared store
+OwnershipError: OwnershipError: platform account not found: acct-of-user-zyongzhu
+ ❯ Object.getAccount ../backend/src/modules/platform-account/platform-account.repository.ts:104:13
+    102|     const row = rows[0];
+    103|     if (!row) {
+    104|       throw new OwnershipError(
+       |             ^
+    105|         `OwnershipError: platform account not found: ${accountId}`,
+    106|       );
+ ❯ Object.assertOwnedAccount ../backend/src/modules/platform-account/platform-account.service.ts:224:19
+ ❯ withTarget ../backend/src/modules/publishing/publishing.service.ts:355:5
+ ❯ Object.request ../backend/src/modules/publishing/publishing.transport.ts:163:23
+ ❯ Object.request src/lib/page-read-cache.server.ts:109:18
+ ❯ src/server/__module_integration__/publishing.persistence-client.test.ts:76:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/server/__module_integration__/publishing.persistence-client.test.ts > publishing ops registered in the composite transport > outputs.publications.register 落 published+external_id 且幂等(同 external key 返回既有行)
+OwnershipError: OwnershipError: platform account not found: acct-of-user-zyongzhu
+ ❯ Object.getAccount ../backend/src/modules/platform-account/platform-account.repository.ts:104:13
+    102|     const row = rows[0];
+    103|     if (!row) {
+    104|       throw new OwnershipError(
+       |             ^
+    105|         `OwnershipError: platform account not found: ${accountId}`,
+    106|       );
+ ❯ Object.assertOwnedAccount ../backend/src/modules/platform-account/platform-account.service.ts:224:19
+ ❯ withTarget ../backend/src/modules/publishing/publishing.service.ts:355:5
+ ❯ Object.registerOwnerPublication ../backend/src/modules/publishing/publishing.service.ts:1024:20
+ ❯ Object.request ../backend/src/modules/publishing/publishing.transport.ts:189:21
+ ❯ Object.request src/lib/page-read-cache.server.ts:109:18
+ ❯ src/server/__module_integration__/publishing.persistence-client.test.ts:159:25
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  4 failed (4)
+      Tests  5 failed | 11 passed (16)
+   Start at  14:14:16
+   Duration  28.51s (transform 4.43s, setup 416ms, import 9.09s, tests 16.74s, environment 1.71s)
+

@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "pnpm",
+    "-C",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/execution/execution.transport.test.ts",
+    "src/modules/execution/transcribe-command-receipt.integration.test.ts",
+    "src/modules/execution/transcribe-postprocess.integration.test.ts",
+    "src/modules/execution/video-render/template.test.ts",
+    "src/modules/projects/transcript-artifact-ownership.integration.test.ts",
+    "src/modules/publishing/publishing.service.test.ts",
+    "src/modules/execution/persistent-task.service.test.ts",
+    "src/modules/artifacts/script-draft-target.service.test.ts",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T09:08:49.404645+00:00",
+  "finishedAt": "2026-10-10T09:14:05.007624+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 315.6004055829835,
+  "logSha256": "c0094c2e653f0aa2b828b0decca176d0aa410b1581a53ddb7137acb1e7d301a0"
+}

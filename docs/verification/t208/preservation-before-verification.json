@@ -1,0 +1,86 @@
+{
+  "protected_unchanged": [
+    {
+      "path": "PROJECT.md",
+      "sha256": "6c779d7481577b44f54f18ccc2f0c593313bc5ef41f398c1b05ad37436de07de",
+      "unchanged": true
+    },
+    {
+      "path": "docs/features/t1072-owned-devices.md",
+      "sha256": "971a503642f67e92b5343772d96abc6800ba74814c014b30fdfb6b486e866f7b",
+      "unchanged": true
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+      "sha256": "32dfc6b72fe0d923947d0f5df625d4f6a4f4afec2917e55c39cf9ab1ca4c56c3",
+      "unchanged": true
+    },
+    {
+      "path": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md",
+      "sha256": "a3be0936b204afd59b47669edf3cb00027fd367d2ef687404505977b5eada40f",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1072/integration/ENGINE.md",
+      "sha256": "f079ef2437597868c742a759a54e115d557d1ad1c503ff05e1461c1af742bc36",
+      "unchanged": true
+    },
+    {
+      "path": "docs/verification/t1072/integration/TEST_ENGINEERING_RECOVERY.md",
+      "sha256": "9eab3f2149251ed96ab998d9fb94afbcd06ad7519548e1833c5a3fede79a345c",
+      "unchanged": true
+    },
+    {
+      "path": "orchestrator/.lessons-stats.json",
+      "sha256": "742b1f3246e1df73da81ca644aead7f9b7127e31b8725c0bd9b532dee383ce7b",
+      "unchanged": true
+    },
+    {
+      "path": "orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "57d8629a89dc68869ca6b7dd012ba720efc6560704a99d7276607af9629998cf",
+      "unchanged": true
+    },
+    {
+      "path": "orchestrator/CHANGE_IMPACT.md",
+      "sha256": "e1e6ad4f1b92867cd033e7debb7325a01eca7bc850946e402bf636a51e045511",
+      "unchanged": true
+    },
+    {
+      "path": "orchestrator/context/T-915.md",
+      "sha256": "2d395bdd515f5406fac80e37b40df597886aad862a101865abc230eaed2838ea",
+      "unchanged": true
+    },
+    {
+      "path": "orchestrator/review-events.ndjson",
+      "sha256": "ed87f9b6aaed3c01814d186d796ca3ee8c0184d6148387a3423472032c4118b7",
+      "unchanged": true
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "unchanged": true
+    },
+    {
+      "path": "orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "unchanged": true
+    }
+  ],
+  "governance_preservation": {
+    "orchestrator/DECISION_LOG.md": {
+      "old_prefix_byte_equal": true
+    },
+    "orchestrator/events.ndjson": {
+      "old_prefix_byte_equal": true
+    },
+    "BACKLOG.md": {
+      "old_rows_byte_equal": true
+    },
+    "orchestrator/process/modules.config.json": {
+      "old_objects_deep_equal": true
+    },
+    "orchestrator/progress.json": {
+      "old_objects_deep_equal": true
+    }
+  }
+}

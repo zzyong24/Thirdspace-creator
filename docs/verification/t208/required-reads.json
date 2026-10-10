@@ -1,0 +1,220 @@
+{
+  "mode": "已完整读取的 compat-full 40项复用，当前任务所需路径再次核字节",
+  "reads": [
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/rules/global-rules.md",
+      "sha256": "9664495d0967f5727059b29beca7d67dda885110cadd96e8acb528108c3174bb",
+      "bytes": 1502
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/workflows/_COMMON.md",
+      "sha256": "9fbfe4eedce268c4322f340ae83b0d7063498dba2a8318eebfb59b2f756f6cf8",
+      "bytes": 1982
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/gates/_GATE_EVIDENCE.md",
+      "sha256": "5dff08e3af35d3bccac5d82f3532864aaee6596467c05ac668e618e6f9eda4d6",
+      "bytes": 1868
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/workflows/v3-1-plan.md",
+      "sha256": "c8e28f2063b72458a0661696dffaf389a6a2a29fa4d5f5251348da903fed707b",
+      "bytes": 2074
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/gates/01-product-gate.md",
+      "sha256": "6278183e69d7829ba6053ea12d19199bb837e8e759e016e04ca31a9eca849d01",
+      "bytes": 1284
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/templates/PRODUCT_SPEC_TEMPLATE.md",
+      "sha256": "5a309c2416e440bff8d70decebfced3f892385fc436e81c7cb49e47b036ef15d",
+      "bytes": 5011
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/workflows/v3-2-contract.md",
+      "sha256": "ba3ab5117d05be6102c7b4dcee63cdae59eccb668ce0b3bf1584ff4a72b53f21",
+      "bytes": 2109
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/gates/03-scope-budget-gate.md",
+      "sha256": "c651f0422e548b31fc63debd082c7db56dbbda6dc6c298fcf78ee633e2fc80ae",
+      "bytes": 2074
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/gates/15b-contract-completeness-gate.md",
+      "sha256": "2b346ffaf0600e58166c1538c10f06ee5ac9d611f696a5c82f7fc3f8fed57c9c",
+      "bytes": 1186
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/templates/SERVICE_CONTRACT_TEMPLATE.md",
+      "sha256": "bf6acf73a7e05adc150c3f1cef9e6e9569726f7a3911c84319ba58ce9082d8c7",
+      "bytes": 2672
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/workflows/v3-3-design.md",
+      "sha256": "ca11c1cd505e63c9fea54e3293e0a96400a3d743d2d80ea1a57cbe7daa3b4c68",
+      "bytes": 1598
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/gates/05-ui-gate.md",
+      "sha256": "837f9dd43bcf866f4d38068d138df4eca594b3f14d9c5c47e5368bcf760fe952",
+      "bytes": 895
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/gates/06-page-spec-gate.md",
+      "sha256": "623d43f5e03eb130b7becea3e1d1c2dcd2514fe5c77401110cf408f669b57a63",
+      "bytes": 1064
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/templates/UI_RULES_TEMPLATE.md",
+      "sha256": "6833aa276f2f487553351a5350bfc2a7fba31a7d5deef21f1ae75be9b0b4d416",
+      "bytes": 1718
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/templates/PAGE_SPEC_TEMPLATE.md",
+      "sha256": "86f194bf1db3e245105af0f333324330210190ffece9d11ba550ebd4910cb4e0",
+      "bytes": 5984
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/workflows/v3-4-build.md",
+      "sha256": "f1ad09466b63f5ee2bfadfa2361e82375ac8df0ec76d883cc5a3f768778e77bf",
+      "bytes": 2725
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/gates/13-tdd-gate.md",
+      "sha256": "a5cdd1b29f4426318b3be80037491588a52f0687cc6f5ce698cfde85bdae17fa",
+      "bytes": 1204
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/workflows/v3-5-ship.md",
+      "sha256": "15ebbd1c40e15e48a92d9b429ffa8e2b3a61f0f169bae385199043a025a6f37e",
+      "bytes": 1738
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/gates/14-integration-gate.md",
+      "sha256": "3be23f9331f357316dd4de1c10b83f66d232a5315011922c9a2adba1f688656b",
+      "bytes": 1665
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/rules/product-integrity-rules.md",
+      "sha256": "93a4c47b3f35df54390fa2a0d00ffefc70fbde9d9e4ff454bf6629245907f8ea",
+      "bytes": 2955
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/rules/observability-rules.md",
+      "sha256": "43d787e3deded85f927fcd0f2131877776709ebc7a1c0f342015b5b5eff761be",
+      "bytes": 2594
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/templates/RELEASE_REVIEW_TEMPLATE.md",
+      "sha256": "f9109cb4c0993aa588db17e8420556784979958fe47154d724aeaf4f2c0a3c6a",
+      "bytes": 422
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/rules/physical-architecture-rules.md",
+      "sha256": "ac754f3ed9689114095d7aadc8f716a6f059978f4a30819e29bc39fd6ff7cc5a",
+      "bytes": 1445
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/gates/02-architecture-boundary-gate.md",
+      "sha256": "05483a3297d76c0d3561c958e3772731fdd30caa9be193aa525e8c3c41c8f943",
+      "bytes": 878
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/templates/SYSTEM_ARCHITECTURE_TEMPLATE.md",
+      "sha256": "410ca719316756ce474041daa6066cda49aa793bed8f9b4229b52ca755f6d67c",
+      "bytes": 4983
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/rules/knowledge-layer-rules.md",
+      "sha256": "bb80f0b9f333f53fd362700bf1ca802ccaf53fdf6adcf60832c2fd2b39759fe6",
+      "bytes": 2280
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/rules/program-orchestration-rules.md",
+      "sha256": "7f7f3eb98c68e6c563f86503b66b5fb6a759f1c96c3f5f7f96792e6748830d44",
+      "bytes": 4391
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/rules/orchestrator-state-machine.md",
+      "sha256": "781746894f89dcd613625f4a3c8c0e78815e989162f19bd75d5dce134cb8f34b",
+      "bytes": 5894
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/templates/THREAT_MODEL_TEMPLATE.json",
+      "sha256": "b465b34f4a3d8dec7dc60509cf9511be6b8833bcaeea952010ff9c736b377220",
+      "bytes": 51
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/rules/ui-implementation-rules.md",
+      "sha256": "c791095257d2bc6804773eb545a0cfa45936177f65bdc929f55f622e5a468ce7",
+      "bytes": 1626
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/gates/09-frontend-implementation-gate.md",
+      "sha256": "ad8f979879a737aee818652f1e645ccee2c00350d4cb1c9101e91f92116f4094",
+      "bytes": 931
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/gates/10-frontend-validation-gate.md",
+      "sha256": "f931a26bc38330e1d45c2732b857d0d70a1f55121fb99fff1b5fd2ca97ab4bd1",
+      "bytes": 1701
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/gates/04-research-first-gate.md",
+      "sha256": "f3bf4ad6e8a000598174be7af903950a9080f1bb67fb6ed28b6f7c080daa5594",
+      "bytes": 4005
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/templates/TECHNICAL_RESEARCH_CARD_TEMPLATE.md",
+      "sha256": "34943d0c2b5c9b9c6b2c8c1ba0616e7adf7200f55fb247c6340c79203d215cd9",
+      "bytes": 3071
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/rules/mock-data-rules.md",
+      "sha256": "1c96c4a19afe14f213741f64e710e4083ac44821e3abf9374224a971ac9588de",
+      "bytes": 929
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/gates/08-mock-data-gate.md",
+      "sha256": "6ae8425c99d4addab59eb17e45a3f4c1e02120cc64be95d75dc8e0212aad21f4",
+      "bytes": 439
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/templates/UI_MOCK_PROMPT_TEMPLATE.md",
+      "sha256": "fd583811940c0ffa710bd11cfbc842701bdba2409063a71987d9abc89b7186e4",
+      "bytes": 1416
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/prelaunch-engineering-audit.md",
+      "sha256": "661b474df8ea32882f20646483c7ddf51187847d47ac15b8d2599aa239cdadfb",
+      "bytes": 2742
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/engineering-retro.md",
+      "sha256": "656d84523be86fcaa22052576b4b0bc3fcb11457511c0f0c35c544ee531bf9ec",
+      "bytes": 635
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/asset-distill.md",
+      "sha256": "6b68f21c7c8916a192b8e3c215ed2dd19a5a0f83147318b962837d894da98f11",
+      "bytes": 949
+    },
+    {
+      "path": "orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "3efbb0394b8bcc9eb3c9ad7e8c9364df51e336006b862e02ac71fd6c9327971e",
+      "bytes": 6646
+    },
+    {
+      "path": "orchestrator/process/boundaries.config.json",
+      "sha256": "51773564dfc12b035aba1b26b0729052c173da698ac347e20a235d6747e915d7",
+      "bytes": 1881
+    },
+    {
+      "path": "orchestrator/THREAT_MODEL.json",
+      "sha256": "b465b34f4a3d8dec7dc60509cf9511be6b8833bcaeea952010ff9c736b377220",
+      "bytes": 51
+    }
+  ]
+}

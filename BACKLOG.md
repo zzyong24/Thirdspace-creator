@@ -10,6 +10,7 @@
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
 |T-1080|汇总全部本地worktree代码到main并清理闲置目录后构建|🔨 待办|—|—|[SPEC](docs/features/t1080-local-main-worktree-consolidation.md)|用户2026-10-08明确授权全部代码本地合并至主分支、清理不用的worktree再构建，构建无需备份。先逐树核HEAD/未提交/使用情况并保留Git来源，解决冲突和验证后只删除已保留代码且未占用的目录；保留活跃会话、真实数据与既有备份，不push/tag/发布。|
+|T-1197|核对旧外部MCP窄权限配对来源与当前账号组兼容|📋 待办|—|待验|[SPEC](docs/features/t1197-external-agent-pairing-source-convergence.md)|T1080独立分支审计实发现71d2cc77未投用配对源码缺口；原来源与27文件保留，先核授权/账号组/凭据及0101同号迁移，不恢复已淘汰ACP、不假称全CLI等价窄grant。|
 |T-1196|排查新安装版启动配置同步502与运行摘要拒绝|📋 待办|—|—|[实际诊断](docs/features/t1196-installed-config-sync-502.md)|T1194新包真启动HTTP首页正常、CLI连接正常；同时日志CHANNEL_RUNTIME_DIGEST_MISMATCH、展示副本同步502、config_sync blocked502。保失败和已激活事实，核真实同步消费者/返回来源，不猜网络或绕过摘要/验签，不重置激活。|
 |T-1195|校准安装验收探针的公开PID和首页事件边界|✅ 待办|—|—|[诊断与校准](docs/features/t1195-installed-startup-probe-pid.md)|T1194首探针错误把status.pid当服务PID，真实值为安装版主PID，15.006秒exit1；只校准私有验收驱动，绑定主进程/直属HTTP监听及HTTP首页事件，排除tauri启动页；原失败不覆写，不改产品。|
 |T-1194|安装当前新包并清理旧测试安装包与App副本|✅ 待办|—|—|[操作SPEC](docs/features/t1194-install-current-clean-old-packages.md)|用户2026-10-10明确要求安装当前新包并删除旧测试安装包；仅安装已核验的d91079d6本地1.2.0包，无需重建或备份。逐项核归属后清理旧制品/空包装目录，保账号、项目、素材、激活、日志、证据和源码；验证实际原生启动，不代签全功能。|

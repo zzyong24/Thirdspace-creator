@@ -1103,6 +1103,20 @@ describe("[T-239f] POST /api/chat — user 消息去重", () => {
     expect(durableSubmit).not.toHaveBeenCalled();
   });
 
+  it.each([
+    { content: "已保存的另一段原文", attachments: [] },
+    { content: "hi", attachments: ["original-attachment"] },
+  ])("regenerate 原内容或附件变化时保留409且零新消息/新任务：%j", async saved => {
+    listMessages.mockResolvedValue([{ id: "m-original", role: "user", ...saved }]);
+    const res = await POST(chatReq({
+      messages: [userMessage("hi")], conversationId: "conv-existing", trigger: "regenerate-message",
+    }, "creatoros_session=tok"));
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ code: "CHAT_RETRY_SOURCE_MISMATCH" });
+    expect(createMessage).not.toHaveBeenCalled();
+    expect(durableSubmit).not.toHaveBeenCalled();
+  });
+
   it("兜底(无 trigger 的老客户端):续接会话且库中最后一条=同内容 user 行 → 不重插", async () => {
     listMessages.mockResolvedValue([
       { id: "m-0", role: "assistant", content: "上一轮回答" },

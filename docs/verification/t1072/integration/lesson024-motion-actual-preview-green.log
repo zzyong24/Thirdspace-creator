@@ -1,0 +1,116 @@
+{
+  "status": "pass",
+  "screenshots": "/var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-t794-preview.2rCt1c",
+  "viewports": [
+    {
+      "viewport": "1920x1080",
+      "geometry": [
+        {
+          "className": "visual-magnitude visual-sentence",
+          "x": 168,
+          "y": 298,
+          "width": 964,
+          "height": 404,
+          "right": 1132,
+          "bottom": 702,
+          "captionTop": 951.640625
+        },
+        {
+          "className": "visual-contrast visual-sentence",
+          "x": 168,
+          "y": 298,
+          "width": 964,
+          "height": 404,
+          "right": 1132,
+          "bottom": 702,
+          "captionTop": 951.640625
+        },
+        {
+          "className": "visual-sequence visual-sentence",
+          "x": 168,
+          "y": 298,
+          "width": 964,
+          "height": 404,
+          "right": 1132,
+          "bottom": 702,
+          "captionTop": 951.640625
+        },
+        {
+          "className": "visual-cause-effect visual-sentence",
+          "x": 168,
+          "y": 298,
+          "width": 964,
+          "height": 404,
+          "right": 1132,
+          "bottom": 702,
+          "captionTop": 951.640625
+        },
+        {
+          "className": "visual-replacement visual-sentence",
+          "x": 168,
+          "y": 298,
+          "width": 964,
+          "height": 404,
+          "right": 1132,
+          "bottom": 702,
+          "captionTop": 951.640625
+        }
+      ]
+    },
+    {
+      "viewport": "1080x1920",
+      "geometry": [
+        {
+          "className": "visual-magnitude visual-sentence",
+          "x": 78,
+          "y": 458,
+          "width": 964,
+          "height": 664,
+          "right": 1042,
+          "bottom": 1122,
+          "captionTop": 1677.90625
+        },
+        {
+          "className": "visual-contrast visual-sentence",
+          "x": 78,
+          "y": 458,
+          "width": 964,
+          "height": 664,
+          "right": 1042,
+          "bottom": 1122,
+          "captionTop": 1677.90625
+        },
+        {
+          "className": "visual-sequence visual-sentence",
+          "x": 78,
+          "y": 458,
+          "width": 964,
+          "height": 664,
+          "right": 1042,
+          "bottom": 1122,
+          "captionTop": 1677.90625
+        },
+        {
+          "className": "visual-cause-effect visual-sentence",
+          "x": 78,
+          "y": 458,
+          "width": 964,
+          "height": 664,
+          "right": 1042,
+          "bottom": 1122,
+          "captionTop": 1677.90625
+        },
+        {
+          "className": "visual-replacement visual-sentence",
+          "x": 78,
+          "y": 458,
+          "width": 964,
+          "height": 664,
+          "right": 1042,
+          "bottom": 1122,
+          "captionTop": 1677.90625
+        }
+      ]
+    }
+  ]
+}

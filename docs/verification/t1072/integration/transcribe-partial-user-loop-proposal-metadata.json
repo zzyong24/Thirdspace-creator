@@ -1,0 +1,68 @@
+{
+  "status": "unapplied_user_loop_proposal",
+  "source_head": "af34bef454d4bab319e75806c068b9f3a7f8bf3f",
+  "production_changed": false,
+  "worker_changed": false,
+  "public_contract_changed": false,
+  "ui_changed": false,
+  "terminal_expected_changed": false,
+  "formal_review_performed": false,
+  "review_round_consumed": false,
+  "spec_patch_applied": false,
+  "proposal": {
+    "path": "docs/verification/t1072/integration/TRANSCRIBE_PARTIAL_WIRE_COMPAT_PROPOSAL.md",
+    "sha256": "ede08aaaa0ecebd451c8537d6dc5e74ffeae2464c1e5f6b618548b03e0f47df5"
+  },
+  "spec_patch": {
+    "path": "docs/verification/t1072/integration/TRANSCRIBE_PARTIAL_USER_LOOP_SPEC.candidate.patch",
+    "sha256": "fe449a1410f209e058fcac0d308b9b73f5b2dbacd85331108e34788428e50565",
+    "target": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+    "target_current_pending_draft_sha256": "32dfc6b72fe0d923947d0f5df625d4f6a4f4afec2917e55c39cf9ab1ca4c56c3",
+    "note": "当前母文件已有待正式审核的聊天draft；本candidate只增原R05转写段与AC07，不改R03a/R05a/S5，未应用，不继承旧PASS。"
+  },
+  "source_sha256": {
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts": "66784d2d4605c484129e05d8c33073be092429f0609978f3767a2f2b509a5235",
+    "backend/src/modules/execution/transcribe-execution-binding.ts": "e0be33e2bf1256e0015a6ac0eabc2257abb894a0272c70715b699a1b257032ea",
+    "backend/src/modules/execution/persistent-task.service.ts": "2c0dd4dc93d601c641c25777976edfcf9b394e81ed5b51211cf05c33e9331e4d",
+    "backend/src/modules/execution/execution.transport.ts": "da6066db329bbb70750a914a6729fdd584f60ebe8cf11c6171e42d70df7e417d",
+    "backend/src/modules/execution/execution.service.ts": "89a9cae74e2969eaaafcc1bb9ae26d0cae87967dd1b4f6acde3da4655a961fac",
+    "backend/src/modules/ai/ai.service.ts": "91cd9a9eae3d9def01dc7ae086f717186cb75d034c3b3da693bf79fc5260e03e",
+    "backend/src/modules/ai/execution-task-projection.ts": "49eb9fa991f84b791e3eb657b6eb7e217b3dfc7ea1d303fff96bd2d80cc7a3cc",
+    "backend/src/modules/ai/project-transcription-submission.ts": "3cb51a485087880598e834c1f976463dfdb5a52afbc19efd8bf1a90d989b01a5",
+    "backend/src/modules/projects/transcript-artifact.service.ts": "b4a5d4de5863d99500f998c59458ff12c0f121ff6d4bdb3acc80e4877e875fdc",
+    "backend/src/modules/projects/transcript-artifact.ts": "62b7a2a24b7b704b4581e087f681fd02a002c3d767c426c79bbd3bd4454a8380",
+    "backend/src/modules/execution/execution-transcribe-preparation.service.ts": "2bb0a837c6b503723ffee8da3afb703774812978762fbf605cde2a47c5003bad",
+    "backend/src/modules/execution/execution-asr-ports.service.ts": "da538a80a8d115df2bd6cc30aaebe0cd5dbf0c8f55b6b5426142325c8033d7e9",
+    "ai-worker/src/execution/transcribe-worker-run.ts": "dd6e27ce858d45aec5bc5445d345fc48bb77079045eb069cedd6723a9c9c82ad",
+    "ai-worker/src/execution/transcribe-asr-run.ts": "babae7b22d9176597f97ff56bf3b01a5409ef68cb18a5689e22847f1951fd476",
+    "frontend/src/features/draft-workbench/draft-workbench-data.ts": "4830e6596adff4e830c861d943d66cce5f546887b32d512056540e6e4ec5655e",
+    "frontend/src/features/draft-workbench/draft-workbench-page.tsx": "c8e0f3bd6eb64ad13d8ebeb81c8f6a84a843de8436668b238410305a5fcf1c5a",
+    "frontend/src/features/draft-workbench/transcribe-now-button.tsx": "fbd877a4098d7a64491b7a5afcb78b8c84f5f5eb6ee020408f0124479fe82a70",
+    "frontend/src/features/copilot/ai-copilot-content.tsx": "4848adb233caaed68d98332583cf8bd52d984cd7b504d42232117489c427cd79",
+    "frontend/src/components/ai/task-runtime-actions.tsx": "feaaceb9899c9d1cd14000230ea5a19a4d92e9757ab2b7ea82d8bbc22b07330d",
+    "frontend/src/features/script/script-editor-data.ts": "c075f4532e977d8c9738944f5350ed05e6ea89aac9fd260658e25087c115db24",
+    "contract/src/resources/ai.ts": "87f5a6335aea9db375b437005fbbbd948f037341a1d1e1db55c843be2f32ff85",
+    "contract/src/operations/execution.ts": "7385ff330e0b39b12e92e54151fe84403bf3ba933cc7a4766ef3459763adac5c"
+  },
+  "verification": {
+    "kind": "read_only_source_investigation",
+    "new_partial_tests_run": false,
+    "last_original30": {
+      "passed": 19,
+      "failed": 11
+    },
+    "last_full170": {
+      "passed": 159,
+      "failed": 11,
+      "exit_code": 1,
+      "log": "backend-five-chat-current-contract-full170.log"
+    },
+    "research_separate_inventory": {
+      "original": 46,
+      "observer_added": 18,
+      "passed": 64,
+      "failed": 0,
+      "log": "backend-research-current-fixture-original46-plus18-full.log"
+    }
+  }
+}

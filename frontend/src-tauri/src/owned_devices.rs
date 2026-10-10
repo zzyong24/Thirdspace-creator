@@ -77,6 +77,10 @@ fn ulid(raw: &str) -> bool {
             .bytes()
             .all(|b| b"0123456789ABCDEFGHJKMNPQRSTVWXYZ".contains(&b))
 }
+fn registration_reference(raw: &str) -> bool {
+    raw.len()==36 && raw.starts_with("LDR_")
+        && raw[4..].bytes().all(|b|b.is_ascii_digit()||(b'a'..=b'f').contains(&b))
+}
 fn user_code(raw: &str) -> Option<String> {
     let compact = raw.replace('-', "");
     if compact.len() != 8
@@ -90,7 +94,12 @@ fn user_code(raw: &str) -> Option<String> {
 }
 fn verification_url(raw: &str, code: &str) -> Result<String, String> {
     let url = url::Url::parse(raw).map_err(|_| error("官方确认地址无效，请重新连接"))?;
-    if url.origin().ascii_serialization() != GROWTH
+    let origin_allowed = url.origin().ascii_serialization() == GROWTH;
+    #[cfg(debug_assertions)]
+    let origin_allowed = origin_allowed ||
+        (std::env::var("CREATOROS_OWNED_DEVICES_HTTP_LAB").as_deref() == Ok("1")
+        && http_client_and_origin(GROWTH)?.1 == url.origin().ascii_serialization());
+    if !origin_allowed
         || url.path() != "/products/connect"
         || !url.username().is_empty()
         || url.password().is_some()
@@ -193,7 +202,7 @@ fn validate_journal(j: &Journal, cfg: &LicenseConfig) -> Result<(), String> {
     if j.integrity != seal(j)
         || j.schema_version != 1
         || !matches!(j.intent.as_str(), "link_owner" | "register_device")
-        || !ulid(&j.registration_ref)
+        || !registration_reference(&j.registration_ref)
         || j.binding != binding(cfg, &j.registration_ref)
         || !(43..=128).contains(&j.code_verifier.len())
         || j.device_secret.len() < 32
@@ -283,6 +292,64 @@ impl Drop for Flight {
     }
 }
 struct Http;
+// 只在开发/测试编译中存在。普通运行不读Lab文件，正式编译不包含该入口。
+#[cfg(debug_assertions)]
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct LocalHttpLab {
+    schema: String,
+    growth_origin: String,
+    activity_origin: String,
+    ca_pem_path: Option<String>,
+}
+#[cfg(debug_assertions)]
+fn loopback_origin(raw: &str) -> Result<url::Url, String> {
+    let u = url::Url::parse(raw).map_err(|_| error("本地测试origin无效"))?;
+    if !matches!(u.scheme(), "http" | "https")
+        || !matches!(u.host_str(), Some("127.0.0.1" | "localhost" | "[::1]"))
+        || u.port().is_none_or(|p| p < 1024)
+        || !u.username().is_empty() || u.password().is_some()
+        || u.path() != "/" || u.query().is_some() || u.fragment().is_some()
+    { return Err(error("本地测试只允许显式loopback origin")); }
+    Ok(u)
+}
+fn http_client_and_origin(origin: &str) -> Result<(reqwest::blocking::Client, String), String> {
+    let builder = reqwest::blocking::Client::builder()
+        .timeout(Duration::from_secs(120))
+        .redirect(reqwest::redirect::Policy::none());
+    #[cfg(debug_assertions)]
+    if std::env::var("CREATOROS_OWNED_DEVICES_HTTP_LAB").as_deref() == Ok("1") {
+        let path = std::env::var("CREATOROS_OWNED_DEVICES_HTTP_LAB_CONFIG")
+            .map_err(|_| error("本地HTTP测试缺少显式配置"))?;
+        let bytes = std::fs::read(path).map_err(|_| error("本地HTTP测试配置无法读取"))?;
+        if bytes.len() as u64 > MAX_BODY { return Err(error("本地HTTP测试配置过大")); }
+        let lab: LocalHttpLab = serde_json::from_slice(&bytes)
+            .map_err(|_| error("本地HTTP测试配置无效"))?;
+        if lab.schema != "creator-owned-devices-http-lab/v1" {
+            return Err(error("本地HTTP测试配置版本无效"));
+        }
+        let growth = loopback_origin(&lab.growth_origin)?;
+        let activity = loopback_origin(&lab.activity_origin)?;
+        let target = match origin { GROWTH => growth, ACTIVITY => activity,
+            _ => return Err(error("本地HTTP测试不能扩展生产origin白名单")) };
+        let mut builder = builder.no_proxy();
+        if target.scheme() == "https" {
+            let pem = std::fs::read(lab.ca_pem_path.ok_or_else(|| error("本地HTTPS测试缺少专属CA"))?)
+                .map_err(|_| error("本地HTTPS测试CA无法读取"))?;
+            if pem.len() as u64 > MAX_BODY { return Err(error("本地HTTPS测试CA过大")); }
+            let cert = reqwest::Certificate::from_pem(&pem)
+                .map_err(|_| error("本地HTTPS测试CA无效"))?;
+            builder = builder.add_root_certificate(cert);
+        }
+        if target.host_str() == Some("localhost") {
+            let addr = std::net::SocketAddr::from(([127,0,0,1], target.port().unwrap()));
+            builder = builder.resolve("localhost", addr);
+        }
+        let client = builder.build().map_err(|_| error("本地HTTP测试client无法建立"))?;
+        return Ok((client, target.origin().ascii_serialization()));
+    }
+    Ok((builder.build().map_err(|_| error("无法建立安全网络连接"))?, origin.to_string()))
+}
 struct Response {
     signed: LicenseHttpResponse,
     retry_after: Option<u64>,
@@ -317,16 +384,17 @@ impl Transport for Http {
         {
             return Err(error("连接服务地址未通过安全核对"));
         }
-        let client = reqwest::blocking::Client::builder()
-            .timeout(Duration::from_secs(120))
-            .redirect(reqwest::redirect::Policy::none())
-            .build()
-            .map_err(|_| error("无法建立安全网络连接"))?;
+        let (client, target_origin) = http_client_and_origin(origin)?;
         let mut request = client
-            .post(format!("{origin}{path}"))
+            .post(format!("{target_origin}{path}"))
             .header("content-type", "application/json")
             .header("accept", "application/json")
             .body(body.to_string());
+        #[cfg(debug_assertions)]
+        if target_origin != origin {
+            let host = url::Url::parse(origin).map_err(|_| error("官方origin无效"))?;
+            request = request.header("host", host.host_str().unwrap_or_default());
+        }
         if let Some(token) = bearer {
             request = request.bearer_auth(token);
         }
@@ -843,7 +911,7 @@ pub async fn owned_device_start(
         let code = user_code(&created.user_code).ok_or_else(|| error("连接短码无法核对，请重试"))?;
         let url = verification_url(&created.verification_url, &code)?;
         let expiry = canonical_time(&created.expires_at).ok_or_else(|| error("连接期限无法核对"))?;
-        if !ulid(&created.registration_ref) || created.device_secret.len() < 32 || created.device_secret.len() > 256 || !(1..=60).contains(&created.poll_interval_seconds) || expiry <= now() || expiry - now() > 600_000 { return Err(error("连接记录无法核对，请重试")); }
+        if !registration_reference(&created.registration_ref) || created.device_secret.len() < 32 || created.device_secret.len() > 256 || !(1..=60).contains(&created.poll_interval_seconds) || expiry <= now() || expiry - now() > 600_000 { return Err(error("连接记录无法核对，请重试")); }
         let j = Journal { integrity: String::new(), schema_version: 1, intent, binding: binding(&cfg, &created.registration_ref), registration_ref: created.registration_ref.clone(), device_secret: std::mem::take(&mut created.device_secret), code_verifier: verifier.to_string(), activation_code: original.take(), user_code: code, verification_url: url, expires_at: created.expires_at.clone(), retry_after_seconds: created.poll_interval_seconds, next_poll_at: now() + (created.poll_interval_seconds * 1000) as i64, saved_snapshot_hash: None, committed: false };
         install_journal(&Keychain, &j, &flight)?;
         Ok(view("waiting", Some(&j), "在官方页面验证手机号并确认产品，完成后回到这里"))
@@ -1102,6 +1170,26 @@ mod tests {
     use std::cell::RefCell;
     static GLOBAL_TEST_LOCK: Mutex<()> = Mutex::new(());
     const REF: &str = "01K0A0B1C7Z8Y9X0W1V2T3S4R5";
+    const REGISTRATION_REF: &str = "LDR_6a1fa8334d754d31ad447d2d9532012e";
+
+    #[test]
+    fn canonical_growth_registration_reference_survives_journal_validation() {
+        let mut j=journal();
+        j.registration_ref=REGISTRATION_REF.into();
+        j.binding=binding(&cfg(),REGISTRATION_REF);
+        j.integrity=seal(&j);
+        assert!(validate_journal(&j,&cfg()).is_ok());
+    }
+    #[test]
+    fn connection_reference_rejects_foreign_formats_and_keeps_device_ulid_strict() {
+        for reference in [REF,"https://growth.aitongban.com/LDR_6a1fa8334d754d31ad447d2d9532012e","LDR_6A1FA8334D754D31AD447D2D9532012E","LDR_6a1fa8334d754d31ad447d2d9532012","LDR_6a1fa8334d754d31ad447d2d9532012g"] {
+            let mut j=journal();j.registration_ref=reference.into();j.binding=binding(&cfg(),reference);j.integrity=seal(&j);
+            assert!(validate_journal(&j,&cfg()).is_err());
+        }
+        assert!(ulid(REF));assert!(!ulid(REGISTRATION_REF));
+        let mut r=ready();r.registered_device_ref=REGISTRATION_REF.into();
+        assert!(validate_ready(&r,&journal(),&cfg()).is_err());
+    }
     fn cfg() -> LicenseConfig {
         LicenseConfig {
             base_url: ACTIVITY.into(),
@@ -1118,7 +1206,7 @@ mod tests {
             integrity: String::new(),
             schema_version: 1,
             intent: "register_device".into(),
-            registration_ref: REF.into(),
+            registration_ref: REGISTRATION_REF.into(),
             device_secret: "s".repeat(43),
             code_verifier: "v".repeat(43),
             activation_code: None,
@@ -1127,7 +1215,7 @@ mod tests {
             expires_at: iso_ms(now() + 600_000),
             retry_after_seconds: 5,
             next_poll_at: 0,
-            binding: binding(&cfg, REF),
+            binding: binding(&cfg, REGISTRATION_REF),
             saved_snapshot_hash: None,
             committed: false,
         };
@@ -1555,3 +1643,7 @@ mod tests {
         }
     }
 }
+
+#[cfg(all(test, debug_assertions))]
+#[path = "owned_devices_http_lab.rs"]
+mod http_lab;

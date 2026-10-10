@@ -1,0 +1,57 @@
+{
+  "sourceParent": "6597ae18980a02c4dea6ade4e79eb30735058c1b",
+  "codeWriteSet": [
+    "backend/src/modules/execution/video-render/template.ts",
+    "backend/src/modules/execution/video-render/template.test.ts",
+    "backend/src/modules/execution/video-render/__snapshots__/template.test.ts.snap"
+  ],
+  "codeSha256": {
+    "backend/src/modules/execution/video-render/template.ts": "ab28b3ef082caeacee34046ecce987dcf8a48b4c622d494dd075b6cc2675aa21",
+    "backend/src/modules/execution/video-render/template.test.ts": "d562ccdbda9717411a378533d6d47a957f484b9f3dc0e88732e28a9371636a0f",
+    "backend/src/modules/execution/video-render/__snapshots__/template.test.ts.snap": "9fee54f497af706a6365269260e9b99850b71aa423a18d5f7df5af591e257768"
+  },
+  "baselineProduction": "6b1322af",
+  "accurateNewTestsOnBaseline": {
+    "passed": 3,
+    "failed": 5,
+    "selected": 8,
+    "exit": 1
+  },
+  "originalTemplate": 80,
+  "newTimeBoundaryTests": 8,
+  "templateFinal": {
+    "passed": 88,
+    "failed": 0,
+    "exit": 0,
+    "seconds": 2.33
+  },
+  "originalLed024Chain": {
+    "worker": 11,
+    "backend": 186,
+    "frontend": 12,
+    "browser": "横竖原strict15及安全几何通过",
+    "exit": 0
+  },
+  "originalT902SafetyRender": {
+    "exit": 0,
+    "width": 1080,
+    "height": 1920,
+    "fps": "30/1",
+    "durationSeconds": 3,
+    "fallbacks": []
+  },
+  "typecheckExit": 0,
+  "snapshotChange": "仅删除原portrait终点60.00人物tween与zIndex两行",
+  "logsSha256": {
+    "lesson024-preview-exact-diagnostic.log": "2441c03c6ff7985450970b1d78e03a868f3acc5dff47df6f35b2b37af5fea0ce",
+    "lesson024-baseline-preview-exact-diagnostic.log": "0fa7594e0551cbdc770d8deda4a62242e785a16205b9657ad9788c614eebee19",
+    "backend-motion-duration-baseline-accurate-red.log": "74123b846cb00fd537a7cfe02c7cd3d659503fa158f8dd302d6b681dd4ffe15f",
+    "backend-motion-duration-template-green.log": "8bb84e3a9436f8681ca80b1b3df358add51d6015236769c77a0a541d10776a45",
+    "backend-motion-duration-final-template88.log": "b8e181531270342faef6e9dcd3eabc3ab2ab2fd9229737c6654c92835f868628",
+    "lesson024-motion-required-tests-green.log": "0c0e4549ec25ef6db54f326a94098ed9e0f60e6a0a40ee675ca87d9c2e53bc21",
+    "lesson024-motion-actual-preview-green.log": "41946f0ab1eded7fdca158934371b3949ec2edb5a3c2c05fa3134cd0284a39d6",
+    "motion-t902-existing-safety-render.log": "196295be566b149cb7d1b29e04580392f2b60833d4d0f92286bbb8b841b754b0",
+    "backend-motion-duration-typecheck.log": "a3061b0539ed05271807c7764cc0ed8e01202b30c6bb838000c8e805418f7241",
+    "backend-motion-duration-corrected-typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

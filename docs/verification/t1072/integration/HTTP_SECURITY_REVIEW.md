@@ -1,0 +1,9 @@
+# 独立原生HTTP配置安全复核
+
+2026-10-09，`creator_spec_review` 只读审阅当前LocalHttpLab、loopback映射、verification_url、Http与cfg(test)驱动及.gitignore；不读私有配置、secret/key/source.json或OS凭据。结论：未发现实质安全漏洞。release仍为官方origin；Lab/CA/Host覆盖受cfg(debug_assertions)限制，驱动仅cfg(test)；loopback高端口且拒绝userinfo/path/query/fragment，localhost固定回环，无代理/重定向；TLS单client添加CA，没有关闭证书或主机名验证；签名canonical Host保持官方，输出无秘密，写入固定工作树私有目录且Git忽略。
+
+本轮仅静态复核，未运行TLS负向或真实HTTP驱动，不替代正式Mac/Windows双机UAT。之后驱动补入同一Lab服务器不加CA的真实TLS拒绝检查，运行证据单独记录。
+
+同一独立评审者再次只读检查保存后ACK未知恢复：仅已验签allowed快照精确匹配原journal哈希时续ACK，不重复激活；未匹配对象及committed但文件不存在均拒绝。评审发现production ack允许410过期清理，所以最初driver成功输出不足以证明200回执；当前已用ConfirmedAckHttp要求真实200且status=acknowledged，再进入原ack清理。两个调用点均核查，未发现新增问题。以上仍为静态结论，真实运行结果另记。
+
+独立评审再次检查本轮已过期胶囊的新意向恢复驱动，发现两点并真实整改：任何license.enc存在都拒绝新建；active胶囊先写同目录600临时加密文件、同步及密文回读再原子rename、目录同步与active回读。替换后同步未知不假称旧active未变，旧加密归档保留。评审只读复核修复通过，未执行故障注入/真实新意向；运行证据单独列。

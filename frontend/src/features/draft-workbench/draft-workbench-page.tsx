@@ -83,7 +83,7 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
         data-slot="draft-topbar"
         className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-border bg-surface px-5 py-2"
       >
-        <div className="ml-auto flex shrink-0 items-center gap-2.5">
+        <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-center gap-2.5">
           {project.imported ? (
             <span
               data-slot="draft-imported-badge"
@@ -92,10 +92,11 @@ export function DraftWorkbenchPage({ vm }: { vm: DraftWorkbenchVm }) {
               真实导入作品
             </span>
           ) : null}
-          {/* [T-505] 只在有抖音锚且尚无真稿时渲染；queued/running 从持久任务恢复并置灰。 */}
-          {project.douyinExternalId && project.transcriptState !== "done" ? (
+          {/* 有真稿后保原任务入口；只读结果不等于本次刚保存。 */}
+          {project.douyinExternalId ? (
             <TranscribeNowButton
               projectId={project.id}
+              awemeId={project.douyinExternalId}
               initialState={project.transcriptState}
             />
           ) : null}

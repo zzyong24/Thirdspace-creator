@@ -1,0 +1,50 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > F7-a:按后续T768完全未配或坏云配置安全丢弃并本地一次，不使用不可信线上规格
+回执相等白名单 {"keysFrozen":["reason","applied","transcript"],"keysParsed":["applied","transcript","reason"],"deepEqual":true,"jsonEqual":false}
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > F7-a:按后续T768完全未配或坏云配置安全丢弃并本地一次，不使用不可信线上规格
+回执相等白名单 {"keysFrozen":["reason","applied","transcript"],"keysParsed":["applied","transcript","reason"],"deepEqual":true,"jsonEqual":false}
+
+stdout | src/modules/ai-runtime/transcribe-runner.test.ts > F7-a:按后续T768完全未配或坏云配置安全丢弃并本地一次，不使用不可信线上规格
+回执相等白名单 {"keysFrozen":["reason","applied","transcript"],"keysParsed":["applied","transcript","reason"],"deepEqual":true,"jsonEqual":false}
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts (30 tests | 1 failed | 29 skipped) 2741ms
+   × F7-a:按后续T768完全未配或坏云配置安全丢弃并本地一次，不使用不可信线上规格 923ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/transcribe-runner.test.ts > F7-a:按后续T768完全未配或坏云配置安全丢弃并本地一次，不使用不可信线上规格
+AssertionError: expected [ { …(2) } ] to deeply equal [ { …(2) } ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "operationKey": "transcribe:invalid-cloud/asr/1",
++     "operationKey": "transcribe:invalid-cloud/local-asr/1",
+      "status": "settled",
+    },
+  ]
+
+ ❯ src/modules/ai-runtime/transcribe-runner.test.ts:154:83
+    152|  const rows=await invalid.rows(),payload=rows.execution.payload as Rec…
+    153|  expect(transcribeAsrPlanSchema.parse(plans['invalid-cloud']).identity…
+    154|  expect(rows.calls.map(row=>({operationKey:row.operationKey,status:row…
+       |                                                                                   ^
+    155|  expect(rows.business.status).toBe('succeeded');expect(JSON.stringify(…
+    156| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 29 skipped (30)
+   Start at  17:13:31
+   Duration  6.97s (transform 2.62s, setup 0ms, import 4.04s, tests 2.74s, environment 0ms)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/transcribe-runner.test.ts --maxWorkers=2 --retry=0 -t F7-a

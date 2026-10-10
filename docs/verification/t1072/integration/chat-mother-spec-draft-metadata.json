@@ -1,0 +1,26 @@
+{
+  "schema": "t915-chat-mother-spec-draft/v1",
+  "status": "已按主控授权应用规范draft，正式T915审核待执行，未实施",
+  "sourceHead": "6dd9db7acbcc80a85075f07a40964dd014d24454",
+  "motherSpec": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+  "motherSpecSha256": "76d22c8860767ac5de715af3c6e3c2b3079f5e452ebcb22aceca055c574d2822",
+  "reviewedProposalSha256": "857a0f989794f292710ca422602dd8250296bde12d4933c9b1caadbcfcd0fe3d",
+  "candidateSha256": "32dfc6b72fe0d923947d0f5df625d4f6a4f4afec2917e55c39cf9ab1ca4c56c3",
+  "cycle": 1,
+  "currentRound": 2,
+  "maxRounds": 3,
+  "latestT915EventHash": "1d0f281764a2d94f245bbaedad518a9d89ad8fc824c531ba04bf5609a747b93b",
+  "oldReceiptSpecSha256": "b990a38a015698105d29d2da0cada4767b3be4bd09948cc5ef147621fb98d8ce",
+  "oldReceiptIsCurrent": false,
+  "proposedChangeIds": [
+    "R-03a",
+    "R-05a",
+    "AC-04",
+    "AC-05",
+    "AC-08"
+  ],
+  "mutatedCodeSchemaContract": false,
+  "reviewctlRecorded": false,
+  "newCycle": false,
+  "appliedMotherSha256": "32dfc6b72fe0d923947d0f5df625d4f6a4f4afec2917e55c39cf9ab1ca4c56c3"
+}

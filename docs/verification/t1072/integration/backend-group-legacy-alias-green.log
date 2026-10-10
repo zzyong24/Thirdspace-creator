@@ -1,0 +1,26 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+ ❯ src/modules/assets/pending-generated-asset.test.ts (15 tests | 1 failed) 16828ms
+   × 正常平台注册的显式legacy组别名按原account键读回同素材，不能落入新组 905ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/assets/pending-generated-asset.test.ts > 正常平台注册的显式legacy组别名按原account键读回同素材，不能落入新组
+ConflictError: 素材缺少原调用的持久提交事实
+ ❯ readGeneratedAssetReceipt src/modules/assets/generated-asset-candidate.service.ts:17:29
+
+ ❯ verifyGeneratedAssetCandidate src/modules/assets/generated-asset-candidate.service.ts:23:22
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 14 passed (15)
+   Start at  15:12:59
+   Duration  18.91s (transform 1.06s, setup 0ms, import 1.93s, tests 16.83s, environment 0ms)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/assets/pending-generated-asset.test.ts --maxWorkers=1 --retry=0

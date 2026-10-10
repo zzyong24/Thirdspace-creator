@@ -1,0 +1,11 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:16370) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  1 passed (1)
+      Tests  50 passed (50)
+   Start at  14:29:21
+   Duration  11.40s (transform 3.38s, setup 109ms, import 4.57s, tests 6.06s, environment 479ms)
+

@@ -1,0 +1,104 @@
+{
+  "head": "5a472fb018609517f8feb17c8adb0c358e1f3bab",
+  "node": "v25.9.0",
+  "pnpm": "10.32.1",
+  "files": {
+    "BACKLOG.md": {
+      "sha256": "17d7e89db0b22acf92ec9dd76d926fb1972e3f82b5a966ba1e5a2b2d486577ed",
+      "bytes": 59875
+    },
+    "PROJECT.md": {
+      "sha256": "6c779d7481577b44f54f18ccc2f0c593313bc5ef41f398c1b05ad37436de07de",
+      "bytes": 18975
+    },
+    "docs/features/t1072-owned-devices.md": {
+      "sha256": "971a503642f67e92b5343772d96abc6800ba74814c014b30fdfb6b486e866f7b",
+      "bytes": 13631
+    },
+    "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md": {
+      "sha256": "32dfc6b72fe0d923947d0f5df625d4f6a4f4afec2917e55c39cf9ab1ca4c56c3",
+      "bytes": 54947
+    },
+    "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md": {
+      "sha256": "a3be0936b204afd59b47669edf3cb00027fd367d2ef687404505977b5eada40f",
+      "bytes": 8203
+    },
+    "docs/verification/t1072/integration/ENGINE.md": {
+      "sha256": "f079ef2437597868c742a759a54e115d557d1ad1c503ff05e1461c1af742bc36",
+      "bytes": 1142
+    },
+    "docs/verification/t1072/integration/TEST_ENGINEERING_RECOVERY.md": {
+      "sha256": "9eab3f2149251ed96ab998d9fb94afbcd06ad7519548e1833c5a3fede79a345c",
+      "bytes": 17728
+    },
+    "orchestrator/.lessons-stats.json": {
+      "sha256": "742b1f3246e1df73da81ca644aead7f9b7127e31b8725c0bd9b532dee383ce7b",
+      "bytes": 9791
+    },
+    "orchestrator/ARTIFACT_MANIFEST.yaml": {
+      "sha256": "57d8629a89dc68869ca6b7dd012ba720efc6560704a99d7276607af9629998cf",
+      "bytes": 52641
+    },
+    "orchestrator/CHANGE_IMPACT.md": {
+      "sha256": "e1e6ad4f1b92867cd033e7debb7325a01eca7bc850946e402bf636a51e045511",
+      "bytes": 68143
+    },
+    "orchestrator/DECISION_LOG.md": {
+      "sha256": "b275d6e10825187c6a21bf7c0ae4453af3ea33353d03bf4f9c7b747c704800d2",
+      "bytes": 279077
+    },
+    "orchestrator/ID_REGISTRY.md": {
+      "sha256": "d5f31dfc4b3dd0d5d23d06fc8705054b0a0c81f6a78ceb988739453c82f1e644",
+      "bytes": 74111
+    },
+    "orchestrator/context/T-915.md": {
+      "sha256": "2d395bdd515f5406fac80e37b40df597886aad862a101865abc230eaed2838ea",
+      "bytes": 9178
+    },
+    "orchestrator/events.ndjson": {
+      "sha256": "1feb559a272751e04a6b94c188f0b86db055ae60dc5526a4e52515302e96f293",
+      "bytes": 341539
+    },
+    "orchestrator/process/modules.config.json": {
+      "sha256": "81746f523551d252c59249bff1fea6b2bbde1622762d23d61185f9fa2eba80b9",
+      "bytes": 97172
+    },
+    "orchestrator/progress.json": {
+      "sha256": "33494031893b4d02e90e315217f58661376857503c17612f24276b2e5a8040bc",
+      "bytes": 97188
+    },
+    "orchestrator/review-events.ndjson": {
+      "sha256": "ed87f9b6aaed3c01814d186d796ca3ee8c0184d6148387a3423472032c4118b7",
+      "bytes": 939983
+    },
+    "AGENTS.md": {
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819
+    },
+    "orchestrator/process/.skill-version": {
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "bytes": 84
+    },
+    "backend/src/modules/ai-runtime/transcribe-runner.test.ts": {
+      "sha256": "383d94cf7e409de00f8340e834175ab6660164f7fc389f68e19ac5a25323bcbe",
+      "bytes": 31707
+    },
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts": {
+      "sha256": "3247450beffa31d696bf5291c884b25fced088df2e20a777666a0596681548c2",
+      "bytes": 10961
+    },
+    "backend/src/modules/execution/transcribe-postprocess.integration.test.ts": {
+      "sha256": "833c5d4a4f092b5c5dc2ed1dd0e2dd99207d689caa85b4b5d88cfea875868ad1",
+      "bytes": 42970
+    },
+    "docs/features/t208-transcribe-confirmed-step-maintenance.md": {
+      "sha256": "3c77a639dd7732f17ed6c065961c1bfbb7bb2ef720725c161077a27ba39cf786",
+      "bytes": 6782
+    },
+    "docs/verification/t1072/integration/t915-mother-cycle2-review.json": {
+      "sha256": "17564729b1d2d24e6d532a4977b142c81f62ba1de07b71ae7d3d29320b223b86",
+      "bytes": 5777
+    }
+  },
+  "historical_task_id_collision": "BACKLOG-archive.md:400 T210定位多轮访谈49a5d7c；不覆盖／不借来源；当前登记身份待Root核定"
+}

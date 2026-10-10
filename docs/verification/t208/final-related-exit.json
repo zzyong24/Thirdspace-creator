@@ -1,0 +1,18 @@
+{
+  "exit_code": 0,
+  "log_sha256": "2546cfa7ce52e664c0da0fc8db4cbb389cd880bf72ac66a3c929d7ef227ef8c6",
+  "total": 132,
+  "original": {
+    "passed": 113,
+    "failed": 0,
+    "pending": 0,
+    "skipped": 0
+  },
+  "additional": {
+    "passed": 19,
+    "failed": 0,
+    "pending": 0,
+    "skipped": 0
+  },
+  "failed_titles": []
+}

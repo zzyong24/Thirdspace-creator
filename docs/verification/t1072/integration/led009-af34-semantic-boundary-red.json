@@ -1,0 +1,7 @@
+{
+  "source_commit": "af34bef454d4bab319e75806c068b9f3a7f8bf3f",
+  "exit_code": 1,
+  "log_sha256": "7cbfa9443346edf9491b83ddb83b954cb1f8df6829a641b2362813753644e2f7",
+  "production_changed": false,
+  "guard_changed": false
+}

@@ -1,0 +1,64 @@
+{
+  "sourceParent": "00a5be6ea720648e1e981c9d42c486a2c2a1d325",
+  "codeWriteSet": [
+    "backend/src/modules/ai-runtime/agentic-research-worker.integration.test.ts"
+  ],
+  "codeSha256": "5447901af5779b4896191a3d1e1f8a403f0ca56b84a307d838aa7e4f8e914990",
+  "patchSha256": "f1823b57224d119f06de2623e5692bcdadd637e617865cf776c128781969b908",
+  "productionChanged": false,
+  "publicContractChanged": false,
+  "originalBusinessScenarios": 3,
+  "declaredMaxCallsUnchanged": [
+    20,
+    10,
+    8
+  ],
+  "expectedRequestsUnchanged": [
+    6,
+    5,
+    4
+  ],
+  "expectedStatusUnchanged": [
+    "succeeded",
+    "partial",
+    "partial"
+  ],
+  "inputJsonAndOperationDigestByteIdentical": false,
+  "inputMigration": "公开本人账号返回id替代虚构research-account；既有params显式maxSteps/maxTokens冻结原有限数值，不改历史任务",
+  "oldSameSourceFull": {
+    "passed": 61,
+    "failed": 3,
+    "total": 64,
+    "exit": 1,
+    "durationSeconds": 32.82
+  },
+  "original3Focused": {
+    "passed": 3,
+    "failed": 0,
+    "filteredObserverCases": 18,
+    "exit": 0,
+    "durationSeconds": 24.48,
+    "testsDurationSeconds": 17.96
+  },
+  "original46Plus18Full": {
+    "passed": 64,
+    "failed": 0,
+    "skipped": 0,
+    "total": 64,
+    "originalInventory": 46,
+    "newObserverControls": 18,
+    "exit": 0,
+    "durationSeconds": 40.23,
+    "maxWorkers": 1,
+    "retry": 0
+  },
+  "backendTypecheckExit": 0,
+  "logs": {
+    "backend-research-visible-observer-original46-serial-full.log": "ca1bab0f1763c084a780225d0c7c055bfe1ed1b4c37574d8d22a6b828bb036c1",
+    "backend-research-current-fixture-original3-first.log": "aa2dccf423f1af91a14482ce7706af0ec684d543261e6d869c47aa143bdeb806",
+    "backend-research-current-fixture-original46-plus18-full.log": "bc13d3b0be3cf1a401323c2e419694aace0dfddab339ee0227bc3a9e4b066c06",
+    "backend-research-current-fixture-typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "preApplicationEvidence": "research-fixture-pre-application-evidence.json",
+  "limit": "只本地合成模型/网页与真实跨进程、PGlite宿主；不证明真实付费供应商、网站账号、完整170或安装版"
+}

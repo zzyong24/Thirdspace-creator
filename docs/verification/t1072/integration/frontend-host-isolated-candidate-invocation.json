@@ -1,0 +1,21 @@
+{
+  "sha": "ea7a636e",
+  "command": "pnpm",
+  "args": [
+    "exec",
+    "vitest",
+    "run",
+    "src/server/chat-read-host.integration.test.ts",
+    "--testNamePattern=^(正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果|真实聊天 Worker 连续探测本机 Node 和已授权目录，结果进入下一轮模型)$",
+    "--retry=0",
+    "--maxWorkers=1",
+    "--testTimeout=180000",
+    "--hookTimeout=180000",
+    "--reporter=default",
+    "--reporter=json",
+    "--outputFile=/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/docs/verification/t1072/integration/frontend-host-isolated-candidate.json"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend",
+  "sequential": true,
+  "node": "v25.9.0"
+}

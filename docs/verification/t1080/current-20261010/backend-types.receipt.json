@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "pnpm",
+    "-C",
+    "backend",
+    "exec",
+    "tsc",
+    "--noEmit"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T09:12:13.188667+00:00",
+  "finishedAt": "2026-10-10T09:13:52.053136+00:00",
+  "exitCode": 2,
+  "elapsedSeconds": 98.86364145798143,
+  "logSha256": "a2c8ccf4a8c2dfd369970d2908c04f27198db27008f410ce94e2c59a48e3f163"
+}

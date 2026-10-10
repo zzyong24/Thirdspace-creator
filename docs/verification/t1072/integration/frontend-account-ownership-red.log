@@ -1,0 +1,51 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:36945) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/__module_integration__/account-isolation.acceptance.test.ts > [T-332 S6] 双号全域交叉泄漏 = 0(ISO-08,dispatch 真链) > 发布/修订:跨号 pub/revision/父锚 404;C-09 外键锚跨号触碰 = 报错不静默
+[CreatorOS] DISPATCH_FAILED {"operation":"publications.get","errorName":"OwnershipError","errorCode":"OwnershipError"}
+
+stderr | src/server/__module_integration__/account-isolation.acceptance.test.ts > [T-332 S6] 双号全域交叉泄漏 = 0(ISO-08,dispatch 真链) > 发布/修订:跨号 pub/revision/父锚 404;C-09 外键锚跨号触碰 = 报错不静默
+[CreatorOS] DISPATCH_FAILED {"operation":"publications.revisions.list","errorName":"OwnershipError","errorCode":"OwnershipError"}
+
+stderr | src/server/__module_integration__/account-isolation.acceptance.test.ts > [T-332 S6] 双号全域交叉泄漏 = 0(ISO-08,dispatch 真链) > 发布/修订:跨号 pub/revision/父锚 404;C-09 外键锚跨号触碰 = 报错不静默
+[CreatorOS] DISPATCH_FAILED {"operation":"publications.revisions.create","errorName":"OwnershipError","errorCode":"OwnershipError"}
+
+stderr | src/server/__module_integration__/account-isolation.acceptance.test.ts > [T-332 S6] 双号全域交叉泄漏 = 0(ISO-08,dispatch 真链) > 发布/修订:跨号 pub/revision/父锚 404;C-09 外键锚跨号触碰 = 报错不静默
+[CreatorOS] DISPATCH_FAILED {"operation":"outputs.publications.list","errorName":"OwnershipError","errorCode":"OwnershipError"}
+
+stderr | src/server/__module_integration__/account-isolation.acceptance.test.ts > [T-332 S6] 双号全域交叉泄漏 = 0(ISO-08,dispatch 真链) > 发布/修订:跨号 pub/revision/父锚 404;C-09 外键锚跨号触碰 = 报错不静默
+[CreatorOS] DISPATCH_FAILED {"operation":"outputs.publications.register","errorName":"OwnershipError","errorCode":"OwnershipError"}
+
+stderr | src/server/__module_integration__/account-isolation.acceptance.test.ts
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/__module_integration__/account-isolation.acceptance.test.ts (19 tests | 1 failed) 2246ms
+     × 发布/修订:跨号 pub/revision/父锚 404;C-09 外键锚跨号触碰 = 报错不静默 190ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/__module_integration__/account-isolation.acceptance.test.ts > [T-332 S6] 双号全域交叉泄漏 = 0(ISO-08,dispatch 真链) > 发布/修订:跨号 pub/revision/父锚 404;C-09 外键锚跨号触碰 = 报错不静默
+AssertionError: expected '{"code":"OwnershipError","message":"发…' to contain '归属号与当前 ctx 不一致'
+
+Expected: "归属号与当前 ctx 不一致"
+Received: "{"code":"OwnershipError","message":"发布记录不属于当前工作区","details":{}}"
+
+ ❯ src/server/__module_integration__/account-isolation.acceptance.test.ts:396:46
+    394|     expect(clash.status).toBeGreaterThanOrEqual(400);
+    395|     expect(clash.body.data).toBeUndefined();
+    396|     expect(JSON.stringify(clash.body.error)).toContain("归属号与当前 ctx 不一致…
+       |                                              ^
+    397|   });
+    398|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 passed (19)
+   Start at  14:55:23
+   Duration  8.53s (transform 3.92s, setup 160ms, import 5.29s, tests 2.25s, environment 638ms)
+

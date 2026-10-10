@@ -1,0 +1,43 @@
+{
+  "schema": "t915-mother-changed-line-refs/v1",
+  "mother": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md",
+  "sha256": "32dfc6b72fe0d923947d0f5df625d4f6a4f4afec2917e55c39cf9ab1ca4c56c3",
+  "draftOnly": true,
+  "sourceHead": "6dd9db7acbcc80a85075f07a40964dd014d24454",
+  "hunks": [
+    {
+      "oldStart": 167,
+      "oldCount": 0,
+      "newStart": 168,
+      "newCount": 32
+    },
+    {
+      "oldStart": 187,
+      "oldCount": 0,
+      "newStart": 220,
+      "newCount": 32
+    },
+    {
+      "oldStart": 195,
+      "oldCount": 2,
+      "newStart": 259,
+      "newCount": 2
+    },
+    {
+      "oldStart": 199,
+      "oldCount": 1,
+      "newStart": 263,
+      "newCount": 1
+    }
+  ],
+  "approvedChangeIds": [
+    "R-03a",
+    "R-05a",
+    "AC-04",
+    "AC-05",
+    "AC-08"
+  ],
+  "S5Modified": false,
+  "packet": "orchestrator/context/T-915.md",
+  "chainContext": "docs/verification/t1072/integration/t915-current-chain-review-context.json"
+}

@@ -13,6 +13,7 @@ export function createScriptDraftTargetService(deps:{now:()=>string;nextId:(pref
    if(output.projectId!==projectId || output.contentType!=="video")throw new Error("视频作品与项目不匹配");
   }
   const service=createArtifactsService({db:tx,now:deps.now,nextId:deps.nextId,
+   assertProjectOwned:(context,id)=>lockOwnedProjectForUpdate(tx,context,id),
    resolveOutputProjectId:async(c,id)=>(await projects.getOutput(c,id)).projectId});
   const existing=(await service.listProjectArtifacts(ctx,projectId)).find(row=>row.stage==="script" && row.artifactType==="output_script" &&
    (outputId ? row.contentOutputId===outputId : !row.contentOutputId));

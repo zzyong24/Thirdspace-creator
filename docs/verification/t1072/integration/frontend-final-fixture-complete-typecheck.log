@@ -1,0 +1,6 @@
+
+> creatoros-frontend@1.2.0 typecheck /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+> next typegen && tsc --noEmit
+
+Generating route types...
+✓ Types generated successfully

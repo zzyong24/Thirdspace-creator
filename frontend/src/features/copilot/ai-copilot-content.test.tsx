@@ -42,6 +42,7 @@ import {
   vi,
   type Mock,
 } from "vitest";
+import { ENDPOINTS } from "@creatoros/contract";
 import { buildCopilotViewModel } from "@/fixtures/selectors/copilot";
 
 vi.mock("next/navigation", () => ({
@@ -129,7 +130,7 @@ import {
   type DraftEditorPort,
 } from "@/features/draft-workbench/draft-chat-request";
 
-afterEach(() => cleanup());
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 beforeEach(() => {
   protocol.live = null;
   protocol.actualSdk = false;
@@ -790,5 +791,51 @@ describe("T-1070 actual composer component / SDK boundary", () => {
       await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
       expect(protocol.regenerate).toHaveBeenCalledTimes(3);
     } finally { vi.useRealTimers(); }
+  });
+});
+
+
+describe("T1188 实际 Copilot 原 project.transcribe 工具回执入口", () => {
+  function receipts(output: Record<string,unknown>) {
+    protocol.messages=[{id:"assistant-receipt",role:"assistant",parts:[{type:"tool-project_transcribe",toolCallId:"call-original",state:"output-available",input:{},output}]}];
+    localStorage.setItem("creatoros:current-group", "group-1");
+    const requests: Array<{id:string;input:{params?:{taskId?:string}}}> = [];
+    const TIME="2026-10-09T00:00:00.000Z";
+    vi.stubGlobal("fetch", vi.fn(async (_url:RequestInfo|URL, init?:RequestInit) => {
+      const request=JSON.parse(String(init?.body)) as (typeof requests)[number]; requests.push(request);
+      const envelope=(data:unknown,list=false)=>Response.json({data,meta:{requestId:"t1188",...(list?{page:1,pageSize:100,total:Array.isArray(data)?data.length:0}:{})}});
+      if(request.id==="settings.get")return envelope({id:"user-1",email:"synthetic@example.invalid",displayName:"测试创作者",timezone:"Asia/Shanghai",locale:"zh-CN",createdAt:TIME,updatedAt:TIME});
+      if(request.id==="accountGroups.get")return envelope({id:"group-1",userId:"user-1",name:"本人组",status:"active",version:1,createdAt:TIME,updatedAt:TIME,members:[]});
+      if(request.id==="ai.tasks.get")return envelope(ENDPOINTS.getTask.response.parse({id:"task-original",userId:"user-1",groupId:"group-1",projectId:null,contentOutputId:null,taskType:"transcribe.douyin",status:"succeeded",inputData:{awemeIds:["aweme-1"]},modelKey:"local",idempotencyKey:"paid-original",attemptId:"11111111-1111-4111-8111-111111111111",requestFingerprint:`sha256:${"a".repeat(64)}`,retryOfTaskId:null,requestedAt:TIME,startedAt:TIME,completedAt:TIME,errorMessage:null}));
+      if(request.id==="ai.tasks.steps.list")return envelope([{stepNo:1,kind:"step",text:"原真实确认保存步骤",toolCalls:[],createdAt:TIME}],true);
+      return envelope([],true);
+    }));
+    render(<AICopilotContent viewModel={buildCopilotViewModel()}/>);
+    return requests;
+  }
+  it("真实 tool output taskId 接准确原 task 与 steps，零重发", async () => {
+    const requests=receipts({kind:"project.transcribe",taskId:"task-original"});
+    expect(document.querySelector('[data-slot="copilot-transcribe-status"]')).toHaveAttribute("data-ok","true");
+    fireEvent.click(await screen.findByRole("button",{name:"查看转写进度"}));
+    await screen.findByText("第 1 步：原真实确认保存步骤");
+    expect(requests.filter(row=>row.id==="ai.tasks.get").every(row=>row.input.params?.taskId==="task-original")).toBe(true);
+    expect(requests.some(row=>row.id==="projects.transcribe"||row.id==="execution.tasks.command")).toBe(false);
+    expect(document.querySelector('[data-slot="copilot-dashboard"]')).toBeNull();
+  });
+  it("缺taskId保持未确认且无任务hook/POST", async () => {
+    const requests=receipts({kind:"project.transcribe"});
+    await waitFor(()=>expect(document.querySelector('[data-slot="copilot-transcribe-status"]')).toHaveAttribute("data-ok","unknown"));
+    expect(screen.queryByRole("button",{name:"查看转写进度"})).toBeNull();
+    expect(screen.getByText(/未取得准确任务编号/)).toBeVisible();
+    expect(requests.some(row=>row.id==="ai.tasks.get"||row.id==="projects.transcribe")).toBe(false);
+  });
+  it("工具error即使带taskId不装成功进度或重发", () => {
+    const requests=receipts({kind:"project.transcribe",taskId:"task-original",error:"原作品来源未确认"});
+    const notice = document.querySelector('[data-slot="copilot-tool-outcome-notice"]');
+    expect(notice).toBeVisible();
+    expect(notice).toHaveTextContent("原作品来源未确认");
+    expect(document.querySelector('[data-slot="copilot-transcribe-status"]')).toBeNull();
+    expect(screen.queryByRole("button",{name:"查看转写进度"})).toBeNull();
+    expect(requests.some(row=>row.id==="ai.tasks.get"||row.id==="ai.tasks.steps.list"||row.id==="projects.transcribe"||row.id==="execution.tasks.command"||row.id==="execution.tasks.transcribeCommand.v1")).toBe(false);
   });
 });

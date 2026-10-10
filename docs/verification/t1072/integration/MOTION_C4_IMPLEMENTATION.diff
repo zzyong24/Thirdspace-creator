@@ -1,0 +1,48 @@
+diff --git a/backend/src/modules/execution/video-render/__snapshots__/template.test.ts.snap b/backend/src/modules/execution/video-render/__snapshots__/template.test.ts.snap
+index 400babef..f90461dd 100644
+--- a/backend/src/modules/execution/video-render/__snapshots__/template.test.ts.snap
++++ b/backend/src/modules/execution/video-render/__snapshots__/template.test.ts.snap
+@@ -63,8 +63,6 @@ tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:.34,eas
+ tl.set("#th",{zIndex:900},38.34);
+ tl.set("#th",{zIndex:945},53.00);
+ tl.to("#th",{left:54,top:1188,width:264,height:469,borderRadius:24,duration:.34,ease:"power3.inOut"},53.00);
+-tl.to("#th",{left:0,top:0,width:1080,height:1920,borderRadius:0,duration:.34,ease:"power3.inOut"},60.00);
+-tl.set("#th",{zIndex:900},60.00);
+ tl.fromTo("#c10",{autoAlpha:0,scale:1.02},{autoAlpha:1,scale:1,duration:.4,ease:"power3.out"},2.00);
+ tl.fromTo("#c10 > *:not(.ovl)",{autoAlpha:0,y:8},{autoAlpha:1,y:0,duration:.35,stagger:.08,ease:"power2.out"},2.00);
+ tl.to("#c10",{autoAlpha:0,duration:.3},7.70);
+diff --git a/backend/src/modules/execution/video-render/template.ts b/backend/src/modules/execution/video-render/template.ts
+index b7043807..819cebbf 100644
+--- a/backend/src/modules/execution/video-render/template.ts
++++ b/backend/src/modules/execution/video-render/template.ts
+@@ -756,18 +756,25 @@ function schedulePortraitSpeakerDirection(
+     at: number,
+   ): void => {
+     if (from === to) return;
++    const end = f2(props.talkingHead.durationSec);
++    const start = f2(at);
++    if (start >= end) return;
++    // 先按现时间线百分秒网格求剩余量，避免 15-14.9 的浮点误差错误缩短 transition。
++    const remaining = (Math.round(end * 100) - Math.round(start * 100)) / 100;
++    const duration = f2(Math.min(0.34, remaining));
++    if (duration <= 0) return;
++    const durationText = duration === 0.34 ? ".34" : fmt(duration);
+     const box = to === "pip" ? pip : full;
+-    const layer = to === "pip" ? 945 : 900;
+     if (to === "pip") {
+       ctx.tweens.push(
+-        `tl.set("#th",{zIndex:945},${fmt(at)});`,
+-        `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:.34,ease:"power3.inOut"},${fmt(at)});`,
++        `tl.set("#th",{zIndex:945},${fmt(start)});`,
++        `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:${durationText},ease:"power3.inOut"},${fmt(start)});`,
+       );
+       return;
+     }
+     ctx.tweens.push(
+-      `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:.34,ease:"power3.inOut"},${fmt(at)});`,
+-      `tl.set("#th",{zIndex:900},${fmt(Math.min(props.talkingHead.durationSec, at + 0.34))});`,
++      `tl.to("#th",{left:${box.left},top:${box.top},width:${box.width},height:${box.height},borderRadius:${box.borderRadius},duration:${durationText},ease:"power3.inOut"},${fmt(start)});`,
++      `tl.set("#th",{zIndex:900},${fmt(Math.min(end, start + duration))});`,
+     );
+   };
+ 

@@ -1,0 +1,39 @@
+{
+  "sha": "ea7a636e",
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend",
+  "command": "pnpm",
+  "args": [
+    "exec",
+    "vitest",
+    "run",
+    "src/server/chat-read-host.integration.test.ts",
+    "src/server/chat-task-submission.integration.test.ts",
+    "src/server/platform-worker-entry.integration.test.ts",
+    "src/server/script-worker-entry.integration.test.ts",
+    "--testNamePattern=^(正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果|真实聊天 Worker 连续探测本机 Node 和已授权目录，结果进入下一轮模型|聊天论点提交沿原 attempt 恢复并继续真实派发，同键不同主题拒绝|真实 'material\\.generate' 工厂首次准备失败 \\+0 次后，不重启也能读回候选|真实 'material\\.generate' 工厂首次准备失败 1 次后，不重启也能读回候选|真实 'review\\.script' 工厂首次准备失败 \\+0 次后，不重启也能读回候选|真实 'review\\.script' 工厂首次准备失败 \\+0 次后，不重启也能读回候选|真实 'publish\\.package' 工厂首次准备失败 \\+0 次后，不重启也能读回候选|真实 'publish\\.package' 工厂首次准备失败 \\+0 次后，不重启也能读回候选|生产多平台创建入口 planning\\.contract 公共transport创建后由真实Worker生成，公共回读完成并可采纳|script\\.draft真实Worker入口：normal|script\\.draft真实Worker入口：verbatim|script\\.draft真实Worker入口：mismatch)$",
+    "--retry=0",
+    "--maxWorkers=2",
+    "--testTimeout=180000",
+    "--hookTimeout=180000",
+    "--reporter=default",
+    "--reporter=json",
+    "--outputFile=/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/docs/verification/t1072/integration/frontend-divergence-candidate.json"
+  ],
+  "node": "v25.9.0",
+  "selectedTests": [
+    "正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果",
+    "真实聊天 Worker 连续探测本机 Node 和已授权目录，结果进入下一轮模型",
+    "聊天论点提交沿原 attempt 恢复并继续真实派发，同键不同主题拒绝",
+    "真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选",
+    "真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选",
+    "真实 'review.script' 工厂首次准备失败 +0 次后，不重启也能读回候选",
+    "真实 'review.script' 工厂首次准备失败 +0 次后，不重启也能读回候选",
+    "真实 'publish.package' 工厂首次准备失败 +0 次后，不重启也能读回候选",
+    "真实 'publish.package' 工厂首次准备失败 +0 次后，不重启也能读回候选",
+    "生产多平台创建入口 planning.contract 公共transport创建后由真实Worker生成，公共回读完成并可采纳",
+    "script.draft真实Worker入口：normal",
+    "script.draft真实Worker入口：verbatim",
+    "script.draft真实Worker入口：mismatch"
+  ],
+  "sequential": true
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "creator-native-http-handoff/v1",
+  "sourceHead": "f4b0c492467525fd143fd486902ae070ff5620e5",
+  "sourceFingerprintsSha256": {
+    "frontend/src-tauri/src/owned_devices.rs": "b4358d41e2f33a044568238d2d7d02b974ea7c14e192694e0bd1e789e18dbe36",
+    "frontend/src-tauri/src/owned_devices_http_lab.rs": "dafa16fb56893e4d13d59262202dfc5c89ba04e7cd202e2af3f69569fbe40613",
+    "frontend/src-tauri/src/license.rs": "baa9e9240b57d83d956e5375fe61877ce457735f1428e364224acc9efcd26243",
+    "frontend/src-tauri/src/lib.rs": "7e7801658ed8870572e7750f62ff1822f676948da2113fa1ce34131f69c412e8",
+    "frontend/src-tauri/Cargo.toml": "b3281de070d41c60aef764d69e233712a566c8bd03322064d0395251adf004b3",
+    "frontend/src-tauri/build.rs": "379803132404a09a4628d864c20e83f07c4ee36ae140901a3ccc2882994eb6e5"
+  },
+  "binary": "frontend/src-tauri/target/debug/deps/creatoros_desktop_lib-24e8f3d9e8947476",
+  "binarySha256": "9ffeabc8568b9e20515a76b1a3ab0d0a91ad65f132f83856069e2037f36ec92e",
+  "prepareLog": "docs/verification/t1072/integration/native-http-prepare-gd-ready.log",
+  "consumeLog": "docs/verification/t1072/integration/native-http-consume-gd-ready.log",
+  "registrationRef": "LDR_2c53f897124140b3bac5474979b6611b",
+  "growthOrigin": "http://localhost:8872",
+  "activityOrigin": "https://127.0.0.1:8850",
+  "originalActivatedAt": "2026-10-09T05:23:35.102Z",
+  "originalExpiresAt": "2026-11-08T05:23:35.102Z",
+  "ready": true,
+  "signatureVerified": true,
+  "encryptedSavedAndReadBack": true,
+  "acknowledged": true,
+  "journalCleared": true,
+  "foreignOriginRejected": true,
+  "untrustedCertificateRejected": true,
+  "wrongSigningKeyRejected": true,
+  "secretExposure": false,
+  "nativeTest": "owned_devices::http_lab::live_loopback_owned_device_consumer",
+  "nativeResult": {
+    "passed": 1,
+    "failed": 0,
+    "exitCode": 0
+  },
+  "limitation": "开发编译与独立fixture加密存储；未替代安装版、OS凭据journal或真实双机验收"
+}

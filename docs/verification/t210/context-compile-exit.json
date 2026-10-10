@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/context-compile.mjs",
+    "T-1074"
+  ],
+  "exit_code": 0,
+  "log_sha256": "9258435e947402abfad2a9a869b6564dbf9c563ba6671786a7e06d1c10f04c2e"
+}

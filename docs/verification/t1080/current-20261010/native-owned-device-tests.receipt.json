@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "cargo",
+    "test",
+    "--manifest-path",
+    "frontend/src-tauri/Cargo.toml",
+    "--profile",
+    "release-fast",
+    "--lib",
+    "owned_devices",
+    "--",
+    "--test-threads=1"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T09:20:39.920630+00:00",
+  "finishedAt": "2026-10-10T09:24:33.118625+00:00",
+  "exitCode": 101,
+  "elapsedSeconds": 233.19609787501395,
+  "logSha256": "d4cb34ab4572cc9f21efca89b4b5b38279826b035564d6c6fd6a5363a1061903"
+}

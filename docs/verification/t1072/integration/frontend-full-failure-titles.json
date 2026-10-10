@@ -1,0 +1,354 @@
+[
+  {
+    "file": "scripts/desktop/startup-safety-contract.test.mjs",
+    "test": "T-535 desktop startup safety contract > T-734 routes Douyin login through Chrome then bundled Chromium without a CLI preflight"
+  },
+  {
+    "file": "src/server/chat-read-host.integration.test.ts",
+    "test": "完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选"
+  },
+  {
+    "file": "src/server/chat-task-submission.integration.test.ts",
+    "test": "真实 'planning.thesis' 工厂首次准备失败 +0 次后，不重启也能读回候选"
+  },
+  {
+    "file": "src/server/chat-task-submission.integration.test.ts",
+    "test": "真实 'planning.thesis' 工厂首次准备失败 1 次后，不重启也能读回候选"
+  },
+  {
+    "file": "src/server/chat-task-submission.integration.test.ts",
+    "test": "真实 'review.script' 工厂首次准备失败 +0 次后，不重启也能读回候选"
+  },
+  {
+    "file": "src/server/chat-task-submission.integration.test.ts",
+    "test": "真实 'review.script' 工厂首次准备失败 1 次后，不重启也能读回候选"
+  },
+  {
+    "file": "src/server/chat-task-submission.integration.test.ts",
+    "test": "真实 'publish.package' 工厂首次准备失败 +0 次后，不重启也能读回候选"
+  },
+  {
+    "file": "src/server/chat-task-submission.integration.test.ts",
+    "test": "真实 'publish.package' 工厂首次准备失败 1 次后，不重启也能读回候选"
+  },
+  {
+    "file": "src/server/chat-task-submission.integration.test.ts",
+    "test": "真实 'script.draft' 工厂首次准备失败 +0 次后，不重启也能读回候选"
+  },
+  {
+    "file": "src/server/chat-task-submission.integration.test.ts",
+    "test": "真实 'script.draft' 工厂首次准备失败 1 次后，不重启也能读回候选"
+  },
+  {
+    "file": "src/server/persistence-client.favorites-diagnostics.test.ts",
+    "test": "[T-536] 内容雷达收藏同步诊断接线 > 同步指定收藏来源时下传 requestId/采集账号，不让诊断字段为空"
+  },
+  {
+    "file": "src/server/persistence-client.favorites-diagnostics.test.ts",
+    "test": "[T-536] 内容雷达收藏同步诊断接线 > 兼容旧来源保存的收藏夹名称，先解析真实 collects_id 再抓作品"
+  },
+  {
+    "file": "src/server/platform-worker-entry.integration.test.ts",
+    "test": "生产多平台创建入口 > publish.platform_adapt 公共transport创建后由真实Worker生成，公共回读完成并可采纳"
+  },
+  {
+    "file": "src/server/review-insights-worker-entry.integration.test.ts",
+    "test": "生产复盘 Worker 入口与采纳 > 真实复盘 lostReceipt=false invalid=false"
+  },
+  {
+    "file": "src/server/review-insights-worker-entry.integration.test.ts",
+    "test": "生产复盘 Worker 入口与采纳 > 真实复盘 lostReceipt=true invalid=false"
+  },
+  {
+    "file": "src/server/review-insights-worker-entry.integration.test.ts",
+    "test": "生产复盘 Worker 入口与采纳 > 真实复盘 lostReceipt=false invalid=true"
+  },
+  {
+    "file": "src/server/script-worker-entry.integration.test.ts",
+    "test": "script.draft真实Worker入口：malformed"
+  },
+  {
+    "file": "src/server/script-worker-entry.integration.test.ts",
+    "test": "script.draft真实Worker入口：retry"
+  },
+  {
+    "file": "src/server/settings-model-test-wrap.test.ts",
+    "test": "runModelConnectionTest — 文本模型(default) > 复用正式模型工厂的流式探针并收到非空文本 → ✓ 连通"
+  },
+  {
+    "file": "src/server/settings-model-test-wrap.test.ts",
+    "test": "runModelConnectionTest — 文本模型(default) > openai_responses 同样交给正式模型工厂，不在测试层手拼 /responses"
+  },
+  {
+    "file": "src/server/settings-model-test-wrap.test.ts",
+    "test": "runModelConnectionTest — image.generate(真实最小生图) > openai 兼容 provider → 同走真实最小生图,spec 原样透传"
+  },
+  {
+    "file": "src/test/function-key-invariant.test.ts",
+    "test": "[T-265] functionKey ↔ ALL_CHAT_TOOL_NAMES 不变量(死链防复发) > 每个前端 functionKey 字面量都 ∈ ALL_CHAT_TOOL_NAMES(否则 forcedTool 命不中 = 死链)"
+  },
+  {
+    "file": "src/test/icons.test.ts",
+    "test": "CreatorOS platform icons > provides frozen deterministic local platform metadata"
+  },
+  {
+    "file": "src/components/shell/zero-account-guidance.test.tsx",
+    "test": "ZeroAccountGuidance > 渲染绑定引导 + /accounts 深链"
+  },
+  {
+    "file": "src/components/ui/creator-date-picker-antd.test.tsx",
+    "test": "真实中文Ant日历 > 空字符串代表未选日期，以北京时间当天作为面板锚点，不渲染 Invalid Date"
+  },
+  {
+    "file": "src/features/automations/automations-edit.test.tsx",
+    "test": "T-248 — 任务编辑弹窗 > 反解失败(手写复杂 cron)→ 诚实降级提示 + 重选频率前禁保存;重选后可保存新 cron"
+  },
+  {
+    "file": "src/features/copilot/chat-diagnosis-card.test.tsx",
+    "test": "ChatDiagnosisCard(盲预测确认卡,T-103a) > 诚实:取不到 draft(如没配模型 confirm 空)→ 置 error 态,不假装锁成功"
+  },
+  {
+    "file": "src/features/knowledge/knowledge-graph-view.test.tsx",
+    "test": "KnowledgeGraphView > AI 失败 → 内联错误(不静默)"
+  },
+  {
+    "file": "src/features/settings/settings-page.test.tsx",
+    "test": "SettingsPage > renders the settings dialog with 6 vertical tabs in the approved order"
+  },
+  {
+    "file": "src/server/__module_integration__/account-isolation.acceptance.test.ts",
+    "test": "[T-332 S6] 双号全域交叉泄漏 = 0(ISO-08,dispatch 真链) > 发布/修订:跨号 pub/revision/父锚 404;C-09 外键锚跨号触碰 = 报错不静默"
+  },
+  {
+    "file": "src/server/__module_integration__/assets.persistence-client.test.ts",
+    "test": "assets ops registered in the composite transport > assets.usage.list returns the 用料链 edges referencing the asset (用料反查)"
+  },
+  {
+    "file": "src/server/__module_integration__/content-calendar.persistence-client.test.ts",
+    "test": "content-calendar ops registered in the composite transport > the 8 calendar op ids are persistence-backed (not the mock)"
+  },
+  {
+    "file": "src/server/__module_integration__/data-foundation-prefer-real.persistence-client.test.ts",
+    "test": "数据底座 §1.4 — pages.dashboard.get 优先读真 / fixture 兜底 > 优先读真:种入 imported 真项目后,最近发布让 fixture 让位、只出真实导入作品"
+  },
+  {
+    "file": "src/server/__module_integration__/knowledge.persistence-client.test.ts",
+    "test": "knowledge ops registered in the composite transport > knowledge.create round-trips: the new item is then listable"
+  },
+  {
+    "file": "src/server/__module_integration__/search-indexing.persistence-client.test.ts",
+    "test": "实体 create/update/delete 写搜索索引(全局搜索可用) > 4. knowledge.create 后,pages.search.get 立刻命中 knowledge tab(await 消竞态)"
+  },
+  {
+    "file": "src/server/__module_integration__/platform-account.persistence-client.test.ts",
+    "test": "platform-account ops registered in the composite transport > the 5 account op ids are persistence-backed (not the mock)"
+  },
+  {
+    "file": "src/server/__module_integration__/production.persistence-client.test.ts",
+    "test": "production ops registered in the composite transport > get → put → segment → export → complete round-trips over the shared store"
+  },
+  {
+    "file": "src/server/__module_integration__/publishing.persistence-client.test.ts",
+    "test": "publishing ops registered in the composite transport > create → list → revise → transition(published) round-trips over the shared store"
+  },
+  {
+    "file": "src/server/__module_integration__/publishing.persistence-client.test.ts",
+    "test": "publishing ops registered in the composite transport > outputs.publications.register 落 published+external_id 且幂等(同 external key 返回既有行)"
+  },
+  {
+    "file": "src/server/__module_integration__/query-services.contract.test.ts",
+    "test": "query-services ops registered in the composite transport > the 3 page-read op ids are persistence-backed (reject without ctx)"
+  },
+  {
+    "file": "src/server/__module_integration__/search-indexing.persistence-client.test.ts",
+    "test": "实体 create/update/delete 写搜索索引(全局搜索可用) > 5. 发布作品索引 entity_type='video',video 作品 tab 能搜到(tab 对齐)"
+  },
+  {
+    "file": "src/server/activation/client-config.server.test.ts",
+    "test": "T-575 config.pull Creator consumer > 拿既有 ticket、验签 closed bundle，并只返回脱敏 authority 投影"
+  },
+  {
+    "file": "src/server/activation/client-config.server.test.ts",
+    "test": "T-575 config.pull Creator consumer > T-706 正式包未显式注入授权 origin 时复用官方授权服务默认值"
+  },
+  {
+    "file": "src/server/activation/client-config.server.test.ts",
+    "test": "T-575 config.pull Creator consumer > 逐字通过 Growth canonical bundle fixture 的 Ed25519 与 JCS digest"
+  },
+  {
+    "file": "src/server/activation/client-config.server.test.ts",
+    "test": "T-575 config.pull Creator consumer > 坏签名、额外 envelope 字段和未知产品协议均 fail-closed"
+  },
+  {
+    "file": "src/server/activation/client-config.server.test.ts",
+    "test": "T-575 config.pull Creator consumer > 低版本与同版本不同 digest 隔离，历史密文保留但不激活"
+  },
+  {
+    "file": "src/server/activation/client-config.server.test.ts",
+    "test": "T-575 config.pull Creator consumer > 明确无 extension 时保留历史渠道密文但切到本地"
+  },
+  {
+    "file": "src/server/activation/client-config.server.test.ts",
+    "test": "T-575 config.pull Creator consumer > 独立审查反例矩阵：locator、5xx、密文损坏与 clientId 权威边界"
+  },
+  {
+    "file": "src/server/ingestion/chromium-guard.test.ts",
+    "test": "guardedLaunch 超时/失败诚实 > launch 超时 → BrowserLaunchError 人话报错,迟到的 context 被顺手关掉"
+  },
+  {
+    "file": "src/server/ingestion/chromium-guard.test.ts",
+    "test": "guardedLaunch 超时/失败诚实 > 超时错误文案是人话(含「请重试」)"
+  },
+  {
+    "file": "src/server/ingestion/douyin-cdp.test.ts",
+    "test": "[T-202] gotoWithRetry 导航退避重试 > 首次成功 → 只 goto 一次,不退避"
+  },
+  {
+    "file": "src/server/ingestion/douyin-throttle-integration.test.ts",
+    "test": "[gate-F7 插装点⑤] fetchDouyinWorkListExport 过 creator-center > [gate-F6 错误映射] download 超时 + 有「暂无数据」toast → report('content-error')(图集不退避)"
+  },
+  {
+    "file": "src/server/ingestion/douyin-throttle-integration.test.ts",
+    "test": "[gate-F7 插装点⑤] fetchDouyinWorkListExport 过 creator-center > [T-176 错误映射] download 超时 + 无 toast → report('content-error')(导出 DOM 脆弱,不再退避)"
+  },
+  {
+    "file": "src/server/intelligence/share-import-runner.test.ts",
+    "test": "[T-482] 单条分享导入持久任务 > 普通分享明确向领域层传 false，不能被 host 自动升级为转写"
+  },
+  {
+    "file": "src/features/intelligence/intelligence-workbench.test.tsx",
+    "test": "T-482 内容雷达工作区 > [T-546] 收藏夹列表读取失败时仍可按准确名称指定，失败不伪装成 0"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 鉴权门 > 无 session cookie → 200 直通本机主用户(T-046,装配照常)"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > [T-813] 全文阅读动作规范化并绑定用户点击的 URL"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > [T-716] 局部改稿发送前重绑当前稿面版本与正文，并强制走 script.patch"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > [T-732] 连续对话保留的段落锚点只提供可选局部工具，不劫持明确整稿请求"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > [T-732] 可选旧段落已失效时丢弃锚点并继续整稿请求，不再返回 409"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > [T-732] 明确点击整稿功能时先丢弃旧段落锚点并执行 script.draft"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > 有 cookie → 持久化会话+用户消息,委派 runChatStream,透传流式响应 + 会话头"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > 缺 chatContext.surface → 默认 topics(选题编导)"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > [T-128] onFinish 把 assistant 文本 + 完整 parts(含 tool-result 卡)落 appendAssistantMessage"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > [T-128/T-464] 纯空轮 → 落一条兜底提示 assistant 消息(而非静默空气泡)"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > [T-464] 中断轮空 → 仍不落库(用户主动停,本就该空)"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > [T-096] 续接 scope 一致 → 放行(同 scope = 一条记忆线)"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > [T-096] 非法 scope 声明(文法不符)按未声明处理:不触发续接校验,lazy 建回落推导"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > 装配抛错(如没配 key)→ 400(诚实,不假成功)"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "POST /api/chat — 装配 + 持久化 > 持久化失败不阻断流式(best-effort)—— 仍委派 runChatStream 并返回 200"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-239c] POST /api/chat — 中断真一致 > req.signal 贯通到 runChatStream(input.abortSignal)—— 用户点「停止」服务端立停"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-239c] POST /api/chat — 中断真一致 > 挂 consumeSseStream 兜底消费 —— 客户端断开后 onFinish 仍能触发(中断落库前提)"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-239c] POST /api/chat — 中断真一致 > 中断轮(isAborted=true)→ 部分文本+已完成 tool parts 带 aborted 标记落库(刷新后该轮仍在)"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-239c] POST /api/chat — 中断真一致 > 中断轮毫无产出(无文本无 tool part)→ 不落空气泡"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-239e] POST /api/chat — usage 落库 > runChatStream 收到 onUsage 回报口;回报后 onFinish 落库带 usage + modelKey"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-239e] POST /api/chat — usage 落库 > 中断轮也带已回报的 usage(aborted 与 usage 并存)"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-239e] POST /api/chat — usage 落库 > 整轮没回报 usage → 维持 4 参调用(不带空 opts,老语义原样)"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-239f] POST /api/chat — user 消息去重 > trigger='regenerate-message'(useChat regenerate 重发同一条 user)→ 不重复 insert,流式照跑"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-239f] POST /api/chat — user 消息去重 > 兜底(无 trigger 的老客户端):续接会话且库中最后一条=同内容 user 行 → 不重插"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-716] POST /api/chat — 附件上下文 > 图片经素材归属门读取，只把 assetId 落消息，模型临时收到 file part"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-716] POST /api/chat — 附件上下文 > 文档抽取内容作为 user_data 注入，不把正文写进 attachments"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-716] POST /api/chat — 附件上下文 > Markdown 无预抽取结果时仍直接读取原始字节"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-716] POST /api/chat — 附件上下文 > PDF 无预抽取结果时可直接抽取文本"
+  },
+  {
+    "file": "src/app/api/chat/route.test.ts",
+    "test": "[T-716] POST /api/chat — 附件上下文 > DOCX 无预抽取结果时可直接抽取文本"
+  },
+  {
+    "file": "src/app/api/knowledge/distill/route.test.ts",
+    "test": "POST /api/knowledge/distill > runner 抛错(无凭据/产出不可用)→ 400 { error }(诚实失败,前端内联展示)"
+  },
+  {
+    "file": "src/app/api/v1/auth/auth-routes.test.ts",
+    "test": "GET /api/v1/auth/me > without a cookie → 200 直通本机主用户(T-046 单机免登录)"
+  },
+  {
+    "file": "src/app/api/v1/auth/auth-routes.test.ts",
+    "test": "GET /api/v1/auth/me > with a garbage cookie → 200 直通本机主用户(失效 token 与无 token 同路径)"
+  },
+  {
+    "file": "src/app/api/v1/auth/auth-routes.test.ts",
+    "test": "POST /api/v1/auth/logout > clears the cookie and revokes the session(撤销后旧 cookie 走单机直通,不再 401)"
+  }
+]

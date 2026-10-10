@@ -1,0 +1,42 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+ ❯ src/application/collection/cover-file-repair.test.ts (2 tests | 1 failed) 5845ms
+   × 真实临时文件删除后，经候选、补采、版本保存整链恢复可读图片，保留好封面 5827ms
+ ❯ src/modules/intelligence/transcript-runner.test.ts (3 tests | 1 failed) 9452ms
+     × [T-632] 启动恢复会持续消费全部历史积压，不在 20 条后停止 6015ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/application/collection/cover-file-repair.test.ts > 真实临时文件删除后，经候选、补采、版本保存整链恢复可读图片，保留好封面
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/application/collection/cover-file-repair.test.ts:16:1
+     14| const cleanups:Array<()=>Promise<unknown>>=[];
+     15| afterEach(async()=>{for(const f of cleanups.splice(0).reverse())await …
+     16| it('真实临时文件删除后，经候选、补采、版本保存整链恢复可读图片，保留好封面',async()=>{
+       | ^
+     17|  const root=await mkdtemp(join(tmpdir(),'creatoros-cover-repair-'));cl…
+     18|  const {db,client}=await createDb();cleanups.push(()=>client.close());…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/modules/intelligence/transcript-runner.test.ts > T-482 手动逐字稿持久队列 > [T-632] 启动恢复会持续消费全部历史积压，不在 20 条后停止
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/modules/intelligence/transcript-runner.test.ts:29:3
+     27|
+     28| describe("T-482 手动逐字稿持久队列", () => {
+     29|   it("[T-632] 启动恢复会持续消费全部历史积压，不在 20 条后停止", async () => {
+       |   ^
+     30|     const { db, client } = await createDb();
+     31|     const d = deps();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 2 passed (4)
+      Tests  2 failed | 230 passed (232)
+   Start at  16:00:47
+   Duration  24.44s (transform 16.64s, setup 0ms, import 27.38s, tests 16.01s, environment 0ms)
+

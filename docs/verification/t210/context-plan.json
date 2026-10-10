@@ -1,0 +1,216 @@
+{
+  "schema": "product-to-code-orchestrator/context-plan@2",
+  "stage": "4-build",
+  "task_id": "T-1074",
+  "step": "implementation",
+  "read_root": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator",
+  "compatibility_mode": true,
+  "diagnostic": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+  "packs": [
+    {
+      "id": "core",
+      "reason": "每个任务都需要的最小交付内核；legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "rules/global-rules.md",
+        "workflows/_COMMON.md",
+        "gates/_GATE_EVIDENCE.md"
+      ]
+    },
+    {
+      "id": "plan",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "workflows/v3-1-plan.md",
+        "gates/01-product-gate.md",
+        "templates/PRODUCT_SPEC_TEMPLATE.md"
+      ]
+    },
+    {
+      "id": "contract",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "workflows/v3-2-contract.md",
+        "gates/03-scope-budget-gate.md",
+        "gates/15b-contract-completeness-gate.md",
+        "templates/SERVICE_CONTRACT_TEMPLATE.md"
+      ]
+    },
+    {
+      "id": "design",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "workflows/v3-3-design.md",
+        "gates/05-ui-gate.md",
+        "gates/06-page-spec-gate.md",
+        "templates/UI_RULES_TEMPLATE.md",
+        "templates/PAGE_SPEC_TEMPLATE.md"
+      ]
+    },
+    {
+      "id": "build",
+      "reason": "当前阶段为 4-build；legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "workflows/v3-4-build.md",
+        "gates/13-tdd-gate.md"
+      ]
+    },
+    {
+      "id": "ship",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "workflows/v3-5-ship.md",
+        "gates/14-integration-gate.md",
+        "rules/product-integrity-rules.md",
+        "rules/observability-rules.md",
+        "templates/RELEASE_REVIEW_TEMPLATE.md"
+      ]
+    },
+    {
+      "id": "architecture",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置；项目存在 boundaries.config.json",
+      "refs": [
+        "rules/physical-architecture-rules.md",
+        "gates/02-architecture-boundary-gate.md",
+        "templates/SYSTEM_ARCHITECTURE_TEMPLATE.md"
+      ]
+    },
+    {
+      "id": "knowledge",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "rules/knowledge-layer-rules.md"
+      ]
+    },
+    {
+      "id": "program",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "rules/program-orchestration-rules.md"
+      ]
+    },
+    {
+      "id": "autonomy",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "rules/orchestrator-state-machine.md"
+      ]
+    },
+    {
+      "id": "security",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "templates/THREAT_MODEL_TEMPLATE.json"
+      ]
+    },
+    {
+      "id": "observability",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "rules/observability-rules.md"
+      ]
+    },
+    {
+      "id": "ui",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "rules/product-integrity-rules.md",
+        "rules/ui-implementation-rules.md",
+        "gates/09-frontend-implementation-gate.md",
+        "gates/10-frontend-validation-gate.md"
+      ]
+    },
+    {
+      "id": "research",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "gates/04-research-first-gate.md",
+        "templates/TECHNICAL_RESEARCH_CARD_TEMPLATE.md"
+      ]
+    },
+    {
+      "id": "mock",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "rules/mock-data-rules.md",
+        "gates/08-mock-data-gate.md"
+      ]
+    },
+    {
+      "id": "visual-mock",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "templates/UI_MOCK_PROMPT_TEMPLATE.md"
+      ]
+    },
+    {
+      "id": "prelaunch",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "prompts/prelaunch-engineering-audit.md"
+      ]
+    },
+    {
+      "id": "retro",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "prompts/engineering-retro.md"
+      ]
+    },
+    {
+      "id": "asset-mining",
+      "reason": "legacy reconcile.config.json 缺少 context_policy，本次显式使用 compat-full；不修改项目配置",
+      "refs": [
+        "prompts/asset-distill.md"
+      ]
+    }
+  ],
+  "required_reads": [
+    "rules/global-rules.md",
+    "workflows/_COMMON.md",
+    "gates/_GATE_EVIDENCE.md",
+    "workflows/v3-1-plan.md",
+    "gates/01-product-gate.md",
+    "templates/PRODUCT_SPEC_TEMPLATE.md",
+    "workflows/v3-2-contract.md",
+    "gates/03-scope-budget-gate.md",
+    "gates/15b-contract-completeness-gate.md",
+    "templates/SERVICE_CONTRACT_TEMPLATE.md",
+    "workflows/v3-3-design.md",
+    "gates/05-ui-gate.md",
+    "gates/06-page-spec-gate.md",
+    "templates/UI_RULES_TEMPLATE.md",
+    "templates/PAGE_SPEC_TEMPLATE.md",
+    "workflows/v3-4-build.md",
+    "gates/13-tdd-gate.md",
+    "workflows/v3-5-ship.md",
+    "gates/14-integration-gate.md",
+    "rules/product-integrity-rules.md",
+    "rules/observability-rules.md",
+    "templates/RELEASE_REVIEW_TEMPLATE.md",
+    "rules/physical-architecture-rules.md",
+    "gates/02-architecture-boundary-gate.md",
+    "templates/SYSTEM_ARCHITECTURE_TEMPLATE.md",
+    "rules/knowledge-layer-rules.md",
+    "rules/program-orchestration-rules.md",
+    "rules/orchestrator-state-machine.md",
+    "templates/THREAT_MODEL_TEMPLATE.json",
+    "rules/ui-implementation-rules.md",
+    "gates/09-frontend-implementation-gate.md",
+    "gates/10-frontend-validation-gate.md",
+    "gates/04-research-first-gate.md",
+    "templates/TECHNICAL_RESEARCH_CARD_TEMPLATE.md",
+    "rules/mock-data-rules.md",
+    "gates/08-mock-data-gate.md",
+    "templates/UI_MOCK_PROMPT_TEMPLATE.md",
+    "prompts/prelaunch-engineering-audit.md",
+    "prompts/engineering-retro.md",
+    "prompts/asset-distill.md"
+  ],
+  "required_project_reads": [
+    "orchestrator/SYSTEM_ARCHITECTURE.md",
+    "orchestrator/process/boundaries.config.json",
+    "orchestrator/THREAT_MODEL.json"
+  ],
+  "total_inline_bytes": 0,
+  "referenced_bytes": 84690
+}

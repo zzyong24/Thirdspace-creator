@@ -1,0 +1,43 @@
+{
+  "protected_old_dirty_byte_equal": {
+    "PROJECT.md": true,
+    "docs/features/t1072-owned-devices.md": true,
+    "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md": true,
+    "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md": true,
+    "docs/verification/t1072/integration/ENGINE.md": true,
+    "docs/verification/t1072/integration/TEST_ENGINEERING_RECOVERY.md": true,
+    "orchestrator/.lessons-stats.json": true,
+    "orchestrator/ARTIFACT_MANIFEST.yaml": true,
+    "orchestrator/CHANGE_IMPACT.md": true,
+    "orchestrator/context/T-915.md": true,
+    "orchestrator/review-events.ndjson": true,
+    "AGENTS.md": true,
+    "orchestrator/process/.skill-version": true
+  },
+  "old_control_objects": {
+    "orchestrator/DECISION_LOG.md": {
+      "old_prefix_byte_equal": true
+    },
+    "orchestrator/events.ndjson": {
+      "old_prefix_byte_equal": true
+    },
+    "BACKLOG.md": {
+      "old_rows_byte_equal": true
+    },
+    "orchestrator/process/modules.config.json": {
+      "old_objects_deep_equal": true
+    },
+    "orchestrator/progress.json": {
+      "old_objects_deep_equal": true
+    }
+  },
+  "t915_review_packet_sha256": "17564729b1d2d24e6d532a4977b142c81f62ba1de07b71ae7d3d29320b223b86",
+  "t915_review_packet_byte_equal": true,
+  "frozen_source_unchanged": {
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts": true,
+    "backend/src/modules/ai-runtime/transcribe-runner.test.ts": true,
+    "backend/src/modules/execution/transcribe-postprocess.integration.test.ts": true
+  },
+  "id_registry_head_prefix_byte_equal": true,
+  "old_id_registry_note": "本任务前 ID_REGISTRY 在 git status 中干净，以HEAD全文前缀逐字验证，仅新增 T208/DEC 行。"
+}

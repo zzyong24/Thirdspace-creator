@@ -1,0 +1,3 @@
+# 新测试首次装配的真实失败
+
+首次聚焦16PASS/4FAIL；原两个标题已GREEN，新增3例误以为工件只有1个version，实际原公开Artifacts service创建空初版并保存正文版，故准确库存是2版，当前version必须是原正文且双save/complete保持完整事实不变。另1例误用不存在的markUnknown（首次tsc报错），改真实ledger.settle严格输入{status:unknown}；首次试用errorCode/errorMessage被strict拒绝，现不传额外字段。均只修本轮新增测试装配，原30断言未改；首次失败JSON/日志完整保留。

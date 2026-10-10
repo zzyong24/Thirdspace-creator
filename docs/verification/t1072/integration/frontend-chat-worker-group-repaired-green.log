@@ -1,0 +1,39 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/chat-task-submission.integration.test.ts (14 tests | 2 failed) 105770ms
+   × 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选 6074ms
+   × 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选 8941ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 +0 次后，不重启也能读回候选
+ FAIL  src/server/chat-task-submission.integration.test.ts > 真实 'material.generate' 工厂首次准备失败 1 次后，不重启也能读回候选
+OwnershipError: 项目不存在
+ ❯ assertParent ../backend/src/modules/material-links/material-links.service.ts:121:120
+    119|     if(ctx.groupId&&!deps.assertProjectOwned)throw new OwnershipError(…
+    120|     const project=await deps.assertProjectOwned?.(ctx,id);
+    121|     if(ctx.groupId&&(!project||typeof project!=="object"||(project as …
+       |                                                                                                                        ^
+    122|     return project;
+    123|   }
+ ❯ Object.create ../backend/src/modules/material-links/material-links.service.ts:140:7
+ ❯ ../backend/src/modules/ai/generated-asset-adoption.service.ts:45:23
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 12 passed (14)
+   Start at  15:07:38
+   Duration  110.85s (transform 3.55s, setup 109ms, import 4.80s, tests 105.77s, environment 0ms)
+

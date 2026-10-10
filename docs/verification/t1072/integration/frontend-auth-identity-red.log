@@ -1,0 +1,78 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:5392) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/app/api/v1/auth/auth-routes.test.ts > GET /api/v1/auth/me > without a cookie → 200 直通本机主用户(T-046 单机免登录)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/app/api/v1/auth/auth-routes.test.ts > GET /api/v1/auth/me > with a garbage cookie → 200 直通本机主用户(失效 token 与无 token 同路径)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/app/api/v1/auth/auth-routes.test.ts > POST /api/v1/auth/logout > clears the cookie and revokes the session(撤销后旧 cookie 走单机直通,不再 401)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/app/api/v1/auth/auth-routes.test.ts (8 tests | 3 failed) 7232ms
+     × without a cookie → 200 直通本机主用户(T-046 单机免登录) 934ms
+     × with a garbage cookie → 200 直通本机主用户(失效 token 与无 token 同路径) 929ms
+     × clears the cookie and revokes the session(撤销后旧 cookie 走单机直通,不再 401) 963ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/app/api/v1/auth/auth-routes.test.ts > GET /api/v1/auth/me > without a cookie → 200 直通本机主用户(T-046 单机免登录)
+AssertionError: expected 'user-p-1' to be 'user-zyongzhu' // Object.is equality
+
+Expected: "user-zyongzhu"
+Received: "user-p-1"
+
+ ❯ src/app/api/v1/auth/auth-routes.test.ts:139:26
+    137|     expect(res.status).toBe(200);
+    138|     const json = (await res.json()) as { data: { id: string } };
+    139|     expect(json.data.id).toBe(CANONICAL_USER_ID);
+       |                          ^
+    140|   });
+    141|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/app/api/v1/auth/auth-routes.test.ts > GET /api/v1/auth/me > with a garbage cookie → 200 直通本机主用户(失效 token 与无 token 同路径)
+AssertionError: expected 'user-p-1' to be 'user-zyongzhu' // Object.is equality
+
+Expected: "user-zyongzhu"
+Received: "user-p-1"
+
+ ❯ src/app/api/v1/auth/auth-routes.test.ts:152:26
+    150|     expect(res.status).toBe(200);
+    151|     const json = (await res.json()) as { data: { id: string } };
+    152|     expect(json.data.id).toBe(CANONICAL_USER_ID);
+       |                          ^
+    153|   });
+    154| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/app/api/v1/auth/auth-routes.test.ts > POST /api/v1/auth/logout > clears the cookie and revokes the session(撤销后旧 cookie 走单机直通,不再 401)
+AssertionError: expected 'user-p-1' to be 'user-zyongzhu' // Object.is equality
+
+Expected: "user-zyongzhu"
+Received: "user-p-1"
+
+ ❯ src/app/api/v1/auth/auth-routes.test.ts:178:28
+    176|     expect(me.status).toBe(200);
+    177|     const meJson = (await me.json()) as { data: { id: string } };
+    178|     expect(meJson.data.id).toBe(CANONICAL_USER_ID);
+       |                            ^
+    179|   });
+    180|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 5 passed (8)
+   Start at  14:12:47
+   Duration  12.84s (transform 3.36s, setup 163ms, import 4.75s, tests 7.23s, environment 529ms)
+

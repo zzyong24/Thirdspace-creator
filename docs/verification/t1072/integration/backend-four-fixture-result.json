@@ -1,0 +1,21 @@
+{
+  "schema": "t1072-test-engineering/v1",
+  "headBeforeCommit": "6dd9db7acbcc80a85075f07a40964dd014d24454",
+  "files": {
+    "backend/src/application/collection/cover-file-repair.test.ts": "7d26860700c119df9e1edf68720f7d23392a72378a8078f307f128bf374687b7",
+    "backend/src/application/queries/dashboard-read-performance.test.ts": "4d96fa9a119ca4e621237e4111bb89a9538c368afc2a2df212f02a8ca7a0832b",
+    "backend/src/modules/ai-runtime/chat-tools.test.ts": "13bc06feaf17db20243da0c82fd662481c36897d70154121325834ac6b3b78c8",
+    "backend/src/modules/intelligence/transcript-runner.test.ts": "093151ed58a433e171509cd28226eed4bccd761a334d64b59c5ccead5e69aa41"
+  },
+  "result": {
+    "filesPassed": 4,
+    "testsPassed": 232,
+    "failed": 0,
+    "exitCode": 0,
+    "durationSeconds": 16.48
+  },
+  "maxWorkers": 2,
+  "retry": 0,
+  "timeoutOverride": null,
+  "productionChanges": []
+}

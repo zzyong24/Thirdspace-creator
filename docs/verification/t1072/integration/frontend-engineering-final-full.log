@@ -1,0 +1,4001 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:50824) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:50825) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:50911) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:50975) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:50982) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51030) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51031) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51033) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51034) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51035) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51037) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51042) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51136) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51285) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51368) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51456) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51477) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51489) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51559) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51619) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/chat-read-host.integration.test.ts > 完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stdout | src/server/chat-read-host.integration.test.ts > 完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选
+[chat-context] est=1701→1701 tokens cleared=0 truncated=0
+
+ ❯ src/server/chat-read-host.integration.test.ts (5 tests | 1 failed) 20283ms
+   × 完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选 2964ms
+(node:51734) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"witness":"T-1073 root dispose","sweepsBeforeStop":2,"sweepsAfterStop":2,"cronStops":1,"timersAfterStop":0}
+(node:51766) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ scripts/desktop/execution-worker-runtime.test.mjs (4 tests | 1 failed) 10013ms
+     × 复制两个入口并保留旧返回路径，普通Worker仍可独立启动 9870ms
+(node:51821) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51825) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51826) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51843) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51844) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51859) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51862) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51897) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51979) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51983) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51996) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52011) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52017) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52019) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52071) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52072) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52079) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52080) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52088) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52089) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52112) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52124) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52137) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52143) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52145) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52148) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52151) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52153) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52157) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52168) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52182) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52183) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52202) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+(node:52205) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52211) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52222) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52235) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52242) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52246) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+Not implemented: navigation to another Document
+(node:52248) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52249) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52250) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52251) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52252) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52254) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52261) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52262) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52264) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52267) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52269) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52270) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52273) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+(node:52277) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52278) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52305) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52306) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52307) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52309) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52311) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52312) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52313) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52316) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52319) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52320) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52321) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52322) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52326) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52327) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52333) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52334) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52335) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52336) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52338) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52339) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52341) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52342) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52343) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52344) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52346) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52347) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52349) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52351) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52352) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52353) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52354) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52357) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52358) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52385) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52386) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52387) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52388) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52390) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52391) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+Not implemented: navigation to another Document
+(node:52392) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52393) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52395) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52396) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52397) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52400) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52401) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52402) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52404) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52410) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52414) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52415) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52416) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52417) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52418) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52437) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52445) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52448) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52449) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52450) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52453) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52454) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52456) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52457) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52458) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52459) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52461) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52462) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52481) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52482) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52484) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52485) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52513) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52514) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52515) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52516) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52518) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52519) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52520) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52521) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52522) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52525) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52526) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52528) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52529) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52530) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52536) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52538) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52540) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52541) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52543) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52544) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52553) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52573) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52574) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52575) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52578) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52579) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52581) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52582) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52622) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52629) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52630) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52631) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52632) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52635) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52637) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52638) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52639) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52640) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52665) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52667) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52668) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52671) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52672) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52673) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52674) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52676) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52677) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52679) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52682) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52683) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52684) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52685) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52776) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52777) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52784) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52785) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52786) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52789) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52790) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52792) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52794) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52795) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52796) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52797) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52862) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52864) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52865) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52888) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52889) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52914) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52915) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52916) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52917) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52920) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52923) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52924) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52925) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52926) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52928) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52929) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52932) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52933) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52996) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52997) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52998) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53045) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53046) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53048) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53053) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53072) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53077) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53078) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53079) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53081) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53082) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53118) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53119) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53120) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53121) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53122) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53124) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+Could not parse CSS stylesheet
+(node:53125) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53127) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53128) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53129) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53133) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53134) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53135) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53147) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53154) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53155) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53157) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53158) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53159) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53161) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53162) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53163) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53164) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+(node:53165) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53166) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53184) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53206) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53207) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53208) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53209) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53210) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53211) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53218) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53219) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53222) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53223) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53250) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53257) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53259) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53260) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53261) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53263) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53265) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53266) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53280) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53281) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53282) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53283) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53286) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53297) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53306) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53307) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53310) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53311) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53321) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53322) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53332) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53333) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53334) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53338) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53345) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53350) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53354) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53360) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53363) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53369) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53371) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53372) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53383) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53385) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53386) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53392) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53395) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53398) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53400) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53404) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53405) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53407) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53438) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53442) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53443) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53445) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53447) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53469) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53484) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53495) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53508) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53509) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53514) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53515) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53521) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53525) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53526) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53529) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53533) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53535) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53547) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53583) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53587) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53588) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53597) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53600) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53609) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53628) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53630) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53631) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53633) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53634) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53635) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53637) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53657) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53658) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53661) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53664) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53665) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53667) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53668) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53671) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53675) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53676) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53678) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53679) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53683) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53685) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53688) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53693) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53696) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53697) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53701) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53710) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53711) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53715) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53717) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53718) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53720) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53721) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53744) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53745) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53747) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53748) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53749) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53750) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53752) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53753) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53756) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53757) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53759) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53760) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53766) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53767) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53774) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53775) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53778) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53780) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53781) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53783) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53785) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  scripts/desktop/execution-worker-runtime.test.mjs > 随包Worker入口资源 > 复制两个入口并保留旧返回路径，普通Worker仍可独立启动
+AssertionError: expected Buffer[ 34, 117, 115, 101, 32, …(1134164) ] to deeply equal Buffer[ 34, 117, 115, 101, 32, …(1134830) ]
+
+- Expected
++ Received
+
+@@ -1515,13 +1515,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -2720,13 +2717,10 @@
+      123,
+      10,
+      32,
+      32,
+      34,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -2896,13 +2890,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -5521,13 +5512,10 @@
+      123,
+      10,
+      32,
+      32,
+      34,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -6240,13 +6228,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -7882,13 +7867,10 @@
+      123,
+      10,
+      32,
+      32,
+      34,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -8037,13 +8019,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -19885,13 +19864,10 @@
+      123,
+      10,
+      32,
+      32,
+      34,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -20979,13 +20955,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -23628,13 +23601,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -23857,13 +23827,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -30819,13 +30786,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -39755,13 +39719,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -41909,13 +41870,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -61891,13 +61849,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -66643,13 +66598,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -70510,13 +70462,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -78106,13 +78055,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -94551,13 +94497,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -95543,13 +95486,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -95670,13 +95610,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -161613,13 +161550,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -163008,13 +162942,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -170201,13 +170132,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -174613,13 +174541,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -183389,13 +183314,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -191286,13 +191208,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -195512,13 +195431,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -200050,13 +199966,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -204299,13 +204212,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -208374,13 +208284,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -216429,13 +216336,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -220578,13 +220482,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -224693,13 +224594,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -229554,13 +229452,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -236352,13 +236247,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -240671,13 +240563,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -245268,13 +245157,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -249342,13 +249228,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -262447,13 +262330,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -266954,13 +266834,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -271305,13 +271182,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -279643,13 +279517,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -283679,13 +283550,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -287895,13 +287763,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -291929,13 +291794,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -297349,13 +297211,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -305238,13 +305097,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -313342,13 +313198,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -313461,13 +313314,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -318678,13 +318528,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -325959,13 +325806,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -333031,13 +332875,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -336976,13 +336817,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -341177,13 +341015,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -345174,13 +345009,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -349390,13 +349222,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -355538,13 +355367,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -360265,13 +360091,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -364341,13 +364164,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -368779,13 +368599,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -377841,13 +377658,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -381935,13 +381749,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -386127,13 +385938,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -394371,13 +394179,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -402550,13 +402355,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -406703,13 +406505,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -414652,13 +414451,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -414771,13 +414567,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -422237,13 +422030,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -426527,13 +426317,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -431264,13 +431051,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -435843,13 +435627,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -440527,13 +440308,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -445383,13 +445161,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -446788,13 +446563,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -469928,13 +469700,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -481442,13 +481211,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -498488,13 +498254,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -500703,13 +500466,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -500809,13 +500569,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -505552,13 +505309,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -506484,13 +506238,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -507756,13 +507507,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -508853,13 +508601,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -509662,13 +509407,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -550895,13 +550637,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -551610,13 +551349,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -568203,13 +567939,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -568827,13 +568560,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      110,
+      111,
+      100,
+      101,
+      95,
+@@ -568925,13 +568655,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -586504,13 +586231,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -587874,13 +587598,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -590236,13 +589957,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -592011,13 +591729,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -593225,13 +592940,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -596195,13 +595907,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -597488,13 +597197,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -601750,13 +601456,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -604085,13 +603788,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -604967,13 +604667,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -605460,13 +605157,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -608197,13 +607891,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -609461,13 +609152,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -610774,13 +610462,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -616256,13 +615941,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -617052,13 +616734,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -621044,13 +620723,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -623341,13 +623017,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -627478,13 +627151,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -629607,13 +629277,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -631147,13 +630814,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -663530,13 +663194,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -664703,13 +664364,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -668510,13 +668168,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -669802,13 +669457,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -683400,13 +683052,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -686622,13 +686271,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -695567,13 +695213,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -695639,13 +695282,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -697748,13 +697388,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -698397,13 +698034,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -703043,13 +702677,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -710115,13 +709746,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -718734,13 +718362,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -724644,13 +724269,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -732992,13 +732614,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -737242,13 +736861,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -741784,13 +741400,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -744448,13 +744061,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -750508,13 +750118,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -751126,13 +750733,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -753640,13 +753244,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -756736,13 +756337,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -761075,13 +760673,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -761920,13 +761515,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -767004,13 +766596,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -769254,13 +768843,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -774883,13 +774469,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -776869,13 +776452,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -781341,13 +780921,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -783660,13 +783237,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -785128,13 +784702,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -786121,13 +785692,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -788259,13 +787827,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -793794,13 +793359,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -796320,13 +795882,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -799317,13 +798876,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -801003,13 +800559,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -807313,13 +806866,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -812135,13 +811685,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -816946,13 +816493,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -818448,13 +817992,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -821805,13 +821346,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -835514,13 +835052,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -837725,13 +837260,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -838751,13 +838283,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -839079,13 +838608,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -839502,13 +839028,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -840099,13 +839622,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -849537,13 +849057,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -859961,13 +859478,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -861998,13 +861512,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -867581,13 +867092,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -874109,13 +873617,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -880462,13 +879967,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -887010,13 +886512,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -892716,13 +892215,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -897031,13 +896527,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -898921,13 +898414,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -901704,13 +901194,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -903246,13 +902733,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -909233,13 +908717,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -910574,13 +910055,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -913073,13 +912551,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -916093,13 +915568,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -916866,13 +916338,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -918405,13 +917874,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -919116,13 +918582,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -920685,13 +920148,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -921861,13 +921321,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -922411,13 +921868,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -925259,13 +924713,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -929181,13 +928632,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -932894,13 +932342,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -935146,13 +934591,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -938251,13 +937693,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -940609,13 +940048,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -942677,13 +942113,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -944087,13 +943520,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -945633,13 +945063,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -947039,13 +946466,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -970664,13 +970088,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -972778,13 +972199,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -975159,13 +974577,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -986778,13 +986193,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -986830,13 +986242,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -1006821,13 +1006230,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -1007164,13 +1006570,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      99,
+      111,
+      110,
+      116,
+      114,
+@@ -1008916,13 +1008319,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1013506,13 +1012906,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1021723,13 +1021120,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1044957,13 +1044351,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1045083,13 +1044474,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1045166,13 +1044554,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1061593,13 +1060978,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1067537,13 +1066919,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1069964,13 +1069343,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1070042,13 +1069418,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1072667,13 +1072040,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1072820,13 +1072190,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1073031,13 +1072398,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1073106,13 +1072470,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1080434,13 +1079795,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1084075,13 +1083433,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1092992,13 +1092347,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1095659,13 +1095011,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1095733,13 +1095082,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1095808,13 +1095154,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1096555,13 +1095898,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1116328,13 +1115668,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+@@ -1133463,13 +1132800,10 @@
+      10,
+      10,
+      47,
+      47,
+      32,
+-     46,
+-     46,
+-     47,
+      97,
+      105,
+      45,
+      119,
+      111,
+
+ ❯ scripts/desktop/execution-worker-runtime.test.mjs:15:136
+     13|       const entry=stageExecutionWorkerRuntime({repoRoot:resolve(".."),…
+     14|       expect(entry).toBe(join(root,"frontend/runtime/execution-worker.…
+     15|       for(const filename of ["execution-worker.cjs","agentic-worker.cj…
+       |                                                                                                                                        ^
+     16|       // Worker研究工具有顶层Playwright导入，隔离启动fixture需装配真实声明依赖。
+     17|       stageMissingDependencies({from:resolve("../ai-worker"),vendorRoo…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/server/chat-read-host.integration.test.ts > 完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选
+Error: 原任务缺少生成节点 Skill
+ ❯ prepareDurableChatTurn ../backend/src/modules/ai-runtime/chat-turn-preparation.ts:54:239
+
+ ❯ Object.assemble src/server/chat-read-host.integration.test.ts:161:19
+ ❯ Object.submit ../backend/src/modules/ai/chat-turn-submission.service.ts:68:54
+ ❯ src/server/chat-read-host.integration.test.ts:158:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 411 passed | 1 skipped (414)
+      Tests  2 failed | 3608 passed | 1 skipped | 1 todo (3612)
+   Start at  15:19:03
+   Duration  474.16s (transform 20.42s, setup 38.35s, import 141.09s, tests 548.78s, environment 159.31s)
+

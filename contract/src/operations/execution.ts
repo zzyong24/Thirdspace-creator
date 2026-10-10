@@ -61,6 +61,18 @@ export const executionOperations = {
     response: z.object({ tasks: z.array(executionTaskResourceV2) }).strict(),
     fr: ["FR-CR-020"],
   }),
+  commandTranscribeExecutionTaskV1: defineEndpoint({
+    id: "execution.tasks.transcribeCommand.v1",
+    method: "POST",
+    path: "/execution/tasks/transcribe-commands/v1",
+    body: z.object({
+      taskIds: z.array(id).length(1),
+      command: z.enum(["pause", "resume", "cancel", "retry"]),
+      idempotencyKey: z.string().min(1),
+    }).strict(),
+    response: z.object({ tasks: z.array(executionTaskResourceV2) }).strict(),
+    fr: ["FR-CR-020"],
+  }),
   getExecutionTask: defineEndpoint({
     id: "execution.tasks.get",
     method: "GET",

@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "pnpm",
+    "-C",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/ai-runtime/transcribe-runner.test.ts",
+    "--testTimeout=120000",
+    "--hookTimeout=120000"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T09:32:17.223760+00:00",
+  "finishedAt": "2026-10-10T09:32:29.489796+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 12.2658377920161,
+  "logSha256": "a643bf420e423e4f95e28a6cf79849f69fd84bbe45fb2e81ae59ca4c38a711bb"
+}

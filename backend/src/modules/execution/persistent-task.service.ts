@@ -12,6 +12,8 @@ import {unconfirmedModelCalls,resumableChatModelCalls,recoverableChatModelRetryA
 import {createDailyTopicRunService} from "../scheduling";
 import {scheduledChildId,assertScheduledChild,scheduledParentProjection} from "./execution-scheduled-child.service";
 import { createHash, randomUUID } from "node:crypto";
+import {withWorkspaceWrite,type WorkspaceWriteTx} from "../../workspace-write";
+import {TRANSCRIBE_COMMAND_RECEIPTS,isTranscribeCommandInput,inspectTranscribeCommand,routeTranscribeCommand,readTranscribeCommandBinding,isTranscribeCommandReplay,appendTranscribeCommandReceipt} from "./transcribe-command-receipt";
 
 import {
   and,
@@ -116,6 +118,8 @@ export interface PersistentTaskService {
       taskIds: string[];
       command: PersistentTaskCommand;
       idempotencyKey: string;
+      /** 仅版本端点内部设置；不是客户端授权事实。 */
+      receiptProtocol?: "transcribe-command-v1";
     },
   ): Promise<ExecutionTaskResourceV2[]>;
   /** Worker-only internal port. It returns one opaque lease, never an arbitrary account listing. */
@@ -331,6 +335,7 @@ export function createPersistentTaskService(
           "ownerId 与 idempotencyKey 不能为空",
         );
       }
+      if (input.kind === "ai_task" && isTranscribeCommandInput(input.payload) && Object.hasOwn(input.payload, TRANSCRIBE_COMMAND_RECEIPTS)) throw new ExecutionValidationError("转写控制回执只能由宿主受理写入");
       if (Object.hasOwn(input.payload, "filePredispatchRecoveries") || Object.hasOwn(input.payload, "modelIdentity") || Object.hasOwn(input.payload, "__scheduledChild") || Object.hasOwn(input.payload, "parentExecutionTaskId") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedThroughSequence") || Object.hasOwn(input.payload, "researchBlockedAcknowledgedCallIds")) {
         throw new ExecutionValidationError("宿主运行字段不能由入队请求指定");
       }
@@ -418,6 +423,7 @@ export function createPersistentTaskService(
       delete existingRequestPayload.researchBlockedAcknowledgedCallIds;
       delete existingRequestPayload.__scheduledChild;
       delete existingRequestPayload.parentExecutionTaskId;
+      if (input.kind === "ai_task" && isTranscribeCommandInput(input.payload)) delete existingRequestPayload[TRANSCRIBE_COMMAND_RECEIPTS];
       if (
         !existing ||
         existing.ownerType !== input.ownerType ||
@@ -474,6 +480,9 @@ export function createPersistentTaskService(
     },
 
     async command(ctx, input) {
+      if (input.receiptProtocol !== undefined && input.receiptProtocol !== "transcribe-command-v1") {
+        throw new ExecutionValidationError("不支持的转写控制恢复协议");
+      }
       await assertWritableWorkspace(db,ctx);
       requireWorkspace(ctx);
       const taskIds = [...new Set(input.taskIds)];
@@ -486,6 +495,9 @@ export function createPersistentTaskService(
           "taskIds 必须非空且不得重复，idempotencyKey 不能为空",
         );
       }
+      if (input.receiptProtocol === "transcribe-command-v1" && taskIds.length !== 1) {
+        throw new ExecutionValidationError("转写控制恢复协议仅支持单个直接转写任务");
+      }
       // SEMANTIC_BOUNDARY_ALLOW: 摘要只核验用户明确命令和目标 ID，不做创作选择。
       const requestDigest=createHash("sha256").update(JSON.stringify({command:input.command,taskIds:[...taskIds].sort()})).digest("hex");
       const accountId=ctx.accountId??null;
@@ -495,7 +507,9 @@ export function createPersistentTaskService(
         const resources=receipt.result as ExecutionTaskResourceV2[];
         return taskIds.map(id=>{const resource=resources.find(item=>item.id===id);if(!resource)throw new ConflictError("原命令回执缺少目标");return resource;});
       };
-      try{return await db.transaction(async (tx) => {
+      const routeRows=await db.select().from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
+      const workspaceWrite=await routeTranscribeCommand(db,ctx,routeRows,taskIds,input.idempotencyKey);
+      const execute=async(tx:WorkspaceWriteTx)=>{
         const discovered = await tx.select().from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
         const lockIds=[...new Set([...taskIds,...discovered.map(scheduledChildId).filter((id):id is string=>Boolean(id))])];
         const rows = await tx
@@ -512,11 +526,27 @@ export function createPersistentTaskService(
           throw new OwnershipError("Execution task not found");
         }
 
-        const [receipt]=await tx.select().from(executionControlReceipts).where(receiptWhere);
-        if(receipt)return restore(receipt);
         const parents=rows.filter(row=>taskIds.includes(row.id)&&scheduledChildId(row));
         for(const parent of parents){const child=rows.find(row=>row.id===scheduledChildId(parent));if(!child||asPayload(child.payload).parentExecutionTaskId!==parent.id)throw new ConflictError('调度链接变更，请重新执行控制命令');assertScheduledChild(parent,child);}
         const effectiveIds=[...new Set(taskIds.map(id=>scheduledChildId(rows.find(row=>row.id===id)!)??id))];
+        const transcribeBindings=new Map<string,NonNullable<Awaited<ReturnType<typeof readTranscribeCommandBinding>>>>();
+        for(const row of rows){if(!inspectTranscribeCommand(row,taskIds,input.idempotencyKey))continue;const bound=await readTranscribeCommandBinding(tx,row,ctx);if(bound)transcribeBindings.set(row.id,bound);}
+        const receiptTaskId=taskIds.length===1&&effectiveIds.length===1&&effectiveIds[0]===taskIds[0]&&!parents.length&&!transcribeBindings.get(taskIds[0]!)?.delegated&&transcribeBindings.has(taskIds[0]!)?taskIds[0]:undefined;
+        // 先核新协议的真实适用域，再回放已有原意图。
+        if (input.receiptProtocol === "transcribe-command-v1" && !receiptTaskId) {
+          throw new ExecutionValidationError("转写控制恢复协议仅支持单个直接转写任务");
+        }
+        // mixed输入若包含已受理原任务，完整target摘要必须一致；不能借批量绕回执。
+        for(const bound of transcribeBindings.values()){
+          if(isTranscribeCommandReplay(bound,input.idempotencyKey,input.command,taskIds)){if(!workspaceWrite)throw new ConflictError("转写控制回执已改变，请沿原任务回读同一意图");return taskIds.map(target=>toResource(rows.find(row=>row.id===target)!));}
+        }
+        // 若预查询后真实绑定改变，不在未受workspace写锁保护的事务里新建受理。
+        if(receiptTaskId&&!workspaceWrite)throw new ConflictError('转写控制绑定已改变，请沿原任务重试同一意图');
+        const [receipt]=await tx.select().from(executionControlReceipts).where(receiptWhere);
+        if(receipt){
+          if(input.receiptProtocol==="transcribe-command-v1")throw new ConflictError("原转写命令未保存此版本的受理回执，请保留原任务核对");
+          return restore(receipt);
+        }
         // 绑定只有开始、核对和取消协议；重开必须终态后用新意图，不借通用控制平行执行扫码。
         if(input.command!=="cancel"&&rows.some(row=>effectiveIds.includes(row.id)&&row.kind==="account_binding")){
           throw new ExecutionValidationError("扫码绑定仅允许取消；完成停止后请重新发起绑定，不支持暂停、继续或重试");
@@ -572,6 +602,9 @@ export function createPersistentTaskService(
             acknowledgedPayload = {...asPayload(previous.payload), researchBlockedAcknowledgedThroughSequence: calls.at(-1)?.sequence ?? 0,
               researchBlockedAcknowledgedCallIds: calls.filter(isAcknowledgableResearchBlock).map(call => call.id)};
           }
+          if(taskId===receiptTaskId){
+            acknowledgedPayload=appendTranscribeCommandReceipt(transcribeBindings.get(taskId)!,acknowledgedPayload??asPayload(previous.payload),input.idempotencyKey,input.command,taskIds,previous.attempt,stamp);
+          }
           const clearLease =
             target === "queued" ||
             target === "cancelled" ||
@@ -607,12 +640,18 @@ export function createPersistentTaskService(
         const result=taskIds.map(id=>toResource(updated.find(row=>row.id===id)!));
         if(accountId)await tx.insert(executionControlReceipts).values({id:nextId("control-receipt"),userId:ctx.userId,accountId,idempotencyKey:input.idempotencyKey,requestDigest,result,createdAt:stamp});
         return result;
-      });}catch(error){
+      };
+      try{return await (workspaceWrite?withWorkspaceWrite(db,ctx,execute):db.transaction(execute));}catch(error){
         // 唯一冲突后事务已回滚；重新鉴权再恢复真实赢家，不重复执行命令。
         const owned=await db.select({id:executionTasks.id}).from(executionTasks).where(and(inArray(executionTasks.id,taskIds),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,ctx)));
         if(owned.length!==taskIds.length)throw new OwnershipError("Execution task not found");
         const [winner]=await db.select().from(executionControlReceipts).where(receiptWhere);
-        if(winner)return restore(winner);throw error;
+        if(winner){
+          if(workspaceWrite)return withWorkspaceWrite(db,ctx,execute);
+          if(input.receiptProtocol==="transcribe-command-v1")return db.transaction(execute);
+          return restore(winner);
+        }
+        throw error;
       }
     },
 

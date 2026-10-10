@@ -1,0 +1,14 @@
+   Compiling creatoros-desktop v1.2.0 (/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend/src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.20s
+     Running unittests src/lib.rs (frontend/src-tauri/target/debug/deps/creatoros_desktop_lib-24e8f3d9e8947476)
+
+running 1 test
+test owned_devices::http_lab::live_loopback_owned_device_consumer ... {"caUsedAsEndEntity":false,"certificateExpired":false,"certificateNameInvalid":false,"phase":"tlsNegativeMetadata","secretExposure":false,"unknownIssuer":true}
+[license] 验签未过(第1次,将重试): Ed25519 验签失败(签名伪造或响应被篡改)
+[license] 验签未过(第2次,将重试): Ed25519 验签失败(签名伪造或响应被篡改)
+[license] 在线校验未通过(对用户降级为友好提示): Ed25519 验签失败(签名伪造或响应被篡改)
+{"acknowledged":true,"encryptedSavedAndReadBack":true,"foreignOriginRejected":true,"journalCleared":true,"originalActivatedAt":"2026-10-09T05:23:35.102Z","originalExpiresAt":"2026-11-08T05:23:35.102Z","phase":"consume","ready":true,"secretExposure":false,"signatureVerified":true,"untrustedCertificateRejected":true,"wrongSigningKeyRejected":true}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 205 filtered out; finished in 1.22s
+

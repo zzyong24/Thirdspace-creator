@@ -1,0 +1,39 @@
+{
+  "canonical_task": "T-1074",
+  "source_task": "Growth/T-210",
+  "old_protected_files_byte_equal": {
+    "PROJECT.md": true,
+    "docs/features/t1072-owned-devices.md": true,
+    "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md": true,
+    "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.review.md": true,
+    "docs/verification/t1072/integration/ENGINE.md": true,
+    "docs/verification/t1072/integration/TEST_ENGINEERING_RECOVERY.md": true,
+    "orchestrator/.lessons-stats.json": true,
+    "orchestrator/ARTIFACT_MANIFEST.yaml": true,
+    "orchestrator/CHANGE_IMPACT.md": true,
+    "orchestrator/context/T-915.md": true,
+    "orchestrator/review-events.ndjson": true,
+    "AGENTS.md": true,
+    "orchestrator/process/.skill-version": true,
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts": true,
+    "backend/src/modules/execution/transcribe-postprocess.integration.test.ts": true,
+    "docs/features/t208-transcribe-confirmed-step-maintenance.md": true,
+    "docs/verification/t1072/integration/t915-mother-cycle2-review.json": true
+  },
+  "old_control_prefixes": {
+    "orchestrator/ID_REGISTRY.md": true,
+    "orchestrator/DECISION_LOG.md": true,
+    "orchestrator/events.ndjson": true
+  },
+  "backlog_without_new_row_byte_equal": true,
+  "T208_still_in_progress": true,
+  "old_module_objects_deep_equal": true,
+  "old_progress_objects_summary_stage_deep_equal": true,
+  "historical_archive_equals_HEAD": true,
+  "T208_packet_original_hash_equal": true,
+  "frozen_source_unchanged": {
+    "backend/src/modules/ai-runtime/transcribe-runner.test.ts": true,
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts": true,
+    "backend/src/modules/execution/transcribe-postprocess.integration.test.ts": true
+  }
+}

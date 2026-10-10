@@ -210,7 +210,7 @@ export interface DraftWorkbenchClient extends ScriptDataClient {
 // ---------------------------------------------------------------------------
 
 export type ProjectTranscriptState =
-  "idle" | "queued" | "running" | "done" | "failed";
+  "idle" | "queued" | "running" | "done" | "failed" | "unknown";
 
 export interface DraftWorkbenchVm {
   readonly project: {
@@ -711,8 +711,8 @@ interface TranscriptTaskDto {
  * [T-505] 首屏恢复项目逐字稿状态。
  *
  * 先按 runner 的真实落点判 done；否则从持久 ai_tasks 找同项目/同 aweme 最近任务。
- * 查询不强制 projectId，是为了恢复修复前创建的旧任务（旧行 project_id 为 null，
- * 但 inputData.awemeIds 仍有稳定作品锚）。任一读失败诚实降级 idle，不在读路径写任务。
+ * 查询不强制 projectId，是为了恢复旧 project_id=null 的批量任务。
+ * 此普通client没有meta，不宣称查全；未确认为unknown。浏览器局部组件使用现meta读取，零读侧写入。
  */
 export async function readProjectTranscriptState(
   client: DraftWorkbenchClient,
@@ -751,46 +751,25 @@ export async function readProjectTranscriptState(
         awemeId,
       );
     } catch {
-      hasTranscript = false;
+      return "unknown";
     }
   }
   if (hasTranscript) return "done";
-  if (!client.listAITasks) return "idle";
-
+  if (!client.listAITasks) return "unknown";
   try {
-    const listed = await client.listAITasks({
-      params: undefined,
-      query: {
-        page: 1,
-        pageSize: 100,
-        taskType: "transcribe.douyin",
-      },
-      body: undefined,
+    const listed = await client.listAITasks({ params: undefined,
+      query: { page: 1, pageSize: 100, taskType: "transcribe.douyin" }, body: undefined });
+    if (!Array.isArray(listed)) return "unknown";
+    const matched = (listed as TranscriptTaskDto[]).filter(task => {
+      const ids = task.inputData?.awemeIds;
+      return task.projectId === projectId || (Array.isArray(ids) ? ids.includes(awemeId) : task.inputData?.awemeId === awemeId);
     });
-    const tasks = (Array.isArray(listed) ? listed : []) as TranscriptTaskDto[];
-    const latest = tasks.find((task) => {
-      const awemeIds = task.inputData?.awemeIds;
-      return (
-        task.projectId === projectId ||
-        (Array.isArray(awemeIds) && awemeIds.includes(awemeId))
-      );
-    });
-    if (!latest) return "idle";
-    if (latest.status === "queued") return "queued";
-    if (
-      latest.status === "running" ||
-      latest.status === "awaiting_confirmation"
-    ) {
-      return "running";
-    }
-    if (latest.status === "succeeded") return "done";
-    if (latest.status === "failed" || latest.status === "cancelled") {
-      return "failed";
-    }
-    return "idle";
-  } catch {
-    return "idle";
-  }
+    if (matched.some(task => task.status === "running" || task.status === "awaiting_confirmation")) return "running";
+    if (matched.some(task => task.status === "queued")) return "queued";
+    if (matched.some(task => task.status === "failed" || task.status === "cancelled")) return "failed";
+    // createClient剥去meta，短页不能证明全量没有；局部浏览器读现meta后才能准入首次POST。
+    return "unknown";
+  } catch { return "unknown"; }
 }
 
 // [T-086] 读本项目最新审核报告。404(未审)/ 桩不带 op / 读失败 → null(诚实显未审)。

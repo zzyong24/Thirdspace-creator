@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/backend
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed | 18 skipped (21)
+   Start at  18:36:48
+   Duration  24.48s (transform 4.29s, setup 0ms, import 6.34s, tests 17.96s, environment 0ms)
+

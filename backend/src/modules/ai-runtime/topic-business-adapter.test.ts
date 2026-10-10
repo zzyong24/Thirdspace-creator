@@ -251,7 +251,7 @@ it("T-957 助手给子任务的建议不冒充优先用户指令",async()=>{
 
 it('T-1074 新普通聊天、手动四依据和每日准备不再消费已配置网格',async()=>{
  const {emptyTopicWorkspaceConfig}=await import('@creatoros/contract');
- const context={version:2,positioningVersionId:'position',rejected:[],config:{...emptyTopicWorkspaceConfig(),audience:'已确认观众',audienceGrid:[{id:'audience:0',text:'历史观众格',evidence:'hypothesis',sourceRefs:[],basis:'',publicQueryAllowed:false}],industryGrid:[{id:'industry:0',text:'历史行业格',evidence:'hypothesis',sourceRefs:[],basis:'',publicQueryAllowed:false}]}};
+ const context={version:2,positioningVersionId:'position',rejected:[],config:{...emptyTopicWorkspaceConfig(),audience:'已确认观众',audienceGrid:[{id:'audience:0',version:1,text:'历史观众格',evidence:'hypothesis' as const,sourceRefs:[],basis:'',publicQueryAllowed:false}],industryGrid:[{id:'industry:0',version:1,text:'历史行业格',evidence:'hypothesis' as const,sourceRefs:[],basis:'',publicQueryAllowed:false}]}};
  const getContext=vi.fn(async()=>context);
  const deps={...base,topicWorkspace:{getContext},assertProject:async()=>{},readTrend:vi.fn()};
  const business=createChatBusinessGenerationPreparation(deps);

@@ -1,0 +1,6 @@
+{
+  "schema": "creator-owned-devices-http-lab/v1",
+  "growthOrigin": "http://localhost:8872",
+  "activityOrigin": "https://127.0.0.1:8850",
+  "caPemPath": "/tmp/t188-devices-lab/cert.pem"
+}

@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/execution/transcribe-postprocess.integration.test.ts",
+    "-t",
+    "T208 原公开retry",
+    "--maxWorkers=1",
+    "--retry=0",
+    "--reporter=json",
+    "--outputFile=/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/docs/verification/t208/summary-retry-typed-red.json"
+  ],
+  "node": "v25.9.0",
+  "host_sha256": "545dc7bc084d9556c88a4e19b8fb083cda658498fd4b93b228669e0111fcaf4a",
+  "test_sha256": "3a702f6aeaaf1d3d2ab98671e89b2eadae30ca5a72ebee91f148df03aa356c81"
+}

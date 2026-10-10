@@ -1,0 +1,36 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:6688) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6804) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/__module_integration__/production.persistence-client.test.ts > production ops registered in the composite transport > get → put → segment → export → complete round-trips over the shared store
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/__module_integration__/production.persistence-client.test.ts (3 tests | 1 failed) 3187ms
+     × get → put → segment → export → complete round-trips over the shared store 991ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/__module_integration__/production.persistence-client.test.ts > production ops registered in the composite transport > get → put → segment → export → complete round-trips over the shared store
+UnsupportedOperationError: persistence: operation not implemented: projects.outputs.get
+ ❯ Object.request ../backend/src/application/transport.ts:79:21
+     77|   return {async request(endpoint,input,ctx){
+     78|     const owner=owners.get(endpoint.id);
+     79|     if(!owner)throw new UnsupportedOperationError(endpoint.id);
+       |                     ^
+     80|     return (await resolve())[owner].request(endpoint,input,ctx);
+     81|   }};
+ ❯ Object.request src/lib/page-read-cache.server.ts:109:34
+ ❯ src/server/__module_integration__/production.persistence-client.test.ts:144:46
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 9 passed (10)
+   Start at  14:15:08
+   Duration  19.51s (transform 4.25s, setup 251ms, import 7.04s, tests 10.82s, environment 1.01s)
+

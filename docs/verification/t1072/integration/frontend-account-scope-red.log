@@ -1,0 +1,129 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:15509) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 真实复盘 lostReceipt=false invalid=false
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 真实复盘 lostReceipt=true invalid=false
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 真实复盘 lostReceipt=false invalid=true
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/review-insights-worker-entry.integration.test.ts (3 tests | 3 failed) 15070ms
+     × 真实复盘 lostReceipt=false invalid=false 4982ms
+     × 真实复盘 lostReceipt=true invalid=false 4965ms
+     × 真实复盘 lostReceipt=false invalid=true 5122ms
+(node:15950) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/__module_integration__/search-indexing.persistence-client.test.ts > 实体 create/update/delete 写搜索索引(全局搜索可用) > 4. knowledge.create 后,pages.search.get 立刻命中 knowledge tab(await 消竞态)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+stderr | src/server/__module_integration__/search-indexing.persistence-client.test.ts > 实体 create/update/delete 写搜索索引(全局搜索可用) > 5. 发布作品索引 entity_type='video',video 作品 tab 能搜到(tab 对齐)
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/__module_integration__/search-indexing.persistence-client.test.ts (5 tests | 2 failed) 9608ms
+     × 4. knowledge.create 后,pages.search.get 立刻命中 knowledge tab(await 消竞态) 1089ms
+     × 5. 发布作品索引 entity_type='video',video 作品 tab 能搜到(tab 对齐) 1141ms
+(node:16112) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/__module_integration__/knowledge.persistence-client.test.ts > knowledge ops registered in the composite transport > knowledge.create round-trips: the new item is then listable
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/__module_integration__/knowledge.persistence-client.test.ts (3 tests | 1 failed) 3585ms
+     × knowledge.create round-trips: the new item is then listable 1111ms
+(node:16235) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/platform-worker-entry.integration.test.ts > 生产多平台创建入口 > publish.platform_adapt 公共transport创建后由真实Worker生成，公共回读完成并可采纳
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/platform-worker-entry.integration.test.ts (3 tests | 1 failed) 21164ms
+     × publish.platform_adapt 公共transport创建后由真实Worker生成，公共回读完成并可采纳 6939ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/platform-worker-entry.integration.test.ts > 生产多平台创建入口 > publish.platform_adapt 公共transport创建后由真实Worker生成，公共回读完成并可采纳
+OwnershipError: OwnershipError: platform account not found: worker-entry-test
+ ❯ Object.getAccount ../backend/src/modules/platform-account/platform-account.repository.ts:104:13
+    102|     const row = rows[0];
+    103|     if (!row) {
+    104|       throw new OwnershipError(
+       |             ^
+    105|         `OwnershipError: platform account not found: ${accountId}`,
+    106|       );
+ ❯ Object.assertOwnedAccount ../backend/src/modules/platform-account/platform-account.service.ts:224:19
+ ❯ withTarget ../backend/src/modules/publishing/publishing.service.ts:355:5
+ ❯ Object.confirmTask ../backend/src/modules/ai/ai.service.ts:1702:11
+ ❯ Object.request ../backend/src/modules/ai/ai.transport.ts:158:24
+ ❯ Object.request src/server/persistence-client.ts:2947:19
+ ❯ Object.request src/lib/page-read-cache.server.ts:109:18
+ ❯ call src/server/platform-worker-entry.integration.test.ts:19:60
+ ❯ src/server/platform-worker-entry.integration.test.ts:44:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 真实复盘 lostReceipt=false invalid=false
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 真实复盘 lostReceipt=true invalid=false
+ FAIL  src/server/review-insights-worker-entry.integration.test.ts > 生产复盘 Worker 入口与采纳 > 真实复盘 lostReceipt=false invalid=true
+OwnershipError: OwnershipError: platform account not found: insights-entry-test
+ ❯ Object.getAccount ../backend/src/modules/platform-account/platform-account.repository.ts:104:13
+    102|     const row = rows[0];
+    103|     if (!row) {
+    104|       throw new OwnershipError(
+       |             ^
+    105|         `OwnershipError: platform account not found: ${accountId}`,
+    106|       );
+ ❯ Object.assertOwnedAccount ../backend/src/modules/platform-account/platform-account.service.ts:224:19
+ ❯ withTarget ../backend/src/modules/publishing/publishing.service.ts:355:5
+ ❯ Object.registerOwnerPublication ../backend/src/modules/publishing/publishing.service.ts:1024:20
+ ❯ Object.request ../backend/src/modules/publishing/publishing.transport.ts:189:21
+ ❯ Object.request src/lib/page-read-cache.server.ts:109:18
+ ❯ call src/server/review-insights-worker-entry.integration.test.ts:15:60
+ ❯ src/server/review-insights-worker-entry.integration.test.ts:24:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  src/server/__module_integration__/knowledge.persistence-client.test.ts > knowledge ops registered in the composite transport > knowledge.create round-trips: the new item is then listable
+ FAIL  src/server/__module_integration__/search-indexing.persistence-client.test.ts > 实体 create/update/delete 写搜索索引(全局搜索可用) > 4. knowledge.create 后,pages.search.get 立刻命中 knowledge tab(await 消竞态)
+error: GROUP_RESOURCE_SCOPE_CONFLICT:引用账号组不存在
+ ❯ ye.Ve ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:432:10
+ ❯ ye.nt ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:210:15
+ ❯ ye.parse ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pg-protocol/src/parser.ts:102:24
+ ❯ pe.execProtocol ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/pglite.ts:631:25
+ ❯ pe.l ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:130:11
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:267:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  src/server/__module_integration__/search-indexing.persistence-client.test.ts > 实体 create/update/delete 写搜索索引(全局搜索可用) > 5. 发布作品索引 entity_type='video',video 作品 tab 能搜到(tab 对齐)
+OwnershipError: OwnershipError: platform account not found: acct-of-user-zyongzhu
+ ❯ Object.getAccount ../backend/src/modules/platform-account/platform-account.repository.ts:104:13
+    102|     const row = rows[0];
+    103|     if (!row) {
+    104|       throw new OwnershipError(
+       |             ^
+    105|         `OwnershipError: platform account not found: ${accountId}`,
+    106|       );
+ ❯ Object.assertOwnedAccount ../backend/src/modules/platform-account/platform-account.service.ts:224:19
+ ❯ withTarget ../backend/src/modules/publishing/publishing.service.ts:355:5
+ ❯ Object.request ../backend/src/modules/publishing/publishing.transport.ts:163:23
+ ❯ Object.request src/lib/page-read-cache.server.ts:109:18
+ ❯ src/server/__module_integration__/search-indexing.persistence-client.test.ts:171:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+
+ Test Files  4 failed (4)
+      Tests  7 failed | 7 passed (14)
+   Start at  14:28:32
+   Duration  64.41s (transform 4.37s, setup 500ms, import 10.91s, tests 49.43s, environment 2.65s)
+

@@ -1,0 +1,20 @@
+{
+  "baseline": "6b1322af",
+  "fullCandidateAtInvocation": "2a9389e5",
+  "baselineFailedTests": 88,
+  "fullCandidateFailureBlocks": 88,
+  "matchedFailureTitles": 87,
+  "fullOnly": [
+    [
+      "src/features/intelligence/intelligence-workbench.test.tsx",
+      "T-482 内容雷达工作区 > [T-546] 收藏夹列表读取失败时仍可按准确名称指定，失败不伪装成 0"
+    ]
+  ],
+  "baselineOnly": [
+    [
+      "src/server/chat-task-submission.integration.test.ts",
+      "正式发布包派发沿原 attempt 复用首稿快照，稿面改变不重复创建任务"
+    ]
+  ],
+  "note": "同35失败文件已冻结基线完成；候选同批仍运行，不能以full-vs-subset差异直接判本轮引入"
+}

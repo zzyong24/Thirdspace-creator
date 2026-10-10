@@ -1,0 +1,31 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/frontend
+
+(node:64453) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/chat-read-host.integration.test.ts > 完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/chat-read-host.integration.test.ts (5 tests | 1 failed) 20859ms
+   × 完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选 2961ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/chat-read-host.integration.test.ts > 完整真实聊天装配经持久提交后，Worker 读取项目并生成开场候选
+AssertionError: 任务错误=CHAT_WORKER_INPUT_UNAVAILABLE; 模型请求=0; 工厂错误=; 未接工具=: expected 'failed' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "failed"
+
+ ❯ src/server/chat-read-host.integration.test.ts:200:143
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  15:35:19
+   Duration  27.63s (transform 4.49s, setup 145ms, import 5.94s, tests 20.86s, environment 532ms)
+

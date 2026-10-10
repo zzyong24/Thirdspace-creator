@@ -1,0 +1,195 @@
+{
+  "scope": "旧外部MCP配对分支原字节；供迁移复核，未注册为当前运行功能",
+  "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+  "files": [
+    {
+      "originalPath": "backend/drizzle/0101_external_agent_connections.sql",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/backend/drizzle/0101_external_agent_connections.sql",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 792,
+      "sha256": "0984bb32f6a86684d19a81561c53893eaaa86350399e9494dd95c133b65b7e18"
+    },
+    {
+      "originalPath": "backend/drizzle/meta/_journal.json",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/backend/drizzle/meta/_journal.json",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 15622,
+      "sha256": "b0c4e5e1a66e6d3cbd4b73cc0b8a3fa26ffc36333fd4e114ef32920821219278"
+    },
+    {
+      "originalPath": "backend/src/db.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/backend/src/db.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 23574,
+      "sha256": "74bd0983d8caa0b5538b007b4846d5f6e93965b1b7d1f0cbcd98fb00e9766699"
+    },
+    {
+      "originalPath": "backend/src/index.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/backend/src/index.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 7957,
+      "sha256": "a7879ccab8d3a24b5255390fb2657e9dcab7c90e09ce9f47bd02533e68e6ce33"
+    },
+    {
+      "originalPath": "backend/src/modules/external-agent-connections/external-agent-connections.service.test.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/backend/src/modules/external-agent-connections/external-agent-connections.service.test.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 3873,
+      "sha256": "f2f63bca8913a891a9efe1cbcfb4c79182640b8422668fc6e6d2d484b49c79d7"
+    },
+    {
+      "originalPath": "backend/src/modules/external-agent-connections/external-agent-connections.service.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/backend/src/modules/external-agent-connections/external-agent-connections.service.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 10962,
+      "sha256": "892127ec634fe2adc7149a9a24ae3cce51c92f0ac5c14d13e19ce45b9ab07401"
+    },
+    {
+      "originalPath": "backend/src/schema/external-agent-connections.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/backend/src/schema/external-agent-connections.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 1173,
+      "sha256": "ab11b1300bef08a7edff1ca44e1379782a17ea380391c6a5fc074eff59c333b1"
+    },
+    {
+      "originalPath": "frontend/src/app/api/v1/dispatch/route.test.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/app/api/v1/dispatch/route.test.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 22442,
+      "sha256": "2c40c3dccaf9f56bba6c636023d74f01c59d9b814971df34675376a82aa1ddfa"
+    },
+    {
+      "originalPath": "frontend/src/app/api/v1/dispatch/route.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/app/api/v1/dispatch/route.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 18590,
+      "sha256": "c3603f5d0b832bb3775b0950ce03b4e6f949dfcae847621510603e77643f15dd"
+    },
+    {
+      "originalPath": "frontend/src/app/api/v1/external-agent/connections/[id]/install/route.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/app/api/v1/external-agent/connections/[id]/install/route.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 1255,
+      "sha256": "0c43144dc2ffcdfd1b55fc0f859909beb1f6781f6811487c23a8b7d9982ddc26"
+    },
+    {
+      "originalPath": "frontend/src/app/api/v1/external-agent/connections/[id]/route.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/app/api/v1/external-agent/connections/[id]/route.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 1882,
+      "sha256": "57144f2a505c43c55bff974668838b58a62ebccf52d78878f29c36629240e2e5"
+    },
+    {
+      "originalPath": "frontend/src/app/api/v1/external-agent/connections/route.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/app/api/v1/external-agent/connections/route.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 3927,
+      "sha256": "053a61fc030328a587787cd962face939c0bca65354802f3e6975738f65e395b"
+    },
+    {
+      "originalPath": "frontend/src/app/api/v1/external-agent/scope/route.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/app/api/v1/external-agent/scope/route.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 1186,
+      "sha256": "5c88f5c48bfe675bef81ba33d8578905635117e348a7ccfd8c812bc32257aa81"
+    },
+    {
+      "originalPath": "frontend/src/features/settings/external-agent-connections-card.tsx",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/features/settings/external-agent-connections-card.tsx",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 6583,
+      "sha256": "ea50647eb598c61f2fc713abe7bd9024bc2da054b65072696058dfc06034306c"
+    },
+    {
+      "originalPath": "frontend/src/features/settings/settings-interactive-region.tsx",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/features/settings/settings-interactive-region.tsx",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 76595,
+      "sha256": "6ba870527104d659303ad7df69ace3072bb76e29d75b3a581c147f6e6ee59dbd"
+    },
+    {
+      "originalPath": "frontend/src/lib/loopback-core.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/lib/loopback-core.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 4874,
+      "sha256": "e442f3b82ab7b8376b53dbdba671d1c702350a7db1ce01f1fce054519a3068be"
+    },
+    {
+      "originalPath": "frontend/src/lib/loopback-guard.server.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/lib/loopback-guard.server.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 1062,
+      "sha256": "b04dd6ade4b5b1d952799d5f55d6e0adaff20c23eb5781b7dfc919c37d9f4e27"
+    },
+    {
+      "originalPath": "frontend/src/proxy.test.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/proxy.test.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 5642,
+      "sha256": "17872fd8f0dd1f51f680fc94fef60810dba3fe0806a0b74c6cd3021f1abfd032"
+    },
+    {
+      "originalPath": "frontend/src/proxy.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/proxy.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 6340,
+      "sha256": "46f6cdde42734f1044ca9c7e6fa9821680ce67878e89753c6c31b0237d0f63d9"
+    },
+    {
+      "originalPath": "frontend/src/server/external-agent-codex-config.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/server/external-agent-codex-config.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 1191,
+      "sha256": "31b4171e71ee0b2ed0e990bd26dc5f39c44d508b1b08c0a24c2accdd28cb67a4"
+    },
+    {
+      "originalPath": "frontend/src/server/external-agent-pairing-files.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/server/external-agent-pairing-files.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 2049,
+      "sha256": "49258e27b2e072dbf22e4be2744ff6df6e0db9e3a9bd63bb356b1bd8352eaf76"
+    },
+    {
+      "originalPath": "frontend/src/server/persistence-client.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/frontend/src/server/persistence-client.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 329436,
+      "sha256": "8cd6737dbae69ccb3dff4b5b031d81c690fee10da6ee8204ddaf36fc9b22caf7"
+    },
+    {
+      "originalPath": "mcp-server/src/cli.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/mcp-server/src/cli.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 20851,
+      "sha256": "a97ad6d76a686790cf167d2952e81aff5d0fe3d3f18ba463b0f96a57636dc408"
+    },
+    {
+      "originalPath": "mcp-server/src/dispatch.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/mcp-server/src/dispatch.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 8197,
+      "sha256": "fdc4e6d59f431243fda848795ece9a53f843890b9dbfd1aee9992d3f634b28d8"
+    },
+    {
+      "originalPath": "mcp-server/src/paired-connection.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/mcp-server/src/paired-connection.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 1734,
+      "sha256": "1d202beefc8ba5a067c15050109e77edd394117431e5b1a909f922cb77a7c67f"
+    },
+    {
+      "originalPath": "mcp-server/src/server.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/mcp-server/src/server.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 3674,
+      "sha256": "2f359388dd84bc23c627975b5568e366b56d1a3a9fd7be4f496fc603f2ad9892"
+    },
+    {
+      "originalPath": "mcp-server/tests/dispatch.test.ts",
+      "retainedPath": "docs/verification/t1080/current-20261010/historical-source/external-agent-mcp/mcp-server/tests/dispatch.test.ts",
+      "source": "71d2cc77b4b96af01fde8228c4cdaa29be500003",
+      "bytes": 8167,
+      "sha256": "106b8e305d9a6b723962d30c665a22fb503fdd56947da8b3d57b331e6091f597"
+    }
+  ]
+}

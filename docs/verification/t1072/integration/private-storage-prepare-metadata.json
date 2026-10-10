@@ -1,0 +1,15 @@
+{
+  "phase": "prepare",
+  "directoryMode": "0o700",
+  "fileMetadata": {
+    "fixture-key.bin": {
+      "mode": "0o600",
+      "bytes": 32
+    },
+    "session.enc": {
+      "mode": "0o600",
+      "bytes": 732
+    }
+  },
+  "contentsRead": false
+}

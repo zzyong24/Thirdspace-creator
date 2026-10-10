@@ -87,6 +87,22 @@ const backendVideoRunner = await readFile(
   "utf8",
 );
 const videoRunnerPath = "ai-worker/src/runtime/video-decisions-runner.ts";
+const videoCompatibilityPath = "backend/src/modules/ai-runtime/video-decisions-runner.ts";
+const compatibilityCode = backendVideoRunner.split("\n")
+  .filter((line) => !line.trim().startsWith("//"))
+  .join("\n").trim();
+if (compatibilityCode !== 'export * from "@creatoros/ai-worker/video-decisions-runner";') {
+  failures.push(`${videoCompatibilityPath} 未精确导出唯一 Worker 实现`);
+}
+const workerPackage = JSON.parse(await readFile(path.join(root, "ai-worker/package.json"), "utf8"));
+const workerExport = workerPackage.exports?.["./video-decisions-runner"];
+if (workerPackage.name !== "@creatoros/ai-worker" ||
+    workerExport === null || typeof workerExport !== "object" || Array.isArray(workerExport) ||
+    Object.keys(workerExport).sort().join(",") !== "default,types" ||
+    workerExport.types !== "./src/runtime/video-decisions-runner.ts" ||
+    workerExport.default !== "./src/runtime/video-decisions-runner.ts") {
+  failures.push("ai-worker/package.json video-decisions-runner 导出未指向唯一受控实现");
+}
 const videoRunner = await readFile(path.join(root, videoRunnerPath), "utf8");
 const videoWorker = await readFile(path.join(root, "ai-worker/src/execution/video-decisions-worker.ts"), "utf8");
 failures.push(...checkVideoMaterialBoundary(backendVideoRunner, videoWorker, videoRunner));

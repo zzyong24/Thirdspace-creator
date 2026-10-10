@@ -1,0 +1,19 @@
+{
+  "sourceHead": "3a551fb58c369f310dd13fde97cc246efbb90a8e",
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "--maxWorkers=2",
+    "--retry=0"
+  ],
+  "timeoutOverride": null,
+  "repoDefaultTestTimeoutMs": 20000,
+  "perTestExplicitBudgets": "保现有测试声明，不新增超时",
+  "log": "docs/verification/t1072/integration/frontend-engineering-final-full.log",
+  "shaAtInvocation": "4491de4359cfca193ed5c3223c1a573dcd365950",
+  "sourceBinding": "调用时已包含后续3a551fb5提交中的全部测试与生产改动；运行后未改产品源码"
+}
