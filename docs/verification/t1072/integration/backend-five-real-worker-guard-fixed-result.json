@@ -1,0 +1,151 @@
+{
+  "source_commit": "4b0b69b55553f809446a8ea83e32cc7314e0ebf4",
+  "total": 170,
+  "passed": 136,
+  "failed": 34,
+  "chat_failed": 22,
+  "transcribe_failed": 12,
+  "exit": 1,
+  "duration_seconds": 48.55,
+  "log_sha256": "391f0ecee9f90edc509f01c48461be7ad545d09fd5fcde69f3af244c923e8f56",
+  "original_inventory_preserved": true,
+  "original_terminal_expected_preserved": true,
+  "failures": [
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-770] 批准 surface 的 snapshot 缺 guide 时整轮显式失败",
+      "first_diagnostic": "AssertionError: promise resolved \"{ skillId: 'chatbox.topic', …(7) }\" instead of rejecting"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > 本机读取能力明确支持 Windows 盘符和 UNC 路径，不再误报只能识别 Unix 路径",
+      "first_diagnostic": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain 'Windows 盘符路径'"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-240③] 场景白名单真收窄:topics(选题页)= 创作产出 + 素材 + 全量只读,不含 review.analyze/review.script",
+      "first_diagnostic": "AssertionError: expected [ 'brief.fill', …(39) ] to deeply equal [ 'brief.fill', …(37) ]"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-077c] 技能自感知:skillsBrief 注入 system(每白名单工具一行「中文名(工具名):用途」,行数=白名单数、≤30)",
+      "first_diagnostic": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '你的技能清单'"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > surface=positioning → chatbox.positioning skill + positioning.generate([T-240③] 场景收窄:不给出题/写稿/复盘)",
+      "first_diagnostic": "AssertionError: expected 29 to be 27 // Object.is equality"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-240③] surface=review → chatbox.review skill,场景白名单 = 复盘提炼 + 记经验 + 素材 + 全量只读(不给创作产出)",
+      "first_diagnostic": "AssertionError: expected 30 to be 28 // Object.is equality"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > functionKey 越权(不在 skill preferred 白名单)→ 不置顶该工具(在场景白名单内仍可调,只是不预调置顶)",
+      "first_diagnostic": "AssertionError: expected 40 to be 38 // Object.is equality"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > ② 规则带作用域:全局条款(编造禁令/直接写稿)+ 场景条款(S1 已发布无稿门 / S2 创作前豁免)",
+      "first_diagnostic": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '全局条款'"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > [T-730] 编导仍可直接使用 Brief、定位和真实素材写稿，不强制论点前置",
+      "first_diagnostic": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '直接用当前选题、项目 Brief、定位和真实素材起草或改写脚本'"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > [T-265] 全局反工具冒充条款在场(治「深链死链 → 编导抓 topic.enrich 冒充论点树」)",
+      "first_diagnostic": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '绝不用「用途不同的工具」冒充用户真正要的能力'"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > ③ 创作前 project surface → review.analyze 被阶段感知砍掉(review.script/calibration.diagnose 保留)",
+      "first_diagnostic": "AssertionError: expected 42 to be 40 // Object.is equality"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > ③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底",
+      "first_diagnostic": "AssertionError: expected 44 to be 42 // Object.is equality"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > ③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量工具(向后兼容)",
+      "first_diagnostic": "AssertionError: expected 43 to be 41 // Object.is equality"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > ③ functionKey 命中真工具但被场景砍掉 → 补回白名单且 forcedTool 生效(T-231⑨ 强制置顶不受收窄影响)",
+      "first_diagnostic": "AssertionError: expected 41 to be 39 // Object.is equality"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > [T-081⑤] honestyBlock — 工具边界诚实 > system 注入「绝不提供工具不具备的操作选项」规则",
+      "first_diagnostic": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '绝不向用户提供你的工具不具备的操作选项'"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > [T-081⑤] honestyBlock — 工具边界诚实 > [T-098] system 注入「指针权/禁逐字复述清单」规则",
+      "first_diagnostic": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '只有指针权'"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > [T-081⑤] honestyBlock — 工具边界诚实 > [T-708] 创作完整度统一为软提示，用户要先生成时不再被形式门禁拦住",
+      "first_diagnostic": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '创作完整度不是拒绝服务的理由'"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > [T-081⑤] honestyBlock — 工具边界诚实 > [T-708] 长文允许阶段结果，本机授权在同一回合续跑而不是重复调用",
+      "first_diagnostic": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '仅基于已读 X/总 Y 字'"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > [T-684] 随包浏览器检索 + 禁止模型记忆兜底 > 宿主未装 searchWeb 端口 → 明确能力未接入，不引导配置搜索模型",
+      "first_diagnostic": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '不要引导用户配置已经下线的“搜索模型”'"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > [T-256a] 环境感知能力认知 — honesty 第 13 条 > system 注入第 13 条:能探测已装工具 + 列工作区目录,缺工具诚实引导、只读不装不跑命令",
+      "first_diagnostic": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '你能感知用户的电脑环境'"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > [T-245] 热点能力认知 — honesty 条款 + trend 出题接信源 > system 注入第 11 条:有真实热点能力(内容雷达/web 搜索)+ 引导登记来源,绝不自称没能力",
+      "first_diagnostic": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '你有真实热点能力'"
+    },
+    {
+      "title": "src/modules/ai-runtime/chat-assembly.test.ts > [T-386] prepareChatAssembly — 后台任务状态真值块 > 端口抛错 / 未装配 → 不注块、装配不崩(best-effort);诚实第 16 条恒在",
+      "first_diagnostic": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '后台任务状态绝不凭记忆断言'"
+    },
+    {
+      "title": "src/modules/ai-runtime/transcribe-runner.test.ts > F7-a:按DEC-ASR-022完全未配云ASR仍本地成功，显式无效云配置不能被本地回退掩盖",
+      "first_diagnostic": "AssertionError: expected \"vi.fn()\" to not be called at all, but actually been called 1 times"
+    },
+    {
+      "title": "src/modules/ai-runtime/transcribe-runner.test.ts > F7-b:多 aweme,其中一条 streamAudio 抛 → 该 aweme 失败、其余成功、任务不整体崩(markSucceeded 带失败计数)",
+      "first_diagnostic": "AssertionError: expected 'failed' to be 'succeeded' // Object.is equality"
+    },
+    {
+      "title": "src/modules/ai-runtime/transcribe-runner.test.ts > 已有事实恢复口播稿且恢复失败不重复 ASR (失败=true)",
+      "first_diagnostic": "AssertionError: expected 'unknown_result' to be 'succeeded' // Object.is equality"
+    },
+    {
+      "title": "src/modules/ai-runtime/transcribe-runner.test.ts > 图集作品 → 写占位锚(source:image-album + skipMasterScript),不抽音不 ASR,计数单列不算失败",
+      "first_diagnostic": "AssertionError: expected '作品 album1：图集作品，无口播音频\\n作品 vid1：逐字稿已保存' to contain '图集跳过 1 条'"
+    },
+    {
+      "title": "src/modules/ai-runtime/transcribe-runner.test.ts > ffmpeg 重试后仍失败 → 单作品失败继续,汇总带分类计数(ffmpeg 1)",
+      "first_diagnostic": "AssertionError: expected 'failed' to be 'succeeded' // Object.is equality"
+    },
+    {
+      "title": "src/modules/ai-runtime/transcribe-runner.test.ts > 全批撞冷却 → 等冷却结束重试子集一次 → 全部成功,任务 markSucceeded",
+      "first_diagnostic": "AssertionError: expected \"vi.fn()\" to be called with arguments: [ 965000, undefined, { …(1) } ]"
+    },
+    {
+      "title": "src/modules/ai-runtime/transcribe-runner.test.ts > 冷却剩余超等待上限 → 诚实不等(sleep 不被调),失败照旧终态",
+      "first_diagnostic": "AssertionError: expected \"vi.fn()\" to not be called at all, but actually been called 2 times"
+    },
+    {
+      "title": "src/modules/ai-runtime/transcribe-runner.test.ts > 未注入冷却端口(旧 host)→ 零回归:冷却失败按原样终态,不重试",
+      "first_diagnostic": "AssertionError: expected 'unknown_result' to be 'failed' // Object.is equality"
+    },
+    {
+      "title": "src/modules/ai-runtime/transcribe-runner.test.ts > 后处理生效 → ensure 收到校正稿(非 ASR 原文),步骤注记「纠错+断句完成」,任务成功",
+      "first_diagnostic": "AssertionError: expected '逐字稿X' to be '逐字稿X(已校正)' // Object.is equality"
+    },
+    {
+      "title": "src/modules/ai-runtime/transcribe-runner.test.ts > 后处理未执行(applied:false + reason)→ 落 ASR 原文,步骤注记「后处理未执行:<原因>」,不阻断",
+      "first_diagnostic": "AssertionError: expected '作品 a1：逐字稿已保存' to contain '后处理未执行:'"
+    },
+    {
+      "title": "src/modules/ai-runtime/transcribe-runner.test.ts > 后处理直接抛错(实现违约)→ runner 双保险接住:落原文 + 注记,任务仍成功",
+      "first_diagnostic": "AssertionError: expected undefined to be '逐字稿X' // Object.is equality"
+    },
+    {
+      "title": "src/modules/ai-runtime/transcribe-runner.test.ts > 未注入后处理端口(旧 host / 缺省)→ 零回归:落 ASR 原文,无后处理注记",
+      "first_diagnostic": "AssertionError: expected undefined to be '逐字稿X' // Object.is equality"
+    }
+  ]
+}

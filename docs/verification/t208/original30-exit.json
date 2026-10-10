@@ -1,0 +1,28 @@
+{
+  "exit_code": 1,
+  "log_sha256": "7bef469a2170d87a0bc13934bee8871cf913cf1ccbb27c8f69f4a03cfa1f3c0b",
+  "total": 31,
+  "original": {
+    "passed": 21,
+    "failed": 9,
+    "pending": 0,
+    "skipped": 0
+  },
+  "additional": {
+    "passed": 1,
+    "failed": 0,
+    "pending": 0,
+    "skipped": 0
+  },
+  "failed_titles": [
+    "F7-b:多 aweme,其中一条 streamAudio 抛 → 该 aweme 失败、其余成功、任务不整体崩(markSucceeded 带失败计数)",
+    "已有事实恢复口播稿且恢复失败不重复 ASR (失败=true)",
+    "ffmpeg 重试后仍失败 → 单作品失败继续,汇总带分类计数(ffmpeg 1)",
+    "全批撞冷却 → 等冷却结束重试子集一次 → 全部成功,任务 markSucceeded",
+    "冷却剩余超等待上限 → 诚实不等(sleep 不被调),失败照旧终态",
+    "未注入冷却端口(旧 host)→ 零回归:冷却失败按原样终态,不重试",
+    "后处理生效 → ensure 收到校正稿(非 ASR 原文),步骤注记「纠错+断句完成」,任务成功",
+    "后处理直接抛错(实现违约)→ runner 双保险接住:落原文 + 注记,任务仍成功",
+    "未注入后处理端口(旧 host / 缺省)→ 零回归:落 ASR 原文,无后处理注记"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "runner_before_sha256": "383d94cf7e409de00f8340e834175ab6660164f7fc389f68e19ac5a25323bcbe",
+  "approved_patch_sha256": "20c12c282586d38867e3e9c6f4d8b40ad091572e4a32c5f1787f47caf9211c8c",
+  "check_exit": 0,
+  "check_output": "",
+  "applied": false
+}

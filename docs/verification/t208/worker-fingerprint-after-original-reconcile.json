@@ -1,0 +1,7 @@
+{
+  "source_sha256": "dd6e27ce858d45aec5bc5445d345fc48bb77079045eb069cedd6723a9c9c82ad",
+  "bundle_sha256_after_original_reconcile_rebuild": "02a07ca9e2c0ae4f6b0c8ca7c778ec7bafbacdb8fde0c5c6cee6cdc6bb0234dd",
+  "original_reconcile_LED054_command_success": true,
+  "claim": "初版related含真实source/bundle；该额外binary hash为原reconcile LED054同源重建后的指纹，不冒称初次related运行前已记录指纹",
+  "source_changed_in_T208": false
+}

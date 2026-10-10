@@ -1,0 +1,20 @@
+{
+  "canonical_task": "T-1074",
+  "source_task": "Growth/T-210",
+  "argv": [
+    "pnpm",
+    "--filter",
+    "@creatoros/backend",
+    "typecheck"
+  ],
+  "node": "v25.9.0",
+  "pnpm": "10.32.1",
+  "timeout_override": false,
+  "maxWorkers": null,
+  "retry": null,
+  "source_sha256": {
+    "backend/src/modules/ai-runtime/transcribe-runner.test.ts": "252f58ba1a4a9262dbf7db3ded2739e89a0126dd71ab8a3fcbc54220a7f3fcda",
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts": "3247450beffa31d696bf5291c884b25fced088df2e20a777666a0596681548c2",
+    "backend/src/modules/execution/transcribe-postprocess.integration.test.ts": "833c5d4a4f092b5c5dc2ed1dd0e2dd99207d689caa85b4b5d88cfea875868ad1"
+  }
+}

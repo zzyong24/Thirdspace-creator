@@ -1,0 +1,70 @@
+{
+  "kind": "浏览器组件诊断，原生适配为fixture，不能代替真实双机UAT",
+  "source": "59acab77 + 当前16px修复",
+  "viewports": [
+    {
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "dimensions": [
+        {
+          "role": "INPUT",
+          "text": "",
+          "font": "16px",
+          "height": 44
+        },
+        {
+          "role": "BUTTON",
+          "text": "已有原激活码？",
+          "font": "16px",
+          "height": 44
+        },
+        {
+          "role": "BUTTON",
+          "text": "连接本人已有产品",
+          "font": "16px",
+          "height": 44
+        }
+      ],
+      "passwordMetrics": {
+        "font": "16px",
+        "height": 44
+      },
+      "overflow": false,
+      "journey": "意图→短码反馈→外页打开调用→失败保留→刷新恢复→核对成功→重启失败恢复，fixture原生"
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "dimensions": [
+        {
+          "role": "INPUT",
+          "text": "",
+          "font": "16px",
+          "height": 44
+        },
+        {
+          "role": "BUTTON",
+          "text": "已有原激活码？",
+          "font": "16px",
+          "height": 44
+        },
+        {
+          "role": "BUTTON",
+          "text": "连接本人已有产品",
+          "font": "16px",
+          "height": 44
+        }
+      ],
+      "passwordMetrics": {
+        "font": "16px",
+        "height": 44
+      },
+      "overflow": false,
+      "journey": "意图→短码反馈→外页打开调用→失败保留→刷新恢复→核对成功→重启失败恢复，fixture原生"
+    }
+  ]
+}

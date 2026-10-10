@@ -1,0 +1,8 @@
+{
+  "orchestrator/process/modules.config.json": true,
+  "orchestrator/progress.json": true,
+  "events_old_prefix_byte_equal": true,
+  "backlog_other_rows_byte_equal": true,
+  "T1074_completed": true,
+  "T208_still_in_progress": true
+}

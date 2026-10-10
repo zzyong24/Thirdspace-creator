@@ -1,0 +1,24 @@
+{
+  "schema": "t1072-frontend-final-result/v1",
+  "sourceHead": "6dd9db7acbcc80a85075f07a40964dd014d24454",
+  "exitCode": 0,
+  "files": {
+    "total": 414,
+    "passed": 413,
+    "failed": 0,
+    "skipped": 1
+  },
+  "tests": {
+    "total": 3612,
+    "passed": 3610,
+    "failed": 0,
+    "skipped": 1,
+    "todo": 1
+  },
+  "durationSeconds": 581.41,
+  "log": "frontend-final-repaired-full.log",
+  "timeoutOverride": null,
+  "retry": 0,
+  "sourceChangedDuringRun": false,
+  "installedAppValidated": false
+}

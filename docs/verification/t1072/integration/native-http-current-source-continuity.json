@@ -1,0 +1,47 @@
+{
+  "schema": "creator-native-http-current-source-continuity/v1",
+  "currentSourceHead": "00a5be6ea720648e1e981c9d42c486a2c2a1d325",
+  "nativeHttpOriginalSourceHead": "f4b0c492467525fd143fd486902ae070ff5620e5",
+  "allSixUnchanged": true,
+  "sourceFiles": [
+    {
+      "path": "frontend/src-tauri/src/owned_devices.rs",
+      "nativeHttpSourceSha256": "b4358d41e2f33a044568238d2d7d02b974ea7c14e192694e0bd1e789e18dbe36",
+      "currentSha256": "b4358d41e2f33a044568238d2d7d02b974ea7c14e192694e0bd1e789e18dbe36",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src-tauri/src/owned_devices_http_lab.rs",
+      "nativeHttpSourceSha256": "dafa16fb56893e4d13d59262202dfc5c89ba04e7cd202e2af3f69569fbe40613",
+      "currentSha256": "dafa16fb56893e4d13d59262202dfc5c89ba04e7cd202e2af3f69569fbe40613",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src-tauri/src/license.rs",
+      "nativeHttpSourceSha256": "baa9e9240b57d83d956e5375fe61877ce457735f1428e364224acc9efcd26243",
+      "currentSha256": "baa9e9240b57d83d956e5375fe61877ce457735f1428e364224acc9efcd26243",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src-tauri/src/lib.rs",
+      "nativeHttpSourceSha256": "7e7801658ed8870572e7750f62ff1822f676948da2113fa1ce34131f69c412e8",
+      "currentSha256": "7e7801658ed8870572e7750f62ff1822f676948da2113fa1ce34131f69c412e8",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src-tauri/Cargo.toml",
+      "nativeHttpSourceSha256": "b3281de070d41c60aef764d69e233712a566c8bd03322064d0395251adf004b3",
+      "currentSha256": "b3281de070d41c60aef764d69e233712a566c8bd03322064d0395251adf004b3",
+      "unchanged": true
+    },
+    {
+      "path": "frontend/src-tauri/build.rs",
+      "nativeHttpSourceSha256": "379803132404a09a4628d864c20e83f07c4ee36ae140901a3ccc2882994eb6e5",
+      "currentSha256": "379803132404a09a4628d864c20e83f07c4ee36ae140901a3ccc2882994eb6e5",
+      "unchanged": true
+    }
+  ],
+  "binarySha256": "9ffeabc8568b9e20515a76b1a3ab0d0a91ad65f132f83856069e2037f36ec92e",
+  "newNativeHttpExecuted": false,
+  "limitation": "原HTTP已验证源码与当前六文件内容一致；不是当前HEAD重新消费或正式安装包证明，未修改原交接与授权"
+}

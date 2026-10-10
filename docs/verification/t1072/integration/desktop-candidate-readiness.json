@@ -1,0 +1,48 @@
+{
+  "recordedAt": "2026-10-09T06:14:35.479Z",
+  "commit": "278f93795f84a6d735f27a5b970910d81f162507",
+  "node": "v25.9.0",
+  "cargo": "cargo 1.98.0 (797e8a9bc 2026-08-05)",
+  "platform": "darwin",
+  "architecture": "arm64",
+  "resources": [
+    {
+      "path": "frontend/src-tauri/sidecar.tar.gz",
+      "exists": false
+    },
+    {
+      "path": "frontend/src-tauri/binaries/creatoros-server-aarch64-apple-darwin",
+      "exists": false
+    },
+    {
+      "path": "frontend/src-tauri/icons/icon.icns",
+      "exists": true,
+      "bytes": 1447723,
+      "isFile": true
+    },
+    {
+      "path": "frontend/src-tauri/placeholder-dist/index.html",
+      "exists": true,
+      "bytes": 3225,
+      "isFile": true
+    },
+    {
+      "path": "ai-worker/dist/execution-worker.cjs",
+      "exists": true,
+      "bytes": 4490293,
+      "isFile": true
+    },
+    {
+      "path": "ai-worker/dist/agentic-worker.cjs",
+      "exists": true,
+      "bytes": 1134944,
+      "isFile": true
+    }
+  ],
+  "emptyExplicitBuildEnvironmentGate": {
+    "ok": false,
+    "code": "missing-signing-key",
+    "error": "缺少 CREATOROS_VERDICT_SIGNING_KEY_B64，拒绝生成安装后必白屏的桌面包。"
+  },
+  "scope": "仅当前隔离源码树候选包准备；未读取用户密钥，未运行 package-local，未构建、安装或替换正式包"
+}

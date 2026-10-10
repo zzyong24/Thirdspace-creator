@@ -848,3 +848,37 @@ Stable TEST-* IDs to be assigned when the service contract defines testable oper
 ## T-1003 多步 Agent（PLANNED）
 
 FR-AW-01 至 FR-AW-08、AC-AW-01 至 AC-AW-09 的唯一正文见 [SPEC](../docs/features/t1003-agent-workbench.md)。用户已确认目标与迁移方向；实现和验收尚未发生。
+
+## T-208 · 2026-10-09 · 本地步骤维护
+
+| ID | 名称 | 定义 | 状态 |
+| --- | --- | --- | --- |
+| T-208 | 已确认转录结果的原步骤说明维护 | docs/features/t208-transcribe-confirmed-step-maintenance.md | active |
+| DEC-T208-MAINTENANCE | 原批准行为窄维护准入 | DECISION_LOG.md | active |
+
+## T-1074 · Growth/T210 · 2026-10-10
+
+| ID | 名称 | 定义 | 状态 |
+| --- | --- | --- | --- |
+| T-1074 | 当前转录五fixture维护 | docs/features/t1074-transcribe-fixture-maintenance.md | active |
+| DEC-T1074-MAINTENANCE | Growth/T210准确合并维护准入 | DECISION_LOG.md | active |
+
+## T-1075 · 2026-10-10
+
+| ID | 类型 | 说明 |
+| --- | --- | --- |
+| T-1075 | Task | Growth T-213 来源冷却说明与后续步骤排序维护；引用 docs/features/t1075-transcribe-source-step-maintenance.md |
+
+## Root/T213 编号纠偏 · 2026-10-10
+
+Creator all-ref真实历史T1075已有其它任务。仅本轮误命名维护迁T1091（all-ref台账/ID/features及当前树已查无引用），原本轮T1075 start/block事件和新SPEC影印保持，不rewrite链、不改任何历史refs。实际三源码SHA、RED/4P4F/43P均保；新SPEC docs/features/t1091-transcribe-source-step-maintenance.md。Root DEC202编号补充授权，非新的业务范围、风险接受或PASS。
+
+| T-1092 | task | docs/features/t1092-transcript-project-ownership-assembly.md | Root/T216 DEC203原项目归属装配准确维护 |
+
+| T-1188 | task | docs/features/t1188-transcribe-task-entry-recovery.md | Root/T214 DEC204；本地all-ref已核无占用 |
+
+| T-1093 | task | docs/features/t1093-transcribe-command-ack-recovery.md | Root/T215 DEC205原控制回执维修 |
+
+| `T-1189` | 原转写命令版本入口与原意图恢复（Root T217） | docs/features/t1189-transcribe-versioned-command-recovery.md | active |
+
+| T-1190 | task | docs/features/t1190-contract-test-inventory-recovery.md | Root/T218 DEC207现行批准三tests维护 |

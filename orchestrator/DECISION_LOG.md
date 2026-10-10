@@ -3482,3 +3482,85 @@ T-1073门适用性补充（2026-10-08）：独立只读复核确认本已审源�
 T-1073会话归属补充（2026-10-08）：无审批卡的等待状态经SDK既有message-metadata通道传递真实executionTaskId/status，前端只信与本轮响应头回执匹配的状态。用户明确停止且服务端接受取消后，释放对应本轮的本地会话控制关联；这不是持久任务cancelled断言，cancel_requested仍保留原任务真实状态。失败保留原关联，迟到旧停止回执不能中断新回合或新scope。此为既有取消/资源归属兼容修复，不新增公共读取、操作或后台轮询。
 
 T-1073收尾补充（2026-10-08）：全部隔离lease已关闭后，父写集收窄为本轮实际44个源码/测试文件及规格/证据路径，不覆盖其它运行时或Copilot文件；主响应流整合测试新增实际消费者读集。按用户AGENTS.md明确要求将8处资源生命周期教训登记LED-055及reconcile可执行检查，只约束源码回归，不新增运行时质量门、公共服务契约或发布标准。精确哈希预算只覆盖已审规格实际清理/私有确认及合成证据，不扩大历史基线。
+
+## DEC-T1072-INTEGRATION · 2026-10-09 · 当前基线精确本地集成
+
+用户授权继续完整落地 Growth T-188 与 CreatorOS T-1072；本轮唯一写入工作树为 `codex/t188-completion-integration`（基线 `6b1322af`）。只集成已授权、历史独立评审的 `fd09b64b` 与 `6855ba14`，不导入无关 `40a5eaf4`。旧 `e8ec732c` 规范与评审作为来源保存，不把旧 hash-chain 事件拼接为当前事件。当前 SPEC 内容未改变，独立只读复核由 `creator_spec_review` 当场执行并交给当前 reviewctl 生成回执。原授权仍不含 push、生产部署、真实码/设备操作、访问用户数据或系统凭据及替换安装版；构建候选允许，真实 Mac/Windows 双机 UAT 保留待验。流程路由为当前 `4-build` 已评审任务精确集成，不改变 IA、合同、数据模型或发布标准。
+
+T-1072 当前实图补充：以生产组件、既有 tokens 与真实浏览器在1366/390视口诊断（原生fixture，不算双机UAT），电脑名称输入框桌面computed font为14px；共享Input的 `md:text-sm` 覆盖旧面板 `text-base`。按已批准SPEC16px要求，只对新面板两处Input显式增加 `md:text-base`，不改共享Input或其他页面，不改变任务/合同/品牌方向。保留修复前证据后重测同旅程。
+
+T-1072 真实HTTP补充授权：父会话明确要求继续既有本地原生HTTP跨仓验收；允许独立loopback开发服务与单reqwest client显式测试CA，禁止全局证书信任、danger_accept_invalid_certs、改变release官方origin/签名边界、读OS凭据或启动安装版。新增cfg(debug_assertions)本地Lab配置映射与cfg(test)真实consumer驱动；原有公开API/IPC与release路径不变。驱动仅操作父会话新准备的隔离对象，阶段由prepare→人工批准→consume，秘密保留隔离加密胶囊，不打印code/secret/verifier/machineId。当前任务恢复本地准备，真实双机UAT仍待验。
+
+- DEC-T1072-LDR-REFERENCE（2026-10-09）：主控在获准新隔离Lab正常API实测CREATE后，原生错误按Activity ULID校验Growth registrationRef而拒绝。主控核实Growth `_id('LDR')` 实际canonical `^LDR_[0-9a-f]{32}$`，API334连接ref为opaque。明确授权修正常原生start与安全journal的该引用校验并真实红/绿回归；绑定、PKCE、poll/ACK沿同一精确引用保持。Activity registeredDeviceRef/jti仍严格ULID，不放宽任意引用/URL，不更改生产服务验证；此前失败意向没有安全胶囊，不冒称续同意向，保留失败后新建准确测试意向。
+
+## DEC-T1072-TEST-ENGINEERING · 2026-10-09 · 全功能失败的真实根因恢复
+
+主控在用户已授权完整本地验收范围内，明确要求继续修复全前端失败；不把基线复现当成完成理由。日期测试实测 RED 后，只冻结 `Date` 为 `2026-09-13T18:00Z`，保北京时间9月14日今天与9月锚点、Invalid Date拒绝、完整restore；7项GREEN，隔离提交 `96dc12c4`。免登录旧canonical默认身份断言与已批准T915真实本机身份不符；改以实际identity service取最早用户，注册/登录/无与坏Cookie/注销恢复仍精确校验本人或本机主用户；实测3项RED、整文件8加身份重建1项GREEN，隔离提交 `278f9379`。两项均只测试，不改运行行为。
+
+正常身份、账号与外键fixture必须经当前公开服务建立真实父对象，保持账号/平台/项目/素材归属guard。正式发布未接通时明确失败，恢复使用既有手工登记事实；不可把退役MockPublisher挂回正式装配。聊天旧mock按已批准T915 R01/R02/R05、AC05/08及T1073 AC003/009迁到持久提交、ledger、Worker完成与SSE；保原场景而验证当前协议，不恢复退役runChatStream/onFinish、不删除场景、不跳过或放宽断言、不增加timeout凑绿。源码产品缺陷如出现仍按正式规范和独立review处理。
+
+## DEC-T915-CHAT-MOTHER-DRAFT · 2026-10-09 · 仅母规范精确增补
+
+主控核独立提案设计857a0f...和未应用精确patch后授权只规范draft应用：母R03a/R05a与AC04/05/08、准确design-review写集、CHANGE_IMPACT/manifest局部失效及真实工具审计。旧S5价格配置和会话成本角标仍原责任；不写backend/schema/contract/UI，不开始新generation/source/收费行为。T915真实同cycle1round2/3，旧SPECreceipt已过期；正式下一recheck由主控安排独立执行者，记录工具另由主控授权。不消费T1072最后round3、不newcycle；本DEC不是process-review-cycle capability。当前progress design-review原done51ed266e保历史，不能手改重开或把规范draft当新BUILD通过。
+
+
+## DEC-016 · 2026-10-09 · T-915 constitution 漂移后的唯一正式复审周期
+
+Source：用户本轮明确“确认”，及主控 Root `orchestrator/DECISION_LOG.md` 的 DEC-198；主控已核准 `t915-creator-cycle-capability-draft.md` SHA256 1999878f1f675b637146fb149b47596b3cf4bab16af6539e3dcffccdf3adf3b8 的准确能力文本。此授权仅用于所属 Creator T-915 一个新周期，不授权新业务实现、source/generation/partial wire、风险接受、安装、推送或部署，不升级或修改审核引擎。
+
+末任务事件 `1d0f281764a2d94f245bbaedad518a9d89ad8fc824c531ba04bf5609a747b93b`（cycle1/round2）保原链；本次仅将当前母 `32dfc6b72fe0d923947d0f5df625d4f6a4f4afec2917e55c39cf9ab1ca4c56c3` 和当前 constitution `c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a` 交独立 homogeneous 实际审核。旧 REV-001/002 全对象、原拒绝、旧事件前缀原样保留。Allowed-Change-IDs 直接来自工具本次 `changed_line_refs[].origin_ref` 全部89项，不把历史接线审计转成实施权限；唯一 nonce 只能消费一次。
+
+```text
+ID: DEC-016
+Date: 2026-10-09
+Authorization-Kind: process-review-cycle
+Task-ID: T-915
+Previous-Spec-SHA256: b990a38a015698105d29d2da0cada4767b3be4bd09948cc5ef147621fb98d8ce
+Previous-Constitution-SHA256: ab6003112be4c5b680fba05abf8326eaf59eeafd1613b4ca44464ef3d0cff126
+Allowed-Change-IDs: SPEC-LINE:168:8dbd45b8788d171b,SPEC-LINE:170:4227f4e45d6f41ee,SPEC-LINE:173:86d8b54713514ca8,SPEC-LINE:175:f3470a2a9303cb20,SPEC-LINE:177:f92587a48b379f60,SPEC-LINE:178:d99e1f95536ab02a,SPEC-LINE:179:6241df71b04cbfc0,SPEC-LINE:180:3854e5e118c34d52,SPEC-LINE:182:5938ce5f18104a91,SPEC-LINE:184:2ae06f6d9ae0e40d,SPEC-LINE:186:a67c20545b44b683,SPEC-LINE:188:02c236832a5244fa,SPEC-LINE:190:fd09bd2d6165f9b0,SPEC-LINE:192:f82d35bc0f899343,SPEC-LINE:194:aa80ec412af67fed,SPEC-LINE:196:835fe2464cf1da9a,SPEC-LINE:198:e486604203329f58,SPEC-LINE:220:f7ea98b7d5343be3,SPEC-LINE:223:f9141f36fc197910,SPEC-LINE:225:841e4f9d42a9c49c,SPEC-LINE:227:bfbdc5e09bbf66eb,SPEC-LINE:228:7684ff8e0dad6324,SPEC-LINE:229:2a5ea02b4ec2b231,SPEC-LINE:230:a3c0a6b3be189058,SPEC-LINE:232:dd70d6c9793ad026,SPEC-LINE:234:1c63681db74422bb,SPEC-LINE:236:a96798bba1a9c130,SPEC-LINE:238:4f88661f3254e4b1,SPEC-LINE:240:f9d72435e1ecb88b,SPEC-LINE:242:bb13d89222ada468,SPEC-LINE:244:1fe6fe3afb8e74ae,SPEC-LINE:246:5de99f746402458f,SPEC-LINE:248:20e9e65526e7a978,SPEC-LINE:250:e57e8b351ee00745,SPEC-LINE:259:c4c0554860d55f95,SPEC-LINE:260:30063e6b138bb341,SPEC-LINE:263:9ddb41a68eabcf9b,SPEC-LINE:270:db81515e1cf82395,SPEC-LINE:272:518fd3f0c60cc15d,SPEC-LINE:273:40eeb0aa9c8e2ca2,SPEC-LINE:274:0344077f6fcd666b,SPEC-LINE:275:7b3763a06ff0c483,SPEC-LINE:276:7a436ff59a812213,SPEC-LINE:277:20428eb886463378,SPEC-LINE:279:7b7596ad8cd892c2,SPEC-LINE:281:f9d6c9444070a8e3,SPEC-LINE:283:121e124a6827bbda,SPEC-LINE:285:230e4baa4500b2f6,SPEC-LINE:287:86766090bba54ea5,SPEC-LINE:288:1d45ade6aecbacfd,SPEC-LINE:289:a871e7788b59865e,SPEC-LINE:290:f58cfcce1fb6ec07,SPEC-LINE:291:8ebcb43c1711db96,SPEC-LINE:292:5337791ae0108804,SPEC-LINE:293:617778b0c7c98e1e,SPEC-LINE:295:155343de4e29355a,SPEC-LINE:297:01797500c138eb38,SPEC-LINE:299:b18e3edfaa770aff,SPEC-LINE:300:42b2d13b64cac96b,SPEC-LINE:301:7c71a6615daae586,SPEC-LINE:302:04a2e85aee293b00,SPEC-LINE:303:ed8e83e7c35759f9,SPEC-LINE:305:025dc1120107ac5b,SPEC-LINE:307:488816385805dbee,SPEC-LINE:309:6304fd0a9b0db135,SPEC-LINE:311:303a20d6168f9466,SPEC-LINE:313:e38a4dcefcd36a81,SPEC-LINE:315:efed6b1b63163762,SPEC-LINE:316:4199ba454d6d3ae8,SPEC-LINE:317:b950b5a80b8ba81e,SPEC-LINE:318:9ffd7e46bc435b4a,SPEC-LINE:319:8516aeb8ee0d4c16,SPEC-LINE:320:fba7bf1a0ad1d2f1,SPEC-LINE:321:e29c4a814e0640da,SPEC-LINE:322:40cd8e13e42b0be0,SPEC-LINE:324:a85cf8d756ee75a4,SPEC-LINE:326:2001540ca501ae55,SPEC-LINE:328:af89c62223d8f1d0,SPEC-LINE:330:133dd4629368eb3f,SPEC-LINE:331:b87c77dcecf2d7d6,SPEC-LINE:332:af503c331248034e,SPEC-LINE:333:ef82707a1b3ec08d,SPEC-LINE:335:c7fa3f9f72b6b104,SPEC-LINE:337:0f65ff241b86bea4,SPEC-LINE:338:d113f3621195820e,SPEC-LINE:339:0cf64cec0881649d,SPEC-LINE:340:3f2969f0b70369f4,SPEC-LINE:342:78e1df4e0782a5f5,SPEC-LINE:344:69b72b2483dad407
+Max-Cycles: 1
+Nonce: 517b9341-64c3-46f5-a51e-ac916ea6cb5f
+Owner: user
+Status: active
+```
+
+## DEC-T208-MAINTENANCE · 2026-10-09 · 原批准转录步骤维护
+
+Source：用户既有全部落地与功能测试授权，Root DEC-199、本轮主控准确准入及 Root T-208 合同；独立提案报告已核精确 diff SHA256 776d633b4501b01d18cb8c2aa1a33327caf1801628c1f65c8c36a6c8f8f43eae。所属 Creator 按已批准 T243/T357/T1070 实现遗漏维护；唯一生产 Host、两原 tests，保全部原30/170断言，不新周期、不借旧PASS，不改 Mother/AGENTS/引擎或任何 partial/状态/公开 wire。新任务审核 — 为适用豁免的真实事实，不是 review receipt。先保旧 dirty 字节，taskctl 真实 start 后 RED/GREEN、事务恢复、原 guard 与完整相关库存，Root 独立实现验收后再裁决任务交付，不自动完成整体T188。禁止生产/浏览器/安装/外部真实供应商及秘密读取。
+
+T208同轮恢复补充（2026-10-10）：Root已独立核真实公开retry/claim/Host RED（新attempt成功仍仅旧失败summary），准许唯一原workflow的summary-only补丁3d4c1e75…及原integration中的attempt2真实CHECK故障恢复反例。初代ID兼容、后续锁内attempt suffix；summary排历史之后，不改store编号/source/paid key/public状态或任何partial候选。保原RED与旧控制面，全部新候选适用检查真实重验；未取得最终Root窄交付裁决前不提交/complete。
+
+## DEC-T1074-MAINTENANCE · 2026-10-10
+
+Owner: user（既有全功能验收授权）；Source: Root DEC201及本轮明确串行准入。Growth/T210→Creator/T1074，历史CreatorT210定位访谈不复用。Root准确合并diff20c12c282586d38867e3e9c6f4d8b40ad091572e4a32c5f1787f47caf9211c8c已静态独立复核；T208真实源码5a472fb已交接，任务仍🔨，不以源码交付冒UI/UAT完整通过。仅原runner五fixture+五控制及任务局部治理，生产/公共契约/partial/重试/期限/paidkey均不改；不新reviewcycle/PASS/acceptedrisk。新任务绑定仅追加，旧tasks/summary/stage/chain原样；实际fail完整保留。
+
+## DEC-T1075-MAINTENANCE · 2026-10-10
+
+Owner: user；Source: Root DEC202与本轮明确实施授权。仅两原Host、新公开步骤集成测试及新SPEC/任务局部治理；先真实RED再已审组合实现与回归。旧任务、summary、stage、审核链与脏改原样；无新cycle、partial、wire、收费或控制协议。保四原FAIL，不commit/complete直到Root最终独立裁决，不启动真实供应商或读取秘密，不代UAT。
+
+## Root/T213 编号纠偏 · 2026-10-10
+
+Creator all-ref真实历史T1075已有其它任务。仅本轮误命名维护迁T1091（all-ref台账/ID/features及当前树已查无引用），原本轮T1075 start/block事件和新SPEC影印保持，不rewrite链、不改任何历史refs。实际三源码SHA、RED/4P4F/43P均保；新SPEC docs/features/t1091-transcribe-source-step-maintenance.md。Root DEC202编号补充授权，非新的业务范围、风险接受或PASS。
+
+## Root DEC-203 / T1092：原转写工件项目归属装配
+
+2026-10-10。对应Growth准确合同与3494ee800226候选；原Projects公共guard同store装配、两个准确路径、先真实RED/7例GREEN。不是方向/归属/公开合同改变，不新正式周期，不改历史/泛化权限或生产。
+
+## Root DEC-204 / T1188：原转写入口查看恢复
+
+2026-10-10。已核v3五生产0fd38e8864ae与独立f6a4ebbb180e，准准确5生产+5真实transport测试；既有工作台方向/原协议维护，16px/44px。正常6视口/200%/键盘及本人UAT未验，不借未知保护或母PASS冒ACK闭环/partial。零生产/部署/安装/browser takeover。
+
+## Root DEC-205 / T1093：原转写控制稳定意图
+
+2026-10-10。独立9c787be17101+v2befbc0c819d4，只3路径及新test内必要原门回归，首次守原门同交易回执/replay只读当前。私有map不扩public协议/全域key/费用/partial；T214消费及UAT待验；旧无receipt不回填，无provider/生产/PG新库/安装/部署。
+
+
+DEC-205准确测试兼容补充（2026-10-10）：Root全文核未应用单hunk 2629ed0abba09262e5b5a11021f5c888c16aba273bf960343d92657d122bd971；准第4路径 backend/src/modules/execution/transcribe-postprocess.integration.test.ts，只容纳本任务已准私有回执，全部旧payload其余字段严格深相等/期限不变；新map唯一hash键与六字段严格相等，完整冻结input/targets/原attempt/同tx时间实算。原失败131P1F保留；修后原43/相关132/新22与backendtypes重验。零生产行为、费用、状态、timeout或其他旧断言变化，不消除原170四失败、不冒UAT。
+
+## Root DEC-206 绑定 — Creator T1189
+
+来源Growth DEC206/T217（2026-10-10），准入准确13路径与新SPEC；用户既有本地落地授权，不是新增确认/风险接受。冻结三diff、静态核和先V03 RED后实现顺序见SPEC；旧Mother/reviewchain/失败/manifest/引擎与UAT保持，不发布/安装/生产写。
+
+## DEC-T1190-MAINTENANCE — Root DEC207准确三测试维护
+
+2026-10-10。准新SPEC精确三tests/本任务串行治理；Root DEC207及独立57697eb6可核来源。不改Mother/新审核周期/生产/公共合同，原FAIL及真人UAT欠项保。

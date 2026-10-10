@@ -1,0 +1,7 @@
+{
+  "first_compile_exit": 2,
+  "first_compile_error": "Task Packet control contract: T-208 在 progress.json 中缺 task binding",
+  "old_verticals_deep_equal": true,
+  "old_other_fields_deep_equal": true,
+  "summary_unchanged": true
+}

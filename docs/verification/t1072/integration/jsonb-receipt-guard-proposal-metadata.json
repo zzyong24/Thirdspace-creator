@@ -1,0 +1,21 @@
+{
+  "source_file": "backend/src/modules/execution/execution-transcribe-workflow.service.ts",
+  "source_sha256": "e0c52a9342acc6887867e8e07a4c1e3d63d07ea60af2e864d96f3418e9260ea2",
+  "patch_sha256": "c22246d23b1d5552c408be7a35b5171fadb3b26362c5e9fd52b1a13830a4c15d",
+  "status": "proposal_unapplied",
+  "evidence": "backend-transcribe-jsonb-receipt-real-red.log",
+  "whitelist": {
+    "keysFrozen": [
+      "reason",
+      "applied",
+      "transcript"
+    ],
+    "keysParsed": [
+      "applied",
+      "transcript",
+      "reason"
+    ],
+    "deepEqual": true,
+    "jsonEqual": false
+  }
+}

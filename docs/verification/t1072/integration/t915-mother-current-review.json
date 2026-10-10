@@ -1,0 +1,61 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "T-915同cycle1最后round3定向独立复核；homogeneous同模型独立上下文，model为inherited-root-model，不声称cross-family。真实末事件REV-001/REV-002已resolved且冻结字段原样携带。已核当前母SHA32dfc6b72fe0d923947d0f5df625d4f6a4f4afec2917e55c39cf9ab1ca4c56c3的R-03a/R-05a与AC-04/05/08：source请求幂等、unknown不换键收费、逐call宿主内部身份与公共allowlist、历史深比较/加法wire/前向迁移/保事实回退及旧S5责任无新confirmed requirement gap。实际verdict仅由真实reviewctl裁决；当前constitution hash与上轮不同是控制面问题，本packet不绕过、不newcycle或借T1072，不代表实现/测试/安装/UAT通过。",
+  "findings": [
+    {
+      "status": "resolved",
+      "severity": "minor",
+      "evidence_kind": "spec-contradiction",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "resolution_evidence": "已只读核对当前 SPEC R-05 首段：不可恢复错误映射 failed，配置/登录阻断映射 waiting_user，未知提交映射 unknown_result；明确 blocked 只保留为工具结果与旧公共状态，不是新执行终态。历史 blocked 保持回读，仅依据持久化错误码与实际恢复动作映射，缺原因保留原记录并要求诊断，禁止猜成可重试。与 R-01 枚举及 AC-03、AC-07、AC-08 一致。",
+      "parent_id": "",
+      "id": "REV-001",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "R-01",
+        "quote": "任务状态为 queued、running、retry_wait、waiting_user、unknown_result、succeeded、partial、failed、cancelled。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-07",
+        "quote": "actualEngine 真实；可用部分保留；诊断不冒充成功；有效旧路径安全降级"
+      },
+      "where": "R-01 状态枚举与 R-05 诊断结果映射",
+      "failure_mode": "R-05 要求只有诊断且无业务结果时为 failed/blocked，但 blocked 不在 R-01 新状态枚举中。当前持久任务服务已有 blocked 状态；迁移实现可能继续写入未定义的新状态，或将登录等待等可恢复阻断误投影为不可恢复失败。",
+      "evidence_ref": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md#r-01-执行权与数据归属；#r-05-结果与兼容路径；backend/src/modules/execution/persistent-task.service.ts 的 finish 与 commandTarget",
+      "suggestion": "明确 blocked 是旧公共状态或工具结果，而非新增执行终态；列明配置/登录阻断映射 waiting_user、未知提交映射 unknown_result、不可恢复且无业务结果映射 failed，并补充旧 blocked 数据的回读与恢复映射。也可选择保留内部 blocked，但需同步补齐状态机及可执行恢复命令。"
+    },
+    {
+      "status": "resolved",
+      "severity": "minor",
+      "evidence_kind": "spec-contradiction",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "baseline",
+      "origin_ref": "round-1 full review",
+      "resolution_evidence": "已只读核对当前 SPEC R-01 状态机段：pause_requested 禁止新 admission，在途调用允许幂等结算或记未知，确认停止后进入 paused，暂停期间重启仍保持暂停；resume 取得新租约并保留累计预算、已确认回执、operationKey、原 deadline，浏览器重新观察。调度 attempt 明确为 fencing 版本，模型/工具重试额度单独累计，暂停恢复既不重置额度也不计作供应商失败重试。AC-05 已补充暂停无新 admission、在途结算、暂停重启不自启及恢复保持预算/重试额度/deadline/operationKey 的验收要求。",
+      "parent_id": "",
+      "id": "REV-002",
+      "category": "completeness",
+      "requirement_anchor": {
+        "id": "R-01",
+        "quote": "暂停用控制状态 pause_requested/paused，保留恢复位置。"
+      },
+      "acceptance_anchor": {
+        "id": "AC-05",
+        "quote": "恢复消息/预算/工具事实；无重复候选；ai/execution 投影一致；浏览器重新观察；旧 sweep 不判死新任务"
+      },
+      "where": "R-01 暂停恢复与 AC-04/AC-05 故障验收",
+      "failure_mode": "SPEC 明确保留暂停能力，但验收仅覆盖取消、崩溃和检查点恢复，未检查 pause_requested 期间是否禁止新调用、如何收敛在途调用，以及 resume 是否保留累计预算与已完成事实。实现可通过现有 AC 而丢失用户已确认的暂停行为。",
+      "evidence_ref": "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md#r-01-执行权与数据归属；#验收-ac完整范围统一交付；backend/src/modules/execution/persistent-task.service.ts 的 commandTarget、acknowledgeControl、recoverExpiredLeases",
+      "suggestion": "补充暂停语义及 AC：pause_requested 禁止新 admission，在途调用允许幂等结算或记未知；确认停止后进入 paused；resume 使用新执行租约并保留累计预算、已确认回执和稳定 operationKey，浏览器重新观察；暂停期间重启仍保持暂停。明确调度 attempt 与模型/工具重试额度的关系，不能通过暂停恢复重置额度。"
+    }
+  ]
+}

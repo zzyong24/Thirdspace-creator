@@ -1,0 +1,21 @@
+{
+  "command": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "run",
+    "typecheck"
+  ],
+  "exit_code": 2,
+  "diagnostics": [
+    {
+      "path": "backend/src/modules/execution/transcribe-postprocess.integration.test.ts",
+      "line": 363,
+      "column": 100,
+      "code": "TS2339",
+      "message": "Property markUnknown does not exist on type of ledger service"
+    }
+  ],
+  "scope": "本轮新增测试首次端口装配错误，后修到真实ledger.settle，非原生产/原30变更",
+  "evidence": "真实工具输出保留于当前会话；该首次命令未redirect文件，不编造原日志/运行时间"
+}

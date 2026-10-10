@@ -1,0 +1,19 @@
+{
+  "node": "v25.9.0",
+  "head": "daa8cc7f0b785f83e37ae65be31c79749ce71217",
+  "original_30_case_bodies_byte_equal": true,
+  "original_24_integration_cases_and_driver_byte_equal_except_import_and_optional_extraIds": true,
+  "fixture_default_preserved": true,
+  "frozen_source_sha256": {
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts": "3247450beffa31d696bf5291c884b25fced088df2e20a777666a0596681548c2",
+    "backend/src/modules/ai-runtime/transcribe-runner.test.ts": "383d94cf7e409de00f8340e834175ab6660164f7fc389f68e19ac5a25323bcbe",
+    "backend/src/modules/execution/transcribe-postprocess.integration.test.ts": "833c5d4a4f092b5c5dc2ed1dd0e2dd99207d689caa85b4b5d88cfea875868ad1"
+  },
+  "focused": {
+    "passed": 22,
+    "failed": 0,
+    "original_target": 2,
+    "additional": 20,
+    "filtered_not_run": 52
+  }
+}

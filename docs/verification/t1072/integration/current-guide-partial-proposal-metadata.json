@@ -1,0 +1,11 @@
+{
+  "status": "unapplied_proposals",
+  "production_changed": false,
+  "wire_changed": false,
+  "proposals": {
+    "CHAT_GUIDE_AUTHORITY_PROPOSAL.md": "7075fb56cf33de641454826cc391b6c8c56dec7c92c4dc13eddb0768e3a6f5c1",
+    "TRANSCRIBE_PARTIAL_WIRE_COMPAT_PROPOSAL.md": "ede08aaaa0ecebd451c8537d6dc5e74ffeae2464c1e5f6b618548b03e0f47df5"
+  },
+  "partial_user_loop_metadata": "transcribe-partial-user-loop-proposal-metadata.json",
+  "note": "partial方案仅只读细化未实施；guide旧proposal的拒绝方向已由后续T928独立来源裁决，已授权测试恢复不等于实施旧proposal。"
+}

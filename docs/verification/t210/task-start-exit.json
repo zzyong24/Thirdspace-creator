@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "start",
+    "T-1074"
+  ],
+  "exit_code": 0,
+  "log_sha256": "88c297239fb47c2b8743db8786ddea559f75a97d82214971a4e4e920b5408c0f"
+}

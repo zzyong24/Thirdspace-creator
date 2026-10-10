@@ -1,0 +1,24 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/modules/ai-runtime/transcribe-runner.test.ts",
+    "--maxWorkers=1",
+    "--retry=0",
+    "--reporter=json",
+    "--outputFile=/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/docs/verification/t208/final-original30.json"
+  ],
+  "node": "v25.9.0",
+  "source_sha256": {
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts": "3247450beffa31d696bf5291c884b25fced088df2e20a777666a0596681548c2",
+    "backend/src/modules/ai-runtime/transcribe-runner.test.ts": "383d94cf7e409de00f8340e834175ab6660164f7fc389f68e19ac5a25323bcbe",
+    "backend/src/modules/execution/transcribe-postprocess.integration.test.ts": "833c5d4a4f092b5c5dc2ed1dd0e2dd99207d689caa85b4b5d88cfea875868ad1"
+  },
+  "timeout_override": false,
+  "maxWorkers": 1,
+  "retry": 0
+}

@@ -1,0 +1,16 @@
+{
+  "canonical_task": "T-1074",
+  "source_task": "Growth/T-210",
+  "historical_creator_T210_preserved": true,
+  "old_module_objects_deep_equal": true,
+  "old_progress_objects_and_summary_stage_deep_equal": true,
+  "root_read_set_sha256": {
+    "/Users/zyongzhu/Workbase/Thirdspace-growth/docs/contracts/T-210-transcribe-fixture-maintenance-proposal.md": "4890938023479c6a7c43b94a93014c1b674f9ffc61f2aaae63c11e883f7d3b4a",
+    "/Users/zyongzhu/Workbase/Thirdspace-growth/docs/build/T-188-validation/completion/t210-root-proposal-review.md": "c6fc478a3c7317020377662a91c2092da3b490d44f97969e3a91dacebdd4267f",
+    "/Users/zyongzhu/Workbase/Thirdspace-growth/docs/build/T-188-validation/completion/t210-transcribe-fixture-maintenance-proposal.md": "64abedc428c0bf5f617982d998e583763992ea970692a60c551a6e74d1652c1f",
+    "/Users/zyongzhu/Workbase/Thirdspace-growth/docs/build/T-188-validation/completion/t208-final-source.json": "2971b3aac3296cfa06ec794f0f0a4e5fd62566f50bc2ff3599b438892e4d3d94",
+    "/Users/zyongzhu/Workbase/Thirdspace-growth/docs/build/T-188-validation/completion/t208-root-final-implementation-review.md": "2d678128eed492212f18e7fc0b0b74c6b76a14a5ef5b6b14528b2dce3da83a67",
+    "/Users/zyongzhu/Workbase/Thirdspace-growth/docs/build/T-188-validation/completion/t210-merged-fixture-proposal.md": "9b8fb872d0be15b6f0b28d4fb5d3a0234f9200933b2454fb3c8f5e3dc8e6c078",
+    "/Users/zyongzhu/Workbase/Thirdspace-growth/docs/build/T-188-validation/completion/t210-independent-merged-proposal-review.md": "c32233b00c1fce8847e6311bcd0839469cb16058176c0205fd3932b255912014"
+  }
+}

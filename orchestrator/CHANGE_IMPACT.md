@@ -753,3 +753,16 @@ Each entry: the change, which upstream IDs/artifacts it touched, the downstream 
   destructive` 真路径，dev server 证据不可替代。
 - **当前 Gate**：用户方向已确认；因授权模型和范围改变，旧 PASS[REV:805cc308700e] 已失效，重写后的
   SPEC 必须独立复审 PASS，才能启动 T-843 BUILD。
+
+## CI-T915-CHAT-MOTHER-20261009 — 聊天新请求恢复与逐调用安全用量规范 draft
+
+- 主控已核独立提案857a0f...，仅批准母R03a/R05a和AC04/05/08规范draft应用；当前仍待真实T915同cycle1round3，不是实现或新收费wire许可。精确patch与schema/wire表见docs/verification/t1072/integration/CHAT_MOTHER_SPEC_DRAFT.md。
+- 此上游变化使对应聊天request mapping/model identity/API公开投影/安全/测试计划、新消息恢复UX、admission/ledger/completion与迁移回退范围失效，必须后续派生再验；不扩大成其他已通过切片全局失效。母原R03/R05、未知调用同键恢复、预算/fence、旧regenerate绑定与S5价格配置/成本角标保。
+- 当前backend/schema/contract/UI代码未改，全frontend测试仍freeze6dd9db7a。母旧receipt过期保，T915与T1072最后轮独立不借用、不newcycle。正式SPEC审核后仍无自动实施/发布PASS。
+
+
+## 2026-10-09 T1072与已生效Growth GD身份规则同期
+
+主控独立核正式GD §5第82行/§10第207、211、213行后，仅授权T1072第47行原一句同步：native原client/projectKey/productRef与appIdentifier不变；register_device先唯一商品及product/project scope、本人选择原授权后固定profile；link_owner准确ticket/grant/batch/source解析唯一profile。不是按latest/first猜配置，不增native/profileRef wire或新代码。GD正式源62c0754...的cycle2round2记录与Creator自身cycle1round2分开，不能借GD审核替Creator末轮。
+
+局部失效仅T1072产品/profile定位规范的当前独立复审/验收映射，manifest精确T-1072-GD-identity-review待审；旧原生HTTP真实事实及源码/签名/期限/保存/ACK证据不抹去，不宣称新规范正式PASS。T1072本来已有engineering增量导致旧SPEC回执过期；此次继续同cycle待最后round3，范围稳定前不运行record、不新cycle。不改T915母draft、reviewevents/progress或任何公共schema/业务实现。准确前后hash与字段证据见T1072_GD_SCOPE_SYNC.md。

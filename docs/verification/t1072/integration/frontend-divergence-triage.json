@@ -1,0 +1,71 @@
+{
+  "schema": "t1072-frontend-divergence-triage/v1",
+  "baseline": "6b1322af",
+  "candidate": "ea7a636e",
+  "frontendSourceUnchangedFrom": "c21c8086",
+  "sequentialSelectedRuns": {
+    "baseline": {
+      "failed": 2,
+      "passed": 11,
+      "skipped": 14,
+      "failedDetails": [
+        {
+          "file": "src/server/chat-task-submission.integration.test.ts",
+          "test": "真实 'review.script' 工厂首次准备失败 +0 次后，不重启也能读回候选",
+          "failureKind": "AssertionError: {\"task\":{\"id\":\"ai-task-c6f5b71a-19\",\"userId\":\"planning-factory\",\"groupId\":null,\"groupVersion\":null,\"membershipVersion\":null,\"projectId\":\"project-c6f5b71a-3\",\"contentOutputId\":null,\"tas"
+        },
+        {
+          "file": "src/server/chat-task-submission.integration.test.ts",
+          "test": "真实 'publish.package' 工厂首次准备失败 +0 次后，不重启也能读回候选",
+          "failureKind": "AssertionError: {\"task\":{\"id\":\"ai-task-e749cacb-25\",\"userId\":\"planning-factory\",\"groupId\":null,\"groupVersion\":null,\"membershipVersion\":null,\"projectId\":\"project-e749cacb-3\",\"contentOutputId\":null,\"tas"
+        }
+      ]
+    },
+    "candidate": {
+      "failed": 5,
+      "passed": 8,
+      "skipped": 14,
+      "failedDetails": [
+        {
+          "file": "src/server/chat-read-host.integration.test.ts",
+          "test": "正式Worker经动态工具工厂读取真实项目，下一轮供应商请求确实包含当前账号结果",
+          "failureKind": "AssertionError: expected 'running' to be 'succeeded' // Object.is equality"
+        },
+        {
+          "file": "src/server/chat-read-host.integration.test.ts",
+          "test": "真实聊天 Worker 连续探测本机 Node 和已授权目录，结果进入下一轮模型",
+          "failureKind": "Error: STACK_TRACE_ERROR"
+        },
+        {
+          "file": "src/server/chat-task-submission.integration.test.ts",
+          "test": "真实 'review.script' 工厂首次准备失败 +0 次后，不重启也能读回候选",
+          "failureKind": "AssertionError: {\"task\":{\"id\":\"ai-task-382a90d1-19\",\"userId\":\"planning-factory\",\"groupId\":null,\"groupVersion\":null,\"membershipVersion\":null,\"projectId\":\"project-382a90d1-3\",\"contentOutputId\":null,\"tas"
+        },
+        {
+          "file": "src/server/chat-task-submission.integration.test.ts",
+          "test": "真实 'review.script' 工厂首次准备失败 +0 次后，不重启也能读回候选",
+          "failureKind": "Error: STACK_TRACE_ERROR"
+        },
+        {
+          "file": "src/server/chat-task-submission.integration.test.ts",
+          "test": "真实 'publish.package' 工厂首次准备失败 +0 次后，不重启也能读回候选",
+          "failureKind": "Error: PGlite is closed"
+        }
+      ]
+    }
+  },
+  "singleWorkerHostRuns": {
+    "baseline": {
+      "failed": 0,
+      "passed": 2,
+      "skipped": 3
+    },
+    "candidate": {
+      "failed": 0,
+      "passed": 2,
+      "skipped": 3
+    }
+  },
+  "interpretation": "35文件首轮共同88失败；候选额外11项在顺序缩小集已多数恢复。候选两项chat-read-host延迟终态/堆栈失败在进一步同单文件1worker顺序基线和候选各2/2通过，未放宽断言/预算。剩review.script重复标题的afterEach STACK_TRACE_ERROR及publish PGlite is closed围绕两侧均存在的工厂失败；当前全suite仍未通过，不将顺序较小集算整体通过。",
+  "sourceEvidence": "基线至ea7a636e的frontend/src/server、backend/src、contract/src业务代码无diff；frontend src/scripts/package在c21c8086至ea7a636e无diff。"
+}

@@ -1,0 +1,130 @@
+{
+  "canonical_task": "T-1074",
+  "source_task": "Growth/T-210",
+  "head_before_apply": "5a472fb018609517f8feb17c8adb0c358e1f3bab",
+  "node": "v25.9.0",
+  "pnpm": "10.32.1",
+  "frozen_source_sha256": {
+    "backend/src/modules/ai-runtime/transcribe-runner.test.ts": "252f58ba1a4a9262dbf7db3ded2739e89a0126dd71ab8a3fcbc54220a7f3fcda",
+    "backend/src/modules/execution/execution-transcribe-workflow.service.ts": "3247450beffa31d696bf5291c884b25fced088df2e20a777666a0596681548c2",
+    "backend/src/modules/execution/transcribe-postprocess.integration.test.ts": "833c5d4a4f092b5c5dc2ed1dd0e2dd99207d689caa85b4b5d88cfea875868ad1"
+  },
+  "approved_patch_sha256": "20c12c282586d38867e3e9c6f4d8b40ad091572e4a32c5f1787f47caf9211c8c",
+  "T208_test_body_byte_equal": true,
+  "applied": true,
+  "baseline_RED": {
+    "path": "/Users/zyongzhu/.codex/worktrees/t188-completion-creator/Thirdspace-creator/docs/verification/t208/final-original30.json",
+    "sha256": "476519325b228244bc78acda426908c21173e1f960c874d6bfae59d16e92984f",
+    "binding_runner_sha256": "383d94cf7e409de00f8340e834175ab6660164f7fc389f68e19ac5a25323bcbe",
+    "five_fixture_categories_six_cases": [
+      {
+        "title": "已有事实恢复口播稿且恢复失败不重复 ASR (失败=false)",
+        "status": "passed"
+      },
+      {
+        "title": "已有事实恢复口播稿且恢复失败不重复 ASR (失败=true)",
+        "status": "failed"
+      },
+      {
+        "title": "未注入冷却端口(旧 host)→ 零回归:冷却失败按原样终态,不重试",
+        "status": "failed"
+      },
+      {
+        "title": "后处理生效 → ensure 收到校正稿(非 ASR 原文),步骤注记「纠错+断句完成」,任务成功",
+        "status": "failed"
+      },
+      {
+        "title": "后处理直接抛错(实现违约)→ runner 双保险接住:落原文 + 注记,任务仍成功",
+        "status": "failed"
+      },
+      {
+        "title": "未注入后处理端口(旧 host / 缺省)→ 零回归:落 ASR 原文,无后处理注记",
+        "status": "failed"
+      }
+    ],
+    "fresh_execution_claim": false
+  },
+  "verification_finished": true,
+  "current_head": "5a472fb018609517f8feb17c8adb0c358e1f3bab",
+  "results": {
+    "focused-first": {
+      "exit_code": 0,
+      "log_sha256": "b1966a57eddcdab263db104d8ca649ac14092142ffd16646a1c5050d2e2821a1",
+      "counts": {
+        "passed": 11,
+        "failed": 0,
+        "skipped": 25,
+        "pending": 0
+      },
+      "failed_cases": []
+    },
+    "runner36": {
+      "exit_code": 1,
+      "log_sha256": "c8bc90453d902e72a6bdb4b811600ed06d1a55a3070aa10c683cdcd438dade36",
+      "total": 36,
+      "groups": {
+        "original": {
+          "passed": 26,
+          "failed": 4,
+          "pending": 0,
+          "skipped": 0
+        },
+        "T208_additional": {
+          "passed": 1,
+          "failed": 0,
+          "pending": 0,
+          "skipped": 0
+        },
+        "T1074_GrowthT210_additional": {
+          "passed": 5,
+          "failed": 0,
+          "pending": 0,
+          "skipped": 0
+        }
+      },
+      "failed_titles": [
+        "F7-b:多 aweme,其中一条 streamAudio 抛 → 该 aweme 失败、其余成功、任务不整体崩(markSucceeded 带失败计数)",
+        "ffmpeg 重试后仍失败 → 单作品失败继续,汇总带分类计数(ffmpeg 1)",
+        "全批撞冷却 → 等冷却结束重试子集一次 → 全部成功,任务 markSucceeded",
+        "冷却剩余超等待上限 → 诚实不等(sleep 不被调),失败照旧终态"
+      ]
+    },
+    "original170": {
+      "exit_code": 1,
+      "log_sha256": "1c072d594bc0296d425929ea722237888090acf451abcb9c2d21ac314b58b649",
+      "total": 176,
+      "groups": {
+        "original": {
+          "passed": 166,
+          "failed": 4,
+          "pending": 0,
+          "skipped": 0
+        },
+        "T208_additional": {
+          "passed": 1,
+          "failed": 0,
+          "pending": 0,
+          "skipped": 0
+        },
+        "T1074_GrowthT210_additional": {
+          "passed": 5,
+          "failed": 0,
+          "pending": 0,
+          "skipped": 0
+        }
+      },
+      "failed_titles": [
+        "F7-b:多 aweme,其中一条 streamAudio 抛 → 该 aweme 失败、其余成功、任务不整体崩(markSucceeded 带失败计数)",
+        "ffmpeg 重试后仍失败 → 单作品失败继续,汇总带分类计数(ffmpeg 1)",
+        "全批撞冷却 → 等冷却结束重试子集一次 → 全部成功,任务 markSucceeded",
+        "冷却剩余超等待上限 → 诚实不等(sleep 不被调),失败照旧终态"
+      ]
+    },
+    "backend-typecheck": {
+      "exit_code": 0,
+      "log_sha256": "4577bb24eb52c4d96ebc6fa935f12776c32d0692bb6eea17edc0a04370da024c"
+    }
+  },
+  "source_corrected_after_approved_apply": false,
+  "commit_and_complete": "尚未执行，待Root精确核准"
+}

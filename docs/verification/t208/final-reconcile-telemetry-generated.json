@@ -1,0 +1,6 @@
+{
+  "before_existed": true,
+  "before_sha256": "742b1f3246e1df73da81ca644aead7f9b7127e31b8725c0bd9b532dee383ce7b",
+  "after_sha256": "7ba8f2f48d72123d2aa2ce24b9a7f2bd74a22fa3555b92916f9e70f165620700",
+  "recovery_authorization": "Root 本轮精确telemetry缓存保护，finding/status/receipt不修改"
+}

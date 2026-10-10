@@ -657,6 +657,40 @@ stages:
       仍被 T-635/T-639/T-638/T-637/T-634 的既有过期回执阻断，已在 Gate 诚实记录。
 
 
+
+  "T-915-chat-mother-draft":
+    status: "draft"
+    gate: "T-915 同cycle独立SPEC recheck"
+    gate_status: "not-run"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md"
+      - existing: "docs/verification/t1072/integration/CHAT_MOTHER_SPEC_DRAFT.md"
+    notes: "仅R03a/R05a与AC04/05/08 draft；旧receipt过期，未实施或正式PASS，旧S5价格/成本保。"
+
+  "T-915-chat-affected-downstream":
+    status: "invalidated"
+    gate: "对应API/数据模型/安全/测试/UX/实现/迁移回退重新派生与真实验收"
+    gate_status: "not-run"
+    confirmation_required: false
+    artifacts:
+      - existing: "contract/src/resources/ai.ts"
+      - existing: "backend/src/schema/ai.ts"
+      - existing: "backend/src/schema/intelligence.ts"
+      - existing: "frontend/src/app/api/chat/route.ts"
+      - existing: "orchestrator/CHANGE_IMPACT.md"
+    notes: "局部失效只指本draft新增request映射/逐call identity与公开usage、新消息恢复及其迁移；其它既有切片通过记录不改。当前代码仍旧合同，新增母行为未经正式审核不得实施。"
+
+  "T-1072-GD-identity-review":
+    status: "invalidated"
+    gate: "T-1072 当前cycle1最后round3独立SPEC recheck"
+    gate_status: "not-run"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/features/t1072-owned-devices.review.md"
+      - existing: "docs/verification/t1072/integration/T1072_GD_SCOPE_SYNC.md"
+    notes: "仅GD已批§5/§10产品/profile定位顺序同期导致T1072身份规范下游待当前正式复审；GD源SHA62c0754b74792856a6a78260e0cad9ca8060db2d116338c483a85be43adf941c。native closed wire/烘焙身份/实现与原HTTP证据事实不变，link_owner仍准确来源唯一profile；T1072旧round2记录保，不新增周期/消耗末轮，不影响T915 draft。"
+
 stage_defaults:
   valid_statuses:
     - "not-started"

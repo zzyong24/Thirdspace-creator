@@ -1,0 +1,134 @@
+{
+  "source": "backend-five-current-contract-red.log",
+  "source_commit": "8b8d6d1eaa3a965da67d61a0513dfcba2f3e0c29",
+  "original_input_count": 90,
+  "original_failure_count": 25,
+  "captured_failure_count": 25,
+  "rows": [
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > [T-513] active 账号快照覆盖 chat method 与工具，不读取全局 registry 定制",
+      "red_error": "Error: SKILL_SNAPSHOT_ACCOUNT_MISMATCH",
+      "source_line": "499"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > [T-770] 批准 surface 的 snapshot 缺 guide 时整轮显式失败",
+      "red_error": "AssertionError: expected [Function] to throw error including 'SKILL_SNAPSHOT_INCOMPLETE' but got 'SKILL_SNAPSHOT_ACCOUNT_MISMATCH'",
+      "source_line": "580"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > 本机读取能力明确支持 Windows 盘符和 UNC 路径，不再误报只能识别 Unix 路径",
+      "red_error": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain 'Windows 盘符路径'",
+      "source_line": "631"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > [T-240③] 场景白名单真收窄:topics(选题页)= 创作产出 + 素材 + 全量只读,不含 review.analyze/review.script",
+      "red_error": "AssertionError: expected [ 'brief.fill', …(39) ] to deeply equal [ 'brief.fill', …(37) ]",
+      "source_line": "795"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > [T-077c] 技能自感知:skillsBrief 注入 system(每白名单工具一行「中文名(工具名):用途」,行数=白名单数、≤30)",
+      "red_error": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '你的技能清单'",
+      "source_line": "857"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > surface=positioning → chatbox.positioning skill + positioning.generate([T-240③] 场景收窄:不给出题/写稿/复盘)",
+      "red_error": "AssertionError: expected 29 to be 27 // Object.is equality",
+      "source_line": "897"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > [T-240③] surface=review → chatbox.review skill,场景白名单 = 复盘提炼 + 记经验 + 素材 + 全量只读(不给创作产出)",
+      "red_error": "AssertionError: expected 30 to be 28 // Object.is equality",
+      "source_line": "951"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > functionKey 越权(不在 skill preferred 白名单)→ 不置顶该工具(在场景白名单内仍可调,只是不预调置顶)",
+      "red_error": "AssertionError: expected 40 to be 38 // Object.is equality",
+      "source_line": "1017"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > ② 规则带作用域:全局条款(编造禁令/直接写稿)+ 场景条款(S1 已发布无稿门 / S2 创作前豁免)",
+      "red_error": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '全局条款'",
+      "source_line": "1077"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > [T-730] 编导仍可直接使用 Brief、定位和真实素材写稿，不强制论点前置",
+      "red_error": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '直接用当前选题、项目 Brief、定位和真实素材起草或改写脚本'",
+      "source_line": "1093"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > [T-265] 全局反工具冒充条款在场(治「深链死链 → 编导抓 topic.enrich 冒充论点树」)",
+      "red_error": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '绝不用「用途不同的工具」冒充用户真正要的能力'",
+      "source_line": "1100"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > ③ 创作前 project surface → review.analyze 被阶段感知砍掉(review.script/calibration.diagnose 保留)",
+      "red_error": "AssertionError: expected 42 to be 40 // Object.is equality",
+      "source_line": "1122"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > ③ 已发布 project surface → review.analyze 保留(复盘不误伤);阶段未知(无读端口)→ 全量兜底",
+      "red_error": "AssertionError: expected 44 to be 42 // Object.is equality",
+      "source_line": "1145"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > ③ 未知 surface(global 全局唤醒/兜底)→ 无场景映射,回落全量工具(向后兼容)",
+      "red_error": "AssertionError: expected 43 to be 41 // Object.is equality",
+      "source_line": "1163"
+    },
+    {
+      "scenario": "prepareChatAssembly — 三层注入装配 > [T-240] 场景一等机制 > ③ functionKey 命中真工具但被场景砍掉 → 补回白名单且 forcedTool 生效(T-231⑨ 强制置顶不受收窄影响)",
+      "red_error": "AssertionError: expected 41 to be 39 // Object.is equality",
+      "source_line": "1197"
+    },
+    {
+      "scenario": "[T-081⑤] honestyBlock — 工具边界诚实 > system 注入「绝不提供工具不具备的操作选项」规则",
+      "red_error": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '绝不向用户提供你的工具不具备的操作选项'",
+      "source_line": "1222"
+    },
+    {
+      "scenario": "[T-081⑤] honestyBlock — 工具边界诚实 > [T-098] system 注入「指针权/禁逐字复述清单」规则",
+      "red_error": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '只有指针权'",
+      "source_line": "1272"
+    },
+    {
+      "scenario": "[T-081⑤] honestyBlock — 工具边界诚实 > [T-708] 创作完整度统一为软提示，用户要先生成时不再被形式门禁拦住",
+      "red_error": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '创作完整度不是拒绝服务的理由'",
+      "source_line": "1280"
+    },
+    {
+      "scenario": "[T-081⑤] honestyBlock — 工具边界诚实 > [T-708] 长文允许阶段结果，本机授权在同一回合续跑而不是重复调用",
+      "red_error": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '仅基于已读 X/总 Y 字'",
+      "source_line": "1291"
+    },
+    {
+      "scenario": "[T-684] 随包浏览器检索 + 禁止模型记忆兜底 > 宿主未装 searchWeb 端口 → 明确能力未接入，不引导配置搜索模型",
+      "red_error": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '不要引导用户配置已经下线的“搜索模型”'",
+      "source_line": "1304"
+    },
+    {
+      "scenario": "[T-239c] 长工具 signal 透传(material.screenshot / web.read) > material.screenshot:SDK callOptions.abortSignal 经工具 execute 透传到 captureScreenshotPort",
+      "red_error": "AssertionError: expected '这一步未能完成，原因尚未确认。请先确认是否已有结果，再决定是否重试。' to be null",
+      "source_line": "1531"
+    },
+    {
+      "scenario": "[T-239c] 长工具 signal 透传(material.screenshot / web.read) > web.read:同款透传到 readWebUrlPort;端口抛 AbortError → 工具信封人话(不裸抛给 SDK)",
+      "red_error": "AssertionError: expected undefined to be AbortSignal { aborted: true } // Object.is equality",
+      "source_line": "1556"
+    },
+    {
+      "scenario": "[T-256a] 环境感知能力认知 — honesty 第 13 条 > system 注入第 13 条:能探测已装工具 + 列工作区目录,缺工具诚实引导、只读不装不跑命令",
+      "red_error": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '你能感知用户的电脑环境'",
+      "source_line": "1569"
+    },
+    {
+      "scenario": "[T-245] 热点能力认知 — honesty 条款 + trend 出题接信源 > system 注入第 11 条:有真实热点能力(内容雷达/web 搜索)+ 引导登记来源,绝不自称没能力",
+      "red_error": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '你有真实热点能力'",
+      "source_line": "1587"
+    },
+    {
+      "scenario": "[T-386] prepareChatAssembly — 后台任务状态真值块 > 端口抛错 / 未装配 → 不注块、装配不崩(best-effort);诚实第 16 条恒在",
+      "red_error": "AssertionError: expected '【数据边界 —— 必须遵守】\\n本 system 中凡被 <user_da…' to contain '后台任务状态绝不凭记忆断言'",
+      "source_line": "1696"
+    }
+  ]
+}

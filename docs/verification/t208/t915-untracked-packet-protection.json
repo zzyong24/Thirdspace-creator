@@ -1,0 +1,14 @@
+{
+  "docs/verification/t1072/integration/t915-mother-cycle2-review.json": {
+    "sha256": "17564729b1d2d24e6d532a4977b142c81f62ba1de07b71ae7d3d29320b223b86",
+    "unchanged_from_formal_cycle2": true
+  },
+  "docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md": {
+    "sha256": "32dfc6b72fe0d923947d0f5df625d4f6a4f4afec2917e55c39cf9ab1ca4c56c3",
+    "unchanged_from_formal_cycle2": true
+  },
+  "AGENTS.md": {
+    "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+    "unchanged_from_formal_cycle2": true
+  }
+}

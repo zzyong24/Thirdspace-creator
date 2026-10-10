@@ -44,7 +44,7 @@ Activity服务器移除后立即拒绝该设备验码和新票据。旧客户端
 
 ## 工程范围与验收
 
-新增 frontend/src-tauri/src/owned_devices.rs、frontend/src/lib/owned-devices.ts、frontend/src/app/activate/owned-device-panel.tsx、frontend/src/features/settings/owned-device-connection.tsx；修改激活页、设置授权卡、原生命令注册/build flag/最小ACL capability与permission；原电脑连接新增native/server-only adapter与必要薄local route。若复用 frontend/src-tauri/src/license.rs 内部验签/快照/票据函数，仅做必要pub(crate)可见性或helper抽取，不变更旧验证语义。客户端身份使用现有烘焙productRef/appIdentifier/projectKey，Growth从准确注册事实解析唯一软件profile，不让用户输入内部profileRef，也不在客户端写死猜ID。ready仅native响应分别携带连接有效期与原授权expiresAt（永久null），不能混用重置期限。新API消费只允许规范冻结的官方HTTPS origin；本地测试环境仅隔离开发构建，release不得允许绕过验签。
+新增 frontend/src-tauri/src/owned_devices.rs、frontend/src/lib/owned-devices.ts、frontend/src/app/activate/owned-device-panel.tsx、frontend/src/features/settings/owned-device-connection.tsx；修改激活页、设置授权卡、原生命令注册/build flag/最小ACL capability与permission；原电脑连接新增native/server-only adapter与必要薄local route。若复用 frontend/src-tauri/src/license.rs 内部验签/快照/票据函数，仅做必要pub(crate)可见性或helper抽取，不变更旧验证语义。客户端身份继续使用既有烘焙client/projectKey/productRef及原appIdentifier；register_device由Growth先按准确注册事实定位唯一商品并冻结产品/project scope，官网由本人明确选择准确合法授权后固定其原profile；link_owner仍由准确ticket/grant/batch及既有source解析唯一profile，不猜first/latest/default，不让用户输入内部profileRef，也不在客户端写死猜ID。ready仅native响应分别携带连接有效期与原授权expiresAt（永久null），不能混用重置期限。新API消费只允许规范冻结的官方HTTPS origin；本地测试环境仅隔离开发构建，release不得允许绕过验签。
 
 新增界面按oil-ui-pro及账号组UI_RULES，保留原方向；所有功能文字>=16px，触控>=44px，桌面/390px兼容。不要单独改变T1022其他页样式；不引入第二登录库、OAuth供应商或同步产品。
 
@@ -65,3 +65,15 @@ Activity服务器移除后立即拒绝该设备验码和新票据。旧客户端
 
 
 本轮上述组实现遗漏已完成独立只读边界复核，并按最小 3 文件修复：素材候选同源 workspaceObjectIdentity/workspaceFilter、空稿面同事务 Projects 锁端口、两条采纳 MaterialLinks callback 返回同事务真实 Projects row。真实 Worker 原14场景从4失败→2失败→14通过；研究用料组合根直接真实事务1通过（跨owner/组/缺项目拒绝、写后失败回滚），后端组候选与既有恢复4文件82通过，正常平台legacy别名补测15通过。组身份与成员冻结沿既有规则，未增加groupVersion逐值拒绝、未改schema/endpoint/业务shape；失败日志完整保留。正式安装版与双电脑仍待验，母聊天规范提案未批准未实现。
+
+
+### 全量工程验收中完整JSONB回执等价比较遗漏
+
+真实转写Worker/宿主全回归发现：JSONB规范对象键顺序，而strict schema按声明顺序构造完整后处理结果；原JSON.stringify比较把完整字段深相等的回执拒为未知，正常已确认稿无法保存。此为原母R03“完整回执/已确认事实”守卫实现遗漏，不涉及待审R05a、状态聚合或新协议。主控核唯一patch及独立只读proposal后授权：仅execution-transcribe-workflow.service.ts新增Node内建isDeepStrictEqual并替完整比较，现transcribe-postprocess.integration.test.ts追加真实键重排/全文与标记原因/字段缺失或extra/实际冻结identity/有序awemeIds反例；不改变strict schema、owner/workspace、fence、lease、事务、原operation及收费调用门。保原30业务库存和未裁决expected，新增守卫测试单独计数，完整产品与双机仍待验。
+
+
+### 全量控制门中既有口播时长边界遗漏
+
+原T794固定15秒真实横竖预览，候选与6b1322af均保portrait15.34≠15的RED。T902批准同一人物在辅助结束后原几何回位、代码落实时间边界，不授权口播结束后新增帧。主控已读本轮独立时长proposal复核并精确授权：仅backend/src/modules/execution/video-render/template.ts的schedulePortraitSpeakerDirection局部change及现template.test.ts，终点不新增tween、短剩余窗口限制原.34 transition，起点/持续/layer共同按原f2/fmt精度受口播终点约束；连续辅助单缩放、尾talking-head回位、真人常驻/字幕、横屏/visualOnly原规则保。严格15expected与原LED024命令不改。提案与原RED见MOTION_TIMELINE_DURATION_PROPOSAL.md及lesson024两份预览日志；本段登记不称已实施或验收通过。
+
+相关自主研究3FAIL明确是T923已批模型传输首尾片段与旧JSON-only测试驱动冲突，主控仅授权existing agentic-research-worker.integration.test.ts内typed严格observer：完整content继续JSON/schema、明确16000/8000片段只读真正完整可见字段，不从DB补给模拟模型，保原3输入、12k正文、来源快照、6/5/4请求/预算、settle/采纳/隐私反例。该test-only不改Worker网页fixture、生产窗口/协议；准确算法及待验事实见RESEARCH_CONTEXT_DRIVER_PROPOSAL.md。

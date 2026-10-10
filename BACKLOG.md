@@ -9,8 +9,17 @@
 
 | ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
 | --- | --- | --- | --- | --- | --- | --- |
+| T-1190 | 恢复完整契约三处过期测试清单并严格重验 | ✅ 待办 | — | — | [SPEC](docs/features/t1190-contract-test-inventory-recovery.md) | Root/T218 Creator430cc8cf；22/274P0F0skip及contracttypes0，原269P3F保；仅三测试维修，不代UAT。 |
+| T-1189 | 补齐原转写命令版本入口与原意图恢复 | 🔨 待办 | — | 待验 | [SPEC](docs/features/t1189-transcribe-versioned-command-recovery.md) | Root/T217 Creator8826031f；V03真实RED→41/132/162P及types/build0；全contract274P(T218)；原4F/真实UAT待验。 |
+| T-1093 | 修复原转写控制意图响应丢失后的安全恢复 | 🔨 待办 | — | — | [SPEC](docs/features/t1093-transcribe-command-ack-recovery.md) | Root/T215回执22P/types0；DEC205准第4旧test窄兼容维护，原4F保，新版本恢复与真实UAT待验。 |
+| T-1188 | 补齐原转写入口准确任务查看与失败恢复 | 🔨 待办 | — | 待验 | [SPEC](docs/features/t1188-transcribe-task-entry-recovery.md) | Root/T214 DEC204 v3独立核验，准确5生产+5测试；保持未知/权限与已有稿，真实6视口/UAT待验。 |
+| T-1092 | 补齐转写工件真实项目归属端口 | 🔨 待办 | — | — | [SPEC](docs/features/t1092-transcript-project-ownership-assembly.md) | Root/T216 DEC203准确两文件；先真实RED后7例与相关回归；原guard/正文恢复保持，不冒UAT。 |
+| T-1091 | 维护来源冷却说明与后续结果步骤排序 | 🔨 待办 | — | — | [SPEC](docs/features/t1091-transcribe-source-step-maintenance.md) | Root/T213编号纠偏；真实RED后4P4F/相关43P，等待T216项目归属装配后重验，不代UI/UAT。 |
+| T-1075 | 仅本轮Root/T213误名记录；真实历史T1075未改 | ⏸️ 待办 | — | — | [SPEC](docs/features/t1075-transcribe-source-step-maintenance.md) | 误名原事件/SPEC保影印；实际维护迁Creator/T1091，不作为历史T1075的新实施或验收。 |
+| T-1074 | 维护当前持久转录协议五处准确fixture | ✅ 待办 | — | — | [SPEC](docs/features/t1074-transcribe-fixture-maintenance.md) | Growth/T210与DEC201已审窄测试维护；保历史CreatorT210、T208新增及原生产缺口，独占runner真实回归，不冒入口/UAT通过。 |
+| T-208 | 补齐已确认转录结果的原步骤说明 | 🔨 待办 | — | — | [SPEC](docs/features/t208-transcribe-confirmed-step-maintenance.md) | Root DEC199准入的既有T243/T357/T1070行为维护；仅1Host+2原tests，保30/170断言与旧控制面，先RED/GREEN与真实事务恢复，不冒主UI或整体T188通过。 |
 | T-1073 | 修复全面排查确认的8处资源浪费与内存泄漏 | ✅ 待办 | PASS[REV:3b0b0c1dc9ce] | — | [SPEC](docs/features/t1073-resource-memory-fixes.md) | 8处源码修复已本地整合提交，生命周期301/301及独立复核通过，原任务/幂等/跨页回复和合法输出保留；最终reconcile仍34个既有错误/1告警、逐行无新增，根因T916/T1015/T1018保留；正式安装版与像素未验，不安装/推送/发布。详[修复报告](docs/verification/t1073/REPORT.md)。 |
-| T-1072 | 配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口 | 📋 待办 | 待审 | 待验 | [SPEC](docs/features/t1072-owned-devices.md) | 用户已采纳并授权与Growth T-188一起实施；仅隔离本地改造，原码首台不变，第二电脑本人确认后登记同一授权，不重复期限或额度；保留本机素材与项目，正式包双电脑验收与生产操作尚未授权。 |
+| T-1072 | 配合 Growth 轻量手机号账号与正式双设备，补齐新电脑连接与已激活账号入口 | 🔨 待办 | PASS[REV:63640ce7cbab] | 待验 | [SPEC](docs/features/t1072-owned-devices.md) | 用户已采纳并授权与Growth T-188一起实施；仅隔离本地改造，原码首台不变，第二电脑本人确认后登记同一授权，不重复期限或额度；保留本机素材与项目，正式包双电脑验收与生产操作尚未授权。 |
 | T-1071 | 全系统排查资源浪费与内存泄漏并隔离复现 | ✅ 待办 | — | — | [排查范围](docs/verification/t1071-resource-memory-audit.md) | 已隔离复现8项资源缺陷并登记6个根因整改任务；成功Whisper线程1→2→3、IPC50MiB回执保留、SSE缓冲及前端/后台重复工作，详[报告](docs/verification/t1071/REPORT.md)；本轮只诊断，未修改产品代码/安装版或真实数据，UI交付验收不适用。 |
 | T-1071-whisper | 修复本地转录成功后遗留Whisper线程 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071缺陷证据保留。 |
 | T-1071-stream | 补齐聊天响应背压与缓冲容量策略 | ✅ 待办 | — | — | [同轮修复SPEC](docs/features/t1073-resource-memory-fixes.md) | T-1073已审范围的实现归属；统一在父任务核验8处资源生命周期及兼容性，原T-1071缺陷证据保留。 |
@@ -74,7 +83,7 @@
 | T-934 | 统一 CLI 与页面的持久聊天工具入口【T-933 真机验收发现】 | 🔨 待办 | — | — | [实现与验收](docs/verification/t934-cli-chat-unification.md) | CLI 仍走通用回复任务，实际没有搜索和正文回执；复用页面持久聊天装配与 Pi 工具循环，保留归属、幂等和历史，真实搜集复验后方可验收。 |
 | T-933 | 安装并验收本轮Agent Runtime桌面版【用户要求自行检查】 | 🔨 待办 | — | — | [T-932交付](docs/verification/t932-runtime-alignment.md) | 核对已安装候选与签名、启动及实际页面/Skill/聊天链路；通过公开CLI操作，未获本次启动授权前不绕过访问；保留真实验收结果。 |
 | T-919 | 定位并修复本地包主导航卡顿、助手通知刷屏与搜索停滞【用户运行反馈】 | 🔨 待办 | — | — | 复用 T-912/T-909 导航契约与 [T-915 SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 读取最新本机日志与运行进程，定位导航阻塞和资源争用；补充切换项目 Tab 丢失在途回复：保留账号/项目隔离的窗口级消息与订阅，避免恢复历史覆；[原说明](BACKLOG-details.md#t-919-triage-description)。 |
-| T-915 | 根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力【T-914 审查承接·用户 2026-09-04】 | 🔨 待办 | PASS[REV:692283b8bace] | — | [SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 保留原执行/恢复改造任务；剩余登录资源迁移、备用模型和运行验收，详见 [历史说明](BACKLOG-details.md#t-915-triage-history)。 |
+| T-915 | 根治 AI 卡慢、失败不重试与搜索/浏览器缺少自主循环，收敛架构与执行能力【T-914 审查承接·用户 2026-09-04】 | 🔨 待办 | PASS[REV:448455eebf9a] | — | [SPEC](docs/superpowers/specs/2026-09-04-agent-runtime-refactor.md) | 保留原执行/恢复改造任务；剩余登录资源迁移、备用模型和运行验收，详见 [历史说明](BACKLOG-details.md#t-915-triage-history)。 |
 | T-916 | 修复工程对账与历史任务证据漂移，恢复可信重构基线【T-914 实测根因·2026-09-04】 | 🔨 待办 | — | — | [审计 A-13](docs/research/2026-09-04-architecture-agent-audit.md) | reconcile 实测 210 errors：模块 write_set/verify、自治声明、旧看板和 receipt 漂移；LED-0；[原说明](BACKLOG-details.md#t-916-triage-description)。 本轮T-1022收尾对账33错误/1告警，其中17项历史回执/链接漂移，见docs/verification/t1022/logs/reconcile-final.log。 T-1066支持更新3.27.4时双活动表阻断strict receipt migration；17条旧回执漂移保持未改；详超时整改日志。  T-1066收尾额外全树governance实际298项含ignored的Rust target指纹，active为0；工具范围与历史缺口另核对，未冒充全树通过。 |
 | T-917 | 记录 T-915 媒体测试事故并防止测试再次访问真实媒体根【用户接受数据清理，解除恢复前置】 | 📋 待办 | — | — | [事故记录](docs/research/evidence/t915/2026-09-06-media-test-incident.md) | 用户明确要求继续重构，数据恢复不再作为 T-915 阻塞；数据未恢复的事实保留；[原说明](BACKLOG-details.md#t-917-triage-description)。 |
 | T-908 | 真实复测 douyin-transcribe Skill，并对照 CreatorOS 当前抖音抓取链路判断是否需要兼容修复【用户截图与压缩包·2026-08-23】 | 📋 待办 | — | — | — | 隔离检查用户提供的 Skill 压缩包与当前已安装版本，以公开抖音链接实际验证短链解析、作品元数据、视频直链、下载和转写前置链路；同时审计 ；[原说明](BACKLOG-details.md#t-908-triage-description)。 |
@@ -189,84 +198,84 @@
 | T-538 | 接通渠道签名上下文的产品问题反馈【跨仓契约·上线闭环】 | 🔨 本地PASS·待生产E2E | — | 待验 | [详情](BACKLOG-details.md#t-538) | 详情见外置记录。 |
 | T-536 | 根治“我的收藏”同步错误分类与浏览器档案锁恢复【bug·多账号采集·用户 2026-07-26】 | 🔨 待真实账号只读验收 | — | 待验 | [详情](BACKLOG-details.md#t-536) | 详情见外置记录。 |
 
-| T-626 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-626) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-577 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-577) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-565 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-565) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-524 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-524) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-519 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-519) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-525 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-525) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-517 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-517) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-516 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-516) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-510 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-510) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-506 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-506) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-502 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-502) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-497 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-497) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-451 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-451) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-449 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-449) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-448 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-448) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-433 S2 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-433-s2) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-433 S4 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-433-s4) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-433 S5 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-433-s5) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-426 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-426) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-425W | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-425w) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-413 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-413) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-417 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-417) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-418 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-418) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-420 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-420) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-399 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-399) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-399c | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-399c) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-409 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-409) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-372 W-spike | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-372-w-spike) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-372 W-ci | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-372-w-ci) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-391 H-econ | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-391-h-econ) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-393 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-393) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-401 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-401) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-406 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-406) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-407 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-407) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-396 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-396) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-398 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-398) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-366c | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-366c) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-361 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-361) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-352 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-352) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-320c | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-320c) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-350c | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-350c) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-351 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-351) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-349d | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-349d) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-339 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-339) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-328 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-328) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-332R | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-332r) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-336 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-336) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-335 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-335) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-337 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-337a | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337a) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-337b | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337b) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-337c | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337c) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-337d | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337d) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-337e | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337e) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-337f | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337f) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-337g | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337g) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-334 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-334) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-324 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-324) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-340 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-340) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-315 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-315) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-316 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-316) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-317 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-317) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-318 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-318) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-319 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-319) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-312 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-312) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-307 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-307) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-306 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-306) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-301 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-301) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-302 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-302) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-261 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-261) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-249 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-249) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-250 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-250) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-255b | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-255b) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-185R | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-185r) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-136R | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-136r) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-100 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-100) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-087 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-087) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
-| T-045 | 详情见任务文档 | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-045) | 暂停原因与恢复条件见任务事件；不得自动派发。 |
+| T-626 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-626) | — |
+| T-577 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-577) | — |
+| T-565 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-565) | — |
+| T-524 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-524) | — |
+| T-519 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-519) | — |
+| T-525 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-525) | — |
+| T-517 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-517) | — |
+| T-516 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-516) | — |
+| T-510 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-510) | — |
+| T-506 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-506) | — |
+| T-502 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-502) | — |
+| T-497 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-497) | — |
+| T-451 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-451) | — |
+| T-449 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-449) | — |
+| T-448 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-448) | — |
+| T-433 S2 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-433-s2) | — |
+| T-433 S4 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-433-s4) | — |
+| T-433 S5 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-433-s5) | — |
+| T-426 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-426) | — |
+| T-425W | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-425w) | — |
+| T-413 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-413) | — |
+| T-417 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-417) | — |
+| T-418 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-418) | — |
+| T-420 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-420) | — |
+| T-399 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-399) | — |
+| T-399c | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-399c) | — |
+| T-409 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-409) | — |
+| T-372 W-spike | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-372-w-spike) | — |
+| T-372 W-ci | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-372-w-ci) | — |
+| T-391 H-econ | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-391-h-econ) | — |
+| T-393 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-393) | — |
+| T-401 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-401) | — |
+| T-406 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-406) | — |
+| T-407 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-407) | — |
+| T-396 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-396) | — |
+| T-398 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-398) | — |
+| T-366c | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-366c) | — |
+| T-361 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-361) | — |
+| T-352 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-352) | — |
+| T-320c | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-320c) | — |
+| T-350c | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-350c) | — |
+| T-351 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-351) | — |
+| T-349d | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-349d) | — |
+| T-339 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-339) | — |
+| T-328 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-328) | — |
+| T-332R | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-332r) | — |
+| T-336 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-336) | — |
+| T-335 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-335) | — |
+| T-337 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337) | — |
+| T-337a | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337a) | — |
+| T-337b | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337b) | — |
+| T-337c | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337c) | — |
+| T-337d | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337d) | — |
+| T-337e | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337e) | — |
+| T-337f | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337f) | — |
+| T-337g | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-337g) | — |
+| T-334 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-334) | — |
+| T-324 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-324) | — |
+| T-340 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-340) | — |
+| T-315 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-315) | — |
+| T-316 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-316) | — |
+| T-317 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-317) | — |
+| T-318 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-318) | — |
+| T-319 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-319) | — |
+| T-312 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-312) | — |
+| T-307 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-307) | — |
+| T-306 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-306) | — |
+| T-301 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-301) | — |
+| T-302 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-302) | — |
+| T-261 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-261) | — |
+| T-249 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-249) | — |
+| T-250 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-250) | — |
+| T-255b | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-255b) | — |
+| T-185R | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-185r) | — |
+| T-136R | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-136r) | — |
+| T-100 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-100) | — |
+| T-087 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-087) | — |
+| T-045 | — | ⏸️ | — | 待验 | [详情](BACKLOG-details.md#t-045) | — |
 
 > ⏸️ 任务保留原暂停状态与详情；恢复必须使用 `taskctl start`，不自动派发。
 

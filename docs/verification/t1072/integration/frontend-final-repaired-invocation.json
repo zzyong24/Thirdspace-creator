@@ -1,0 +1,19 @@
+{
+  "recordedAt": "2026-10-09T07:38:05.818386+00:00",
+  "sourceHead": "6dd9db7acbcc80a85075f07a40964dd014d24454",
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "--maxWorkers=2",
+    "--retry=0"
+  ],
+  "timeoutOverride": null,
+  "repoDefaultTestTimeoutMs": 20000,
+  "perTestExplicitBudgets": "保现有测试声明，不新增超时",
+  "log": "docs/verification/t1072/integration/frontend-final-repaired-full.log",
+  "sourceBinding": "本次所有产品与测试源码已commit；运行期间不修改这些源码"
+}
