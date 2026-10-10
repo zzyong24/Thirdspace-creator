@@ -1453,3 +1453,4 @@
 {"ts":"2026-10-10T15:42:46.191Z","actor":"taskctl","action":"start","task":"T-1206","sha_before":"08f0a6a6e5ee","sha_after":"fb063dfc73c0"}
 {"ts":"2026-10-10T15:48:21.465Z","actor":"taskctl","action":"complete","task":"T-1206","evidence":"docs/verification/t1206/RESULTS.md：8个无占用Git忽略中间目录实清理，磁盘2.24→21.92GiB后续24.93GiB；最新DMG/App精确SHA保持、安装版CLI连接正常，产品diff为空。未签历史RAM/OOM根因；既有全局29错误T1204保持，本机环境收尾不重复产品Gate。","sha_before":"fb063dfc73c0","sha_after":"ab1e8b00d388"}
 {"ts":"2026-10-10T16:43:53.241Z","actor":"taskctl","action":"start","task":"T-1207","sha_before":"3aa7231d6dbd","sha_after":"7f0737a24e48"}
+{"ts":"2026-10-10T20:40:20.244Z","actor":"taskctl","action":"start","task":"T-1208","sha_before":"8ead37b0e1f0","sha_after":"7786f752873d"}

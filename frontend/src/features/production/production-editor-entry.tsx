@@ -37,7 +37,7 @@ export function ProductionEditorSession(props:ProductionWorkbenchProps&{sessionI
 
 export function ProductionEditorEntry(props:ProductionWorkbenchProps){
  const scope=useNativeWorkspace(),host=React.useContext(ProjectVideoSessionContext);
- React.useEffect(()=>{if(host)return host.attach(props,scope);},[host,props.projectId,props.outputId,scope.groupId,scope.accountId]);
- if(host)return <p className="p-4 text-sm text-muted-foreground">正在恢复当前剪辑工作台…</p>;
+ React.useEffect(()=>{if(host&&props.outputId)return host.attach(props,scope);},[host,props.projectId,props.outputId,scope.groupId,scope.accountId]);
+ if(host&&props.outputId)return <p className="p-4 text-sm text-muted-foreground">正在恢复当前剪辑工作台…</p>;
  return <ProductionEditorSession key={`${scope.groupId?`group:${scope.groupId}`:`account:${scope.accountId??'missing'}`}:${props.projectId}:${props.outputId??'empty'}`} {...props}/>;
 }
