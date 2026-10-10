@@ -1,0 +1,63 @@
+{
+  "schema": "t1110-project-independent-research-validation/v1",
+  "observedAt": "2026-10-10T03:47:47.251Z",
+  "root": "/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator",
+  "method": "项目自有完整只读检查；未调用官方private validator或resume CLI",
+  "stateWrite": false,
+  "eventWrite": false,
+  "open": {
+    "ts": "2026-10-09T16:52:22.653Z",
+    "actor": "codex-policy-compatible-registration",
+    "action": "research_open",
+    "task": "T-1110",
+    "research_task": "T-1110",
+    "card": "docs/research/t1110-wechat-statistics-visible-section.md",
+    "failure_family": "wechat-statistics-visible-section",
+    "trigger_kind": "repeated-failure-family",
+    "manual_registration": true,
+    "reason": "用户AGENTS指定taskctl唯一状态转换；实际taskctl block已暂停，此登记无状态写入，随后官方observe已有OPEN分支记录真实观测，不伪造CLI调用。"
+  },
+  "openSha256": "cdd51a96cca098f547217fe6aee8d28a286f808b039b9dc5ce037700b696c065",
+  "inputSha256": {
+    "BACKLOG.md": "8fde336ec520907e2edf75ee5742b422ecff883c6e79abb25fa490adb42665b4",
+    "orchestrator/events.ndjson": "526139529710011d2b9908a06937d18f1c10e0688e91c638d51571506535f5b3",
+    "orchestrator/DECISION_LOG.md": "89ef67ae30c0b69f5889e85768fec0ff397d9e02babadddf79c7c2503573d00b",
+    "orchestrator/process/reconcile.config.json": "07d3db3597d9e3c1a95a4e0a384a8326c00523c6433048aacbb76c43659f2074",
+    "docs/research/t1110-wechat-statistics-visible-section.md": "445a6df493fedc352c0e8c4f5f35dee5e059ba91598161f2567b6e4f700bebbf",
+    "tools/verification/t1110-research.mjs": "0af3df108810916f283844dc975d383c26645ddc7d3b2ebed108f209ee094f46",
+    "tools/verification/t1110-scope-observe.sh": "c1ee5509b4c41dd45f1ef3509b74cb7865a0eab8bd64ce214a431fcd5d3069e5",
+    "tools/verification/t1110-scope-check.mjs": "d88ebcb3c11f34b0dc24d631b437160c1d152265a4a0c3d83adb3ce8878b3a83",
+    "ai-worker/src/runtime/platform/wechat-browser-source.ts": "ec7c53bc4c83bb57b8f707acd2ba1602f6722f9626c6a3843f8b3031814df19a",
+    "ai-worker/src/runtime/platform/wechat-dom-witness.ts": "039dc9abc6716b1efbbc0f60e3e4895da16a9318a973a7fbb3bfaf198dda26c7",
+    "ai-worker/src/runtime/platform/wechat-dom-witness.test.ts": "d7f8451b1a175acd554cbad680cd2c3a396696a35de75e93d31c50a8513dcc89",
+    "frontend/src/server/persistence-client.ts": "ab11053526e4f2a4f71b45fad6e012b5215a1502d4d5124a8e4db4b5d0457dd8",
+    "docs/features/t1110-wechat-browser-collection.md": "cc4c7976146dadb0aafe264780344dfcf509c78cb5ff4c35d02c2a687f46996d",
+    "docs/verification/t1110/section-failure-20261010.json": "8b29b3fee483689af8743df357f2e0aec21c76863ab532c1e077c4a53424825e",
+    "docs/verification/t1110/product-live-status-20261009.json": "3ccb846d324c6e5e65d028bdc2e98b78a8a3d2035be90ad0eb7f5ce2e84465e0",
+    "docs/research/2026-10-09-channels-native-export.md": "d6d042affaf044a9df9ad365621f309efe08185e5d65fc7f118e4fd18a395b58",
+    "docs/verification/t1110/section-research-cleanup-20261010.json": "47c687f85238a3c29658143e2bb6a9dd5ddaa94e91f36fc46ca4d21953d5ffec",
+    "docs/verification/t1110/handback-20261010.json": "6efb2a675db5a812b8e8e36ab305c97a77e4050af47a73ed3cb45f4839e3158f",
+    "docs/verification/t1110/wujie-scope-20261010.json": "2434de0b72ca39275cc9d370668cbdefa2eb2edda7a0bc954552390dfe629bc7",
+    "docs/verification/t1110/wujie-scope-independent-review-20261010.md": "ba5b6441f573668c46371786cfed3001e4840632813f6dcecf256e2b35b2d4cf",
+    "docs/verification/t1110/section-exp1-result.json": "af4786a97ecf132c6d00d2848f9e378c88aa96286aec760c03a335b17e9e99a6",
+    "docs/verification/t1110/section-exp2-result.json": "9f00dbc0a846e2ccb8acacf4da7f0059a132d488570bac9b2afcfc18b11e8bb5"
+  },
+  "results": [
+    {
+      "key": "t1110_wechat_section_mechanism",
+      "command": "zsh tools/verification/t1110-scope-observe.sh",
+      "exitCode": 0,
+      "stdout": "{\n  \"observedAt\": \"2026-10-10T03:47:46.802Z\",\n  \"space\": 20,\n  \"page\": \"p6\",\n  \"ownership\": \"agent\",\n  \"method\": \"CDP Runtime.evaluate in parent main realm; native Document prototype versus Wujie-proxied iframe document\",\n  \"runtimeTimeoutMs\": 120000,\n  \"requestTimeoutMs\": 150000,\n  \"value\": {\n    \"officialOrigin\": true,\n    \"path\": \"/platform/statistic/post\",\n    \"readyState\": \"complete\",\n    \"visibleWujieHosts\": 1,\n    \"shadowMode\": \"open\",\n    \"shadowCounts\": [\n      1,\n      1,\n      1\n    ],\n    \"shadowVisibleCounts\": [\n      1,\n      1,\n      1\n    ],\n    \"frames\": [\n      {\n        \"path\": \"/micro/statistic/post\",\n        \"visible\": false,\n        \"display\": \"none\",\n        \"nativeCounts\": [\n          0,\n          0,\n          0\n        ],\n        \"proxyCounts\": [\n          1,\n          1,\n          1\n        ],\n        \"nativeBodyLength\": 0,\n        \"proxyBodyLength\": 601,\n        \"proxyLabelsBelongToVisibleShadow\": true,\n        \"nativeLabelRootMatchesVisibleShadow\": true\n      }\n    ]\n  }\n}\n",
+      "stderr": "",
+      "outputSha256": "b8ca8d8c0b172706401f7cf16ff45c9f2a534a6a937491349ef58d5a5af43fa7"
+    },
+    {
+      "key": "t1110_wechat_section_boundary",
+      "command": "node tools/verification/t1110-research.mjs boundary",
+      "exitCode": 0,
+      "stdout": "{\n  \"result\": \"历史失败/2实验/原生产源与只读命令边界核对通过\",\n  \"historicalPublicReadAt\": \"2026-10-09T17:23:42Z\",\n  \"currentPublicDatabaseRead\": false,\n  \"originalFailurePreserved\": true,\n  \"productionSourcePaths\": [\n    \"ai-worker/src/runtime/platform/wechat-browser-source.ts\",\n    \"ai-worker/src/runtime/platform/wechat-dom-witness.ts\",\n    \"ai-worker/src/runtime/platform/wechat-dom-witness.test.ts\",\n    \"frontend/src/server/persistence-client.ts\"\n  ],\n  \"openSha256\": \"cdd51a96cca098f547217fe6aee8d28a286f808b039b9dc5ce037700b696c065\"\n}\n",
+      "stderr": "",
+      "outputSha256": "038dd00ab3e1ee79041c4d87ee65528e673f28d11e964393ce9e58c368f1e596"
+    }
+  ]
+}

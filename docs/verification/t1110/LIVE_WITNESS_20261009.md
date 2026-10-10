@@ -152,3 +152,15 @@ EXP-2实际一次快照为officialOriginMatch=true、reportPathMatch=false、pat
 视频号原p6读取再次实际超时、截图Internal error；同原页goto官方首页后恢复响应。可见跨origin qrconnect iframe与语义快照显示本人微信快捷登录，正文“数据中心”只是文本命中，不能代签已登录。点击真实快捷登录入口返回，无同步dialog/popup；原身份元素等待120000ms超时，后续快照仍停登录入口。需用户手动完成原窗口登录；不推断产品Cookie失效、不重发旧任务。详见[本轮安全记录](handback-20261010.json)。
 
 本轮仅只读证据、原用户已授权登录入口及文档；生产source/dom-witness/composition摘要与原69一致。没有启动产品服务、公开扫码/采集任务或第三次原生实验，没有当前产品回读。T1110仍paused/OPEN/researching；视频号导航落首页原因未闭合，必要verify_key/TDD/真人绑定与UI验收仍缺，原全局欠债保留。
+
+### 2026-10-10 用户手动登录后：当前scope机制与实际只读验证
+
+原space20/p6本人后台已实际登录，ef9887稳定身份摘要匹配；菜单数据中心/视频数据实际进入/platform/statistic/post。5c755f waitForURL额外waitUntil参数TypeError保留，1a9ffe仅timeout120000正确等待完成。可见画面在主Page唯一open WUJIE-APP；对应micro iframe display:none。c51212同快照三标签原生0/代理1/Shadow1，0c1055和87db32以parent原生Node.getRootNode与ShadowRoot.contains证明代理标签属于同可见host；无界修改node.getRootNode/ownerDocument，普通方法不能作根身份证明（81c71f/2f954c）。实际菜单anchors的固定文本/可见性由be7d6f核，href均javascript。历史EXP2落首页原因仍UNKNOWN。
+
+新项目只读验证工具曾因Ego console输出stderr而捕获为空，758563/91f693/77fbf4/b7036d实际断言失败，不记PASS；修接收后c5eba1机制exit0、a813fe边界exit0、f47f73 full-card两key exit0。collection_audit在/tmp隔离复现源码/SPEC冻结遗漏及错误原文回显，初轮不签CLOSE。补全部生产四文件与本地authority冻结、固定2命令、固定异常及pathname类别；87db32新机制exit0，6cfbac full-card实际再次执行两个key均exit0，结果见research-validation-20261010.json。没有第三native任务/新QR/空间/Cookie迁移；原失败0与历史公开读时点保留，不冒称本轮DB新读或产品采集。
+
+环境准备pnpm install --frozen-lockfile --ignore-scripts实际16.7秒完成（session2859）；锁文件未改变。原无--step context-plan仍exit2；按modules.config实际唯一已声明implementation显式传--step后197589实际exit0、4-build，未改progress状态或把原失败洗绿。原研究OPEN与T1110暂停在完整独立CLOSE复审前不变。
+
+## 2026-10-10 研究闭合与原任务恢复（实际）
+
+完整只读验证工件及独立CLOSE评审已保存。本轮第一次锁内登记（4996b0）因本地对输出摘要遗漏分隔换行而exit1；在追加事件前拒绝，BACKLOG/events未改。核实际验证器算法后，37ff86锁内重核22项输入/原OPEN/两实际输出/评审摘要均一致，仅追加真实兼容research_resume，BACKLOG字节不变。原OPEN与两次失败/取消实验保留，不重置次数。随后305fe7实际taskctl resume T-1110 exit0：⏸→🔨；faec7b实际research-gate audit exit0无OPEN。不是官方private validator/resume CLI执行，也不是产品绑定/采集/UI PASS。

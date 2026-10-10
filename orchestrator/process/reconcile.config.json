@@ -385,7 +385,9 @@
     "t1062-aac-delivery-physics": "node docs/research/t1062-local-word-timing/verify-evidence.mjs physics",
     "t1062-installed-history-cause": "node docs/research/t1062-installed-migration-history/verify-cause.mjs",
     "t1070-warm-decoder": "node --input-type=commonjs -e \"const a=require('node:assert/strict'),r=require('./docs/verification/t1070/native-warm-root-cause.json'),e=Object.fromEntries(r.exactEvents.map(x=>[x.n,x]));a.equal(e[3].time,0);a.equal(e[16].time,1);a.equal(e[16].timestamp,1);a.notEqual(e[16].pixels,e[3].pixels);\"",
-    "t1070-warm-gpu-cache": "node --input-type=commonjs -e \"const a=require('node:assert/strict'),r=require('./docs/verification/t1070/native-warm-root-cause.json'),e=Object.fromEntries(r.exactEvents.map(x=>[x.n,x]));a.equal(e[18].identityHit,true);a.notEqual(e[18].pixels,e[18].lastUploadedPixels);a.equal(e[24].identityHit,false);a.equal(e[25].type,'texture-upload');\""
+    "t1070-warm-gpu-cache": "node --input-type=commonjs -e \"const a=require('node:assert/strict'),r=require('./docs/verification/t1070/native-warm-root-cause.json'),e=Object.fromEntries(r.exactEvents.map(x=>[x.n,x]));a.equal(e[18].identityHit,true);a.notEqual(e[18].pixels,e[18].lastUploadedPixels);a.equal(e[24].identityHit,false);a.equal(e[25].type,'texture-upload');\"",
+    "t1110_wechat_section_mechanism": "zsh tools/verification/t1110-scope-observe.sh",
+    "t1110_wechat_section_boundary": "node tools/verification/t1110-research.mjs boundary"
   },
   "execution_mode": "interactive",
   "autonomy_level": "interactive"
