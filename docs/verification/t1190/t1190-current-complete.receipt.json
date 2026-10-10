@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1190",
+    "--evidence",
+    "当前测试SHA4a9c8e2d11cdc38132b60fe3eeb8e70bdf5e480086810bfd4c06d3d47859c5f7；原17PASS、组lease12/ctx29PASS；精确独评报告e1811bb0b21acc9eeddf793c59d4565778957e141cf2a09137e3e2abf41ee1cc。pmem实际0；当前canonical1371.561389秒exit1/23ERROR1WARN log abcfd9379864d2ad5aa863f20687f0ed3bbfa1b10bfc53587dc96b51bac6a493，保范围外19审核/LED042054058053/T1171，完整LED058三雷达失败归T1188，不签全局/模型/native/上传。"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T03:49:15.613086+00:00",
+  "finishedAt": "2026-10-10T03:49:15.738935+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.12572208401979879,
+  "logSha256": "225eed7e540849482f3fe7d2debd4871c19e6a7fb0732c01ad7d521d042eea9d"
+}

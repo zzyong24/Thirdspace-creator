@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/bin/zsh",
+    "-c",
+    "pnpm --dir backend exec vitest run src/integration/chat-work-editor-worker.test.ts src/modules/ai/work-creation-chat.integration.test.ts src/modules/ai-runtime/chat-work-editor-tool-host.test.ts src/modules/ai-runtime/chat-work-creation-tool-host.test.ts --retry=0"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T03:08:38.131729+00:00",
+  "finishedAt": "2026-10-10T03:09:28.984135+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 50.852092917019036,
+  "logSha256": "267b6238360e59d74dec23f43279a9ec859dac187f8064dea221fb3bf2e38043"
+}

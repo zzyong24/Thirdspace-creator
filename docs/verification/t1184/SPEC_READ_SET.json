@@ -1,0 +1,315 @@
+{
+  "schema": "independent-read-set/v1",
+  "task_id": "T-1184",
+  "review_kind": "initial",
+  "reviewer": "/root/t1159_fix_recheck_recovery",
+  "reviewed_at_utc": "2026-10-10T02:00:37.550373+00:00",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+  "verdict": "PASS_BOUNDED_SPEC_INITIAL",
+  "findings": [],
+  "spec_sha256": "d691b14bbb4ac4e46c46cface4f32e2a16e7b17f808ef7ded841a21598a496de",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "reads": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1184-chat-route-assembly-fixture.md",
+      "sha256": "d691b14bbb4ac4e46c46cface4f32e2a16e7b17f808ef7ded841a21598a496de",
+      "bytes": 3281,
+      "read_scope": "本轮全文最终重读：精确单测试写集与后续公共合同验收"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "d3f3540a017760c725b28d079c7e6e3548d88fc1d25406cf5fdc1e1f1e01a789",
+      "bytes": 57005,
+      "read_scope": "本轮顶部T1184未实施/SPEC链接；现字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143,
+      "read_scope": "本会话已读定位/助手及桌面权限边界；本轮实际现字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT.md",
+      "sha256": "e876ef317cd0d7885f7ed009d42f4ee6505803d7c86fbc1e4c9ad708fd9b0107",
+      "bytes": 17765,
+      "read_scope": "本会话活记忆已读，本轮字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT_CONTEXT.md",
+      "sha256": "a74ec6498a8e06fe574f86ec96c51a99076672b717d103b26b25578bd2a1ed3c",
+      "bytes": 1316,
+      "read_scope": "本会话路由已读，本轮字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819,
+      "read_scope": "本会话维护独评/诚实证据/归属与物理边界约束"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "bytes": 8130,
+      "read_scope": "本会话已读物理层边界；只校准测试无生产层迁移"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3",
+      "bytes": 50753,
+      "read_scope": "本会话已读阶段4-build维护路由"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "bytes": 84,
+      "read_scope": "流程版本实际绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/SKILL.md",
+      "sha256": "5796cf1b3b9f3de2d45c8e754e3df2146735aa14b266b7c32e2cb4c8638f4c1f",
+      "bytes": 4021,
+      "read_scope": "本会话已全文加载技能/路由，现字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/VERSION",
+      "sha256": "db8c5f26ffadff528c3c988af09e26339ee629b449372f4a62f0c357f7329dfc",
+      "bytes": 7,
+      "read_scope": "本会话已全文加载技能/路由，现字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/stage-router.md",
+      "sha256": "dd656d4b0d886aee9fafa10b61a1db9554e1d424c533dd79693f28ff7447cf1e",
+      "bytes": 1339,
+      "read_scope": "本会话已全文加载技能/路由，现字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/app/api/chat/route.test.ts",
+      "sha256": "c1da68f00fbf56a50335515d026729ff464d9e3132a92803f74f95b4d82a3769",
+      "bytes": 54260,
+      "read_scope": "本轮实际1–325、1080–1318及326–990原用例名称/来源/锚点/权限/恢复断言；整体Git字节绑定；未实施"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/app/api/chat/route.ts",
+      "sha256": "6f0b0258485ff6c4754f7a1dabbc0f742e8e736da9260e58c5fd3f242f5cfcd6",
+      "bytes": 31445,
+      "read_scope": "本轮实际118–140、380–416、526–654，尤其599–613：request引擎原样传递、callback第三参数消费；非全文产品审"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/ai/chat-turn-submission.service.ts",
+      "sha256": "f21d3924fb7f17cabe995e96309dafcfc2a8e0416560bc5309dda13c54224fae",
+      "bytes": 12028,
+      "read_scope": "本轮真实service全文/18、49、70–91：必需第三参数、默认Pi、显式引擎验证/冻结/重放保护"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/ai/chat-turn-submission.service.test.ts",
+      "sha256": "6a9558285ab197c1ee81c5527425cd46418a287b243d7f2c146241088d4b4b41",
+      "bytes": 28690,
+      "read_scope": "本轮实际1–43、24–39、277–295：默认/Codex三参数、冻结/不重装配/拒切引擎；其它用例只Git绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/ai/chat-host-context.service.test.ts",
+      "sha256": "8436699406efcb1b6d5cee9749786816e88a525908dd477ae215dd9ae5c21911",
+      "bytes": 7100,
+      "read_scope": "本轮实际1–62：原任务租约/host冻结来源与真实工具回读；不执行"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/chat-attachments.ts",
+      "sha256": "6758264cd7f77f4e2ac03e67186dd7b8d5978c899a0cf9e968d3975267518b62",
+      "bytes": 5140,
+      "read_scope": "本轮全文：原附件归属之后确定性读取与来源标记；该helper不在写集"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "bytes": 44912,
+      "read_scope": "本轮真实LED014完整串行命令与原配置字节；不得改门"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led014-diagnostic.json",
+      "sha256": "fb26d3c5435a41df9e554bc46799a240978687f6c287a0b0c4d181ec4ff0aa3f",
+      "bytes": 1172,
+      "read_scope": "本轮原收据全文：完整两段命令/显式PG隔离/实际exit与原logSHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led014-diagnostic.log",
+      "sha256": "9998244e979afc2acd37ea0f3ce5d5ec6d42ed377a2bf051ae542eeb167d2519",
+      "bytes": 59409,
+      "read_scope": "实际原始全文字节SHA；语义读前160/末80及147PASS29FAIL、route54例标识/重试x2/安全TypeError phase诊断，不把aggregate断言为全部同因"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1184/t1015-current-led014-diagnostic.log.gz",
+      "sha256": "bef0fd508c662358ef492cc6e1d9f8b02880df1a8f8c72a409a376b59ee402f5",
+      "bytes": 5643,
+      "read_scope": "实际归档原字节、gzip解压与N原件逐字比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1184/t1015-current-led014-diagnostic.receipt.json",
+      "sha256": "fb26d3c5435a41df9e554bc46799a240978687f6c287a0b0c4d181ec4ff0aa3f",
+      "bytes": 1172,
+      "read_scope": "实际归档原字节、gzip解压与N原件逐字比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1015/current-20261010/CANONICAL.receipt.json",
+      "sha256": "5a677623138dc5b136690f0293f2afa876a023f34428ff94ccc26dd33d4b6a9d",
+      "bytes": 589,
+      "read_scope": "本轮T1183前一审实际已读完整收据/owners/report及gzip SHA/原27ERROR1WARN片段；本轮绑定，不复核所有子根因"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1015/current-20261010/CANONICAL.log.gz",
+      "sha256": "7ac6c1c9ba6a4a8bdb1d2c4cb50e14ac3c1e9e070ed0cdb8ecdfa6ce88adef82",
+      "bytes": 5954,
+      "read_scope": "本轮T1183前一审实际已读完整收据/owners/report及gzip SHA/原27ERROR1WARN片段；本轮绑定，不复核所有子根因"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1015/current-20261010/CURRENT_FAILURE_OWNERS.json",
+      "sha256": "f3b6cc109f081f5bf5e292d9aa7c4154f97a626a7a56d2864c9bb9d85c1e7d04",
+      "bytes": 12418,
+      "read_scope": "本轮T1183前一审实际已读完整收据/owners/report及gzip SHA/原27ERROR1WARN片段；本轮绑定，不复核所有子根因"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1015/current-20261010/REPORT.md",
+      "sha256": "0a9f94444e370dedc9f465fb51170ce4d7fb79b69e8e725930836ad98289f29c",
+      "bytes": 2771,
+      "read_scope": "本轮T1183前一审实际已读完整收据/owners/report及gzip SHA/原27ERROR1WARN片段；本轮绑定，不复核所有子根因"
+    }
+  ],
+  "backlog_rows": [
+    "|T-1184|核对聊天路由回归的装配参数夹具|📋 待办|—|—|[SPEC](docs/features/t1184-chat-route-assembly-fixture.md)|LED014当场147PASS/29FAIL、context_preparation TypeError；旧mock不给必需第三参数，先独评只校准单测试和引擎输入负测，保原来源/权限/恢复与原完整串行命令，不称真实模型已验。|"
+  ],
+  "exact_code_write_set": [
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/app/api/chat/route.test.ts"
+  ],
+  "source_frozen_comparisons": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/app/api/chat/route.test.ts",
+      "sha256": "c1da68f00fbf56a50335515d026729ff464d9e3132a92803f74f95b4d82a3769",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/app/api/chat/route.ts",
+      "sha256": "6f0b0258485ff6c4754f7a1dabbc0f742e8e736da9260e58c5fd3f242f5cfcd6",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/ai/chat-turn-submission.service.ts",
+      "sha256": "f21d3924fb7f17cabe995e96309dafcfc2a8e0416560bc5309dda13c54224fae",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/ai/chat-turn-submission.service.test.ts",
+      "sha256": "6a9558285ab197c1ee81c5527425cd46418a287b243d7f2c146241088d4b4b41",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/ai/chat-host-context.service.test.ts",
+      "sha256": "8436699406efcb1b6d5cee9749786816e88a525908dd477ae215dd9ae5c21911",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/chat-attachments.ts",
+      "sha256": "6758264cd7f77f4e2ac03e67186dd7b8d5978c899a0cf9e968d3975267518b62",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    }
+  ],
+  "static_defect_evidence": {
+    "invalid_fixture_line": 185,
+    "invalid_fixture_call": "assemble(ctx,snapshot)",
+    "real_service_option_type": "ChatPrepareOptions={executionEngine:pi|codex}",
+    "real_service_assemble_line": 88,
+    "real_service_engine_default": "requestedEngine??pi",
+    "route_submit_line": 599,
+    "route_option_consumption_line": 613,
+    "scope": "此处静态因果成立；未声称所有29例同根因或真实安装聊天失败"
+  },
+  "original_led014": {
+    "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led014-diagnostic.json",
+    "receipt_sha256": "fb26d3c5435a41df9e554bc46799a240978687f6c287a0b0c4d181ec4ff0aa3f",
+    "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led014-diagnostic.log",
+    "log_sha256": "9998244e979afc2acd37ea0f3ce5d5ec6d42ed377a2bf051ae542eeb167d2519",
+    "receipt_log_hash_matches": true,
+    "exit_code": 1,
+    "elapsed_seconds": 28.671211499953642,
+    "overall_passed": 147,
+    "overall_failed": 29,
+    "route_file_cases": 54,
+    "test_retries": 2,
+    "diagnostic_class": "TypeError",
+    "diagnostic_phase": "context_preparation",
+    "backend_command_executed": false,
+    "all_29_failures_root_cause": "NOT_YET_REVALIDATED",
+    "command": "pnpm --dir frontend exec vitest run src/app/api/chat/route.test.ts src/server/__module_integration__/artifacts.persistence-client.test.ts src/features/script/script-editor-data.test.ts src/features/script/script-structure-view.test.tsx src/features/copilot/chat-script-patch-card.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/features/copilot/chat-api-error.test.ts && pnpm --dir backend exec vitest run src/modules/artifacts/artifacts.service.test.ts src/modules/ai-runtime/script-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts"
+  },
+  "archive_comparisons": [
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1184/t1015-current-led014-diagnostic.log.gz",
+      "archive_sha256": "bef0fd508c662358ef492cc6e1d9f8b02880df1a8f8c72a409a376b59ee402f5",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led014-diagnostic.log",
+      "original_sha256": "9998244e979afc2acd37ea0f3ce5d5ec6d42ed377a2bf051ae542eeb167d2519",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1184/t1015-current-led014-diagnostic.receipt.json",
+      "archive_sha256": "fb26d3c5435a41df9e554bc46799a240978687f6c287a0b0c4d181ec4ff0aa3f",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led014-diagnostic.json",
+      "original_sha256": "fb26d3c5435a41df9e554bc46799a240978687f6c287a0b0c4d181ec4ff0aa3f",
+      "bytes_equal_after_decompression_if_gzip": true
+    }
+  ],
+  "required_engine_regressions": [
+    {
+      "input": "未传引擎",
+      "assembly_engine": "pi",
+      "request_engine": "保持未传/undefined语义，不要求生产改成显式pi"
+    },
+    {
+      "input": "显式codex",
+      "assertions": [
+        "durable.submit request.executionEngine=codex",
+        "prepareChatReply input.executionEngine=codex"
+      ]
+    },
+    {
+      "input": "非法引擎",
+      "assertions": [
+        "400/CHAT_ENGINE_INVALID",
+        "createConversation calls=0",
+        "createMessage calls=0",
+        "durableSubmit calls=0",
+        "prepareChatReply calls=0"
+      ]
+    }
+  ],
+  "required_after_implementation": [
+    "原54用例所有断言保留，仅精确mock/引擎测试变更",
+    "原完整LED014串行命令两段与原显式隔离PG环境",
+    "backend chat-turn-submission.service/chat-host-context.service回归",
+    "frontend/backend types",
+    "boundary/semantic/orphan/diff",
+    "独立实施diff/receipt/logSHA复核",
+    "不同根因不放宽旧mock或断言，先登记并另收敛/审范围",
+    "完整canonical27ERROR1WARN及原owner诚实保留"
+  ],
+  "not_signed": [
+    "实现GREEN",
+    "所有29例同一根因",
+    "后段backend实际结果",
+    "付费模型/真实Codex进程",
+    "原生App/真用户安装/全功能",
+    "完整Gate",
+    "T1181研究恢复"
+  ],
+  "actions": "只读文件/Git及既有证据，仅写本私有目录；未运行测试/服务/CLI/验证器/DB/模型/浏览器/实验，未改仓库。"
+}

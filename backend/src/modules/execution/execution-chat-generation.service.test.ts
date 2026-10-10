@@ -314,7 +314,7 @@ it("定位节点按专属能力重建原 normalizer 结果并保留前采候选�
  const f=await fixture(false,"positioning.generate"),request=await next(f),child=await f.service.reserve(f.ref,request);
  await f.service.start(f.ref,{callId:child.callId});await f.service.settle(f.ref,{callId:child.callId,...success});
  expect((await f.service.complete(f.ref,{callId:f.parent.callId})).data).toMatchObject({kind:"positioning.suggestion",suggestion:{oneLiner:"原模型候选",keywords:["","",""]},discovery:{sessionId:"session",candidateId:"poscand:session:7:direct",candidateRevision:7}});
- expect(f.resolveCredential).toHaveBeenCalledWith({...f.ctx,source:"ai",requestId:`execution:${f.ref.executionTaskId}:${f.ref.attempt}`},"positioning.generate",f.ref,undefined);
+ expect(f.resolveCredential).toHaveBeenCalledWith({...f.ctx,groupId:null,groupVersion:undefined,membershipVersion:undefined,source:"ai",requestId:`execution:${f.ref.executionTaskId}:${f.ref.attempt}`},"positioning.generate",f.ref,undefined);
 });
 
 it.each([true,false])("聊天诊断从原模型回执恢复，有效评分=%s",async valid=>{

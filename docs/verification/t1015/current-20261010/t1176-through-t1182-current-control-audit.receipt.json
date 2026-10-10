@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "node",
+    "--input-type=module",
+    "-e",
+    "import { auditReviewReceipts } from \"./orchestrator/process/reviewctl.mjs\"; import { auditResearchGates } from \"./orchestrator/process/research-gate.mjs\"; const root=process.cwd(); const review=auditReviewReceipts({root,backlogFile:root+\"/BACKLOG.md\"}); const research=auditResearchGates({root}); console.log(JSON.stringify({review, research},null,2)); process.exit(review.length||research.errors.length?1:0);"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T01:51:53.251241+00:00",
+  "finishedAt": "2026-10-10T01:51:54.030024+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 0.7786234579980373,
+  "logSha256": "48170101e5bf63a16d71bd39ee7e7b50097d7cce516b26399c9f2c2073344ab7"
+}

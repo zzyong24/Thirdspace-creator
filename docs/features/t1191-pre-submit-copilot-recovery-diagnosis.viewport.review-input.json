@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "PASS（仅T1191新增第7条实施准入，SPEC38bfa86d…）：真实共享宿主有限高度与content原下限/消息滚动/composer已核；唯一根overflow-y-auto候选四场景100%已记录几何不变且无额外纵滚。200%仅Tab仍有textarea裁切，原失败保留；Tab后一次标准滚轮使textarea完整且5点命中、允许动作各自可达。只准同文件根加一个现class，不改宿主/字体/下限/逻辑/预算。先正式record，再最终源公共链/独立100%和200%视觉任务/新包验收，不把候选或旧PASS代签第7条后验，保后端4FAIL/timeout总体1/canonical27/1与研究暂停。",
+  "findings": []
+}

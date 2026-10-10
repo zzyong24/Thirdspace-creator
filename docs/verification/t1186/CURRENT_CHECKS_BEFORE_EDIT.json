@@ -1,0 +1,86 @@
+[
+  {
+    "stem": "t1186-current-real-tool-host-contracts",
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "pnpm",
+      "--dir",
+      "backend",
+      "exec",
+      "vitest",
+      "run",
+      "src/modules/ai-runtime/chat-tool-parameters.test.ts",
+      "src/modules/ai-runtime/chat-canvas-tool-host.test.ts",
+      "src/modules/ai-runtime/chat-system-tool-host.test.ts"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:19:03.905299+00:00",
+    "finishedAt": "2026-10-10T02:19:09.151022+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 5.24559941701591,
+    "logSha256": "0f0f02438f0c99738608e0567950bb8cc5640cf86a7e6aea79ff3034f05d9f06"
+  },
+  {
+    "stem": "t1186-current-real-assistant-owner-chain",
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "pnpm",
+      "--dir",
+      "backend",
+      "exec",
+      "vitest",
+      "run",
+      "src/application/chat/assistant-system-root.integration.test.ts",
+      "src/modules/ai/assistant-action-adoption.integration.test.ts",
+      "src/modules/creative-canvas/creative-canvas.service.test.ts"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:19:03.902416+00:00",
+    "finishedAt": "2026-10-10T02:19:37.167211+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 33.26442212500842,
+    "logSha256": "74b046f7164749f3621ffa361fd2ef281d9ea8629194de3b74a717a509313da2"
+  },
+  {
+    "stem": "t1186-current-assistant-contract",
+    "argv": [
+      "pnpm",
+      "--dir",
+      "contract",
+      "exec",
+      "vitest",
+      "run",
+      "src/assistant-system.test.ts"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:19:03.902883+00:00",
+    "finishedAt": "2026-10-10T02:19:04.421367+00:00",
+    "exitCode": 1,
+    "elapsedSeconds": 0.5182049999712035,
+    "logSha256": "75d50b95d49c6fd78e26b8bf6e547fab0832f3c0c3af750d222f07f2bde09bd3"
+  },
+  {
+    "stem": "t1186-current-assistant-contract-corrected",
+    "argv": [
+      "pnpm",
+      "--dir",
+      "contract",
+      "exec",
+      "vitest",
+      "run",
+      "--config",
+      "../backend/vitest.config.ts",
+      "src/assistant-system.test.ts"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:19:24.618473+00:00",
+    "finishedAt": "2026-10-10T02:19:25.730567+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 1.1119279999984428,
+    "logSha256": "9f6ec42420af5428e4f56c43901734dbb1cf573d6e1c33d54160169c61921e6a"
+  }
+]

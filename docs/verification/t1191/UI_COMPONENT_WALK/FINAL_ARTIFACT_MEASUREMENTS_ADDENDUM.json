@@ -1,0 +1,700 @@
+{
+  "kind": "T1191原证据不改写的最终产物字节补充",
+  "recordedAt": "2026-10-10T03:40:00.525497+00:00",
+  "originalReportSha256": "a2d34c70a41e7368d3febc98a7b0782765e7c54e8ccca89b02e48f0b108893c6",
+  "originalArtifactRows": 70,
+  "originalByteMetadataMatchedRows": 69,
+  "originalByteMetadataMismatch": [
+    {
+      "recorded": {
+        "name": "final-source-report.log",
+        "size": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "actualFinalBytes": {
+        "name": "final-source-report.log",
+        "size": 2225,
+        "sha256": "190455fd7629c0b5fc516b3f631c83d422a7bcc02426b9610252b343e08b76e2"
+      }
+    }
+  ],
+  "finalMeasurements": [
+    {
+      "name": "final-source-REPORT.md",
+      "size": 7894,
+      "sha256": "98be02cfe007895d86e26f5e5815357398c4da8901dada47858a0b34e47bbe5b"
+    },
+    {
+      "name": "final-source-browser-receipt.json",
+      "size": 33211,
+      "sha256": "5c6543825f28f04b7b94d9c90830ae9aba49ba218aaf4e29ccc0b7c6951626c5"
+    },
+    {
+      "name": "final-source-build.log",
+      "size": 203,
+      "sha256": "d334651d0bff97c952c7e4e0024983579df27f987c8b43fcc25ddcaea9a3fd6c"
+    },
+    {
+      "name": "final-source-capture.log",
+      "size": 1073,
+      "sha256": "7ff66dbff0e7911921b320ebd841bf52e35b8ba12fe9148e3faf0f8036d692fd"
+    },
+    {
+      "name": "final-source-creation-1280x800-dom.html",
+      "size": 10455,
+      "sha256": "27338a7e5725cb897b28f16c3b0ee7adef434b5ea49578bc34a15dc79d7416f7"
+    },
+    {
+      "name": "final-source-creation-1280x800.png",
+      "size": 75862,
+      "sha256": "e1249c90a768a2c7454d449dbcf0b1414c5e3319461f1f36172430ebc47e4b31"
+    },
+    {
+      "name": "final-source-creation-900x600-dom.html",
+      "size": 10455,
+      "sha256": "27338a7e5725cb897b28f16c3b0ee7adef434b5ea49578bc34a15dc79d7416f7"
+    },
+    {
+      "name": "final-source-creation-900x600.png",
+      "size": 71709,
+      "sha256": "def9847c8c7e7907f6f7e268d967fe4c114fdbb054fc77927725abfb41dd1ce7"
+    },
+    {
+      "name": "final-source-global-browser-receipt.json",
+      "size": 1713914,
+      "sha256": "82f0b5c430a6876115c7e94e1c1ef09df482c02cc1d987ce72cca0ba97d98962"
+    },
+    {
+      "name": "final-source-global-browser.log",
+      "size": 16580,
+      "sha256": "3cd6e6b51116715aa20ec977e73e1ab5554da5246ae42f530c79ad73067785e8"
+    },
+    {
+      "name": "final-source-global-build.log",
+      "size": 210,
+      "sha256": "491bd2214a1c35642264fc849021912729d5fd1b8d2c3e66d6f23ecc974537ec"
+    },
+    {
+      "name": "final-source-global-creation-1280x800-dom.html",
+      "size": 12737,
+      "sha256": "ec017561d369e00bac6b11be2bf54f7e880e213af65fb005e88bbe997accbe07"
+    },
+    {
+      "name": "final-source-global-creation-1280x800-failure100.png",
+      "size": 69211,
+      "sha256": "3d86986f1d8b6730b23c3c139fba84daa4fadeceeb9a6b03bb383f5da1a865a8"
+    },
+    {
+      "name": "final-source-global-creation-1280x800-failure200.png",
+      "size": 108397,
+      "sha256": "45824ed1a1c700562bb0fc8daeb04ba1154303b8cc8dbf29f993fd745d5be463"
+    },
+    {
+      "name": "final-source-global-creation-1280x800-focus-copilot-error-engine-settings-link.png",
+      "size": 108959,
+      "sha256": "8ac9f28eb33f7adce838c7ff1ca6ad2786c2708b44fc1ec12c2a00157ea87c43"
+    },
+    {
+      "name": "final-source-global-creation-1280x800-focus-prompt-input.png",
+      "size": 108482,
+      "sha256": "bc7fb1fe4c2e8022161fd932063b07d1692e5771fe52f38c9db4ac4c3d166e46"
+    },
+    {
+      "name": "final-source-global-creation-1280x800-textarea-one-native-wheel.png",
+      "size": 91455,
+      "sha256": "45920316e2f89fbbba00ca57536150f7354fd06a0b58c2d8eb614528f0926e24"
+    },
+    {
+      "name": "final-source-global-creation-900x600-dom.html",
+      "size": 12737,
+      "sha256": "b94dbd3b1da44569d4ea3ad10f9d1e80f8824a990c20ba714e65065ce10a391f"
+    },
+    {
+      "name": "final-source-global-creation-900x600-failure100.png",
+      "size": 64436,
+      "sha256": "f0e2eeb2333f155110e994603a2a80cca354a5f0131bdf19f67c1e5b84224f99"
+    },
+    {
+      "name": "final-source-global-creation-900x600-failure200.png",
+      "size": 64206,
+      "sha256": "3bc9e3fb95d5596599dc635c893d4117e3c3d883d523f24ca24824a7cf5afc6f"
+    },
+    {
+      "name": "final-source-global-creation-900x600-focus-copilot-error-engine-settings-link.png",
+      "size": 72219,
+      "sha256": "25d92d9e95921d6309b0a5af0bb28c16019b5b6cc747410e937b96b927c162f7"
+    },
+    {
+      "name": "final-source-global-creation-900x600-focus-prompt-input.png",
+      "size": 71789,
+      "sha256": "2fa9be85b2c04de5d151913afbafe1d14f5c064e1e897e7f9d2ebcb6aefd54b5"
+    },
+    {
+      "name": "final-source-global-creation-900x600-textarea-one-native-wheel.png",
+      "size": 58706,
+      "sha256": "0c4ec7414009c6ef77c4cd5d032ac37b1da1f5e6acf0a237bec2c57d60f29e96"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-dom.html",
+      "size": 12408,
+      "sha256": "5a3108c008c077714ba5044a31bdee8339460e93f03cd03fb04d425e661b04d2"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-failure100.png",
+      "size": 60881,
+      "sha256": "f8baedb8f77e3365bf42a5bb1f3e1f47e6172e52385b60ba7f352027e272694f"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-failure200.png",
+      "size": 89726,
+      "sha256": "80c5bbc38ad4b12ef8b74e123229e792d4a44fbdfda1b94989584325576ad5ba"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-focus-copilot-error-retry.png",
+      "size": 91836,
+      "sha256": "2faeff411823bb659373f64eab397514e271a35b69a6111a670ba307ecd05885"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-focus-prompt-clear.png",
+      "size": 71595,
+      "sha256": "4824b5b345939a6c838707763b56209ad8866411ae2a59f58151334f523c3f99"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-focus-prompt-input.png",
+      "size": 91356,
+      "sha256": "0b0695624b93995b9ce9989c80ca1751aa295a452f7babc54256d7104c52a06b"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-focus-submit-button.png",
+      "size": 70460,
+      "sha256": "c5da285f1403ef2e82080f34aaff07b8ce8173b2b0702b88589850794e3f55e7"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-textarea-one-native-wheel.png",
+      "size": 73891,
+      "sha256": "960ad094bca17eb777508e200e839d4b20c65734f97c1518ca09505fe3ad278b"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-dom.html",
+      "size": 12408,
+      "sha256": "192d7c9469e6f9eda4fc97d2d0329f56e806bad7a308b5948a7657efb138d1dd"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-failure100.png",
+      "size": 56562,
+      "sha256": "b8c245fe27a60e62e37d1433f49ecc0096ca237082357fcedec3375cde3b1350"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-failure200.png",
+      "size": 62745,
+      "sha256": "1476a2c9af23fae967d8da74fc76b942d92c74dde9807cdbf8448a94288fab64"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-focus-copilot-error-retry.png",
+      "size": 58344,
+      "sha256": "bb25afc3af9066c369aafc7bb77394411199d39d43185910c286013a105b72db"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-focus-prompt-clear.png",
+      "size": 53843,
+      "sha256": "b5ef5df596f9f74aa9009c53ab272f265f9085ebe62ed19c90d0605b1d48c1d2"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-focus-prompt-input.png",
+      "size": 57812,
+      "sha256": "b560409ef2659b05fbaf970dd681a21dd9ab583a584633063d72e908e2683172"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-focus-submit-button.png",
+      "size": 52718,
+      "sha256": "9affbc18519c3e61f3f240cf5ed03d8416dfae22b5b669525f3d4c88d338f22f"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-textarea-one-native-wheel.png",
+      "size": 40872,
+      "sha256": "5e61ca4af70aa0142efc815a146c6e2ef7ad618a4eed162927a828b621b246af"
+    },
+    {
+      "name": "final-source-global-source-manifest.json",
+      "size": 3205893,
+      "sha256": "81c53a4d77aa226916e32229e01413bac4e3470908af07472fe2ba3e5a97528f"
+    },
+    {
+      "name": "final-source-prepare-1280x800-dom.html",
+      "size": 10103,
+      "sha256": "2e038faa4dea06e85649afb30e884dedc376acf5d7d0fb11a07f9f343c113737"
+    },
+    {
+      "name": "final-source-prepare-1280x800.png",
+      "size": 66655,
+      "sha256": "a175c2e4ddc111df7d03dd6a615a0559ba40160ec9251eeff0a21026f7e47135"
+    },
+    {
+      "name": "final-source-prepare-900x600-dom.html",
+      "size": 10103,
+      "sha256": "2e038faa4dea06e85649afb30e884dedc376acf5d7d0fb11a07f9f343c113737"
+    },
+    {
+      "name": "final-source-prepare-900x600.png",
+      "size": 62810,
+      "sha256": "1bb0c12d521b09ac3b6330f62ad80289ba8fd51ba9848977749a647a2ea34c94"
+    },
+    {
+      "name": "final-source-report.log",
+      "size": 2225,
+      "sha256": "190455fd7629c0b5fc516b3f631c83d422a7bcc02426b9610252b343e08b76e2"
+    },
+    {
+      "name": "final-source-source-manifest.json",
+      "size": 3199785,
+      "sha256": "58af920df8b6ad30eb94b9355b9ca816d6cdfc9a8f6a8370065240e9bc7d5ed6"
+    },
+    {
+      "name": "final-source-walk-browser-receipt.json",
+      "size": 132386,
+      "sha256": "a1e79940d50c56642ec244b69b28cb1b6ba8d72cf394689a762a224ae5facc5d"
+    },
+    {
+      "name": "final-source-walk-creation-1280x800-continue-keyboard-focus.png",
+      "size": 75778,
+      "sha256": "51e44f88823ba4e7c4608c152a621ed63e83248020273bd35e960eabe533fc18"
+    },
+    {
+      "name": "final-source-walk-creation-1280x800-dom.html",
+      "size": 10491,
+      "sha256": "1a4bb20a83b09b54a19be49027c3abfa1dd6e730b2d1f31432d7925c307ccf8a"
+    },
+    {
+      "name": "final-source-walk-creation-1280x800-failed.png",
+      "size": 75862,
+      "sha256": "e1249c90a768a2c7454d449dbcf0b1414c5e3319461f1f36172430ebc47e4b31"
+    },
+    {
+      "name": "final-source-walk-creation-1280x800-ready.png",
+      "size": 75587,
+      "sha256": "e19f4cc5183a3b16b43796e03ca6ff44f8f1ffa52d48c8db73e249da610689a5"
+    },
+    {
+      "name": "final-source-walk-creation-1280x800-settings-keyboard-focus.png",
+      "size": 76083,
+      "sha256": "0b8f40eb1cfa31be21869c838da172753e7fb4eaefee2c26f8773e9025c46a16"
+    },
+    {
+      "name": "final-source-walk-creation-1280x800-submitted-unknown.png",
+      "size": 78263,
+      "sha256": "0b68c0fb9dbe3b82b22290c0bc7994eea3af6f1df59bae51a0c302000c4c1eea"
+    },
+    {
+      "name": "final-source-walk-creation-900x600-continue-keyboard-focus.png",
+      "size": 71709,
+      "sha256": "5c8d40ed5347a483dd7860918fb2311249a7e149132173463c7875abd9ac923f"
+    },
+    {
+      "name": "final-source-walk-creation-900x600-dom.html",
+      "size": 10491,
+      "sha256": "1a4bb20a83b09b54a19be49027c3abfa1dd6e730b2d1f31432d7925c307ccf8a"
+    },
+    {
+      "name": "final-source-walk-creation-900x600-failed.png",
+      "size": 71709,
+      "sha256": "def9847c8c7e7907f6f7e268d967fe4c114fdbb054fc77927725abfb41dd1ce7"
+    },
+    {
+      "name": "final-source-walk-creation-900x600-ready.png",
+      "size": 71474,
+      "sha256": "17c2ae7523395284e605cda4540726439c40c363707d435d2f286e8620ca7f66"
+    },
+    {
+      "name": "final-source-walk-creation-900x600-settings-keyboard-focus.png",
+      "size": 71930,
+      "sha256": "1f0f57010aae5427c1a3ccf77222331b5f7ba4f2afadfd01c321d17c6362beac"
+    },
+    {
+      "name": "final-source-walk-creation-900x600-submitted-unknown.png",
+      "size": 73885,
+      "sha256": "de7925f399b21e4f3ad2828eee8f2eebfbee871d0f16761d73e491b6da74777a"
+    },
+    {
+      "name": "final-source-walk-prepare-1280x800-continue-keyboard-focus.png",
+      "size": 66892,
+      "sha256": "7c0a8eb3fd5f17669eb4d41ac0e4e70c14c0287eeaf2deb15c6fb94a8757e9c6"
+    },
+    {
+      "name": "final-source-walk-prepare-1280x800-dom.html",
+      "size": 10435,
+      "sha256": "4ded87546e8090f67ded70f5dc1c124cb6155929aa95af04354c3a0cbeed2788"
+    },
+    {
+      "name": "final-source-walk-prepare-1280x800-failed.png",
+      "size": 66655,
+      "sha256": "a0b16561ae783ba6d546cb271703b8652a3b1a519c63097f1f8158075b0f1d2f"
+    },
+    {
+      "name": "final-source-walk-prepare-1280x800-ready.png",
+      "size": 66661,
+      "sha256": "d9b23d911af62a43ec30eb171f3eadd1f51cf4b1784c09899340c82adb58f240"
+    },
+    {
+      "name": "final-source-walk-prepare-1280x800-submitted-unknown.png",
+      "size": 67979,
+      "sha256": "9613a4506837648fa752e03d72dacf302abc0ea3843b0e2b7398ecf9211fa28a"
+    },
+    {
+      "name": "final-source-walk-prepare-900x600-continue-keyboard-focus.png",
+      "size": 63066,
+      "sha256": "0f668e191d8725c49a2a641d9ef689fec6c2bb192addecde1e97dc0947af4677"
+    },
+    {
+      "name": "final-source-walk-prepare-900x600-dom.html",
+      "size": 10435,
+      "sha256": "4ded87546e8090f67ded70f5dc1c124cb6155929aa95af04354c3a0cbeed2788"
+    },
+    {
+      "name": "final-source-walk-prepare-900x600-failed.png",
+      "size": 62840,
+      "sha256": "035056757affc602dc2b59a6bf307723c2ee1931d5e331da0c74afd631ca13af"
+    },
+    {
+      "name": "final-source-walk-prepare-900x600-ready.png",
+      "size": 62846,
+      "sha256": "f9705edd6b34829fb29651da2afa8027e33fcbd0a95d3f7accd163f22bac2cd0"
+    },
+    {
+      "name": "final-source-walk-prepare-900x600-submitted-unknown.png",
+      "size": 64115,
+      "sha256": "540853e82b8b906853a76fb4687de41082b02aae52ff3ccf87eb27514ec2640b"
+    },
+    {
+      "name": "final-source-walk.log",
+      "size": 9216,
+      "sha256": "a9df7f7a496622e76a926df92a7bbc1f3116ba90a081b0882c9aaf5aa5d1c788"
+    }
+  ],
+  "pngDimensionChecks": [
+    {
+      "name": "final-source-creation-1280x800.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-creation-900x600.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-creation-1280x800-failure100.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-creation-1280x800-failure200.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-creation-1280x800-focus-copilot-error-engine-settings-link.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-creation-1280x800-focus-prompt-input.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-creation-1280x800-textarea-one-native-wheel.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-creation-900x600-failure100.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-creation-900x600-failure200.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-creation-900x600-focus-copilot-error-engine-settings-link.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-creation-900x600-focus-prompt-input.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-creation-900x600-textarea-one-native-wheel.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-failure100.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-failure200.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-focus-copilot-error-retry.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-focus-prompt-clear.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-focus-prompt-input.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-focus-submit-button.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-1280x800-textarea-one-native-wheel.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-failure100.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-failure200.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-focus-copilot-error-retry.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-focus-prompt-clear.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-focus-prompt-input.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-focus-submit-button.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-global-prepare-900x600-textarea-one-native-wheel.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-prepare-1280x800.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-prepare-900x600.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-creation-1280x800-continue-keyboard-focus.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-creation-1280x800-failed.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-creation-1280x800-ready.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-creation-1280x800-settings-keyboard-focus.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-creation-1280x800-submitted-unknown.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-creation-900x600-continue-keyboard-focus.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-creation-900x600-failed.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-creation-900x600-ready.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-creation-900x600-settings-keyboard-focus.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-creation-900x600-submitted-unknown.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-prepare-1280x800-continue-keyboard-focus.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-prepare-1280x800-failed.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-prepare-1280x800-ready.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-prepare-1280x800-submitted-unknown.png",
+      "width": 1280,
+      "height": 800,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-prepare-900x600-continue-keyboard-focus.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-prepare-900x600-failed.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-prepare-900x600-ready.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    },
+    {
+      "name": "final-source-walk-prepare-900x600-submitted-unknown.png",
+      "width": 900,
+      "height": 600,
+      "dimensionMatchesOriginal": true,
+      "visuallyRead": "仅保持原maker声明；本补充不据metadata签看图"
+    }
+  ],
+  "finalRowsMeasured": 70,
+  "firstPreparationFailure": "首次逐字dict比较把图片额外width/height/visuallyRead字段当checksum差异，assert失败未写文件。现size/hash及PNG尺寸分别精确核，原看图声明不作为本root测量事实。",
+  "boundary": "maker结束后读最终字节；原JSON及原日志不改、不倒签原闭包、不重跑产品/浏览器/测试；本补充自身不列清单，避免自引用；非独立验收/Task完成。"
+}

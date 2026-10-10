@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS（仅T1181当前精确机械探针补充SPEC初审）：实读第三轮receipt/log为exit1、139.96299762499984秒、日志SHA1893a847…一致；failure.json及四张1280×720实际图显示本轮两媒体卡片/公开列表存在，刷新通过，公开exact-file下载size/SHA严格等本轮中性PNG178B与MP42936B；两次请求体观测available=false且bytes/SHA=null。失败在第70行未展开的/accounts直链120秒等待。真实AccountSwitcher的绑定入口为触发器→菜单项“账号组与绑定账号”→原/accounts URL，校准三处导航有依据。当前SPEC明确新私有驱动及所有新root/观察JSON/PNG/A-B-return/failure/sidecar/final路径统一新前缀并预核不存在，保JSON/log wx、原全部证据冻结；原上传顺序/200/冻结scope/File名/存在Buffer严格SHA/两媒体公开下载/刷新/跨组/返回/pageerror及120秒预算均保，产品/测试/SDK/config/守卫不改。新驱动尚不存在/未执行，本轮仅准入精确维护探针。前轮MP4可见性超时原FAIL/根因UNKNOWN保留，不签任务完成、完整旅程、canonical/完整Gate/native/安装/全功能或微信研究恢复。",
+  "findings": []
+}

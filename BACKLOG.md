@@ -9,12 +9,17 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1181|核对真实素材上传成功后视频列表不可见|🔨 待办|—|—|[实际诊断](docs/features/t1181-uploaded-video-list-visibility.md)|T1180新隔离随包浏览器当场139.349秒exit1；MP4已显示上传完成，精确文件名在素材列表等待120秒仍不可见。保原日志/驱动，先核真实页面、公开列表与刷新，不猜丢失或删除可见性保护。|
+|T-1193|核对结果待确认时的重复发送暗示与恢复状态可读性|📋 待办|—|—|[实际诊断](docs/features/t1193-copilot-unknown-request-presentation.md)|fresh视觉及独立receipt确认等待回执时同原话预填、生成disabled=false；POST仍1，未签重复请求。另核真实字号与短高分段阅读，先精确独评，不清新草稿或阻断合法创作。|
+|T-1192|核对作品精调公共链的消息结果断言|📋 待办|—|—|[实际诊断](docs/features/t1192-work-editor-message-outcome-diagnosis.md)|当场公共链11PASS4FAIL；联合两例归T1092，另Pi/Codex精调完整output相等失败。先核可信回执投影与长候选正文，不删除回执/schema/完整性保护洗绿。|
+|T-1191|核对编导发送前准备失败与恢复入口|🔨 待办|PASS[REV:ad518ff0cf03]|—|[实际诊断](docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md)|T1187接口校准后原20例14PASS6FAIL；首条消息未发时准备错误提示自动恢复，effect却要求已有消息。核可信准备/提交状态及原任务恢复，不改名宽松化断言。|
+|T-1190|核对定位生成服务的请求上下文断言|✅ 待办|PASS[REV:0c41e3239506]|—|[实际诊断](docs/features/t1190-positioning-generation-request-context-test.md)|原LED058 Worker54PASS、后端117PASS1FAIL，前端未执行；旧精确ctx期待缺实际三项组字段。先核任务来源/合同，不删除字段或以objectContaining削弱隔离。|
+|T-1189|核对聊天子进程状态与取消的七项当前失败|📋 待办|—|—|[实际诊断](docs/features/t1189-chat-worker-entry-current-state-diagnosis.md)|原LED054前25PASS5条件跳过、Worker30PASS、后66PASS7FAIL；核denied/unknown/revoked/login/pause真实状态和调用次数，不猜单一根因或放宽终态/取消。|
+|T-1188|核对雷达活动任务期间的采纳保护断言|📋 待办|—|—|[实际诊断](docs/features/t1188-radar-active-task-adoption-test-diagnosis.md)|原LED042合同3/后端4PASS、雷达58PASS3FAIL；旧用例要隐藏采纳按钮，DOM实际disabled。先核已确认呈现与真实活动保护，不宽松断言、不改产品或guard。|
+|T-1187|核对编导前端回归的旧会话替身|✅ 待办|PASS[REV:1a0ed8fa1e3f]|—|[SPEC](docs/features/t1187-copilot-live-session-test-contract.md)|T1186原LED020后端274PASS、前端66PASS/18FAIL；旧替身缺currentTaskId方法。先独评核真实接口，仅补无回执null，不改产品/guard/预算，不删原恢复与SDK断言。|
+|T-1182|区分隐藏文件注入与真实上传按钮的刷新等待|🔨 待办|PASS[REV:456a0d53bb41]|—|[实验SPEC](docs/features/t1182-real-upload-button-control.md) · [研究卡](docs/research/t1182-upload-ui-refresh.md)|T1181两次MP4完成后公开库存有文件而列表等120秒不可见；原探针直接注入隐藏input，可能绕过真实按钮pending。冻结失败，一次已观测加一次真实按钮/filechooser区分实验，不改产品/权限/预算、不盲重跑或代签根因。|
+|T-1181|核对真实素材上传成功后视频列表不可见|⏸️ 待办|PASS[REV:f8b0038f725b]|—|[实际诊断](docs/features/t1181-uploaded-video-list-visibility.md)|T1180新隔离随包浏览器当场139.349秒exit1；MP4已显示上传完成，精确文件名在素材列表等待120秒仍不可见。保原日志/驱动，先核真实页面、公开列表与刷新，不猜丢失或删除可见性保护。|
 |T-1180|核对真实上传探针的File请求体字节测量失败|🔨 待办|PASS[REV:36946ee35804]|—|[实际诊断](docs/features/t1180-upload-probe-file-bytes.md)|T1179真实随包浏览器首轮21.852秒exit1；PNG创建/PUT/完成均200后请求体SHA断言失败，未写最终结果。保原驱动/日志，核SDK是否拿到body与公开下载SHA，不猜文件损坏或删保护。|
 |T-1179|核对素材上传回归未触发完成接口的实际原因|🔨 待办|PASS[REV:13d0145a7fcd]|—|[实际诊断](docs/features/t1179-asset-upload-regression-diagnosis.md)|原LED022当场18PASS/1FAIL；旧E2完成接口0调用，当前上传已走workspace.capture而旧mock只拦全局client；先核真实scope/HTTP/上传与取消，不猜产品缺陷或绕过组权限。|
-|T-1178|校准双端打包资源回归的第三方声明前置条件|🔨 待办|PASS[REV:8d538a517aa5]|—|[SPEC](docs/features/t1178-package-resource-contract.md)|原LED006当场42PASS/1FAIL：旧断言只允许tar，漏当前第三方声明；先独评只校准该测试，保单tar与无sidecar目录保护，不改包配置/流程/预算。|
-|T-1177|修复首页性能回归的稀疏指标夹具缺字段|🔨 待办|PASS[REV:e7019c7dcc42]|—|[SPEC](docs/features/t1177-dashboard-rollup-fixture.md)|原LED050实际7前端PASS、后端45PASS/3FAIL；旧夹具缺合同finishAvg导致toFixed异常，只校准该测试、保原并行/缓存/跨号/诚实缺数断言。|
-|T-1176|校准导航与封面恢复回归的过期前置条件|🔨 待办|PASS[REV:d0fefb6b762e]|—|[SPEC](docs/features/t1176-current-regression-preconditions.md)|当前LED049三处旧导航/容器断言，LED048封面用例缺真实父稿件；保原红测，独立核合同后只改两测试，原完整检查与隔离浏览器复验，不改产品/守卫/预算。|
 |T-1171|无损压缩当前超限任务看板|🔨 待办|—|—|[实际失败](docs/features/t1171-current-backlog-compaction.md)|当前健康门RUNAWAY；只用原受支持归档/详情外置，任务状态、原文和失败责任保留，原健康复验，不凭归档销审核债。|
 |T-1159|在当前main整合微信原生报表、绑定归属与调度闭包|🔨 待办|PASS[REV:914cad514a19]|待验|[SPEC](docs/features/t1159-current-wechat-native-report-integration.md) · [验收合同](docs/verification/t1159/PAGE_SPEC.md)|T1124剩余56路径，来源293d统计页导航UNKNOWN/0报告/两实验用尽；独评后冻结语义移植、当前隔离公共链验收，保纯组/保存/调度与原研究暂停，不代签真人微信或安装。|
 |T-1155|核对浏览器导航时本地服务连接中断日志|⏸️ 待办|—|—|[实际诊断](docs/features/t1155-browser-navigation-connection-abort.md)|当前三轮原日志aborted/ECONNRESET及uncaughtException，主要断言失败另有原因；保原日志，核请求/进程与后续公开操作，不猜根因或屏蔽错误。|

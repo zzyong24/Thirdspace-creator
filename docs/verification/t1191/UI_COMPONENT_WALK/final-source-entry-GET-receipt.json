@@ -1,0 +1,53 @@
+{
+  "scope": "Node http直接访问自有127绑定服务的只读入口GET与资产hash；不是额外产品浏览器走查",
+  "at": "2026-10-10T03:30:03.426Z",
+  "previousClientFailure": "final-source-entry-GET-urllib-failure.log",
+  "results": [
+    {
+      "url": "http://127.0.0.1:31591/normal/index.html?scenario=prepare",
+      "at": "2026-10-10T03:30:03.404Z",
+      "method": "GET",
+      "status": 200,
+      "size": 1147,
+      "sha256": "ec94bf189193160c1fb29be8154c4e10e240cc1b808f3ba26a3d5b48935b47d4",
+      "contentType": "text/html;charset=utf-8"
+    },
+    {
+      "url": "http://127.0.0.1:31591/normal/index.html?scenario=creation",
+      "at": "2026-10-10T03:30:03.411Z",
+      "method": "GET",
+      "status": 200,
+      "size": 1147,
+      "sha256": "ec94bf189193160c1fb29be8154c4e10e240cc1b808f3ba26a3d5b48935b47d4",
+      "contentType": "text/html;charset=utf-8"
+    },
+    {
+      "url": "http://127.0.0.1:31591/normal/app.js",
+      "at": "2026-10-10T03:30:03.412Z",
+      "method": "GET",
+      "status": 200,
+      "size": 4238888,
+      "sha256": "08eb34bbd1a4aea76af7f3338e8682102c49eafac4a0873fa2222019933ddf91",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "http://127.0.0.1:31591/?scenario=prepare",
+      "at": "2026-10-10T03:30:03.420Z",
+      "method": "GET",
+      "status": 200,
+      "size": 657,
+      "sha256": "a599671180966efa6a9f63e7e32c2ee16b6c23328f62b676a73fd174fcecb734",
+      "contentType": "text/html;charset=utf-8"
+    },
+    {
+      "url": "http://127.0.0.1:31591/?scenario=creation",
+      "at": "2026-10-10T03:30:03.421Z",
+      "method": "GET",
+      "status": 200,
+      "size": 657,
+      "sha256": "a599671180966efa6a9f63e7e32c2ee16b6c23328f62b676a73fd174fcecb734",
+      "contentType": "text/html;charset=utf-8"
+    }
+  ],
+  "normalAppJSSameFrozenHash": true
+}

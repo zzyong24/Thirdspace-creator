@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "PASS（仅T1191当前可信恢复条件澄清的实施准入，SPEC746ced07…）：实际LED047/059同一T716失败及原替身证明，仅nofetch不能推断准备失败。收紧为当前有效attempt且networkStarted=false、明确preparationFailure才重新prepare同原话/请求/附件；无准备失败标记保原SDK恢复，不伪造fetch或按消息/错误文案推断状态，strict/非strict真实准备失败均保。两文件写集及已审session/epoch/附件/pending/预算约束不扩；新增普通SDK不重send与无编辑器引擎失败一次原话提交回归。前次正式initialPASS及当场RED、首次28PASS保留；LED047/059原整体FAIL保留。当前广条件仍未修，本复核不签after GREEN/视觉/包/安装/native/model/完整Gate或研究恢复。",
+  "findings": []
+}

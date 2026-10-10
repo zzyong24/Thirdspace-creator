@@ -1,0 +1,24 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/server/ai-runtime/live-chat-session.test.ts",
+    "src/features/copilot/live-chat-session.consumer.test.ts",
+    "src/features/draft-workbench/draft-chat-request.test.tsx",
+    "src/features/draft-workbench/work-creation-request.test.ts",
+    "src/features/draft-workbench/creation-flow-ctas.test.tsx",
+    "src/features/copilot/chat-work-editor-card.test.tsx",
+    "src/features/copilot/chat-work-creation-card.test.tsx",
+    "--retry=0"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T02:56:45.886157+00:00",
+  "finishedAt": "2026-10-10T02:56:51.262912+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 5.376580374955665,
+  "logSha256": "ff9a2b2d06dc26415f23614a5614446b3c1ab9e7e879daa44544f7cbdd8e62c4"
+}

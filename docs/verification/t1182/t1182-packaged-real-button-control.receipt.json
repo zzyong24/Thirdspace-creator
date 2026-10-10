@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1182-real-button-control.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T01:41:34.317935+00:00",
+  "finishedAt": "2026-10-10T01:43:52.811291+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 138.49226037500193,
+  "logSha256": "fc2021c06314899a589e1b443bfd5fed4acbbf872f2791b07ed583d1a0bc5b77"
+}

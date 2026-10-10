@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/reviewctl.mjs",
+    "record",
+    "T-1191",
+    "--spec",
+    "docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md",
+    "--constitution",
+    "docs/产品定位.md",
+    "--input",
+    "docs/features/t1191-pre-submit-copilot-recovery-diagnosis.viewport.review-input.json",
+    "--review",
+    "docs/features/t1191-pre-submit-copilot-recovery-diagnosis.review.md",
+    "--backlog",
+    "BACKLOG.md",
+    "--review-mode",
+    "independent",
+    "--model",
+    "codex-inherited"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T03:24:40.785644+00:00",
+  "finishedAt": "2026-10-10T03:24:40.943958+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.15818429097998887,
+  "logSha256": "2e3ef49108d84b316641a478815addfbdb7d968a7f5bf19336153dc2e6e3bb07"
+}

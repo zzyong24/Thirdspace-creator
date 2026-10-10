@@ -1,0 +1,7 @@
+{
+  "phase": "tests modified after actual formal review/start; product unchanged before full RED command",
+  "sha256": {
+    "frontend/src/features/copilot/ai-copilot-content.tsx": "2db7debaf1fea381f88e18d74bbef747904c78587427e4e2048266d252a4469a",
+    "frontend/src/features/copilot/ai-copilot-content.test.tsx": "0791875615d414600262f285bdb18a2927ca70d10df534af511ace851fdab990"
+  }
+}

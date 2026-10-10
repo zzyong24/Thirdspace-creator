@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/features/copilot/ai-copilot-content.test.tsx",
+    "--retry=0"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T03:02:58.906473+00:00",
+  "finishedAt": "2026-10-10T03:03:06.669650+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 7.763030292000622,
+  "logSha256": "e729c03f5f4f746637189a228533670944783ae15388b77aad77948b7afc4d19"
+}

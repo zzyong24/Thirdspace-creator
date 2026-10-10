@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS（仅T1182剩余一次真实按钮控制实验SPEC初审）：当前第四轮原receipt/log仍exit1、138.76938770897686秒，logSHA e9bcef9a…匹配；MP4公开库存两项而DOM仅PNG/exactMatches=[]，原disabled属性未捕获保持UNKNOWN。真实按钮disabled=pending，hidden input没有该限制；当前私有driver直接赋值会绕过可操作条件，toast之后router.refresh不代表画廊完成。精确新私有driver只改filechooser监听→真实button.click默认actionability/120秒/no force→实际chooser.setFiles，记录真实isDisabled/chooser并最终有限等enabled；新root/全部证据新前缀且预核不存在，原wx/全部上传、列表、字节、公开下载、刷新、真实菜单跨组/返回/错误断言及120秒预算保留，无product/tests/SDK/config修改。实际Research Gate observe为exit2且research_open/T1181⏸成立，重复block原exit1保留。当前卡researching/max2/已有1，只剩一次；失败保暂停、不第三次同族，成功只证明该条正常UI旅程。verify keys当前未注册，不签validated/恢复或根因已解释；新driver尚不存在，不签实验结果、canonical/完整Gate/native/安装/全功能/微信研究恢复。",
+  "findings": []
+}

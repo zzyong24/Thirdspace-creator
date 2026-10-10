@@ -1,0 +1,249 @@
+{
+  "scope": "真实React/SDK组件隔离页，最终fetch固定503；只核验到fetch边界，不代表真实后端/模型/持久任务成功",
+  "results": [
+    {
+      "name": "prepare-second-keyboard-wide",
+      "receiptLogIndices": [
+        32,
+        34,
+        44,
+        53
+      ],
+      "postCounts": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "oneSubmission": true,
+      "originalText": "这次明确修改",
+      "actualText": "这次明确修改",
+      "originalTextEqual": true,
+      "targetKind": "editorTarget",
+      "originalTarget": {
+        "schemaVersion": 1,
+        "projectId": "protocol-project",
+        "outputId": "actual-article",
+        "owner": "wechat_article",
+        "contentType": "article",
+        "savedBase": {
+          "kind": "artifact",
+          "artifactId": "actual-artifact",
+          "versionId": "saved-base"
+        },
+        "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": {
+          "kind": "article_sections",
+          "sectionIds": [
+            "actual-section"
+          ]
+        }
+      },
+      "actualTarget": {
+        "schemaVersion": 1,
+        "projectId": "protocol-project",
+        "outputId": "actual-article",
+        "owner": "wechat_article",
+        "contentType": "article",
+        "savedBase": {
+          "kind": "artifact",
+          "artifactId": "actual-artifact",
+          "versionId": "saved-base"
+        },
+        "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": {
+          "kind": "article_sections",
+          "sectionIds": [
+            "actual-section"
+          ]
+        }
+      },
+      "targetEqual": true,
+      "creationSubmission": [],
+      "blockedNetwork": []
+    },
+    {
+      "name": "prepare-narrow",
+      "receiptLogIndices": [
+        104,
+        107,
+        109
+      ],
+      "postCounts": [
+        0,
+        0,
+        1
+      ],
+      "oneSubmission": true,
+      "originalText": "这次明确修改",
+      "actualText": "这次明确修改",
+      "originalTextEqual": true,
+      "targetKind": "editorTarget",
+      "originalTarget": {
+        "schemaVersion": 1,
+        "projectId": "protocol-project",
+        "outputId": "actual-article",
+        "owner": "wechat_article",
+        "contentType": "article",
+        "savedBase": {
+          "kind": "artifact",
+          "artifactId": "actual-artifact",
+          "versionId": "saved-base"
+        },
+        "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": {
+          "kind": "article_sections",
+          "sectionIds": [
+            "actual-section"
+          ]
+        }
+      },
+      "actualTarget": {
+        "schemaVersion": 1,
+        "projectId": "protocol-project",
+        "outputId": "actual-article",
+        "owner": "wechat_article",
+        "contentType": "article",
+        "savedBase": {
+          "kind": "artifact",
+          "artifactId": "actual-artifact",
+          "versionId": "saved-base"
+        },
+        "documentDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "selection": {
+          "kind": "article_sections",
+          "sectionIds": [
+            "actual-section"
+          ]
+        }
+      },
+      "targetEqual": true,
+      "creationSubmission": [],
+      "blockedNetwork": []
+    },
+    {
+      "name": "creation-second-keyboard-wide",
+      "receiptLogIndices": [
+        80,
+        88,
+        97
+      ],
+      "postCounts": [
+        0,
+        0,
+        1
+      ],
+      "oneSubmission": true,
+      "originalText": "生成原文章图文候选",
+      "actualText": "生成原文章图文候选",
+      "originalTextEqual": true,
+      "targetKind": "creationTarget",
+      "originalTarget": {
+        "clientRequestId": "original-pair",
+        "projectId": "protocol-project",
+        "scriptSourceRef": {
+          "kind": "project_script",
+          "id": "script",
+          "versionId": "frozen-script-v"
+        }
+      },
+      "actualTarget": {
+        "clientRequestId": "original-pair",
+        "projectId": "protocol-project",
+        "scriptSourceRef": {
+          "kind": "project_script",
+          "id": "script",
+          "versionId": "frozen-script-v"
+        }
+      },
+      "targetEqual": true,
+      "creationSubmission": [
+        "not-submitted",
+        "submitted-unknown"
+      ],
+      "blockedNetwork": []
+    },
+    {
+      "name": "creation-narrow",
+      "receiptLogIndices": [
+        114,
+        116,
+        119
+      ],
+      "postCounts": [
+        0,
+        0,
+        1
+      ],
+      "oneSubmission": true,
+      "originalText": "生成原文章图文候选",
+      "actualText": "生成原文章图文候选",
+      "originalTextEqual": true,
+      "targetKind": "creationTarget",
+      "originalTarget": {
+        "clientRequestId": "original-pair",
+        "projectId": "protocol-project",
+        "scriptSourceRef": {
+          "kind": "project_script",
+          "id": "script",
+          "versionId": "frozen-script-v"
+        }
+      },
+      "actualTarget": {
+        "clientRequestId": "original-pair",
+        "projectId": "protocol-project",
+        "scriptSourceRef": {
+          "kind": "project_script",
+          "id": "script",
+          "versionId": "frozen-script-v"
+        }
+      },
+      "targetEqual": true,
+      "creationSubmission": [
+        "not-submitted",
+        "submitted-unknown"
+      ],
+      "blockedNetwork": []
+    }
+  ],
+  "unknown": {
+    "receiptLogIndex": 56,
+    "postCount": 1,
+    "originalText": "这次明确修改",
+    "receiptAbsent": true,
+    "verifyOriginalActionDisabled": true
+  },
+  "zoom": {
+    "method": "真实Chrome普通私有profile的chrome://settings/appearance网页缩放select，值2即200%",
+    "settingReceiptLogIndices": [
+      123,
+      227,
+      228,
+      229
+    ],
+    "hostMetricsReceiptLogIndices": [
+      126,
+      157,
+      170,
+      184,
+      197
+    ],
+    "noCSSScale": true,
+    "noDPRSimulation": true
+  },
+  "verdict": {
+    "prepare": "窄范围通过",
+    "creation": "窄范围通过",
+    "unknown": "保留输入和不自动重提已观察；无原会话回执，核对动作未验，不能标全任务PASS",
+    "global200": "两个视口的关键键盘动作可达；prepare原生滚轮可达完整composer，creation宽窗原生滚轮可达composer；creation窄窗的wheel-only完整底部未证实"
+  },
+  "unverified": [
+    "真实保存页及保存完成",
+    "真实设置页",
+    "真实模型生成成功",
+    "真实后端任务接收/会话回执/原请求核对",
+    "真实持久任务恢复成功",
+    "上传及附件恢复（未上传）",
+    "creation窄窗200%仅靠滚轮到完整底部"
+  ]
+}

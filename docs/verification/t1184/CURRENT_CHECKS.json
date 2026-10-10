@@ -1,0 +1,41 @@
+[
+  {
+    "stem": "t1184-real-submission-and-host-contracts",
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "pnpm",
+      "--dir",
+      "backend",
+      "exec",
+      "vitest",
+      "run",
+      "src/modules/ai/chat-turn-submission.service.test.ts",
+      "src/modules/ai/chat-host-context.service.test.ts"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:08:55.042649+00:00",
+    "finishedAt": "2026-10-10T02:09:04.167330+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 9.124506167019717,
+    "logSha256": "c70be818749d032dc617cec202f0cd4eb3f2ad188a40544d342e661e2ec3c7d3"
+  },
+  {
+    "stem": "t1184-current-backend-type",
+    "argv": [
+      "pnpm",
+      "--dir",
+      "backend",
+      "exec",
+      "tsc",
+      "--noEmit"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:09:41.999298+00:00",
+    "finishedAt": "2026-10-10T02:10:20.410122+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 38.41047170798993,
+    "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

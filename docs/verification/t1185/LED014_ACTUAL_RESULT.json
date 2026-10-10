@@ -1,0 +1,30 @@
+{
+  "stem": "t1184-t1185-led014-complete-current",
+  "argv": [
+    "env",
+    "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+    "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+    "/bin/zsh",
+    "-c",
+    "pnpm --dir frontend exec vitest run src/app/api/chat/route.test.ts src/server/__module_integration__/artifacts.persistence-client.test.ts src/features/script/script-editor-data.test.ts src/features/script/script-structure-view.test.tsx src/features/copilot/chat-script-patch-card.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/features/copilot/chat-api-error.test.ts && pnpm --dir backend exec vitest run src/modules/artifacts/artifacts.service.test.ts src/modules/ai-runtime/script-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/chat-runner.test.ts"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T02:11:07.379104+00:00",
+  "finishedAt": "2026-10-10T02:12:44.142011+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 96.7621204170282,
+  "logSha256": "4fffe363cea4e4fa07c03f0f9a27c22a568db1bd7226d754f092748994c583ee",
+  "frontend": {
+    "files": 7,
+    "passed": 178,
+    "failed": 0
+  },
+  "backend": {
+    "files": 3,
+    "passed": 264,
+    "failed": 2
+  },
+  "failingTool": "canvas.propose",
+  "failureOwner": "T-1186",
+  "canonicalNotRewritten": true
+}

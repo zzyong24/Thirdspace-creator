@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "complete",
+    "T-1186",
+    "--evidence",
+    "仅chat-tools原selected/project两模式测试样本校准；独立实施PASS_BOUNDED b3e5e0fc/读集dbc36673，源码c3eadefe。原完整LED014前178/后266 PASS0、LED017后243/前67 PASS0，真实宿主35/合同7及公共链101PASS3条件跳过、原PG子集3PASS72filtered并角色清理0；双端type及boundary/semantic/orphan/diff0，pmem0。LED020后274PASS/前66PASS18FAIL1另T1187；完整canonical原27ERROR1WARN、控制审计19旧review失败仍exit1，原owner保留。无原生/模型/平台/全功能PASS，无第三上传实验，不改产品/guard/预算，证据docs/verification/t1186。"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T02:33:19.198231+00:00",
+  "finishedAt": "2026-10-10T02:33:19.320543+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.12216858402825892,
+  "logSha256": "df48a00594ac6f46eb71eb8cb5ff4dca06f92287ad4c64ff44a52e657f0cace5"
+}

@@ -1,0 +1,11 @@
+{
+  "frontend/src/features/copilot/chat-task-control.ts": "c69f5df1488a43ac48602ab0833f66f4009534262961e5e8f8339a37d0967830",
+  "frontend/src/features/copilot/live-chat-session.ts": "6f11f0af329bcd23ee0165a416d8f3c822bbf5e0fadbb6d0226d0d5b3a55b27e",
+  "frontend/src/features/copilot/ai-copilot-content.tsx": "2db7debaf1fea381f88e18d74bbef747904c78587427e4e2048266d252a4469a",
+  "frontend/src/features/copilot/ai-copilot-content.test.tsx": "8f360dd063260dba9700c4c58b3364c141c3ba3e5a007bd4fbea8b7f48cf3f36",
+  "frontend/src/features/copilot/chat-task-control.test.ts": "d06077f44ead9df17a42a1d82118aaef77a107fa13cfab6c2c99a41541caaf7d",
+  "frontend/src/server/ai-runtime/live-chat-session.test.ts": "83596e481049a4badf48feb2006adf00731d582c88c1ecd1ba9822529aff1da3",
+  "frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx": "c5b7b304f495f5688d1e3618b29e415c61224cce12428fbb44b8016dcafe3791",
+  "frontend/src/features/copilot/ai-copilot-interactions.test.tsx": "f378c5f4e9d3d6c902af77f8cf68a3e7d01110a7b6e23ee552d0bb9369339772",
+  "orchestrator/process/reconcile.config.json": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44"
+}

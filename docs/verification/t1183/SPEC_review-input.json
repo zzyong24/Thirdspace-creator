@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS（仅T1183测试合同校准SPEC初审）：实际原LED018完整串行receipt/log匹配，exit1／3.673325542秒、154PASS／1FAIL、douyin文件144例且首次默认预算期待60000而实际120000；retry x2和原字节保留，cargo后段因&&未执行。真实导出链为frontend douyin-cdp→worker gotoWithRetry→contract executionTimeoutMs，当前默认正预算120000与已批两分钟规范一致。精确写集仅douyin-cdp.test.ts首次成功断言固定120000及旁注两处，不能派生期待或退回产品60秒；保单goto/零退避、原4类重试断言、原144例及fake error／原错期待60000文本。生产、SDK、配置、guard及预算现与b344字节相同。实施后仍须原完整串行命令含cargo后段、前端type、boundary/semantic/orphan/diff及实际timeout-policy公共检查；其原LED053失败保T1081/T1066-timeout-policy等owner，当前完整canonical27ERROR/1WARN仍exit1。原实现未改，无finding；不代签实施结果、Rust／Windows安装、native／模型／平台、完整Gate或T1181研究恢复。",
+  "findings": []
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "independent-implementation-review/v1",
+  "task_id": "T-1190",
+  "review_kind": "implementation",
+  "verdict": "PASS",
+  "summary": "T1190实际实施与自身验收PASS。自行证明仅原317完整期待增加三组字段，撤去后与改前文件/Git HEAD逐字节一致；原17例、候选身份与全部guard未变。已核正式初审/start事件和真实17PASS、LED05854/118PASS但前142PASS3FAIL、组/租约12PASS及请求ctx29PASS、双端types及静态门收据。LED058三项T1188旧失败及timeout原27失败、全局旧债保留。本结论不是新SPEC复审轮，不签task已完成、包、原生、模型或全功能。",
+  "findings": [],
+  "spec_sha256": "8ebfd3316843168588d31ab59f5478984bd3be016204bd6990727aa5c31d5a15",
+  "before_test_sha256": "a52c2063e67aa0849b046ded2f2dc1c7b513af7f3e8ab0a8711c6a5696b2cb32",
+  "after_test_sha256": "4a9c8e2d11cdc38132b60fe3eeb8e70bdf5e480086810bfd4c06d3d47859c5f7",
+  "product_write_set": [],
+  "test_write_set": [
+    "backend/src/modules/execution/execution-chat-generation.service.test.ts"
+  ],
+  "completion_boundary": "本任务实施及自身验收已满足；root仍须实际pmem sync/reconcile后将范围外失败与owner写进taskctl completion evidence。未观测本次收尾收据时不签task已complete。"
+}

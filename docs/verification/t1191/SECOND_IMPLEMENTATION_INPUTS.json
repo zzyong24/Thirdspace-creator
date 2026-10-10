@@ -1,0 +1,7 @@
+{
+  "phase": "after clarification recheck0 and actual RED29PASS2FAIL; all final gates pending",
+  "sha256": {
+    "frontend/src/features/copilot/ai-copilot-content.tsx": "346cf00843c6f2283ba244c85d8dd41e5e9118645e856df12e9100ce1eda21d0",
+    "frontend/src/features/copilot/ai-copilot-content.test.tsx": "e6163928151eb6cb23b364571131b709d680337c06a510b69047cc72b1d301f8"
+  }
+}

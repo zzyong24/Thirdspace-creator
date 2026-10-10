@@ -1,0 +1,9 @@
+{
+  "source": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+  "sha256": "35a0a9d416cedbe93bacb9e152d7349e9155c6dd09dd85c07d9d7d94a001a801",
+  "fourNullCurrentTaskMethods": 4,
+  "oneObservationMock": 1,
+  "restoredBytesEqualBefore": true,
+  "originalTestsUnchanged": true,
+  "noNewSkip": true
+}

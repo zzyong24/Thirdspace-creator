@@ -2475,10 +2475,10 @@ describe("[T-202] gotoWithRetry 导航退避重试", () => {
     await gotoWithRetry(page, "https://creator.douyin.com/x", { retries: 3 });
     expect(gotoCalls).toHaveLength(1);
     expect(waits).toHaveLength(0);
-    // 透传 waitUntil/timeout 到底层 goto(默认 domcontentloaded / 60000)。
+    // 透传 waitUntil/timeout 到底层 goto(默认 domcontentloaded / 120000)。
     expect(gotoCalls[0]!.opts).toMatchObject({
       waitUntil: "domcontentloaded",
-      timeout: 60000,
+      timeout: 120000,
     });
   });
 

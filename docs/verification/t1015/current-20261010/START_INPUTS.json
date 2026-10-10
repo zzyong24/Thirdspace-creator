@@ -1,0 +1,18 @@
+{
+  "head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+  "startedPreparationAt": "2026-10-10T01:29:46.597501+00:00",
+  "runtimeProductCommit": "5a1929ca98ab6cba8cb8b3a4020ece68faaff2b8",
+  "testFiles": {
+    "frontend/src/components/shell/shell.test.tsx": "85232cb1b33f9874ff1133c388d20e017c6df1bee85cd6899c6e51ca168ab8a9",
+    "backend/src/application/collection/cover-file-repair.test.ts": "930501eeec2d22b44957a904e2b0062b913678cc49d06de43f40762112e8c794",
+    "backend/src/application/queries/dashboard-read-performance.test.ts": "1cd1d0eb842c0d62f3b727153dc7d551faf8787094cc0e84586edf4a1e5eed34",
+    "frontend/scripts/desktop/windows-runtime-config.test.mjs": "2318d74f2dfb4e9f48fda39579b3154a862e45d6d6acb0fa1f6be929dea7749b",
+    "frontend/src/features/assets/assets-interactions.test.tsx": "cf15330235eacaea5f0ebc6f28d97edc0b720ba75c850a095812a308e44d8e48"
+  },
+  "controlFiles": {
+    "BACKLOG.md": "9925f2256fd78c6184d944094f5daf526d326385a3814b063eed85862435edf2",
+    "orchestrator/review-events.ndjson": "91b0191013d9e24ae83afa507dcefe5f069c66b9c74b4ed94407b3b30ee4a4be",
+    "orchestrator/process/reconcile.config.json": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44"
+  },
+  "nativeApp": false
+}

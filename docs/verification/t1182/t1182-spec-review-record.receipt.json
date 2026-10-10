@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/reviewctl.mjs",
+    "record",
+    "T-1182",
+    "--spec",
+    "docs/features/t1182-real-upload-button-control.md",
+    "--constitution",
+    "docs/产品定位.md",
+    "--input",
+    "docs/features/t1182-real-upload-button-control.review-input.json",
+    "--review",
+    "docs/features/t1182-real-upload-button-control.review.md",
+    "--backlog",
+    "BACKLOG.md",
+    "--review-mode",
+    "independent",
+    "--model",
+    "codex-inherited"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T01:41:33.873941+00:00",
+  "finishedAt": "2026-10-10T01:41:34.019066+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.14499275002162904,
+  "logSha256": "12a4a8f41e685142cbb8f279e48835fddc661a72e7e85a0ab14631752208ad04"
+}

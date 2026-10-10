@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/bin/zsh",
+    "-c",
+    "pnpm --dir frontend exec vitest run src/features/copilot/chat-task-control.test.ts src/server/ai-runtime/live-chat-session.test.ts src/server/ai-runtime/live-chat-session.consumer.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx --retry=0"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T03:07:42.348056+00:00",
+  "finishedAt": "2026-10-10T03:07:57.223381+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 14.874989000032656,
+  "logSha256": "3cf71e5ff250a014638af5fccb52bc31775d836cb5f1be44cd62c924ac057009"
+}

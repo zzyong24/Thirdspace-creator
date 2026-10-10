@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/bin/zsh",
+    "-c",
+    "pnpm --dir backend exec vitest run src/modules/ai/group-task-scope.integration.test.ts src/modules/execution/execution-lease.service.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/lib/request-context.server.test.ts --retry=0"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T03:08:38.134994+00:00",
+  "finishedAt": "2026-10-10T03:09:45.447767+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 67.3122864580364,
+  "logSha256": "acd35f5f699768590b5893b700522d66a4b8ddc760f8298df5f8afdfa8864a78"
+}

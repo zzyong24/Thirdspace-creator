@@ -1,0 +1,179 @@
+[
+  {
+    "stem": "t1185-spec-review-record",
+    "argv": [
+      "node",
+      "orchestrator/process/reviewctl.mjs",
+      "record",
+      "T-1185",
+      "--spec",
+      "docs/features/t1185-chat-completion-and-stream-fixtures.md",
+      "--constitution",
+      "docs/产品定位.md",
+      "--input",
+      "docs/features/t1185-chat-completion-and-stream-fixtures.review-input.json",
+      "--review",
+      "docs/features/t1185-chat-completion-and-stream-fixtures.review.md",
+      "--backlog",
+      "BACKLOG.md",
+      "--review-mode",
+      "independent",
+      "--model",
+      "codex-inherited"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:10:25.568936+00:00",
+    "finishedAt": "2026-10-10T02:10:25.712016+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.14293808297952637,
+    "logSha256": "aa0c61936e7d5b4049175985aa92a4452aa51c40387aa2e933230d4a4eca71b5"
+  },
+  {
+    "stem": "t1185-start",
+    "argv": [
+      "node",
+      "orchestrator/process/taskctl.mjs",
+      "start",
+      "T-1185"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:10:25.918303+00:00",
+    "finishedAt": "2026-10-10T02:10:26.063505+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.14503225003136322,
+    "logSha256": "e4c3ea7888cceb2eade85497f45c3b31f09b23fc3f8e3642b97fa9a53d97c02b"
+  },
+  {
+    "stem": "t1185-exact-route-current",
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "vitest",
+      "run",
+      "src/app/api/chat/route.test.ts"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:10:37.024286+00:00",
+    "finishedAt": "2026-10-10T02:10:46.877338+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 9.852832290984225,
+    "logSha256": "e70aa855c21e3f078004056089e02414e63f88906c77d1bf96d772739af2e52e"
+  },
+  {
+    "stem": "t1185-real-completion-contracts",
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "pnpm",
+      "--dir",
+      "backend",
+      "exec",
+      "vitest",
+      "run",
+      "src/modules/ai/chat-turn-completion.service.test.ts"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:10:49.015522+00:00",
+    "finishedAt": "2026-10-10T02:11:03.856649+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 14.840829459019005,
+    "logSha256": "3ea8e2f17b7b37f8117b1b870b9d0ac1592e0efc16000dad7734960133a87c6e"
+  },
+  {
+    "stem": "t1185-real-stream-host-contracts",
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "vitest",
+      "run",
+      "src/server/chat-execution-stream.test.ts"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:10:48.971612+00:00",
+    "finishedAt": "2026-10-10T02:11:05.382754+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 16.410847040999215,
+    "logSha256": "fa009f2322887d8ca3a6d31a0baef3eff8ffbf73d2ac57a44da124efdab480b3"
+  },
+  {
+    "stem": "t1185-current-frontend-type",
+    "argv": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "tsc",
+      "--noEmit"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:10:49.007837+00:00",
+    "finishedAt": "2026-10-10T02:10:57.802859+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 8.794646708003711,
+    "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "stem": "t1185-current-boundary",
+    "argv": [
+      "node",
+      "orchestrator/process/boundary-scan.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:10:49.008258+00:00",
+    "finishedAt": "2026-10-10T02:10:49.521843+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.5131278329645284,
+    "logSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24"
+  },
+  {
+    "stem": "t1185-current-semantic",
+    "argv": [
+      "node",
+      "orchestrator/process/semantic-boundary-scan.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:10:49.019537+00:00",
+    "finishedAt": "2026-10-10T02:10:49.376241+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.3565781659563072,
+    "logSha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923"
+  },
+  {
+    "stem": "t1185-current-orphan",
+    "argv": [
+      "node",
+      "orchestrator/process/orphan-scan.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:10:49.014156+00:00",
+    "finishedAt": "2026-10-10T02:10:49.148007+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.13367520802421495,
+    "logSha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+  },
+  {
+    "stem": "t1185-current-diff",
+    "argv": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T02:10:49.015260+00:00",
+    "finishedAt": "2026-10-10T02:10:49.102638+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.08724987501045689,
+    "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

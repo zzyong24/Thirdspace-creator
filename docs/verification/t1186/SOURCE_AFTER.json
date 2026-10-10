@@ -1,0 +1,11 @@
+{
+  "path": "backend/src/modules/ai-runtime/chat-tools.test.ts",
+  "head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+  "sha256": "c3eadefeb911e72c16dfffef05e91825fb4b8c147988b4d7572050bd5ea9febc",
+  "originalSha256": "a62cc9fa58c0cd7428ee5a26fe9e993168751b0c3f938d6d9d15cad27a01da85",
+  "outsideTwoModeCaseUnchanged": true,
+  "sampleGeneratorUnchanged": true,
+  "newSkippedTools": 0,
+  "productionOrConfigChanged": false,
+  "nativeApp": false
+}

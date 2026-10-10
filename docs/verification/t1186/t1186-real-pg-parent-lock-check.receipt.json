@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "python3",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1186-private-pg-parent-lock-check.py"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T02:22:36.518878+00:00",
+  "finishedAt": "2026-10-10T02:22:46.292144+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 9.773109457979444,
+  "logSha256": "f9fc586343f6bcc79e7da4a060f45e1360146367175bcf9f2f02c255c03e6a38"
+}

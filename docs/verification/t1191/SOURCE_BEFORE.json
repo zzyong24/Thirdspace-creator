@@ -1,0 +1,9 @@
+{
+  "frontend/src/features/copilot/ai-copilot-content.tsx": "2db7debaf1fea381f88e18d74bbef747904c78587427e4e2048266d252a4469a",
+  "frontend/src/features/copilot/ai-copilot-content.test.tsx": "35a0a9d416cedbe93bacb9e152d7349e9155c6dd09dd85c07d9d7d94a001a801",
+  "frontend/src/features/settings/settings-interactive-region.tsx": "6f9508e376b421f30c344385bca97ecf3efaad19a3e44b64971417c5197b4868",
+  "frontend/src/features/copilot/chat-task-control.ts": "c69f5df1488a43ac48602ab0833f66f4009534262961e5e8f8339a37d0967830",
+  "frontend/src/features/copilot/live-chat-session.ts": "6f11f0af329bcd23ee0165a416d8f3c822bbf5e0fadbb6d0226d0d5b3a55b27e",
+  "frontend/src/features/draft-workbench/draft-chat-request.tsx": "0685de879b73d5293ba627700642601c32ddf518b8f0eadd3b9810211b198730",
+  "orchestrator/process/reconcile.config.json": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44"
+}

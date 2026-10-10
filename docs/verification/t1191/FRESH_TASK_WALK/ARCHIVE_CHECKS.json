@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-10T03:40:42.321829+00:00",
+  "sourceRoot": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-fresh-task-walk",
+  "byteEqualFiles": {
+    "report.md": "f12dca993fcfaa1346f1ed9da943c277200da657603bd6b6f17e31f5a3dbe26d",
+    "summary.json": "78f5c5ea69c9d2539b90f561ab377c17628a204d0b79559b5ae09cbcc6a6c53f",
+    "receipt.json": "af3102ae6d4ddc2cba816d6c6e55bb390ada138c709604976bd5bcc0156fe1b4",
+    "environment-events.json": "074faf6dda94fda880db4582d903e99949984250dccb6ccb99282f059882f285",
+    "driver.cjs": "58590342e6980c23c56f2693e38cafb73e018c0115001817849bb016122802f8",
+    "check-evidence.cjs": "7841528b8c35d69f0df7110d7d4deedaaba67b8c372702e48169ab1cd93f371b"
+  },
+  "pngCount": 48,
+  "boundary": "原SOURCE未变；原异常/误操作/未验均保留，非完整三任务PASS"
+}

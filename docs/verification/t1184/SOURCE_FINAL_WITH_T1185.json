@@ -1,0 +1,14 @@
+{
+  "head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+  "path": "frontend/src/app/api/chat/route.test.ts",
+  "sha256": "ad75542e6a0f178540ad30d0046cd279fc87f60c9a080fc5c95171fe59ca2ee8",
+  "originalTests": 54,
+  "currentTests": 56,
+  "removedOriginalTestNames": [],
+  "addedTestNames": [
+    "显式 Codex 原样传到持久提交和本轮装配，不回落 Pi",
+    "非法引擎返回明确400且不保存消息或启动任务"
+  ],
+  "productionOrConfigChanged": false,
+  "nativeApp": false
+}

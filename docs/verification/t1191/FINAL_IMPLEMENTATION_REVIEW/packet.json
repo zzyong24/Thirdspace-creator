@@ -1,0 +1,205 @@
+{
+  "schema": "implementation-review/v1",
+  "review_kind": "independent-final-incremental",
+  "task_ids": [
+    "T1187",
+    "T1191"
+  ],
+  "summary": "当前精确源和已完成原测试局部PASS；组件/UI部分证据成立，原失败和待验保留，不签完整任务/包/全局Gate。",
+  "source_verdict": "PASS_BOUNDED",
+  "task_completion": "NOT_SIGNED",
+  "head_at_final_read": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+  "source_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.tsx",
+  "source_sha256": "60fe11f9b68530fbe22a0e282e1eca182659c5e917dba281a04d0eaaa9adc1da",
+  "test_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.test.tsx",
+  "test_sha256": "e6163928151eb6cb23b364571131b709d680337c06a510b69047cc72b1d301f8",
+  "spec_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md",
+  "spec_sha256": "38bfa86de9ab922f6058bf7d66fd56ca14c4fe8a947268641e36930b0a63e8f9",
+  "source_bindings": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.tsx",
+      "sha256": "60fe11f9b68530fbe22a0e282e1eca182659c5e917dba281a04d0eaaa9adc1da"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "sha256": "e6163928151eb6cb23b364571131b709d680337c06a510b69047cc72b1d301f8"
+    }
+  ],
+  "prior_source_reconstructed_sha256": "346cf00843c6f2283ba244c85d8dd41e5e9118645e856df12e9100ce1eda21d0",
+  "formal_revision": "ad518ff0cf03",
+  "single_class_delta": "仅content根overflow-y-auto，其余完整字节等于346cf",
+  "product_findings_in_increment": [],
+  "evidence_findings": [
+    {
+      "id": "E001",
+      "kind": "original_metadata_mismatch",
+      "status": "原69/70 FAIL保留，追加70/70字节及46/46尺寸匹配",
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-report.log",
+      "actual_bytes": 2225,
+      "actual_sha256": "190455fd7629c0b5fc516b3f631c83d422a7bcc02426b9610252b343e08b76e2"
+    },
+    {
+      "id": "E002",
+      "kind": "presentation_followup",
+      "status": "T1193待诊断",
+      "raw_receipt_indices": [
+        55,
+        56
+      ],
+      "verify_disabled": true,
+      "ordinary_submit_disabled": false,
+      "observed_posts": 1,
+      "duplicate_request_proven": false
+    },
+    {
+      "id": "E003",
+      "kind": "coverage_limit",
+      "status": "未验",
+      "scope": "fresh creation窄窗200% wheel-only完整底部；真实回执核对、保存/设置/模型/持久任务"
+    }
+  ],
+  "actual_final_commands": [
+    {
+      "name": "LED020",
+      "backend_actual_files": 3,
+      "backend_pass": 274,
+      "frontend_pass": 95,
+      "exitCode": 0
+    },
+    {
+      "name": "LED047",
+      "files": 8,
+      "pass": 174,
+      "exitCode": 0
+    },
+    {
+      "name": "LED059",
+      "backend_pass": 20,
+      "frontend_pass": 67,
+      "exitCode": 0
+    },
+    {
+      "name": "frontend-types",
+      "exitCode": 0
+    }
+  ],
+  "fresh_recomputed_checks": [
+    {
+      "name": "prepare-second-keyboard-wide",
+      "receiptLogIndices": [
+        32,
+        34,
+        44,
+        53
+      ],
+      "postCounts": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "oneSubmission": true,
+      "originalTextEqual": true,
+      "fullTargetEqual": true,
+      "matches_summary": true,
+      "boundary": "真实SDK私有fetch固定503，非后端/模型/持久任务接收"
+    },
+    {
+      "name": "prepare-narrow",
+      "receiptLogIndices": [
+        104,
+        107,
+        109
+      ],
+      "postCounts": [
+        0,
+        0,
+        1
+      ],
+      "oneSubmission": true,
+      "originalTextEqual": true,
+      "fullTargetEqual": true,
+      "matches_summary": true,
+      "boundary": "真实SDK私有fetch固定503，非后端/模型/持久任务接收"
+    },
+    {
+      "name": "creation-second-keyboard-wide",
+      "receiptLogIndices": [
+        80,
+        88,
+        97
+      ],
+      "postCounts": [
+        0,
+        0,
+        1
+      ],
+      "oneSubmission": true,
+      "originalTextEqual": true,
+      "fullTargetEqual": true,
+      "matches_summary": true,
+      "boundary": "真实SDK私有fetch固定503，非后端/模型/持久任务接收"
+    },
+    {
+      "name": "creation-narrow",
+      "receiptLogIndices": [
+        114,
+        116,
+        119
+      ],
+      "postCounts": [
+        0,
+        0,
+        1
+      ],
+      "oneSubmission": true,
+      "originalTextEqual": true,
+      "fullTargetEqual": true,
+      "matches_summary": true,
+      "boundary": "真实SDK私有fetch固定503，非后端/模型/持久任务接收"
+    }
+  ],
+  "fresh_unknown_actual_dom": {
+    "receiptLogIndices": [
+      55,
+      56
+    ],
+    "verify_button_disabled": true,
+    "ordinary_submit_disabled": false,
+    "original_text_retained": true,
+    "observed_post_count": 1,
+    "duplicate_request_proven": false,
+    "followup_task": "T1193",
+    "receipt_action": "无真实会话回执，未执行核对"
+  },
+  "ui_verdict": "BOUNDED_COMPONENT_EVIDENCE_WITH_RETAINED_LIMITS",
+  "preserved_failures": {
+    "owner_worker": "11PASS4FAIL exit1；T1092/T1192",
+    "timeout_policy": "27staticFAIL/public166PASS/overall1",
+    "prior_canonical": "27ERROR/1WARN",
+    "old_review_debts": 19,
+    "research": "T1181/T1182 2/2用尽，原暂停保留",
+    "prior_candidate_failures": "原RED/28及LED047/059原FAIL保留",
+    "maker_original_manifest": "69/70 FAIL保留"
+  },
+  "not_signed": [
+    "task complete",
+    "full canonical",
+    "full Gate",
+    "完整UI",
+    "native App",
+    "新包构建",
+    "真用户安装",
+    "真实保存/设置/回执核对",
+    "模型",
+    "持久任务成功",
+    "真人平台",
+    "研究恢复"
+  ],
+  "report_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-final-implementation-review/REVIEW.md",
+  "report_sha256": "2e2a5b8d455bf31ad66d94fe4f3467d111a7043834023f38b21790516cf78871",
+  "read_set_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-final-implementation-review/READ_SET.json",
+  "read_set_sha256": "da2d9326eed3111a6f52f73fc1f92d9dc4b51cd78a97c11f1f2963a5ee1a72e3",
+  "reviewer_executions": [],
+  "created_at_utc": "2026-10-10T03:46:25.144031+00:00"
+}

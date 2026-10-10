@@ -1,0 +1,518 @@
+{
+  "schema": "independent-read-set/v1",
+  "review_kind": "recheck",
+  "task_id": "T-1191",
+  "captured_at": "2026-10-10T03:20:54.849631+00:00",
+  "spec_sha256": "38bfa86de9ab922f6058bf7d66fd56ca14c4fe8a947268641e36930b0a63e8f9",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "scope": "仅新增第7条有限高度content根overflow-y-auto实施准入；第1–6项不重审，不签正式修改后UI",
+  "reads": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "2e48928f70b3e7cf15ca60c4e42a377d4c55c4423bf81d45fd39655c9e0ff116",
+      "bytes": 57327,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT.md",
+      "sha256": "055964b6b1b50ca6780262ccb3bea20146405aebc5bc83098746482307148951",
+      "bytes": 17607,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT_CONTEXT.md",
+      "sha256": "a74ec6498a8e06fe574f86ec96c51a99076672b717d103b26b25578bd2a1ed3c",
+      "bytes": 1316,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "bytes": 8130,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "bytes": 84,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/SKILL.md",
+      "sha256": "a623059117b5afdeaf437a6ac0944040ba666b0847e520cfe4fa42cc1ea1cec2",
+      "bytes": 14717,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/existing-project.md",
+      "sha256": "82a39fe64cb7fc183e1b3349d1829f6e163aee214c268ce2b921fd30c7f74aed",
+      "bytes": 5835,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/interaction-and-state.md",
+      "sha256": "34e8961d11f70522e3b10d18f2f59263a3e9eaf4662a3940dcef3ea7ba6f7915",
+      "bytes": 10790,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1022-account-group-workspace/UI_RULES.md",
+      "sha256": "a19d209281fe1a51463c7c2b8a063c3fa117d53679762f33d8c9637004bc8d76",
+      "bytes": 5803,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md",
+      "sha256": "38bfa86de9ab922f6058bf7d66fd56ca14c4fe8a947268641e36930b0a63e8f9",
+      "bytes": 10919,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1191-pre-submit-copilot-recovery-diagnosis.review.md",
+      "sha256": "18d35e0cd9eaef21470fc027d6869cbebce864c3e3b6972e410934f7f5a2f886",
+      "bytes": 1889,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.tsx",
+      "sha256": "346cf00843c6f2283ba244c85d8dd41e5e9118645e856df12e9100ce1eda21d0",
+      "bytes": 190783,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "sha256": "e6163928151eb6cb23b364571131b709d680337c06a510b69047cc72b1d301f8",
+      "bytes": 42552,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/overlays/overlay-controller.tsx",
+      "sha256": "c671d1aafae649dbc043c729de32366a793e84ac1c3e235ad41a183883345d2f",
+      "bytes": 18548,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/overlays/ai-copilot-dialog.tsx",
+      "sha256": "de2ca3b1984741b0e0ee90ce776bf4137b1a81f57a16498849bf56c1c643ed2a",
+      "bytes": 3528,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/app/globals.css",
+      "sha256": "89a8702d4958e924039f9e59838312267631b51e0434d8b8a29d3786e0bbf15c",
+      "bytes": 9772,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/styles/tokens.css",
+      "sha256": "9a61b49eee0c84da8c820b7d9175afa0a9350edf603aa584eb5dfafe4c6af675",
+      "bytes": 1892,
+      "role": "规范/第7项实际源消费者/未改基线；全字节SHA与相关正文/布局实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/SKILL.md",
+      "sha256": "5796cf1b3b9f3de2d45c8e754e3df2146735aa14b266b7c32e2cb4c8638f4c1f",
+      "bytes": 4021,
+      "role": "现适用流程"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/VERSION",
+      "sha256": "db8c5f26ffadff528c3c988af09e26339ee629b449372f4a62f0c357f7329dfc",
+      "bytes": 7,
+      "role": "现适用流程"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/stage-router.md",
+      "sha256": "dd656d4b0d886aee9fafa10b61a1db9554e1d424c533dd79693f28ff7447cf1e",
+      "bytes": 1339,
+      "role": "现适用流程"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-viewport-spec-review/BEFORE_INPUTS.json",
+      "sha256": "9ccfa72ba239d8d689c1d1717e372abcae1e7f39bbcbd9112960256f30ba683c",
+      "bytes": 520,
+      "role": "root正式修改前实际source绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/build.mjs",
+      "sha256": "75292df75ce56730c1d92f9cb297d9f2fa9cde740c7950984c11857fca981105",
+      "bytes": 4105,
+      "role": "真实私有harness与候选/实际输出；不进入产品写集"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/global-main.tsx",
+      "sha256": "b8725070aa479beb03a1c60cafe813c45dccc121328436ce7f38d6bfe3a15717",
+      "bytes": 714,
+      "role": "真实私有harness与候选/实际输出；不进入产品写集"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/global-content-slot.tsx",
+      "sha256": "01c4aedf526f4d5b014212d975d0bc584af50c52e8297314a1fd8abe44bd1298",
+      "bytes": 1847,
+      "role": "真实私有harness与候选/实际输出；不进入产品写集"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/global-index.html",
+      "sha256": "a599671180966efa6a9f63e7e32c2ee16b6c23328f62b676a73fd174fcecb734",
+      "bytes": 657,
+      "role": "真实私有harness与候选/实际输出；不进入产品写集"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/candidate-inner-scroll-index.html",
+      "sha256": "7a45cc86f5342d34886b4f7c8c1c266fe1430c621406df8aaedb89513ee7a34d",
+      "bytes": 706,
+      "role": "真实私有harness与候选/实际输出；不进入产品写集"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/global-compare.mjs",
+      "sha256": "cb519eee789671aff629154ba95c8f4e1d7188e38f5218c888ccbfc2cdda6c7b",
+      "bytes": 9462,
+      "role": "真实私有harness与候选/实际输出；不进入产品写集"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/candidate-inner-scroll-compare.mjs",
+      "sha256": "5658c7b4ecf82ae59339c99e53199ee0dd1a60fbaf63ea7ed87dddc7798266b2",
+      "bytes": 9912,
+      "role": "真实私有harness与候选/实际输出；不进入产品写集"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/candidate-inner-scroll-wheel-compare.mjs",
+      "sha256": "02c2ca7b997e52993b3562f3ad5c0ac40c9414d0de76e46786555bd8913d7145",
+      "bytes": 10933,
+      "role": "真实私有harness与候选/实际输出；不进入产品写集"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-normal100-file-comparison.json",
+      "sha256": "62b49393ca9898cdc06f59bebef756b6eb303ea6242de388fcf10e88bf21f940",
+      "bytes": 2087,
+      "role": "真实私有harness与候选/实际输出；不进入产品写集"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-global-browser-receipt.json",
+      "sha256": "2bbecf6016f7ba316a0baafbaf7f51f52a62c5916b0023dbcd74c56792c9559f",
+      "bytes": 1097891,
+      "role": "已发生浏览器观测JSON（不是exitCode标准wrapper）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-global-browser.log",
+      "sha256": "28efd11d5fc35ef2b8c93a586b4e0bb57ae2c66a17c537e2d4edbcc7a8215011",
+      "bytes": 12762,
+      "role": "当场浏览器摘要原日志（含前置输出）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-global-source-manifest.json",
+      "sha256": "8082aa1a0eccc63637dea6f49a07c006f481c365e96a46ccf13faa73aec80a5f",
+      "bytes": 3205894,
+      "role": "实际bundle逐源SHA manifest"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-global-build.log",
+      "sha256": "fe54908e1f60370df60592941ec08e277aa8788ba17518ff669834586fb0c13f",
+      "bytes": 211,
+      "role": "实际构建日志，不重跑"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-browser-receipt.json",
+      "sha256": "01a169a7da3519b3719972ac84ae8b2f7b5c63b7f615f862de6aa2ee6ea7664c",
+      "bytes": 1479960,
+      "role": "已发生浏览器观测JSON（不是exitCode标准wrapper）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-browser.log",
+      "sha256": "aaa3cd816509cbc5ee2f51c607affff2406d592e6eb494a72bb260db8f7e5da6",
+      "bytes": 12768,
+      "role": "当场浏览器摘要原日志（含前置输出）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-source-manifest.json",
+      "sha256": "ee78d7e1be3c332f65c5be00629640ef9f65656313f673ba2be0228c6a9318a9",
+      "bytes": 3205926,
+      "role": "实际bundle逐源SHA manifest"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-build.log",
+      "sha256": "34416627ed4c5c976ae55f67d0232e167d411e2ce0722c99b2b2140344547755",
+      "bytes": 227,
+      "role": "实际构建日志，不重跑"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-wheel-browser-receipt.json",
+      "sha256": "fc56143e15d2b3206590402b9119779b2073b7a1e412bc22c47e75f9e38c15f4",
+      "bytes": 1714069,
+      "role": "已发生浏览器观测JSON（不是exitCode标准wrapper）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-wheel-browser.log",
+      "sha256": "74a677658803cf9b6d1d304eb58a14724137f5f8e9adf2067faa17bcae23e670",
+      "bytes": 16548,
+      "role": "当场浏览器摘要原日志（含前置输出）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-wheel-source-manifest.json",
+      "sha256": "d819a500bc55dabd2c14ab11c58914e658310c63d1ce7fd39ab2598fd22ee097",
+      "bytes": 3205932,
+      "role": "实际bundle逐源SHA manifest"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-wheel-build.log",
+      "sha256": "bbc7b7e6c9c71729c89fb0586ec3ef98d7b0643a4e42b80bd8d13ea97445c84b",
+      "bytes": 233,
+      "role": "实际构建日志，不重跑"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-global-prepare-1280x800-failure200.png",
+      "sha256": "d729cc9537d960088f66876e45430449a24004d75a31cc5c473c8017bc85a235",
+      "bytes": 89796,
+      "role": "实际静态看图；未操作浏览器或改写图片"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-global-creation-900x600-failure200.png",
+      "sha256": "d41482c9c854c5cf74a6cff2b3effc5d8d933df4f4596cb84746bbb146c78c36",
+      "bytes": 76118,
+      "role": "实际静态看图；未操作浏览器或改写图片"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-wheel-prepare-1280x800-textarea-one-native-wheel.png",
+      "sha256": "960ad094bca17eb777508e200e839d4b20c65734f97c1518ca09505fe3ad278b",
+      "bytes": 73891,
+      "role": "实际静态看图；未操作浏览器或改写图片"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-wheel-prepare-900x600-textarea-one-native-wheel.png",
+      "sha256": "0cf906c613ae3687343f068f54b10b47a44e29e77efdb7b3c28357c5f06e182c",
+      "bytes": 40878,
+      "role": "实际静态看图；未操作浏览器或改写图片"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-wheel-creation-1280x800-textarea-one-native-wheel.png",
+      "sha256": "45920316e2f89fbbba00ca57536150f7354fd06a0b58c2d8eb614528f0926e24",
+      "bytes": 91455,
+      "role": "实际静态看图；未操作浏览器或改写图片"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-wheel-creation-900x600-textarea-one-native-wheel.png",
+      "sha256": "0c4ec7414009c6ef77c4cd5d032ac37b1da1f5e6acf0a237bec2c57d60f29e96",
+      "bytes": 58706,
+      "role": "实际静态看图；未操作浏览器或改写图片"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-global-prepare-900x600-failure100.png",
+      "sha256": "b0bdb54fbf0e66f7295681c2faf2df5596b859d4550f604181b0a90332e086c9",
+      "bytes": 56699,
+      "role": "实际静态看图；未操作浏览器或改写图片"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-prepare-900x600-failure100.png",
+      "sha256": "71b7a722d1be57d1256ad617bc4d52cafc2ba07cacfa8bffac7b071587d88f73",
+      "bytes": 56556,
+      "role": "实际静态看图；未操作浏览器或改写图片"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-wheel-dist/theme.css",
+      "sha256": "bbfa0f38aeb657a0dabe1cf8a4a7aefc7c15e14dc629a41e13e0c4a957c03c72",
+      "bytes": 328582,
+      "role": "实际生成overflow-y-auto utility段落与全字节SHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-recovery-clarification-spec-review/review-input.json",
+      "sha256": "eb560e16e94b1aa1227b22d7a109a64eea02441b401c85ccbe8134018590ac9a",
+      "bytes": 889,
+      "role": "前轮正式recheck/第1–6项局部实施，不覆盖"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-implementation-review/IMPLEMENTATION_REVIEW.md",
+      "sha256": "e842c0ab786ea4ddbfda1ba99f81928d2c2a7e68b5833c305c16289c21a2b20b",
+      "bytes": 6597,
+      "role": "前轮正式recheck/第1–6项局部实施，不覆盖"
+    }
+  ],
+  "actual_candidate_receipts": [
+    {
+      "prefix": "after-t1191-2-global",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-global-browser-receipt.json",
+      "receipt_sha256": "2bbecf6016f7ba316a0baafbaf7f51f52a62c5916b0023dbcd74c56792c9559f",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-global-browser.log",
+      "log_sha256": "28efd11d5fc35ef2b8c93a586b4e0bb57ae2c66a17c537e2d4edbcc7a8215011",
+      "final_summary_log_matches_receipt": true,
+      "source_manifest_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-global-source-manifest.json",
+      "reviewed_source_hashes_match_current": true,
+      "exit_code": "此观测JSON未提供，不推定标准wrapper exit0"
+    },
+    {
+      "prefix": "after-t1191-2-candidate-inner-scroll",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-browser-receipt.json",
+      "receipt_sha256": "01a169a7da3519b3719972ac84ae8b2f7b5c63b7f615f862de6aa2ee6ea7664c",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-browser.log",
+      "log_sha256": "aaa3cd816509cbc5ee2f51c607affff2406d592e6eb494a72bb260db8f7e5da6",
+      "final_summary_log_matches_receipt": true,
+      "source_manifest_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-source-manifest.json",
+      "reviewed_source_hashes_match_current": true,
+      "exit_code": "此观测JSON未提供，不推定标准wrapper exit0"
+    },
+    {
+      "prefix": "after-t1191-2-candidate-inner-scroll-wheel",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-wheel-browser-receipt.json",
+      "receipt_sha256": "fc56143e15d2b3206590402b9119779b2073b7a1e412bc22c47e75f9e38c15f4",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-wheel-browser.log",
+      "log_sha256": "74a677658803cf9b6d1d304eb58a14724137f5f8e9adf2067faa17bcae23e670",
+      "final_summary_log_matches_receipt": true,
+      "source_manifest_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/after-t1191-2-candidate-inner-scroll-wheel-source-manifest.json",
+      "reviewed_source_hashes_match_current": true,
+      "exit_code": "此观测JSON未提供，不推定标准wrapper exit0"
+    }
+  ],
+  "actual_measurements": [
+    {
+      "scenario": "prepare",
+      "physical_viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "normal_100_recorded_rect_differences": [],
+      "normal_100_content_client_height": 651,
+      "normal_100_content_scroll_height": 651,
+      "tab_only_action_reachability": false,
+      "tab_plus_standard_wheel_action_reachability": true,
+      "textarea_after_wheel_fully_visible": true,
+      "textarea_hit_points_inside": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "after_wheel_scroll": [
+        {
+          "slot": "ai-copilot-content",
+          "scrollTop": 52.5
+        },
+        {
+          "slot": "overlay-panel",
+          "scrollTop": 0
+        }
+      ],
+      "post_calls": 0,
+      "pageerrors": 0
+    },
+    {
+      "scenario": "prepare",
+      "physical_viewport": {
+        "width": 900,
+        "height": 600
+      },
+      "normal_100_recorded_rect_differences": [],
+      "normal_100_content_client_height": 451,
+      "normal_100_content_scroll_height": 451,
+      "tab_only_action_reachability": false,
+      "tab_plus_standard_wheel_action_reachability": true,
+      "textarea_after_wheel_fully_visible": true,
+      "textarea_hit_points_inside": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "after_wheel_scroll": [
+        {
+          "slot": "ai-copilot-content",
+          "scrollTop": 164
+        },
+        {
+          "slot": "overlay-panel",
+          "scrollTop": 0
+        }
+      ],
+      "post_calls": 0,
+      "pageerrors": 0
+    },
+    {
+      "scenario": "creation",
+      "physical_viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "normal_100_recorded_rect_differences": [],
+      "normal_100_content_client_height": 651,
+      "normal_100_content_scroll_height": 651,
+      "tab_only_action_reachability": false,
+      "tab_plus_standard_wheel_action_reachability": true,
+      "textarea_after_wheel_fully_visible": true,
+      "textarea_hit_points_inside": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "after_wheel_scroll": [
+        {
+          "slot": "ai-copilot-content",
+          "scrollTop": 52.5
+        },
+        {
+          "slot": "overlay-panel",
+          "scrollTop": 0
+        }
+      ],
+      "post_calls": 0,
+      "pageerrors": 0
+    },
+    {
+      "scenario": "creation",
+      "physical_viewport": {
+        "width": 900,
+        "height": 600
+      },
+      "normal_100_recorded_rect_differences": [],
+      "normal_100_content_client_height": 451,
+      "normal_100_content_scroll_height": 451,
+      "tab_only_action_reachability": false,
+      "tab_plus_standard_wheel_action_reachability": true,
+      "textarea_after_wheel_fully_visible": true,
+      "textarea_hit_points_inside": [
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "after_wheel_scroll": [
+        {
+          "slot": "ai-copilot-content",
+          "scrollTop": 164
+        },
+        {
+          "slot": "overlay-panel",
+          "scrollTop": 0
+        }
+      ],
+      "post_calls": 0,
+      "pageerrors": 0
+    }
+  ],
+  "screenshots_actually_viewed": [
+    "after-t1191-2-global-prepare-1280x800-failure200.png",
+    "after-t1191-2-global-creation-900x600-failure200.png",
+    "after-t1191-2-candidate-inner-scroll-wheel-prepare-1280x800-textarea-one-native-wheel.png",
+    "after-t1191-2-candidate-inner-scroll-wheel-prepare-900x600-textarea-one-native-wheel.png",
+    "after-t1191-2-candidate-inner-scroll-wheel-creation-1280x800-textarea-one-native-wheel.png",
+    "after-t1191-2-candidate-inner-scroll-wheel-creation-900x600-textarea-one-native-wheel.png",
+    "after-t1191-2-global-prepare-900x600-failure100.png",
+    "after-t1191-2-candidate-inner-scroll-prepare-900x600-failure100.png"
+  ],
+  "candidate_change": "私有HTML比原global-index仅多根overflow-y:auto；产品346cf仍未加class",
+  "execution_by_reviewer": []
+}

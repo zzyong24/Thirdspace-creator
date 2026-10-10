@@ -1,0 +1,464 @@
+{
+  "schema": "independent-spec-read-set/v1",
+  "task_id": "T-1191",
+  "review_kind": "initial",
+  "reviewer": "/root/t1159_fix_recheck_recovery",
+  "generated_at_utc": "2026-10-10T02:51:52.506296+00:00",
+  "head_read": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+  "conclusion": "PASS_SPEC_INITIAL_BOUNDED_RECOVERY_CONTRACT",
+  "findings": [],
+  "spec": {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md",
+    "sha256": "93a51a2c13c3a8d71d7bd815410d7562e992e48ddb08205ddd40600d78d02221"
+  },
+  "constitution": {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+    "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+  },
+  "permitted_code_write_set": [
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.tsx",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.test.tsx"
+  ],
+  "product_unchanged_from_head": true,
+  "t1187_test_only_five_approved_interface_additions": true,
+  "source_and_test_sha256": {
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.tsx": "2db7debaf1fea381f88e18d74bbef747904c78587427e4e2048266d252a4469a",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.test.tsx": "35a0a9d416cedbe93bacb9e152d7349e9155c6dd09dd85c07d9d7d94a001a801"
+  },
+  "draft_findings_before_formal_record": [
+    {
+      "id": "DRAFT-001",
+      "severity_at_discovery": "major",
+      "category": "correctness",
+      "discovered_against_spec_sha256": "cf584ad91279ec965ef68a939808a3a13740c8d7ef946c6650caa34540556df0",
+      "source_sha256": "2db7debaf1fea381f88e18d74bbef747904c78587427e4e2048266d252a4469a",
+      "source_lines": [
+        841,
+        865,
+        1062,
+        1546,
+        1676,
+        1903,
+        2015
+      ],
+      "finding": "原attempt没有session/epoch归属；扩大零fetch恢复入口时，旧失败可能在切scope/组后沿当前sendPreparedRef重用旧请求。单说既有保护不改不足以保证当前原请求。",
+      "resolution": "正式record前SPEC第1/4/6项及验收明确ref身份+session+epoch的显示、继续、fetch标记、prepare后提交/错误/输入回写边界，切组/scope/新会话/晚prepare负测；只在SPEC层解决，未修改或验证实现。",
+      "first_addressing_spec_sha256": "ed62af762e606f571e5006a538d5e88fd010f2f2ba0f2df159c5ccb864fb664e",
+      "final_spec_sha256": "93a51a2c13c3a8d71d7bd815410d7562e992e48ddb08205ddd40600d78d02221"
+    },
+    {
+      "id": "DRAFT-002",
+      "severity_at_discovery": "major",
+      "category": "completeness",
+      "discovered_against_spec_sha256": "ed62af762e606f571e5006a538d5e88fd010f2f2ba0f2df159c5ccb864fb664e",
+      "source_sha256": "2db7debaf1fea381f88e18d74bbef747904c78587427e4e2048266d252a4469a",
+      "source_lines": [
+        1062,
+        1682,
+        1747,
+        1797,
+        1799
+      ],
+      "finding": "原submit清picker且finally清transport附件ref，attempt仅保text/request。带附件准备失败后按原第4项继续会丢原附件IDs；这是直接源码链，未作为六日志已观察失败。",
+      "resolution": "最终SPEC第1/4项增加attempt原attachmentIds快照、只重武装原IDs、不读后来picker、不让旧finally清新attempt；验收增加真实SDK准备拒绝后继续body保原附件。只在SPEC层解决，未验证实现。",
+      "final_spec_sha256": "93a51a2c13c3a8d71d7bd815410d7562e992e48ddb08205ddd40600d78d02221"
+    }
+  ],
+  "historical_spec_reads": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md",
+      "sha256": "cf584ad91279ec965ef68a939808a3a13740c8d7ef946c6650caa34540556df0",
+      "phase": "原初稿；独立发现DRAFT-001；未正式record"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md",
+      "sha256": "ed62af762e606f571e5006a538d5e88fd010f2f2ba0f2df159c5ccb864fb664e",
+      "phase": "第一次澄清；DRAFT-001在SPEC层闭合，发现DRAFT-002；未正式record"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md",
+      "sha256": "93a51a2c13c3a8d71d7bd815410d7562e992e48ddb08205ddd40600d78d02221",
+      "phase": "最终初审绑定；两发现均在SPEC层闭合，实施待验"
+    }
+  ],
+  "actual_evidence_pairs": [
+    {
+      "name": "t1187-copilot-content-complete-current",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-copilot-content-complete-current.json",
+      "receipt_sha256": "f32c0ff2bfbecfdb3fe468b8544a54ac45ab56582092f6b965a4fa8093a516a7",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-copilot-content-complete-current.log",
+      "log_sha256": "b542617c27a355879f6cb050a43a778b01e59fd573206ffeeea20f321bc35263",
+      "receipt_log_sha_matches": true,
+      "archived_receipt_bytes_equal": true,
+      "archived_gzip_raw_bytes_equal": true,
+      "exit_code": 1,
+      "elapsed_seconds": 23.003778791986406
+    },
+    {
+      "name": "t1187-led020-complete-current",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-led020-complete-current.json",
+      "receipt_sha256": "7507d875fd445bfdee67117f9d18c6ab934bf1473c8db5074b5f02b1d3fbaacc",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-led020-complete-current.log",
+      "log_sha256": "5d0f09a7e29a6d7a6290a11a5144a1fab44d5e7888019e1a37526b412e9be768",
+      "receipt_log_sha_matches": true,
+      "archived_receipt_bytes_equal": true,
+      "archived_gzip_raw_bytes_equal": true,
+      "exit_code": 1,
+      "elapsed_seconds": 26.20109158300329
+    },
+    {
+      "name": "t1187-real-task-session-before-edit",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-real-task-session-before-edit.json",
+      "receipt_sha256": "5a33565609368c687f41bf9f45e656411b0b814f1ccb6d150e417ade200d9802",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-real-task-session-before-edit.log",
+      "log_sha256": "5d9120364d76a783961dd4e89a2b16a9d68127c01c6112864769fc0db804cb88",
+      "receipt_log_sha_matches": true,
+      "archived_receipt_bytes_equal": true,
+      "archived_gzip_raw_bytes_equal": true,
+      "exit_code": 0,
+      "elapsed_seconds": 11.184483582968824
+    },
+    {
+      "name": "t1187-current-frontend-type",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-current-frontend-type.json",
+      "receipt_sha256": "ddc7907d714594e671ed086f2a664de5585626b46d68845acbed678621c82e8c",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-current-frontend-type.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "receipt_log_sha_matches": true,
+      "archived_receipt_bytes_equal": true,
+      "archived_gzip_raw_bytes_equal": true,
+      "exit_code": 0,
+      "elapsed_seconds": 6.418101915973239
+    }
+  ],
+  "read_method": "仅文件字节/实际日志、gzip解压与Git只读比较；未执行测试、验证器、产品CLI、服务、DB、浏览器、模型或研究实验。消费者按本范围关键函数及引用核读；全文件SHA绑定读集，不宣称逐行审计范围外全部逻辑。",
+  "actual_baseline": {
+    "complete_test": {
+      "pass": 14,
+      "fail": 6,
+      "exit": 1
+    },
+    "led020": {
+      "backend_pass": 274,
+      "frontend_pass": 78,
+      "frontend_fail": 6,
+      "exit": 1
+    },
+    "related_before_edit": {
+      "files": 4,
+      "pass": 83,
+      "exit": 0,
+      "timing": "T1187编辑前；未冒称T1191实施后重跑"
+    },
+    "frontend_type": {
+      "exit": 0,
+      "timing": "T1187接口校准后；非T1191实施验证"
+    }
+  },
+  "not_certified": [
+    "T1191实施/当场RED→GREEN",
+    "实际修后视觉与任务走查",
+    "包或安装版全部功能",
+    "native/真人profile/真实模型平台",
+    "完整canonical全绿",
+    "T1187完整20通过或任务完成",
+    "T1181/T1182两次失败研究恢复或第三实验"
+  ],
+  "read_set": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "d203e2ff0ff835a2cc4cc0923ff5a326fc2220f7b7a36b67ccb0389b01d9e44e",
+      "bytes": 56945
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT.md",
+      "sha256": "055964b6b1b50ca6780262ccb3bea20146405aebc5bc83098746482307148951",
+      "bytes": 17607
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT_CONTEXT.md",
+      "sha256": "a74ec6498a8e06fe574f86ec96c51a99076672b717d103b26b25578bd2a1ed3c",
+      "bytes": 1316
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "bytes": 8130
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3",
+      "bytes": 50753
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "bytes": 84
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reviewctl.mjs",
+      "sha256": "dde682e0ad114048daa5cfd8686a1450ccf902a8ab56a48411e88399a51ccc15",
+      "bytes": 56241
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md",
+      "sha256": "93a51a2c13c3a8d71d7bd815410d7562e992e48ddb08205ddd40600d78d02221",
+      "bytes": 8738
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1187-copilot-live-session-test-contract.md",
+      "sha256": "e963ea787b3487cd36a0160541d14e90c039425aa1d376e207eb577acd7c0801",
+      "bytes": 3204
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1022-nonblocking-agent-recovery.md",
+      "sha256": "5eb3f4069a9e5601a05c46e5cd5a709e0254338e64078a351d526fa1209b7363",
+      "bytes": 6103
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1023-agent-recovery-liveness.md",
+      "sha256": "5ee3d880e6378fa24baaec19bce215b64a53fa7e8c6a8b8f72dab5944f5a9ea3",
+      "bytes": 6812
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1070-director-script-workflow.md",
+      "sha256": "2513aedb1164f3ce99b0a81ea25dc4a0e79853cbda5374ce49a75fbf89c871e9",
+      "bytes": 28118
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/engineering/timeout-policy.md",
+      "sha256": "94385308b37926c3f1b81cf3c8bf0533983025bfc539cac7c914770c112604cf",
+      "bytes": 3245
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1022-account-group-workspace/UI_RULES.md",
+      "sha256": "a19d209281fe1a51463c7c2b8a063c3fa117d53679762f33d8c9637004bc8d76",
+      "bytes": 5803
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/SKILL.md",
+      "sha256": "a623059117b5afdeaf437a6ac0944040ba666b0847e520cfe4fa42cc1ea1cec2",
+      "bytes": 14717
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/existing-project.md",
+      "sha256": "82a39fe64cb7fc183e1b3349d1829f6e163aee214c268ce2b921fd30c7f74aed",
+      "bytes": 5835
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/interaction-and-state.md",
+      "sha256": "34e8961d11f70522e3b10d18f2f59263a3e9eaf4662a3940dcef3ea7ba6f7915",
+      "bytes": 10790
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.tsx",
+      "sha256": "2db7debaf1fea381f88e18d74bbef747904c78587427e4e2048266d252a4469a",
+      "bytes": 184894
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "sha256": "35a0a9d416cedbe93bacb9e152d7349e9155c6dd09dd85c07d9d7d94a001a801",
+      "bytes": 28540
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+      "sha256": "f378c5f4e9d3d6c902af77f8cf68a3e7d01110a7b6e23ee552d0bb9369339772",
+      "bytes": 77323
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/chat-task-control.ts",
+      "sha256": "c69f5df1488a43ac48602ab0833f66f4009534262961e5e8f8339a37d0967830",
+      "bytes": 2683
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/chat-task-control.test.ts",
+      "sha256": "d06077f44ead9df17a42a1d82118aaef77a107fa13cfab6c2c99a41541caaf7d",
+      "bytes": 1775
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/live-chat-session.ts",
+      "sha256": "6f11f0af329bcd23ee0165a416d8f3c822bbf5e0fadbb6d0226d0d5b3a55b27e",
+      "bytes": 5586
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/ai-runtime/live-chat-session.test.ts",
+      "sha256": "83596e481049a4badf48feb2006adf00731d582c88c1ecd1ba9822529aff1da3",
+      "bytes": 4799
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+      "sha256": "c5b7b304f495f5688d1e3618b29e415c61224cce12428fbb44b8016dcafe3791",
+      "bytes": 17311
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/use-assistant-engine.ts",
+      "sha256": "d406e8ea4aa1c84f71f80de3bb3437ae0687ac49ef4cf8826abda4c54feea7e8",
+      "bytes": 3715
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/use-assistant-engine.test.tsx",
+      "sha256": "bac65883572536ce84e23e1402f30ace532304432ff12ad712585b10cb90b575",
+      "bytes": 8402
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/draft-workbench/draft-chat-request.tsx",
+      "sha256": "0685de879b73d5293ba627700642601c32ddf518b8f0eadd3b9810211b198730",
+      "bytes": 16947
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/draft-workbench/draft-chat-request.test.tsx",
+      "sha256": "4700d008edc41e2fce74c9ba64a96445ec0e5e30d1c805523a5714dfc6821533",
+      "bytes": 6684
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/settings/settings-interactive-region.tsx",
+      "sha256": "6f9508e376b421f30c344385bca97ecf3efaad19a3e44b64971417c5197b4868",
+      "bytes": 76852
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/settings/assistant-engine-card.tsx",
+      "sha256": "e35c37c8d723cf3b43da05117f23702ac046523aac753c6d56351c35fabcd7b1",
+      "bytes": 715
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/settings/settings-model-region.tsx",
+      "sha256": "4ef708709adff5ace4c01387c1d44a6456dd026f4bac84fc059d08550bfa3079",
+      "bytes": 7237
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1191/SOURCE_BEFORE.json",
+      "sha256": "bbd89f7b74a4551cc57b5836940deb35777cd974efd7fbd300232976e4d5c302",
+      "bytes": 894
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1187/SPEC_REVIEW.md",
+      "sha256": "ca37a815c9964c2be834536657ab55d51b5c16be4865e3afcd9ff45024a4ff50",
+      "bytes": 3807
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1187/SPEC_READ_SET.json",
+      "sha256": "a2c48f072a8864a29a0187d2df0c694a9fdfa526e00951c0bdfa9ffecb13faf8",
+      "bytes": 21838
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1187/SPEC_review-input.json",
+      "sha256": "a937b7cae28ed00b6023c9162b8f6e75492351893641588a0810bdad277f4df8",
+      "bytes": 1381
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1187/SOURCE_AFTER.json",
+      "sha256": "2049a1d5e5d21b2fc78143736ff4d11a994591a0dd706eb6aef78a001ca1cb15",
+      "bytes": 309
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1187/IMPLEMENTATION.diff.gz",
+      "sha256": "061887a28d3788caac36b8c5749e193f51b4541e64a3b4c992eddb684eabb2f3",
+      "bytes": 1434
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/SKILL.md",
+      "sha256": "5796cf1b3b9f3de2d45c8e754e3df2146735aa14b266b7c32e2cb4c8638f4c1f",
+      "bytes": 4021
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/VERSION",
+      "sha256": "db8c5f26ffadff528c3c988af09e26339ee629b449372f4a62f0c357f7329dfc",
+      "bytes": 7
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/stage-router.md",
+      "sha256": "dd656d4b0d886aee9fafa10b61a1db9554e1d424c533dd79693f28ff7447cf1e",
+      "bytes": 1339
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-copilot-content-complete-current.json",
+      "sha256": "f32c0ff2bfbecfdb3fe468b8544a54ac45ab56582092f6b965a4fa8093a516a7",
+      "bytes": 485
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-copilot-content-complete-current.log",
+      "sha256": "b542617c27a355879f6cb050a43a778b01e59fd573206ffeeea20f321bc35263",
+      "bytes": 154760
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1187/t1187-copilot-content-complete-current.receipt.json",
+      "sha256": "f32c0ff2bfbecfdb3fe468b8544a54ac45ab56582092f6b965a4fa8093a516a7",
+      "bytes": 485
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1187/t1187-copilot-content-complete-current.log.gz",
+      "sha256": "7de9cfe1cdc9b0cf0a81feb13a99bbd966a3a03d626cc139ed63dd4115c462e7",
+      "bytes": 7854
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-led020-complete-current.json",
+      "sha256": "7507d875fd445bfdee67117f9d18c6ab934bf1473c8db5074b5f02b1d3fbaacc",
+      "bytes": 950
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-led020-complete-current.log",
+      "sha256": "5d0f09a7e29a6d7a6290a11a5144a1fab44d5e7888019e1a37526b412e9be768",
+      "bytes": 122931
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1187/t1187-led020-complete-current.receipt.json",
+      "sha256": "7507d875fd445bfdee67117f9d18c6ab934bf1473c8db5074b5f02b1d3fbaacc",
+      "bytes": 950
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1187/t1187-led020-complete-current.log.gz",
+      "sha256": "642c6c1fda0d96eefbfe7ecd6bbba52802ca225985ce8bb66dad4f5b33c689d2",
+      "bytes": 7173
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-real-task-session-before-edit.json",
+      "sha256": "5a33565609368c687f41bf9f45e656411b0b814f1ccb6d150e417ade200d9802",
+      "bytes": 664
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-real-task-session-before-edit.log",
+      "sha256": "5d9120364d76a783961dd4e89a2b16a9d68127c01c6112864769fc0db804cb88",
+      "bytes": 877
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1187/t1187-real-task-session-before-edit.receipt.json",
+      "sha256": "5a33565609368c687f41bf9f45e656411b0b814f1ccb6d150e417ade200d9802",
+      "bytes": 664
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1187/t1187-real-task-session-before-edit.log.gz",
+      "sha256": "1e08d6e358cbca48fde5d95cdaee8c9c5fe15dc519b859653c9adb963dfc235d",
+      "bytes": 335
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-current-frontend-type.json",
+      "sha256": "ddc7907d714594e671ed086f2a664de5585626b46d68845acbed678621c82e8c",
+      "bytes": 430
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1187-current-frontend-type.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1187/t1187-current-frontend-type.receipt.json",
+      "sha256": "ddc7907d714594e671ed086f2a664de5585626b46d68845acbed678621c82e8c",
+      "bytes": 430
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1187/t1187-current-frontend-type.log.gz",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "bytes": 20
+    }
+  ]
+}

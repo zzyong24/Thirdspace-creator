@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS（仅T1191最终精确SPEC初审）：实际绑定93a51a2c…与当前产品宪法。首次准备失败的零消息恢复缺口及旧SDK错误优先级有源码证据；正式记录前发现的attempt会话/epoch归属与原附件快照两项缺口，最终SPEC已在同两文件写集内明确约束及负测。保已发送真实source自动恢复、无source只读核对、引擎真实设置深链、pending不抢保存、原期限/身份/owner/后台任务与20原例。产品仍HEAD原字节；T1187完整20仍14PASS6FAIL/exit1，LED020仍后274PASS、前78PASS6FAIL/exit1，原日志/收据/gzip一致。本初审不代签实施、视觉、包/安装、真人/模型、完整Gate或上传研究恢复。",
+  "findings": []
+}

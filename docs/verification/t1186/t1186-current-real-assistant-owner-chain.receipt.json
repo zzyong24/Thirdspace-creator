@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "env",
+    "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+    "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/application/chat/assistant-system-root.integration.test.ts",
+    "src/modules/ai/assistant-action-adoption.integration.test.ts",
+    "src/modules/creative-canvas/creative-canvas.service.test.ts"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T02:19:03.902416+00:00",
+  "finishedAt": "2026-10-10T02:19:37.167211+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 33.26442212500842,
+  "logSha256": "74b046f7164749f3621ffa361fd2ef281d9ea8629194de3b74a717a509313da2"
+}

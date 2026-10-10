@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/reviewctl.mjs",
+    "record",
+    "T-1183",
+    "--spec",
+    "docs/features/t1183-navigation-timeout-test-contract.md",
+    "--constitution",
+    "docs/产品定位.md",
+    "--input",
+    "docs/features/t1183-navigation-timeout-test-contract.review-input.json",
+    "--review",
+    "docs/features/t1183-navigation-timeout-test-contract.T-1183.review.md",
+    "--backlog",
+    "BACKLOG.md",
+    "--review-mode",
+    "independent",
+    "--model",
+    "codex-inherited"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T02:00:07.718213+00:00",
+  "finishedAt": "2026-10-10T02:00:07.866707+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.1483867500210181,
+  "logSha256": "2fddcf22e7e0826843037872915c7413b8273b8813ea1da2b4d8891eaf38680c"
+}

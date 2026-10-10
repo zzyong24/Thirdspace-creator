@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS（仅T1185两例测试前置条件SPEC初审）：实际T1184 focused原receipt/log虽名green但exit1／14.946611375秒，56例54PASS2FAIL、retry x2与原logSHA da63264f…匹配。当前route SHA6269300…与SOURCE_BEFORE_T1185一致，尚未改本次两例。真实现代submission保terminalPlanFailurePolicyVersion=1；completion在原租约/owner/来源/回执/检查点事务中要求真实两validator，生产dispatcher与backend测试确实注入workbench-plan.service实际函数。仅完成例注入这两真实函数，不删策略/guard或假通过。stream真实HWM0、仅pull推进，旧例首次pull前abort没有文字；仅校准真实reader有限读到“已写”后abort，后续done、订阅signal即时aborted且durable.command0，不能抢读/延迟取消。上游options/引擎与原56例、真实原子终态/来源/不重复/所有权/即时订阅释放/任务不取消/原预算均保留。要求原LED014完整两段及submission/host/completion/stream公共回归、双端type/scans/diff与独评；不签实施GREEN、完整Gate、模型/native或T1181研究恢复。findings=[]。",
+  "findings": []
+}

@@ -1059,9 +1059,28 @@ export function AICopilotContent({
   const receiptStorageKey=`creatoros:t1070:turn:${liveSessionKey}`;
   React.useEffect(()=>{try{const stored=sessionStorage.getItem(receiptStorageKey);preparedReceipt.current=stored?JSON.parse(stored):null;}catch{preparedReceipt.current=null;}},[receiptStorageKey]);
   const preparationPending=React.useRef(new WeakSet<typeof liveSession>());
-  const submissionAttempt=React.useRef<{text:string;strict:boolean;request?:EmbeddedDraftChatRequest|null;networkStarted:boolean}|null>(null);
+  const [preparationRevision,refreshPreparation]=React.useReducer((revision:number)=>revision+1,0);
+  const submissionAttempt=React.useRef<{
+    text:string;
+    request?:EmbeddedDraftChatRequest|null;
+    session:typeof liveSession;
+    epoch:number;
+    attachmentIds:string[];
+    networkStarted:boolean;
+    preparationFailure:"engine_unavailable"|"preparation_failed"|null;
+  }|null>(null);
   const recoveryMounted=React.useRef(true);
   React.useEffect(()=>{recoveryMounted.current=true;return()=>{recoveryMounted.current=false;};},[]);
+  const ownsSubmissionAttempt=React.useCallback((attempt:NonNullable<typeof submissionAttempt.current>)=>
+    recoveryMounted.current&&submissionAttempt.current===attempt&&liveSessionRef.current===attempt.session&&
+    attempt.session.epoch===attempt.epoch&&conversationStorageOwner()===sessionOwner,[sessionOwner]);
+  const currentSubmissionAttempt=submissionAttempt.current&&ownsSubmissionAttempt(submissionAttempt.current)?submissionAttempt.current:null;
+  React.useLayoutEffect(()=>{
+    if(submissionAttempt.current&&!ownsSubmissionAttempt(submissionAttempt.current)){
+      submissionAttempt.current=null;
+      setComposerLifecycleError(null);
+    }
+  },[liveSessionKey,liveSession,ownsSubmissionAttempt]);
   const sendPreparedRef=React.useRef<(text:string,request?:EmbeddedDraftChatRequest|null)=>Promise<void>>(async()=>{});
   const quickFunctionKeyRef = React.useRef<string | null>(null);
   // [T-813] 搜索卡「阅读全文」的一次性执行锚。和 functionKey 同轮消费，服务端在浏览器
@@ -1141,7 +1160,7 @@ export function AICopilotContent({
         fetch: async (input, init) => {
           const epoch = liveSession.epoch;
           const attempt=submissionAttempt.current;
-          if(attempt&&!attempt.networkStarted){attempt.networkStarted=true;attempt.request?.onCreationSubmission?.("submitted-unknown");}
+          if(attempt&&attempt.session===liveSession&&attempt.epoch===epoch&&liveSessionRef.current===liveSession&&conversationStorageOwner()===sessionOwner&&!attempt.networkStarted){attempt.networkStarted=true;attempt.request?.onCreationSubmission?.("submitted-unknown");}
           const sourceHeaders=new Headers(init?.headers);
           const res = await liveSession.control.fetch(input as RequestInfo, init);
           try {
@@ -1306,8 +1325,33 @@ export function AICopilotContent({
   // [T-094] 本轮流式错误 → 人话气泡:服务端 onError 已转人话;若客户端拿到的仍是原始机器码
   // (装配期 4xx 等路径),这里再过一次共享映射兜底。命中「换模型可解」类附「去设置」链接。
   const terminalScriptSelectionError = isTerminalScriptSelectionError(error);
-  const chatError = React.useMemo(() => {
+  const receiptForRecovery=preparedReceipt.current;
+  const chatError = React.useMemo<{
+    title:string;message:string;suggestSwitchModel:boolean;suggestOpenCredits:boolean;suggestOpenPositioning:boolean;
+    suggestOpenEngine?:boolean;canRetry:boolean;autoRecover:boolean;retryLabel?:string;retryDisabled?:boolean;canRetryWithoutMessages?:boolean;
+  }|null>(() => {
     if (!error && !composerLifecycleError) return null;
+    if(composerLifecycleError&&currentSubmissionAttempt&&!currentSubmissionAttempt.networkStarted&&currentSubmissionAttempt.preparationFailure){
+      const engineReady=selectedEngineAvailable&&!assistantEngine.checking;
+      const engineFailure=currentSubmissionAttempt.preparationFailure==="engine_unavailable"||!engineReady;
+      return {
+        title:engineFailure?(engineReady?"编导引擎已就绪":assistantEngine.checking?"正在检查编导引擎":"编导引擎尚未就绪"):"稿件尚未准备好",
+        message:engineFailure?(engineReady?"本轮尚未发送，原请求和附件已保留。点击继续本轮即可按当前设置发送。":"本轮尚未发送，原请求和附件已保留。请检查编导引擎，待就绪后继续本轮。"):
+          "本轮尚未发送，原话、目标和附件已保留。请先处理稿件的保存状态，再继续本轮。",
+        suggestSwitchModel:false,suggestOpenCredits:false,suggestOpenPositioning:false,suggestOpenEngine:engineFailure,
+        canRetry:true,autoRecover:false,retryLabel:"继续本轮",retryDisabled:!engineReady,
+      };
+    }
+    const receipt=receiptForRecovery;
+    if(composerLifecycleError&&receipt&&(receipt.chatContext.editorTarget||receipt.chatContext.creationTarget)&&!receipt.sourceMessageId&&(!currentSubmissionAttempt||currentSubmissionAttempt.networkStarted)){
+      const canRead=Boolean(receipt.conversationId??conversationIdRef.current);
+      return {
+        title:"原请求结果待确认",
+        message:canRead?"原请求未重复提交。核对原对话回执后，再查看原任务与候选结果。":"原请求未重复提交，正在等待原会话回执。取得回执后，可以核对原请求。",
+        suggestSwitchModel:false,suggestOpenCredits:false,suggestOpenPositioning:false,
+        canRetry:true,autoRecover:false,retryLabel:"核对原请求",retryDisabled:!canRead,canRetryWithoutMessages:true,
+      };
+    }
     if (!error && composerLifecycleError) {
       if (recoveryStalled) {
         return {
@@ -1400,6 +1444,11 @@ export function AICopilotContent({
     };
   }, [
     composerLifecycleError,
+    currentSubmissionAttempt,
+    receiptForRecovery,
+    conversationId,
+    selectedEngineAvailable,
+    assistantEngine.checking,
     error,
     hasDurableTaskReceipt,
     pendingComposerRequest?.functionKey,
@@ -1544,15 +1593,20 @@ export function AICopilotContent({
   }, [error, finishComposerRequest, messages, status]);
 
   const retryLastTurn = React.useCallback(async () => {
-    setComposerLifecycleError(null);
+    if(preparationPending.current.has(liveSession))return;
     const attempt=submissionAttempt.current;
-    if(attempt?.strict&&!attempt.networkStarted){
-      if(preparationPending.current.has(liveSession))return;
+    if(attempt&&!attempt.networkStarted&&attempt.preparationFailure){
+      if(!ownsSubmissionAttempt(attempt))return;
       // This attempt never reached transport.fetch. An explicit retry prepares
-      // this same text/request, rather than regenerating any older saved receipt.
-      try{await sendPreparedRef.current(attempt.text,attempt.request);}catch{/* Original preflight error stays visible. */}
+      // the original text/request/attachments, not an older receipt or new picker.
+      requestAttachmentIdsRef.current=[...attempt.attachmentIds];
+      const pending=sendPreparedRef.current(attempt.text,attempt.request);
+      const continuedAttempt=submissionAttempt.current;
+      try{await pending;}catch{/* Original preflight error stays visible. */}
+      finally{if(continuedAttempt&&ownsSubmissionAttempt(continuedAttempt))requestAttachmentIdsRef.current=[];}
       return;
     }
+    setComposerLifecycleError(null);
     const request =
       pendingComposerRequestRef.current ?? retryableScriptPatchRequestRef.current;
     if (request) {
@@ -1577,6 +1631,7 @@ export function AICopilotContent({
       const id=receipt.conversationId??conversationIdRef.current;
       if(!id){setComposerLifecycleError("原请求结果尚未确认，请保留当前对话并等待原任务回执。");return;}
       preparationPending.current.add(liveSession);
+      refreshPreparation();
       const epoch=liveSession.epoch,beforeMessages=liveSession.chat.messages;
       try{
         const rows=await client.listMessages({params:{conversationId:id},query:undefined,body:undefined}) as unknown as Array<WireAIMessage&{attachments?:string[]}>;
@@ -1591,12 +1646,12 @@ export function AICopilotContent({
         setMessages(mapped);captureConversationId(id);
         if(receipt.executionEngine==="pi"||receipt.executionEngine==="codex")liveSession.sourceEngines.set(source.id,receipt.executionEngine);
         await regenerate({messageId:source.id,body:{chatContext:receipt.chatContext,conversationId:id,attachmentIds:receipt.attachmentIds??source.attachments??[],...(receipt.executionEngine?{executionEngine:receipt.executionEngine}:{})}});
-      }catch(cause){if(recoveryMounted.current&&liveSessionRef.current===liveSession&&preparedReceipt.current===receipt)setComposerLifecycleError(cause instanceof Error?`原请求恢复未完成：${cause.message}`:"原请求恢复未完成，请核对原任务。");}
-      finally{preparationPending.current.delete(liveSession);}
+      }catch(cause){if(recoveryMounted.current&&liveSessionRef.current===liveSession&&liveSession.epoch===epoch&&preparedReceipt.current===receipt)setComposerLifecycleError(cause instanceof Error?`原请求恢复未完成：${cause.message}`:"原请求恢复未完成，请核对原任务。");}
+      finally{preparationPending.current.delete(liveSession);if(recoveryMounted.current&&liveSessionRef.current===liveSession)refreshPreparation();}
       return;
     }
     return regenerate();
-  }, [messages, regenerate,setMessages,liveSession,captureConversationId]);
+  }, [messages, regenerate,setMessages,liveSession,captureConversationId,ownsSubmissionAttempt]);
 
   const continueRecovery = React.useCallback(() => {
     resetRecoveryBudget();
@@ -1607,7 +1662,7 @@ export function AICopilotContent({
   // 持久 Agent，连续三次仍没有新流事件就结束自动请求并给出“继续恢复”；已有 executionTaskId
   // 的后台任务不会被取消，用户离开页面后仍由其自身 retry_wait/检查点推进。
   React.useEffect(() => {
-    if (!chatError?.autoRecover || streaming || messages.length === 0) return;
+    if (!chatError?.autoRecover || streaming || messages.length === 0 || preparationPending.current.has(liveSession)) return;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const continueOriginalTurn = () => {
@@ -1617,7 +1672,7 @@ export function AICopilotContent({
       }
       const delay = 1_000 * 2 ** recoveryAttemptsRef.current;
       timer = setTimeout(() => {
-        if (cancelled) return;
+        if (cancelled || preparationPending.current.has(liveSession)) return;
         recoveryAttemptsRef.current += 1;
         void Promise.resolve(retryLastTurn())
           .catch(() => undefined)
@@ -1631,7 +1686,7 @@ export function AICopilotContent({
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [chatError?.autoRecover, messages.length, retryLastTurn, streaming]);
+  }, [chatError?.autoRecover, messages.length, retryLastTurn, streaming,liveSession,preparationRevision]);
 
   // [T-055b SPEC §5.1] 一键岛预填 —— 面板带 fn 打开且对话尚空 → 把「预填话术」写进**输入框**,
   // 用户回车才发,**绝不自动发送**(治「点击后内容重复两遍」:旧预调自动 sendMessage 在带 ?fn
@@ -1672,17 +1727,33 @@ export function AICopilotContent({
   // nonce 由 Provider 内部计数器生成(SSR 安全,非 Date.now/Random),天然去重(重渲不重复发)。
   React.useLayoutEffect(()=>{sendPreparedRef.current=async(text,request)=>{
     if(preparationPending.current.has(liveSession))throw Error("当前稿件仍在准备，请等待原保存结束。");
-    preparationPending.current.add(liveSession);setComposerLifecycleError(null);
-    const attempt={text,request,strict:Boolean(request?.creationTarget||draftEditor.readEditorState()),networkStarted:false};submissionAttempt.current=attempt;
-    try{if(!selectedEngineAvailable)throw Error("当前编导引擎尚不可用，请到设置核对后恢复原请求。");const editorTarget=request?.creationTarget?undefined:await draftEditor.prepareEditorTurn();const targets={...(editorTarget?{editorTarget}:{}),...(request?.creationTarget?{creationTarget:request.creationTarget}:{})};preparedTargets.current=targets;
+    preparationPending.current.add(liveSession);refreshPreparation();setComposerLifecycleError(null);
+    const attempt:NonNullable<typeof submissionAttempt.current>={text,request,session:liveSession,epoch:liveSession.epoch,attachmentIds:[...requestAttachmentIdsRef.current],networkStarted:false,preparationFailure:null};submissionAttempt.current=attempt;
+    try{
+      if(!selectedEngineAvailable||assistantEngine.checking){attempt.preparationFailure="engine_unavailable";throw Error("当前编导引擎尚不可用，请到设置核对后恢复原请求。");}
+      const editorTarget=request?.creationTarget?undefined:await draftEditor.prepareEditorTurn();
+      if(!ownsSubmissionAttempt(attempt))return;
+      const targets={...(editorTarget?{editorTarget}:{}),...(request?.creationTarget?{creationTarget:request.creationTarget}:{})};preparedTargets.current=targets;
       if(!targets.editorTarget&&!targets.creationTarget){preparedReceipt.current=null;sessionStorage.removeItem(receiptStorageKey);await sendMessage({text});return;}
       const requestedFn=quickFunctionKeyRef.current??entryFunctionKeyRef.current?.consume()??null;quickFunctionKeyRef.current=null;
       const webReadUrl=requestedFn==="web.read"?quickWebReadUrlRef.current:null;quickWebReadUrlRef.current=null;
       const frozenContext={...chatContextBodyRef.current.chatContext,...targets,...(requestedFn?{functionKey:requestedFn}:{}),...(webReadUrl?{webReadUrl}:{}),...(Object.keys(assetAliasRegistryRef.current.aliases).length?{assetAliases:assetAliasRegistryRef.current.aliases}:{})};
-      const frozenReceipt={chatContext:frozenContext,sourceText:text,attachmentIds:[...requestAttachmentIdsRef.current],executionEngine:liveSession.executionEngine,...(liveSession.conversationId?{conversationId:liveSession.conversationId}:{})};
+      const frozenReceipt={chatContext:frozenContext,sourceText:text,attachmentIds:[...attempt.attachmentIds],executionEngine:liveSession.executionEngine,...(liveSession.conversationId?{conversationId:liveSession.conversationId}:{})};
       preparedReceipt.current=frozenReceipt;sessionStorage.setItem(receiptStorageKey,JSON.stringify(frozenReceipt));
       await sendMessage({text},{body:{chatContext:frozenContext,attachmentIds:frozenReceipt.attachmentIds,executionEngine:frozenReceipt.executionEngine,...(frozenReceipt.conversationId?{conversationId:frozenReceipt.conversationId}:{})}});
-    }catch(cause){if(liveSessionRef.current===liveSession)setComposerLifecycleError(cause instanceof Error?cause.message:"稿件尚未准备好，本次未发送。");throw cause;}finally{if(!attempt.networkStarted)request?.onCreationSubmission?.("not-submitted");preparationPending.current.delete(liveSession);}
+    }catch(cause){
+      if(ownsSubmissionAttempt(attempt)){
+        if(!attempt.networkStarted)attempt.preparationFailure??="preparation_failed";
+        setComposerLifecycleError(cause instanceof Error?cause.message:"稿件尚未准备好，本次未发送。");
+      }
+      throw cause;
+    }finally{
+      preparationPending.current.delete(liveSession);
+      if(recoveryMounted.current&&liveSessionRef.current===liveSession)refreshPreparation();
+      if(ownsSubmissionAttempt(attempt)){
+        if(!attempt.networkStarted)request?.onCreationSubmission?.("not-submitted");
+      }
+    }
   };});
   const settledCreation=React.useRef(new Set<string>());
   React.useEffect(()=>{const request=embed?.request,target=request?.creationTarget;if(!target||!request?.onCreationSettled||settledCreation.current.has(target.clientRequestId))return;const settled=messages.some(message=>message.role==="assistant"&&message.parts.some(part=>{if(!isToolUIPart(part)||getToolName(part)!=="work.creation.propose"||part.state!=="output-available")return false;const outcome=readChatToolOutcome(part.output);if(outcome.blocksData)return false;const result=workCreationProposalResult.safeParse(outcome.data);return result.success&&result.data.target.clientRequestId===target.clientRequestId;}));if(settled){settledCreation.current.add(target.clientRequestId);request.onCreationSettled();}},[messages,embed?.request]);
@@ -1794,15 +1865,17 @@ export function AICopilotContent({
     // useChat 正常返回 Promise；测试 seam 或兼容适配器可能返回 void。统一包成 Promise，
     // 既保证附件 ids 活到 transport 读取本轮 body，又不让旧适配器触发 finally 崩溃。
     const pending = sendPreparedRef.current(value,explicitRequest);
+    const submittedAttempt=submissionAttempt.current;
     setPrompt("");
     attachmentPickerRef.current?.clear();
-    void pending.catch(()=>{if(liveSessionRef.current===liveSession)setPrompt(value);}).finally(() => {
-      requestAttachmentIdsRef.current = [];
+    void pending.catch(()=>{if(submittedAttempt&&ownsSubmissionAttempt(submittedAttempt))setPrompt(value);}).finally(() => {
+      if(submittedAttempt&&ownsSubmissionAttempt(submittedAttempt))requestAttachmentIdsRef.current = [];
     });
   }, [
     prompt,
     selectedEngineAvailable,
     liveSession,
+    ownsSubmissionAttempt,
     streaming,
     hasPendingApproval,
     sendMessage,
@@ -2008,6 +2081,10 @@ export function AICopilotContent({
     retryableScriptPatchRequestRef.current = null;
     setRetryableScriptPatchRequest(null);
     setComposerLifecycleError(null);
+    submissionAttempt.current=null;
+    preparedReceipt.current=null;
+    try{sessionStorage.removeItem(receiptStorageKey);}catch{/* New conversation still clears the in-memory original receipt. */}
+    requestAttachmentIdsRef.current=[];
     setConsumedRequestNonce((current) =>
       Math.max(current, providerRequest?.nonce ?? 0),
     );
@@ -2337,7 +2414,7 @@ export function AICopilotContent({
     // bug #5:面板布局重排 —— 整体撑满浮层高度(min-h-0 让内部可正确收缩),对话区做主区(flex-1
     // 占满、消息流自身滚动),下面的「控制台/快捷入口/智能推荐」收进一个有界、可滚的次区,不再挤占对话。
     <div
-      className="flex h-full min-h-0 flex-col gap-3"
+      className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto"
       data-slot="ai-copilot-content"
     >
       {/* CopilotHeader ------------------------------------------------- */}
@@ -3286,6 +3363,15 @@ export function AICopilotContent({
                     {chatError.message}
                   </span>
                   <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                    {chatError.suggestOpenEngine ? (
+                      <Link
+                        href="/settings?highlight=assistant-engine"
+                        data-slot="copilot-error-engine-settings-link"
+                        className="inline-flex h-8 items-center rounded-md bg-brand px-3 text-[11px] font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                      >
+                        检查编导引擎
+                      </Link>
+                    ) : null}
                     {chatError.suggestSwitchModel ? (
                       <Link
                         href="/settings?highlight=text-model"
@@ -3336,14 +3422,15 @@ export function AICopilotContent({
                     ) : chatError.canRetry &&
                     !chatError.suggestOpenCredits &&
                     !streaming &&
-                    (messages.length > 0 || Boolean(submissionAttempt.current?.strict&&!submissionAttempt.current.networkStarted)) ? (
+                    (messages.length > 0 || Boolean(currentSubmissionAttempt&&!currentSubmissionAttempt.networkStarted) || chatError.canRetryWithoutMessages) ? (
                       <button
                         type="button"
                         data-slot="copilot-error-retry"
+                        disabled={chatError.retryDisabled||preparationPending.current.has(liveSession)}
                         onClick={() => void continueRecovery()}
-                        className="inline-flex h-8 items-center rounded-md border border-border px-3 text-[11px] font-medium text-foreground transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                        className="inline-flex h-8 items-center rounded-md border border-border px-3 text-[11px] font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                       >
-                        {recoveryStalled ? "继续恢复" : "重试"}
+                        {chatError.retryLabel??(recoveryStalled ? "继续恢复" : "重试")}
                       </button>
                     ) : null}
                   </div>
@@ -3509,7 +3596,7 @@ export function AICopilotContent({
                   <button
                     type="submit"
                     disabled={
-                      isEmpty || hasPendingApproval || attachmentState.uploading || !selectedEngineAvailable
+                      isEmpty || hasPendingApproval || attachmentState.uploading || !selectedEngineAvailable || preparationPending.current.has(liveSession)
                     }
                     data-slot="submit-button"
                     data-testid="submit-button"

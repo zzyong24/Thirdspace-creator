@@ -1,0 +1,82 @@
+[
+  {
+    "path": "backend/src/modules/ai-runtime/chat-tool-parameters.ts",
+    "sha256": "21ad4b5c6e3e46c4aff0a2c6150fa72fd8ef15ae88550cd9e234f9005a42f384",
+    "equalHead": true
+  },
+  {
+    "path": "backend/src/modules/ai-runtime/chat-tools.ts",
+    "sha256": "1f737085ed0f1cec960747df0d405e048e7fef9a4975fdf0c705464500adb752",
+    "equalHead": true
+  },
+  {
+    "path": "backend/src/modules/ai-runtime/chat-canvas-tool-host.ts",
+    "sha256": "a4c22971599838cdb3d039b154bb52f7c738564bbc5b9a0c1e81e973b726df36",
+    "equalHead": true
+  },
+  {
+    "path": "backend/src/modules/ai-runtime/chat-system-tool-host.ts",
+    "sha256": "310586b85ec56efca0434ec165eac0d316fd4eaef12701d8bcd06d17ea416286",
+    "equalHead": true
+  },
+  {
+    "path": "contract/src/resources/creative-canvas.ts",
+    "sha256": "4143dc37e960405de6e2c038b28b8c65b5a7107dc4550a76f7cd3defe7e0c733",
+    "equalHead": true
+  },
+  {
+    "path": "contract/src/resources/assistant-system.ts",
+    "sha256": "a258e187b20bd54c994d2bbff7a25e281506ced3862ca8f92963f0916cbc063b",
+    "equalHead": true
+  },
+  {
+    "path": "contract/src/operations/account-groups.ts",
+    "sha256": "b4509e08b4758142ea545dd37b13f09c8ec98fc084585446f25a722acac6d119",
+    "equalHead": true
+  },
+  {
+    "path": "backend/src/modules/ai-runtime/chat-tool-parameters.test.ts",
+    "sha256": "1cd51a3c440f20691311e58fc33275948b12b4bffe01caad1c378834fae1d70d",
+    "equalHead": true
+  },
+  {
+    "path": "backend/src/modules/ai-runtime/chat-canvas-tool-host.test.ts",
+    "sha256": "bcde90d5489b5d32bbe7ba1622fa503ad562dc0ba56921bc61a6f7bada23aa40",
+    "equalHead": true
+  },
+  {
+    "path": "backend/src/modules/ai-runtime/chat-system-tool-host.test.ts",
+    "sha256": "38ca68d172e887740d1161a8036717f1a0b3b7588be5aa8a955fc8804573acee",
+    "equalHead": true
+  },
+  {
+    "path": "backend/src/application/chat/assistant-system-root.integration.test.ts",
+    "sha256": "d192f72b5a193cb92303ead1806ca7d735c25dea0344b7905c5ad78e70143c35",
+    "equalHead": true
+  },
+  {
+    "path": "backend/src/modules/ai/assistant-action-adoption.integration.test.ts",
+    "sha256": "5f32ad9045c4f2fce9c097b7ee71d275e99868c0f58ab13c5aaf766f28fe2b3d",
+    "equalHead": true
+  },
+  {
+    "path": "backend/src/modules/creative-canvas/creative-canvas.service.test.ts",
+    "sha256": "1690eb7a6dc6ff4adb20444dccd3dda3d4b3a8c31e0115d28f5ffa8cb11a8553",
+    "equalHead": true
+  },
+  {
+    "path": "contract/src/assistant-system.test.ts",
+    "sha256": "fff4016197b673c7e79b0eb83901d8b14da165650e8fd787e35da34bafd9bf9f",
+    "equalHead": true
+  },
+  {
+    "path": "backend/vitest.config.ts",
+    "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07",
+    "equalHead": true
+  },
+  {
+    "path": "contract/vitest.config.ts",
+    "sha256": "e9b7fc586228b7dd93460da476ac0471697a79d6d2d690ec7b7751a80d3941da",
+    "equalHead": true
+  }
+]

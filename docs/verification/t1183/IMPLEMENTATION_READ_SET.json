@@ -1,0 +1,1005 @@
+{
+  "schema": "independent-read-set/v1",
+  "task_id": "T-1183",
+  "review_kind": "implementation",
+  "reviewer": "/root/t1159_fix_recheck_recovery",
+  "reviewed_at_utc": "2026-10-10T02:13:10.603558+00:00",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+  "verdict": "PASS_BOUNDED_FINAL_SOURCE_AND_POST_FORMAL_REGRESSIONS",
+  "product_findings": [],
+  "historical_findings": [
+    {
+      "id": "PROCESS-H001",
+      "type": "historical_process_deviation",
+      "severity": "medium",
+      "status": "historical_retained",
+      "summary": "第一次正式登记失败后仍首编辑/启动检查",
+      "detail": "独立initial实际01:58:13已完成；正式record01:58:54因legacy目标拒绝exit1，却已start0并首编辑/运行。不得称首编辑前formalPASS。01:59:42第二次路径亦exit1；02:00:07支持路径实际record0，最终02:00:24完整命令再次运行。恢复原两行/diff为空由SOURCE_INPUTS和IMPLEMENTATION保留声明，本轮未看到另一个独立冻结恢复瞬间命令receipt，不把后续state/当前diff倒签该时点。最终有限源码和post-formal原完整回归可独立签；历史不消失。"
+    }
+  ],
+  "spec_sha256": "e5df8ea59cf0fa1ec655675a71dac158a0e9b7de9c3c3db8e61135db21d5781a",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "current_test_sha256": "d76edcf3473a8e107e78495fee8c9173d97e11ad58f071bee3442e0f67e7014c",
+  "original_test_git_sha256": "3f41feccfe0ca367e49665592dc4f0af91344e77e2c31f736f378f15b22fe594",
+  "exact_two_literal_edits_only": true,
+  "all_other_bytes_equal_to_original": true,
+  "actual_diff_sha256": "16d446d461f9458df13d8ef766fa16e124cffcaade6921e1e27719a48e7c544c",
+  "archive_diff_equals_actual": true,
+  "reads": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1183-navigation-timeout-test-contract.md",
+      "sha256": "e5df8ea59cf0fa1ec655675a71dac158a0e9b7de9c3c3db8e61135db21d5781a",
+      "bytes": 2900,
+      "read_scope": "当前SPEC全文与前次独立初审不变字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143,
+      "read_scope": "本会话已读适用定位，现字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819,
+      "read_scope": "独立维护/真实证据/LED053及物理边界原约束"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT.md",
+      "sha256": "e876ef317cd0d7885f7ed009d42f4ee6505803d7c86fbc1e4c9ad708fd9b0107",
+      "bytes": 17765,
+      "read_scope": "本会话已读活记忆，现字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT_CONTEXT.md",
+      "sha256": "a74ec6498a8e06fe574f86ec96c51a99076672b717d103b26b25578bd2a1ed3c",
+      "bytes": 1316,
+      "read_scope": "本会话已读阶段路由，现字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "e67b8f96998ea0c5ef7473c521cef1be7cc056278f18d3a3e2b83ac395864a3f",
+      "bytes": 57428,
+      "read_scope": "本轮T1183状态与合法receipt；当前任务保护"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "bytes": 8130,
+      "read_scope": "本会话已读物理边界，不改生产消费者"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3",
+      "bytes": 50753,
+      "read_scope": "本会话已读阶段4-build维护路由"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "bytes": 84,
+      "read_scope": "流程版本"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/engineering/timeout-policy.md",
+      "sha256": "94385308b37926c3f1b81cf3c8bf0533983025bfc539cac7c914770c112604cf",
+      "bytes": 3245,
+      "read_scope": "前次全文两分钟及公共链要求，当前字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1066-timeout-policy.md",
+      "sha256": "323d092d8e75167b287500d8d628a5528ecf2bf062fa81d476cb9751e1e463af",
+      "bytes": 5286,
+      "read_scope": "前次已读既有确认预算/原owner范围"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/SKILL.md",
+      "sha256": "5796cf1b3b9f3de2d45c8e754e3df2146735aa14b266b7c32e2cb4c8638f4c1f",
+      "bytes": 4021,
+      "read_scope": "本会话已加载技能/路由，当前字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/VERSION",
+      "sha256": "db8c5f26ffadff528c3c988af09e26339ee629b449372f4a62f0c357f7329dfc",
+      "bytes": 7,
+      "read_scope": "本会话已加载技能/路由，当前字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/stage-router.md",
+      "sha256": "dd656d4b0d886aee9fafa10b61a1db9554e1d424c533dd79693f28ff7447cf1e",
+      "bytes": 1339,
+      "read_scope": "本会话已加载技能/路由，当前字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp.test.ts",
+      "sha256": "d76edcf3473a8e107e78495fee8c9173d97e11ad58f071bee3442e0f67e7014c",
+      "bytes": 133829,
+      "read_scope": "本轮完整diff+原4个导航用例/人工错误原字节；除两处字节全等原Git，所有144例不削弱"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/IMPLEMENTATION.diff.gz",
+      "sha256": "7b82872e11d387bd5faba0ba91b5bab08c762a0997ebb0fa2328c9a763b0bb4d",
+      "bytes": 432,
+      "read_scope": "本轮解压完整两行diff与当前git diff逐字比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp.ts",
+      "sha256": "c9b59ec63ef473e2c6be79e78b82ffcba1d6ffcc5b044bb4b00244873bbe266c",
+      "bytes": 162157,
+      "read_scope": "前次实际worker原样导出消费者；现字节与Git比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/runtime/browser/navigation-retry.ts",
+      "sha256": "3633f081059b7356a74b087faf748c0bfdeef46d4876c9079249921412840527",
+      "bytes": 2983,
+      "read_scope": "前次全文executionTimeoutMs/重试/原错/取消；现字节未改"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/timeout-policy.ts",
+      "sha256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71",
+      "bytes": 1725,
+      "read_scope": "前次全文共享正预算/原deadline策略；现字节未改"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/tools/timeout-policy/verify.mjs",
+      "sha256": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+      "bytes": 2227,
+      "read_scope": "前次全文公共各组执行/保非零；本轮日志消费者对应"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "bytes": 44912,
+      "read_scope": "实际LED018/053原命令配置，未改门"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/scripts/desktop/startup-safety-contract.test.mjs",
+      "sha256": "12be26df526ea2bd6f9d4d36ca660c98d10d4e96f9a420d7a66313da2686fb5f",
+      "bytes": 7448,
+      "read_scope": "LED018原后续首段文件整体字节未改；未重审全部原业务"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/src/lib.rs",
+      "sha256": "508a50632893f27970eb1fab0fef04d53c87255891b5b0bc1af4b60ab2ad2e29",
+      "bytes": 217921,
+      "read_scope": "Rust原源字节与b344相等，只签日志windows_子集，不是全Rust/Windows安装"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/Cargo.toml",
+      "sha256": "6fc6b92e179df84c1e597dd18b4829d921c005a292c14831b86fb15f6ebc766f",
+      "bytes": 9320,
+      "read_scope": "Rust构建依赖/config现字节与b344相等"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/SOURCE_INPUTS.json",
+      "sha256": "da5a2292a07dd4da1256de844cab86e72d84ae976a102ec4b9d73f0fe97fd81a",
+      "bytes": 588,
+      "read_scope": "实际归档全文；源/testSHA、当场命令/阶段历史、原初审与未抹失败"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/CURRENT_CHECKS.json",
+      "sha256": "1deb053a1106650e382d06e46733fc570b907abb2c6671f609011333a14e3d70",
+      "bytes": 7660,
+      "read_scope": "实际归档全文；源/testSHA、当场命令/阶段历史、原初审与未抹失败"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/TIMEOUT_STATIC_ACTUAL.json",
+      "sha256": "2a71752fd0eb8c772a4e26a4a215cb233d8bdddebf2a73f49c5b5aa59d739748",
+      "bytes": 6387,
+      "read_scope": "实际归档全文；源/testSHA、当场命令/阶段历史、原初审与未抹失败"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/IMPLEMENTATION.md",
+      "sha256": "5b531c2410fb8d5a2c7062133dba594b79dfe690721f585cf71e8353a162176e",
+      "bytes": 2453,
+      "read_scope": "实际归档全文；源/testSHA、当场命令/阶段历史、原初审与未抹失败"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/SPEC_REVIEW.md",
+      "sha256": "5d1cd2a398a50240c032f181458e79b29b16bc1b04989bd502fff1d7cd7c7c61",
+      "bytes": 3648,
+      "read_scope": "实际归档全文；源/testSHA、当场命令/阶段历史、原初审与未抹失败"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/SPEC_READ_SET.json",
+      "sha256": "a43cd7b34aa7946c537a91cdaa8c372575278f40e469cd5c01a7e9d4700ac930",
+      "bytes": 15230,
+      "read_scope": "实际归档全文；源/testSHA、当场命令/阶段历史、原初审与未抹失败"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/SPEC_review-input.json",
+      "sha256": "a7aade40acdfd2052e793123a33da7d55cae2dfde908b3503e6296db92d8ef01",
+      "bytes": 1174,
+      "read_scope": "实际归档全文；源/testSHA、当场命令/阶段历史、原初审与未抹失败"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-independent-spec-review/REVIEW.md",
+      "sha256": "5d1cd2a398a50240c032f181458e79b29b16bc1b04989bd502fff1d7cd7c7c61",
+      "bytes": 3648,
+      "read_scope": "本会话独立initial原材料；实际审读时间在首编辑前，不等于formal record"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-independent-spec-review/READ_SET.json",
+      "sha256": "a43cd7b34aa7946c537a91cdaa8c372575278f40e469cd5c01a7e9d4700ac930",
+      "bytes": 15230,
+      "read_scope": "本会话独立initial原材料；实际审读时间在首编辑前，不等于formal record"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-independent-spec-review/review-input.json",
+      "sha256": "a7aade40acdfd2052e793123a33da7d55cae2dfde908b3503e6296db92d8ef01",
+      "bytes": 1174,
+      "read_scope": "本会话独立initial原材料；实际审读时间在首编辑前，不等于formal record"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1183-navigation-timeout-test-contract.T-1183.review.md",
+      "sha256": "236cac3f1d3f538d077f703e5eac569ca8ba46f115773d282c213e3e1602a338",
+      "bytes": 2171,
+      "read_scope": "合法正式state/保留只读legacy独评/同packet实际绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1183-navigation-timeout-test-contract.review.md",
+      "sha256": "5d1cd2a398a50240c032f181458e79b29b16bc1b04989bd502fff1d7cd7c7c61",
+      "bytes": 3648,
+      "read_scope": "合法正式state/保留只读legacy独评/同packet实际绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1183-navigation-timeout-test-contract.review-input.json",
+      "sha256": "a7aade40acdfd2052e793123a33da7d55cae2dfde908b3503e6296db92d8ef01",
+      "bytes": 1174,
+      "read_scope": "合法正式state/保留只读legacy独评/同packet实际绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/review-events.ndjson",
+      "sha256": "7369c919b3e84fd3fd82608ff9631ebaa7c339ebeaceb1ddc8bb1c0ce8ded128",
+      "bytes": 1318399,
+      "read_scope": "本轮实际T1183 event行、recorded_at/hash与合法formal state对应；其它事件只字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/events.ndjson",
+      "sha256": "6cf1ccac2c6a6145c498dca3f763ea5ba986cac793539c71e861570d4e45a1e3",
+      "bytes": 418045,
+      "read_scope": "本轮T1183实际start事件；不声称start0等同formalPASS"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1015-current-led018-diagnostic.receipt.json",
+      "sha256": "9fe63d9b90777cd2877b93caca931ebb860bfc62217e9a6cb4724ad94a71dfb2",
+      "bytes": 769,
+      "read_scope": "本轮实际原完整receipt/argv/退出码/开始结束/原logSHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1015-current-led018-diagnostic.log.gz",
+      "sha256": "50a7d00b54c96eb7b32461e6771508cdf1367b0955c1006c30d71c819763e576",
+      "bytes": 820,
+      "read_scope": "本轮gzip原字节，解压SHA核receipt；语义读原RED/登记拒绝/最终GREEN与类型扫描结果（orphan只摘要）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led018-diagnostic.json",
+      "sha256": "9fe63d9b90777cd2877b93caca931ebb860bfc62217e9a6cb4724ad94a71dfb2",
+      "bytes": 769,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led018-diagnostic.log",
+      "sha256": "5cfce07bbab012407ea7ebd846a30d83b0ed3751390836e3bb9ff16d96f326a1",
+      "bytes": 1898,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-boundary-scan.receipt.json",
+      "sha256": "e222d10c4d168f6b25eaba986ce6f3d138d95b80fb8d88123cce2ad085c1341f",
+      "bytes": 409,
+      "read_scope": "本轮实际原完整receipt/argv/退出码/开始结束/原logSHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-boundary-scan.log.gz",
+      "sha256": "44b85ac68d7b45b416b0fdc4bcddd47403d70dd4368255457309499c37237ae2",
+      "bytes": 574,
+      "read_scope": "本轮gzip原字节，解压SHA核receipt；语义读原RED/登记拒绝/最终GREEN与类型扫描结果（orphan只摘要）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-boundary-scan.json",
+      "sha256": "e222d10c4d168f6b25eaba986ce6f3d138d95b80fb8d88123cce2ad085c1341f",
+      "bytes": 409,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-boundary-scan.log",
+      "sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "bytes": 779,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-frontend-type.receipt.json",
+      "sha256": "df36e8134b2bf70b940c7b0e292a2168ea29e542154e7e1986931524fecf92e2",
+      "bytes": 430,
+      "read_scope": "本轮实际原完整receipt/argv/退出码/开始结束/原logSHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-frontend-type.log.gz",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "bytes": 20,
+      "read_scope": "本轮gzip原字节，解压SHA核receipt；语义读原RED/登记拒绝/最终GREEN与类型扫描结果（orphan只摘要）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-frontend-type.json",
+      "sha256": "df36e8134b2bf70b940c7b0e292a2168ea29e542154e7e1986931524fecf92e2",
+      "bytes": 430,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-frontend-type.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-led018-after-formal-record-green.receipt.json",
+      "sha256": "3679533fd8b62c0e45a6d461d00577f2bf0106d1d632ea94a6a84aff705a7590",
+      "bytes": 768,
+      "read_scope": "本轮实际原完整receipt/argv/退出码/开始结束/原logSHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-led018-after-formal-record-green.log.gz",
+      "sha256": "6ed0215c435beb81cbbfcce95a28948578517d13751c85e5d47768eb35e44ddb",
+      "bytes": 1790,
+      "read_scope": "本轮gzip原字节，解压SHA核receipt；语义读原RED/登记拒绝/最终GREEN与类型扫描结果（orphan只摘要）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-led018-after-formal-record-green.json",
+      "sha256": "3679533fd8b62c0e45a6d461d00577f2bf0106d1d632ea94a6a84aff705a7590",
+      "bytes": 768,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-led018-after-formal-record-green.log",
+      "sha256": "10c1743773960bdb6b784a4e1a30a9c47b54c886da5bfcdc47d63c69158c0ff6",
+      "bytes": 5500,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-led018-current-green.receipt.json",
+      "sha256": "c6e9943bdc1208a0da5adecbbe936ac3a2ffe415623364f369c65689b13aaccf",
+      "bytes": 769,
+      "read_scope": "本轮实际原完整receipt/argv/退出码/开始结束/原logSHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-led018-current-green.log.gz",
+      "sha256": "0cfdcd6698cadd4884948728077a1e834ab86766c19875eeb7381ccf84834f62",
+      "bytes": 1816,
+      "read_scope": "本轮gzip原字节，解压SHA核receipt；语义读原RED/登记拒绝/最终GREEN与类型扫描结果（orphan只摘要）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-led018-current-green.json",
+      "sha256": "c6e9943bdc1208a0da5adecbbe936ac3a2ffe415623364f369c65689b13aaccf",
+      "bytes": 769,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-led018-current-green.log",
+      "sha256": "00aea67381aca728d336aa19e7f0d8db614e8b1e826a1fcf619183179e2c2b17",
+      "bytes": 5637,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-orphan-scan.receipt.json",
+      "sha256": "b4bd9e80bf7b4adf0213de448c3b0bc82a8c5121f0282d7dd3575764a03ae753",
+      "bytes": 407,
+      "read_scope": "本轮实际原完整receipt/argv/退出码/开始结束/原logSHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-orphan-scan.log.gz",
+      "sha256": "3f97d9436f7cc5b05bd288981f31306c4990129c3f272bc4975e42446090d153",
+      "bytes": 1407,
+      "read_scope": "本轮gzip原字节，解压SHA核receipt；语义读原RED/登记拒绝/最终GREEN与类型扫描结果（orphan只摘要）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-orphan-scan.json",
+      "sha256": "b4bd9e80bf7b4adf0213de448c3b0bc82a8c5121f0282d7dd3575764a03ae753",
+      "bytes": 407,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-orphan-scan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "bytes": 15862,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-semantic-boundary-scan.receipt.json",
+      "sha256": "ded7d4af20237ba79438f9ba89cce720ff170a3cfbddfd344d6398108ec38174",
+      "bytes": 418,
+      "read_scope": "本轮实际原完整receipt/argv/退出码/开始结束/原logSHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-semantic-boundary-scan.log.gz",
+      "sha256": "e072a2bbe761c672af0fefcbe0551666845af536ea3fd654ad866bc6507c1ebb",
+      "bytes": 107,
+      "read_scope": "本轮gzip原字节，解压SHA核receipt；语义读原RED/登记拒绝/最终GREEN与类型扫描结果（orphan只摘要）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-semantic-boundary-scan.json",
+      "sha256": "ded7d4af20237ba79438f9ba89cce720ff170a3cfbddfd344d6398108ec38174",
+      "bytes": 418,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-semantic-boundary-scan.log",
+      "sha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+      "bytes": 86,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record-corrected.receipt.json",
+      "sha256": "5232b667a13a0058e4f5b8718c1afb267f35cd6b3ad51fa9bc61339d244eb4a6",
+      "bytes": 854,
+      "read_scope": "本轮实际原完整receipt/argv/退出码/开始结束/原logSHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record-corrected.log.gz",
+      "sha256": "c480ea97341b0aaf296fbf2e76bd6328b445ef3525846ae34e04d16e53849b05",
+      "bytes": 140,
+      "read_scope": "本轮gzip原字节，解压SHA核receipt；语义读原RED/登记拒绝/最终GREEN与类型扫描结果（orphan只摘要）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-spec-review-record-corrected.json",
+      "sha256": "5232b667a13a0058e4f5b8718c1afb267f35cd6b3ad51fa9bc61339d244eb4a6",
+      "bytes": 854,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-spec-review-record-corrected.log",
+      "sha256": "aba74e23816e35f274ba729daa3a50d0bb3439ba6141d5367545f643b356042d",
+      "bytes": 182,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record-supported-path.receipt.json",
+      "sha256": "89e1646686461e5a03a35eb7ca9b213e7405a0f56b80e78458173143d0fb2038",
+      "bytes": 859,
+      "read_scope": "本轮实际原完整receipt/argv/退出码/开始结束/原logSHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record-supported-path.log.gz",
+      "sha256": "11b12f831069bcd27545e79f1ae7bed3990a9ebb54aed11c391d0860ea31560a",
+      "bytes": 92,
+      "read_scope": "本轮gzip原字节，解压SHA核receipt；语义读原RED/登记拒绝/最终GREEN与类型扫描结果（orphan只摘要）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-spec-review-record-supported-path.json",
+      "sha256": "89e1646686461e5a03a35eb7ca9b213e7405a0f56b80e78458173143d0fb2038",
+      "bytes": 859,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-spec-review-record-supported-path.log",
+      "sha256": "2fddcf22e7e0826843037872915c7413b8273b8813ea1da2b4d8891eaf38680c",
+      "bytes": 72,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record.receipt.json",
+      "sha256": "7fe3bc452d1d514768ae8ce4442734def46c7acd5b3c07a1f01ef20cd30393d6",
+      "bytes": 853,
+      "read_scope": "本轮实际原完整receipt/argv/退出码/开始结束/原logSHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record.log.gz",
+      "sha256": "93b36a6dc35a8111ab687e8a1f946a9af784041e1fa09f4552bf960e0caf5b9c",
+      "bytes": 180,
+      "read_scope": "本轮gzip原字节，解压SHA核receipt；语义读原RED/登记拒绝/最终GREEN与类型扫描结果（orphan只摘要）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-spec-review-record.json",
+      "sha256": "7fe3bc452d1d514768ae8ce4442734def46c7acd5b3c07a1f01ef20cd30393d6",
+      "bytes": 853,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-spec-review-record.log",
+      "sha256": "8b01855d0bc112393413dbd98194f4f9dcab4581d49f7d0a94c3684d2392751c",
+      "bytes": 161,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-start.receipt.json",
+      "sha256": "a33845d87e982e54047c959a42bf374a8903d5b118e4f1a56869add33eee8402",
+      "bytes": 430,
+      "read_scope": "本轮实际原完整receipt/argv/退出码/开始结束/原logSHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-start.log.gz",
+      "sha256": "eda56b5d43bdacd4b87e2c1822813a1fefa2d3a5275a56687ffda4151d69e24b",
+      "bytes": 60,
+      "read_scope": "本轮gzip原字节，解压SHA核receipt；语义读原RED/登记拒绝/最终GREEN与类型扫描结果（orphan只摘要）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-start.json",
+      "sha256": "a33845d87e982e54047c959a42bf374a8903d5b118e4f1a56869add33eee8402",
+      "bytes": 430,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-start.log",
+      "sha256": "546c9d935b07c36db3432e69f59c59b3a366951adc05610b6354f36d217d0f56",
+      "bytes": 37,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-timeout-policy-public-regression.receipt.json",
+      "sha256": "df29171cadacf37e3b57b8f73f6d6df3d7a90fb3b48e37dad5d1e3860169cefc",
+      "bytes": 586,
+      "read_scope": "本轮实际原完整receipt/argv/退出码/开始结束/原logSHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-timeout-policy-public-regression.log.gz",
+      "sha256": "906c5395eafd9b5dea8aa8b5d79af958639d3bbaf5fb8ad15c83ae5463291c1e",
+      "bytes": 2987,
+      "read_scope": "本轮gzip原字节，解压SHA核receipt；语义读原RED/登记拒绝/最终GREEN与类型扫描结果（orphan只摘要）"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-timeout-policy-public-regression.json",
+      "sha256": "df29171cadacf37e3b57b8f73f6d6df3d7a90fb3b48e37dad5d1e3860169cefc",
+      "bytes": 586,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-timeout-policy-public-regression.log",
+      "sha256": "e7516195fa9347b04a4de3b4d300e42b25d28661f0138455c9f0c85a77228350",
+      "bytes": 11587,
+      "read_scope": "本轮实际N原件字节对照归档、receipt/logSHA；不运行命令"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1015/current-20261010/CANONICAL.receipt.json",
+      "sha256": "5a677623138dc5b136690f0293f2afa876a023f34428ff94ccc26dd33d4b6a9d",
+      "bytes": 589,
+      "read_scope": "本会话实际原canonical receipt/gzipSHA/27ERROR1WARN及owner已读；现不改/不代签完整Gate"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1015/current-20261010/CANONICAL.log.gz",
+      "sha256": "7ac6c1c9ba6a4a8bdb1d2c4cb50e14ac3c1e9e070ed0cdb8ecdfa6ce88adef82",
+      "bytes": 5954,
+      "read_scope": "本会话实际原canonical receipt/gzipSHA/27ERROR1WARN及owner已读；现不改/不代签完整Gate"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1015/current-20261010/CURRENT_FAILURE_OWNERS.json",
+      "sha256": "f3b6cc109f081f5bf5e292d9aa7c4154f97a626a7a56d2864c9bb9d85c1e7d04",
+      "bytes": 12418,
+      "read_scope": "本会话实际原canonical receipt/gzipSHA/27ERROR1WARN及owner已读；现不改/不代签完整Gate"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1015/current-20261010/REPORT.md",
+      "sha256": "0a9f94444e370dedc9f465fb51170ce4d7fb79b69e8e725930836ad98289f29c",
+      "bytes": 2771,
+      "read_scope": "本会话实际原canonical receipt/gzipSHA/27ERROR1WARN及owner已读；现不改/不代签完整Gate"
+    }
+  ],
+  "source_head_comparisons": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp.ts",
+      "sha256": "c9b59ec63ef473e2c6be79e78b82ffcba1d6ffcc5b044bb4b00244873bbe266c",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/runtime/browser/navigation-retry.ts",
+      "sha256": "3633f081059b7356a74b087faf748c0bfdeef46d4876c9079249921412840527",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/timeout-policy.ts",
+      "sha256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/tools/timeout-policy/verify.mjs",
+      "sha256": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/scripts/desktop/startup-safety-contract.test.mjs",
+      "sha256": "12be26df526ea2bd6f9d4d36ca660c98d10d4e96f9a420d7a66313da2686fb5f",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/src/lib.rs",
+      "sha256": "508a50632893f27970eb1fab0fef04d53c87255891b5b0bc1af4b60ab2ad2e29",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/Cargo.toml",
+      "sha256": "6fc6b92e179df84c1e597dd18b4829d921c005a292c14831b86fb15f6ebc766f",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    }
+  ],
+  "actual_receipt_log_pairs": [
+    {
+      "stem": "t1015-current-led018-diagnostic",
+      "receipt_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1015-current-led018-diagnostic.receipt.json",
+      "receipt_sha256": "9fe63d9b90777cd2877b93caca931ebb860bfc62217e9a6cb4724ad94a71dfb2",
+      "gzip_log_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1015-current-led018-diagnostic.log.gz",
+      "gzip_log_sha256": "50a7d00b54c96eb7b32461e6771508cdf1367b0955c1006c30d71c819763e576",
+      "decompressed_log_sha256": "5cfce07bbab012407ea7ebd846a30d83b0ed3751390836e3bb9ff16d96f326a1",
+      "receipt_log_sha256_matches": true,
+      "exit_code": 1,
+      "elapsed_seconds": 3.6733255420112982,
+      "started_at": "2026-10-10T01:51:52.081012+00:00",
+      "finished_at": "2026-10-10T01:51:55.755034+00:00"
+    },
+    {
+      "stem": "t1183-boundary-scan",
+      "receipt_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-boundary-scan.receipt.json",
+      "receipt_sha256": "e222d10c4d168f6b25eaba986ce6f3d138d95b80fb8d88123cce2ad085c1341f",
+      "gzip_log_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-boundary-scan.log.gz",
+      "gzip_log_sha256": "44b85ac68d7b45b416b0fdc4bcddd47403d70dd4368255457309499c37237ae2",
+      "decompressed_log_sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "receipt_log_sha256_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.5571877500042319,
+      "started_at": "2026-10-10T02:00:24.643810+00:00",
+      "finished_at": "2026-10-10T02:00:25.201310+00:00"
+    },
+    {
+      "stem": "t1183-frontend-type",
+      "receipt_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-frontend-type.receipt.json",
+      "receipt_sha256": "df36e8134b2bf70b940c7b0e292a2168ea29e542154e7e1986931524fecf92e2",
+      "gzip_log_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-frontend-type.log.gz",
+      "gzip_log_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "decompressed_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "receipt_log_sha256_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 6.481846707989462,
+      "started_at": "2026-10-10T02:00:24.632222+00:00",
+      "finished_at": "2026-10-10T02:00:31.114216+00:00"
+    },
+    {
+      "stem": "t1183-led018-after-formal-record-green",
+      "receipt_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-led018-after-formal-record-green.receipt.json",
+      "receipt_sha256": "3679533fd8b62c0e45a6d461d00577f2bf0106d1d632ea94a6a84aff705a7590",
+      "gzip_log_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-led018-after-formal-record-green.log.gz",
+      "gzip_log_sha256": "6ed0215c435beb81cbbfcce95a28948578517d13751c85e5d47768eb35e44ddb",
+      "decompressed_log_sha256": "10c1743773960bdb6b784a4e1a30a9c47b54c886da5bfcdc47d63c69158c0ff6",
+      "receipt_log_sha256_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 6.640041667036712,
+      "started_at": "2026-10-10T02:00:24.648384+00:00",
+      "finished_at": "2026-10-10T02:00:31.288596+00:00"
+    },
+    {
+      "stem": "t1183-led018-current-green",
+      "receipt_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-led018-current-green.receipt.json",
+      "receipt_sha256": "c6e9943bdc1208a0da5adecbbe936ac3a2ffe415623364f369c65689b13aaccf",
+      "gzip_log_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-led018-current-green.log.gz",
+      "gzip_log_sha256": "0cfdcd6698cadd4884948728077a1e834ab86766c19875eeb7381ccf84834f62",
+      "decompressed_log_sha256": "00aea67381aca728d336aa19e7f0d8db614e8b1e826a1fcf619183179e2c2b17",
+      "receipt_log_sha256_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 60.232726375048514,
+      "started_at": "2026-10-10T01:58:54.902946+00:00",
+      "finished_at": "2026-10-10T01:59:55.136191+00:00"
+    },
+    {
+      "stem": "t1183-orphan-scan",
+      "receipt_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-orphan-scan.receipt.json",
+      "receipt_sha256": "b4bd9e80bf7b4adf0213de448c3b0bc82a8c5121f0282d7dd3575764a03ae753",
+      "gzip_log_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-orphan-scan.log.gz",
+      "gzip_log_sha256": "3f97d9436f7cc5b05bd288981f31306c4990129c3f272bc4975e42446090d153",
+      "decompressed_log_sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "receipt_log_sha256_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.1313668749644421,
+      "started_at": "2026-10-10T02:00:25.799623+00:00",
+      "finished_at": "2026-10-10T02:00:25.931139+00:00"
+    },
+    {
+      "stem": "t1183-semantic-boundary-scan",
+      "receipt_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-semantic-boundary-scan.receipt.json",
+      "receipt_sha256": "ded7d4af20237ba79438f9ba89cce720ff170a3cfbddfd344d6398108ec38174",
+      "gzip_log_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-semantic-boundary-scan.log.gz",
+      "gzip_log_sha256": "e072a2bbe761c672af0fefcbe0551666845af536ea3fd654ad866bc6507c1ebb",
+      "decompressed_log_sha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+      "receipt_log_sha256_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.3610612499760464,
+      "started_at": "2026-10-10T02:00:25.320985+00:00",
+      "finished_at": "2026-10-10T02:00:25.682172+00:00"
+    },
+    {
+      "stem": "t1183-spec-review-record-corrected",
+      "receipt_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record-corrected.receipt.json",
+      "receipt_sha256": "5232b667a13a0058e4f5b8718c1afb267f35cd6b3ad51fa9bc61339d244eb4a6",
+      "gzip_log_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record-corrected.log.gz",
+      "gzip_log_sha256": "c480ea97341b0aaf296fbf2e76bd6328b445ef3525846ae34e04d16e53849b05",
+      "decompressed_log_sha256": "aba74e23816e35f274ba729daa3a50d0bb3439ba6141d5367545f643b356042d",
+      "receipt_log_sha256_matches": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.105329415993765,
+      "started_at": "2026-10-10T01:59:42.352489+00:00",
+      "finished_at": "2026-10-10T01:59:42.457966+00:00"
+    },
+    {
+      "stem": "t1183-spec-review-record-supported-path",
+      "receipt_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record-supported-path.receipt.json",
+      "receipt_sha256": "89e1646686461e5a03a35eb7ca9b213e7405a0f56b80e78458173143d0fb2038",
+      "gzip_log_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record-supported-path.log.gz",
+      "gzip_log_sha256": "11b12f831069bcd27545e79f1ae7bed3990a9ebb54aed11c391d0860ea31560a",
+      "decompressed_log_sha256": "2fddcf22e7e0826843037872915c7413b8273b8813ea1da2b4d8891eaf38680c",
+      "receipt_log_sha256_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.1483867500210181,
+      "started_at": "2026-10-10T02:00:07.718213+00:00",
+      "finished_at": "2026-10-10T02:00:07.866707+00:00"
+    },
+    {
+      "stem": "t1183-spec-review-record",
+      "receipt_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record.receipt.json",
+      "receipt_sha256": "7fe3bc452d1d514768ae8ce4442734def46c7acd5b3c07a1f01ef20cd30393d6",
+      "gzip_log_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record.log.gz",
+      "gzip_log_sha256": "93b36a6dc35a8111ab687e8a1f946a9af784041e1fa09f4552bf960e0caf5b9c",
+      "decompressed_log_sha256": "8b01855d0bc112393413dbd98194f4f9dcab4581d49f7d0a94c3684d2392751c",
+      "receipt_log_sha256_matches": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.12985270796343684,
+      "started_at": "2026-10-10T01:58:54.011722+00:00",
+      "finished_at": "2026-10-10T01:58:54.141692+00:00"
+    },
+    {
+      "stem": "t1183-start",
+      "receipt_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-start.receipt.json",
+      "receipt_sha256": "a33845d87e982e54047c959a42bf374a8903d5b118e4f1a56869add33eee8402",
+      "gzip_log_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-start.log.gz",
+      "gzip_log_sha256": "eda56b5d43bdacd4b87e2c1822813a1fefa2d3a5275a56687ffda4151d69e24b",
+      "decompressed_log_sha256": "546c9d935b07c36db3432e69f59c59b3a366951adc05610b6354f36d217d0f56",
+      "receipt_log_sha256_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.1270860829972662,
+      "started_at": "2026-10-10T01:58:54.375968+00:00",
+      "finished_at": "2026-10-10T01:58:54.503207+00:00"
+    },
+    {
+      "stem": "t1183-timeout-policy-public-regression",
+      "receipt_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-timeout-policy-public-regression.receipt.json",
+      "receipt_sha256": "df29171cadacf37e3b57b8f73f6d6df3d7a90fb3b48e37dad5d1e3860169cefc",
+      "gzip_log_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-timeout-policy-public-regression.log.gz",
+      "gzip_log_sha256": "906c5395eafd9b5dea8aa8b5d79af958639d3bbaf5fb8ad15c83ae5463291c1e",
+      "decompressed_log_sha256": "e7516195fa9347b04a4de3b4d300e42b25d28661f0138455c9f0c85a77228350",
+      "receipt_log_sha256_matches": true,
+      "exit_code": 1,
+      "elapsed_seconds": 30.22597687499365,
+      "started_at": "2026-10-10T02:00:24.648588+00:00",
+      "finished_at": "2026-10-10T02:00:54.875019+00:00"
+    }
+  ],
+  "archive_original_comparisons": [
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1015-current-led018-diagnostic.receipt.json",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led018-diagnostic.json",
+      "original_sha256": "9fe63d9b90777cd2877b93caca931ebb860bfc62217e9a6cb4724ad94a71dfb2",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1015-current-led018-diagnostic.log.gz",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led018-diagnostic.log",
+      "original_sha256": "5cfce07bbab012407ea7ebd846a30d83b0ed3751390836e3bb9ff16d96f326a1",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-boundary-scan.receipt.json",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-boundary-scan.json",
+      "original_sha256": "e222d10c4d168f6b25eaba986ce6f3d138d95b80fb8d88123cce2ad085c1341f",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-boundary-scan.log.gz",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-boundary-scan.log",
+      "original_sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-frontend-type.receipt.json",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-frontend-type.json",
+      "original_sha256": "df36e8134b2bf70b940c7b0e292a2168ea29e542154e7e1986931524fecf92e2",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-frontend-type.log.gz",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-frontend-type.log",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-led018-after-formal-record-green.receipt.json",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-led018-after-formal-record-green.json",
+      "original_sha256": "3679533fd8b62c0e45a6d461d00577f2bf0106d1d632ea94a6a84aff705a7590",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-led018-after-formal-record-green.log.gz",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-led018-after-formal-record-green.log",
+      "original_sha256": "10c1743773960bdb6b784a4e1a30a9c47b54c886da5bfcdc47d63c69158c0ff6",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-led018-current-green.receipt.json",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-led018-current-green.json",
+      "original_sha256": "c6e9943bdc1208a0da5adecbbe936ac3a2ffe415623364f369c65689b13aaccf",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-led018-current-green.log.gz",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-led018-current-green.log",
+      "original_sha256": "00aea67381aca728d336aa19e7f0d8db614e8b1e826a1fcf619183179e2c2b17",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-orphan-scan.receipt.json",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-orphan-scan.json",
+      "original_sha256": "b4bd9e80bf7b4adf0213de448c3b0bc82a8c5121f0282d7dd3575764a03ae753",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-orphan-scan.log.gz",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-orphan-scan.log",
+      "original_sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-semantic-boundary-scan.receipt.json",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-semantic-boundary-scan.json",
+      "original_sha256": "ded7d4af20237ba79438f9ba89cce720ff170a3cfbddfd344d6398108ec38174",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-semantic-boundary-scan.log.gz",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-semantic-boundary-scan.log",
+      "original_sha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record-corrected.receipt.json",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-spec-review-record-corrected.json",
+      "original_sha256": "5232b667a13a0058e4f5b8718c1afb267f35cd6b3ad51fa9bc61339d244eb4a6",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record-corrected.log.gz",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-spec-review-record-corrected.log",
+      "original_sha256": "aba74e23816e35f274ba729daa3a50d0bb3439ba6141d5367545f643b356042d",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record-supported-path.receipt.json",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-spec-review-record-supported-path.json",
+      "original_sha256": "89e1646686461e5a03a35eb7ca9b213e7405a0f56b80e78458173143d0fb2038",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record-supported-path.log.gz",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-spec-review-record-supported-path.log",
+      "original_sha256": "2fddcf22e7e0826843037872915c7413b8273b8813ea1da2b4d8891eaf38680c",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record.receipt.json",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-spec-review-record.json",
+      "original_sha256": "7fe3bc452d1d514768ae8ce4442734def46c7acd5b3c07a1f01ef20cd30393d6",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-spec-review-record.log.gz",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-spec-review-record.log",
+      "original_sha256": "8b01855d0bc112393413dbd98194f4f9dcab4581d49f7d0a94c3684d2392751c",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-start.receipt.json",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-start.json",
+      "original_sha256": "a33845d87e982e54047c959a42bf374a8903d5b118e4f1a56869add33eee8402",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-start.log.gz",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-start.log",
+      "original_sha256": "546c9d935b07c36db3432e69f59c59b3a366951adc05610b6354f36d217d0f56",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-timeout-policy-public-regression.receipt.json",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-timeout-policy-public-regression.json",
+      "original_sha256": "df29171cadacf37e3b57b8f73f6d6df3d7a90fb3b48e37dad5d1e3860169cefc",
+      "bytes_equal_after_decompression_if_gzip": true
+    },
+    {
+      "archive_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1183/t1183-timeout-policy-public-regression.log.gz",
+      "original_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1183-timeout-policy-public-regression.log",
+      "original_sha256": "e7516195fa9347b04a4de3b4d300e42b25d28661f0138455c9f0c85a77228350",
+      "bytes_equal_after_decompression_if_gzip": true
+    }
+  ],
+  "formal_timing": {
+    "independent_initial_at": "2026-10-10T01:58:13.335003+00:00",
+    "first_formal_record_exit": 1,
+    "formal_pass_before_first_edit": false,
+    "second_formal_record_exit": 1,
+    "supported_formal_record_at": "2026-10-10T02:00:07.851Z",
+    "supported_formal_event_hash": "44dcfed828a6bec8286b36a6edee6b0991d3ead23f0572b0a9442fc47bf5d700",
+    "supported_formal_review_receipt": "7b12a69947e9",
+    "supported_formal_record_exit": 0,
+    "restoration_before_record": "SOURCE_INPUTS/IMPLEMENTATION明确记录；恢复瞬间独立receipt未提供，本轮不倒签历史",
+    "final_complete_command_started_at": "2026-10-10T02:00:24.648384+00:00",
+    "post_formal_complete_command_exit": 0
+  },
+  "final_complete_regressions": {
+    "frontend_passed": 155,
+    "douyin_original_cases": 144,
+    "rust_windows_subset_passed": 17,
+    "rust_failed": 0,
+    "rust_ignored": 0,
+    "rust_filtered": 259,
+    "rust_warnings": 6,
+    "elapsed_seconds": 6.640041667036712,
+    "log_sha256": "10c1743773960bdb6b784a4e1a30a9c47b54c886da5bfcdc47d63c69158c0ff6"
+  },
+  "timeout_public_regression": {
+    "overall_exit_code": 1,
+    "elapsed_seconds": 30.22597687499365,
+    "static_failures": 27,
+    "static_json_equals_log_object": true,
+    "public_groups_passed": [
+      6,
+      5,
+      20,
+      35,
+      68,
+      27,
+      5
+    ],
+    "public_total_passed": 166,
+    "log_sha256": "e7516195fa9347b04a4de3b4d300e42b25d28661f0138455c9f0c85a77228350",
+    "owner": [
+      "T-1081",
+      "T-1066-timeout-policy",
+      "T-1101-global-gates"
+    ],
+    "not_marked_all_green": true
+  },
+  "other_checks": {
+    "frontend_type_exit": 0,
+    "boundary_exit": 0,
+    "boundary_existing_baseline_count": 5,
+    "semantic_exit": 0,
+    "orphan_exit": 0,
+    "orphan_existing_warnings": 100,
+    "diff_check": "root IMPLEMENTATION记exit0；本独评只比较当前/归档diff和精确字节，不运行check"
+  },
+  "canonical": {
+    "original_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+    "original_exit": 1,
+    "errors": 27,
+    "warnings": 1,
+    "unchanged_original_log_sha256": "34e36c225d9ab3429c82470294d13ab8c3b7adb266919d6d1e65c09713c9caee",
+    "not_rewritten_by_local_pass": true
+  },
+  "not_signed": [
+    "首编辑前正式record成功",
+    "恢复瞬间单独历史receipt",
+    "timeout-policy全绿",
+    "完整canonical/Gate",
+    "完整Rust或Windows安装/native App",
+    "付费模型/Codex/真实平台/全功能",
+    "T1181研究恢复或素材列表通过"
+  ],
+  "actions": "只读实际文件/Git及原收据日志，写本私有目录；未运行测试/服务/CLI/验证器/模型/DB/浏览器/实验，不改仓库或研究预算。"
+}

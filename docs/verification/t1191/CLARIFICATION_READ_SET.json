@@ -1,0 +1,549 @@
+{
+  "schema": "independent-spec-read-set/v1",
+  "task_id": "T-1191",
+  "review_kind": "recheck",
+  "reviewer": "/root/t1159_fix_recheck_recovery",
+  "generated_at_utc": "2026-10-10T03:00:12.562073+00:00",
+  "head_read": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+  "conclusion": "PASS_BOUNDED_RECOVERY_CLARIFICATION_ADMISSION_ONLY",
+  "findings": [],
+  "spec": {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md",
+    "sha256": "746ced072262c34db65dcfecf8934e574b5c67c4bf39467054417d36356ce9cf"
+  },
+  "constitution": {
+    "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+    "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800"
+  },
+  "prior_review": {
+    "private_dir": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-independent-spec-review",
+    "formal_path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1191-pre-submit-copilot-recovery-diagnosis.review.md",
+    "spec_sha256": "93a51a2c13c3a8d71d7bd815410d7562e992e48ddb08205ddd40600d78d02221",
+    "cycle": 1,
+    "round": 1,
+    "kind": "initial",
+    "verdict": "PASS",
+    "receipt": "ab67cdb366be",
+    "untouched_by_reviewer": true
+  },
+  "packet_kind_reason": "现reviewctl同lineage已有round1 initial历史后只允许recheck；本次不重置cycle，不覆盖原私有初评或相邻tool-owned文件。",
+  "permitted_code_write_set": [
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.tsx",
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.test.tsx"
+  ],
+  "source_at_clarification_review": {
+    "product_sha256": "2fe5c5cf6f3ddb1ab6c0ed1e44afca90d5136958976affbb52a1985be713760e",
+    "test_sha256": "0791875615d414600262f285bdb18a2927ca70d10df534af511ace851fdab990",
+    "broad_condition_still_present": true,
+    "proposed_condition_not_yet_implemented": true
+  },
+  "actual_evidence_pairs": [
+    {
+      "name": "t1191-spec-review-record",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-spec-review-record.json",
+      "receipt_sha256": "e2d5af2f7f42b84e5a7bb335902c45ab76e90b1a4f18c8976870031a9ba3d446",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-spec-review-record.log",
+      "log_sha256": "ed8cc346ef51d0758a26c4906b0ded0cb2a51c6198b81301e47d4341f45fef1a",
+      "receipt_log_sha_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.14207462494960055,
+      "argv": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-1191",
+        "--spec",
+        "docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/features/t1191-pre-submit-copilot-recovery-diagnosis.review-input.json",
+        "--review",
+        "docs/features/t1191-pre-submit-copilot-recovery-diagnosis.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "independent",
+        "--model",
+        "codex-inherited"
+      ]
+    },
+    {
+      "name": "t1191-start",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-start.json",
+      "receipt_sha256": "0c8130c61e99be8ebd13a20d7806b40a87fdd2a38427b2b2b6d833d9e051163e",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-start.log",
+      "log_sha256": "997a5928eb61b639d34110b494c5e4995fd36b38f868eecf65256d28f98c1deb",
+      "receipt_log_sha_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.17017879203194752,
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "start",
+        "T-1191"
+      ]
+    },
+    {
+      "name": "t1191-composer-tdd-red",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-composer-tdd-red.json",
+      "receipt_sha256": "4ad4030fb8b75c5e8278e7cd499ad3e3f12f8296b0d78c2b718fbf27257fbd99",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-composer-tdd-red.log",
+      "log_sha256": "d95c74b68aa6b2a9eff3a62db2ba1e662f34644ba03bae7b3e5c9f7b6b8799b6",
+      "receipt_log_sha_matches": true,
+      "exit_code": 1,
+      "elapsed_seconds": 35.7349691670388,
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/copilot/ai-copilot-content.test.tsx"
+      ]
+    },
+    {
+      "name": "t1191-composer-first-green-candidate",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-composer-first-green-candidate.json",
+      "receipt_sha256": "20a285478a97ec9dc8ddff1e5928f0221e299909c169bc2e7844415f49beb5c4",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-composer-first-green-candidate.log",
+      "log_sha256": "556839afcc733d44d7c5f359754aadcea3a6b6c52bad2374a140a00abf1467c7",
+      "receipt_log_sha_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 8.211427749949507,
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/copilot/ai-copilot-content.test.tsx"
+      ]
+    },
+    {
+      "name": "t1191-led020-complete",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-led020-complete.json",
+      "receipt_sha256": "16a4c69afbe772d8fc17fc96b3f8705e74296b3c361107676bb8d9287f91b0ac",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-led020-complete.log",
+      "log_sha256": "c83735f0855386652c9a24da038c7f8dab8ceac3203fe390b44556770331eb97",
+      "receipt_log_sha_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 17.39260295900749,
+      "argv": [
+        "env",
+        "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "/bin/zsh",
+        "-c",
+        "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-runner.test.ts src/modules/ai-runtime/chat-tools.test.ts src/modules/ai-runtime/cover-runner.test.ts src/modules/ai-runtime/multimodal/resolve.test.ts && pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-content.test.tsx src/features/copilot/chat-generate-card.test.tsx src/app/api/chat/route.test.ts"
+      ]
+    },
+    {
+      "name": "t1191-real-session-and-strict-preparation",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-real-session-and-strict-preparation.json",
+      "receipt_sha256": "473017899d6623a437a55272a373bf22eeef9ee05e31d6711e52fff45ead012d",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-real-session-and-strict-preparation.log",
+      "log_sha256": "ff9a2b2d06dc26415f23614a5614446b3c1ab9e7e879daa44544f7cbdd8e62c4",
+      "receipt_log_sha_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 5.376580374955665,
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/server/ai-runtime/live-chat-session.test.ts",
+        "src/features/copilot/live-chat-session.consumer.test.ts",
+        "src/features/draft-workbench/draft-chat-request.test.tsx",
+        "src/features/draft-workbench/work-creation-request.test.ts",
+        "src/features/draft-workbench/creation-flow-ctas.test.tsx",
+        "src/features/copilot/chat-work-editor-card.test.tsx",
+        "src/features/copilot/chat-work-creation-card.test.tsx",
+        "--retry=0"
+      ]
+    },
+    {
+      "name": "t1191-first-frontend-types",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-first-frontend-types.json",
+      "receipt_sha256": "b039a70a2ba96c14c6a145194df7157798c4c9c3478765273a2eae777bd5687a",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-first-frontend-types.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "receipt_log_sha_matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 10.27163874998223,
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ]
+    },
+    {
+      "name": "t1191-led047-complete",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-led047-complete.json",
+      "receipt_sha256": "6f8a5f6b746dbd799b16039cebb3dc74b4b119694fb5fee873b2d452431fea5a",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-led047-complete.log",
+      "log_sha256": "e7a61cf02b6070e4da45043f6583495695b1c0cb51e079243c73d6700c906433",
+      "receipt_log_sha_matches": true,
+      "exit_code": 1,
+      "elapsed_seconds": 12.564721041999292,
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/copilot/ai-copilot-interactions.test.tsx",
+        "src/features/knowledge/knowledge-dump-zone.test.tsx",
+        "src/features/topics/topics-interactions.test.tsx",
+        "src/components/overlays/overlay-routing.test.tsx",
+        "src/lib/copilot-navigation.test.ts",
+        "src/features/copilot/chat-tool-trace.test.tsx",
+        "src/features/automations/run-controls.test.tsx",
+        "src/features/automations/cadence.test.ts",
+        "--retry=0"
+      ]
+    },
+    {
+      "name": "t1191-led059-complete",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-led059-complete.json",
+      "receipt_sha256": "1dbe18865f7a4086370805b77d2beafbf3701d622f047faf6dd5ef1dfa8dd525",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-led059-complete.log",
+      "log_sha256": "eb938de67307fb7c5d5964255d6a07c59be8ac2f86072a07aad71a95a244f123",
+      "receipt_log_sha_matches": true,
+      "exit_code": 1,
+      "elapsed_seconds": 11.010231708001811,
+      "argv": [
+        "env",
+        "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "/bin/zsh",
+        "-c",
+        "pnpm --dir backend exec vitest run src/modules/ai-runtime/chat-tool-parameters.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/server/prepare-chat-reply.test.ts src/features/copilot/chat-task-control.test.ts src/features/copilot/ai-copilot-interactions.test.tsx --retry=0"
+      ]
+    }
+  ],
+  "unchanged_dependency_bytes": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+      "sha256": "f378c5f4e9d3d6c902af77f8cf68a3e7d01110a7b6e23ee552d0bb9369339772",
+      "head_byte_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/chat-task-control.ts",
+      "sha256": "c69f5df1488a43ac48602ab0833f66f4009534262961e5e8f8339a37d0967830",
+      "head_byte_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/live-chat-session.ts",
+      "sha256": "6f11f0af329bcd23ee0165a416d8f3c822bbf5e0fadbb6d0226d0d5b3a55b27e",
+      "head_byte_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/draft-workbench/draft-chat-request.tsx",
+      "sha256": "0685de879b73d5293ba627700642601c32ddf518b8f0eadd3b9810211b198730",
+      "head_byte_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/settings/settings-interactive-region.tsx",
+      "sha256": "6f9508e376b421f30c344385bca97ecf3efaad19a3e44b64971417c5197b4868",
+      "head_byte_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "head_byte_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/timeout-policy.ts",
+      "sha256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71",
+      "head_byte_equal": true
+    }
+  ],
+  "read_set": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "fe201ee2cafd25cd354a60e64d025639abaf3583d49d234eebf348e1801136b8",
+      "bytes": 56964
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT.md",
+      "sha256": "055964b6b1b50ca6780262ccb3bea20146405aebc5bc83098746482307148951",
+      "bytes": 17607
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT_CONTEXT.md",
+      "sha256": "a74ec6498a8e06fe574f86ec96c51a99076672b717d103b26b25578bd2a1ed3c",
+      "bytes": 1316
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "bytes": 8130
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3",
+      "bytes": 50753
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "bytes": 84
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reviewctl.mjs",
+      "sha256": "dde682e0ad114048daa5cfd8686a1450ccf902a8ab56a48411e88399a51ccc15",
+      "bytes": 56241
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "bytes": 44912
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/timeout-policy.ts",
+      "sha256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71",
+      "bytes": 1725
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1191-pre-submit-copilot-recovery-diagnosis.md",
+      "sha256": "746ced072262c34db65dcfecf8934e574b5c67c4bf39467054417d36356ce9cf",
+      "bytes": 9865
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1191-pre-submit-copilot-recovery-diagnosis.review.md",
+      "sha256": "10e91711231e22e4d39ff1b3741e773b04f2d81ce40b1986a29e19fe51968620",
+      "bytes": 1815
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1191-pre-submit-copilot-recovery-diagnosis.review-input.json",
+      "sha256": "f23baf4d0353831bb780535d4799297cb90446fbbe77862ad037c027480f4936",
+      "bytes": 815
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1022-nonblocking-agent-recovery.md",
+      "sha256": "5eb3f4069a9e5601a05c46e5cd5a709e0254338e64078a351d526fa1209b7363",
+      "bytes": 6103
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1023-agent-recovery-liveness.md",
+      "sha256": "5ee3d880e6378fa24baaec19bce215b64a53fa7e8c6a8b8f72dab5944f5a9ea3",
+      "bytes": 6812
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1070-director-script-workflow.md",
+      "sha256": "2513aedb1164f3ce99b0a81ea25dc4a0e79853cbda5374ce49a75fbf89c871e9",
+      "bytes": 28118
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1022-account-group-workspace/UI_RULES.md",
+      "sha256": "a19d209281fe1a51463c7c2b8a063c3fa117d53679762f33d8c9637004bc8d76",
+      "bytes": 5803
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/SKILL.md",
+      "sha256": "a623059117b5afdeaf437a6ac0944040ba666b0847e520cfe4fa42cc1ea1cec2",
+      "bytes": 14717
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/existing-project.md",
+      "sha256": "82a39fe64cb7fc183e1b3349d1829f6e163aee214c268ce2b921fd30c7f74aed",
+      "bytes": 5835
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/interaction-and-state.md",
+      "sha256": "34e8961d11f70522e3b10d18f2f59263a3e9eaf4662a3940dcef3ea7ba6f7915",
+      "bytes": 10790
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.tsx",
+      "sha256": "2fe5c5cf6f3ddb1ab6c0ed1e44afca90d5136958976affbb52a1985be713760e",
+      "bytes": 190641
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "sha256": "0791875615d414600262f285bdb18a2927ca70d10df534af511ace851fdab990",
+      "bytes": 37716
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+      "sha256": "f378c5f4e9d3d6c902af77f8cf68a3e7d01110a7b6e23ee552d0bb9369339772",
+      "bytes": 77323
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/chat-task-control.ts",
+      "sha256": "c69f5df1488a43ac48602ab0833f66f4009534262961e5e8f8339a37d0967830",
+      "bytes": 2683
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/copilot/live-chat-session.ts",
+      "sha256": "6f11f0af329bcd23ee0165a416d8f3c822bbf5e0fadbb6d0226d0d5b3a55b27e",
+      "bytes": 5586
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/draft-workbench/draft-chat-request.tsx",
+      "sha256": "0685de879b73d5293ba627700642601c32ddf518b8f0eadd3b9810211b198730",
+      "bytes": 16947
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/settings/settings-interactive-region.tsx",
+      "sha256": "6f9508e376b421f30c344385bca97ecf3efaad19a3e44b64971417c5197b4868",
+      "bytes": 76852
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/SKILL.md",
+      "sha256": "5796cf1b3b9f3de2d45c8e754e3df2146735aa14b266b7c32e2cb4c8638f4c1f",
+      "bytes": 4021
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/VERSION",
+      "sha256": "db8c5f26ffadff528c3c988af09e26339ee629b449372f4a62f0c357f7329dfc",
+      "bytes": 7
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/stage-router.md",
+      "sha256": "dd656d4b0d886aee9fafa10b61a1db9554e1d424c533dd79693f28ff7447cf1e",
+      "bytes": 1339
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-independent-spec-review/REVIEW.md",
+      "sha256": "d641e0aa5937f5e83a88e601956da75e2e0fc859b5dd72370c194703b427cbcb",
+      "bytes": 6793
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-independent-spec-review/READ_SET.json",
+      "sha256": "3011ea685ff167f8d853310be8a2591a49c5836cbec1ad0dcb9ed1b6bb62a35f",
+      "bytes": 23756
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-independent-spec-review/review-input.json",
+      "sha256": "f23baf4d0353831bb780535d4799297cb90446fbbe77862ad037c027480f4936",
+      "bytes": 815
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-spec-review-record.json",
+      "sha256": "e2d5af2f7f42b84e5a7bb335902c45ab76e90b1a4f18c8976870031a9ba3d446",
+      "bytes": 868
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-spec-review-record.log",
+      "sha256": "ed8cc346ef51d0758a26c4906b0ded0cb2a51c6198b81301e47d4341f45fef1a",
+      "bytes": 72
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-start.json",
+      "sha256": "0c8130c61e99be8ebd13a20d7806b40a87fdd2a38427b2b2b6d833d9e051163e",
+      "bytes": 431
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-start.log",
+      "sha256": "997a5928eb61b639d34110b494c5e4995fd36b38f868eecf65256d28f98c1deb",
+      "bytes": 37
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-composer-tdd-red.json",
+      "sha256": "4ad4030fb8b75c5e8278e7cd499ad3e3f12f8296b0d78c2b718fbf27257fbd99",
+      "bytes": 483
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-composer-tdd-red.log",
+      "sha256": "d95c74b68aa6b2a9eff3a62db2ba1e662f34644ba03bae7b3e5c9f7b6b8799b6",
+      "bytes": 126091
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-composer-first-green-candidate.json",
+      "sha256": "20a285478a97ec9dc8ddff1e5928f0221e299909c169bc2e7844415f49beb5c4",
+      "bytes": 484
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-composer-first-green-candidate.log",
+      "sha256": "556839afcc733d44d7c5f359754aadcea3a6b6c52bad2374a140a00abf1467c7",
+      "bytes": 425
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-led020-complete.json",
+      "sha256": "16a4c69afbe772d8fc17fc96b3f8705e74296b3c361107676bb8d9287f91b0ac",
+      "bytes": 950
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-led020-complete.log",
+      "sha256": "c83735f0855386652c9a24da038c7f8dab8ceac3203fe390b44556770331eb97",
+      "bytes": 997
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-real-session-and-strict-preparation.json",
+      "sha256": "473017899d6623a437a55272a373bf22eeef9ee05e31d6711e52fff45ead012d",
+      "bytes": 877
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-real-session-and-strict-preparation.log",
+      "sha256": "ff9a2b2d06dc26415f23614a5614446b3c1ab9e7e879daa44544f7cbdd8e62c4",
+      "bytes": 1176
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-first-frontend-types.json",
+      "sha256": "b039a70a2ba96c14c6a145194df7157798c4c9c3478765273a2eae777bd5687a",
+      "bytes": 430
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-first-frontend-types.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-led047-complete.json",
+      "sha256": "6f8a5f6b746dbd799b16039cebb3dc74b4b119694fb5fee873b2d452431fea5a",
+      "bytes": 875
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-led047-complete.log",
+      "sha256": "e7a61cf02b6070e4da45043f6583495695b1c0cb51e079243c73d6700c906433",
+      "bytes": 10682
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-led059-complete.json",
+      "sha256": "1dbe18865f7a4086370805b77d2beafbf3701d622f047faf6dd5ef1dfa8dd525",
+      "bytes": 854
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-led059-complete.log",
+      "sha256": "eb938de67307fb7c5d5964255d6a07c59be8ac2f86072a07aad71a95a244f123",
+      "bytes": 10003
+    }
+  ],
+  "read_method": "精确读当前SPEC、候选retry/attempt/prepare等消费者、原T716替身/断言、正式前轮快照与真实receipt/log；继承前轮相同宪法/技能/依赖读集且核当前字节。仅Git/文件/哈希只读，无测试/验证器/服务/CLI/DB/模型/浏览器执行。",
+  "coverage_note": "t1191-real-session-and-strict-preparation命令列7路径但实际发现6文件/30PASS；不存在的src/features/copilot/live-chat-session.consumer.test.ts不补拍PASS；本次不给该聚合代签原真实consumer四文件完整链。",
+  "after_change_evidence": "待验；当前首轮28PASS及局部门失败不是746ced新条件修复后结果。",
+  "not_certified": [
+    "新的condition实现/GREEN",
+    "最终UI_walk/视觉",
+    "完整Gate或任务完成",
+    "包/安装/native/模型真人全功能",
+    "研究恢复或新增实验"
+  ],
+  "pending_cleanup_implementation_note": {
+    "scope": "原SPEC第1/6项当前归属清理，不扩大写集",
+    "current_source": "WeakSet删除后只有owns成立才refresh；同liveSession新会话epoch变化会阻止refresh，submit disabled可能保旧渲染。仅源码风险，未运行复现。",
+    "allowed_pure_refresh_guard": "mounted且当前liveSession相同；可以不要求旧epoch，仅通知当前pending真值重算",
+    "business_write_guards": "错误/输入/附件/not-submitted仍必须当前attempt owns；原后台任务/取消/预算不变",
+    "required_actual_tests": "迟到resolve/reject→新会话submit重新可用，零旧SDK/regenerate、旧输入/错误/附件不覆盖新状态；实施后再验，不预签candidate。"
+  }
+}

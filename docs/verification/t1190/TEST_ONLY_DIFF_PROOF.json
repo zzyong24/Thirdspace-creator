@@ -1,0 +1,8 @@
+{
+  "task": "T-1190",
+  "beforeSha256": "a52c2063e67aa0849b046ded2f2dc1c7b513af7f3e8ab0a8711c6a5696b2cb32",
+  "afterSha256": "4a9c8e2d11cdc38132b60fe3eeb8e70bdf5e480086810bfd4c06d3d47859c5f7",
+  "removingOnlyThreeAddedFieldsEqualsBefore": true,
+  "addedFields": "groupId:null,groupVersion:undefined,membershipVersion:undefined,",
+  "productWriteSet": []
+}

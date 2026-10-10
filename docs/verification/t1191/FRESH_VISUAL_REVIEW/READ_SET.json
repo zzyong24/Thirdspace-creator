@@ -1,0 +1,417 @@
+{
+  "task": "T1191 fresh 独立已有界面视觉评审",
+  "review_type": "已有界面；仅一轮；不评分",
+  "recorded_at_utc": "2026-10-10T03:29:46.694301+00:00",
+  "constraints": [
+    "保留丰富紫色CreatorOS工作台方向",
+    "不更换品牌#6d4aff、Noto Sans SC、组件库或整体布局",
+    "未读取产品源码、旧图、旧评审、制作driver",
+    "未启动浏览器、服务、测试、App或研究",
+    "未修改项目；仅写本私有目录的REVIEW.md与READ_SET.json",
+    "未spawn子Agent"
+  ],
+  "environment_boundary_from_handoff": "私有中性边界Port/引擎，503网络固定；非native、真保存/模型/安装版验收",
+  "source_version": "交接标注当前最终源截图；源码revision未读取，截图SHA固定本次实际读集",
+  "references": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/SKILL.md",
+      "sha256": "a623059117b5afdeaf437a6ac0944040ba666b0847e520cfe4fa42cc1ea1cec2",
+      "actually_read": true,
+      "read_method": "exec_command cat",
+      "purpose": "已有界面评审规范与必要视觉/布局/状态参考"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/visual-review.md",
+      "sha256": "88783135161196b8e14b2010f5924b883abab2fceb474e20b42cb8ca1bbf0865",
+      "actually_read": true,
+      "read_method": "exec_command cat",
+      "purpose": "已有界面评审规范与必要视觉/布局/状态参考"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/visual-language.md",
+      "sha256": "0a089c65c2f2527fdcef9f9e6d4e0cd04cac1c61764a92f806d89fbb10963dfa",
+      "actually_read": true,
+      "read_method": "exec_command cat",
+      "purpose": "已有界面评审规范与必要视觉/布局/状态参考"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/layout-and-viewport.md",
+      "sha256": "6df09e5fbd80336310077f0da49980641ffcf850c168086f413909ca65a6c282",
+      "actually_read": true,
+      "read_method": "exec_command cat",
+      "purpose": "已有界面评审规范与必要视觉/布局/状态参考"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/references/interaction-and-state.md",
+      "sha256": "34e8961d11f70522e3b10d18f2f59263a3e9eaf4662a3940dcef3ea7ba6f7915",
+      "actually_read": true,
+      "read_method": "exec_command cat",
+      "purpose": "已有界面评审规范与必要视觉/布局/状态参考"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1022-account-group-workspace/UI_RULES.md",
+      "sha256": "a19d209281fe1a51463c7c2b8a063c3fa117d53679762f33d8c9637004bc8d76",
+      "actually_read": true,
+      "read_method": "exec_command cat",
+      "purpose": "已有界面评审规范与必要视觉/布局/状态参考"
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-prepare-1280x800.png",
+      "sha256": "a175c2e4ddc111df7d03dd6a615a0559ba40160ec9251eeff0a21026f7e47135",
+      "physical_image_size_px": [
+        1280,
+        800
+      ],
+      "logical_viewport_px": [
+        1280,
+        800
+      ],
+      "zoom_percent": 100,
+      "page": "prepare",
+      "state_from_handoff": "稿件尚未准备好",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-prepare-900x600.png",
+      "sha256": "1bb0c12d521b09ac3b6330f62ad80289ba8fd51ba9848977749a647a2ea34c94",
+      "physical_image_size_px": [
+        900,
+        600
+      ],
+      "logical_viewport_px": [
+        900,
+        600
+      ],
+      "zoom_percent": 100,
+      "page": "prepare",
+      "state_from_handoff": "稿件尚未准备好",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-creation-1280x800.png",
+      "sha256": "e1249c90a768a2c7454d449dbcf0b1414c5e3319461f1f36172430ebc47e4b31",
+      "physical_image_size_px": [
+        1280,
+        800
+      ],
+      "logical_viewport_px": [
+        1280,
+        800
+      ],
+      "zoom_percent": 100,
+      "page": "creation",
+      "state_from_handoff": "编导引擎尚未就绪",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-creation-900x600.png",
+      "sha256": "def9847c8c7e7907f6f7e268d967fe4c114fdbb054fc77927725abfb41dd1ce7",
+      "physical_image_size_px": [
+        900,
+        600
+      ],
+      "logical_viewport_px": [
+        900,
+        600
+      ],
+      "zoom_percent": 100,
+      "page": "creation",
+      "state_from_handoff": "编导引擎尚未就绪",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-walk-prepare-1280x800-submitted-unknown.png",
+      "sha256": "9613a4506837648fa752e03d72dacf302abc0ea3843b0e2b7398ecf9211fa28a",
+      "physical_image_size_px": [
+        1280,
+        800
+      ],
+      "logical_viewport_px": [
+        1280,
+        800
+      ],
+      "zoom_percent": 100,
+      "page": "prepare",
+      "state_from_handoff": "原请求结果待确认",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-walk-creation-900x600-submitted-unknown.png",
+      "sha256": "de7925f399b21e4f3ad2828eee8f2eebfbee871d0f16761d73e491b6da74777a",
+      "physical_image_size_px": [
+        900,
+        600
+      ],
+      "logical_viewport_px": [
+        900,
+        600
+      ],
+      "zoom_percent": 100,
+      "page": "creation",
+      "state_from_handoff": "原请求结果待确认",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-global-prepare-1280x800-failure200.png",
+      "sha256": "80c5bbc38ad4b12ef8b74e123229e792d4a44fbdfda1b94989584325576ad5ba",
+      "physical_image_size_px": [
+        1280,
+        800
+      ],
+      "logical_viewport_px": [
+        640,
+        400
+      ],
+      "zoom_percent": 200,
+      "page": "prepare",
+      "state_from_handoff": "全局宿主200%初态",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-global-prepare-1280x800-textarea-one-native-wheel.png",
+      "sha256": "960ad094bca17eb777508e200e839d4b20c65734f97c1518ca09505fe3ad278b",
+      "physical_image_size_px": [
+        1280,
+        800
+      ],
+      "logical_viewport_px": [
+        640,
+        400
+      ],
+      "zoom_percent": 200,
+      "page": "prepare",
+      "state_from_handoff": "全局宿主200%：交接所称标准滚轮后",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-global-prepare-900x600-failure200.png",
+      "sha256": "1476a2c9af23fae967d8da74fc76b942d92c74dde9807cdbf8448a94288fab64",
+      "physical_image_size_px": [
+        900,
+        600
+      ],
+      "logical_viewport_px": [
+        450,
+        300
+      ],
+      "zoom_percent": 200,
+      "page": "prepare",
+      "state_from_handoff": "全局宿主200%初态",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-global-prepare-900x600-textarea-one-native-wheel.png",
+      "sha256": "5e61ca4af70aa0142efc815a146c6e2ef7ad618a4eed162927a828b621b246af",
+      "physical_image_size_px": [
+        900,
+        600
+      ],
+      "logical_viewport_px": [
+        450,
+        300
+      ],
+      "zoom_percent": 200,
+      "page": "prepare",
+      "state_from_handoff": "全局宿主200%：交接所称标准滚轮后",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-global-creation-1280x800-failure200.png",
+      "sha256": "45824ed1a1c700562bb0fc8daeb04ba1154303b8cc8dbf29f993fd745d5be463",
+      "physical_image_size_px": [
+        1280,
+        800
+      ],
+      "logical_viewport_px": [
+        640,
+        400
+      ],
+      "zoom_percent": 200,
+      "page": "creation",
+      "state_from_handoff": "全局宿主200%初态",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-global-creation-1280x800-textarea-one-native-wheel.png",
+      "sha256": "45920316e2f89fbbba00ca57536150f7354fd06a0b58c2d8eb614528f0926e24",
+      "physical_image_size_px": [
+        1280,
+        800
+      ],
+      "logical_viewport_px": [
+        640,
+        400
+      ],
+      "zoom_percent": 200,
+      "page": "creation",
+      "state_from_handoff": "全局宿主200%：交接所称标准滚轮后",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-global-creation-900x600-failure200.png",
+      "sha256": "3bc9e3fb95d5596599dc635c893d4117e3c3d883d523f24ca24824a7cf5afc6f",
+      "physical_image_size_px": [
+        900,
+        600
+      ],
+      "logical_viewport_px": [
+        450,
+        300
+      ],
+      "zoom_percent": 200,
+      "page": "creation",
+      "state_from_handoff": "全局宿主200%初态",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-global-creation-900x600-textarea-one-native-wheel.png",
+      "sha256": "0c4ec7414009c6ef77c4cd5d032ac37b1da1f5e6acf0a237bec2c57d60f29e96",
+      "physical_image_size_px": [
+        900,
+        600
+      ],
+      "logical_viewport_px": [
+        450,
+        300
+      ],
+      "zoom_percent": 200,
+      "page": "creation",
+      "state_from_handoff": "全局宿主200%：交接所称标准滚轮后",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-global-prepare-1280x800-focus-submit-button.png",
+      "sha256": "c5da285f1403ef2e82080f34aaff07b8ce8173b2b0702b88589850794e3f55e7",
+      "physical_image_size_px": [
+        1280,
+        800
+      ],
+      "logical_viewport_px": [
+        640,
+        400
+      ],
+      "zoom_percent": 200,
+      "page": "prepare",
+      "state_from_handoff": "全局宿主200%：交接所称发送控件聚焦后",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-global-creation-1280x800-focus-copilot-error-engine-settings-link.png",
+      "sha256": "8ac9f28eb33f7adce838c7ff1ca6ad2786c2708b44fc1ec12c2a00157ea87c43",
+      "physical_image_size_px": [
+        1280,
+        800
+      ],
+      "logical_viewport_px": [
+        640,
+        400
+      ],
+      "zoom_percent": 200,
+      "page": "creation",
+      "state_from_handoff": "全局宿主200%：交接所称引擎设置入口聚焦后",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-global-prepare-900x600-focus-submit-button.png",
+      "sha256": "9affbc18519c3e61f3f240cf5ed03d8416dfae22b5b669525f3d4c88d338f22f",
+      "physical_image_size_px": [
+        900,
+        600
+      ],
+      "logical_viewport_px": [
+        450,
+        300
+      ],
+      "zoom_percent": 200,
+      "page": "prepare",
+      "state_from_handoff": "全局宿主200%：交接所称发送控件聚焦后",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-ui-harness/final-source-global-creation-900x600-focus-copilot-error-engine-settings-link.png",
+      "sha256": "25d92d9e95921d6309b0a5af0bb28c16019b5b6cc747410e937b96b927c162f7",
+      "physical_image_size_px": [
+        900,
+        600
+      ],
+      "logical_viewport_px": [
+        450,
+        300
+      ],
+      "zoom_percent": 200,
+      "page": "creation",
+      "state_from_handoff": "全局宿主200%：交接所称引擎设置入口聚焦后",
+      "actually_viewed": true,
+      "view_method": "tools.view_image(detail=original)",
+      "scope": "当前完整截图；含100%局部组件或200%共享全局宿主，顶部harness说明不属于产品评判范围",
+      "claims_supported": "可见文字、构图、换行、裁切、状态外观、控件进入可见区；不证明真实动作或服务结果"
+    }
+  ],
+  "screenshot_count": 18,
+  "not_verified": [
+    "真实请求保留、继续和幂等行为",
+    "引擎设置入口的实际目标、返回、就绪与提交",
+    "原会话回执、核对原请求及是否自动重发",
+    "保存后重新读取、真实模型结果、真实安装版与native宿主",
+    "键盘Tab/Enter/Esc、焦点返回、点击及滚轮因果；所称focus/wheel仅作为提供的静态状态",
+    "无障碍名称、实际DOM禁用/处理中状态",
+    "CSS字号、精确tokens、字体加载与组件归属",
+    "200%完整长内容与全部滚动位置；只看所提供初态、一次滚轮及focus状态",
+    "动效、reduce-motion、真实网络生命周期",
+    "完整Dashboard/其它工作台页的丰富度、账号组与数据隔离"
+  ],
+  "missing_materials": []
+}

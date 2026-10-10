@@ -182,7 +182,10 @@ beforeEach(() => {
       sourceMessage: source,
     };
     lastSnapshot = snapshot;
-    submittedAssembly = await assemble(ctx, snapshot);
+    const prepareOptions: { executionEngine: "pi" | "codex" } = {
+      executionEngine: input.executionEngine ?? "pi",
+    };
+    submittedAssembly = await assemble(ctx, snapshot, prepareOptions);
     return {
       taskId: "task-1",
       executionTaskId: "execution-1",
@@ -276,6 +279,35 @@ describe("POST /api/chat — 鉴权门", () => {
     expect(res.status).toBe(200);
     expect(resolveLocalContext).toHaveBeenCalledTimes(1);
     expect(durableSubmit).toHaveBeenCalledTimes(1);
+    expect(preparedInput().executionEngine).toBe("pi");
+  });
+
+  it("显式 Codex 原样传到持久提交和本轮装配，不回落 Pi", async () => {
+    const res = await POST(chatReq({
+      messages: [userMessage("检查当前稿件")],
+      executionEngine: "codex",
+    }));
+    expect(res.status).toBe(200);
+    expect(durableSubmit).toHaveBeenCalledTimes(1);
+    expect(durableSubmit.mock.calls[0]![1]).toMatchObject({
+      conversationId: "conv-1",
+      sourceMessageId: "m-1",
+      executionEngine: "codex",
+    });
+    expect(preparedInput().executionEngine).toBe("codex");
+  });
+
+  it("非法引擎返回明确400且不保存消息或启动任务", async () => {
+    const res = await POST(chatReq({
+      messages: [userMessage("检查当前稿件")],
+      executionEngine: "unknown-engine",
+    }));
+    expect(res.status).toBe(400);
+    await expect(res.json()).resolves.toMatchObject({ code: "CHAT_ENGINE_INVALID" });
+    expect(createConversation).not.toHaveBeenCalled();
+    expect(createMessage).not.toHaveBeenCalled();
+    expect(durableSubmit).not.toHaveBeenCalled();
+    expect(prepareChatReply).not.toHaveBeenCalled();
   });
 
   it("非法 JSON body → 400", async () => {
@@ -693,6 +725,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
     const { createAiRepository, createChatTurnSubmissionService, createChatTurnCompletionService } = await import("@creatoros/backend/modules/ai");
     const { createPersistentTaskService, createExecutionCallLedgerService, createExecutionCheckpointService } = await import("@creatoros/backend/modules/execution");
     const { createExecutionGenerationPorts } = await import("../../../../../backend/src/modules/execution/execution-generation-ports.service");
+    const { validateTerminalPlanFailures, validateTerminalToolFailures } = await import("../../../../../backend/src/modules/execution/workbench-plan.service");
     const instance = await createDb();
     const { db, client } = instance;
     let sequence = 0;
@@ -741,7 +774,7 @@ describe("POST /api/chat — 装配 + 持久化", () => {
         usage: { inputTokens: 21, outputTokens: 8 },
       });
       await createExecutionCheckpointService(db).save(ref, { expectedRevision: 0, expectedLedgerSequence: 1, messages: [{ role: "assistant", callId: call.callId }] });
-      const result = await createChatTurnCompletionService(db).commitResult(ref, { lastModelCallId: call.callId, toolCallIds: [] });
+      const result = await createChatTurnCompletionService(db, { validateTerminalPlanFailures, validateTerminalToolFailures }).commitResult(ref, { lastModelCallId: call.callId, toolCallIds: [] });
       expect(result).toMatchObject({ outcome: "succeeded", messageId: `chat:${source.id}` });
       const messages = await repo.listMessages(conversationId);
       expect(messages).toHaveLength(2);
@@ -957,7 +990,9 @@ describe("POST /api/chat — 装配 + 持久化", () => {
 describe("[T-239c] POST /api/chat — 中断与恢复", () => {
   it("请求信号进入装配，但断开事件连接不向原任务发送 cancel", async () => {
     const controller = new AbortController();
+    let subscriptionSignal: AbortSignal | undefined;
     durableSubscribe.mockImplementationOnce(async function* (_ctx, _id, signal: AbortSignal) {
+      subscriptionSignal = signal;
       yield { events: [{ chunk: { type: "text-delta", id: "t", delta: "已写" } }], hasMore: true, status: "running" };
       await new Promise<void>(resolve => {
         if (signal.aborted) resolve();
@@ -969,8 +1004,20 @@ describe("[T-239c] POST /api/chat — 中断与恢复", () => {
     });
     const res = await POST(req);
     expect(preparedInput().abortSignal).toBe(req.signal);
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
+    // 零预读响应只在 pull 时推进：先读 start 和已确认文字，再断开连接。
+    const start = await reader.read();
+    const written = await reader.read();
+    expect(start.done).toBe(false);
+    expect(written.done).toBe(false);
+    const body = decoder.decode(start.value) + decoder.decode(written.value);
+    expect(body).toContain("已写");
+    expect(subscriptionSignal?.aborted).toBe(false);
     controller.abort();
-    expect(await res.text()).toContain("已写");
+    expect(subscriptionSignal?.aborted).toBe(true);
+    expect((await reader.read()).done).toBe(true);
+    reader.releaseLock();
     expect(durableCommand).not.toHaveBeenCalled();
   });
 

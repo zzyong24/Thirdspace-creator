@@ -1,0 +1,292 @@
+{
+  "actualCanonicalHead": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+  "errors": 27,
+  "warnings": 1,
+  "owners": [
+    {
+      "actualError": "✗ [ERROR] review receipt: T-1072-owned-devices: review receipt 缺少任务 T-1072-owned-devices 的 hash-chained event",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-1021: review receipt 已过期：SPEC hash 1ca8392b4d5e != 242b25c4f83f",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-915: BACKLOG review receipt 692283b8bace 与 snapshot ad76cf555129 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-859: BACKLOG review receipt 9895a91a63a8 与 snapshot 5818394813ca 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-858: BACKLOG review receipt 2521be715a0a 与 snapshot c76009a5586c 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-824: BACKLOG review receipt 18361dc8c3c3 与 snapshot f0e215103ddf 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-819: BACKLOG review receipt 0425ab7b87b8 与 snapshot a8879edf798f 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-816: BACKLOG review receipt fb03de3a57d7 与 snapshot 7896d566ccf8 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-768: BACKLOG review receipt 3eb18966ea59 与 snapshot 64f8010b2045 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-726: BACKLOG review receipt 2809820bf64a 与 snapshot 39e3f41ca866 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-707: BACKLOG review receipt 06867c4bf60c 与 snapshot 87de34262527 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-703: BACKLOG review receipt c1a3920aea71 与 snapshot 0662dafac8fa 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-691: BACKLOG review receipt 9444ca5b32a9 与 snapshot 2f2a131519e7 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-694: BACKLOG review receipt 2c7be136aea0 与 snapshot 171b7c9ad2f2 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-656: BACKLOG review receipt 5f6970ac76f2 与 snapshot bd8a6ac135f0 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-652: 审核列为「待审」；存在未销账问题，不得开工",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-645: BACKLOG review receipt 5dfe24b42eb7 与 snapshot 7ff0c3cb1906 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-642: BACKLOG review receipt 7728c9ed44bd 与 snapshot 9002b8dbeb4d 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] review receipt: T-635: BACKLOG review receipt b8add273a494 与 snapshot 84661017fde5 不一致",
+      "existingTasks": [
+        "T-1082",
+        "T-1025",
+        "T-916"
+      ],
+      "scope": "历史审核链或SPEC/快照不一致",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] lesson LED-014 RECURRED — 局部改稿门回归：脚本写入必须持久化稳定段落 ID，存量无 ID 版本须用稿面同一兼容锚点并在新版本自愈；技术锚点必须由稿面点击时可信绑定；模型只产新段落正文；未保存稿先自动保存；采纳只替换目标段；冲突不得静默覆盖，也不得让失效锚点污染后续普通对话。",
+      "existingTasks": [
+        "T-1015",
+        "T-1018",
+        "T-1101-global-gates"
+      ],
+      "scope": "原教训检查失败；逐项真实公共命令及根因仍需原任务复核",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] lesson LED-017 RECURRED — 逐字保真门回归：必须从本轮受信 sourceRef 恢复精确原文、校验长度和 SHA-256，并由确定性 runner 生成待采纳候选；恢复失败不得退回 extraBrief 摘要或模型生成。",
+      "existingTasks": [
+        "T-1015",
+        "T-1018",
+        "T-1101-global-gates"
+      ],
+      "scope": "原教训检查失败；逐项真实公共命令及根因仍需原任务复核",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] lesson LED-018 RECURRED — 桌面浏览器交付门回归：壳层注入目录必须覆盖宿主机残留环境；入口先系统 Chrome、再随包 Chromium；正式桌面态不得依赖 CLI/npm/联网下载；安装校验必须看到真实 chrome.exe。",
+      "existingTasks": [
+        "T-1015",
+        "T-1018",
+        "T-1101-global-gates"
+      ],
+      "scope": "原教训检查失败；逐项真实公共命令及根因仍需原任务复核",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] lesson LED-020 RECURRED — 封面工具链回归：生成封面入口必须绑定 cover.generate；发布参考候选只含真实已发布且有封面的作品；模型按相关性优先、时间次序选择后必须传真实 coverAssetId；组合回合禁止 local.tools 且不得静默纯文降级。",
+      "existingTasks": [
+        "T-1015",
+        "T-1018",
+        "T-1101-global-gates"
+      ],
+      "scope": "原教训检查失败；逐项真实公共命令及根因仍需原任务复核",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] lesson LED-042 RECURRED — 分页真相门回归：可见总数必须消费同一服务端查询的 meta.total；items.length 只表示已显示；超过首批必须能继续加载并保持筛选、排序、账号上下文一致。",
+      "existingTasks": [
+        "T-1015",
+        "T-1018",
+        "T-1101-global-gates"
+      ],
+      "scope": "原教训检查失败；逐项真实公共命令及根因仍需原任务复核",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] lesson LED-054 RECURRED — 恢复短事务读取可信身份→事务外 I/O→短事务复核租约；对象存储回读必须在租约事务外完成；外部副作用按原键对账后自动续跑同一任务。",
+      "existingTasks": [
+        "T-1015",
+        "T-1018",
+        "T-1101-global-gates"
+      ],
+      "scope": "原教训检查失败；逐项真实公共命令及根因仍需原任务复核",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] lesson LED-058 RECURRED — 恢复模型候选的 superseded→retry_wait→同任务重试链；保留预算、检查点和原对话。只有无模型配置进入设置引导；用户取消与外部副作用 unknown 继续禁止自动重放。",
+      "existingTasks": [
+        "T-1015",
+        "T-1018",
+        "T-1101-global-gates"
+      ],
+      "scope": "原教训检查失败；逐项真实公共命令及根因仍需原任务复核",
+      "rootCauseRevalidatedByThisAggregate": false
+    },
+    {
+      "actualError": "✗ [ERROR] lesson LED-053 RECURRED — 超时预算回归：正执行最低两分钟；独立外层覆盖完整内部预算；原绝对期限/continuous/即时取消保持；前端保留原任务ID；HyperFrames同版本补丁与实际CLI配置必须一致。公共链回归失败不能用词法扫描替代。",
+      "existingTasks": [
+        "T-1081",
+        "T-1066-timeout-policy",
+        "T-1101-global-gates"
+      ],
+      "scope": "原超时检查失败；公共详细输出未在总对账中展开，不以相同marker断定同根因",
+      "rootCauseRevalidatedByThisAggregate": false
+    }
+  ],
+  "removedMarkers": [
+    "✗ [ERROR] lesson LED-006 RECURRED — 桌面启动门回归：必须保留静态 splash、显式 sidecar cwd、runtime 失败可见且落日志，并在 Windows 安装后真启动 GUI 等待 MAIN_PAGE_LOAD_FINISHED。",
+    "✗ [ERROR] lesson LED-022 RECURRED — 跨平台文件定位门回归：win32/darwin/linux 必须各有 command/API、shell-free argv/path、completion 和中性 user copy；route 必须消费 plan + launcher，禁止直接执行单平台命令。",
+    "✗ [ERROR] lesson LED-048 RECURRED — 保留原执行与成功进度，修复独立优先调度、按账号资源管理及各源计数；禁止总时长误杀、TTL抢锁、关闭开关后自动新建任务或盲目重试。",
+    "✗ [ERROR] lesson LED-049 RECURRED — 修复有界读取与同用户账号缓存失效，保留日历/运行真值及稀疏趋势口径；禁止删除历史或统一长TTL提速。",
+    "✗ [ERROR] lesson LED-050 RECURRED — 按真实过渡完成token合并同目标、先筛选再展开；保留不同导航与失败重试，不缓存整页动态待办。"
+  ],
+  "backlogWarningOwner": "T-1171",
+  "uploadJourneyFailureOwner": [
+    "T-1179",
+    "T-1180",
+    "T-1181",
+    "T-1182"
+  ],
+  "noAllFunctionAcceptance": true
+}

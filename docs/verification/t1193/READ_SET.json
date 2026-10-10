@@ -1,0 +1,28 @@
+{
+  "kind": "root只读源码诊断，不是独立review或操作PASS",
+  "source": [
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+      "sha256": "60fe11f9b68530fbe22a0e282e1eca182659c5e917dba281a04d0eaaa9adc1da",
+      "inspection": "实读1329–1365/1728–1759/1840–1898/3353–3439/3590–3615发送与错误消费者"
+    },
+    {
+      "path": "frontend/src/components/ui/button.tsx",
+      "sha256": "7d3e97a7bbd62bce2ccbdedfd291e05a8ccd58cf2277f49702d169f0afce8937",
+      "inspection": "完整shared Button variants；生产恢复入口是同文件原生button并非自动继承shared sm字号"
+    },
+    {
+      "path": "docs/features/t1193-copilot-unknown-request-presentation.md",
+      "sha256": "756e6b93eebd9777daeb2989717198a24dc273b6f9f21ebf73331af0229ca30f",
+      "inspection": "当前诊断SPEC全文"
+    },
+    {
+      "path": "docs/verification/t1191/FRESH_VISUAL_REVIEW/REVIEW.md",
+      "sha256": "2f2247070f8314850d50b5778ef51cb3b7479ce58436a5df8b980a9382e4a192",
+      "inspection": "完整fresh视觉意见，严守未操作/未CSS度量边界"
+    }
+  ],
+  "experiments": 0,
+  "productWrites": 0,
+  "pending": "实际重复提交/新草稿覆盖操作仍未验；精确修复SPEC待独评"
+}

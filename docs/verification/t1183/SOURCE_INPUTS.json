@@ -1,0 +1,15 @@
+{
+  "head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+  "source": {
+    "frontend/src/server/ingestion/douyin-cdp.test.ts": "d76edcf3473a8e107e78495fee8c9173d97e11ad58f071bee3442e0f67e7014c"
+  },
+  "config": {
+    "orchestrator/process/reconcile.config.json": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44"
+  },
+  "initialIndependentReviewBeforeEdit": true,
+  "firstFormalRecordBeforeFirstEdit": false,
+  "formalFailuresPreserved": true,
+  "restoredOriginalTestBeforeSupportedRecord": true,
+  "finalCompleteCommandAfterSupportedRecord": true,
+  "nativeApp": false
+}

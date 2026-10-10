@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/taskctl.mjs",
+    "block",
+    "T-1181",
+    "--reason",
+    "两次MP4完成后公开库存有文件而列表等120秒不可见；T1182卡已记录隐藏input绕过按钮条件的观测1，剩一次真实button/filechooser控制，原因UNKNOWN；暂停产品修补/扩大workaround/重复同族全量/不可逆操作。"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T01:36:53.216263+00:00",
+  "finishedAt": "2026-10-10T01:36:53.338881+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 0.12249654199695215,
+  "logSha256": "f3ecf6ac3d160cbe2b85e8b55e0fec7349b071c8ec6065b9d26f02141ab748a0"
+}

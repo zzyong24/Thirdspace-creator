@@ -1,0 +1,7 @@
+{
+  "phase": "first implementation after initial approval; LED047/059 each same T716 failure retained, not final green",
+  "sha256": {
+    "frontend/src/features/copilot/ai-copilot-content.tsx": "2fe5c5cf6f3ddb1ab6c0ed1e44afca90d5136958976affbb52a1985be713760e",
+    "frontend/src/features/copilot/ai-copilot-content.test.tsx": "0791875615d414600262f285bdb18a2927ca70d10df534af511ace851fdab990"
+  }
+}

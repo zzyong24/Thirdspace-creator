@@ -1,0 +1,7 @@
+# T1191 证据元数据时序补充
+
+独立源码复核发现maker报告70项artifact中69项size/SHA与最终字节相同；自身摘要输出final-source-report.log在报告生成时为空，随后stdout产生2225字节，原size0/SHA空内容与最终日志不一致。原REPORT.json、log及所有失败保持，没有覆盖或重跑。
+
+FINAL_ARTIFACT_MEASUREMENTS_ADDENDUM.json在maker结束后逐项测量70文件的size/SHA，并用PNG IHDR标准库精确复核所有物理尺寸；原visuallyRead仅保maker声明，不由本root机械统计签看图。补充绑定原REPORT实际SHA及唯一字节差异，自身不放清单，无循环checksum；不能把它倒签成原JSON已经最终闭包。完整源、真正浏览器观测和Gate仍各自核独立SHA。
+
+首次准备把图片的附加width/height/visuallyRead字段也当dict差异，assert失败且未写文件；这次按每个实际字节/尺寸字段核对，未删除产物或改原判断。属于T1191验证产物准确性范围的机械补充，无产品/测试/helper改动，无新研究。root测量仍需独审再读确认，非独立UI/native/模型/任务完成。

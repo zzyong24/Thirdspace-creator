@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/reviewctl.mjs",
+    "record",
+    "T-1187",
+    "--spec",
+    "docs/features/t1187-copilot-live-session-test-contract.md",
+    "--constitution",
+    "docs/产品定位.md",
+    "--input",
+    "docs/features/t1187-copilot-live-session-test-contract.review-input.json",
+    "--review",
+    "docs/features/t1187-copilot-live-session-test-contract.review.md",
+    "--backlog",
+    "BACKLOG.md",
+    "--review-mode",
+    "independent",
+    "--model",
+    "codex-inherited"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T02:35:47.219300+00:00",
+  "finishedAt": "2026-10-10T02:35:47.365791+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.1463733749696985,
+  "logSha256": "ac22ba390a208b18b6c8862b5369b4916eebaadcb1371039ab9a78a2be2f7ea6"
+}

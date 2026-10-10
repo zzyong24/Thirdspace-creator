@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "contract",
+    "exec",
+    "vitest",
+    "run",
+    "src/assistant-system.test.ts"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T02:19:03.902883+00:00",
+  "finishedAt": "2026-10-10T02:19:04.421367+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 0.5182049999712035,
+  "logSha256": "75d50b95d49c6fd78e26b8bf6e547fab0832f3c0c3af750d222f07f2bde09bd3"
+}

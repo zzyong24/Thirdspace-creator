@@ -1128,3 +1128,15 @@
 |T-1124|核对本轮新增来源分支未合入main的源码并闭合整合|✅ 待办|—|—|[实际诊断](docs/features/t1124-current-worktree-source-gap.md)|T1080删除前只读再盘点：canvas来源17条源码/测试路径main缺失，chart来源1条缺失，其它58条不同不能直接算遗漏；保留来源与活跃树，逐项核main替代及新增SPEC/独评，禁止ours丢源码或代签全合并。先交付当前已复核包继续验收，本轮新增功能不冒称已入包。|
 |T-1117|修复画布保存英文反馈与参考选择器名称展示遗漏|✅ 待办|PASS[REV:161a32c6331a]|PASS:32177b98fc54|[SPEC](docs/features/t1117-canvas-error-reference-preview.md)|当前main两条Chrome流程通过，但实际截图保存错误裸英文，参考已选卡仍长文件名；复用原中文反馈并闭合showIdentity=false全选择流程，精确file/保存/owner不变。独評、实际RED/GREEN及浏览器证据后修复；不代签模型或旧失败。|
 |T-1108|核对画布连线引用保存回读及浏览器短观察窗口|✅|PASS[REV:7725159d945d]|PASS:54ebbd993813|[实际缺陷](docs/features/t1108-canvas-public-observation.md) [详情](BACKLOG-details.md#t-1108)|见详情。|
+
+## 归档于 2026-10-10
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1186|核对全部工具宿主参数回归的两项当前失败|✅ 待办|PASS[REV:bb17ace346de]|—|[实际诊断](docs/features/t1186-tool-host-sample-diagnosis.md)|T1184/T1185原LED014当前前端178PASS，后端chat-tools selected/project遍历各失败；先冻结完整原命令结果并核具体工具/schema/样本，不猜产品错误或跳过工具，不改guard、预算、原研究暂停。|
+|T-1185|校准聊天完成与断开连接回归的实际前置条件|✅ 待办|PASS[REV:f175a67abe08]|—|[SPEC](docs/features/t1185-chat-completion-and-stream-fixtures.md)|T1184首轮54PASS/2FAIL；现代终态缺实际validator、零预读stream在abort前未读文字。只独评后修这两测试准备，保真实原子完成、即时取消订阅与不取消任务，不改产品/预算/guard。|
+|T-1184|核对聊天路由回归的装配参数夹具|✅ 待办|PASS[REV:1092852bacd8]|—|[SPEC](docs/features/t1184-chat-route-assembly-fixture.md)|LED014当场147PASS/29FAIL、context_preparation TypeError；旧mock不给必需第三参数，先独评只校准单测试和引擎输入负测，保原来源/权限/恢复与原完整串行命令，不称真实模型已验。|
+|T-1183|校准浏览器导航回归的已过期默认预算断言|✅ 待办|PASS[REV:7b12a69947e9]|—|[SPEC](docs/features/t1183-navigation-timeout-test-contract.md)|LED018原完整命令154PASS/1FAIL、后段未执行；旧测试期待60秒而真实消费者已120秒。仅独评后校准该两处测试期待/旁注，保原重试与错误透传、完整串行复验，不改产品/预算或代签原生。|
+|T-1178|校准双端打包资源回归的第三方声明前置条件|✅ 待办|PASS[REV:8d538a517aa5]|—|[SPEC](docs/features/t1178-package-resource-contract.md)|原LED006当场42PASS/1FAIL：旧断言只允许tar，漏当前第三方声明；先独评只校准该测试，保单tar与无sidecar目录保护，不改包配置/流程/预算。|
+|T-1177|修复首页性能回归的稀疏指标夹具缺字段|✅ 待办|PASS[REV:e7019c7dcc42]|—|[SPEC](docs/features/t1177-dashboard-rollup-fixture.md)|原LED050实际7前端PASS、后端45PASS/3FAIL；旧夹具缺合同finishAvg导致toFixed异常，只校准该测试、保原并行/缓存/跨号/诚实缺数断言。|
+|T-1176|校准导航与封面恢复回归的过期前置条件|✅ 待办|PASS[REV:d0fefb6b762e]|—|[SPEC](docs/features/t1176-current-regression-preconditions.md)|当前LED049三处旧导航/容器断言，LED048封面用例缺真实父稿件；保原红测，独立核合同后只改两测试，原完整检查与隔离浏览器复验，不改产品/守卫/预算。|

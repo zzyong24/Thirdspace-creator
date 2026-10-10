@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "T1190独立SPEC初审PASS：已自行核真实RequestContext、legacy fixture来源、membership冻结/持久任务/lease/host reader/凭据消费者与原失败字节。仅准入原317完整toHaveBeenCalledWith期待补groupId:null、groupVersion:undefined、membershipVersion:undefined；产品写集空，原316候选/身份及全部17例、四参数、归属/父任务/取消/unknown/预算守卫不变。原LED058为Worker54PASS、后端117PASS/1FAIL、前端未执行、exit1；初审不签实施或功能PASS，原全局债/T1188失败与上传研究2/2暂停保留。",
+  "findings": []
+}

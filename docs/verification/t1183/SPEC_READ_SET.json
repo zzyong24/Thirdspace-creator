@@ -1,0 +1,289 @@
+{
+  "schema": "independent-read-set/v1",
+  "task_id": "T-1183",
+  "review_kind": "initial",
+  "reviewer": "/root/t1159_fix_recheck_recovery",
+  "reviewed_at_utc": "2026-10-10T01:58:13.335003+00:00",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+  "verdict": "PASS_BOUNDED_SPEC_INITIAL",
+  "findings": [],
+  "spec_sha256": "e5df8ea59cf0fa1ec655675a71dac158a0e9b7de9c3c3db8e61135db21d5781a",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "reads": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1183-navigation-timeout-test-contract.md",
+      "sha256": "e5df8ea59cf0fa1ec655675a71dac158a0e9b7de9c3c3db8e61135db21d5781a",
+      "bytes": 2900,
+      "read_scope": "本轮全文最终重读；正式独立初审唯一绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "9c4e39e032cbd41ffd65dfe33216399386bdbbe80a453ca6b488f9764502abee",
+      "bytes": 56986,
+      "read_scope": "本轮顶部可执行T1183/SPEC链接与未实施状态；现完整文件字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143,
+      "read_scope": "本会话已读产品定位；本轮素材/桌面/稳定执行相关适用原合同现字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT.md",
+      "sha256": "e876ef317cd0d7885f7ed009d42f4ee6505803d7c86fbc1e4c9ad708fd9b0107",
+      "bytes": 17765,
+      "read_scope": "本会话项目活记忆已读；本轮实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT_CONTEXT.md",
+      "sha256": "a74ec6498a8e06fe574f86ec96c51a99076672b717d103b26b25578bd2a1ed3c",
+      "bytes": 1316,
+      "read_scope": "本会话阶段路由已读；本轮实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819,
+      "read_scope": "本会话已读适用独评/不补历史红测/LED053维护边界"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "bytes": 8130,
+      "read_scope": "本会话已读物理边界，测试校准无产品层变更"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3",
+      "bytes": 50753,
+      "read_scope": "本会话阶段4-build维护路由现字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "bytes": 84,
+      "read_scope": "项目3.29.0流程版本"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/engineering/timeout-policy.md",
+      "sha256": "94385308b37926c3f1b81cf3c8bf0533983025bfc539cac7c914770c112604cf",
+      "bytes": 3245,
+      "read_scope": "本轮全文：正执行至少两分钟/更长预算/嵌套/原期限/公共链"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1066-timeout-policy.md",
+      "sha256": "323d092d8e75167b287500d8d628a5528ecf2bf062fa81d476cb9751e1e463af",
+      "bytes": 5286,
+      "read_scope": "本轮全文：用户既有全系统两分钟授权/所有权/任务范围及验收"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/SKILL.md",
+      "sha256": "5796cf1b3b9f3de2d45c8e754e3df2146735aa14b266b7c32e2cb4c8638f4c1f",
+      "bytes": 4021,
+      "read_scope": "本会话已加载技能与阶段路由，本轮现字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/VERSION",
+      "sha256": "db8c5f26ffadff528c3c988af09e26339ee629b449372f4a62f0c357f7329dfc",
+      "bytes": 7,
+      "read_scope": "本会话已加载技能与阶段路由，本轮现字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/stage-router.md",
+      "sha256": "dd656d4b0d886aee9fafa10b61a1db9554e1d424c533dd79693f28ff7447cf1e",
+      "bytes": 1339,
+      "read_scope": "本会话已加载技能与阶段路由，本轮现字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp.test.ts",
+      "sha256": "3f41feccfe0ca367e49665592dc4f0af91344e77e2c31f736f378f15b22fe594",
+      "bytes": 133827,
+      "read_scope": "本轮实际imports、2411–2565：makeGotoPage/完整4个gotoWithRetry用例；其余原字节整体Git比较，不冒称新增实现已改"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp.ts",
+      "sha256": "c9b59ec63ef473e2c6be79e78b82ffcba1d6ffcc5b044bb4b00244873bbe266c",
+      "bytes": 162157,
+      "read_scope": "本轮实际71–73原样worker import/re-export及goto调用位置；完整字节Git比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/runtime/browser/navigation-retry.ts",
+      "sha256": "3633f081059b7356a74b087faf748c0bfdeef46d4876c9079249921412840527",
+      "bytes": 2983,
+      "read_scope": "本轮全文：executionTimeoutMs→真实goto、重试/退避/取消/最后原错；旧JSDoc不代实际合同"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/timeout-policy.ts",
+      "sha256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71",
+      "bytes": 1725,
+      "read_scope": "本轮全文：固定MIN120000与executionTimeoutMs默认/更长/无效处理"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/tools/timeout-policy/verify.mjs",
+      "sha256": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+      "bytes": 2227,
+      "read_scope": "本轮全文：逐组公共contract/worker/backend/frontend/mcp/Node检查且保非零"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "bytes": 44912,
+      "read_scope": "本轮实际LED018/053原命令与失败责任；完整配置Git字节比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led018-diagnostic.json",
+      "sha256": "9fe63d9b90777cd2877b93caca931ebb860bfc62217e9a6cb4724ad94a71dfb2",
+      "bytes": 769,
+      "read_scope": "本轮全文：原完整串行argv/隔离环境/exit1/时间/logSha256"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led018-diagnostic.log",
+      "sha256": "5cfce07bbab012407ea7ebd846a30d83b0ed3751390836e3bb9ff16d96f326a1",
+      "bytes": 1898,
+      "read_scope": "本轮原日志全文：144 tests与总154PASS/1FAIL/retry x2/Expected60000/Received120000/未到cargo"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1015/current-20261010/CANONICAL.receipt.json",
+      "sha256": "5a677623138dc5b136690f0293f2afa876a023f34428ff94ccc26dd33d4b6a9d",
+      "bytes": 589,
+      "read_scope": "本轮实际完整canonical收据：exit1/1158.662259833014秒/原logSHA，非PASS"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1015/current-20261010/CANONICAL.log.gz",
+      "sha256": "7ac6c1c9ba6a4a8bdb1d2c4cb50e14ac3c1e9e070ed0cdb8ecdfa6ce88adef82",
+      "bytes": 5954,
+      "read_scope": "本轮实际gzip原字节与解压SHA核对；语义只读LED018/LED053与错误/警告段，不重核所有子根因"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1015/current-20261010/CURRENT_FAILURE_OWNERS.json",
+      "sha256": "f3b6cc109f081f5bf5e292d9aa7c4154f97a626a7a56d2864c9bb9d85c1e7d04",
+      "bytes": 12418,
+      "read_scope": "本轮全文：27ERROR/1WARN既有owner；LED053=T1081/T1066-timeout-policy/T1101-global-gates且rootCauseRevalidated=false"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1015/current-20261010/REPORT.md",
+      "sha256": "0a9f94444e370dedc9f465fb51170ce4d7fb79b69e8e725930836ad98289f29c",
+      "bytes": 2771,
+      "read_scope": "本轮全文：完整Gate仍FAIL、来源冻结与上传研究暂停/范围界限"
+    }
+  ],
+  "backlog_rows": [
+    "|T-1183|校准浏览器导航回归的已过期默认预算断言|📋 待办|—|—|[SPEC](docs/features/t1183-navigation-timeout-test-contract.md)|LED018原完整命令154PASS/1FAIL、后段未执行；旧测试期待60秒而真实消费者已120秒。仅独评后校准该两处测试期待/旁注，保原重试与错误透传、完整串行复验，不改产品/预算或代签原生。|"
+  ],
+  "exact_code_write_set": [
+    "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp.test.ts"
+  ],
+  "exact_proposed_edits": [
+    {
+      "line_before": 2478,
+      "kind": "comment",
+      "change": "默认domcontentloaded / 60000旁注校准120000"
+    },
+    {
+      "line_before": 2481,
+      "kind": "fixed_expectation",
+      "before": 60000,
+      "after": 120000,
+      "derived_from_sut_or_constant": false
+    }
+  ],
+  "preserved": [
+    "原144用例",
+    "首次单goto与零退避",
+    "两次失败后成功的3调用/2000与5000退避",
+    "用尽重试抛最后原错/4调用/3退避",
+    "短退避序列复用末位",
+    "fake error 60000ms文本和原错60000正则",
+    "实际所有权/取消/guard/预算/配置/SDK",
+    "原RED日志/重试x2/cargo尚未执行事实",
+    "T1181暂停/2次研究预算用尽"
+  ],
+  "source_frozen_comparisons": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp.test.ts",
+      "sha256": "3f41feccfe0ca367e49665592dc4f0af91344e77e2c31f736f378f15b22fe594",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/ingestion/douyin-cdp.ts",
+      "sha256": "c9b59ec63ef473e2c6be79e78b82ffcba1d6ffcc5b044bb4b00244873bbe266c",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/ai-worker/src/runtime/browser/navigation-retry.ts",
+      "sha256": "3633f081059b7356a74b087faf748c0bfdeef46d4876c9079249921412840527",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/timeout-policy.ts",
+      "sha256": "0ab2c32fe7f282bb1e7d9e3fc29d252bc3aef8d48a2385d46a13e089f6fbbb71",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/tools/timeout-policy/verify.mjs",
+      "sha256": "7db6f10f79d91829fae56a2f902737bc4977462b39da5c01c8f50f15e40e0fae",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "compared_to_head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+      "bytes_equal": true
+    }
+  ],
+  "original_led018": {
+    "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led018-diagnostic.json",
+    "receipt_sha256": "9fe63d9b90777cd2877b93caca931ebb860bfc62217e9a6cb4724ad94a71dfb2",
+    "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-current-led018-diagnostic.log",
+    "log_sha256": "5cfce07bbab012407ea7ebd846a30d83b0ed3751390836e3bb9ff16d96f326a1",
+    "receipt_log_hash_matches": true,
+    "exit_code": 1,
+    "elapsed_seconds": 3.6733255420112982,
+    "file_tests": 144,
+    "overall_passed": 154,
+    "overall_failed": 1,
+    "test_retries": 2,
+    "cargo_executed": false,
+    "command": "pnpm --dir frontend exec vitest run src/server/ingestion/douyin-cdp.test.ts scripts/desktop/startup-safety-contract.test.mjs && cargo test --manifest-path frontend/src-tauri/Cargo.toml --lib windows_"
+  },
+  "current_canonical": {
+    "receipt_sha256": "5a677623138dc5b136690f0293f2afa876a023f34428ff94ccc26dd33d4b6a9d",
+    "gzip_log_sha256": "7ac6c1c9ba6a4a8bdb1d2c4cb50e14ac3c1e9e070ed0cdb8ecdfa6ce88adef82",
+    "decompressed_log_sha256": "34e36c225d9ab3429c82470294d13ab8c3b7adb266919d6d1e65c09713c9caee",
+    "receipt_log_hash_matches": true,
+    "exit_code": 1,
+    "elapsed_seconds": 1158.662259833014,
+    "errors": 27,
+    "warnings": 1,
+    "led053_present": true,
+    "led053_root_cause_revalidated": false,
+    "owner": [
+      "T-1081",
+      "T-1066-timeout-policy",
+      "T-1101-global-gates"
+    ]
+  },
+  "required_after_implementation": [
+    "原LED018完整显式隔离串行命令，包括cargo windows_后段",
+    "前端type",
+    "boundary/semantic/orphan/diff检查",
+    "原node tools/timeout-policy/verify.mjs公共检查，原失败按owner保留",
+    "独立精确实施diff/原收据日志哈希复核",
+    "pmem/reconcile与任务完成如实列全局仍失败，不盲重跑全系统"
+  ],
+  "not_signed": [
+    "新实施GREEN",
+    "Rust/cargo实际结果",
+    "Windows真实安装或原生App",
+    "平台采集/模型/全功能",
+    "完整Gate",
+    "T1181研究恢复"
+  ],
+  "actions": "仅文件/Git与已有日志只读；只写本私有目录。未执行测试/服务/CLI/验证器/模型/DB/浏览器/实验，未改仓库、任务或预算配置。"
+}

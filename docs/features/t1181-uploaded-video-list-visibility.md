@@ -20,3 +20,5 @@ flowchart LR
 已读当前account-switcher.tsx真实消费者：已选组页面的绑定链接位于未展开的DropdownMenu中，必须先点data-testid=account-switcher-trigger，再点role=menuitem、name=账号组与绑定账号；初始空组页面的直链不能推论为所有页面常驻。本轮截图已实际查看，当前素材页两卡片和右侧预览均存在，没有常驻/accounts直链。
 
 精确机械写集仅新私有N/t1181-upload-list-navigation-corrected.mjs、当前SPEC/独评/看板事件及docs/verification/t1181当场证据。先独立复核本补充，再复制原诊断驱动新路径，将三处/accounts导航统一为真实切换器触发器→菜单项→原URL等待。原素材文件名、上传顺序/200/冻结范围、Buffer存在时严格比对、两媒体公开下载size/SHA、刷新、第二组无混入、返回与页面错误断言全部保留；所有120秒预算和原驱动/失败日志冻结。无产品、测试、SDK/config/预算修改，无真实数据/平台/模型/原生App。新轮即使通过也仅签这条旅程，不把前轮MP4可见性超时补造为已解释或全功能通过。
+
+新驱动所有私有输出统一新前缀`t1181-upload-list-navigation-corrected-`：新随机隔离root、逐文件观察JSON/PNG、group A/B与返回截图、failure JSON/PNG、sidecar log和最终result，均不复用诊断轮路径；创建前核这些新文件不存在。JSON/log的wx语义保留，PNG虽SDK默认可覆盖也只写已核不存在的新路径，原证据逐字冻结。仅必要路径隔离，不增加或改变产品范围/业务判断/原断言。

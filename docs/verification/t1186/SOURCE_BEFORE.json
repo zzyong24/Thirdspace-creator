@@ -1,0 +1,8 @@
+{
+  "head": "b34447aaf7836e7798d4bd37c262eff2357aaf7d",
+  "path": "backend/src/modules/ai-runtime/chat-tools.test.ts",
+  "sha256": "a62cc9fa58c0cd7428ee5a26fe9e993168751b0c3f938d6d9d15cad27a01da85",
+  "equalHead": true,
+  "actualFullCheck": "LED014_ACTUAL_RESULT.json",
+  "nativeApp": false
+}

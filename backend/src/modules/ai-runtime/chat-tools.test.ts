@@ -4545,6 +4545,15 @@ it("T-915 同查询失败后可重新执行，不缓存拒绝结果", async () =
 });
 
 it.each(["selected","project"])("全部现有工具参数及%s改稿变体可建立真实宿主校验",async mode=>{
+ const canvasSample={baseRevision:1,operations:[{type:"moveNode",operationId:"operation-neutral",nodeId:"node-neutral",position:{x:0,y:0}}]};
+ // 严格联合、字面量和正数合同用明确中性样本；不调用工具执行器或猜领域归属。
+ const typedSamples:Record<string,unknown>={
+  "canvas.propose":canvasSample,
+  "system.read":{request:{kind:"accountGroups.get",params:{groupId:"group-neutral"}},offset:0,limit:20},
+  "system.action.propose":{action:{kind:"group.create",name:"中性账号组"}},
+  "canvas.create.propose":{title:"中性画布",projectId:null,document:{schemaVersion:1,viewport:{x:0,y:0,zoom:1},nodes:[],edges:[]}},
+  "canvas.generate.propose":{baseRevision:1,nodeId:"node-neutral"},
+ };
  const tools=allChatTools(makeDeps(mode==="selected"?{scriptPatchAnchor:{artifactId:"a",versionId:"v",sectionId:"s",originalText:"原文"}}:{boundProjectId:"p"}).deps);
  expect(Object.keys(tools).sort()).toEqual([...ALL_CHAT_TOOL_NAMES].sort());
  const preparedDefinitions=await prepareChatToolDefinitions(tools);
@@ -4567,9 +4576,16 @@ it.each(["selected","project"])("全部现有工具参数及%s改稿变体可建
   // redfox.query 用 action 判别联合；把所有动作的字段塞进同一对象是非法样本。
   const legal=name==="redfox.query"
    ? {action:"hotspots",startDate:"2026-09-01",endDate:"2026-09-02"}
-   : sample(schema);
+   : Object.hasOwn(typedSamples,name)?typedSamples[name]:sample(schema);
   expect(parameters.safeParse(legal).success,name).toBe(true);expect(parameters.parse(legal),name).toEqual(legal);
   if(name==="redfox.query")expect(parameters.safeParse({action:"hotspots",startDate:"2026-09-01",endDate:"2026-09-02",keyword:"跨动作字段"}).success).toBe(false);
+  if(name==="canvas.propose"){
+   expect(parameters.safeParse({...canvasSample,baseRevision:0}).success).toBe(false);
+   expect(parameters.safeParse({...canvasSample,operations:[{type:"unknown",operationId:"operation-neutral",nodeId:"node-neutral"}]}).success).toBe(false);
+   expect(parameters.safeParse({...canvasSample,operations:[]}).success).toBe(false);
+  }
+  if(name==="system.read")expect(parameters.safeParse({request:{kind:"unknown.operation"},offset:0,limit:20}).success).toBe(false);
+  if(name==="system.action.propose")expect(parameters.safeParse({action:{kind:"unknown.operation"}}).success).toBe(false);
   expect(parameters.safeParse("非对象").success,name).toBe(false);
   expect(parameters.safeParse({}).success,name).toBe(!Array.isArray(schema.required) || schema.required.length===0);
   if(schema.additionalProperties===false)expect(parameters.safeParse({__unexpected:true}).success,name).toBe(false);
