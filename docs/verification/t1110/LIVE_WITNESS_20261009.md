@@ -144,3 +144,11 @@ EXP-2实际一次快照为officialOriginMatch=true、reportPathMatch=false、pat
 用户答复“继续”后，root实际takeOver原Ego20；公众号p1设置页仍可读一个AppID，摘要与原研究身份一致。原源worktree已被清理，app从保留分支23c3bedc建立新隔离worktree，未修改主checkout或迁移Cookie。当前公众号的多设置入口只是条件性协议疑点，静态独评确认fixture未覆盖不同action菜单；实际p3链接计数读取失败，不能宣布原绑定56根因已查明。
 
 视频号旧用户来源页p6只读evaluate触发真实15秒SDK安全超时（不补拍为120秒）；原页reload的120000ms预算实际耗尽，未关闭用户Page。随后p3只读CDP在Runtime 120000/request 150000预算下仍RequestTimeout，没有任何链接计数结果，不重试或切新空间。当前只证明研究页面读取阻塞，不能据pathname/login或超时推断产品Cookie失效。没有新公共任务、报表提交或生产实现改动；上次已知public0仍引用原时间，不冒称本次回读。当前研究OPEN、两个原生实验已用尽，需人工恢复原窗口后才能继续只读取证。
+
+## 2026-10-10原窗口交回后的实际反例
+
+用户答复“已经交还了”后，原Ego空间20实际takeOver。公众号发表页p3仅一个设置入口；账号信息页p1却实际有3个不同完整设置URL，菜单action为index/index/function，AppID标签数量为1。现reader先要求所有设置URL唯一，当前p1组合将停在入口观察、尚未读字段；这证明当前reader缺陷，不证明旧产品56当时页面或绑定失败原因。最小修正是已在官方settingpage时直接沿原字段预算读真实身份、其他页保原入口链。静态独立核对见[当前页核对](oa-current-page-review-20261010.md)，未改生产或补签TDD。
+
+视频号原p6读取再次实际超时、截图Internal error；同原页goto官方首页后恢复响应。可见跨origin qrconnect iframe与语义快照显示本人微信快捷登录，正文“数据中心”只是文本命中，不能代签已登录。点击真实快捷登录入口返回，无同步dialog/popup；原身份元素等待120000ms超时，后续快照仍停登录入口。需用户手动完成原窗口登录；不推断产品Cookie失效、不重发旧任务。详见[本轮安全记录](handback-20261010.json)。
+
+本轮仅只读证据、原用户已授权登录入口及文档；生产source/dom-witness/composition摘要与原69一致。没有启动产品服务、公开扫码/采集任务或第三次原生实验，没有当前产品回读。T1110仍paused/OPEN/researching；视频号导航落首页原因未闭合，必要verify_key/TDD/真人绑定与UI验收仍缺，原全局欠债保留。

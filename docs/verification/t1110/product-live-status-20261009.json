@@ -196,7 +196,7 @@
     "productionCandidateApplied": false,
     "cleanupEvidence": "docs/verification/t1110/section-research-cleanup-20261010.json",
     "diagnosticServiceRunning": false,
-    "originalBrowserSpaceOwnership": "agent after user handback; manual recovery handoff pending",
+    "originalBrowserSpaceOwnership": "agent; actual user handback and takeOver space20",
     "researchGateAudit": {
       "command": "node orchestrator/process/research-gate.mjs audit",
       "actualExitCode": 0,
@@ -218,9 +218,12 @@
       "productionApproval": false
     },
     "continuationEvidence": "docs/verification/t1110/readonly-continuation-20261010.json",
-    "continuationState": "blocked-by-unresponsive-original-research-pages",
-    "officialEntryAmbiguity": "conditional source/test gap; live fullHref count not obtained",
-    "productPublicRereadThisTurn": false
+    "continuationState": "official-settings-page-counterexample-confirmed; video-recovered-but-quick-login-did-not-enter-backend",
+    "officialEntryAmbiguity": "当前p1设置页3个不同完整href，index/index/function；p3发表页唯一入口。当前reader反例已证，不代签旧56。",
+    "productPublicRereadThisTurn": false,
+    "handbackEvidence": "docs/verification/t1110/handback-20261010.json",
+    "officialCorrectionState": "最小方案已静态独立核对；OPEN暂停下未改生产/未运行必要TDD",
+    "videoResearchLoginState": "本人微信快捷登录点击已返回，身份元素观察120000ms超时，当前快照仍登录页；需用户手动完成；不代签产品Cookie过期"
   },
   "latestPublicReportsCount": 0,
   "lastPublicResultObservedAt": "2026-10-09T17:23:42Z"

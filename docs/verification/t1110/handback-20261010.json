@@ -1,0 +1,184 @@
+{
+  "schema": "t1110-original-space-handback/v1",
+  "recordedAt": "2026-10-10T01:14:18.940Z",
+  "userAuthorization": "用户答复已经交还了；原视频号登录授权沿用",
+  "sourceHead": "6e6f2fa36bd0fc7a0b06bbe33f0cd597a6255c86",
+  "space": {
+    "id": 20,
+    "takeOverActual": true,
+    "takeOverToolChunk": "1cc3e2",
+    "ownershipAtTakeOver": "agent",
+    "newSpaceCreated": false,
+    "newPageCreated": false,
+    "profilesInspected": false,
+    "handoffState": "本次文档提交后交回，实际receipt将只写私有/tmp文件并下轮回读；当前未代签user所有权"
+  },
+  "official": {
+    "publishedPage": {
+      "page": "p3",
+      "pathCategory": "appmsg",
+      "observedAt": "2026-10-10T01:02:18.548Z",
+      "toolChunk": "0c0f64",
+      "officialOrigin": true,
+      "readyState": "complete",
+      "validHrefCount": 1,
+      "uniqueFullHrefCount": 1,
+      "actionGroups": {
+        "index": {
+          "count": 1,
+          "uniqueHrefCount": 1
+        }
+      }
+    },
+    "settingsPage": {
+      "page": "p1",
+      "pathCategory": "settingpage",
+      "observedAt": "2026-10-10T01:05:57.634Z",
+      "toolChunk": "a33430",
+      "officialOrigin": true,
+      "readyState": "complete",
+      "validHrefCount": 3,
+      "uniqueFullHrefCount": 3,
+      "appIdLabelCount": 1,
+      "protocolObservedAt": "2026-10-10T01:06:21.752Z",
+      "protocolToolChunk": "e905d9",
+      "entries": [
+        {
+          "label": "账号设置",
+          "action": "index",
+          "visible": true
+        },
+        {
+          "label": "账号详情",
+          "action": "index",
+          "visible": true
+        },
+        {
+          "label": "功能设置",
+          "action": "function",
+          "visible": true
+        }
+      ]
+    },
+    "finding": "当前设置页真实反例：reader先要求全部settingpage href唯一，3个完整href使其停在ENTRY_NOT_READY入口观察，尚未读字段。不能代签旧产品56根因。",
+    "recommendedCorrection": "当前已在官方settingpage时直接沿原480000字段预算观察真实AppID/名称；其他页保持原入口链。index内部仍有2个href，不以action筛选替代。",
+    "independentReview": {
+      "path": "docs/verification/t1110/oa-current-page-review-20261010.md",
+      "sha256": "f5f6c2289a245e808d6ca1fd0f447ccaadf9d9ca66a3487bb894c02f65467ba7",
+      "kind": "静态独立核对；不是正式review receipt、研究验收或产品PASS"
+    },
+    "productionCorrectionApplied": false,
+    "testsRunThisTurn": false
+  },
+  "video": {
+    "page": "p6",
+    "openedBy": "unknown",
+    "initialRead": {
+      "toolChunk": "0e66ed",
+      "operation": "Runtime.evaluate",
+      "requestedRuntimeTimeoutMs": 120000,
+      "requestedRequestTimeoutMs": 150000,
+      "state": "CdpRequestTimeoutError",
+      "noReadResult": true
+    },
+    "initialScreenshot": {
+      "toolChunk": "a316e9",
+      "startedAt": "2026-10-10T01:05:07.033Z",
+      "finishedAt": "2026-10-10T01:05:22.041Z",
+      "requestedRequestTimeoutMs": 150000,
+      "state": "Internal error",
+      "imageObtained": false,
+      "internalFailureElapsedMs": 15008
+    },
+    "samePageRecovery": {
+      "toolChunk": "c7ba48",
+      "startedAt": "2026-10-10T01:07:22.552Z",
+      "finishedAt": "2026-10-10T01:07:38.186Z",
+      "operation": "原p6普通goto官方首页",
+      "requestedNavigationTimeoutMs": 120000,
+      "state": "completed",
+      "immediatePathname": "/"
+    },
+    "recoveredRead": {
+      "toolChunk": "3d4994",
+      "observedAt": "2026-10-10T01:08:47.660Z",
+      "officialOrigin": true,
+      "currentPathCategory": "login",
+      "readyState": "complete",
+      "bodyTextLength": 1139,
+      "dataCenterTextInBody": true
+    },
+    "frameObservation": {
+      "toolChunk": "1e631b",
+      "observedAt": "2026-10-10T01:09:28.396Z",
+      "visibleKnownMenuCount": 0,
+      "visibleCrossOriginQrconnectIframeCount": 1,
+      "dataCenterTextMeaning": "正文命中不等于可见已登录菜单",
+      "dataCenterVisibleMenuConfirmed": false
+    },
+    "recoveredScreenshot": {
+      "toolChunk": "abcc22",
+      "observedAt": "2026-10-10T01:09:40.992Z",
+      "privateLocalPath": "/tmp/t1110-channels-recovered-page-20261010.png",
+      "bytes": 957236,
+      "committedToGit": false,
+      "visualFinding": "登录视频号助手；本人微信快捷登录入口。尚不是助手本人数据页。"
+    },
+    "semanticSnapshot": {
+      "toolChunk": "169652",
+      "visibleQuickLogin": true,
+      "quickLoginRef": "9",
+      "sdkTimeoutOptionAvailable": false,
+      "newSnapshotTimeoutClaimed": false
+    },
+    "quickLogin": {
+      "state": "click-returned; identity-wait-timeout; login-view-unchanged",
+      "authorization": "原用户明确视频号登录请求，未发新产品扫码任务",
+      "operation": "原p6点击真实微信快捷登录入口，沿120000动作/身份元素等待预算",
+      "nativeExportStarted": false,
+      "productBindingTaskStarted": false,
+      "actualToolChunk": "653448",
+      "startedAt": "2026-10-10T01:10:42.882Z",
+      "finishedAt": "2026-10-10T01:12:43.034Z",
+      "clickReturned": true,
+      "synchronousDialog": null,
+      "popupCount": 0,
+      "identityWaitTimeoutMs": 120000,
+      "identityElementVerified": false,
+      "currentSemanticSnapshotToolChunk": "935f83",
+      "currentSemanticView": "本人微信快捷登录入口仍显示，尚未进入助手账号数据页",
+      "newClickOrTaskAutomaticallyRepeated": false,
+      "requiredNextAction": "交回原窗口，请用户手动完成快捷登录并处理微信可能要求的确认"
+    },
+    "productCookieExpired": "未证明",
+    "researchPageAndProductProfileAreSame": false
+  },
+  "workflow": {
+    "task": "T-1110",
+    "status": "paused",
+    "cardStatus": "researching",
+    "researchGate": "OPEN",
+    "nativeExperimentsRun": 2,
+    "nativeExperimentMaximum": 2,
+    "thirdNativeExperimentStarted": false,
+    "productionChanges": false,
+    "publicProductTaskStarted": false,
+    "publicProductRereadThisTurn": false,
+    "audit": {
+      "toolChunk": "7a17b0",
+      "exitCode": 0,
+      "meaning": "仅研究门有效暂停，不是validated或PASS"
+    }
+  },
+  "limitations": [
+    "当前研究页不代签产品隔离profile或旧失败任务",
+    "AppID标签计数不替代完整真实身份校验",
+    "无Cookie复制、清理或手工数据库写入",
+    "必要TDD与生产修正因现有OPEN暂停规则仍未执行"
+  ],
+  "productionHashes": {
+    "browserSource": "ec7c53bc4c83bb57b8f707acd2ba1602f6722f9626c6a3843f8b3031814df19a",
+    "domWitness": "039dc9abc6716b1efbbc0f60e3e4895da16a9318a973a7fbb3bfaf198dda26c7",
+    "composition": "ab11053526e4f2a4f71b45fad6e012b5215a1502d4d5124a8e4db4b5d0457dd8"
+  }
+}

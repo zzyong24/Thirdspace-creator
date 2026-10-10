@@ -64,6 +64,12 @@
         "path": "docs/verification/t1110/section-research-cleanup-20261010.json",
         "locator": "privateImageDirectories/sharedProductionSource/candidateNextProcessCount",
         "observation": "两次研究候选已停止，已知Next/受管Chrome均0；三处经所有权与0700核验的空私图目录已删除；生产69源码/测试/composition摘要未变，候选未合入。"
+      },
+      {
+        "kind": "runtime",
+        "path": "docs/verification/t1110/handback-20261010.json",
+        "locator": "official/settingsPage;video/quickLogin",
+        "observation": "公众号当前设置页实际3个不同href，index/index/function，reader先要求唯一构成当前反例；发表页1入口。原视频页恢复后显示本人快捷登录，点击返回但120000ms身份观察超时。无新产品任务/导出，旧56和产品0报告未重新回读。"
       }
     ],
     "experiments": [
@@ -190,3 +196,18 @@ flowchart LR
 流程兼容：用户AGENTS要求状态转换只经taskctl。先实际taskctl block，再以明确真实actor登记OPEN事件，官方observe在已有OPEN分支只记录真实观测，不写状态。未调用手改状态、未伪造research-gate actor、未将audit当作validated或PASS；resume同样必须保留唯一状态写入口，不自动绕过用户规则。
 
 2026-10-10续接只读证据：用户答复“继续”后，实际takeOver原空间20，公众号p1普通账号信息页可读单一稳定身份且原SHA匹配，不能代签产品绑定。视频号原用户来源标签页p6的evaluate安全超时，execution stopped未确认；原页reload沿120000ms也实际超时。公众号p3菜单计数改用Runtime 120000/request 150000的CDP只读读取，仍RequestTimeout且没有结果；未证明链接歧义或原56根因。详见docs/verification/t1110/readonly-continuation-20261010.json及oa-entry-source-review-20261010.md。两个原生实验额度不变，未创建第三次采集/QR/空间；生产未改，卡仍researching，等待人工恢复原浏览器页面。
+
+2026-10-10用户答复“已经交还了”后的实际补证：原空间20已takeOver。公众号p3发表页读到唯一设置入口，但p1当前账号信息页实际有3个不同完整设置URL，三个可见菜单的action分别为index/index/function，同时AppID标签数量为1。当前reader无条件先要求设置URL唯一，故p1构成当前入口阶段的确定反例；仅筛index仍有2个URL，不解决问题。最小方案是当前已在官方settingpage时直接沿原字段预算观察真实AppID/名称，其他页保持原入口链。此方案经静态独立核对，尚未改生产或执行必要TDD；不倒签旧产品56原因、绑定或研究PASS。事实见[交回后的记录](../verification/t1110/handback-20261010.json)，边界与必要TDD见[独立核对](../verification/t1110/oa-current-page-review-20261010.md)。
+
+```mermaid
+flowchart LR
+ A[当前已在公众号账号信息页] --> B[reader先数设置链接]
+ B --> C[3个不同链接，入口观察无法通过]
+ C --> D[尚未读取真实身份字段]
+ A -. 待恢复后实施的最小修正 .-> E[直接沿原预算读取AppID与名称]
+ E --> F[保留来源、唯一性、格式和归属校验]
+```
+
+视频号p6首次CDP读取仍超时，截图返回Internal error；在同一原标签页普通goto官方首页后页面恢复响应。正文包含“数据中心”不等于可见已登录菜单：现场可见框架是qrconnect，截图与语义快照显示本人的“微信快捷登录”入口。这轮仅沿原登录授权进入该入口，不创建产品扫码或原生采集任务；当前原产品Cookie是否有效未重新读取，不能由研究页状态判断。研究门仍OPEN、两次原生实验额度不变；为什么原产品导航落首页仍待验。
+
+快捷登录后实际结果：点击调用返回、无同步dialog或popup；原身份元素可见等待120000ms超时。新语义快照仍是本人微信快捷登录入口，不签助手已登录或Cookie失效。需交回原窗口，请用户手动完成这一步后继续核菜单。没有重试点击、产品扫码或原生导出。
