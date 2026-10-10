@@ -1,0 +1,28 @@
+{
+  "generatedAt": "2026-10-08T13:19:02.110Z",
+  "validation": {
+    "status": "not-run",
+    "reason": "T-1063 制品生成与额外质量验证分开"
+  },
+  "updatedAt": "2026-10-10T03:57:06.849Z",
+  "codesign": {
+    "signed": false,
+    "platform": "darwin",
+    "reason": "env 未配签名证书"
+  },
+  "notarize": {
+    "notarized": false,
+    "platform": "darwin",
+    "reason": "env 未配公证凭据"
+  },
+  "productIdentity": {
+    "schema": "thirdspace-product-manifest/v1",
+    "productRef": "creatoros",
+    "appIdentifier": "cloud.aitongban.creatoros",
+    "projectKey": "creatoros",
+    "productManifest": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/creatoros-product-manifest.json",
+    "releaseAttestation": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/creatoros-release-attestation.json",
+    "claimEnabled": false,
+    "publishAuthorized": false
+  }
+}

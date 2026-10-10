@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "pnpm",
+    "-C",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "scripts/desktop/package-local.test.mjs",
+    "scripts/desktop/desktop-release-workflow.test.mjs",
+    "scripts/desktop/notarize.test.mjs",
+    "scripts/desktop/tauri-signing-config.test.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T03:50:44.848280+00:00",
+  "finishedAt": "2026-10-10T03:50:46.594153+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 1.7459584589814767,
+  "logSha256": "fdbf131bf55be4b2a43b088fe8324b969b2d657054fc9e1924b001f1c98fadfd"
+}

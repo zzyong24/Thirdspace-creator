@@ -1,0 +1,94 @@
+{
+  "baseHead": "3d4444934a618542747dd9839a299c6d769adad1",
+  "scope": "精确当前源码已读绑定；保原局部验收和未验限制",
+  "bindings": [
+    {
+      "path": "backend/src/application/collection/cover-file-repair.test.ts",
+      "sha256": "930501eeec2d22b44957a904e2b0062b913678cc49d06de43f40762112e8c794",
+      "reportPath": "docs/verification/t1176/independent-implementation-review.md",
+      "reportSha256": "5da623967cc1d4d08e4db3be66c3d794f623c6083b5bd1d777e061df5aaab5e5",
+      "readSetPath": "docs/verification/t1176/independent-implementation-read-set.json",
+      "readSetSha256": "cae2f5d803fe3db6fbb595eb58f974789b82e7d85096109784dc4c061a413585"
+    },
+    {
+      "path": "frontend/src/components/shell/shell.test.tsx",
+      "sha256": "85232cb1b33f9874ff1133c388d20e017c6df1bee85cd6899c6e51ca168ab8a9",
+      "reportPath": "docs/verification/t1176/independent-implementation-review.md",
+      "reportSha256": "5da623967cc1d4d08e4db3be66c3d794f623c6083b5bd1d777e061df5aaab5e5",
+      "readSetPath": "docs/verification/t1176/independent-implementation-read-set.json",
+      "readSetSha256": "cae2f5d803fe3db6fbb595eb58f974789b82e7d85096109784dc4c061a413585"
+    },
+    {
+      "path": "backend/src/application/queries/dashboard-read-performance.test.ts",
+      "sha256": "1cd1d0eb842c0d62f3b727153dc7d551faf8787094cc0e84586edf4a1e5eed34",
+      "reportPath": "docs/verification/t1177/independent-implementation-review.md",
+      "reportSha256": "47eb2423a236087adf963d1c3b153e3836504f288967250368ee0372099978f6",
+      "readSetPath": "docs/verification/t1177/independent-implementation-read-set.json",
+      "readSetSha256": "833ae39ade4edf08b65e541e726106b81268d4c7b045a6601843700694739368"
+    },
+    {
+      "path": "frontend/scripts/desktop/windows-runtime-config.test.mjs",
+      "sha256": "2318d74f2dfb4e9f48fda39579b3154a862e45d6d6acb0fa1f6be929dea7749b",
+      "reportPath": "docs/verification/t1178/independent-implementation-review.md",
+      "reportSha256": "f434c57a0f417dfd6c6da0a2ecbdd81c342fe66c4691efbc3090d981411899dd",
+      "readSetPath": "docs/verification/t1178/independent-implementation-read-set.json",
+      "readSetSha256": "8ad64c1c9f3830c4b3063c5f4f995d0c6bd3747346892a1645e5822a346b9d96"
+    },
+    {
+      "path": "frontend/src/features/assets/assets-interactions.test.tsx",
+      "sha256": "cf15330235eacaea5f0ebc6f28d97edc0b720ba75c850a095812a308e44d8e48",
+      "reportPath": "docs/verification/t1179/IMPLEMENTATION_REVIEW.md",
+      "reportSha256": "f662d0450758d947cd4149da9face4ccdf7491b2f233583a39325dd6c5317834",
+      "readSetPath": "docs/verification/t1179/IMPLEMENTATION_READ_SET.json",
+      "readSetSha256": "b4fc2c0250fc902f74981b8f1669dd952270a4212903adbd7fb93ff63c067a44"
+    },
+    {
+      "path": "frontend/src/server/ingestion/douyin-cdp.test.ts",
+      "sha256": "d76edcf3473a8e107e78495fee8c9173d97e11ad58f071bee3442e0f67e7014c",
+      "reportPath": "docs/verification/t1183/IMPLEMENTATION_REVIEW.md",
+      "reportSha256": "2e8ca57877a3d0878aedd04d8106d440880ff9fd1c9bf6dbaf8467003ab6f72d",
+      "readSetPath": "docs/verification/t1183/IMPLEMENTATION_READ_SET.json",
+      "readSetSha256": "fa244fa66de03c30440e0340312c3b8416a49d784ac08ec764295134bdc6c7f9"
+    },
+    {
+      "path": "frontend/src/app/api/chat/route.test.ts",
+      "sha256": "ad75542e6a0f178540ad30d0046cd279fc87f60c9a080fc5c95171fe59ca2ee8",
+      "reportPath": "docs/verification/t1184/IMPLEMENTATION_REVIEW.md",
+      "reportSha256": "80e2162833cf6b6cd3440e1e90d56c84ac9ea1c5c7e06e8e9d209d3388ba359d",
+      "readSetPath": "docs/verification/t1184/IMPLEMENTATION_READ_SET.json",
+      "readSetSha256": "ff1d4f5f38e752728802195ca01de9ab35da31fee9c51546a93c8f76b0b16c60"
+    },
+    {
+      "path": "backend/src/modules/ai-runtime/chat-tools.test.ts",
+      "sha256": "c3eadefeb911e72c16dfffef05e91825fb4b8c147988b4d7572050bd5ea9febc",
+      "reportPath": "docs/verification/t1186/IMPLEMENTATION_REVIEW.md",
+      "reportSha256": "b3e5e0fc8757ed1367b6e740ec3583adbdb0e52634fc3c55278111d2174ed515",
+      "readSetPath": "docs/verification/t1186/IMPLEMENTATION_READ_SET.json",
+      "readSetSha256": "dbc36673c388450f03f0d9012fa74ffb6a1fe9333bcaedd9c52d36a1c2406ecf"
+    },
+    {
+      "path": "backend/src/modules/execution/execution-chat-generation.service.test.ts",
+      "sha256": "4a9c8e2d11cdc38132b60fe3eeb8e70bdf5e480086810bfd4c06d3d47859c5f7",
+      "reportPath": "docs/verification/t1190/IMPLEMENTATION_REVIEW.md",
+      "reportSha256": "e1811bb0b21acc9eeddf793c59d4565778957e141cf2a09137e3e2abf41ee1cc",
+      "readSetPath": "docs/verification/t1190/IMPLEMENTATION_READ_SET.json",
+      "readSetSha256": "832c0c633de1216dacf1b8be52ee72620d0b99060740b1f2d7d4b469fba466ad"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.tsx",
+      "sha256": "60fe11f9b68530fbe22a0e282e1eca182659c5e917dba281a04d0eaaa9adc1da",
+      "reportPath": "docs/verification/t1191/FINAL_IMPLEMENTATION_REVIEW/REVIEW.md",
+      "reportSha256": "2e2a5b8d455bf31ad66d94fe4f3467d111a7043834023f38b21790516cf78871",
+      "readSetPath": "docs/verification/t1191/FINAL_IMPLEMENTATION_REVIEW/READ_SET.json",
+      "readSetSha256": "da2d9326eed3111a6f52f73fc1f92d9dc4b51cd78a97c11f1f2963a5ee1a72e3"
+    },
+    {
+      "path": "frontend/src/features/copilot/ai-copilot-content.test.tsx",
+      "sha256": "e6163928151eb6cb23b364571131b709d680337c06a510b69047cc72b1d301f8",
+      "reportPath": "docs/verification/t1191/FINAL_IMPLEMENTATION_REVIEW/REVIEW.md",
+      "reportSha256": "2e2a5b8d455bf31ad66d94fe4f3467d111a7043834023f38b21790516cf78871",
+      "readSetPath": "docs/verification/t1191/FINAL_IMPLEMENTATION_REVIEW/READ_SET.json",
+      "readSetSha256": "da2d9326eed3111a6f52f73fc1f92d9dc4b51cd78a97c11f1f2963a5ee1a72e3"
+    }
+  ]
+}

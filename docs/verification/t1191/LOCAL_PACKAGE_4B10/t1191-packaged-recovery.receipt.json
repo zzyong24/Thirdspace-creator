@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1191-packaged-recovery-probe.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T03:58:13.897433+00:00",
+  "finishedAt": "2026-10-10T03:58:44.867705+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 30.969969208003022,
+  "logSha256": "862d0fac44ee35e93d6de66175ca234e3ca8ddba9cb096daa45dbf91168c0fb2"
+}
