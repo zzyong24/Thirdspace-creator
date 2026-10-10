@@ -1,0 +1,68 @@
+[
+  {
+    "index": 0,
+    "rss": [
+      {
+        "pid": 4372,
+        "rssGiB": 0.044,
+        "process": "CreatorOS"
+      },
+      {
+        "pid": 4490,
+        "rssGiB": 0.921,
+        "process": "next-server (v16.2.9)"
+      },
+      {
+        "pid": 55474,
+        "rssGiB": 2.687,
+        "process": "Codex (Renderer)"
+      }
+    ],
+    "swap": "vm.swapusage: total = 22528.00M  used = 20998.50M  free = 1529.50M  (encrypted)",
+    "freeDiskGiB": 24.93
+  },
+  {
+    "index": 1,
+    "rss": [
+      {
+        "pid": 4372,
+        "rssGiB": 0.044,
+        "process": "CreatorOS"
+      },
+      {
+        "pid": 4490,
+        "rssGiB": 0.924,
+        "process": "next-server (v16.2.9)"
+      },
+      {
+        "pid": 55474,
+        "rssGiB": 2.693,
+        "process": "Codex (Renderer)"
+      }
+    ],
+    "swap": "vm.swapusage: total = 22528.00M  used = 20998.50M  free = 1529.50M  (encrypted)",
+    "freeDiskGiB": 24.93
+  },
+  {
+    "index": 2,
+    "rss": [
+      {
+        "pid": 4372,
+        "rssGiB": 0.044,
+        "process": "CreatorOS"
+      },
+      {
+        "pid": 4490,
+        "rssGiB": 0.924,
+        "process": "next-server (v16.2.9)"
+      },
+      {
+        "pid": 55474,
+        "rssGiB": 2.815,
+        "process": "Codex (Renderer)"
+      }
+    ],
+    "swap": "vm.swapusage: total = 22528.00M  used = 20990.50M  free = 1537.50M  (encrypted)",
+    "freeDiskGiB": 24.93
+  }
+]

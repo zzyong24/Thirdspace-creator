@@ -1,0 +1,13 @@
+{
+  "preservedDmgHashMatches": true,
+  "installedAppHashMatches": true,
+  "connected": true,
+  "nativePid": 4372,
+  "mode": "installed",
+  "productDiffSinceBeforeCleanup": "",
+  "sourceChanges": [
+    " M BACKLOG.md",
+    " M orchestrator/events.ndjson",
+    "?? docs/features/t1206-post-package-resource-cleanup.md"
+  ]
+}

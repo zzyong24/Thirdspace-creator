@@ -1,0 +1,7 @@
+{
+  "t1206-cleanup-preflight.json": "b3484960819bb26ef634a1debe28a0df2d36efbb4883385800bce1d9dd3ca1dc",
+  "t1206-cleanup-result.json": "b6983ea5620669d69eed457a5f49cf1d27e1f63a052771e2753b3df32aa72fdc",
+  "t1206-post-cleanup-verification.json": "899efba78c1ec0fb3154b9ef291109c00c0800b3fa26699d318178a4decb6495",
+  "t1206-resource-after-samples.json": "ecd8357dd1464762f406bc1cdc6deec4305166b80a1cc57d738d021c230bda44",
+  "t1206-memory-pressure-after.log": "248345eff119a80c227cde9dbedb8eca810dc8c0bc50cbb8830ade1691869eb7"
+}

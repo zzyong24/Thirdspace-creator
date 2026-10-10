@@ -1,0 +1,47 @@
+{
+  "head": "cd3e18cab2ed29fcf5af2a3ff707a83abcab13fb",
+  "paths": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/.next",
+      "allocatedKiB": 10233864
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/sidecar",
+      "allocatedKiB": 2185688
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/debug",
+      "allocatedKiB": 6020116
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/build",
+      "allocatedKiB": 191652
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/deps",
+      "allocatedKiB": 2358952
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/.fingerprint",
+      "allocatedKiB": 11400
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/incremental",
+      "allocatedKiB": 0
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/examples",
+      "allocatedKiB": 0
+    }
+  ],
+  "allocatedTotalGiB": 20.02875518798828,
+  "openHandles": [],
+  "inFlightBuilds": [],
+  "preservedDmg": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/dmg/CreatorOS_1.2.0_aarch64.dmg",
+  "preservedApp": "/Applications/CreatorOS.app",
+  "preservedBundle": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app",
+  "freeBeforeBytes": 2405416960,
+  "swapBefore": "vm.swapusage: total = 25600.00M  used = 23886.25M  free = 1713.75M  (encrypted)",
+  "trackedProductFilesInTargets": 0,
+  "deleteExecuted": false
+}

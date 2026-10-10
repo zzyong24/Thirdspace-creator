@@ -1,0 +1,52 @@
+{
+  "paths": [
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/.next",
+      "removed": true,
+      "elapsedSeconds": 4.544
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/sidecar",
+      "removed": true,
+      "elapsedSeconds": 2.852
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/debug",
+      "removed": true,
+      "elapsedSeconds": 1.654
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/build",
+      "removed": true,
+      "elapsedSeconds": 0.116
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/deps",
+      "removed": true,
+      "elapsedSeconds": 1.242
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/.fingerprint",
+      "removed": true,
+      "elapsedSeconds": 0.239
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/incremental",
+      "removed": true,
+      "elapsedSeconds": 0.0
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/examples",
+      "removed": true,
+      "elapsedSeconds": 0.0
+    }
+  ],
+  "freeAfterBytes": 23537016832,
+  "freeBeforeBytes": 2405416960,
+  "freedFilesystemBytes": 21131599872,
+  "swapAfter": "vm.swapusage: total = 25600.00M  used = 23870.25M  free = 1729.75M  (encrypted)",
+  "noBackup": true,
+  "preservedDmg": "/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/dmg/CreatorOS_1.2.0_aarch64.dmg",
+  "preservedApp": "/Applications/CreatorOS.app",
+  "boundary": "删除8个非占用且Git忽略的构建中间目录；最终bundle、源码、依赖、用户数据、真实运行时和原证据保持。释放磁盘空间不等于清空RAM/swap。"
+}
