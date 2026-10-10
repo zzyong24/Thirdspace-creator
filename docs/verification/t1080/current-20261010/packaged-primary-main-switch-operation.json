@@ -1,0 +1,162 @@
+{
+  "finishedAt": "2026-10-10T10:21:43.993303+00:00",
+  "head": "300c6faaf792e50725e6bbf4d3c14af49b709151",
+  "primaryMain": "/Users/zyongzhu/Workbase/Thirdspace-creator",
+  "buildWorkspaceDetachedAtExactPackagedHead": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "primarySourceFileReferences": 0,
+  "cwdOnlyReferencesKept": 89,
+  "cleanAfterSwitch": true,
+  "force": false,
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exitCode": 0,
+      "stdout": "300c6faaf792e50725e6bbf4d3c14af49b709151\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exitCode": 0,
+      "stdout": "45ff5ff5e6676d32be38c834660bab88c238a2ba\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "branch",
+        "--show-current"
+      ],
+      "exitCode": 0,
+      "stdout": "main\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "switch",
+        "--detach",
+        "300c6faaf792e50725e6bbf4d3c14af49b709151"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "HEAD is now at 300c6faa 记录当前源码独审清理及完整回归实际结果\n"
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator",
+        "switch",
+        "main"
+      ],
+      "exitCode": 0,
+      "stdout": "Your branch is ahead of 'origin/main' by 611 commits.\n  (use \"git push\" to publish your local commits)\n",
+      "stderr": "Switched to branch 'main'\n"
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator",
+        "branch",
+        "--show-current"
+      ],
+      "exitCode": 0,
+      "stdout": "main\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exitCode": 0,
+      "stdout": "300c6faaf792e50725e6bbf4d3c14af49b709151\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/zyongzhu/Workbase/Thirdspace-creator",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exitCode": 0,
+      "stdout": "300c6faaf792e50725e6bbf4d3c14af49b709151\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "boundary": "只释放main占用并在干净主目录切回main；构建工作区保持相同tree与本轮真实制品，活跃研究和进程不终止。"
+}

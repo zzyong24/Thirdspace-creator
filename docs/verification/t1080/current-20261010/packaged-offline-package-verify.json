@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "python3",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/offline-package-inspect.py"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T10:17:16.362437+00:00",
+  "finishedAt": "2026-10-10T10:17:34.572270+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 18.209593457984738,
+  "logSha256": "47e78b8d0daa7476b3de88ac20e4a29d337dc16f28c786a0e4f752ba348b58e8"
+}

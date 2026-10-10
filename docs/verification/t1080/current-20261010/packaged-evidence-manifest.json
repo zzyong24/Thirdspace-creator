@@ -1,0 +1,54 @@
+{
+  "createdAt": "2026-10-10T10:24:13.222228+00:00",
+  "sourceHead": "300c6faaf792e50725e6bbf4d3c14af49b709151",
+  "copies": [
+    {
+      "privateOriginal": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/local-package.json",
+      "trackedCopy": "docs/verification/t1080/current-20261010/packaged-local-package.json",
+      "sha256": "ea346313780e4df5296fa5b61066b7a75c865f7efa91319172f16a5b62e592cd"
+    },
+    {
+      "privateOriginal": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/offline-package-verify.json",
+      "trackedCopy": "docs/verification/t1080/current-20261010/packaged-offline-package-verify.json",
+      "sha256": "6242cba82d03fc534b3f7c6e322be27bea945bb0e2e56b17910ea2d54ea6a120"
+    },
+    {
+      "privateOriginal": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/offline-package-inspection.json",
+      "trackedCopy": "docs/verification/t1080/current-20261010/packaged-offline-package-inspection.json",
+      "sha256": "02ee7a25b3578742781a88b68d21e76b6862e531537a45a7287b448a580ae1bd"
+    },
+    {
+      "privateOriginal": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/install-current/install-run.json",
+      "trackedCopy": "docs/verification/t1080/current-20261010/packaged-install-current-install-run.json",
+      "sha256": "1e58c080ed8e9c4f580cefa5ec1eec5dc5dfc4134edc6683c1f3f469d82b3103"
+    },
+    {
+      "privateOriginal": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/install-current/installation.json",
+      "trackedCopy": "docs/verification/t1080/current-20261010/packaged-install-current-installation.json",
+      "sha256": "a0c67fce3ff8d377405028004f908c3f6199fc5e84cf417a86efe8c410fb1e30"
+    },
+    {
+      "privateOriginal": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/install-current/startup-v2-run.json",
+      "trackedCopy": "docs/verification/t1080/current-20261010/packaged-install-current-startup-v2-run.json",
+      "sha256": "b4367573d2ad0eae3ca2c1263312d0a321bf1e9f9ca78861b2a69dc77423028a"
+    },
+    {
+      "privateOriginal": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/postbuild-installer-cleanup.json",
+      "trackedCopy": "docs/verification/t1080/current-20261010/packaged-postbuild-installer-cleanup.json",
+      "sha256": "79028d06d188be3ec7bcfa8ecf436637c9fbd9d96c646dac35d05169fbaed9ae"
+    },
+    {
+      "privateOriginal": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/postbuild-full-installer-inventory.json",
+      "trackedCopy": "docs/verification/t1080/current-20261010/packaged-postbuild-full-installer-inventory.json",
+      "sha256": "4a2cb9d31013eeca2baff21eabdfaf069f048fa2abde42c262f0834a47163280"
+    },
+    {
+      "privateOriginal": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/primary-main-switch-operation.json",
+      "trackedCopy": "docs/verification/t1080/current-20261010/packaged-primary-main-switch-operation.json",
+      "sha256": "2496389c2b9aa9261b67c4df5908417a183bacc3675455d0cc438627d4235caf"
+    }
+  ],
+  "startupPrivateOriginalSha256": "a5ab2aa6e88a23e742d3681e50012fb0f85679fa6a09b839b21f029104b65274",
+  "startupTrackedSummarySha256": "a55b8ead8578c9ea0f463895a57ed917e04a8a3e509774e54b4756be3869d12b",
+  "rawActivationAccessAndNativeLogsKeptPrivate": true
+}

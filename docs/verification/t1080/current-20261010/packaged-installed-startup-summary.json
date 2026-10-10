@@ -1,0 +1,53 @@
+{
+  "sourceHead": "300c6faaf792e50725e6bbf4d3c14af49b709151",
+  "startedAt": "2026-10-10T10:17:56.520991+00:00",
+  "finishedAt": "2026-10-10T10:18:54.940960+00:00",
+  "connected": true,
+  "nativePid": 25661,
+  "serviceProcesses": [
+    {
+      "pid": 25986,
+      "ppid": 25661,
+      "command": "next-server (v16.2.9)",
+      "executablePath": "/Users/zyongzhu/Library/Application Support/cloud.aitongban.creatoros/runtime/1.2.0/sidecar/server.app/Contents/MacOS/creatoros-server",
+      "listenPort": 52753,
+      "socketOutput": "COMMAND     PID     USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME\ncreatoros 25986 zyongzhu   16u  IPv4 0x5e9fe7590aca7c85      0t0  TCP 127.0.0.1:52753 (LISTEN)\n"
+    }
+  ],
+  "mainPageLoadRecords": [
+    "[CreatorOS] MAIN_PAGE_LOAD_FINISHED http://127.0.0.1:52753/"
+  ],
+  "installedRuntimeStamp": "sha256:c829253723973d57ce58e4f699f12374d31cc397b6d9b6b8894014649d18898b",
+  "cliRecords": [
+    {
+      "argv": [
+        "/Users/zyongzhu/.local/bin/creatoros",
+        "status"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.6602234590100124,
+      "logSha256": "71d8c1569064124243af973a89b4bfb5604ab4082eaa1dc34666fc8a14d1c026",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/install-current/status-v2.log"
+    },
+    {
+      "argv": [
+        "/Users/zyongzhu/.local/bin/creatoros",
+        "access",
+        "status"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.25717908301157877,
+      "logSha256": "de3e5e7c824f3df75d5620d74c3fae470ee15290b203a355afd8018359f619da",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/install-current/access-v2.log"
+    }
+  ],
+  "knownConfigSyncDigestMismatchObserved": true,
+  "knownConfigSync502Observed": true,
+  "knownIssueTask": "T-1196",
+  "fullPrivateOriginal": "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/install-current/startup-v2.json",
+  "fullPrivateOriginalSha256": "a5ab2aa6e88a23e742d3681e50012fb0f85679fa6a09b839b21f029104b65274",
+  "privateAccessStatusExcludedFromGit": true,
+  "explicitNewModelCalls": 0,
+  "explicitBusinessWrites": 0,
+  "boundary": "真实安装版主进程、直属HTTP监听、公开健康和HTTP首页完成；不把tauri splash当首页，不代签屏幕眼验或全功能验收"
+}

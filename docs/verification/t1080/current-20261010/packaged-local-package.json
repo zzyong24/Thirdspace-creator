@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "env",
+    "CREATOROS_LOCAL_SKIP_INSTALL=1",
+    "pnpm",
+    "-C",
+    "frontend",
+    "desktop:package-local"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T10:10:51.444349+00:00",
+  "finishedAt": "2026-10-10T10:17:10.290015+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 378.8428584589856,
+  "logSha256": "4f9b4e0080e45b9d61af93ee2f8a66b38dd512da0aeb07d953bd0a5dcf8225b7"
+}

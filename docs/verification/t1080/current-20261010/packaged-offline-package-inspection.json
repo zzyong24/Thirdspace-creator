@@ -1,0 +1,126 @@
+{
+  "head": "300c6faaf792e50725e6bbf4d3c14af49b709151",
+  "artifactPath": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "artifactSha256": "12a1fca915ebde0d6a264b144dbb17e069a5ee1b6d7d8549e4a66ab4857b9058",
+  "artifactBytes": 841500148,
+  "versions": {
+    "frontend/package.json": "1.2.0",
+    "frontend/src-tauri/tauri.conf.json": "1.2.0",
+    "frontend/src-tauri/Cargo.toml": "1.2.0",
+    "frontend/src-tauri/Cargo.lock": "1.2.0"
+  },
+  "buildCommand": {
+    "argv": [
+      "env",
+      "CREATOROS_LOCAL_SKIP_INSTALL=1",
+      "pnpm",
+      "-C",
+      "frontend",
+      "desktop:package-local"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T10:10:51.444349+00:00",
+    "finishedAt": "2026-10-10T10:17:10.290015+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 378.8428584589856,
+    "logSha256": "4f9b4e0080e45b9d61af93ee2f8a66b38dd512da0aeb07d953bd0a5dcf8225b7"
+  },
+  "sourceFreezeSha256": "0992599dd1ea5c65f2b913708647ed4eafcd7282888e4c5957abfb81cfa89020",
+  "releaseAttestationSha256": "97abf79e4acb89159597b0217d18ba779f6908dc8a65dd816e33bae225873638",
+  "releaseAttestationCreator": "300c6faaf792e50725e6bbf4d3c14af49b709151",
+  "hdiutilVerify": {
+    "argv": [
+      "hdiutil",
+      "verify",
+      "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 2.3051550000091083,
+    "stdout": "正在检查“Protective Master Boot Record（MBR：0）”的校验和…\nProtective Master Boot Record（MBR：0）：已验证CRC32 $5C07FABC\n正在检查“GPT Header（Primary GPT Header：1）”的校验和…\n    GPT Header（Primary GPT Header：1）：已验证CRC32 $05DBA565\n正在检查“GPT Partition Data（Primary GPT Table：2）”的校验和…\nGPT Partition Data（Primary GPT Table：已验证CRC32 $8193335B\n正在检查“（Apple_Free：3）”的校验和…\n                      （Apple_Free：3）：已验证CRC32 $00000000\n正在检查“disk image（Apple_HFS：4）”的校验和…\n             disk image（Apple_HFS：4）：已验证CRC32 $589DC84F\n正在检查“（Apple_Free：5）”的校验和…\n                      （Apple_Free：5）：已验证CRC32 $00000000\n正在检查“GPT Partition Data（Backup GPT Table：6）”的校验和…\nGPT Partition Data（Backup GPT Table：：已验证CRC32 $8193335B\n正在检查“GPT Header（Backup GPT Header：7）”的校验和…\n     GPT Header（Backup GPT Header：7）：已验证CRC32 $8857C80C\n已验证CRC32 $8EA17D1C\n",
+    "stderr": "hdiutil: verify: checksum of \"/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg\" is VALID\n"
+  },
+  "nativeAppLaunched": false,
+  "userAppOrDataBackup": false,
+  "installedToApplications": false,
+  "mountedReadOnly": true,
+  "bundleId": "cloud.aitongban.creatoros",
+  "bundleVersion": "1.2.0",
+  "shellSha256": "a4f327a11671799af0cb9c512dca531eca31c35eb8fe3602c724b5989b09a1db",
+  "runtimeTarSha256": "c829253723973d57ce58e4f699f12374d31cc397b6d9b6b8894014649d18898b",
+  "runtimeTarMatchesCanonical": true,
+  "appTreeSha256": "f5df7574fb94ea4cd9bfe60fa53916857a113a247290e8940a5cd1683040b4de",
+  "appTreeEntries": 11,
+  "codesignVerification": {
+    "argv": [
+      "codesign",
+      "--verify",
+      "--deep",
+      "--strict",
+      "--verbose=2",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/package-mount-current/CreatorOS.app"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 0.4326472090324387,
+    "stdout": "",
+    "stderr": "--prepared:/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/package-mount-current/CreatorOS.app/Contents/MacOS/creatoros-server\n--validated:/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/package-mount-current/CreatorOS.app/Contents/MacOS/creatoros-server\n/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/package-mount-current/CreatorOS.app: valid on disk\n/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/package-mount-current/CreatorOS.app: satisfies its Designated Requirement\n"
+  },
+  "signature": "ad-hoc",
+  "notarized": false,
+  "tarEntries": 37684,
+  "selectedRuntimeFiles": [
+    {
+      "path": "server.app/Contents/MacOS/creatoros-server",
+      "bytes": 68416,
+      "sha256": "5ed0e129e708e36048981aed983f7302b0c18139f5a174e4b8d5fabbacb6d59d",
+      "matchesCurrentRuntime": true
+    },
+    {
+      "path": "backend/drizzle/0131_platform_native_reports.sql",
+      "bytes": 930,
+      "sha256": "36a411fb6ee7a77923090fa346ed768365fa548746fa62d4735f561bf0a5e84f",
+      "matchesCurrentRuntime": true
+    },
+    {
+      "path": "backend/drizzle/meta/_journal.json",
+      "bytes": 16239,
+      "sha256": "8200bd9de4229786c48cc0fd90359de6512410267bc70504ce0177fd86b3fbfc",
+      "matchesCurrentRuntime": true
+    },
+    {
+      "path": "frontend/server.js",
+      "bytes": 7454,
+      "sha256": "5e0e2dac653770ffd12b68760ca5f659c09e98a2504c19707b70080c2b6ad652",
+      "matchesCurrentRuntime": true
+    },
+    {
+      "path": "frontend/browsers/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+      "bytes": 68624,
+      "sha256": "2447c7bdea8e8ad38b52594f1ba53e18821c05445e8a07ad1cf3b0f23931d89d",
+      "matchesCurrentRuntime": true
+    },
+    {
+      "path": "frontend/.next/server/verdict-verify-key.json",
+      "bytes": 134,
+      "sha256": "9dd7d84c966e7c7a8cd11206a9c536728c1997a434dab1bc810eea92c1b9108d",
+      "matchesCurrentRuntime": true
+    },
+    {
+      "path": "frontend/runtime/execution-worker.cjs",
+      "bytes": 5503859,
+      "sha256": "25fb863681c0705dcbaf801e0a1992fe539850df1c0cd3cc2033e0cc5133e7e2",
+      "matchesCurrentRuntime": true
+    }
+  ],
+  "detach": {
+    "argv": [
+      "hdiutil",
+      "detach",
+      "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/package-mount-current"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 0.1403570409747772,
+    "stdout": "\"disk11\" ejected.\n",
+    "stderr": ""
+  },
+  "verifiedAt": "2026-10-10T10:17:34.548603+00:00"
+}

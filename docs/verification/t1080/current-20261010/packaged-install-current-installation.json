@@ -1,0 +1,92 @@
+{
+  "startedAt": "2026-10-10T10:17:41.514441+00:00",
+  "launchedAt": "2026-10-10T10:17:45.764963+00:00",
+  "finishedAt": "2026-10-10T10:17:45.972118+00:00",
+  "sourceHead": "300c6faaf792e50725e6bbf4d3c14af49b709151",
+  "sourceFreezeSha256": "0992599dd1ea5c65f2b913708647ed4eafcd7282888e4c5957abfb81cfa89020",
+  "offlineProofSha256": "02ee7a25b3578742781a88b68d21e76b6862e531537a45a7287b448a580ae1bd",
+  "artifactSha256": "12a1fca915ebde0d6a264b144dbb17e069a5ee1b6d7d8549e4a66ab4857b9058",
+  "target": "/Applications/CreatorOS.app",
+  "version": "1.2.0",
+  "bundleId": "cloud.aitongban.creatoros",
+  "shellSha256": "a4f327a11671799af0cb9c512dca531eca31c35eb8fe3602c724b5989b09a1db",
+  "runtimeTarSha256": "c829253723973d57ce58e4f699f12374d31cc397b6d9b6b8894014649d18898b",
+  "appTreeSha256": "f5df7574fb94ea4cd9bfe60fa53916857a113a247290e8940a5cd1683040b4de",
+  "oldAppTreeSha256": "dc9556d61809d5a3d5d95db34965105c57d470aeb5828e0b99f166264530cd43",
+  "originalNativePids": [
+    46836
+  ],
+  "newNativePids": [
+    25661
+  ],
+  "noBackup": true,
+  "forceKill": false,
+  "userDataTouched": false,
+  "commands": [
+    {
+      "argv": [
+        "ditto",
+        "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app",
+        "/Applications/.CreatorOS.app.installing-t1080-25627"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.3110684580169618,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "codesign",
+        "--verify",
+        "--deep",
+        "--strict",
+        "--verbose=2",
+        "/Applications/.CreatorOS.app.installing-t1080-25627"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.4236476669902913,
+      "stdout": "",
+      "stderr": "--prepared:/Applications/.CreatorOS.app.installing-t1080-25627/Contents/MacOS/creatoros-server\n--validated:/Applications/.CreatorOS.app.installing-t1080-25627/Contents/MacOS/creatoros-server\n/Applications/.CreatorOS.app.installing-t1080-25627: valid on disk\n/Applications/.CreatorOS.app.installing-t1080-25627: satisfies its Designated Requirement\n"
+    },
+    {
+      "argv": [
+        "osascript",
+        "-e",
+        "tell application \"/Applications/CreatorOS.app\" to quit"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.13026345800608397,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "codesign",
+        "--verify",
+        "--deep",
+        "--strict",
+        "--verbose=2",
+        "/Applications/CreatorOS.app"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.41453745804028586,
+      "stdout": "",
+      "stderr": "--prepared:/Applications/CreatorOS.app/Contents/MacOS/creatoros-server\n--validated:/Applications/CreatorOS.app/Contents/MacOS/creatoros-server\n/Applications/CreatorOS.app: valid on disk\n/Applications/CreatorOS.app: satisfies its Designated Requirement\n"
+    },
+    {
+      "argv": [
+        "open",
+        "--stdout",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/install-current/native.stdout.log",
+        "--stderr",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1080-final-20261010/install-current/native.stderr.log",
+        "/Applications/CreatorOS.app"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.0897369590238668,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "boundary": "只签当前授权安装与真实新主进程；HTTP首页、服务及功能验收另核"
+}

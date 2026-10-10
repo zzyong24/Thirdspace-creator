@@ -1,0 +1,86 @@
+{
+  "checkedAt": "2026-10-10T10:22:22.108579+00:00",
+  "roots": [
+    "/Users/zyongzhu/Downloads",
+    "/Users/zyongzhu/Desktop",
+    "/Users/zyongzhu/Workbase/Thirdspace-creator",
+    "/Users/zyongzhu/.codex/worktrees",
+    "/Applications"
+  ],
+  "prunedDirectories": [
+    ".codegraph",
+    ".git",
+    ".next",
+    ".venv",
+    "__pycache__",
+    "node_modules",
+    "venv"
+  ],
+  "prunedAppContentsAfterIdentityCheck": true,
+  "files": [
+    {
+      "path": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+      "kind": "desktop-installer",
+      "bytes": 841500148,
+      "sha256": "12a1fca915ebde0d6a264b144dbb17e069a5ee1b6d7d8549e4a66ab4857b9058",
+      "matchesCurrentPackage": true
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/output/public-skills/creatoros-cli.zip",
+      "kind": "active-project-resource",
+      "bytes": 12814
+    },
+    {
+      "path": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1060/workbuddy-package/creatoros-workbuddy-connector-0.1.0.zip",
+      "kind": "active-project-resource",
+      "bytes": 8868
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/output/public-skills/creatoros-cli.zip",
+      "kind": "active-project-resource",
+      "bytes": 12814
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/docs/verification/t1060/workbuddy-package/creatoros-workbuddy-connector-0.1.0.zip",
+      "kind": "active-project-resource",
+      "bytes": 8868
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/dmg/CreatorOS_1.2.0_aarch64.dmg",
+      "kind": "desktop-installer",
+      "bytes": 841500148,
+      "sha256": "12a1fca915ebde0d6a264b144dbb17e069a5ee1b6d7d8549e4a66ab4857b9058",
+      "matchesCurrentPackage": true
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/output/public-skills/creatoros-cli.zip",
+      "kind": "active-project-resource",
+      "bytes": 12814
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1060/workbuddy-package/creatoros-workbuddy-connector-0.1.0.zip",
+      "kind": "active-project-resource",
+      "bytes": 8868
+    }
+  ],
+  "apps": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/target/release-fast/bundle/macos/CreatorOS.app",
+      "bundleId": "cloud.aitongban.creatoros",
+      "version": "1.2.0",
+      "shellSha256": "a4f327a11671799af0cb9c512dca531eca31c35eb8fe3602c724b5989b09a1db",
+      "runtimeTarSha256": "c829253723973d57ce58e4f699f12374d31cc397b6d9b6b8894014649d18898b",
+      "matchesCurrentPackage": true
+    },
+    {
+      "path": "/Applications/CreatorOS.app",
+      "bundleId": "cloud.aitongban.creatoros",
+      "version": "1.2.0",
+      "shellSha256": "a4f327a11671799af0cb9c512dca531eca31c35eb8fe3602c724b5989b09a1db",
+      "runtimeTarSha256": "c829253723973d57ce58e4f699f12374d31cc397b6d9b6b8894014649d18898b",
+      "matchesCurrentPackage": true
+    }
+  ],
+  "onlyVerifiedCurrentDesktopPackagesRemain": true,
+  "deletedUserData": false
+}
