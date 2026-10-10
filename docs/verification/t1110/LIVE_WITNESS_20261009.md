@@ -174,3 +174,15 @@ EXP-2实际一次快照为officialOriginMatch=true、reportPathMatch=false、pat
 backend真实隔离公开DB+collector32PASS、公开绑定composition7PASS、worker类型exit0；boundary0新增/5基线、semantic通过、orphan0ERROR/100WARN。timeout-policy实际exit1仍原27静态短预算，动态组通过；不称全绿。见dom-correction-verification-20261010.json及独立源码/测试报告。
 
 原隔离产品PGlite/profile在新源码启动，scheduler显式关闭避免周期意外提交；ready 2026-10-10T04:07:21.853Z。当前公开回读（04:07:20.359Z请求起点）HTTP200：原视频号绑定succeeded/acct-3eba3525-70、reports0、原54仍failed0。此为当下读，不把研究Cookie迁入产品。当前尚未进行本修正后的真实新采集或新公众号QR。
+
+## 2026-10-10 真正产品按钮同步与页面旅程首次执行
+
+当场p4作品页读到零账号引导，实际 localStorage选grp-4eb3a857-5、选择cookie却为另一处127.0.0.1本地服务grp-61c1e07d-6；当前组重选因同ID直接return没有刷新。root经真实“返回/accounts”入口，原客户端RPC镜像当前选择，再点真实成员“查看数据”进入NativeReportPanel。没有改登录Cookie、搬研究profile或放宽归属。首次陈旧按钮ref点击被断开拒绝；随后使用新快照真实链接成功，未因此创建任务。
+
+p4实际点击“同步数据”生成唯一新intent collection-51a95619-62，04:16:03.635Z→04:16:19.746Z自然failed/EXPORT_FAILED/0页。root等待时把“取消本次同步”误写“取消同步”，120000ms观察真实超时；任务已经实际提交，后续只核原ID，没有再发。公开get/reports.list HTTP200确认failed0/0份，UI普通失败文案没有假报登录过期；stage readIdentity/BROWSER_OPERATION_FAILED/Error，具体子步根因仍UNKNOWN。原研究统计页同isLoggedOut回调只读CDP实际false/4ms，不能代签产品原62上下文。完整安全摘要见dom-correction-live-result-20261010.json，独立分析见identity-failure-analysis-20261010.md。
+
+新39dc冻结HEAD影子Next（localhost31411，59QWfo）实际运行sameEgo20/p5旅程，报告read/执行状态明确fixture；真实Next路由、公开建组/成员转组/归属端口照常。第一处公众号扫码弹窗Esc后焦点断言false，旅程exit1，剩余旅程未跑。已保留原run-1791605930465-52512963日志/截图，root实际查看公众号弹窗1366PNG。没有用这次失败签AC或真实微信身份。随后按精确命令/PID归属停止本次影子Next，不关闭用户Page或31410产品服务。
+
+按真实Radix组件新增两微信平台Escape→等待弹窗关闭→等待原按钮焦点测试，未改生产当场2FAIL/18SKIP；不是仅即时断言。最小改AccountGroupManager保存实际event.currentTarget，局部onCloseAutoFocus回到仍连接的按钮；不改全局Dialog、布局、绑定服务或任务。修后相关三文件56PASS，LED047八文件174PASS，frontend类型exit0。新代码真实Chrome复验仍等待用户交回空间，不把单测代签操作。
+
+p4原平台能力表重新开始公众号新明确intent execution-task-51a95619-83，实际waiting_verification/nullaccount。已handOff原Ego20并询问新Chrome人工扫码；上次failed56与本次83区分，未迁研究凭据，未把旧回复当本次扫码。当前仍等待人工动作/真实身份及两份报告；T1110保持进行中。

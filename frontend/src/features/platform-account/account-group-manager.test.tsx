@@ -51,3 +51,16 @@ it('三平台扫码入口在能力表内，删除常驻刷新及重复扫码框'
 });
 
 it.each([['wechatOfficial','公众号'],['wechatVideo','视频号']] as const)('T1110 %s真实扫码按钮在能力表中，组成员链接带显式accountId',async(platform,label)=>{const own={...member,platform,accountId:'wechat-real',accountHandle:'本人微信账号'};api.listAccountGroups.mockResolvedValue([{...group(),members:[own]}]);api.getPlatformAccountCapabilities.mockResolvedValue([{platform,bind:{available:true,reason:'真实端口已装配',method:'qr'},collect:{available:true,reason:'原生报表'},publish:{available:false,reason:'未接入'},draft:{available:false,reason:'未接入'},manual:{available:true,reason:'可登记'}}]);render(<AccountManagerView viewModel={{accounts:[],groups:[{...group(),members:[own]}]}}/>);const table=await screen.findByRole('table',{name:'各平台能力'});const trigger=await within(table).findByRole('button',{name:`扫码绑定${label}账号`});expect(trigger).toBeEnabled();expect(screen.getByRole('link',{name:'查看本人微信账号的数据'})).toHaveAttribute('href','/accounts/works?accountId=wechat-real');fireEvent.click(trigger);expect(await screen.findByRole('dialog')).toHaveTextContent(`扫码绑定${label}账号`);expect(api.loginDouyin).not.toHaveBeenCalled();});
+
+it.each([['wechatOfficial','公众号'],['wechatVideo','视频号']] as const)('T1110 %s扫码弹窗按Escape关闭后回到原表格按钮',async(platform,label)=>{
+ sessionStorage.clear();
+ api.getPlatformAccountCapabilities.mockResolvedValue([{platform,bind:{available:true,reason:'真实端口已装配',method:'qr'},collect:{available:true,reason:'原生报表'},publish:{available:false,reason:'未接入'},draft:{available:false,reason:'未接入'},manual:{available:true,reason:'可登记'}}]);
+ renderManager();
+ const trigger=await within(await screen.findByRole('table',{name:'各平台能力'})).findByRole('button',{name:`扫码绑定${label}账号`});
+ await waitFor(()=>expect(trigger).toBeEnabled());trigger.focus();fireEvent.click(trigger);
+ const dialog=await screen.findByRole('dialog',{name:`扫码绑定${label}账号`});
+ fireEvent.keyDown(dialog,{key:'Escape'});
+ await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+ await waitFor(()=>expect(trigger).toHaveFocus());
+ expect(api.loginDouyin).not.toHaveBeenCalled();
+});

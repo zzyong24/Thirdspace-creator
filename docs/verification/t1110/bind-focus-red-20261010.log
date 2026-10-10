@@ -1,0 +1,441 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/frontend
+
+(node:35889) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/features/platform-account/account-group-manager.test.tsx > T1110 wechatOfficial扫码弹窗按Escape关闭后回到原表格按钮
+[describeUserError] [TypeError: Failed to parse URL from /api/v1/dispatch] {
+  [cause]: TypeError: Invalid URL
+      at new URL (node:internal/url:819:25)
+      at new URL (file:///Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/chunks/index.DC7d2Pf8.js:557:2)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at fetchCreatorApi (/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/frontend/src/lib/http-transport.ts:98:10)
+      at Object.request (/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/frontend/src/lib/http-transport.ts:165:25)
+      at Object.client.<computed> [as listGroupResourceGrants] (/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/contract/src/client.ts:60:35)
+      at /Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/frontend/src/features/platform-account/resource-grants-panel.tsx:23:206 {
+    code: 'ERR_INVALID_URL',
+    input: '/api/v1/dispatch'
+  }
+}
+
+stderr | src/features/platform-account/account-group-manager.test.tsx > T1110 wechatVideo扫码弹窗按Escape关闭后回到原表格按钮
+[describeUserError] [TypeError: Failed to parse URL from /api/v1/dispatch] {
+  [cause]: TypeError: Invalid URL
+      at new URL (node:internal/url:819:25)
+      at new URL (file:///Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/chunks/index.DC7d2Pf8.js:557:2)
+      at new Request (node:internal/deps/undici/undici:11832:25)
+      at fetch (node:internal/deps/undici/undici:12757:25)
+      at fetch (node:internal/deps/undici/undici:17407:10)
+      at fetch (node:internal/bootstrap/web/exposed-window-or-worker:83:12)
+      at fetchCreatorApi (/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/frontend/src/lib/http-transport.ts:98:10)
+      at Object.request (/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/frontend/src/lib/http-transport.ts:165:25)
+      at Object.client.<computed> [as listGroupResourceGrants] (/Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/contract/src/client.ts:60:35)
+      at /Users/zyongzhu/.codex/worktrees/wechat-stats-evidence/Thirdspace-creator/frontend/src/features/platform-account/resource-grants-panel.tsx:23:206 {
+    code: 'ERR_INVALID_URL',
+    input: '/api/v1/dispatch'
+  }
+}
+
+ ❯ src/features/platform-account/account-group-manager.test.tsx (20 tests | 2 failed | 18 skipped) 2259ms
+   × T1110 wechatOfficial扫码弹窗按Escape关闭后回到原表格按钮 1192ms
+   × T1110 wechatVideo扫码弹窗按Escape关闭后回到原表格按钮 1065ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/platform-account/account-group-manager.test.tsx > T1110 wechatOfficial扫码弹窗按Escape关闭后回到原表格按钮
+Error: expect(element).toHaveFocus()
+
+Expected element with focus:
+  <button
+  class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 mt-2"
+  data-slot="button"
+>
+  扫码绑定
+  公众号
+  账号
+</button>
+Received element with focus:
+  <body
+  style=""
+>
+  <div>
+    <main
+      class="flex min-w-0 flex-col gap-section-gap"
+      data-slot="account-manager"
+      data-testid="account-manager"
+    >
+      <header>
+        <h1
+          class="text-2xl font-semibold"
+        >
+          账号组与绑定账号
+        </h1>
+        <p
+          class="mt-1 text-sm text-muted-foreground"
+        >
+          同一创作者的内容在一个工作区管理，平台账号分别绑定与分发。
+        </p>
+      </header>
+      <div
+        class="grid min-w-0 gap-section-gap lg:grid-cols-[16rem_minmax(0,1fr)]"
+      >
+        <aside
+          class="flex min-w-0 flex-col gap-4"
+        >
+          <div … />
+        </aside>
+        <div
+          class="flex min-w-0 flex-col gap-4"
+        >
+          <div … />
+          <div … />
+          <div … />
+          <div … />
+          <div … />
+          <div … />
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body[39m
+    [33mstyle[39m=[32m""[39m
+  [36m>[39m
+    [36m<div>[39m
+      [36m<main[39m
+        [33mclass[39m=[32m"flex min-w-0 flex-col gap-section-gap"[39m
+        [33mdata-slot[39m=[32m"account-manager"[39m
+        [33mdata-testid[39m=[32m"account-manager"[39m
+      [36m>[39m
+        [36m<header>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"text-2xl font-semibold"[39m
+          [36m>[39m
+            [0m账号组与绑定账号[0m
+          [36m</h1>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-1 text-sm text-muted-foreground"[39m
+          [36m>[39m
+            [0m同一创作者的内容在一个工作区管理，平台账号分别绑定与分发。[0m
+          [36m</p>[39m
+        [36m</header>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"grid min-w-0 gap-section-gap lg:grid-cols-[16rem_minmax(0,1fr)]"[39m
+        [36m>[39m
+          [36m<aside[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-col gap-4"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33maria-labelledby[39m=[32m"section-card-账号组"[39m
+              [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+              [33mdata-size[39m=[32m"default"[39m
+              [33mdata-slot[39m=[32m"section-card"[39m
+              [33mrole[39m=[32m"region"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"group/card-header @container/card-header auto-rows-min gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing) flex flex-row items-start justify-between gap-card-gap"[39m
+                [33mdata-slot[39m=[32m"card-header"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex min-w-0 flex-col gap-0.5"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"font-heading group-data-[size=sm]/card:text-sm text-[15px] font-semibold"[39m
+                    [33mdata-slot[39m=[32m"card-title"[39m
+                    [33mid[39m=[32m"section-card-账号组"[39m
+                  [36m>[39m
+                    [0m账号组[0m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"px-(--card-spacing) text-sm"[39m
+                [33mdata-slot[39m=[32m"card-content"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex flex-col gap-3"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"flex gap-2 text-sm"[39m
+                  [36m>[39m
+                    [36m<input[39m
+                      [33mtype[39m=[32m"checkbox"[39m
+                    [36m/>[39m
+                    [0m显示已归档组[0m
+                  [36m</label>[39m
+                  [36m<ul[39m
+                    [33mclass[39m=[32m"flex flex-col gap-2"[39m
+                  [36m>[39m
+                    [36m<li>[39m
+                      [36m<button[39m
+                        [33maria-pressed[39m=[32m"true"[39m
+                        [33mclass[39m=[32m"w-full rounded-control border px-3 py-2 text-left border-brand bg-brand-soft text-brand"[39m
+                        [33mtype[39m=[32m"button"[39m
+                      [36m>[39m
+                        [36m<span[39m
+                          [33mclass[39m=[32m"block break-words text-sm font-medium"[39m
+                        [36m>[39m
+                          [0m创作者[0m
+                        [36m</span>[39m
+                        [36m<span[39m
+                          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+                        [36m>[39m
+                          [0m1 个平台账号[0m
+                          [0m · 当前工作区[0m
+                        [36m</span>[39m
+                      [36m</button>[39m
+                    [36m</li>[39m
+                    [36m<li>[39m
+                      [36m<button[39m
+                        [33maria-pressed[39m=[32m"false"[39m
+                        [33mclass[39m=[32m"w-full rounded-control border px-3 py-2 text-left border-border bg-surface"[39m
+                        [33mtype[39m=[32m"button"[39m
+                      [36m>[39m
+                        [36m<span[39m
+                          [33mclass[39m=[32m"block break-words text-sm font-medium"[39m
+                        [36m>[39m
+                          [0m另一组[0m
+                        [36m</span>[39m
+                        [36m<span[39m
+                          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+                        [36m>[39m
+                          [0m0 个平台账号[0m
+                        [36m</span>[39m
+                      [36m</button>[39m
+                    [36m</li>[39m
+                  [36m</ul>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"text-sm"[39m
+                    [33mfor[39m=[32m"new-group-name"[39m
+                  [36m>[39m
+                    [0m新账号组名称[0m
+                  [36m</label>[39m
+                  [36m<input[39m
+                    [33mclass[39m=[32m"h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"[39m
+                    [33mdata-slot[39m=[32m"input"[39m
+                    [33mid[39m=[32m"new-group-name"[39m
+                    [33mmaxlength[39m=[32m"120"[39m
+                    [33mvalue[39m=[32m""[39m
+                  [36m/>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all ou...
+ ❯ src/features/platform-account/account-group-manager.test.tsx:64:36
+     62|  fireEvent.keyDown(dialog,{key:'Escape'});
+     63|  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+     64|  await waitFor(()=>expect(trigger).toHaveFocus());
+       |                                    ^
+     65|  expect(api.loginDouyin).not.toHaveBeenCalled();
+     66| });
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/features/platform-account/account-group-manager.test.tsx > T1110 wechatVideo扫码弹窗按Escape关闭后回到原表格按钮
+Error: expect(element).toHaveFocus()
+
+Expected element with focus:
+  <button
+  class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 mt-2"
+  data-slot="button"
+>
+  扫码绑定
+  视频号
+  账号
+</button>
+Received element with focus:
+  <body
+  style=""
+>
+  <div>
+    <main
+      class="flex min-w-0 flex-col gap-section-gap"
+      data-slot="account-manager"
+      data-testid="account-manager"
+    >
+      <header>
+        <h1
+          class="text-2xl font-semibold"
+        >
+          账号组与绑定账号
+        </h1>
+        <p
+          class="mt-1 text-sm text-muted-foreground"
+        >
+          同一创作者的内容在一个工作区管理，平台账号分别绑定与分发。
+        </p>
+      </header>
+      <div
+        class="grid min-w-0 gap-section-gap lg:grid-cols-[16rem_minmax(0,1fr)]"
+      >
+        <aside
+          class="flex min-w-0 flex-col gap-4"
+        >
+          <div … />
+        </aside>
+        <div
+          class="flex min-w-0 flex-col gap-4"
+        >
+          <div … />
+          <div … />
+          <div … />
+          <div … />
+          <div … />
+          <div … />
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body[39m
+    [33mstyle[39m=[32m""[39m
+  [36m>[39m
+    [36m<div>[39m
+      [36m<main[39m
+        [33mclass[39m=[32m"flex min-w-0 flex-col gap-section-gap"[39m
+        [33mdata-slot[39m=[32m"account-manager"[39m
+        [33mdata-testid[39m=[32m"account-manager"[39m
+      [36m>[39m
+        [36m<header>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"text-2xl font-semibold"[39m
+          [36m>[39m
+            [0m账号组与绑定账号[0m
+          [36m</h1>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"mt-1 text-sm text-muted-foreground"[39m
+          [36m>[39m
+            [0m同一创作者的内容在一个工作区管理，平台账号分别绑定与分发。[0m
+          [36m</p>[39m
+        [36m</header>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"grid min-w-0 gap-section-gap lg:grid-cols-[16rem_minmax(0,1fr)]"[39m
+        [36m>[39m
+          [36m<aside[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-col gap-4"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33maria-labelledby[39m=[32m"section-card-账号组"[39m
+              [33mclass[39m=[32m"group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground ring-1 ring-foreground/10 [--card-spacing:--spacing(4)] has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(3)] data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl gap-card-gap"[39m
+              [33mdata-size[39m=[32m"default"[39m
+              [33mdata-slot[39m=[32m"section-card"[39m
+              [33mrole[39m=[32m"region"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"group/card-header @container/card-header auto-rows-min gap-1 rounded-t-xl px-(--card-spacing) has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-(--card-spacing) flex flex-row items-start justify-between gap-card-gap"[39m
+                [33mdata-slot[39m=[32m"card-header"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex min-w-0 flex-col gap-0.5"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"font-heading group-data-[size=sm]/card:text-sm text-[15px] font-semibold"[39m
+                    [33mdata-slot[39m=[32m"card-title"[39m
+                    [33mid[39m=[32m"section-card-账号组"[39m
+                  [36m>[39m
+                    [0m账号组[0m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"px-(--card-spacing) text-sm"[39m
+                [33mdata-slot[39m=[32m"card-content"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex flex-col gap-3"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"flex gap-2 text-sm"[39m
+                  [36m>[39m
+                    [36m<input[39m
+                      [33mtype[39m=[32m"checkbox"[39m
+                    [36m/>[39m
+                    [0m显示已归档组[0m
+                  [36m</label>[39m
+                  [36m<ul[39m
+                    [33mclass[39m=[32m"flex flex-col gap-2"[39m
+                  [36m>[39m
+                    [36m<li>[39m
+                      [36m<button[39m
+                        [33maria-pressed[39m=[32m"true"[39m
+                        [33mclass[39m=[32m"w-full rounded-control border px-3 py-2 text-left border-brand bg-brand-soft text-brand"[39m
+                        [33mtype[39m=[32m"button"[39m
+                      [36m>[39m
+                        [36m<span[39m
+                          [33mclass[39m=[32m"block break-words text-sm font-medium"[39m
+                        [36m>[39m
+                          [0m创作者[0m
+                        [36m</span>[39m
+                        [36m<span[39m
+                          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+                        [36m>[39m
+                          [0m1 个平台账号[0m
+                          [0m · 当前工作区[0m
+                        [36m</span>[39m
+                      [36m</button>[39m
+                    [36m</li>[39m
+                    [36m<li>[39m
+                      [36m<button[39m
+                        [33maria-pressed[39m=[32m"false"[39m
+                        [33mclass[39m=[32m"w-full rounded-control border px-3 py-2 text-left border-border bg-surface"[39m
+                        [33mtype[39m=[32m"button"[39m
+                      [36m>[39m
+                        [36m<span[39m
+                          [33mclass[39m=[32m"block break-words text-sm font-medium"[39m
+                        [36m>[39m
+                          [0m另一组[0m
+                        [36m</span>[39m
+                        [36m<span[39m
+                          [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+                        [36m>[39m
+                          [0m0 个平台账号[0m
+                        [36m</span>[39m
+                      [36m</button>[39m
+                    [36m</li>[39m
+                  [36m</ul>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"text-sm"[39m
+                    [33mfor[39m=[32m"new-group-name"[39m
+                  [36m>[39m
+                    [0m新账号组名称[0m
+                  [36m</label>[39m
+                  [36m<input[39m
+                    [33mclass[39m=[32m"h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"[39m
+                    [33mdata-slot[39m=[32m"input"[39m
+                    [33mid[39m=[32m"new-group-name"[39m
+                    [33mmaxlength[39m=[32m"120"[39m
+                    [33mvalue[39m=[32m""[39m
+                  [36m/>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all ou...
+ ❯ src/features/platform-account/account-group-manager.test.tsx:64:36
+     62|  fireEvent.keyDown(dialog,{key:'Escape'});
+     63|  await waitFor(()=>expect(screen.queryByRole('dialog')).toBeNull());
+     64|  await waitFor(()=>expect(trigger).toHaveFocus());
+       |                                    ^
+     65|  expect(api.loginDouyin).not.toHaveBeenCalled();
+     66| });
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 18 skipped (20)
+   Start at  12:21:46
+   Duration  4.27s (transform 633ms, setup 178ms, import 1.11s, tests 2.26s, environment 564ms)
+

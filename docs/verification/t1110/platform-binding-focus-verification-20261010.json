@@ -1,0 +1,60 @@
+{
+  "observedAt": "2026-10-10T04:26:03.406Z",
+  "problem": "实际平台表扫码弹窗Escape关闭后焦点留在body",
+  "red": {
+    "session": 49307,
+    "exitCode": 1,
+    "failed": 2,
+    "skipped": 18,
+    "log": "bind-focus-red-20261010.log"
+  },
+  "change": "仅保存实际按钮currentTarget，局部onCloseAutoFocus聚焦仍连接按钮；复用NativeReportPanel模式",
+  "sourcePaths": [
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.tsx",
+      "sha256": "36d43b9eb8529378c8019577b4698aa1f1eedb226f728f5ff5a79454841b7e58"
+    },
+    {
+      "path": "frontend/src/features/platform-account/account-group-manager.test.tsx",
+      "sha256": "961493ee7ec75c89aa0663d975c48843304075a8ad9bfb50f49192ddd8c0aed3"
+    },
+    {
+      "path": "docs/verification/t1110/browser/run-ego-journey.mjs",
+      "sha256": "7f541025d267b791a3bf3a9a89cd3d6e46ae518d9f5f3e27580d9655404b9afe"
+    }
+  ],
+  "green": {
+    "session": 43915,
+    "exitCode": 0,
+    "files": 3,
+    "passed": 56,
+    "log": "bind-focus-green-20261010.log"
+  },
+  "led047": {
+    "session": 22869,
+    "exitCode": 0,
+    "files": 8,
+    "passed": 174,
+    "log": "bind-focus-led047-20261010.log"
+  },
+  "typecheck": {
+    "session": 55271,
+    "exitCode": 0,
+    "log": "bind-focus-typecheck-20261010.log"
+  },
+  "review": {
+    "path": "platform-binding-focus-review-20261010.md",
+    "sha256": "d551aca61e01db3d4df472cfeb81964f09a396becc2e75e8d3066a77b0538956"
+  },
+  "browserBefore": {
+    "head": "39dcfae6499c60222b31908411c391ee7a7d79f9",
+    "outcome": "failed",
+    "run": "run-1791605930465-52512963",
+    "actualViewed": [
+      "entry-dialog-wechatOfficial-1366.png"
+    ],
+    "note": "实际Chrome失败+组件等待焦点RED，不改原失败"
+  },
+  "browserAfter": "NOT_RUN：同Ego20仍交用户，本修单测不代签真机；须新冻结HEAD新shadow",
+  "qaWait": "等待真正按钮焦点，不调用focus，不固定sleep，仍按原name严格判断"
+}
