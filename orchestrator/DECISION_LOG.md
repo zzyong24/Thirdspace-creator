@@ -1,5 +1,15 @@
 # Decision Log — CreatorOS
 
+## DEC-WECHAT-1110-IDENTITY-EXTRA-PROBE（2026-10-10，待用户确认）
+
+**Stage**：4-build 的 research-first 条件分支。**Owner**：user，**Status**：待确认，尚未授权本次例外。原 DEC-WECHAT-1110 的完整实施方向仍 Confirmed。
+
+本族两次真实额度已用尽，当前仍 OPEN；第二次实际旧闭包仪器定位 `identityFields/IDENTITY_MISSING`，没有完整加载 SHA、具体字段缺失原因或报表。原 onStopped 返回、公开失败、0 报表、原62/83保留和原测试服务恢复已留证，不补签修后磁盘通过。请求同一族追加 **一次** 只读字段形状取证，不重置历史、放宽身份/归属或发布范围。
+
+具体行为、成本、控制边界和待审代码见[追加一次身份字段定位方案](../docs/research/t1110-identity-shape-extra-probe-proposal.md)。拟继续沿原受管 profile 和唯一任务权；无 Cookie 复制/清除、新 QR、报表业务写入、原失败重发或自动再试。原研究120分钟窗口与新任务30分钟原期限保留。额外授权不等于生产验收或官方 resume；程序不能表达超过2次时保真实失败，不能改额度、删证据或伪造门。
+
+**Pattern-Ref**：none，现有研究门最多2次，无现成例外模板；此次是明确的有界用户决策，不建立新产品模式。**Asset-Ref**：none；复用原 nativeCollector、authority、onStopped 和公开 dispatch。**Source**：本族研究卡与 exp2-result/cleanup-restoration、独立运行版本审查。**Invalidates**：none，原记录完整保留。**Revisit Trigger**：用户明确答复、字段形状事实或停止未确认；未答复前不得执行第3次。
+
 ## DEC-WECHAT-1110-EMPTY-WINDOW（2026-10-09，独立复评PASS[REV:b6b7772b74ff]）
 
 T1110独立源码复核发现：合法空单篇作品导出只有固定表头，两个发布时间窗口可能有同一原字节摘要。原SPEC只按SHA去重会误拒第二个合法窗口或混淆日期。沿用户“开始推进”的完整数据同步授权与原保真日期要求，修正内部报表观察键为原SHA+规范化selection摘要；公开DTO、原字节SHA、账号归属、五报表范围和权限均不变，不发布、不迁移真实研究数据。原同页重放及同窗口payload冲突保护保留。先按修正后的SPEC独立评审再改schema/service；不能把原收据代签新hash，也不隐藏原设计缺口。

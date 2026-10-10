@@ -1,0 +1,17 @@
+{
+  "schema": "t1110-fixed-sdk-protocol-projection/v1",
+  "recordedAt": "2026-10-10T05:06:58.743Z",
+  "attemptId": "collection-db52c710-52",
+  "values": {
+    "schema": "t1110-fixed-sdk-protocol/v1",
+    "stage": "readIdentity",
+    "identityStep": "identityFields",
+    "sdkEvaluate": false,
+    "nameHelperUndefined": false,
+    "executionContextDestroyed": false,
+    "javascriptReferenceError": false
+  },
+  "privateLogSha256": "4dd017f2807c6088b8fc612d588f467d5be7328c677274d169fc60efca7a7fef",
+  "projectionMethod": "只提取固定tag后四个布尔及固定步骤；不输出原异常、URL、身份或正文",
+  "conclusion": "本轮最终是预设IDENTITY_MISSING，不是被协议分类的SDK异常；不能判断原62/83或当前字段缺失根因。"
+}

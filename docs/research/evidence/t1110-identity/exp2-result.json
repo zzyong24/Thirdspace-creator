@@ -1,0 +1,192 @@
+{
+  "schema": "t1110-identity-exp2-evidence/v1",
+  "recordedAt": "2026-10-10T05:01:07.319Z",
+  "experimentId": "EXP-2",
+  "quota": "2/2",
+  "publicOperation": "platforms.collections.start",
+  "publicSubmitCount": 1,
+  "attemptId": "collection-db52c710-52",
+  "clientRequestIdSha256": "9c4bdbae945708d749b1f416d60bf54c69e428ec9f5c31234499808ac3d6de34",
+  "runStartedAt": "2026-10-10T04:46:10.617Z",
+  "originalDeadlineAt": "2026-10-10T05:16:10.617Z",
+  "observedFinal": {
+    "status": "failed",
+    "reasonCode": "EXPORT_FAILED",
+    "generation": 2,
+    "committedPages": 0,
+    "updatedAt": "2026-10-10T04:54:23.529Z"
+  },
+  "reportCountAfter": 0,
+  "originalVideo": {
+    "status": "failed",
+    "committedPages": 0
+  },
+  "officialBinding": {
+    "status": "failed",
+    "accountId": null
+  },
+  "diagnostic": {
+    "platform": "wechatVideo",
+    "stage": "readIdentity",
+    "identityStep": "identityFields",
+    "code": "IDENTITY_MISSING",
+    "exceptionName": "WechatBrowserSourceError"
+  },
+  "events": [
+    {
+      "schema": "t1110-identity-probe/v1",
+      "at": "2026-10-10T04:46:10.793Z",
+      "event": "profile-authorized-and-acquired"
+    },
+    {
+      "schema": "t1110-identity-probe/v1",
+      "at": "2026-10-10T04:54:23.351Z",
+      "event": "diagnostic",
+      "diagnostic": {
+        "platform": "wechatVideo",
+        "stage": "readIdentity",
+        "identityStep": "identityFields",
+        "code": "IDENTITY_MISSING",
+        "exceptionName": "WechatBrowserSourceError"
+      }
+    },
+    {
+      "schema": "t1110-identity-probe/v1",
+      "at": "2026-10-10T04:54:23.413Z",
+      "event": "physicalStopConfirmed"
+    },
+    {
+      "schema": "t1110-identity-probe/v1",
+      "at": "2026-10-10T04:54:23.524Z",
+      "event": "identityRejected"
+    }
+  ],
+  "host": {
+    "startedAt": "2026-10-10T04:43:10.099Z",
+    "readyAt": "2026-10-10T04:43:32.642Z",
+    "origin": "http://127.0.0.1:31412",
+    "pid": 41516,
+    "schedulerDisabled": true,
+    "backgroundDriversDisabled": true
+  },
+  "sourceVersions": {
+    "reconstructedInitial": [
+      {
+        "path": "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+        "sha256": "846c2278b53fdc17e3b43850aa5649c444f89669916577c8747918e54cf7380d",
+        "provenance": "由原准备脚本和冻结候选纯字符串重建；不是运行时加载哈希证明"
+      },
+      {
+        "path": "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+        "sha256": "9eedfeca552e4b6d508a9c57b22e0b8e794e57230b078311029198305e5a1025",
+        "provenance": "由原准备脚本和冻结候选纯字符串重建；不是运行时加载哈希证明"
+      },
+      {
+        "path": "frontend/src/server/persistence-client.ts",
+        "sha256": "7b6b7f9ad5b9a483d8d4673484dd50a5436f7b71abc585c90b84a28bf52f46bf",
+        "provenance": "由原准备脚本和冻结候选纯字符串重建；不是运行时加载哈希证明"
+      }
+    ],
+    "revisedDisk": [
+      {
+        "path": "ai-worker/src/runtime/platform/wechat-browser-source.ts",
+        "productionSha256": "f172f920fefc08a2c00d39e753eda97a0e0391369bc7064f60d2c6bd48403d0c",
+        "candidateSha256": "e748b8701e010d2a4cd7109d73bfc2287fed292a4fee2146a5fc9de424f378e2",
+        "researchInstrumentedSha256": "e85b51addfd0d0b84e7d04bf23820c73107db2ae3ec504c77758db43a7b6efe7"
+      },
+      {
+        "path": "ai-worker/src/runtime/platform/wechat-dom-witness.ts",
+        "productionSha256": "10d7b940110ffc96316c2687bae539259c2ba22feabebde34a57d12144c1048b",
+        "candidateSha256": "9eedfeca552e4b6d508a9c57b22e0b8e794e57230b078311029198305e5a1025"
+      },
+      {
+        "path": "frontend/src/server/persistence-client.ts",
+        "productionSha256": "ab11053526e4f2a4f71b45fad6e012b5215a1502d4d5124a8e4db4b5d0457dd8",
+        "candidateSha256": "4f9601f699bd8c25b60434eb2522b9bbf53e6897bbc6a5ce6e245f6c05c13448",
+        "change": "only collectReports delegates readIdentity then fixed stop; no reports fixture, no capability/proof alteration"
+      }
+    ],
+    "runtimeExactSha256": "UNKNOWN",
+    "actualVariantEvidence": "旧文件appendFile事件及全局bundle闭包；证明旧composition行为，不能用重建SHA或事后磁盘SHA签全部实际模块。",
+    "noColdRestartBetweenRepairAndIntent": true,
+    "revisedDiskExecution": "NOT_RUN"
+  },
+  "stopping": {
+    "onStoppedReturnedMarkerAt": "2026-10-10T04:54:23.413Z",
+    "ownedChromiumProcessCount": 0,
+    "osObservedAt": "2026-10-10T05:01:07.320Z",
+    "osCountIsNotReleaseProof": true
+  },
+  "rootCause": "UNKNOWN；仅本轮最终拒绝接缝为identityFields/IDENTITY_MISSING；原62/83原因不代签。",
+  "limitations": [
+    "旧异步日志仪器影响边界尚未通过运行验收",
+    "不证明Cookie失效",
+    "不证明新磁盘仪器执行",
+    "非GREEN/CLOSE/产品采集PASS"
+  ],
+  "artifacts": [
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-prepare-instrument.mjs",
+      "sha256": "9d5fd308fa9012f79900a312e539ccb5d5e2e487d9b058fc63e104e951533f2a",
+      "bytes": 5304
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-repair-instrument.mjs",
+      "sha256": "eb4d97aaf9f66827d174ecdd839c428e8e2ce0296dacef785dc3760b7512efad",
+      "bytes": 2944
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-start-host.mjs",
+      "sha256": "a15fdaafd7a667a2ecfad43e5474aa8ee9362f377eb0aa7d8439f2c13b4dc844",
+      "bytes": 4519
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-public-intent.mjs",
+      "sha256": "4ee7e622603ba42a7cf72672c222ff917029519ff5fe7cc704a2e47ecc425ff0",
+      "bytes": 4485
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-disk-manifest.json",
+      "sha256": "3fa6fd6c454f575c67059fac9d559fbe5134210d4daaec484dad9076c6182c61",
+      "bytes": 2069
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-runtime-variant-review.md",
+      "sha256": "5797fedc0104a5cc7d1cd87f4a97f5ae46a074f502a3cf8141df751a1e30f56c",
+      "bytes": 5227
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-instrument-review.md",
+      "sha256": "fb815a34f36abb6a173f6f3b26e1748e868b3a38bcd3d145ceb68586b7152f44",
+      "bytes": 4924
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-disk-instrument-recheck.md",
+      "sha256": "9599ddeba58ac8b9445471d59ffa534724e28739408d7517a005f23aae2768b6",
+      "bytes": 3482
+    },
+    {
+      "path": "docs/research/evidence/t1110-identity/exp2-fixed-events.ndjson",
+      "sha256": "d1be8aa50e85bcb26c62f7869f65f7fabe9b3d83bcc77836d531ce7dc6bbef38",
+      "bytes": 710
+    }
+  ],
+  "privateRawReceiptPaths": [
+    {
+      "name": "identity-exp2-public-start-20261010.json",
+      "sha256": "8757b3bfd79f2c6f049e98670737c5ad9972cac12f74f631b1970f1c905daf2f"
+    },
+    {
+      "name": "identity-exp2-public-final-20261010.json",
+      "sha256": "99a426401153ca2640f7bbaca2832bab4a90491475f274ece32efe96bcacb0fd"
+    },
+    {
+      "name": "identity-exp2-public-after-20261010.json",
+      "sha256": "519b3ce6e437af89be45612738ad46c31f9f06d16c8fa019a247ab78e98b281b"
+    },
+    {
+      "name": "identity-exp2-public-requests-20261010.json",
+      "sha256": "315be7df013c88f0b4ec0cfbce9efc658b9344adf0bfd974b69694e670e0f04b"
+    }
+  ]
+}
