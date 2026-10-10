@@ -1,0 +1,6 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "initial",
+  "summary": "PASS（仅当前SPEC独立初审）：本轮原LED050实际前端7PASS、后端45PASS/3FAIL，receipt.logSha256与实读日志一致；已最终澄清日志SHA与收据自身SHA。两旧mock漏掉真实DashboardRollup必填finishAvg等字段，经whole-port unknown强转掩盖，dashboard对undefined调用toFixed后组合返回空指标，三旧性能/粉丝断言尚未抵达。真实repository在合法稀疏数据时返回完整字段，缺指标为null、计数为0，不支持据此修改产品或把未知造为0。仅本测试建立以AnalyticsService.getDashboardRollup实际返回类型约束的完整稀疏fixture，保snapshotCount1及原已知指标/粉丝差异，两个mock复用；保四原用例/错误为空及跨号、批量、并行、请求缓存、基线失败恢复断言，并验证未知完播率—与实测百分比，覆盖本校准足够。产品、合同、sharedfixture、其它测试、配置、预算与守卫不变。原LED050全部命令及服务回归、backend类型、边界/语义/orphan/diff、精确实现独评仍待；不签T1015整体、安装/平台/模型/全功能或完整Gate。",
+  "findings": []
+}

@@ -1,0 +1,315 @@
+{
+  "head": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "startedAt": "2026-10-10T01:25:22.579Z",
+  "failedAt": "2026-10-10T01:27:41.744Z",
+  "observed": {
+    "httpStatus": 200,
+    "renderedUrl": "http://127.0.0.1:53829/",
+    "executablePath": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/sidecar/frontend/browsers/chromium-1223/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+    "executableSha256": "2447c7bdea8e8ad38b52594f1ba53e18821c05445e8a07ad1cf3b0f23931d89d",
+    "isolatedGroupCreatedThroughUI": true,
+    "network": [
+      {
+        "operation": "assets.uploads.create",
+        "status": 200,
+        "groupId": "grp-5534ade0-13",
+        "accountId": null,
+        "input": {
+          "body": {
+            "assetType": "image",
+            "mimeType": "image/png",
+            "fileSize": 178,
+            "fileName": "t1179-neutral.png"
+          }
+        }
+      },
+      {
+        "operation": "bytes.put",
+        "status": 200,
+        "pathname": "/api/v1/blob/groups/grp-5534ade0-13/inbox/uploads/objkey-5534ade0-39-t1179-neutral.png",
+        "requestBodyAvailable": false,
+        "bytes": null,
+        "sha256": null
+      },
+      {
+        "operation": "assets.uploads.complete",
+        "status": 200,
+        "groupId": "grp-5534ade0-13",
+        "accountId": null,
+        "input": {
+          "params": {
+            "uploadId": "upload-5534ade0-41"
+          },
+          "body": {
+            "name": "t1179-neutral.png"
+          }
+        }
+      },
+      {
+        "operation": "assets.uploads.create",
+        "status": 200,
+        "groupId": "grp-5534ade0-13",
+        "accountId": null,
+        "input": {
+          "body": {
+            "assetType": "video",
+            "mimeType": "video/mp4",
+            "fileSize": 2936,
+            "fileName": "t1179-neutral.mp4"
+          }
+        }
+      },
+      {
+        "operation": "bytes.put",
+        "status": 200,
+        "pathname": "/api/v1/blob/groups/grp-5534ade0-13/inbox/uploads/objkey-5534ade0-50-t1179-neutral.mp4",
+        "requestBodyAvailable": false,
+        "bytes": null,
+        "sha256": null
+      },
+      {
+        "operation": "assets.uploads.complete",
+        "status": 200,
+        "groupId": "grp-5534ade0-13",
+        "accountId": null,
+        "input": {
+          "params": {
+            "uploadId": "upload-5534ade0-52"
+          },
+          "body": {
+            "name": "t1179-neutral.mp4"
+          }
+        }
+      }
+    ],
+    "uploadResponses": [
+      {
+        "id": "asset-5534ade0-40",
+        "userId": "user-5534ade0-1",
+        "currentFileId": "afile-5534ade0-44",
+        "assetType": "image",
+        "name": "t1179-neutral.png",
+        "description": "",
+        "status": "active",
+        "isFavorite": false,
+        "mimeType": "image/png",
+        "fileSize": 178,
+        "width": 64,
+        "height": 64,
+        "durationMs": null,
+        "extractStatus": null,
+        "materialSummary": null,
+        "extractedText": null,
+        "sourceUrl": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-10T01:25:39.368Z",
+        "updatedAt": "2026-10-10T01:25:39.368Z"
+      },
+      {
+        "id": "asset-5534ade0-51",
+        "userId": "user-5534ade0-1",
+        "currentFileId": "afile-5534ade0-55",
+        "assetType": "video",
+        "name": "t1179-neutral.mp4",
+        "description": "",
+        "status": "active",
+        "isFavorite": false,
+        "mimeType": "video/mp4",
+        "fileSize": 2936,
+        "width": 128,
+        "height": 72,
+        "durationMs": 2000,
+        "extractStatus": null,
+        "materialSummary": null,
+        "extractedText": null,
+        "sourceUrl": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-10T01:25:39.603Z",
+        "updatedAt": "2026-10-10T01:25:39.603Z"
+      }
+    ],
+    "files": [
+      {
+        "name": "t1179-neutral.png",
+        "bytes": 178,
+        "sha256": "0dd2d6f81631af889719ef0b4c9d46943db1448ec3a5340a17c7274a0774e46f"
+      },
+      {
+        "name": "t1179-neutral.mp4",
+        "bytes": 2936,
+        "sha256": "36a6d275f2c41ae55a3a6c03c29ee21def57b6250b26bae7464d8d88bb255574"
+      }
+    ],
+    "beforeListWait": [
+      {
+        "file": "t1179-neutral.png",
+        "url": "http://127.0.0.1:53829/assets",
+        "publicListStatus": 200,
+        "publicList": [
+          {
+            "id": "asset-5534ade0-40",
+            "userId": "user-5534ade0-1",
+            "currentFileId": "afile-5534ade0-44",
+            "assetType": "image",
+            "name": "t1179-neutral.png",
+            "description": "",
+            "status": "active",
+            "isFavorite": false,
+            "mimeType": "image/png",
+            "fileSize": 178,
+            "width": 64,
+            "height": 64,
+            "durationMs": null,
+            "extractStatus": null,
+            "materialSummary": null,
+            "extractedText": null,
+            "sourceUrl": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-10T01:25:39.368Z",
+            "updatedAt": "2026-10-10T01:25:39.368Z"
+          }
+        ],
+        "domCards": [
+          {
+            "id": "asset-5534ade0-40",
+            "text": "t1179-neutral.png2026-10-10 · image/png · 178 B",
+            "visible": true
+          }
+        ],
+        "exactMatches": [
+          {
+            "tag": "SPAN",
+            "text": "t1179-neutral.png",
+            "box": {
+              "x": 487,
+              "y": 257.765625,
+              "width": 112.0625,
+              "height": 16.25,
+              "top": 257.765625,
+              "right": 599.0625,
+              "bottom": 274.015625,
+              "left": 487
+            },
+            "html": "<span class=\"truncate\">t1179-neutral.png</span>"
+          }
+        ]
+      },
+      {
+        "file": "t1179-neutral.mp4",
+        "url": "http://127.0.0.1:53829/assets",
+        "publicListStatus": 200,
+        "publicList": [
+          {
+            "id": "asset-5534ade0-51",
+            "userId": "user-5534ade0-1",
+            "currentFileId": "afile-5534ade0-55",
+            "assetType": "video",
+            "name": "t1179-neutral.mp4",
+            "description": "",
+            "status": "active",
+            "isFavorite": false,
+            "mimeType": "video/mp4",
+            "fileSize": 2936,
+            "width": 128,
+            "height": 72,
+            "durationMs": 2000,
+            "extractStatus": null,
+            "materialSummary": null,
+            "extractedText": null,
+            "sourceUrl": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-10T01:25:39.603Z",
+            "updatedAt": "2026-10-10T01:25:39.603Z"
+          },
+          {
+            "id": "asset-5534ade0-40",
+            "userId": "user-5534ade0-1",
+            "currentFileId": "afile-5534ade0-44",
+            "assetType": "image",
+            "name": "t1179-neutral.png",
+            "description": "",
+            "status": "active",
+            "isFavorite": false,
+            "mimeType": "image/png",
+            "fileSize": 178,
+            "width": 64,
+            "height": 64,
+            "durationMs": null,
+            "extractStatus": null,
+            "materialSummary": null,
+            "extractedText": null,
+            "sourceUrl": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-10T01:25:39.368Z",
+            "updatedAt": "2026-10-10T01:25:39.368Z"
+          }
+        ],
+        "domCards": [
+          {
+            "id": "asset-5534ade0-51",
+            "text": "t1179-neutral.mp42026-10-10 · video/mp4 · 2.9 KB",
+            "visible": true
+          },
+          {
+            "id": "asset-5534ade0-40",
+            "text": "t1179-neutral.png2026-10-10 · image/png · 178 B",
+            "visible": true
+          }
+        ],
+        "exactMatches": [
+          {
+            "tag": "SPAN",
+            "text": "t1179-neutral.mp4",
+            "box": {
+              "x": 487,
+              "y": 257.765625,
+              "width": 116.109375,
+              "height": 16.25,
+              "top": 257.765625,
+              "right": 603.109375,
+              "bottom": 274.015625,
+              "left": 487
+            },
+            "html": "<span class=\"truncate\">t1179-neutral.mp4</span>"
+          }
+        ]
+      }
+    ],
+    "publicReadDownloads": [
+      {
+        "assetId": "asset-5534ade0-40",
+        "fileId": "afile-5534ade0-44",
+        "name": "t1179-neutral.png",
+        "mimeType": "image/png",
+        "fileSize": 178,
+        "durationMs": null,
+        "width": 64,
+        "height": 64,
+        "downloadStatus": 200,
+        "downloadBytes": 178,
+        "sha256": "0dd2d6f81631af889719ef0b4c9d46943db1448ec3a5340a17c7274a0774e46f"
+      },
+      {
+        "assetId": "asset-5534ade0-51",
+        "fileId": "afile-5534ade0-55",
+        "name": "t1179-neutral.mp4",
+        "mimeType": "video/mp4",
+        "fileSize": 2936,
+        "durationMs": 2000,
+        "width": 128,
+        "height": 72,
+        "downloadStatus": 200,
+        "downloadBytes": 2936,
+        "sha256": "36a6d275f2c41ae55a3a6c03c29ee21def57b6250b26bae7464d8d88bb255574"
+      }
+    ],
+    "reloadPreservedBothFiles": true,
+    "failure": {
+      "message": "locator.click: Timeout 120000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a[href=\"/accounts\"]').first()\u001b[22m\n",
+      "stack": "locator.click: Timeout 120000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('a[href=\"/accounts\"]').first()\u001b[22m\n\n    at /Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1181-upload-list-diagnostic.mjs:70:52"
+    }
+  },
+  "isolationRoot": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1181-upload-list-diagnostic-recovery-isolation-a69Gqh",
+  "nativeApp": false,
+  "realUserDataUsed": false
+}

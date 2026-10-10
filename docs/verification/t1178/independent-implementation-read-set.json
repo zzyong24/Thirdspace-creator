@@ -1,0 +1,299 @@
+{
+  "schema": "independent-read-set/v1",
+  "task_id": "T-1178",
+  "review_kind": "implementation",
+  "reviewer": "/root/t1159_fix_recheck_recovery",
+  "reviewed_at_utc": "2026-10-10T01:03:59.938296+00:00",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "verdict": "PASS_BOUNDED_IMPLEMENTATION",
+  "findings": [],
+  "reads": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1178-package-resource-contract.md",
+      "sha256": "db792b5640469348504aa6f1ffa795d2f1259cc25dd07a9f8d9a40f122a34411",
+      "bytes": 2217,
+      "read_scope": "全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1178-package-resource-contract.review.md",
+      "sha256": "2d6786def61ebb62aa883934018d74d10a91b3ecd19cae636e2d0bca34168ecc",
+      "bytes": 2002,
+      "read_scope": "正式当前PASS快照及绑定SPEC/宪法SHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1178-package-resource-contract.review-input.json",
+      "sha256": "802e49d6727cb54b47330d7378e1ae8bc257e3027ecf6c78db231e269ef6f232",
+      "bytes": 1026,
+      "read_scope": "全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143,
+      "read_scope": "本次完整字节SHA与初审绑定一致；R-DESKTOP验收约束此前实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/scripts/desktop/windows-runtime-config.test.mjs",
+      "sha256": "2318d74f2dfb4e9f48fda39579b3154a862e45d6d6acb0fa1f6be929dea7749b",
+      "bytes": 4520,
+      "read_scope": "当前全文及与HEAD原字节完整diff"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/tauri.conf.json",
+      "sha256": "90f04c45450e308452399b548ab6d8e7025a7e60485492526e21dbc89d8daa6f",
+      "bytes": 1786,
+      "read_scope": "全部实际字节读取及与HEAD对象逐字节比较；不重新签runtime/包功能"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/tauri.windows.conf.json",
+      "sha256": "b2576caef0cfa0c6a78ed4aa9d24307da57b8b916f5a8f2376e57197780bb1f1",
+      "bytes": 381,
+      "read_scope": "全部实际字节读取及与HEAD对象逐字节比较；不重新签runtime/包功能"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/THIRD_PARTY_NOTICES.md",
+      "sha256": "164b46fc33639cb2e79cba8abea46e7daccc285d9c19343178823e8ec964e962",
+      "bytes": 1620,
+      "read_scope": "全部实际字节读取及与HEAD对象逐字节比较；不重新签runtime/包功能"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/scripts/desktop/build-sidecar.mjs",
+      "sha256": "07c50a94e1d23e3ce2f601c19255071049ca3d4b31c4bca3b2bb12d5639ed112",
+      "bytes": 139861,
+      "read_scope": "全部实际字节读取及与HEAD对象逐字节比较；不重新签runtime/包功能"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/windows/installer-hooks.nsh",
+      "sha256": "d4d343bce0279250aff6a78385da26ff28d19ff98673a9d0236887b1fd07ddf7",
+      "bytes": 3145,
+      "read_scope": "全部实际字节读取及与HEAD对象逐字节比较；不重新签runtime/包功能"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/build.rs",
+      "sha256": "379803132404a09a4628d864c20e83f07c4ee36ae140901a3ccc2882994eb6e5",
+      "bytes": 29608,
+      "read_scope": "全部实际字节读取及与HEAD对象逐字节比较；不重新签runtime/包功能"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/src/lib.rs",
+      "sha256": "508a50632893f27970eb1fab0fef04d53c87255891b5b0bc1af4b60ab2ad2e29",
+      "bytes": 217921,
+      "read_scope": "全部实际字节读取及与HEAD对象逐字节比较；不重新签runtime/包功能"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/scripts/desktop/startup-safety-contract.test.mjs",
+      "sha256": "12be26df526ea2bd6f9d4d36ca660c98d10d4e96f9a420d7a66313da2686fb5f",
+      "bytes": 7448,
+      "read_scope": "全部实际字节读取及与HEAD对象逐字节比较；不重新签runtime/包功能"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+      "sha256": "eefab4994621bea0fad12b6a6628d4a704b3f5a6ce02a8c224135defbfdbbab6",
+      "bytes": 25622,
+      "read_scope": "全部实际字节读取及与HEAD对象逐字节比较；不重新签runtime/包功能"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "bytes": 44912,
+      "read_scope": "全部实际字节读取及与HEAD对象逐字节比较；不重新签runtime/包功能"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led006-current-diagnostic.json",
+      "sha256": "67b1a39c71d114ab0bfc45c4edff159486bc580ce01577e2d5fbadf9b9851aa8",
+      "bytes": 755,
+      "read_scope": "全文，原argv/cwd/退出码/时长/logSha256"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led006-current-diagnostic.log",
+      "sha256": "cb48cdced5769f5cf02b956ccc86b6017d471227909747957835d1424606bdfb",
+      "bytes": 3033,
+      "read_scope": "全文，原失败/重试/汇总及警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1178-led006-current-green.json",
+      "sha256": "d4f03f11e509b87c6786a578b141ec02256eb2450acdb4109339b93533d968e1",
+      "bytes": 754,
+      "read_scope": "全文，原argv/cwd/退出码/时长/logSha256"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1178-led006-current-green.log",
+      "sha256": "0a30bc06c72848950d934d66209650916a859e6a78d2ca0d45561e581777f771",
+      "bytes": 724,
+      "read_scope": "全文，原失败/重试/汇总及警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1178-exact-resource-green.json",
+      "sha256": "0df7f15865deda64ee63cd5761fda0f8d05bf661504cab45364f021d9658b8e6",
+      "bytes": 484,
+      "read_scope": "全文，原argv/cwd/退出码/时长/logSha256"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1178-exact-resource-green.log",
+      "sha256": "00733ace274ffe5c20a53f99eec890968e564e62d7607b54686351151a03a6e7",
+      "bytes": 420,
+      "read_scope": "全文，原失败/重试/汇总及警告"
+    }
+  ],
+  "baseline_test": {
+    "source": "git:HEAD:frontend/scripts/desktop/windows-runtime-config.test.mjs",
+    "sha256": "70afc320cc7b80231c9f03559d2109c73f1eb8040e460f2b423dcbf618607349",
+    "bytes": 4392
+  },
+  "exact_change_checks": {
+    "approved_three_replacements_and_one_added_assertion_reproduce_entire_current_file": true,
+    "other_five_tests_tail_byte_equal": true,
+    "other_five_tests_tail_sha256": "404445ae5476e72504e225d45dbda67fa3a922cf68d20f7b4110f12232c3b71d",
+    "current_test_sha256": "2318d74f2dfb4e9f48fda39579b3154a862e45d6d6acb0fa1f6be929dea7749b",
+    "whole_test_diff_sha256": "c5602a9bff5eb4f121256d93b83478db87cb2d67836e691a855e467b2cc7b067",
+    "whole_test_diff_bytes": 1245,
+    "path_scope_check_argv": [
+      "git",
+      "diff",
+      "--name-only",
+      "HEAD",
+      "--",
+      "frontend/scripts/desktop",
+      "frontend/src-tauri",
+      ".github/workflows",
+      "tools/timeout-policy",
+      "orchestrator/process/reconcile.config.json"
+    ],
+    "path_scope_check_result": [
+      "frontend/scripts/desktop/windows-runtime-config.test.mjs"
+    ]
+  },
+  "protected_current_files_equal_head": [
+    {
+      "path": "frontend/src-tauri/tauri.conf.json",
+      "sha256": "90f04c45450e308452399b548ab6d8e7025a7e60485492526e21dbc89d8daa6f",
+      "head_sha256": "90f04c45450e308452399b548ab6d8e7025a7e60485492526e21dbc89d8daa6f",
+      "bytes_equal": true
+    },
+    {
+      "path": "frontend/src-tauri/tauri.windows.conf.json",
+      "sha256": "b2576caef0cfa0c6a78ed4aa9d24307da57b8b916f5a8f2376e57197780bb1f1",
+      "head_sha256": "b2576caef0cfa0c6a78ed4aa9d24307da57b8b916f5a8f2376e57197780bb1f1",
+      "bytes_equal": true
+    },
+    {
+      "path": "frontend/src-tauri/THIRD_PARTY_NOTICES.md",
+      "sha256": "164b46fc33639cb2e79cba8abea46e7daccc285d9c19343178823e8ec964e962",
+      "head_sha256": "164b46fc33639cb2e79cba8abea46e7daccc285d9c19343178823e8ec964e962",
+      "bytes_equal": true
+    },
+    {
+      "path": "frontend/scripts/desktop/build-sidecar.mjs",
+      "sha256": "07c50a94e1d23e3ce2f601c19255071049ca3d4b31c4bca3b2bb12d5639ed112",
+      "head_sha256": "07c50a94e1d23e3ce2f601c19255071049ca3d4b31c4bca3b2bb12d5639ed112",
+      "bytes_equal": true
+    },
+    {
+      "path": "frontend/src-tauri/windows/installer-hooks.nsh",
+      "sha256": "d4d343bce0279250aff6a78385da26ff28d19ff98673a9d0236887b1fd07ddf7",
+      "head_sha256": "d4d343bce0279250aff6a78385da26ff28d19ff98673a9d0236887b1fd07ddf7",
+      "bytes_equal": true
+    },
+    {
+      "path": "frontend/src-tauri/build.rs",
+      "sha256": "379803132404a09a4628d864c20e83f07c4ee36ae140901a3ccc2882994eb6e5",
+      "head_sha256": "379803132404a09a4628d864c20e83f07c4ee36ae140901a3ccc2882994eb6e5",
+      "bytes_equal": true
+    },
+    {
+      "path": "frontend/src-tauri/src/lib.rs",
+      "sha256": "508a50632893f27970eb1fab0fef04d53c87255891b5b0bc1af4b60ab2ad2e29",
+      "head_sha256": "508a50632893f27970eb1fab0fef04d53c87255891b5b0bc1af4b60ab2ad2e29",
+      "bytes_equal": true
+    },
+    {
+      "path": "frontend/scripts/desktop/startup-safety-contract.test.mjs",
+      "sha256": "12be26df526ea2bd6f9d4d36ca660c98d10d4e96f9a420d7a66313da2686fb5f",
+      "head_sha256": "12be26df526ea2bd6f9d4d36ca660c98d10d4e96f9a420d7a66313da2686fb5f",
+      "bytes_equal": true
+    },
+    {
+      "path": "frontend/scripts/desktop/desktop-release-workflow.test.mjs",
+      "sha256": "eefab4994621bea0fad12b6a6628d4a704b3f5a6ce02a8c224135defbfdbbab6",
+      "head_sha256": "eefab4994621bea0fad12b6a6628d4a704b3f5a6ce02a8c224135defbfdbbab6",
+      "bytes_equal": true
+    },
+    {
+      "path": "orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "head_sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "bytes_equal": true
+    }
+  ],
+  "evidence": [
+    {
+      "name": "t1015-led006-current-diagnostic",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led006-current-diagnostic.json",
+      "receipt_sha256": "67b1a39c71d114ab0bfc45c4edff159486bc580ce01577e2d5fbadf9b9851aa8",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led006-current-diagnostic.log",
+      "log_sha256": "cb48cdced5769f5cf02b956ccc86b6017d471227909747957835d1424606bdfb",
+      "receipt_log_sha256_matches": true,
+      "argv": [
+        "env",
+        "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "node",
+        "-e",
+        "const {execSync}=require(\"node:child_process\");const c=require(\"./orchestrator/process/reconcile.config.json\");execSync(c.lessons.find(x=>x.led===\"LED-006\").check,{stdio:\"inherit\"})"
+      ],
+      "exit_code": 1,
+      "elapsed_seconds": 2.0262746249791235,
+      "passed": 42,
+      "failed": 1
+    },
+    {
+      "name": "t1178-led006-current-green",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1178-led006-current-green.json",
+      "receipt_sha256": "d4f03f11e509b87c6786a578b141ec02256eb2450acdb4109339b93533d968e1",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1178-led006-current-green.log",
+      "log_sha256": "0a30bc06c72848950d934d66209650916a859e6a78d2ca0d45561e581777f771",
+      "receipt_log_sha256_matches": true,
+      "argv": [
+        "env",
+        "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "node",
+        "-e",
+        "const {execSync}=require(\"node:child_process\");const c=require(\"./orchestrator/process/reconcile.config.json\");execSync(c.lessons.find(x=>x.led===\"LED-006\").check,{stdio:\"inherit\"})"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 2.156212957983371,
+      "passed": 43,
+      "failed": 0
+    },
+    {
+      "name": "t1178-exact-resource-green",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1178-exact-resource-green.json",
+      "receipt_sha256": "0df7f15865deda64ee63cd5761fda0f8d05bf661504cab45364f021d9658b8e6",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1178-exact-resource-green.log",
+      "log_sha256": "00733ace274ffe5c20a53f99eec890968e564e62d7607b54686351151a03a6e7",
+      "receipt_log_sha256_matches": true,
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "scripts/desktop/windows-runtime-config.test.mjs"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.4548079579835758,
+      "passed": 6,
+      "failed": 0
+    }
+  ],
+  "pending_or_excluded": [
+    "当前完整canonical仍待，不能签T1015整体或任务完成",
+    "本次未取得新T1178 boundary/semantic/orphan/diff命令收据，不替root签门",
+    "Windows真实安装/GUI/WebView首启、原生App启动与完整安装版功能均不在本复核",
+    "未执行测试、验证器、产品CLI、服务、DB、模型、真实profile或微信研究"
+  ],
+  "actions": "仅仓库/私有证据读、只读Git和本私有目录报告写。"
+}

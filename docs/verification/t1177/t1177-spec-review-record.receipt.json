@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/reviewctl.mjs",
+    "record",
+    "T-1177",
+    "--spec",
+    "docs/features/t1177-dashboard-rollup-fixture.md",
+    "--constitution",
+    "docs/产品定位.md",
+    "--input",
+    "docs/features/t1177-dashboard-rollup-fixture.review-input.json",
+    "--review",
+    "docs/features/t1177-dashboard-rollup-fixture.review.md",
+    "--backlog",
+    "BACKLOG.md",
+    "--review-mode",
+    "independent",
+    "--model",
+    "codex-inherited"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T00:48:20.984873+00:00",
+  "finishedAt": "2026-10-10T00:48:21.138961+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.1537813750328496,
+  "logSha256": "41f5b945a30b8416bbfdfa1313ef76713ab2f9022a9ac0995cb4e5fa671ab67f"
+}

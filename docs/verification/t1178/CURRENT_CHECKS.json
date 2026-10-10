@@ -1,0 +1,137 @@
+[
+  {
+    "stem": "t1015-led006-current-diagnostic",
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "node",
+      "-e",
+      "const {execSync}=require(\"node:child_process\");const c=require(\"./orchestrator/process/reconcile.config.json\");execSync(c.lessons.find(x=>x.led===\"LED-006\").check,{stdio:\"inherit\"})"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T00:56:58.534049+00:00",
+    "finishedAt": "2026-10-10T00:57:00.560657+00:00",
+    "exitCode": 1,
+    "elapsedSeconds": 2.0262746249791235,
+    "logSha256": "cb48cdced5769f5cf02b956ccc86b6017d471227909747957835d1424606bdfb"
+  },
+  {
+    "stem": "t1178-spec-review-record",
+    "argv": [
+      "node",
+      "orchestrator/process/reviewctl.mjs",
+      "record",
+      "T-1178",
+      "--spec",
+      "docs/features/t1178-package-resource-contract.md",
+      "--constitution",
+      "docs/产品定位.md",
+      "--input",
+      "docs/features/t1178-package-resource-contract.review-input.json",
+      "--review",
+      "docs/features/t1178-package-resource-contract.review.md",
+      "--backlog",
+      "BACKLOG.md",
+      "--review-mode",
+      "independent",
+      "--model",
+      "codex-inherited"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T01:01:55.375061+00:00",
+    "finishedAt": "2026-10-10T01:01:55.538794+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.1634353749686852,
+    "logSha256": "bdf67839713ce3a7c49f55bb1119544c7d90bc924d62c2bcd98c952ff6e992ab"
+  },
+  {
+    "stem": "t1178-start",
+    "argv": [
+      "node",
+      "orchestrator/process/taskctl.mjs",
+      "start",
+      "T-1178"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T01:01:55.757473+00:00",
+    "finishedAt": "2026-10-10T01:01:55.906268+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.14867883297847584,
+    "logSha256": "3185f3b7906f508f8bf9e83b58615ddfe227f371ee6a8e2c1d25c588bcafb20e"
+  },
+  {
+    "stem": "t1178-led006-current-green",
+    "argv": [
+      "env",
+      "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+      "node",
+      "-e",
+      "const {execSync}=require(\"node:child_process\");const c=require(\"./orchestrator/process/reconcile.config.json\");execSync(c.lessons.find(x=>x.led===\"LED-006\").check,{stdio:\"inherit\"})"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T01:02:03.337897+00:00",
+    "finishedAt": "2026-10-10T01:02:05.494403+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 2.156212957983371,
+    "logSha256": "0a30bc06c72848950d934d66209650916a859e6a78d2ca0d45561e581777f771"
+  },
+  {
+    "stem": "t1178-exact-resource-green",
+    "argv": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "vitest",
+      "run",
+      "scripts/desktop/windows-runtime-config.test.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T01:02:04.540958+00:00",
+    "finishedAt": "2026-10-10T01:02:05.995921+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 1.4548079579835758,
+    "logSha256": "00733ace274ffe5c20a53f99eec890968e564e62d7607b54686351151a03a6e7"
+  },
+  {
+    "stem": "t1178-boundary-scan",
+    "argv": [
+      "node",
+      "orchestrator/process/boundary-scan.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T01:06:33.827374+00:00",
+    "finishedAt": "2026-10-10T01:06:34.317243+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.4896019169827923,
+    "logSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24"
+  },
+  {
+    "stem": "t1178-semantic-boundary-scan",
+    "argv": [
+      "node",
+      "orchestrator/process/semantic-boundary-scan.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T01:06:33.827218+00:00",
+    "finishedAt": "2026-10-10T01:06:34.158702+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.33132970897713676,
+    "logSha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923"
+  },
+  {
+    "stem": "t1178-orphan-scan",
+    "argv": [
+      "node",
+      "orchestrator/process/orphan-scan.mjs"
+    ],
+    "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+    "startedAt": "2026-10-10T01:06:33.827367+00:00",
+    "finishedAt": "2026-10-10T01:06:33.941066+00:00",
+    "exitCode": 0,
+    "elapsedSeconds": 0.11344933300279081,
+    "logSha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e"
+  }
+]

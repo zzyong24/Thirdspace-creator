@@ -1,0 +1,7 @@
+{
+  "baselineCommit": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "runtimeProductCommit": "5a1929ca98ab6cba8cb8b3a4020ece68faaff2b8",
+  "tests": {
+    "frontend/scripts/desktop/windows-runtime-config.test.mjs": "2318d74f2dfb4e9f48fda39579b3154a862e45d6d6acb0fa1f6be929dea7749b"
+  }
+}

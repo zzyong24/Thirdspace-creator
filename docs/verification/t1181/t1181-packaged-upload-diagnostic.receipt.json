@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1181-upload-list-diagnostic.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T01:25:21.928068+00:00",
+  "finishedAt": "2026-10-10T01:27:41.892158+00:00",
+  "exitCode": 1,
+  "elapsedSeconds": 139.96299762499984,
+  "logSha256": "1893a8476b6de189c056c0289faabe8ae6189d810f5334620aea4c113db44f7f"
+}

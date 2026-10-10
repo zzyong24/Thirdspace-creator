@@ -1,0 +1,18 @@
+{
+  "baselineCommit": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "derivation": "真实压缩前 SHA 已在当时捕获；从该 baseline 的原文加本轮 taskctl 启动 T1015、正式创建并启动 T1176/T1177 两行恢复，字节 SHA 完全相等。不是新造历史抓拍。",
+  "allTaskRowsIncludingHistoricalSuffixes": 1243,
+  "allRawRowsUnchanged": true,
+  "allCellsUnchanged": true,
+  "beforeSha256": {
+    "BACKLOG.md": "53d4cd6136fb5e63df0f4827ab96ec993133bf49995132cbed3efa1d8610e94e",
+    "BACKLOG-archive.md": "e547d27b13733bb1d210fd06edbb6983218bcb631ffca334523843b9e28d6b6c"
+  },
+  "afterSha256": {
+    "BACKLOG.md": "9449245f47d2f73bbcbb69c497d40ea07f3c28d9e24ef530ab220912fbfa34d2",
+    "BACKLOG-archive.md": "63493c7a15b161672237887b6238e4664cadd6a9f34fddcfea905386d6ef40f5"
+  },
+  "activeBytesBefore": 60885,
+  "activeBytesAfter": 54176,
+  "warningRetained": true
+}

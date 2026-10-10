@@ -1105,3 +1105,26 @@
 | T-1067 | 落实本地客户端优先出包并移除人为构建超时 | ✅ 待办 | PASS[REV:ebe1b789bc56] | — | [SPEC](docs/features/t1067-local-package-build-only.md) | 原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-25094b544f740169)。 |
 | T-1016 | 调研 CreatorOS 连接本地 Codex、WorkBuddy 与外部 Agent | ✅ 待办 | — | — | [SPEC](docs/features/t1016-external-agent-research.md) | 参考 ChatCut 和公开协议，核实双向接入、现有执行边界与可落地方案；本轮仅调研设计。 |
 > T1173：T-1014第二份完全相同归档行合入同任务首行；原行及SHA见[完整历史](BACKLOG-details.md#t1173-t1014-identical-archive-history)。状态/审核/验收未改变。
+
+## 归档于 2026-10-10
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1175|修复工作区恢复态直接显示英文权限错误|✅ 待办|PASS[REV:18cfdcb37bc5]|—|[真实截图与SPEC](docs/features/t1175-workspace-recovery-feedback.md)|已审两文件display修复入main5a；61+174回归及随包403中文→原retry200→主页通过，独立包复核PASS；完整32旧标识保原任务，不代签真人/全功能。|
+|T-1174|核对随包浏览器验收误选缺失的headless shell|✅ 待办|—|—|[实际失败](docs/features/t1174-packaged-browser-verification-context.md)|d414包完整性/签名通过，根驱动原smoke实际exit1找headless_shell-1223；保原失败，核随包full Chromium与消费者，不猜缺包或改原断言。|
+|T-1173|复核历史看板撞号与畸形字段|✅ 待办|—|—|[实际诊断](docs/features/t1173-historical-backlog-identity-collisions.md)|原健康命令已证实T1018重复及执行/归档复用；保原行和事件，独立核来源再修表示，不删待办或伪迁PASS。|
+|T-1172|校正本轮完整校验缺少隔离PG上下文|✅ 待办|—|—|[实际诊断](docs/features/t1172-current-canonical-isolated-pg-context.md)|本轮原canonical40错误，新增LED052来自遗漏两项显式隔离配置；保原exit1，用原隔离公共runner复验，不改门/产品或拼接全绿。|
+|T-1170|无损归档原浏览器失败上下文并恢复提交检查|✅ 待办|—|—|[实际失败](docs/features/t1170-raw-browser-evidence-storage.md)|新增原PW上下文摘录含三行尾空格使staged diff真实exit2；原字节/SHA私有加gzip无损保留，不改原manifest/失败或Git检查；产品写集为空。|
+|T-1169|修复账号转组弹窗关闭后焦点丢失|✅ 待办|PASS[REV:6b4388bed640]|—|[实际走查与SPEC](docs/features/t1169-account-transfer-focus-return.md)|独立Cua确认丢焦并正式审/start；真实6RED含三转组，最终51组件PASS、原Chrome六次Esc回焦、切组/脱离DOM守卫和174LED通过；独立局部PASS，最终Gate/安装待验。|
+|T-1168|统一原生报表身份恢复态的提示与主操作|✅ 待办|PASS[REV:5d38b98b8f17]|—|[实际视觉与SPEC](docs/features/t1168-native-report-recovery-actions.md)|原冲突提示/红次级恢复与32px保留证据，正式审/start后恢复态和cap优先RED；最终51组件、Chrome24px/一致主动作与0副作用、174LED及独立局部PASS；最终Gate/真人待验。|
+|T-1167|修复采集终态等待在途续租无法返回|✅ 待办|PASS[REV:40609910e1a7]|—|[独立反例与SPEC](docs/features/t1167-collector-pending-renewal-finalization.md)|原finally等pending心跳已按独评6RED/原63GREEN修复，当前原execute终态不等失控续租且晚结果守卫保留；全timeout仅旧27静态失败/运行时166PASS，当前窄复核PASS，不代签其它端口或真人。|
+|T-1166|校正新报告旅程有限串行外层预算|✅ 待办|PASS[REV:04e1fdc238d0]|—|[独立预算检查与SPEC](docs/features/t1166-report-journey-outer-budget.md)|新case25,200,000ms/runner26,400,000ms覆盖有限串行加清理，内层120秒/0retry不变；61路径冻结当前Chrome79秒exit0，独立预算复核PASS；旧27静态欠债仍exit1。|
+|T-1165|修复平台身份拒绝在正式HTTP链路丢失错误码与扫码恢复|✅ 待办|PASS[REV:e2674ba1ac3b]|—|[实际缺陷与SPEC](docs/features/t1165-platform-scope-error-envelope.md)|保原Chrome52秒400string失败和trace，固定已有SCOPE_MISSING原400进入合同；正式独评/真实RED→69GREEN，当前Chrome原链恢复可见/0副作用，窄复核PASS；最终Gate与真人待验。|
+|T-1164|校正独立审核输入绑定与证据字段|✅ 待办|—|—|[实际诊断](docs/features/t1164-review-input-binding-and-evidence-kind.md)|保原非法packet拒绝/不同SPEC读集；独立现字节重读正规record0，原verifyReviewReceipt核当前六份PASS，完整audit原23历史错误保留；未改门/产品，最终canonical待验。|
+|T-1161|核对微信账号转组与隐藏管理入口|✅ 待办|PASS[REV:22a46ffc1285]|—|[SPEC](docs/features/t1161-preserve-wechat-account-management.md)|原截断diff误读已澄清，无凭误读改产品；独立Cua实际展开及Chrome六窗口转组入口确认，另发现真实丢焦交T1169修；原CONCERNS保留，真人转组/扫码未执行。|
+|T-1148|核对本轮共享页面修改后的旧验收记录失效|✅ 待办|—|—|[实际诊断](docs/features/t1148-current-frontend-receipt-drift.md)|当前efe9全canonical1093秒exit1/42ERROR，原39保留，新T1136/1117/1108源码绑定失效；保原报告/事件，当前素材先正式补验，旧范围最终源码复验，不改验证器或伪换head。|
+|T-1140|优化低高度窗口的素材浏览与预览空间|✅ 待办|PASS[REV:2a0be12aac16]|PASS:a6f428841135|[当前观察](docs/features/t1140-picker-low-height-preview.md) · [验收合同](docs/verification/t1140/PAGE_SPEC.md)|当前683×450主体预览空间被原上下双滚动区挤压；按钮和取消回读通过，AssetPicker源未改。保截图后精确SPEC独评优化，不称选择失败或已修。|
+|T-1136|在当前main修复长项目与平台账号撑宽排期弹窗|✅ 待办|PASS[REV:db7fe4526b24]|PASS:bb71e533cae7|[SPEC](docs/features/t1136-calendar-dialog-current-integration.md)|T1124来源两条布局缺失；仅共享Dialog单列收缩与排期断点及必要select收缩，先独评/当前Chrome真实尺寸RED，再原公共选择保存回读和相邻消费者验证；不签旧来源或全功能。|
+|T-1124|核对本轮新增来源分支未合入main的源码并闭合整合|✅ 待办|—|—|[实际诊断](docs/features/t1124-current-worktree-source-gap.md)|T1080删除前只读再盘点：canvas来源17条源码/测试路径main缺失，chart来源1条缺失，其它58条不同不能直接算遗漏；保留来源与活跃树，逐项核main替代及新增SPEC/独评，禁止ours丢源码或代签全合并。先交付当前已复核包继续验收，本轮新增功能不冒称已入包。|
+|T-1117|修复画布保存英文反馈与参考选择器名称展示遗漏|✅ 待办|PASS[REV:161a32c6331a]|PASS:32177b98fc54|[SPEC](docs/features/t1117-canvas-error-reference-preview.md)|当前main两条Chrome流程通过，但实际截图保存错误裸英文，参考已选卡仍长文件名；复用原中文反馈并闭合showIdentity=false全选择流程，精确file/保存/owner不变。独評、实际RED/GREEN及浏览器证据后修复；不代签模型或旧失败。|
+|T-1108|核对画布连线引用保存回读及浏览器短观察窗口|✅|PASS[REV:7725159d945d]|PASS:54ebbd993813|[实际缺陷](docs/features/t1108-canvas-public-observation.md) [详情](BACKLOG-details.md#t-1108)|见详情。|

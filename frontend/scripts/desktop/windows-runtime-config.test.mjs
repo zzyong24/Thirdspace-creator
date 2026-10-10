@@ -8,12 +8,13 @@ const readConfig = (name) =>
   JSON.parse(readFileSync(join(process.cwd(), "src-tauri", name), "utf8"));
 
 describe("Windows sidecar runtime 打包契约", () => {
-  it("Windows 仍只携带单个 tar resource，避免 NSIS 压缩十几万小文件", () => {
+  it("双端只携带单个 runtime tar 与第三方声明，避免 NSIS 压缩十几万小文件", () => {
     const shared = readConfig("tauri.conf.json");
     const windows = readConfig("tauri.windows.conf.json");
 
-    expect(shared.bundle.resources).toEqual(["sidecar.tar.gz"]);
-    expect(windows.bundle.resources).toEqual(["sidecar.tar.gz"]);
+    expect(shared.bundle.resources).toEqual(["sidecar.tar.gz", "THIRD_PARTY_NOTICES.md"]);
+    expect(windows.bundle.resources).toEqual(["sidecar.tar.gz", "THIRD_PARTY_NOTICES.md"]);
+    expect(shared.bundle.resources).not.toContain("sidecar/");
     expect(windows.bundle.resources).not.toContain("sidecar/");
   });
 

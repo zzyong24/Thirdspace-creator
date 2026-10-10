@@ -1,0 +1,9 @@
+{
+  "baselineCommit": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "runtimeProductCommit": "5a1929ca98ab6cba8cb8b3a4020ece68faaff2b8",
+  "tests": {
+    "frontend/src/features/assets/assets-interactions.test.tsx": "cf15330235eacaea5f0ebc6f28d97edc0b720ba75c850a095812a308e44d8e48"
+  },
+  "firstProbeOriginalSha256": "a41b0314d635c33474743a7d81ee19f8032766990949b71b52318990fb503576",
+  "firstProbePassed": false
+}

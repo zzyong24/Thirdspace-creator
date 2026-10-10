@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "node",
+    "orchestrator/process/reviewctl.mjs",
+    "record",
+    "T-1176",
+    "--spec",
+    "docs/features/t1176-current-regression-preconditions.md",
+    "--constitution",
+    "docs/产品定位.md",
+    "--input",
+    "docs/features/t1176-current-regression-preconditions.review-input.json",
+    "--review",
+    "docs/features/t1176-current-regression-preconditions.review.md",
+    "--backlog",
+    "BACKLOG.md",
+    "--review-mode",
+    "independent",
+    "--model",
+    "codex-inherited"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T00:42:27.546861+00:00",
+  "finishedAt": "2026-10-10T00:42:27.721152+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 0.1738900410127826,
+  "logSha256": "87e7af1b7837ba2ba1b5d2c4068cd4ac5c5fddbb79cf85a830b6f5e15cd13a76"
+}

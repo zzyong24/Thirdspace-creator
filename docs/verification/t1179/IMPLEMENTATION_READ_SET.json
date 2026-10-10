@@ -1,0 +1,947 @@
+{
+  "schema": "independent-read-set/v1",
+  "task_id": "T-1179",
+  "review_kind": "implementation-source-and-tests",
+  "reviewer": "/root/t1159_fix_recheck_recovery",
+  "reviewed_at_utc": "2026-10-10T01:24:49.875715+00:00",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "baseline_commit": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "verdict": "PASS_BOUNDED_SOURCE_AND_TESTS",
+  "findings": [],
+  "spec_sha256": "a27e32dcbfca6eec2a5666f5e5e2ed840ee2e8b688d6a3f6e2250964e3a94868",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "current_test_sha256": "cf15330235eacaea5f0ebc6f28d97edc0b720ba75c850a095812a308e44d8e48",
+  "baseline_test_sha256": "aa9e050d8d56c82057c7b7147b19ab5464829bbb2c3099610467a01b9d405d2e",
+  "reads": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/assets/assets-interactions.test.tsx",
+      "sha256": "cf15330235eacaea5f0ebc6f28d97edc0b720ba75c850a095812a308e44d8e48",
+      "bytes": 20563,
+      "read_scope": "当前全文与针对335b完整diff"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1179-asset-upload-regression-diagnosis.md",
+      "sha256": "a27e32dcbfca6eec2a5666f5e5e2ed840ee2e8b688d6a3f6e2250964e3a94868",
+      "bytes": 3574,
+      "read_scope": "全文最终绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1179-asset-upload-regression-diagnosis.review.md",
+      "sha256": "c8fa8c23ccad20c97649a2fcf349dac4dc5b6ea043e34260a0932c265d5f1346",
+      "bytes": 2274,
+      "read_scope": "全文正式PASS/绑定SPEC/宪法"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1179-asset-upload-regression-diagnosis.review-input.json",
+      "sha256": "62c82e7c920ce0fa5c3cec3789b246f35461eb5b477f4cfdf7cca4d051f9f8e2",
+      "bytes": 1282,
+      "read_scope": "正式initial packet"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143,
+      "read_scope": "此前事实/R-LIBRARY/R-DESKTOP实读；本轮当前字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1069-installed-media-and-binding.md",
+      "sha256": "0363fa6014a11328af557cf01f3a1f3151ff524ac6b0cbb95acaff4d4983327d",
+      "bytes": 38166,
+      "read_scope": "此前已确认素材/原owner/导入边界实读；本轮当前字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/CURRENT_CHECKS.json",
+      "sha256": "85e7499c37573b0ad5b8a49c5efc3d893d47c13f481ba47111527901ef0229ea",
+      "bytes": 9798,
+      "read_scope": "全文，原失败与真实GREEN并列"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/SOURCE_INPUTS.json",
+      "sha256": "2743b8f7a6c64b20b55838f3f36bed0e1b2129efbd2cfad1211837697ff78128",
+      "bytes": 414,
+      "read_scope": "全文，测试SHA/基点/原probe false"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/independent-spec-packet.json",
+      "sha256": "62c82e7c920ce0fa5c3cec3789b246f35461eb5b477f4cfdf7cca4d051f9f8e2",
+      "bytes": 1282,
+      "read_scope": "归档initial packet"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/independent-spec-review.md",
+      "sha256": "bd35a065386059c686e2ef1e56cfeff4f4120a5f1f2301ee88300435a5949177",
+      "bytes": 5010,
+      "read_scope": "归档独立初审报告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/independent-spec-read-set.json",
+      "sha256": "58274f89eac5231a6ab08ba985dbc57766139d5dda04ca8ec628bd6c12d63004",
+      "bytes": 14827,
+      "read_scope": "归档初审读集"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/assets/asset-upload-button.tsx",
+      "sha256": "b6d70a24277ee77139bd8dc2f0aace1e16e5ee43a4c9a5cae5ddec51bc14d2d3",
+      "bytes": 7855,
+      "read_scope": "真实源码/合同或现守卫原例此前实读，本轮完整字节与335b对象比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/lib/creation-workspace-scope.ts",
+      "sha256": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+      "bytes": 5821,
+      "read_scope": "真实源码/合同或现守卫原例此前实读，本轮完整字节与335b对象比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/lib/http-transport.ts",
+      "sha256": "3c89798b49c372bdb60be1cb255fe1b85ea9449752c97d7bdb4bdad1bff79302",
+      "bytes": 11720,
+      "read_scope": "真实源码/合同或现守卫原例此前实读，本轮完整字节与335b对象比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/lib/contract-client.ts",
+      "sha256": "63b8bb7c84ffe93bc934fe2f1e5672fa21b4fdea10709bec350bef69f651c2ce",
+      "bytes": 580,
+      "read_scope": "真实源码/合同或现守卫原例此前实读，本轮完整字节与335b对象比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/lib/creation-workspace-scope.test.ts",
+      "sha256": "ff346c91140620d1e4e84713b9c0e9caa389a3577cc2274068197b508e2c7c8c",
+      "bytes": 1976,
+      "read_scope": "真实源码/合同或现守卫原例此前实读，本轮完整字节与335b对象比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/lib/http-transport.test.ts",
+      "sha256": "d4bc196a64906160bcfb7802e0618e84166e65ed3711fc715f44d80b3e3310ae",
+      "bytes": 12919,
+      "read_scope": "真实源码/合同或现守卫原例此前实读，本轮完整字节与335b对象比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/client.ts",
+      "sha256": "e265ff6f6b5aa54f9eea1e45b2fdf1c1d64903ea4d6dd57b7e676cb7656a9ded",
+      "bytes": 2171,
+      "read_scope": "真实源码/合同或现守卫原例此前实读，本轮完整字节与335b对象比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/envelope.ts",
+      "sha256": "8fa72b5982906f1c637a05bf10d262385adb0eb0e0f43e826b69f119e8b2b429",
+      "bytes": 4749,
+      "read_scope": "真实源码/合同或现守卫原例此前实读，本轮完整字节与335b对象比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/operations/assets.ts",
+      "sha256": "2c70c4b93f56ab9dca44ab8760d43114d92c01fbff33a997b2f65f295a4226d1",
+      "bytes": 6032,
+      "read_scope": "真实源码/合同或现守卫原例此前实读，本轮完整字节与335b对象比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/resources/assets.ts",
+      "sha256": "b77549ee2e86ae5370105ba95ceb343035819c63972d4bf184c70af66d2d22a6",
+      "bytes": 3609,
+      "read_scope": "真实源码/合同或现守卫原例此前实读，本轮完整字节与335b对象比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/workspace-operation-scope.ts",
+      "sha256": "fe0ed477bce71d5faa759cfa3b72fdfe40ef3f29ce13472194ede5a792747e39",
+      "bytes": 19574,
+      "read_scope": "真实源码/合同或现守卫原例此前实读，本轮完整字节与335b对象比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "bytes": 44912,
+      "read_scope": "真实源码/合同或现守卫原例此前实读，本轮完整字节与335b对象比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/IMPLEMENTATION.diff.gz",
+      "sha256": "d0ab99157710472641656512c6f6ac62d39a3009400fa9d79cbba3783b26f243",
+      "bytes": 2985,
+      "read_scope": "完整归档diff实际解压与当前Git diff比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led022-current-diagnostic.json",
+      "sha256": "d4a8f3ec238837c43e4db531c70c8216b4c06c88a4558640f41cbbe27f1f80a0",
+      "bytes": 754,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led022-current-diagnostic.log",
+      "sha256": "311a66a99c29aad1c54907878d4c36ced8b8720177180852dd9e3ab8ad3d25bd",
+      "bytes": 5184,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1015-led022-current-diagnostic.receipt.json",
+      "sha256": "d4a8f3ec238837c43e4db531c70c8216b4c06c88a4558640f41cbbe27f1f80a0",
+      "bytes": 754,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1015-led022-current-diagnostic.log.gz",
+      "sha256": "c38548c0fd4be75669abd119baacb6d838d70a05a99622fe9bc3d3fe431d0829",
+      "bytes": 1746,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-upload-focused-first.json",
+      "sha256": "2a629da2c632469042931fd9cf85fcc7702a86bc95311fcb0d12a8a1ee92e91f",
+      "bytes": 502,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-upload-focused-first.log",
+      "sha256": "5097bef49ff38dfab624b28f3a6a17cefdc043568ff37baa9f386bc26538051a",
+      "bytes": 473,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-upload-focused-first.receipt.json",
+      "sha256": "2a629da2c632469042931fd9cf85fcc7702a86bc95311fcb0d12a8a1ee92e91f",
+      "bytes": 502,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-upload-focused-first.log.gz",
+      "sha256": "c211d144001d252ee9fc7730eb9ecd68a80bb214f3732a6bb5f24326a313be9e",
+      "bytes": 342,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-led022-current-green.json",
+      "sha256": "a41edbb97ee94943b11a50b2e60be9d22d7d49fe5bb8e4ff4b1dab01b75e6856",
+      "bytes": 755,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-led022-current-green.log",
+      "sha256": "b162f85e2a719a967f3d4cf594e8ab243e4896f2c163c4caadc1e5ba023295ad",
+      "bytes": 923,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-led022-current-green.receipt.json",
+      "sha256": "a41edbb97ee94943b11a50b2e60be9d22d7d49fe5bb8e4ff4b1dab01b75e6856",
+      "bytes": 755,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-led022-current-green.log.gz",
+      "sha256": "9561718c4cacb7b5b973996a8114a1fe3dda5b9aec983a79799edd013c6c66e2",
+      "bytes": 361,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-existing-scope-transport.json",
+      "sha256": "19f069d9dee0574e7f56521acf4f7df9b7d301e84a8f50d98fee501828ca308d",
+      "bytes": 531,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-existing-scope-transport.log",
+      "sha256": "bb38aee0a19604819f96f5d3cb2b16bee444797f28eeba9973ba8e291d3147ee",
+      "bytes": 574,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-existing-scope-transport.receipt.json",
+      "sha256": "19f069d9dee0574e7f56521acf4f7df9b7d301e84a8f50d98fee501828ca308d",
+      "bytes": 531,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-existing-scope-transport.log.gz",
+      "sha256": "00d66f89e3c57d7728167f9e61e7634fb01b8f87772b7d3c24d45c68581ea13a",
+      "bytes": 320,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-frontend-type-first.json",
+      "sha256": "756608e6c4f2bd32dfe9dd89ff467aba2dd4b309db97810ed5060f9ccd3806b2",
+      "bytes": 431,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-frontend-type-first.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-frontend-type-first.receipt.json",
+      "sha256": "756608e6c4f2bd32dfe9dd89ff467aba2dd4b309db97810ed5060f9ccd3806b2",
+      "bytes": 431,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-frontend-type-first.log.gz",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "bytes": 20,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-boundary-scan.json",
+      "sha256": "249800f1359b7d18559deea77d6dfddbdc86d15fffd86817ef35e4af0479502c",
+      "bytes": 409,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-boundary-scan.log",
+      "sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "bytes": 779,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-boundary-scan.receipt.json",
+      "sha256": "249800f1359b7d18559deea77d6dfddbdc86d15fffd86817ef35e4af0479502c",
+      "bytes": 409,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-boundary-scan.log.gz",
+      "sha256": "44b85ac68d7b45b416b0fdc4bcddd47403d70dd4368255457309499c37237ae2",
+      "bytes": 574,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-semantic-boundary-scan.json",
+      "sha256": "a5316d435185c9f85056cdb132ffeec5707e15f2f8f49e65f41dafdc07102c59",
+      "bytes": 418,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-semantic-boundary-scan.log",
+      "sha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+      "bytes": 86,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-semantic-boundary-scan.receipt.json",
+      "sha256": "a5316d435185c9f85056cdb132ffeec5707e15f2f8f49e65f41dafdc07102c59",
+      "bytes": 418,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-semantic-boundary-scan.log.gz",
+      "sha256": "e072a2bbe761c672af0fefcbe0551666845af536ea3fd654ad866bc6507c1ebb",
+      "bytes": 107,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-orphan-scan.json",
+      "sha256": "878c685b5059ea2e956b35f59970aaa5a363e02082ba8f771482dc9de977e438",
+      "bytes": 408,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-orphan-scan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "bytes": 15862,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-orphan-scan.receipt.json",
+      "sha256": "878c685b5059ea2e956b35f59970aaa5a363e02082ba8f771482dc9de977e438",
+      "bytes": 408,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-orphan-scan.log.gz",
+      "sha256": "3f97d9436f7cc5b05bd288981f31306c4990129c3f272bc4975e42446090d153",
+      "bytes": 1407,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-source-diff-check.json",
+      "sha256": "75dfa373751bc252f984dd62ef5f98a2a2a6706c5675f8e8343a557aa1fc25b1",
+      "bytes": 389,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-source-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-source-diff-check.receipt.json",
+      "sha256": "75dfa373751bc252f984dd62ef5f98a2a2a6706c5675f8e8343a557aa1fc25b1",
+      "bytes": 389,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-source-diff-check.log.gz",
+      "sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "bytes": 20,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-diagnostic-start.json",
+      "sha256": "4f3567ae37cd706388f3daa91efa8ce65b8ebf764aa749d6472dbfae1dd847e9",
+      "bytes": 430,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-diagnostic-start.log",
+      "sha256": "fe64f32d8861a072c4736488483a0d78071fd33b6c667522e456f2dfd1a45ed3",
+      "bytes": 77,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-diagnostic-start.receipt.json",
+      "sha256": "4f3567ae37cd706388f3daa91efa8ce65b8ebf764aa749d6472dbfae1dd847e9",
+      "bytes": 430,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-diagnostic-start.log.gz",
+      "sha256": "fb932bd8a6e1e17f5c2fca5b32ffa120c266849fb13cb5223646c609f11951ae",
+      "bytes": 100,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-diagnostic-start-correct-id.json",
+      "sha256": "11c5b9434e05129e233b0e1942db4acb8949b3156508ad5f9d73c1dd8d9f7ad4",
+      "bytes": 431,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-diagnostic-start-correct-id.log",
+      "sha256": "42e53b8e4ff3c2e2f20c672e342033c911a314f4c1d4ad4b5ef6fb00b9d04067",
+      "bytes": 37,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-diagnostic-start-correct-id.receipt.json",
+      "sha256": "11c5b9434e05129e233b0e1942db4acb8949b3156508ad5f9d73c1dd8d9f7ad4",
+      "bytes": 431,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-diagnostic-start-correct-id.log.gz",
+      "sha256": "3af2ababc31c0a611636fff54ba8dd350122e1e383990a954ae19abec5b4c777",
+      "bytes": 60,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-reviewed-start.json",
+      "sha256": "97108fc636adeb6166c3247d6313f3e3d1b7eb9c3e649c90423e81a3c3bff3a6",
+      "bytes": 430,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-reviewed-start.log",
+      "sha256": "077d9ccb4ad2f5044cceef78d0e78d717e8f55d99151873b00257a4721a5a92a",
+      "bytes": 70,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-reviewed-start.receipt.json",
+      "sha256": "97108fc636adeb6166c3247d6313f3e3d1b7eb9c3e649c90423e81a3c3bff3a6",
+      "bytes": 430,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-reviewed-start.log.gz",
+      "sha256": "4ae6d937fcd0aa7b98e3b86ddbc924a09a1d0bde865557c066eca14397682c01",
+      "bytes": 93,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-spec-review-record.json",
+      "sha256": "6efa9d2ddbd3756320d8e37785e3484b1a3e6e11f91408f9cb7e0c4e6bf1aba6",
+      "bytes": 855,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-spec-review-record.log",
+      "sha256": "e439bf26c140b0a2182cda919e32dc0a3a0049692ac3a755776882103533424a",
+      "bytes": 72,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-spec-review-record.receipt.json",
+      "sha256": "6efa9d2ddbd3756320d8e37785e3484b1a3e6e11f91408f9cb7e0c4e6bf1aba6",
+      "bytes": 855,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-spec-review-record.log.gz",
+      "sha256": "29792efc7e2899cf7f6dac4b7678af6c5f29bbf020bc739aef17779fcb93f533",
+      "bytes": 92,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-packaged-upload-first.json",
+      "sha256": "1e94b09bb7d629c4feb4e71f68efd64894b948e26c8daa5b1af2092645de0180",
+      "bytes": 534,
+      "read_scope": "原收据全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-packaged-upload-first.log",
+      "sha256": "e2dedba1db02934f74b46854129dac6b081d1590cb8c1fa6a83a583b97e1dafa",
+      "bytes": 540,
+      "read_scope": "原日志完整字节，重点失败/退出/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-packaged-upload-first.receipt.json",
+      "sha256": "1e94b09bb7d629c4feb4e71f68efd64894b948e26c8daa5b1af2092645de0180",
+      "bytes": 534,
+      "read_scope": "归档收据实际与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1179/t1179-packaged-upload-first.log.gz",
+      "sha256": "dfdc64d2e96689779a1d2b20cbf492eb58eea4579992f3277af2bb7a9de14f8b",
+      "bytes": 284,
+      "read_scope": "归档日志实际解压与原件比较"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-asset-upload-packaged-probe.mjs",
+      "sha256": "a41b0314d635c33474743a7d81ee19f8032766990949b71b52318990fb503576",
+      "bytes": 13335,
+      "read_scope": "原失败driver/sidecar原字节，此前全文已实读，保FAIL不覆盖"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-asset-upload-packaged-recovery-sidecar.log",
+      "sha256": "07016a60650b402034c493facc65562f4959b3ac440cbc661fb75a24f292a52f",
+      "bytes": 696,
+      "read_scope": "原失败driver/sidecar原字节，此前全文已实读，保FAIL不覆盖"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1180-packaged-upload-corrected.json",
+      "sha256": "c958faf1a237c39dccb2ab710864663903cfd45c93916f2af39b592c85a7885f",
+      "bytes": 528,
+      "read_scope": "原收据全文；后续浏览器失败范围补核"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1180-packaged-upload-corrected.log",
+      "sha256": "ef6eef2553891af62026452297b2600a08d4bf2b4184be47f24699f91d39a7c7",
+      "bytes": 374,
+      "read_scope": "原失败日志全文；实际MP4可见性120000ms超时"
+    }
+  ],
+  "code_checks": {
+    "only_approved_t1179_code_path": "frontend/src/features/assets/assets-interactions.test.tsx",
+    "original_other_ten_tests_tail_byte_equal": true,
+    "original_other_ten_tests_tail_sha256": "7b7d47aab5488a7446386e82af154aabc161f0805dba37b1aa32af33228c6b3f",
+    "original_upload_assertions": "原complete1/create1/File name,type,size/相对PUT/complete input/refresh均保留，PUT body/MIME与signal/header新增增强",
+    "whole_diff_sha256": "f54cf3cb688079753510a1f148f1e39f1a5f248376c811d278d66275daacb5ed",
+    "archive_diff_byte_equal": true,
+    "source_diff_path_argv": [
+      "git",
+      "diff",
+      "--name-only",
+      "335b1b5e055b1c8cb0935fe7f512409532236592",
+      "--",
+      "frontend",
+      "backend",
+      "contract",
+      "ai-worker",
+      "worker",
+      "tools",
+      ".github",
+      "orchestrator/process"
+    ],
+    "source_diff_paths": [
+      "backend/src/application/collection/cover-file-repair.test.ts",
+      "backend/src/application/queries/dashboard-read-performance.test.ts",
+      "frontend/scripts/desktop/windows-runtime-config.test.mjs",
+      "frontend/src/components/shell/shell.test.tsx",
+      "frontend/src/features/assets/assets-interactions.test.tsx"
+    ],
+    "other_changed_tests": "另外四文件分别T1176/T1177/T1178；没有当前产品/runtime/helper/config/source变化"
+  },
+  "protected_current_files_equal_baseline": [
+    {
+      "path": "frontend/src/features/assets/asset-upload-button.tsx",
+      "sha256": "b6d70a24277ee77139bd8dc2f0aace1e16e5ee43a4c9a5cae5ddec51bc14d2d3",
+      "baseline_sha256": "b6d70a24277ee77139bd8dc2f0aace1e16e5ee43a4c9a5cae5ddec51bc14d2d3",
+      "baseline_bytes_equal": true
+    },
+    {
+      "path": "frontend/src/lib/creation-workspace-scope.ts",
+      "sha256": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+      "baseline_sha256": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+      "baseline_bytes_equal": true
+    },
+    {
+      "path": "frontend/src/lib/http-transport.ts",
+      "sha256": "3c89798b49c372bdb60be1cb255fe1b85ea9449752c97d7bdb4bdad1bff79302",
+      "baseline_sha256": "3c89798b49c372bdb60be1cb255fe1b85ea9449752c97d7bdb4bdad1bff79302",
+      "baseline_bytes_equal": true
+    },
+    {
+      "path": "frontend/src/lib/contract-client.ts",
+      "sha256": "63b8bb7c84ffe93bc934fe2f1e5672fa21b4fdea10709bec350bef69f651c2ce",
+      "baseline_sha256": "63b8bb7c84ffe93bc934fe2f1e5672fa21b4fdea10709bec350bef69f651c2ce",
+      "baseline_bytes_equal": true
+    },
+    {
+      "path": "frontend/src/lib/creation-workspace-scope.test.ts",
+      "sha256": "ff346c91140620d1e4e84713b9c0e9caa389a3577cc2274068197b508e2c7c8c",
+      "baseline_sha256": "ff346c91140620d1e4e84713b9c0e9caa389a3577cc2274068197b508e2c7c8c",
+      "baseline_bytes_equal": true
+    },
+    {
+      "path": "frontend/src/lib/http-transport.test.ts",
+      "sha256": "d4bc196a64906160bcfb7802e0618e84166e65ed3711fc715f44d80b3e3310ae",
+      "baseline_sha256": "d4bc196a64906160bcfb7802e0618e84166e65ed3711fc715f44d80b3e3310ae",
+      "baseline_bytes_equal": true
+    },
+    {
+      "path": "contract/src/client.ts",
+      "sha256": "e265ff6f6b5aa54f9eea1e45b2fdf1c1d64903ea4d6dd57b7e676cb7656a9ded",
+      "baseline_sha256": "e265ff6f6b5aa54f9eea1e45b2fdf1c1d64903ea4d6dd57b7e676cb7656a9ded",
+      "baseline_bytes_equal": true
+    },
+    {
+      "path": "contract/src/envelope.ts",
+      "sha256": "8fa72b5982906f1c637a05bf10d262385adb0eb0e0f43e826b69f119e8b2b429",
+      "baseline_sha256": "8fa72b5982906f1c637a05bf10d262385adb0eb0e0f43e826b69f119e8b2b429",
+      "baseline_bytes_equal": true
+    },
+    {
+      "path": "contract/src/operations/assets.ts",
+      "sha256": "2c70c4b93f56ab9dca44ab8760d43114d92c01fbff33a997b2f65f295a4226d1",
+      "baseline_sha256": "2c70c4b93f56ab9dca44ab8760d43114d92c01fbff33a997b2f65f295a4226d1",
+      "baseline_bytes_equal": true
+    },
+    {
+      "path": "contract/src/resources/assets.ts",
+      "sha256": "b77549ee2e86ae5370105ba95ceb343035819c63972d4bf184c70af66d2d22a6",
+      "baseline_sha256": "b77549ee2e86ae5370105ba95ceb343035819c63972d4bf184c70af66d2d22a6",
+      "baseline_bytes_equal": true
+    },
+    {
+      "path": "contract/src/workspace-operation-scope.ts",
+      "sha256": "fe0ed477bce71d5faa759cfa3b72fdfe40ef3f29ce13472194ede5a792747e39",
+      "baseline_sha256": "fe0ed477bce71d5faa759cfa3b72fdfe40ef3f29ce13472194ede5a792747e39",
+      "baseline_bytes_equal": true
+    },
+    {
+      "path": "orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "baseline_sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "baseline_bytes_equal": true
+    }
+  ],
+  "actual_evidence": [
+    {
+      "name": "t1015-led022-current-diagnostic",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led022-current-diagnostic.json",
+      "receipt_sha256": "d4a8f3ec238837c43e4db531c70c8216b4c06c88a4558640f41cbbe27f1f80a0",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led022-current-diagnostic.log",
+      "log_sha256": "311a66a99c29aad1c54907878d4c36ced8b8720177180852dd9e3ab8ad3d25bd",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 1,
+      "elapsed_seconds": 6.676512166042812,
+      "argv": [
+        "env",
+        "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "node",
+        "-e",
+        "const {execSync}=require(\"node:child_process\");const c=require(\"./orchestrator/process/reconcile.config.json\");execSync(c.lessons.find(x=>x.led===\"LED-022\").check,{stdio:\"inherit\"})"
+      ],
+      "summary": "exit1，18PASS1FAIL，原E2 mock0/retry x2"
+    },
+    {
+      "name": "t1179-upload-focused-first",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-upload-focused-first.json",
+      "receipt_sha256": "2a629da2c632469042931fd9cf85fcc7702a86bc95311fcb0d12a8a1ee92e91f",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-upload-focused-first.log",
+      "log_sha256": "5097bef49ff38dfab624b28f3a6a17cefdc043568ff37baa9f386bc26538051a",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 0,
+      "elapsed_seconds": 4.7428162500145845,
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/features/assets/assets-interactions.test.tsx",
+        "--retry=0"
+      ],
+      "summary": "exit0，14PASS，focused --retry=0"
+    },
+    {
+      "name": "t1179-led022-current-green",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-led022-current-green.json",
+      "receipt_sha256": "a41edbb97ee94943b11a50b2e60be9d22d7d49fe5bb8e4ff4b1dab01b75e6856",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-led022-current-green.log",
+      "log_sha256": "b162f85e2a719a967f3d4cf594e8ab243e4896f2c163c4caadc1e5ba023295ad",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 0,
+      "elapsed_seconds": 3.7544507919810712,
+      "argv": [
+        "env",
+        "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "node",
+        "-e",
+        "const {execSync}=require(\"node:child_process\");const c=require(\"./orchestrator/process/reconcile.config.json\");execSync(c.lessons.find(x=>x.led===\"LED-022\").check,{stdio:\"inherit\"})"
+      ],
+      "summary": "exit0，4files22PASS，原完整命令"
+    },
+    {
+      "name": "t1179-existing-scope-transport",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-existing-scope-transport.json",
+      "receipt_sha256": "19f069d9dee0574e7f56521acf4f7df9b7d301e84a8f50d98fee501828ca308d",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-existing-scope-transport.log",
+      "log_sha256": "bb38aee0a19604819f96f5d3cb2b16bee444797f28eeba9973ba8e291d3147ee",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 0,
+      "elapsed_seconds": 2.712852166965604,
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "vitest",
+        "run",
+        "src/lib/creation-workspace-scope.test.ts",
+        "src/lib/http-transport.test.ts",
+        "--retry=0"
+      ],
+      "summary": "exit0，2files20PASS"
+    },
+    {
+      "name": "t1179-frontend-type-first",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-frontend-type-first.json",
+      "receipt_sha256": "756608e6c4f2bd32dfe9dd89ff467aba2dd4b309db97810ed5060f9ccd3806b2",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-frontend-type-first.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 0,
+      "elapsed_seconds": 10.841539041954093,
+      "argv": [
+        "pnpm",
+        "--dir",
+        "frontend",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ],
+      "summary": "exit0，空日志"
+    },
+    {
+      "name": "t1179-boundary-scan",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-boundary-scan.json",
+      "receipt_sha256": "249800f1359b7d18559deea77d6dfddbdc86d15fffd86817ef35e4af0479502c",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-boundary-scan.log",
+      "log_sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.5059823339688592,
+      "argv": [
+        "node",
+        "orchestrator/process/boundary-scan.mjs"
+      ],
+      "summary": "exit0，原5违规基线，无新增"
+    },
+    {
+      "name": "t1179-semantic-boundary-scan",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-semantic-boundary-scan.json",
+      "receipt_sha256": "a5316d435185c9f85056cdb132ffeec5707e15f2f8f49e65f41dafdc07102c59",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-semantic-boundary-scan.log",
+      "log_sha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.3415429589804262,
+      "argv": [
+        "node",
+        "orchestrator/process/semantic-boundary-scan.mjs"
+      ],
+      "summary": "exit0"
+    },
+    {
+      "name": "t1179-orphan-scan",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-orphan-scan.json",
+      "receipt_sha256": "878c685b5059ea2e956b35f59970aaa5a363e02082ba8f771482dc9de977e438",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-orphan-scan.log",
+      "log_sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.11350462498376146,
+      "argv": [
+        "node",
+        "orchestrator/process/orphan-scan.mjs"
+      ],
+      "summary": "exit0，0error/100warning"
+    },
+    {
+      "name": "t1179-source-diff-check",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-source-diff-check.json",
+      "receipt_sha256": "75dfa373751bc252f984dd62ef5f98a2a2a6706c5675f8e8343a557aa1fc25b1",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-source-diff-check.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.0676742079667747,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "summary": "exit0，空日志"
+    },
+    {
+      "name": "t1179-diagnostic-start",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-diagnostic-start.json",
+      "receipt_sha256": "4f3567ae37cd706388f3daa91efa8ce65b8ebf764aa749d6472dbfae1dd847e9",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-diagnostic-start.log",
+      "log_sha256": "fe64f32d8861a072c4736488483a0d78071fd33b6c667522e456f2dfd1a45ed3",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.11732120899250731,
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "start",
+        "T1179"
+      ],
+      "summary": "exit1，错误ID T1179"
+    },
+    {
+      "name": "t1179-diagnostic-start-correct-id",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-diagnostic-start-correct-id.json",
+      "receipt_sha256": "11c5b9434e05129e233b0e1942db4acb8949b3156508ad5f9d73c1dd8d9f7ad4",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-diagnostic-start-correct-id.log",
+      "log_sha256": "42e53b8e4ff3c2e2f20c672e342033c911a314f4c1d4ad4b5ef6fb00b9d04067",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.12691154197091237,
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "start",
+        "T-1179"
+      ],
+      "summary": "exit0，原T-1179诊断start事件"
+    },
+    {
+      "name": "t1179-reviewed-start",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-reviewed-start.json",
+      "receipt_sha256": "97108fc636adeb6166c3247d6313f3e3d1b7eb9c3e649c90423e81a3c3bff3a6",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-reviewed-start.log",
+      "log_sha256": "077d9ccb4ad2f5044cceef78d0e78d717e8f55d99151873b00257a4721a5a92a",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 1,
+      "elapsed_seconds": 0.1190109170274809,
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "start",
+        "T-1179"
+      ],
+      "summary": "exit1，已🔨不能再次start"
+    },
+    {
+      "name": "t1179-spec-review-record",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-spec-review-record.json",
+      "receipt_sha256": "6efa9d2ddbd3756320d8e37785e3484b1a3e6e11f91408f9cb7e0c4e6bf1aba6",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-spec-review-record.log",
+      "log_sha256": "e439bf26c140b0a2182cda919e32dc0a3a0049692ac3a755776882103533424a",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.1500576669932343,
+      "argv": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-1179",
+        "--spec",
+        "docs/features/t1179-asset-upload-regression-diagnosis.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/features/t1179-asset-upload-regression-diagnosis.review-input.json",
+        "--review",
+        "docs/features/t1179-asset-upload-regression-diagnosis.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "independent",
+        "--model",
+        "codex-inherited"
+      ],
+      "summary": "exit0，formalPASS13d0145a7fcd"
+    },
+    {
+      "name": "t1179-packaged-upload-first",
+      "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-packaged-upload-first.json",
+      "receipt_sha256": "1e94b09bb7d629c4feb4e71f68efd64894b948e26c8daa5b1af2092645de0180",
+      "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-packaged-upload-first.log",
+      "log_sha256": "e2dedba1db02934f74b46854129dac6b081d1590cb8c1fa6a83a583b97e1dafa",
+      "receipt_log_sha256_matches": true,
+      "archive_receipt_byte_equal": true,
+      "archive_decompressed_log_byte_equal": true,
+      "exit_code": 1,
+      "elapsed_seconds": 21.851652499986812,
+      "argv": [
+        "frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+        "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-asset-upload-packaged-probe.mjs"
+      ],
+      "summary": "exit1，原请求体SHA失败，不签旅程"
+    }
+  ],
+  "pending_evidence": [
+    "新的完整随包probe公共图片/视频/下载字节/刷新/跨组/返回结果及独立复核。T1180当前corrected原收据/log已实读，仍FAIL；T1181可见性诊断待另审，不能替代公共旅程PASS。",
+    "当前完整canonical、pmem及任务收尾，保T1015整体/其它历史欠债"
+  ],
+  "first_browser_run": {
+    "verdict": "FAIL",
+    "exit_code": 1,
+    "final_result_json_exists": false,
+    "raw_post_data_buffer": "UNKNOWN，未保存不能补判null",
+    "mechanical_probe_diagnosis_owner": "T-1180，原失败不改为PASS"
+  },
+  "excluded_claims": [
+    "当前浏览器完整旅程通过",
+    "工程导入/native插入/保存、原生App/Windows/真用户安装、完整安装版功能或完整Gate/canonical",
+    "真实profile/用户媒体/凭据、平台/模型/扫码执行与微信研究恢复"
+  ],
+  "actions": "仅读仓库、Git和原实收据/日志，私有报告写。没有执行测试/门/服务/产品CLI/DB/模型/浏览器或改仓库/旧证据。",
+  "updated_at_utc": "2026-10-10T01:27:17.910381+00:00",
+  "subsequent_browser_run": {
+    "name": "t1180-packaged-upload-corrected",
+    "verdict": "FAIL",
+    "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1180-packaged-upload-corrected.json",
+    "receipt_sha256": "c958faf1a237c39dccb2ab710864663903cfd45c93916f2af39b592c85a7885f",
+    "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1180-packaged-upload-corrected.log",
+    "log_sha256": "ef6eef2553891af62026452297b2600a08d4bf2b4184be47f24699f91d39a7c7",
+    "receipt_log_sha256_matches": true,
+    "exit_code": 1,
+    "elapsed_seconds": 139.3485104580177,
+    "actual_log_failure": "getByText('t1179-neutral.mp4', { exact: true }).first() visible等待120000ms超时",
+    "parent_reported_facts": "根代理说明MP4上传完成toast已通过；未写最终JSON或截图；另建并启动T-1181。此处没有独立签其上传/下载/卡片正确性。",
+    "closure": "公共旅程仍未通过；不签T1179浏览器或T1180闭合；T1181精确补充SPEC另待独审"
+  }
+}

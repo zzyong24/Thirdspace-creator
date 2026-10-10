@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/application/queries/dashboard-read-performance.test.ts",
+    "--retry=0"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T00:48:50.429821+00:00",
+  "finishedAt": "2026-10-10T00:48:52.762668+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 2.3325613329652697,
+  "logSha256": "46ae4f5601dcb6b17556c24ce4aa0f343406d7e4c5fa8ca511ee3ec8c817d162"
+}

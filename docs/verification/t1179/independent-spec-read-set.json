@@ -1,0 +1,274 @@
+{
+  "schema": "independent-read-set/v1",
+  "task_id": "T-1179",
+  "review_kind": "initial",
+  "reviewer": "/root/t1159_fix_recheck_recovery",
+  "reviewed_at_utc": "2026-10-10T01:09:22.432532+00:00",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "verdict": "PASS_SPEC_INITIAL_BOUNDED",
+  "spec_sha256": "a27e32dcbfca6eec2a5666f5e5e2ed840ee2e8b688d6a3f6e2250964e3a94868",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "preimplementation_test_sha256": "aa9e050d8d56c82057c7b7147b19ab5464829bbb2c3099610467a01b9d405d2e",
+  "reads": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "c3246b9110d0bb2188c1cbc66d819354f86f10185db6e9d6862d0b8148be89bc",
+      "bytes": 54890,
+      "read_scope": "顶部当前T1179诊断/审核与链接；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1179-asset-upload-regression-diagnosis.md",
+      "sha256": "a27e32dcbfca6eec2a5666f5e5e2ed840ee2e8b688d6a3f6e2250964e3a94868",
+      "bytes": 3574,
+      "read_scope": "全文最终重读；已澄清组与旧账号都缺失才拒绝；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143,
+      "read_scope": "文档事实规则、R-LIBRARY306–312、R-DESKTOP330–336；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1069-installed-media-and-binding.md",
+      "sha256": "0363fa6014a11328af557cf01f3a1f3151ff524ac6b0cbb95acaff4d4983327d",
+      "bytes": 38166,
+      "read_scope": "已授权范围1–43、现合同43–53、素材选择77–96、导入132–140、稳定容器304–315；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/assets/assets-interactions.test.tsx",
+      "sha256": "aa9e050d8d56c82057c7b7147b19ab5464829bbb2c3099610467a01b9d405d2e",
+      "bytes": 15319,
+      "read_scope": "全文，原11例及所有原断言；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/features/assets/asset-upload-button.tsx",
+      "sha256": "b6d70a24277ee77139bd8dc2f0aace1e16e5ee43a4c9a5cae5ddec51bc14d2d3",
+      "bytes": 7855,
+      "read_scope": "全文，真实File/create/PUT/complete/成功回写与存活保护；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/lib/creation-workspace-scope.ts",
+      "sha256": "3f1080ec0769955cb69f2d8cf23315406057919e13435345150e5cfbc9b2ac64",
+      "bytes": 5821,
+      "read_scope": "全文，真实hook/capture/范围/epoch/signal；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/lib/creation-workspace-scope.test.ts",
+      "sha256": "ff346c91140620d1e4e84713b9c0e9caa389a3577cc2274068197b508e2c7c8c",
+      "bytes": 1976,
+      "read_scope": "全文，仅核现测试契约，不声称执行；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/lib/http-transport.ts",
+      "sha256": "3c89798b49c372bdb60be1cb255fe1b85ea9449752c97d7bdb4bdad1bff79302",
+      "bytes": 11720,
+      "read_scope": "冻结header/fetch58–103及组/storage事件220–235；相关完整 transport；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/lib/http-transport.test.ts",
+      "sha256": "d4bc196a64906160bcfb7802e0618e84166e65ed3711fc715f44d80b3e3310ae",
+      "bytes": 12919,
+      "read_scope": "270–320，冻结headers与无account泄漏回归；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/lib/contract-client.ts",
+      "sha256": "63b8bb7c84ffe93bc934fe2f1e5672fa21b4fdea10709bec350bef69f651c2ce",
+      "bytes": 580,
+      "read_scope": "全文，旧全局client组成；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/client.ts",
+      "sha256": "e265ff6f6b5aa54f9eea1e45b2fdf1c1d64903ea4d6dd57b7e676cb7656a9ded",
+      "bytes": 2171,
+      "read_scope": "全文，返回data之前解析successEnvelope；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/envelope.ts",
+      "sha256": "8fa72b5982906f1c637a05bf10d262385adb0eb0e0f43e826b69f119e8b2b429",
+      "bytes": 4749,
+      "read_scope": "全文，真实data/meta.requestId；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/primitives.ts",
+      "sha256": "23ee12e08ebe60e826172b5211a3a12be613119ebce1ea466caa79caa0d0b4c8",
+      "bytes": 7711,
+      "read_scope": "1–64，id与ISO格式定义；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/operations/assets.ts",
+      "sha256": "2c70c4b93f56ab9dca44ab8760d43114d92c01fbff33a997b2f65f295a4226d1",
+      "bytes": 6032,
+      "read_scope": "全文，上传/完成输入与响应；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/resources/assets.ts",
+      "sha256": "b77549ee2e86ae5370105ba95ceb343035819c63972d4bf184c70af66d2d22a6",
+      "bytes": 3609,
+      "read_scope": "全文，完整AssetResource必填及nullable字段；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/workspace-operation-scope.ts",
+      "sha256": "fe0ed477bce71d5faa759cfa3b72fdfe40ef3f29ce13472194ede5a792747e39",
+      "bytes": 19574,
+      "read_scope": "1–80，素材上传/完成为group且允许空组；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/app/api/v1/dispatch/route.ts",
+      "sha256": "f45afbdb5429e7953081b50d0abf4e8045ac17cc4e1883e3519c9d4d55333816",
+      "bytes": 23567,
+      "read_scope": "1–52、372–449，实际ctx及group/account拒绝；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/lib/request-context.server.ts",
+      "sha256": "b4b218b8ad70fa4c627bb11e9c5f60f6de39a3afd8f7e6dd851210ac842b0c31",
+      "bytes": 11031,
+      "read_scope": "1–130、136–221，真实身份/组/账号属主校验；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/assets/assets.service.ts",
+      "sha256": "e9631f44a3eeefa30d2bec6d912e594e82c6c043d7fce8ac7ba578f02cb3286b",
+      "bytes": 41738,
+      "read_scope": "590–705，上传所有权、同upload幂等、实际headObject/size；另345–385；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "bytes": 44912,
+      "read_scope": "LED022原完整四文件命令；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819,
+      "read_scope": "此前全文实读，当前字节SHA；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT.md",
+      "sha256": "7cd17b98aca09893058fbe3499f394b5dcdd3406874c3660032462d80bf43b7c",
+      "bytes": 17389,
+      "read_scope": "此前定位/主线实读，当前字节SHA；任务状态以BACKLOG为准；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT_CONTEXT.md",
+      "sha256": "a74ec6498a8e06fe574f86ec96c51a99076672b717d103b26b25578bd2a1ed3c",
+      "bytes": 1316,
+      "read_scope": "此前全文实读，当前字节SHA；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "bytes": 8130,
+      "read_scope": "此前物理边界/安全职责实读，当前字节SHA；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3",
+      "bytes": 50753,
+      "read_scope": "4-build路由此前实读，当前字节SHA；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "bytes": 84,
+      "read_scope": "全文，3.29.0；完整实际字节绑定"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/SKILL.md",
+      "sha256": "5796cf1b3b9f3de2d45c8e754e3df2146735aa14b266b7c32e2cb4c8638f4c1f",
+      "bytes": 4021,
+      "read_scope": "此前完整加载，沿用maintenance初审边界"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/VERSION",
+      "sha256": "db8c5f26ffadff528c3c988af09e26339ee629b449372f4a62f0c357f7329dfc",
+      "bytes": 7,
+      "read_scope": "全文3.29.0，与项目一致"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/stage-router.md",
+      "sha256": "dd656d4b0d886aee9fafa10b61a1db9554e1d424c533dd79693f28ff7447cf1e",
+      "bytes": 1339,
+      "read_scope": "此前全文实读，沿用BUILD路由"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led022-current-diagnostic.json",
+      "sha256": "d4a8f3ec238837c43e4db531c70c8216b4c06c88a4558640f41cbbe27f1f80a0",
+      "bytes": 754,
+      "read_scope": "全文，原完整命令/退出码/时长/logSha256或FAIL/retry/汇总/警告"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led022-current-diagnostic.log",
+      "sha256": "311a66a99c29aad1c54907878d4c36ced8b8720177180852dd9e3ab8ad3d25bd",
+      "bytes": 5184,
+      "read_scope": "全文，原完整命令/退出码/时长/logSha256或FAIL/retry/汇总/警告"
+    }
+  ],
+  "readonly_git_checks": [
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--no-ext-diff",
+        "HEAD",
+        "--",
+        "frontend/src/features/assets/assets-interactions.test.tsx",
+        "frontend/src/features/assets/asset-upload-button.tsx",
+        "frontend/src/lib/creation-workspace-scope.ts",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/contract-client.ts",
+        "contract/src/client.ts",
+        "contract/src/envelope.ts",
+        "contract/src/primitives.ts",
+        "contract/src/operations/assets.ts",
+        "contract/src/resources/assets.ts",
+        "contract/src/workspace-operation-scope.ts",
+        "frontend/src/app/api/v1/dispatch/route.ts",
+        "frontend/src/lib/request-context.server.ts",
+        "backend/src/modules/assets/assets.service.ts",
+        "orchestrator/process/reconcile.config.json"
+      ],
+      "output_bytes": 0,
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": "原受审测试及必要产品/合同/配置当前相对HEAD无diff"
+    }
+  ],
+  "red_evidence": {
+    "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led022-current-diagnostic.json",
+    "receipt_sha256": "d4a8f3ec238837c43e4db531c70c8216b4c06c88a4558640f41cbbe27f1f80a0",
+    "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led022-current-diagnostic.log",
+    "log_sha256": "311a66a99c29aad1c54907878d4c36ced8b8720177180852dd9e3ab8ad3d25bd",
+    "receipt_log_sha256_matches": true,
+    "exit_code": 1,
+    "elapsed_seconds": 6.676512166042812,
+    "passed": 18,
+    "failed": 1,
+    "old_retry_x2_retained": true,
+    "failure": "E2 completeUpload全局mock期待1次实际0；不能据此签实际产品上传失败"
+  },
+  "approved_code_write_set": [
+    "frontend/src/features/assets/assets-interactions.test.tsx"
+  ],
+  "scope_interpretation": {
+    "missing_scope": {
+      "groupId": null,
+      "accountId": null
+    },
+    "valid_pure_group": "有效groupId且accountId=null，不依赖平台账号",
+    "legacy_account": "无group时保原account真实范围，不假填组ID为账号ID"
+  },
+  "findings": [],
+  "pending_evidence": [
+    "原11例+缺范围/切组/卸载负测、三段同真实signal/冻结header、真实File body/MIME和dispatch input",
+    "原LED022完整命令与workspace/HTTPtransport守卫、frontend类型、boundary/semantic/orphan/diff、独立实施复核",
+    "当前未改产品包Node/fullChromium，fresh私有data/auth/新合法握手，真实UI建纯组、中性图片/短视频实际create/PUT/complete、列表/刷新公开回读、第二组无混入、截图/网络/日志",
+    "pmem和完整canonical保留其它原失败及T1015整体归属"
+  ],
+  "excluded_claims": [
+    "当前实施/GREEN或真实浏览器通过",
+    "剪辑工程导入/native插入/保存及T1069全部验收",
+    "原生App/Windows或真用户安装、完整Gate/canonical",
+    "真实profile/用户媒体/凭据/DB操作、扫码/模型/平台执行及微信研究恢复"
+  ],
+  "actions": "只读文件/Git，写本私有目录；未执行测试、验证器、产品CLI、服务、DB、模型或浏览器，未改仓库/控制面。"
+}

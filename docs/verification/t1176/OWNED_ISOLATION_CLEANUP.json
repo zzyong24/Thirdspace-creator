@@ -1,0 +1,40 @@
+{
+  "finishedAt": "2026-10-10T00:59:35.851884+00:00",
+  "entries": [
+    {
+      "directory": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-navigation-recovery-isolation-a5gT0E",
+      "files": 2177,
+      "bytes": 39476565,
+      "ownedFreshIsolation": true,
+      "sidecarExit": {
+        "code": 143,
+        "signal": null
+      },
+      "activeProcesses": 0
+    },
+    {
+      "directory": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-workspace-navigation-recovery-isolation-6jC6HN",
+      "files": 2177,
+      "bytes": 39550293,
+      "ownedFreshIsolation": true,
+      "sidecarExit": {
+        "code": 143,
+        "signal": null
+      },
+      "activeProcesses": 0
+    },
+    {
+      "directory": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-inner-scroll-navigation-recovery-isolation-lG5ned",
+      "files": 2177,
+      "bytes": 39550293,
+      "ownedFreshIsolation": true,
+      "sidecarExit": {
+        "code": 143,
+        "signal": null
+      },
+      "activeProcesses": 0
+    }
+  ],
+  "evidenceLogsReceiptsScreenshotsPreserved": true,
+  "realUserDataOrAppRemoved": false
+}

@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "frontend/src-tauri/sidecar/server.app/Contents/MacOS/creatoros-server",
+    "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-inner-scroll-navigation-packaged-probe.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T00:41:21.688940+00:00",
+  "finishedAt": "2026-10-10T00:41:44.508879+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 22.819677499996033,
+  "logSha256": "092f7e04af8240d214b906b0d8b01a5802b8535f95e8de2f5f6c5c7215ac1e68"
+}

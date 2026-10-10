@@ -13,10 +13,12 @@
  * is rendered with a fixed fixture viewModel so a known asset is selected.
  */
 
-import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildAssetsViewModel } from "@/fixtures/selectors";
+import type { CreationClient } from "@/lib/creation-workspace-scope";
+import { CURRENT_ACCOUNT_KEY, CURRENT_GROUP_KEY } from "@/lib/http-transport";
 
 const mockRouter = {
   refresh: vi.fn(),
@@ -78,8 +80,53 @@ vi.mock("@/lib/contract-client", () => ({
   },
 }));
 
-afterEach(() => cleanup());
+const uploadGroup = "upload-test-group";
+const uploadFixture: Awaited<ReturnType<CreationClient["createUpload"]>> = {
+  uploadId: "upload-1", assetId: "asset-new", storageKey: "k",
+  uploadUrl: "/api/v1/blob/k?exp=1&token=t",
+  expiresAt: "2026-10-10T12:00:00.000Z",
+};
+const uploadedAsset: Awaited<ReturnType<CreationClient["completeUpload"]>> = {
+  id: "asset-new", userId: "upload-test-user", currentFileId: "file-new",
+  assetType: "image", name: "clip.png", description: "", status: "active",
+  isFavorite: false, mimeType: "image/png", fileSize: 11,
+  width: null, height: null, durationMs: null, extractStatus: null,
+  materialSummary: null, extractedText: null, sourceUrl: null, deletedAt: null,
+  createdAt: "2026-10-10T00:00:00.000Z", updatedAt: "2026-10-10T00:00:00.000Z",
+};
+
+// SEMANTIC_BOUNDARY_ALLOW: 测试HTTP夹具只按公开操作ID返回合法回执，不做创作选择。
+function mockUploadHttp(put?: () => Promise<Response>) {
+  const fetchSpy = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    if (input === uploadFixture.uploadUrl) return put ? put() : new Response(null, { status: 200 });
+    if (input !== "/api/v1/dispatch") throw new Error(`unexpected upload request: ${String(input)}`);
+    const request = JSON.parse(String(init?.body));
+    let data: unknown;
+    if (request.id === "assets.uploads.create") {
+      await mockClient.createUpload(request.input);
+      data = uploadFixture;
+    } else if (request.id === "assets.uploads.complete") {
+      await mockClient.completeUpload(request.input);
+      data = uploadedAsset;
+    } else throw new Error(`unexpected upload operation: ${String(request.id)}`);
+    return Response.json({ data, meta: { requestId: "upload-test-request" } });
+  });
+  vi.stubGlobal("fetch", fetchSpy);
+  return fetchSpy;
+}
+
+let originalScope: [string | null, string | null];
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+  [CURRENT_GROUP_KEY, CURRENT_ACCOUNT_KEY].forEach((key, index) => {
+    const value = originalScope[index];
+    if (value === null) window.localStorage.removeItem(key);
+    else window.localStorage.setItem(key, value);
+  });
+});
 beforeEach(() => {
+  originalScope = [window.localStorage.getItem(CURRENT_GROUP_KEY), window.localStorage.getItem(CURRENT_ACCOUNT_KEY)];
   for (const fn of Object.values(mockClient)) fn.mockClear();
   mockRouter.refresh.mockClear();
 });
@@ -115,7 +162,10 @@ async function renderIsland(options?: {
   );
 }
 
-async function renderUploadButton() {
+async function renderUploadButton(groupId: string | null = uploadGroup) {
+  if (groupId === null) window.localStorage.removeItem(CURRENT_GROUP_KEY);
+  else window.localStorage.setItem(CURRENT_GROUP_KEY, groupId);
+  window.localStorage.removeItem(CURRENT_ACCOUNT_KEY);
   const { AssetUploadButton } = await import("./asset-upload-button");
   return render(<AssetUploadButton />);
 }
@@ -135,16 +185,25 @@ describe("Assets needs-backend wiring", () => {
     // A real File: name/type/size are read off the File object.
     const file = new File(["hello-bytes"], "clip.png", { type: "image/png" });
     // [T-049 B5] 相对路径 uploadUrl 必须发生字节 PUT(旧实现跳过它 → ENOENT 静默失败)。
-    const fetchSpy = vi.fn(() => Promise.resolve(new Response(null, { status: 200 })));
-    vi.stubGlobal("fetch", fetchSpy);
+    const fetchSpy = mockUploadHttp();
     fireEvent.change(input!, { target: { files: [file] } });
 
     await waitFor(() => expect(mockClient.completeUpload).toHaveBeenCalledTimes(1));
     expect(fetchSpy).toHaveBeenCalledWith(
       "/api/v1/blob/k?exp=1&token=t",
-      expect.objectContaining({ method: "PUT" }),
+      expect.objectContaining({ method: "PUT", body: file, headers: { "content-type": "image/png" } }),
     );
-    vi.unstubAllGlobals();
+    const dispatches = fetchSpy.mock.calls.filter(([path]) => path === "/api/v1/dispatch");
+    expect(dispatches).toHaveLength(2);
+    const signal = dispatches[0]![1]?.signal;
+    expect(signal).toBeDefined();
+    expect(signal?.aborted).toBe(false);
+    for (const [, init] of dispatches) {
+      expect(new Headers(init?.headers).get("x-group-id")).toBe(uploadGroup);
+      expect(new Headers(init?.headers).has("x-account-id")).toBe(false);
+      expect(init?.signal).toBe(signal);
+    }
+    expect(fetchSpy.mock.calls.find(([path]) => path === uploadFixture.uploadUrl)?.[1]?.signal).toBe(signal);
     expect(mockClient.createUpload).toHaveBeenCalledTimes(1);
     // createUpload carries the file's REAL type + size, mapped to assetType.
     expect(mockClient.createUpload).toHaveBeenCalledWith(
@@ -166,6 +225,46 @@ describe("Assets needs-backend wiring", () => {
       }),
     );
     expect(mockRouter.refresh).toHaveBeenCalled();
+  });
+
+  it("E2 没有组与旧账号时不发上传请求", async () => {
+    const { container } = await renderUploadButton(null);
+    const fetchSpy = mockUploadHttp();
+    await act(async () => {
+      fireEvent.change(container.querySelector('[data-slot="assets-upload-input"]')!, {
+        target: { files: [new File(["hello-bytes"], "clip.png", { type: "image/png" })] },
+      });
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(mockClient.completeUpload).not.toHaveBeenCalled();
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
+  });
+
+  it.each(["切组", "卸载"] as const)("E2 PUT等待时%s取消真实signal，晚到成功不完成或刷新", async (leave) => {
+    const { container, unmount } = await renderUploadButton();
+    let finishPut!: (response: Response) => void;
+    const pendingPut = new Promise<Response>((resolve) => { finishPut = resolve; });
+    const fetchSpy = mockUploadHttp(() => pendingPut);
+    fireEvent.change(container.querySelector('[data-slot="assets-upload-input"]')!, {
+      target: { files: [new File(["hello-bytes"], "clip.png", { type: "image/png" })] },
+    });
+    await waitFor(() => expect(fetchSpy.mock.calls.filter(([path]) => path === uploadFixture.uploadUrl)).toHaveLength(1), { timeout: 120_000 });
+    const signal = fetchSpy.mock.calls.find(([path]) => path === uploadFixture.uploadUrl)?.[1]?.signal;
+    expect(signal).toBeDefined();
+    expect(signal?.aborted).toBe(false);
+    act(() => {
+      if (leave === "卸载") unmount();
+      else {
+        window.localStorage.setItem(CURRENT_GROUP_KEY, "another-upload-group");
+        window.dispatchEvent(new Event("creatoros:accounts-changed"));
+      }
+    });
+    expect(signal?.aborted).toBe(true);
+    await act(async () => { finishPut(new Response(null, { status: 200 })); await pendingPut; });
+    expect(mockClient.createUpload).toHaveBeenCalledTimes(1);
+    expect(mockClient.completeUpload).not.toHaveBeenCalled();
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
+    expect(container.textContent).not.toContain("已上传素材");
   });
 
   it("[T-055d] E3 下载做真:assets.downloadUrl 换签名 URL → <a download> 触发保存", async () => {

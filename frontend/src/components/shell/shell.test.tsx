@@ -3,7 +3,7 @@
  *
  * These tests lock the AppShell invariants:
  *  - exactly one Sidebar and one TopHeader per page,
- *  - the primary nav lists all seven approved entries,
+ *  - the primary nav lists the approved entries with real destinations,
  *  - the active nav item is derived from the current pathname,
  *  - the lower contextual card supports both `assistant` and `storage`
  *    variants on a single component (D-003),
@@ -22,7 +22,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import type React from "react";
+import * as React from "react";
 
 import "@/styles/tokens.css";
 
@@ -86,6 +86,22 @@ vi.mock("next/link", () => ({
 }));
 
 type AppShellProps = React.ComponentProps<typeof import("./app-shell").AppShell>;
+
+const approvedNavigation = [
+  ["首页", "/"],
+  ["创作者总览", "/overview"],
+  ["定位中心", "/positioning"],
+  ["内容雷达", "/intelligence"],
+  ["选题", "/topics"],
+  ["项目", "/projects"],
+  ["知识库", "/knowledge"],
+  ["素材中心", "/assets"],
+  ["创作画布", "/canvases"],
+  ["发布中心", "/publishing"],
+  ["运营分析", "/daily-report"],
+  ["自动化", "/automations"],
+  ["设置", "/settings"],
+] as const;
 
 async function renderShell(overrides: Partial<AppShellProps> = {}) {
   const { AppShell } = await import("./app-shell");
@@ -173,34 +189,25 @@ describe("AppShell", () => {
     });
   });
 
-  it("renders the approved primary nav items in order (定位中心 inserted as 2nd, 七步①②)", async () => {
+  it("按现有顺序呈现全部导航名称与真实目的地，包含创作画布", async () => {
     await renderShell();
     const nav = screen.getByRole("navigation", { name: "主要导航" });
     const items = within(nav).getAllByRole("link");
-    const labels = items.map((item) => item.textContent?.trim() ?? "");
     // SPEC §3.4: 定位中心 is the upstream constraint source — pinned 2nd. 选题 sits right
     // under it (定位→选题→项目 upstream order: 定位约束选题, 选题落地为项目).
-    expect(labels).toEqual([
-      "首页",
-      "创作者总览",
-      "定位中心",
-      "内容雷达",
-      "选题",
-      "项目",
-      "知识库",
-      "素材中心",
-      "发布中心",
-      "运营分析",
-      "自动化",
-      "设置",
-    ]);
+    expect(items.map((item) => [item.textContent?.trim(), item.getAttribute("href")]))
+      .toEqual(approvedNavigation);
   });
 
   it("[T-987] 展开与收拢导航不预取未点击页面，仍保留真实链接", async () => {
     await renderShell();
     const assertLinks = () => {
       const links = within(screen.getByRole("navigation", { name: "主要导航" })).getAllByRole("link");
-      expect(links).toHaveLength(12);
+      expect(links).toHaveLength(13);
+      for (const [label, href] of approvedNavigation) {
+        expect(within(screen.getByRole("navigation", { name: "主要导航" }))
+          .getByRole("link", { name: label })).toHaveAttribute("href", href);
+      }
       for (const link of links) {
         expect(link).toHaveAttribute("data-prefetch", "false");
         expect(link.getAttribute("href")).toMatch(/^\//);
@@ -362,12 +369,20 @@ describe("AppShell", () => {
     expect(scroll?.contains(content)).toBe(true);
   });
 
-  it("contentFill mode renders a fixed-height fill region without the PageScrollArea (no double scrollbar)", async () => {
+  it("填满模式保留唯一滚动容器，禁止外层滚动而保留页面内部滚动", async () => {
     const { container } = await renderShell({ contentFill: true });
-    // 填满模式：不套 PageScrollArea (避免外层整页滚 + 列内滚的双滚动条)。
-    expect(
-      container.querySelector('[data-slot="page-scroll-area"]'),
-    ).toBeNull();
+    // T1069稳定宿主：只切滚动CSS，不能通过换树卸载未保存的工程。
+    const scrolls = container.querySelectorAll('[data-slot="page-scroll-area"]');
+    expect(scrolls).toHaveLength(1);
+    const scroll = scrolls[0]!;
+    expect(scroll).toHaveAttribute("data-fill", "true");
+    expect(scroll).toHaveClass(
+      "[&>[data-slot=scroll-area-viewport]]:!overflow-hidden",
+      "[&>[data-slot=scroll-area-viewport]>div]:h-full",
+      "[&>[data-slot=scroll-area-viewport]>div]:min-h-0",
+      "[&>[data-slot=scroll-area-scrollbar]]:hidden",
+    );
+    expect(scroll.querySelector(':scope > [data-slot="scroll-area-viewport"]')).not.toBeNull();
     const fill = container.querySelector(
       '[data-slot="app-page-content"][data-fill="true"]',
     ) as HTMLElement | null;
@@ -382,6 +397,33 @@ describe("AppShell", () => {
     );
     // children 仍渲染在填满区里。
     expect(fill?.contains(screen.getByTestId("page-content"))).toBe(true);
+  });
+
+  it.each([false, true])("从填满=%s双向切换时保留容器与未保存子状态", async (initial) => {
+    const { AppShell } = await import("./app-shell");
+    const mounted = vi.fn(), unmounted = vi.fn();
+    function Draft() {
+      const [value, setValue] = React.useState("原稿");
+      React.useEffect(() => { mounted(); return unmounted; }, []);
+      return <input aria-label="未保存工程名" value={value} onChange={event => setValue(event.target.value)} />;
+    }
+    const view = (fill: boolean) => <AppShell pathname="/projects/example" contentFill={fill}><Draft /></AppShell>;
+    const tree = render(view(initial));
+    const draft = screen.getByRole("textbox", { name: "未保存工程名" });
+    const scroll = tree.container.querySelector('[data-slot="page-scroll-area"]');
+    const viewport = scroll?.querySelector(':scope > [data-slot="scroll-area-viewport"]');
+    expect(scroll).not.toBeNull(); expect(viewport).not.toBeNull();
+    fireEvent.change(draft, { target: { value: "未保存剪辑" } });
+    for (const fill of [!initial, initial]) {
+      tree.rerender(view(fill));
+      expect(tree.container.querySelectorAll('[data-slot="page-scroll-area"]')).toHaveLength(1);
+      expect(tree.container.querySelector('[data-slot="page-scroll-area"]')).toBe(scroll);
+      expect(scroll?.querySelector(':scope > [data-slot="scroll-area-viewport"]')).toBe(viewport);
+      expect(scroll).toHaveAttribute("data-fill", String(fill));
+      expect(screen.getByRole("textbox", { name: "未保存工程名" })).toBe(draft);
+      expect(draft).toHaveValue("未保存剪辑");
+      expect(mounted).toHaveBeenCalledTimes(1); expect(unmounted).not.toHaveBeenCalled();
+    }
   });
 
   it("applies the shared page gutter and section gap tokens", async () => {

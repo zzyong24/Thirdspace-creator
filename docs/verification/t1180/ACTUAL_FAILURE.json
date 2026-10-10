@@ -1,0 +1,11 @@
+{
+  "exitCode": 1,
+  "elapsedSeconds": 139.3485104580177,
+  "logSha256": "ef6eef2553891af62026452297b2600a08d4bf2b4184be47f24699f91d39a7c7",
+  "sidecarLogSha256": "adc9991e63dc77ed771c93391516a1acf3fc2448f56428bb07be474d368afe2a",
+  "stage": "MP4完成提示后精确文件名可见等待120秒超时",
+  "finalResultCreated": false,
+  "requestBodyActualFirstRound": "UNKNOWN",
+  "owner": "T-1181",
+  "complete": false
+}

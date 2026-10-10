@@ -1,0 +1,8 @@
+{
+  "baselineCommit": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "runtimeProductCommit": "5a1929ca98ab6cba8cb8b3a4020ece68faaff2b8",
+  "tests": {
+    "frontend/src/components/shell/shell.test.tsx": "85232cb1b33f9874ff1133c388d20e017c6df1bee85cd6899c6e51ca168ab8a9",
+    "backend/src/application/collection/cover-file-repair.test.ts": "930501eeec2d22b44957a904e2b0062b913678cc49d06de43f40762112e8c794"
+  }
+}

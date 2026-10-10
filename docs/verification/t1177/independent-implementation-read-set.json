@@ -1,0 +1,470 @@
+{
+  "schema": "creatoros-independent-read-set/v1",
+  "task": "T-1177",
+  "review_scope": "当前单测试源码与原真实RED/focused/GREEN/type/边界收据；非canonical或安装版全功能",
+  "verdict": "PASS_BOUNDED_IMPLEMENTATION",
+  "findings": [],
+  "captured_at": "2026-10-10T00:57:01.831755+00:00",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "spec_sha256": "3af9e931d3449e51684a2cd7b23f4474c53e5ad607d3185a9536cf6cc8751331",
+  "target_sha256": "1cd1d0eb842c0d62f3b727153dc7d551faf8787094cc0e84586edf4a1e5eed34",
+  "entries": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "9449245f47d2f73bbcbb69c497d40ea07f3c28d9e24ef530ab220912fbfa34d2",
+      "bytes": 54176,
+      "inspection": "当前T1177正式PASS/start和T1176独立归属，顶部原状态不改"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1177-dashboard-rollup-fixture.md",
+      "sha256": "3af9e931d3449e51684a2cd7b23f4474c53e5ad607d3185a9536cf6cc8751331",
+      "bytes": 2772,
+      "inspection": "正式已审SPEC全文，最终SHA与review绑定一致"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1177-dashboard-rollup-fixture.review-input.json",
+      "sha256": "9b5186e2798a72c7b819e723f77a885d4f559fa4c4e50803a291d9c91a4ff2f2",
+      "bytes": 1230,
+      "inspection": "正式initial packet全文，findings为空，限SPEC初审"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1177-dashboard-rollup-fixture.review.md",
+      "sha256": "71a587bdd256af6cdfcd314aecb45db3b4ce32ac53460be7c8f90ca157260db0",
+      "bytes": 2204,
+      "inspection": "正式snapshot全文，当前spec/constitution/hash/independent PASS链，仅只读未改"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/queries/dashboard-read-performance.test.ts",
+      "sha256": "1cd1d0eb842c0d62f3b727153dc7d551faf8787094cc0e84586edf4a1e5eed34",
+      "bytes": 7813,
+      "inspection": "当前全文及相对335b完整diff；13字段typed fixture/原4例+2边界"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/analytics/analytics.service.ts",
+      "sha256": "7c59961587df8df933ab54956a2ed14d689cacbd641da781adff7d0e9f617cba",
+      "bytes": 8091,
+      "inspection": "当前getDashboardRollup返回类型与真实user/workspace/IDs转发，原字节不变"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/analytics/analytics.repository.ts",
+      "sha256": "631ec714af3e62c72895a291e40d99c8d55bd49b2fca05e03d6687250a9ad295",
+      "bytes": 21757,
+      "inspection": "当前13字段接口/完整稀疏返回/metricNumber，原字节不变"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/queries/dashboard.ts",
+      "sha256": "2935ed2b83f5feace29fc952ac0c54c9c33b919215d0ed67530925f4009f86a5",
+      "bytes": 21088,
+      "inspection": "真实应用消费finishAvg与原并行/请求缓存/粉丝失败恢复，原字节不变"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/query-services/query-services.service.ts",
+      "sha256": "ab01647a1eb9cb5a30099207d4d50639579be31543907ea204b38d7874fa1077",
+      "bytes": 20349,
+      "inspection": "此前已读实际compose异常→空指标链，当前字节不变"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/analytics/index.ts",
+      "sha256": "ccbd6ebbb3fff821884692c86cbe259b483dc2ba4f9706f586a65273bfb3a26f",
+      "bytes": 2045,
+      "inspection": "原AnalyticsService类型导出，未改helper/barrel"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/dashboard-query-projection.ts",
+      "sha256": "3509b695ee09938455863f498c07bbeef22ddf6f3390bab63d831a2aa7838691",
+      "bytes": 1025,
+      "inspection": "此前已全文读原缓存真实返回合同，当前无diff"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/tsconfig.json",
+      "sha256": "472e6845c342ef97120b0f32cfb78ece67131c8eb5e37671b46a5740195ff6a6",
+      "bytes": 337,
+      "inspection": "当前strict/include src，包含本测试类型约束，无配置变更"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/vitest.config.ts",
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07",
+      "bytes": 285,
+      "inspection": "原预算配置未改，当前实SHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/vitest.config.ts",
+      "sha256": "4104dc745d64266e744f5530c1bca73a3e6bbe42df60cc9e99cbe74051509899",
+      "bytes": 1628,
+      "inspection": "原预算配置未改，当前实SHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "bytes": 44912,
+      "inspection": "原LED050两完整串行命令/环境依赖/retry0，当前无diff"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/integration/adjacent-domain-fixtures.ts",
+      "sha256": "d8aaf4ab031d9fb6a6be45b779511d18ddd91b1f7193037918bdf0c6e0e974ae",
+      "bytes": 921,
+      "inspection": "原shared fixture未改，当前字节Git对照"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143,
+      "inspection": "本会话已读诚实缺数/双号隔离/恢复与发布边界；当前constitution一致"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819,
+      "inspection": "本会话已读维护/独立审核/原证据保留规则"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "bytes": 8130,
+      "inspection": "本会话已读原模块服务/真实数据边界"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led050-current-diagnostic.json",
+      "sha256": "c0f4455f7c91ab2ed17936e8a1e18d6fc86e8f86b0339b83d6c02820859e8a7e",
+      "bytes": 755,
+      "inspection": "原包装收据全文读取；本复核没有执行argv"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led050-current-diagnostic.log",
+      "sha256": "fe316b0286d3656c9418af7704379d25e49650ad284060c4f9371fd755db4f84",
+      "bytes": 5029,
+      "inspection": "实际原log读取并全字节核SHA，历史FAIL原字节保留"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-backend-type.json",
+      "sha256": "d9686e071e431cdd1ea19e14abfe930fe56922d1600a039eb635426f6d4de025",
+      "bytes": 430,
+      "inspection": "原包装收据全文读取；本复核没有执行argv"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-backend-type.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "inspection": "实际原log读取并全字节核SHA，历史FAIL原字节保留"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-boundary-scan.json",
+      "sha256": "e8251133486cf6355728d1021c6235b3b9ee8a389271254b2762b7d160aab8fd",
+      "bytes": 408,
+      "inspection": "原包装收据全文读取；本复核没有执行argv"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-boundary-scan.log",
+      "sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "bytes": 779,
+      "inspection": "实际原log读取并全字节核SHA，历史FAIL原字节保留"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-dashboard-focused-green.json",
+      "sha256": "dbe6fe40e260fb95fac2c8062b46da60ef3020e02f213aa187efb8a82465af8f",
+      "bytes": 511,
+      "inspection": "原包装收据全文读取；本复核没有执行argv"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-dashboard-focused-green.log",
+      "sha256": "46ae4f5601dcb6b17556c24ce4aa0f343406d7e4c5fa8ca511ee3ec8c817d162",
+      "bytes": 267,
+      "inspection": "实际原log读取并全字节核SHA，历史FAIL原字节保留"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-led050-current-green.json",
+      "sha256": "df987e5f51854799ed339ee7f43f48a4af0c582dff9dc4c1575d211662c3e2f9",
+      "bytes": 755,
+      "inspection": "原包装收据全文读取；本复核没有执行argv"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-led050-current-green.log",
+      "sha256": "b595f6280698f2f6338a136845314ef5cf260d179ecd89faf67bbe855d125ffa",
+      "bytes": 847,
+      "inspection": "实际原log读取并全字节核SHA，历史FAIL原字节保留"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-orphan-scan.json",
+      "sha256": "aee099e3cfda91e53a8cb9429e06cf2fbcd0297d220af74da66bc73cf7c8ccfa",
+      "bytes": 408,
+      "inspection": "原包装收据全文读取；本复核没有执行argv"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-orphan-scan.log",
+      "sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "bytes": 15862,
+      "inspection": "实际原log读取并全字节核SHA，历史FAIL原字节保留"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-semantic-boundary-scan.json",
+      "sha256": "e0cf7864307ce7c10a4b8e5de5903ac0a90a6ba141c905c2cdda26bb4e968d05",
+      "bytes": 419,
+      "inspection": "原包装收据全文读取；本复核没有执行argv"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-semantic-boundary-scan.log",
+      "sha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+      "bytes": 86,
+      "inspection": "实际原log读取并全字节核SHA，历史FAIL原字节保留"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-spec-review-record.json",
+      "sha256": "678abe6e19333f842d41541456351cf74ea27fb52aada7581465282cc10ea000",
+      "bytes": 828,
+      "inspection": "原包装收据全文读取；本复核没有执行argv"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-spec-review-record.log",
+      "sha256": "41f5b945a30b8416bbfdfa1313ef76713ab2f9022a9ac0995cb4e5fa671ab67f",
+      "bytes": 72,
+      "inspection": "实际原log读取并全字节核SHA，历史FAIL原字节保留"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-start.json",
+      "sha256": "a56606eeb7101c31bdd4910a033d0077a53fa2c97c2e6c8d4f9ebb8a4a478519",
+      "bytes": 430,
+      "inspection": "原包装收据全文读取；本复核没有执行argv"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-start.log",
+      "sha256": "86604a3d3bf5e0e2255725eed69097182bdd259a11f36c770c4de0a00061ce95",
+      "bytes": 37,
+      "inspection": "实际原log读取并全字节核SHA，历史FAIL原字节保留"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-independent-spec-review/REVIEW.md",
+      "sha256": "f1232cee9c145c8ab9027c55b86b67e85f22acbcbaa5e47cb4bd83019f7bf3c0",
+      "bytes": 5626,
+      "inspection": "本轮原独立SPEC初审报告/读集/packet，未覆盖"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-independent-spec-review/READ_SET.json",
+      "sha256": "b468f51ca0942dd431c5f00d28996ec4f37bffd7b5cd41a1322bf81bf5425239",
+      "bytes": 9670,
+      "inspection": "本轮原独立SPEC初审报告/读集/packet，未覆盖"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-independent-spec-review/review-input.json",
+      "sha256": "9b5186e2798a72c7b819e723f77a885d4f559fa4c4e50803a291d9c91a4ff2f2",
+      "bytes": 1230,
+      "inspection": "本轮原独立SPEC初审报告/读集/packet，未覆盖"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-independent-implementation-review/REVIEW.md",
+      "sha256": "5da623967cc1d4d08e4db3be66c3d794f623c6083b5bd1d777e061df5aaab5e5",
+      "bytes": 9495,
+      "inspection": "此前T1176两测试已独立实施复核，仅核读工件归属，不替T1177代签"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-independent-implementation-review/READ_SET.json",
+      "sha256": "cae2f5d803fe3db6fbb595eb58f974789b82e7d85096109784dc4c061a413585",
+      "bytes": 71431,
+      "inspection": "此前T1176两测试已独立实施复核，仅核读工件归属，不替T1177代签"
+    }
+  ],
+  "receipt_log_checks": [
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led050-current-diagnostic.json",
+      "receipt_sha256": "c0f4455f7c91ab2ed17936e8a1e18d6fc86e8f86b0339b83d6c02820859e8a7e",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led050-current-diagnostic.log",
+      "actual_log_sha256": "fe316b0286d3656c9418af7704379d25e49650ad284060c4f9371fd755db4f84",
+      "receipt_logSha256": "fe316b0286d3656c9418af7704379d25e49650ad284060c4f9371fd755db4f84",
+      "matches": true,
+      "exit_code": 1,
+      "elapsed_seconds": 125.03125533403363,
+      "argv": [
+        "env",
+        "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "node",
+        "-e",
+        "const {execSync}=require(\"node:child_process\");const c=require(\"./orchestrator/process/reconcile.config.json\");execSync(c.lessons.find(x=>x.led===\"LED-050\").check,{stdio:\"inherit\"})"
+      ]
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-backend-type.json",
+      "receipt_sha256": "d9686e071e431cdd1ea19e14abfe930fe56922d1600a039eb635426f6d4de025",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-backend-type.log",
+      "actual_log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "receipt_logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 43.756228999991436,
+      "argv": [
+        "pnpm",
+        "--dir",
+        "backend",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ]
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-boundary-scan.json",
+      "receipt_sha256": "e8251133486cf6355728d1021c6235b3b9ee8a389271254b2762b7d160aab8fd",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-boundary-scan.log",
+      "actual_log_sha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "receipt_logSha256": "21063424253db0601ff571f39f0474072b3476d34ee10a8920361b20db642f24",
+      "matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.552049582998734,
+      "argv": [
+        "node",
+        "orchestrator/process/boundary-scan.mjs"
+      ]
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-dashboard-focused-green.json",
+      "receipt_sha256": "dbe6fe40e260fb95fac2c8062b46da60ef3020e02f213aa187efb8a82465af8f",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-dashboard-focused-green.log",
+      "actual_log_sha256": "46ae4f5601dcb6b17556c24ce4aa0f343406d7e4c5fa8ca511ee3ec8c817d162",
+      "receipt_logSha256": "46ae4f5601dcb6b17556c24ce4aa0f343406d7e4c5fa8ca511ee3ec8c817d162",
+      "matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 2.3325613329652697,
+      "argv": [
+        "pnpm",
+        "--dir",
+        "backend",
+        "exec",
+        "vitest",
+        "run",
+        "src/application/queries/dashboard-read-performance.test.ts",
+        "--retry=0"
+      ]
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-led050-current-green.json",
+      "receipt_sha256": "df987e5f51854799ed339ee7f43f48a4af0c582dff9dc4c1575d211662c3e2f9",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-led050-current-green.log",
+      "actual_log_sha256": "b595f6280698f2f6338a136845314ef5cf260d179ecd89faf67bbe855d125ffa",
+      "receipt_logSha256": "b595f6280698f2f6338a136845314ef5cf260d179ecd89faf67bbe855d125ffa",
+      "matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 124.84112400002778,
+      "argv": [
+        "env",
+        "CREATOROS_TEST_POSTGRES_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "CREATOROS_ISOLATED_PG_URL=postgresql://creatoros_test@127.0.0.1:55422/postgres",
+        "node",
+        "-e",
+        "const {execSync}=require(\"node:child_process\");const c=require(\"./orchestrator/process/reconcile.config.json\");execSync(c.lessons.find(x=>x.led===\"LED-050\").check,{stdio:\"inherit\"})"
+      ]
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-orphan-scan.json",
+      "receipt_sha256": "aee099e3cfda91e53a8cb9429e06cf2fbcd0297d220af74da66bc73cf7c8ccfa",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-orphan-scan.log",
+      "actual_log_sha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "receipt_logSha256": "ee3224654cf1b13b1bcd3948dd942050a0435380b5b2a84bbb61e9058d056b0e",
+      "matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.11695333296665922,
+      "argv": [
+        "node",
+        "orchestrator/process/orphan-scan.mjs"
+      ]
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-semantic-boundary-scan.json",
+      "receipt_sha256": "e0cf7864307ce7c10a4b8e5de5903ac0a90a6ba141c905c2cdda26bb4e968d05",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-semantic-boundary-scan.log",
+      "actual_log_sha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+      "receipt_logSha256": "b972b2b1d6a12435c4034d60290afc2db036e5e439f96cc3f617e5e78a476923",
+      "matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.36373316595563665,
+      "argv": [
+        "node",
+        "orchestrator/process/semantic-boundary-scan.mjs"
+      ]
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-spec-review-record.json",
+      "receipt_sha256": "678abe6e19333f842d41541456351cf74ea27fb52aada7581465282cc10ea000",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-spec-review-record.log",
+      "actual_log_sha256": "41f5b945a30b8416bbfdfa1313ef76713ab2f9022a9ac0995cb4e5fa671ab67f",
+      "receipt_logSha256": "41f5b945a30b8416bbfdfa1313ef76713ab2f9022a9ac0995cb4e5fa671ab67f",
+      "matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.1537813750328496,
+      "argv": [
+        "node",
+        "orchestrator/process/reviewctl.mjs",
+        "record",
+        "T-1177",
+        "--spec",
+        "docs/features/t1177-dashboard-rollup-fixture.md",
+        "--constitution",
+        "docs/产品定位.md",
+        "--input",
+        "docs/features/t1177-dashboard-rollup-fixture.review-input.json",
+        "--review",
+        "docs/features/t1177-dashboard-rollup-fixture.review.md",
+        "--backlog",
+        "BACKLOG.md",
+        "--review-mode",
+        "independent",
+        "--model",
+        "codex-inherited"
+      ]
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-start.json",
+      "receipt_sha256": "a56606eeb7101c31bdd4910a033d0077a53fa2c97c2e6c8d4f9ebb8a4a478519",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1177-start.log",
+      "actual_log_sha256": "86604a3d3bf5e0e2255725eed69097182bdd259a11f36c770c4de0a00061ce95",
+      "receipt_logSha256": "86604a3d3bf5e0e2255725eed69097182bdd259a11f36c770c4de0a00061ce95",
+      "matches": true,
+      "exit_code": 0,
+      "elapsed_seconds": 0.1556884580058977,
+      "argv": [
+        "node",
+        "orchestrator/process/taskctl.mjs",
+        "start",
+        "T-1177"
+      ]
+    }
+  ],
+  "git_read_comparisons": {
+    "base": "335b1b5e055b1c8cb0935fe7f512409532236592",
+    "target": "backend/src/application/queries/dashboard-read-performance.test.ts",
+    "complete_diff": "diff --git a/backend/src/application/queries/dashboard-read-performance.test.ts b/backend/src/application/queries/dashboard-read-performance.test.ts\nindex 99741a25..7b3a7d44 100644\n--- a/backend/src/application/queries/dashboard-read-performance.test.ts\n+++ b/backend/src/application/queries/dashboard-read-performance.test.ts\n@@ -2,7 +2,20 @@ import { expect, it, vi } from \"vitest\";\n import type { RequestContext } from \"@creatoros/contract\";\n import { resolveImportedPublicationIdsInBatch } from \"./imported-publication-ids\";\n import { createDashboardApplication } from \"./dashboard\";\n+import type { AnalyticsService } from \"../../modules/analytics/analytics.service\";\n const ctx = { userId: \"u\", accountId: \"a\", source: \"user\" } as RequestContext;\n+// 与真实服务返回合同一致：未知指标为null，已测为0与缺数分开。\n+const sparseRollup: Awaited<ReturnType<AnalyticsService[\"getDashboardRollup\"]>> = {\n+ finishCount:0,ctrCount:0,snapshotCount:1,\n+ plays:12,reads:null,likes:2,comments:null,shares:1,favorites:null,followerGain:0,\n+ ctrAvg:null,finishAvg:null,\n+ metricCoverage:{\n+  plays:{measured:1,total:1},reads:{measured:0,total:1},\n+  likes:{measured:1,total:1},comments:{measured:0,total:1},\n+  shares:{measured:1,total:1},favorites:{measured:0,total:1},\n+  followerGain:{measured:1,total:1},ctrAvg:{measured:0,total:1},finishAvg:{measured:0,total:1},\n+ },\n+};\n it(\"120个项目批量读取保持集合和账号，空集合不继续查询\", async () => {\n  const ids=Array.from({length:120},(_,i)=>`p${i}`), outputs=ids.map(id=>({outputId:`o-${id}`}));\n  const pubs=outputs.map(o=>({id:`pub-${o.outputId}`}));\n@@ -21,7 +34,7 @@ it(\"120个项目批量读取保持集合和账号，空集合不继续查询\", a\n });\n it(\"同次首页共享三处解析，后续及跨号请求独立\", async()=>{\n  const resolve=vi.fn(async(c:RequestContext)=>[`pub-${c.accountId}`]);\n- const getDashboardRollup=vi.fn(async()=>({snapshotCount:1,plays:12,likes:2,shares:1,finishCount:0,followerGain:0}));\n+ const getDashboardRollup=vi.fn(async()=>({...sparseRollup}));\n  const getDailyPlayTrend=vi.fn(async()=>[]);\n  const hasImportedProjects=vi.fn(async()=>true);\n  const getRecentPublicationsWithTitle=vi.fn(async()=>[]);\n@@ -32,6 +45,7 @@ it(\"同次首页共享三处解析，后续及跨号请求独立\", async()=>{\n  } as unknown as Parameters<typeof createDashboardApplication>[0]);\n  const first=await app.getDashboard(ctx);\n  expect(first.error).toBeNull();expect(first.metrics.find(m=>m.id==='d-views')?.value).toBe('12');\n+ expect(first.metrics.find(m=>m.id==='d-finish')).toMatchObject({label:'平均完播率',value:'—'});\n  expect(resolve).toHaveBeenCalledExactlyOnceWith(ctx);\n  expect(hasImportedProjects).toHaveBeenCalledExactlyOnceWith(ctx);\n  expect(getRecentPublicationsWithTitle).toHaveBeenCalledWith(ctx,{limit:100,publicationIds:['pub-a'],displayLimit:5});\n@@ -45,7 +59,7 @@ function dashboardPorts(){\n  return {\n   projectsService:{getDashboardSummary:vi.fn(async()=>({todos:[],continueCreating:null})),hasImportedProjects:vi.fn(async()=>true),listProjectsForComposition:vi.fn(async()=>[]),listOutputRefsByProjects:vi.fn(async()=>[])},\n   publishingService:{getRecentPublicationsWithTitle:vi.fn(async()=>[]),listPublicationsByOutputIds:vi.fn(async()=>[])},\n-  analyticsService:{getDashboardRollup:vi.fn(async()=>({snapshotCount:1,plays:12,likes:2,shares:1,finishCount:0,followerGain:9})),getDailyPlayTrend:vi.fn(async()=>[])},\n+  analyticsService:{getDashboardRollup:vi.fn(async()=>({...sparseRollup,followerGain:9})),getDailyPlayTrend:vi.fn(async()=>[])},\n   executionService:{list:vi.fn(async()=>({rows:[]}))},\n   contentCalendarService:{getCalendarRequestContext:vi.fn(async()=>({today:'2026-09-14'})),listActiveProjectSchedules:vi.fn(async()=>[])},\n   platformAccountService:{listAccounts:vi.fn(async()=>({rows:[]}))},candidateService:{listCandidates:vi.fn(async()=>({rows:[]}))},learningsService:{getSuggestions:vi.fn(async()=>[])},notificationsServiceForQuery:{getUnreadCount:vi.fn(async()=>0)},resolveImportedPublicationIds:vi.fn(async()=>[]),\n@@ -66,3 +80,10 @@ it('账号基线读取失败不能当成零基线，恢复后才可显示真实\n  const failed=await app.getDashboard(ctx);expect(failed.metrics.find(m=>m.id==='d-followers')).toMatchObject({label:'总粉丝',value:'—'});\n  const recovered=await app.getDashboard(ctx);expect(recovered.metrics.find(m=>m.id==='d-followers')).toMatchObject({label:'新增粉丝(期内)',value:'9'});\n });\n+it.each([{finishAvg:0,value:'0.0%'},{finishAvg:38.5,value:'38.5%'}])('已测完播率$finishAvg显示真实百分比，与未知分开',async({finishAvg,value})=>{\n+ const ports=dashboardPorts();\n+ ports.analyticsService.getDashboardRollup.mockResolvedValueOnce({...sparseRollup,followerGain:9,finishCount:1,finishAvg,metricCoverage:{...sparseRollup.metricCoverage,finishAvg:{measured:1,total:1}}});\n+ const result=await createDashboardApplication(ports as unknown as Parameters<typeof createDashboardApplication>[0]).getDashboard(ctx);\n+ expect(result.error).toBeNull();\n+ expect(result.metrics.find(m=>m.id==='d-finish')).toMatchObject({label:'平均完播率',value});\n+});\n",
+    "diff_sha256": "3d966477f66ac266427df246af72ee2527f60aa12614bf1c479741b3fac07bfb",
+    "unchanged_paths": [
+      "backend/src/application/queries/dashboard.ts",
+      "backend/src/modules/analytics",
+      "backend/src/modules/query-services",
+      "backend/src/integration",
+      "frontend/src/server/dashboard-query-projection.ts",
+      "orchestrator/process/reconcile.config.json",
+      "backend/vitest.config.ts",
+      "frontend/vitest.config.ts",
+      "backend/tsconfig.json"
+    ],
+    "unchanged_numstat_stdout": "",
+    "changed_source_paths": [
+      "backend/src/application/collection/cover-file-repair.test.ts",
+      "backend/src/application/queries/dashboard-read-performance.test.ts",
+      "frontend/src/components/shell/shell.test.tsx"
+    ],
+    "other_source_changes": "其余2测试属已经独立复核的T1176；没有T1177产品/helper/config/预算变更"
+  },
+  "contract_fields": [
+    "finishCount",
+    "ctrCount",
+    "plays",
+    "reads",
+    "likes",
+    "comments",
+    "shares",
+    "favorites",
+    "followerGain",
+    "ctrAvg",
+    "finishAvg",
+    "snapshotCount",
+    "metricCoverage"
+  ],
+  "execution_boundary": "仅文件/Git只读与本私有目录REVIEW.md/READ_SET.json写入；未改仓库/任务/审核/源/消费者/守卫/配置；未执行测试、验证器、CLI、服务、DB、客户端、模型或真实用户/profile/平台。"
+}

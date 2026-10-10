@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "scripts/desktop/windows-runtime-config.test.mjs"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T01:02:04.540958+00:00",
+  "finishedAt": "2026-10-10T01:02:05.995921+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 1.4548079579835758,
+  "logSha256": "00733ace274ffe5c20a53f99eec890968e564e62d7607b54686351151a03a6e7"
+}

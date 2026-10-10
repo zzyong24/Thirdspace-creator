@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "backend",
+    "exec",
+    "vitest",
+    "run",
+    "src/application/collection/cover-file-repair.test.ts",
+    "--retry=0"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T00:43:20.938767+00:00",
+  "finishedAt": "2026-10-10T00:43:37.269735+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 16.3306154999882,
+  "logSha256": "091b8d0923b6d11fad545063e5beba18475ea4690890aa241e6213e3cabeeb13"
+}

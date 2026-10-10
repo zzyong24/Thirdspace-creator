@@ -1,0 +1,355 @@
+{
+  "schema": "creatoros-independent-read-set/v1",
+  "task": "T-1176",
+  "review_scope": "只读核因与当前 SPEC 初审；不含实施或验收 PASS",
+  "captured_at": "2026-10-10T00:42:23.651032+00:00",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "spec": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1176-current-regression-preconditions.md",
+  "spec_sha256": "5ace50c84add624b358409d21ee26447b9845aff96dac9e60a6fb848c2327f02",
+  "entries": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "e4c23aa42aa7cb8e7ee098d728888e24b6684ebbb811698571ed673a3f55955f",
+      "bytes": 60541,
+      "inspection": "任务顶部 T1176、T1015 原归属；整文件字节哈希"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-details.md",
+      "sha256": "dfd17d106c8eeebd802f35566778e6991fc8e02e316ab6e1cba66987ca086132",
+      "bytes": 230451,
+      "inspection": "T1015 原完整任务说明；整文件字节哈希"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1176-current-regression-preconditions.md",
+      "sha256": "5ace50c84add624b358409d21ee26447b9845aff96dac9e60a6fb848c2327f02",
+      "bytes": 3692,
+      "inspection": "全文，当前精确 SPEC 初审"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1014-reconcile-triage.md",
+      "sha256": "d14078b86b1935ca33a955efc57fafce415be0b44ce69ac0ac32f6726a28cf8a",
+      "bytes": 4699,
+      "inspection": "全文；历史治理范围，保留未核行为"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/verification/t1101/global-gates.md",
+      "sha256": "23121f040dd0a42ab461122ee3d71f38215a852eb6ed60a63591bd249691609f",
+      "bytes": 11271,
+      "inspection": "全文；68dfffb3 历史 LED048/049 诊断，不能代签当前"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143,
+      "inspection": "产品总纲，重点实际作品归属、恢复与发布验收；整文件字节哈希"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "bytes": 8130,
+      "inspection": "全文，模块所有者与真实数据边界"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819,
+      "inspection": "维护与独立审核、原证据保留、语言及边界规则"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT.md",
+      "sha256": "f1d6d093e059dda41196ee642558f2f3e70c5f5a10d58b999003e2811a61999b",
+      "bytes": 17250,
+      "inspection": "本会话此前已读项目记忆；当前字节哈希"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT_CONTEXT.md",
+      "sha256": "a74ec6498a8e06fe574f86ec96c51a99076672b717d103b26b25578bd2a1ed3c",
+      "bytes": 1316,
+      "inspection": "本会话此前已读项目上下文；当前字节哈希"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3",
+      "bytes": 50753,
+      "inspection": "项目 current_stage/frontier 为 4-build，非发布关闭"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "bytes": 84,
+      "inspection": "版本 3.29.0 与安装技能匹配"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "bytes": 44912,
+      "inspection": "LED048/049 原完整命令及 LED050 相邻发布守卫回归；不改命令/预算"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reviewctl.mjs",
+      "sha256": "dde682e0ad114048daa5cfd8686a1450ccf902a8ab56a48411e88399a51ccc15",
+      "bytes": 56241,
+      "inspection": "schema/枚举/ finding 字段校验消费者，只读未运行"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/collection/cover-file-repair.test.ts",
+      "sha256": "db2456e9a9fe6e605c8b73e90fc1cc6b69b11dd05ded9033e0a93fe5acde63b3",
+      "bytes": 4409,
+      "inspection": "全文，两原用例、setup/失败前后实际调用顺序"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/publishing/publishing.service.ts",
+      "sha256": "5c741ec2fa1924ca2035a9c953a79cc5f3a5f75e91754bd4ee25f8fba15b07e9",
+      "bytes": 60102,
+      "inspection": "withTarget/assertOutputParents/assertOutputOwned/createImportedPublication/listMissingCover/setCover/withPublicationWrite 等实际链"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/publishing/publishing.repository.ts",
+      "sha256": "d81d5ec29ca293164ace45777a51d1c28269503e43ddd340f321f14f1cbfb54e",
+      "bytes": 25324,
+      "inspection": "createImportedPublication 事务写入 publication/revision，未自动建父实体"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/integration/adjacent-domain-fixtures.ts",
+      "sha256": "d8aaf4ab031d9fb6a6be45b779511d18ddd91b1f7193037918bdf0c6e0e974ae",
+      "bytes": 921,
+      "inspection": "全文，既有 seedAdjacentContent 同 ctx 真实父链"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/publishing/publishing.service.test.ts",
+      "sha256": "f1e907c17f7d5d3dcbbe7c7865a4cfe07b41ff203b8a16a450d3def05f91647e",
+      "bytes": 40810,
+      "inspection": "真实 beforeEach 父链、原 ownership/无账号等负测；不声称逐例全审"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/publishing/publication-cover.integration.test.ts",
+      "sha256": "c9e64623264b6c72fb85d8f88beebf9a68ec1cb427bba5eb0190047bfd2d4079",
+      "bytes": 21948,
+      "inspection": "隔离真实 project/output→publication→cover 的夹具模式"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/publishing-retain-unassigned.integration.test.ts",
+      "sha256": "1dc2eeebe6c5227ea97700cf8837ee464df07cf927cb9907236fbe358e537777",
+      "bytes": 2287,
+      "inspection": "真实公共 ProjectsService 建父实体示例"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/collection/douyin-cover-backfill.ts",
+      "sha256": "eecb015615551fc1c92ec2fd4b0e8720eb2fdefaccd66fbc8ac3fbd654ea8b1d",
+      "bytes": 11023,
+      "inspection": "全文，缺图/未知分项、图片创建/版本保存实际端口链"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/collection/self.ts",
+      "sha256": "61cddffbc5b0946ef0e507a97ece4e3e67aa97558d460993a836c7a7dc74e760",
+      "bytes": 33054,
+      "inspection": "真实 backfill 组合消费者段，沿 ctx assets/publishing/projects 调用"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/projects/projects.service.ts",
+      "sha256": "490378c98f98a9f621058d9fafeee0fd66e7d16536932169b7e3adb511fe0925",
+      "bytes": 78916,
+      "inspection": "createProject/createOutput 实体/归属创建段"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/assets/assets.service.ts",
+      "sha256": "e9631f44a3eeefa30d2bec6d912e594e82c6c043d7fce8ac7ba578f02cb3286b",
+      "bytes": 41738,
+      "inspection": "isAssetFileAvailable/getAssetBytes，按 ctx 工作区读取，未知存储错误上抛"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/publishing/publishing.errors.ts",
+      "sha256": "573d5eca3143beeef783c4705908f0a6ab69ae27728c9d76cf2e1ea4a4123e70",
+      "bytes": 2779,
+      "inspection": "全文，原 OwnershipError/ValidationError 语义"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/schema/projects.ts",
+      "sha256": "7ec9860b332060a2d4265836daa0926cf4584263fbd6eb2c29be04072c45186d",
+      "bytes": 10047,
+      "inspection": "projects/contentOutputs 父链实体定义"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/workspace-scope.ts",
+      "sha256": "4dfabca2c21f96efb2cddde6f77b00cfe9f18a7e4b2f3ec92471f15fc361a712",
+      "bytes": 3061,
+      "inspection": "全文，user 外工作区过滤、legacy-account 与已转组保护"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/db.ts",
+      "sha256": "aa74a324e2fe0a566accaff9e8346a6fc52b8161dad71311d4cb2833d13ba71c",
+      "bytes": 22312,
+      "inspection": "createDb/openPglite/migration 段；本例无 dataDir 新内存库，不自动造测试父实体"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/index.ts",
+      "sha256": "8884a768915859ebde749fbb95eb31c209a81b604d08b81ed1791f998bbf816b",
+      "bytes": 9250,
+      "inspection": "createDb/实际 schema/service 导出"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/vitest.config.ts",
+      "sha256": "26ad26c6023af5bc97902b670c26aad8938af0a390541d78fd0ca6bc3b432e07",
+      "bytes": 285,
+      "inspection": "现默认预算，仅只读，原 LED048 局部覆盖值未改"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/shell/shell.test.tsx",
+      "sha256": "afe0f0bcf27d1be79aefee1eedade7259726125f53d7d8c5652cf9457e96bf2a",
+      "bytes": 26683,
+      "inspection": "全文，39 原用例与三处精确旧断言；不删其它断言"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/shell/app-shell.tsx",
+      "sha256": "eb734f9c2b85f3fec5c7dfc16712aa48f52fd11339bdf6c01a96368eb282c76f",
+      "bytes": 6267,
+      "inspection": "全文，稳定 PageScrollArea/app-page-content 树，仅 contentFill CSS 变化"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/shell/sidebar.tsx",
+      "sha256": "5a233257d2980e42b3e846fca826f11aa1f95a6c2047a09baf826924b3d3a3a9",
+      "bytes": 26105,
+      "inspection": "真实 PRIMARY_NAV 13 固定入口、prefetch=false、收拢 aria-label/真实 href 调用段"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/shell/page-scroll-area.tsx",
+      "sha256": "d0c8a67dfa8caeee4d55ec95c3c4ea9aa061177223e26ba3e485460c6b74ad58",
+      "bytes": 1160,
+      "inspection": "全文，Root 裁剪与真实 viewport 滚动"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/ui/scroll-area.tsx",
+      "sha256": "362cfbde22e3ea79fdb9821fb1232f742119c2b76cf465e21cc30b51aa74e4a3",
+      "bytes": 2203,
+      "inspection": "全文，Radix viewport/直接包装层与 scrollbar 实现"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/components/shell/app-shell.test.tsx",
+      "sha256": "68e7e35e5433b3e2b28e52e0313cb2a8945816d9bbad0776f483c3e003e71873",
+      "bytes": 1620,
+      "inspection": "全文，现 T1069 双向 contentFill 真实 child 状态/DOM/mount 回归"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1069-installed-media-and-binding.md",
+      "sha256": "0363fa6014a11328af557cf01f3a1f3151ff524ac6b0cbb95acaff4d4983327d",
+      "bytes": 38166,
+      "inspection": "实际 Tab 丢稿根因与精确容器补充，304–315；其他历史不重签"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/.agents/skills/oil-ui-pro/SKILL.md",
+      "sha256": "a623059117b5afdeaf437a6ac0944040ba666b0847e520cfe4fa42cc1ea1cec2",
+      "bytes": 14717,
+      "inspection": "现 0.10.0；此轮无界面产品变更、不代签实际视觉"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/SKILL.md",
+      "sha256": "5796cf1b3b9f3de2d45c8e754e3df2146735aa14b266b7c32e2cb4c8638f4c1f",
+      "bytes": 4021,
+      "inspection": "已加载维护流程；按只读委派边界不运行 context-plan/compile/validator"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/VERSION",
+      "sha256": "db8c5f26ffadff528c3c988af09e26339ee629b449372f4a62f0c357f7329dfc",
+      "bytes": 7,
+      "inspection": "安装版本 3.29.0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/stage-router.md",
+      "sha256": "dd656d4b0d886aee9fafa10b61a1db9554e1d424c533dd79693f28ff7447cf1e",
+      "bytes": 1339,
+      "inspection": "阶段路由；当前 stage4-build 独立只读初审"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1175-post-package-current-canonical.json",
+      "sha256": "338497fc41124d588666edaf631c9a8786743733e9545b3ab320d4171d061f16",
+      "bytes": 590,
+      "inspection": "当前完整 aggregate 原包装收据，exit1/32错误，不作为具体 inner 根因"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1175-post-package-current-canonical.log",
+      "sha256": "20408be0bca5ffef9a5415bdb35c2d9054d02058e776ad5da76ff0cd21317140",
+      "bytes": 13260,
+      "inspection": "当前完整 aggregate 错误 29/30/99 行，实际全文件 SHA 对收据"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-led048-current-red.json",
+      "sha256": "4976de0ce4a3afa3bcafc0ef695b14addbad0f0294de7dd70bb078abd6a3829e",
+      "bytes": 755,
+      "inspection": "本轮根执行原 LED048 完整包装收据，exit1/219.2516386s"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-led048-current-red.log",
+      "sha256": "2d2b5e9666245e51a6b7ffb8e53427f7195d0a9eaf8fa0cb942de7e361f25964",
+      "bytes": 2735,
+      "inspection": "全文 fresh 内层栈，15file/210例/209PASS/1FAIL；不是本复核执行"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-led049-current-red.json",
+      "sha256": "487f2f305ea8e035a02421e45ac1f58c3892cb96ebbd0931faf334889ca19ee9",
+      "bytes": 753,
+      "inspection": "本轮根执行原 LED049 完整包装收据，exit1/5.08274s"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-led049-current-red.log",
+      "sha256": "aa2b61e313b29fee3bb168d8571504db2563d1f6906dc3a5182c566e5be27ce7",
+      "bytes": 7017,
+      "inspection": "全文 fresh 3FAIL/76PASS；&& 后 backend 未执行，不能代签其当前结果"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1148-original-accepted-artifacts-at-aa7de1e9/docs/verification/t1101/cover-repair-scope-diagnosis.log",
+      "sha256": "fee17b6f1b82e09038fdb506bf8ac982d8d23f9113d7e709555224916cd8a9a8",
+      "bytes": 1111,
+      "inspection": "此前 canvas 来源原单文件 FAIL 实际日志，只作历史证据"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1148-original-accepted-artifacts-at-aa7de1e9/docs/verification/t1101/led048-final.log",
+      "sha256": "7c494c0d03eaee6fc1aef0bed871643fed7425e295d26943a77bb413f0f8b246",
+      "bytes": 1133,
+      "inspection": "此前 canvas 来源原完整 209PASS/1FAIL 日志，只作历史证据"
+    }
+  ],
+  "receipt_log_checks": [
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1175-post-package-current-canonical.json",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1175-post-package-current-canonical.log",
+      "logSha256": "20408be0bca5ffef9a5415bdb35c2d9054d02058e776ad5da76ff0cd21317140",
+      "receiptLogSha256": "20408be0bca5ffef9a5415bdb35c2d9054d02058e776ad5da76ff0cd21317140",
+      "matches": true,
+      "exitCode": 1,
+      "elapsedSeconds": 1101.5300179169863
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-led048-current-red.json",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-led048-current-red.log",
+      "logSha256": "2d2b5e9666245e51a6b7ffb8e53427f7195d0a9eaf8fa0cb942de7e361f25964",
+      "receiptLogSha256": "2d2b5e9666245e51a6b7ffb8e53427f7195d0a9eaf8fa0cb942de7e361f25964",
+      "matches": true,
+      "exitCode": 1,
+      "elapsedSeconds": 219.25163858395535
+    },
+    {
+      "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-led049-current-red.json",
+      "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1176-led049-current-red.log",
+      "logSha256": "aa2b61e313b29fee3bb168d8571504db2563d1f6906dc3a5182c566e5be27ce7",
+      "receiptLogSha256": "aa2b61e313b29fee3bb168d8571504db2563d1f6906dc3a5182c566e5be27ce7",
+      "matches": true,
+      "exitCode": 1,
+      "elapsedSeconds": 5.08273999998346
+    }
+  ],
+  "git_selected_source_comparison": {
+    "base": "68dfffb372ee9f1a0c7c692b018ce803733b7576",
+    "head": "335b1b5e055b1c8cb0935fe7f512409532236592",
+    "paths": [
+      "backend/src/application/collection/cover-file-repair.test.ts",
+      "backend/src/modules/publishing/publishing.service.ts",
+      "backend/src/modules/publishing/publishing.repository.ts",
+      "backend/src/application/collection/douyin-cover-backfill.ts"
+    ],
+    "numstat_stdout": "",
+    "conclusion": "四个所列文件 HEAD 相对 base 字节 diff 为空；不外推全部仓库或发布通过"
+  },
+  "execution_boundary": "仅文件/Git只读与本私有目录工件写入；未运行任何测试、验证器、服务、产品CLI、DB、模型、真实客户端或扫码；未改仓库。",
+  "final_rebind_changes": []
+}

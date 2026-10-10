@@ -1,0 +1,141 @@
+{
+  "schema": "independent-read-set/v1",
+  "task_id": "T-1180",
+  "review_kind": "initial",
+  "reviewer": "/root/t1159_fix_recheck_recovery",
+  "reviewed_at_utc": "2026-10-10T01:17:33.662032+00:00",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "verdict": "PASS_SPEC_INITIAL_BOUNDED",
+  "spec_sha256": "9058b972318db39a1279f26a343b7f0ed9beaa36a042853e24b2921f6365c8f4",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "reads": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "e292f22f6dd37e627a0f092f2e3dc3c3dacff971a3c68458622897b6debee853",
+      "bytes": 55285,
+      "read_scope": "顶部T1180/T1179当前行"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1180-upload-probe-file-bytes.md",
+      "sha256": "9058b972318db39a1279f26a343b7f0ed9beaa36a042853e24b2921f6365c8f4",
+      "bytes": 2981,
+      "read_scope": "全文最终重读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1179-asset-upload-regression-diagnosis.md",
+      "sha256": "a27e32dcbfca6eec2a5666f5e5e2ed840ee2e8b688d6a3f6e2250964e3a94868",
+      "bytes": 3574,
+      "read_scope": "当前绑定全文此前已实读；本轮核上传/公开回读边界"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1179-asset-upload-regression-diagnosis.review.md",
+      "sha256": "c8fa8c23ccad20c97649a2fcf349dac4dc5b6ea043e34260a0932c265d5f1346",
+      "bytes": 2274,
+      "read_scope": "全文，正式initial PASS及绑定spec/constitution"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143,
+      "read_scope": "此前文档事实/R-LIBRARY/R-DESKTOP约束实读；当前完整字节SHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/contract/src/operations/assets.ts",
+      "sha256": "2c70c4b93f56ab9dca44ab8760d43114d92c01fbff33a997b2f65f295a4226d1",
+      "bytes": 6032,
+      "read_scope": "53–59，精确fileDownloadUrl参数与返回；全文此前实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/assets/assets.service.ts",
+      "sha256": "e9631f44a3eeefa30d2bec6d912e594e82c6c043d7fce8ac7ba578f02cb3286b",
+      "bytes": 41738,
+      "read_scope": "455–485，精确asset/file当前user/workspace属主与实际storage存在校验；此前上传链实读"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/assets/assets.transport.ts",
+      "sha256": "705d27c26c9c53a749058b979c3edc966d3709508af581ee02fd11c376f14843",
+      "bytes": 11878,
+      "read_scope": "218–238，真实get/fileDownloadUrl通过service与envelope"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js",
+      "sha256": "f74353fcb8e406756a70a6af0dfc4a5069acd577e35ec9d923ccf36ac009c2f5",
+      "bytes": 3206963,
+      "read_scope": "实际1.60.0源码35160–35210、54715–54750；重点35180–35198/54732–54733"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/package.json",
+      "sha256": "6f7b58cc55449321279f11ca97d4e451c391738b77db32cdbcedf02851e3f097",
+      "bytes": 876,
+      "read_scope": "实际package.version 1.60.0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-asset-upload-packaged-probe.mjs",
+      "sha256": "a41b0314d635c33474743a7d81ee19f8032766990949b71b52318990fb503576",
+      "bytes": 13335,
+      "read_scope": "全文，原body观察回退、严格比对位置、UI/公开下载/隔离/预算/清理顺序"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-packaged-upload-first.json",
+      "sha256": "1e94b09bb7d629c4feb4e71f68efd64894b948e26c8daa5b1af2092645de0180",
+      "bytes": 534,
+      "read_scope": "全文，真实原argv/cwd/时间/exit/logSha256"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-packaged-upload-first.log",
+      "sha256": "e2dedba1db02934f74b46854129dac6b081d1590cb8c1fa6a83a583b97e1dafa",
+      "bytes": 540,
+      "read_scope": "全文，实际第57行SHA失败"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-asset-upload-packaged-recovery-sidecar.log",
+      "sha256": "07016a60650b402034c493facc65562f4959b3ac440cbc661fb75a24f292a52f",
+      "bytes": 696,
+      "read_scope": "全文，启动验证、原CLIENT_CONFIG_PENDING与SIGTERM清理日志"
+    }
+  ],
+  "original_red": {
+    "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-packaged-upload-first.json",
+    "receipt_sha256": "1e94b09bb7d629c4feb4e71f68efd64894b948e26c8daa5b1af2092645de0180",
+    "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1179-packaged-upload-first.log",
+    "log_sha256": "e2dedba1db02934f74b46854129dac6b081d1590cb8c1fa6a83a583b97e1dafa",
+    "receipt_log_sha256_matches": true,
+    "exit_code": 1,
+    "elapsed_seconds": 21.851652499986812,
+    "original_driver_sha256": "a41b0314d635c33474743a7d81ee19f8032766990949b71b52318990fb503576",
+    "sidecar_log_sha256": "07016a60650b402034c493facc65562f4959b3ac440cbc661fb75a24f292a52f",
+    "final_result_json_exists_at_review": false,
+    "raw_first_run_post_data_buffer": "UNKNOWN：首轮未保存，不回填为null/空Buffer/任何新观测",
+    "first_run_complete_journey_verdict": "FAIL，最终JSON未写，不补完整公共旅程PASS"
+  },
+  "sdk_mechanism": {
+    "version": "1.60.0",
+    "chromium_server_lines": "35180–35198",
+    "client_lines": "54732–54733",
+    "core_bundle_sha256": "f74353fcb8e406756a70a6af0dfc4a5069acd577e35ec9d923ccf36ac009c2f5",
+    "observation": "无可用postDataEntries.bytes时可返回null；不证明原首轮真实返回null"
+  },
+  "approved_private_driver_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1180-upload-probe-corrected.mjs",
+  "driver_exists_at_review": false,
+  "required_observation_policy": {
+    "available_buffer": "requestBodyAvailable=true，实际length/SHA，包含0长度Buffer也严格比本轮输入",
+    "absent_buffer": "requestBodyAvailable=false，bytes=null，SHA=null；不冒作真实0",
+    "unconditional_persistence_check": "两种媒体均assets.get取得真实asset/currentFileId，经fileDownloadUrl与GET独立计算下载size/SHA严格比原输入",
+    "scope": "新随机隔离data/auth/握手；不复用首轮group未知写；原UI上传/刷新/第二组无混入/返回及所有原超时/清理保留"
+  },
+  "findings": [],
+  "pending_evidence": [
+    "新driver精确diff和真实执行收据/日志/结果/图片，原失败冻结SHA再核",
+    "两媒体无条件公开文件下载size/SHA及原UI完整旅程",
+    "T1179当前测试与本T1180探针的独立精确实施复核、当前canonical真实结果"
+  ],
+  "excluded_claims": [
+    "原首轮postDataBuffer为null的事实或原首轮完整PASS",
+    "本轮T1179测试实现/GREEN复签",
+    "新probe当前执行或浏览器/下载字节通过",
+    "工程导入、原生App、Windows或真用户安装、完整Gate/canonical",
+    "真实数据/平台/模型/扫码执行与微信研究恢复"
+  ],
+  "actions": "仅只读SPEC/SDK/原driver与实际原证据，私有报告写；未运行测试、探针、产品CLI、浏览器、服务、DB、模型或改仓库。"
+}

@@ -9,34 +9,22 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1175|修复工作区恢复态直接显示英文权限错误|✅ 待办|PASS[REV:18cfdcb37bc5]|—|[真实截图与SPEC](docs/features/t1175-workspace-recovery-feedback.md)|已审两文件display修复入main5a；61+174回归及随包403中文→原retry200→主页通过，独立包复核PASS；完整32旧标识保原任务，不代签真人/全功能。|
-|T-1174|核对随包浏览器验收误选缺失的headless shell|✅ 待办|—|—|[实际失败](docs/features/t1174-packaged-browser-verification-context.md)|d414包完整性/签名通过，根驱动原smoke实际exit1找headless_shell-1223；保原失败，核随包full Chromium与消费者，不猜缺包或改原断言。|
-|T-1173|复核历史看板撞号与畸形字段|✅ 待办|—|—|[实际诊断](docs/features/t1173-historical-backlog-identity-collisions.md)|原健康命令已证实T1018重复及执行/归档复用；保原行和事件，独立核来源再修表示，不删待办或伪迁PASS。|
-|T-1172|校正本轮完整校验缺少隔离PG上下文|✅ 待办|—|—|[实际诊断](docs/features/t1172-current-canonical-isolated-pg-context.md)|本轮原canonical40错误，新增LED052来自遗漏两项显式隔离配置；保原exit1，用原隔离公共runner复验，不改门/产品或拼接全绿。|
+|T-1181|核对真实素材上传成功后视频列表不可见|🔨 待办|—|—|[实际诊断](docs/features/t1181-uploaded-video-list-visibility.md)|T1180新隔离随包浏览器当场139.349秒exit1；MP4已显示上传完成，精确文件名在素材列表等待120秒仍不可见。保原日志/驱动，先核真实页面、公开列表与刷新，不猜丢失或删除可见性保护。|
+|T-1180|核对真实上传探针的File请求体字节测量失败|🔨 待办|PASS[REV:36946ee35804]|—|[实际诊断](docs/features/t1180-upload-probe-file-bytes.md)|T1179真实随包浏览器首轮21.852秒exit1；PNG创建/PUT/完成均200后请求体SHA断言失败，未写最终结果。保原驱动/日志，核SDK是否拿到body与公开下载SHA，不猜文件损坏或删保护。|
+|T-1179|核对素材上传回归未触发完成接口的实际原因|🔨 待办|PASS[REV:13d0145a7fcd]|—|[实际诊断](docs/features/t1179-asset-upload-regression-diagnosis.md)|原LED022当场18PASS/1FAIL；旧E2完成接口0调用，当前上传已走workspace.capture而旧mock只拦全局client；先核真实scope/HTTP/上传与取消，不猜产品缺陷或绕过组权限。|
+|T-1178|校准双端打包资源回归的第三方声明前置条件|🔨 待办|PASS[REV:8d538a517aa5]|—|[SPEC](docs/features/t1178-package-resource-contract.md)|原LED006当场42PASS/1FAIL：旧断言只允许tar，漏当前第三方声明；先独评只校准该测试，保单tar与无sidecar目录保护，不改包配置/流程/预算。|
+|T-1177|修复首页性能回归的稀疏指标夹具缺字段|🔨 待办|PASS[REV:e7019c7dcc42]|—|[SPEC](docs/features/t1177-dashboard-rollup-fixture.md)|原LED050实际7前端PASS、后端45PASS/3FAIL；旧夹具缺合同finishAvg导致toFixed异常，只校准该测试、保原并行/缓存/跨号/诚实缺数断言。|
+|T-1176|校准导航与封面恢复回归的过期前置条件|🔨 待办|PASS[REV:d0fefb6b762e]|—|[SPEC](docs/features/t1176-current-regression-preconditions.md)|当前LED049三处旧导航/容器断言，LED048封面用例缺真实父稿件；保原红测，独立核合同后只改两测试，原完整检查与隔离浏览器复验，不改产品/守卫/预算。|
 |T-1171|无损压缩当前超限任务看板|🔨 待办|—|—|[实际失败](docs/features/t1171-current-backlog-compaction.md)|当前健康门RUNAWAY；只用原受支持归档/详情外置，任务状态、原文和失败责任保留，原健康复验，不凭归档销审核债。|
-|T-1170|无损归档原浏览器失败上下文并恢复提交检查|✅ 待办|—|—|[实际失败](docs/features/t1170-raw-browser-evidence-storage.md)|新增原PW上下文摘录含三行尾空格使staged diff真实exit2；原字节/SHA私有加gzip无损保留，不改原manifest/失败或Git检查；产品写集为空。|
-|T-1169|修复账号转组弹窗关闭后焦点丢失|✅ 待办|PASS[REV:6b4388bed640]|—|[实际走查与SPEC](docs/features/t1169-account-transfer-focus-return.md)|独立Cua确认丢焦并正式审/start；真实6RED含三转组，最终51组件PASS、原Chrome六次Esc回焦、切组/脱离DOM守卫和174LED通过；独立局部PASS，最终Gate/安装待验。|
-|T-1168|统一原生报表身份恢复态的提示与主操作|✅ 待办|PASS[REV:5d38b98b8f17]|—|[实际视觉与SPEC](docs/features/t1168-native-report-recovery-actions.md)|原冲突提示/红次级恢复与32px保留证据，正式审/start后恢复态和cap优先RED；最终51组件、Chrome24px/一致主动作与0副作用、174LED及独立局部PASS；最终Gate/真人待验。|
-|T-1167|修复采集终态等待在途续租无法返回|✅ 待办|PASS[REV:40609910e1a7]|—|[独立反例与SPEC](docs/features/t1167-collector-pending-renewal-finalization.md)|原finally等pending心跳已按独评6RED/原63GREEN修复，当前原execute终态不等失控续租且晚结果守卫保留；全timeout仅旧27静态失败/运行时166PASS，当前窄复核PASS，不代签其它端口或真人。|
-|T-1166|校正新报告旅程有限串行外层预算|✅ 待办|PASS[REV:04e1fdc238d0]|—|[独立预算检查与SPEC](docs/features/t1166-report-journey-outer-budget.md)|新case25,200,000ms/runner26,400,000ms覆盖有限串行加清理，内层120秒/0retry不变；61路径冻结当前Chrome79秒exit0，独立预算复核PASS；旧27静态欠债仍exit1。|
-|T-1165|修复平台身份拒绝在正式HTTP链路丢失错误码与扫码恢复|✅ 待办|PASS[REV:e2674ba1ac3b]|—|[实际缺陷与SPEC](docs/features/t1165-platform-scope-error-envelope.md)|保原Chrome52秒400string失败和trace，固定已有SCOPE_MISSING原400进入合同；正式独评/真实RED→69GREEN，当前Chrome原链恢复可见/0副作用，窄复核PASS；最终Gate与真人待验。|
-|T-1164|校正独立审核输入绑定与证据字段|✅ 待办|—|—|[实际诊断](docs/features/t1164-review-input-binding-and-evidence-kind.md)|保原非法packet拒绝/不同SPEC读集；独立现字节重读正规record0，原verifyReviewReceipt核当前六份PASS，完整audit原23历史错误保留；未改门/产品，最终canonical待验。|
-|T-1161|核对微信账号转组与隐藏管理入口|✅ 待办|PASS[REV:22a46ffc1285]|—|[SPEC](docs/features/t1161-preserve-wechat-account-management.md)|原截断diff误读已澄清，无凭误读改产品；独立Cua实际展开及Chrome六窗口转组入口确认，另发现真实丢焦交T1169修；原CONCERNS保留，真人转组/扫码未执行。|
 |T-1159|在当前main整合微信原生报表、绑定归属与调度闭包|🔨 待办|PASS[REV:914cad514a19]|待验|[SPEC](docs/features/t1159-current-wechat-native-report-integration.md) · [验收合同](docs/verification/t1159/PAGE_SPEC.md)|T1124剩余56路径，来源293d统计页导航UNKNOWN/0报告/两实验用尽；独评后冻结语义移植、当前隔离公共链验收，保纯组/保存/调度与原研究暂停，不代签真人微信或安装。|
 |T-1155|核对浏览器导航时本地服务连接中断日志|⏸️ 待办|—|—|[实际诊断](docs/features/t1155-browser-navigation-connection-abort.md)|当前三轮原日志aborted/ECONNRESET及uncaughtException，主要断言失败另有原因；保原日志，核请求/进程与后续公开操作，不猜根因或屏蔽错误。|
 |T-1149|在当前main整合封面用途与图片页组统一画幅|🔨 待办|PASS[REV:0a91f954eb8f]|待验|[SPEC](docs/features/t1149-current-cover-group-aspect.md)|T1124独评确认来源四路径仍缺；保T1141旧任务/有效比例及T1117引用保存，逐段移植用途、用户统一选择和能力交集；单页不支持不阻断其它合法生成，当前独评后RED/GREEN与公开回读。|
-|T-1148|核对本轮共享页面修改后的旧验收记录失效|✅ 待办|—|—|[实际诊断](docs/features/t1148-current-frontend-receipt-drift.md)|当前efe9全canonical1093秒exit1/42ERROR，原39保留，新T1136/1117/1108源码绑定失效；保原报告/事件，当前素材先正式补验，旧范围最终源码复验，不改验证器或伪换head。|
 |T-1144|核对素材旅程完成后测试进程未退出|🔨 待办|—|—|[实际诊断](docs/features/t1144-picker-worker-cleanup.md)|T1140两例PASS但worker停后300秒不退出，整轮371.938秒exit1；保原失败和归属快照，定位实际清理等待，不缩超时/force退出/忽略全局错误。|
-|T-1140|优化低高度窗口的素材浏览与预览空间|✅ 待办|PASS[REV:2a0be12aac16]|PASS:a6f428841135|[当前观察](docs/features/t1140-picker-low-height-preview.md) · [验收合同](docs/verification/t1140/PAGE_SPEC.md)|当前683×450主体预览空间被原上下双滚动区挤压；按钮和取消回读通过，AssetPicker源未改。保截图后精确SPEC独评优化，不称选择失败或已修。|
-|T-1136|在当前main修复长项目与平台账号撑宽排期弹窗|✅ 待办|PASS[REV:db7fe4526b24]|PASS:bb71e533cae7|[SPEC](docs/features/t1136-calendar-dialog-current-integration.md)|T1124来源两条布局缺失；仅共享Dialog单列收缩与排期断点及必要select收缩，先独评/当前Chrome真实尺寸RED，再原公共选择保存回读和相邻消费者验证；不签旧来源或全功能。|
 |T-1135|核对安装版粗剪成片解码画面比原素材偏暗|⏸️ 待办|—|—|[实际诊断](docs/features/t1135-installed-render-color-fidelity.md)|已批准r7中性成片正式exact-file下载/245帧解码通过，但源+6.76秒三处背景RGB17/36/57变为0/19/44；先核原工程与编码色彩/公共渲染路径，根因未知，不重提渲染或改原稿/媒体；修产品前精确SPEC独评。|
-|T-1124|核对本轮新增来源分支未合入main的源码并闭合整合|✅ 待办|—|—|[实际诊断](docs/features/t1124-current-worktree-source-gap.md)|T1080删除前只读再盘点：canvas来源17条源码/测试路径main缺失，chart来源1条缺失，其它58条不同不能直接算遗漏；保留来源与活跃树，逐项核main替代及新增SPEC/独评，禁止ours丢源码或代签全合并。先交付当前已复核包继续验收，本轮新增功能不冒称已入包。|
-|T-1117|修复画布保存英文反馈与参考选择器名称展示遗漏|✅ 待办|PASS[REV:161a32c6331a]|PASS:32177b98fc54|[SPEC](docs/features/t1117-canvas-error-reference-preview.md)|当前main两条Chrome流程通过，但实际截图保存错误裸英文，参考已选卡仍长文件名；复用原中文反馈并闭合showIdentity=false全选择流程，精确file/保存/owner不变。独評、实际RED/GREEN及浏览器证据后修复；不代签模型或旧失败。|
 |T-1118|核对本机验收原始日志目录消失|📋 待办|—|—|[实际诊断](docs/features/t1118-verification-directory-disappearance.md)|T1117实际RED/GREEN后，原验收父目录突然不存在；七次包装命令exit2未执行内层验证。保工具实际结果与已提交工件，原因UNKNOWN；新隔离目录继续验证，不重造旧日志或触用户数据。|
 |T-1116|核对稿件并发保存回归在本轮完整对账中的再次失败|🔨 待办|—|—|[实际诊断](docs/features/t1116-artifact-cas-global-regression.md)|T1114新增相对失败LED027，原41失败保留；实际全局没有保存内层断言，先原两段命令逐段取得真实失败，核CAS/事务/初始化预算。未确认产品根因，不删除竞争或版本断言，不能称已修或全功能PASS。|
 |T-1101|修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集|🔨|PASS[REV:146ff2046c2c]|待验|[SPEC](docs/features/t1101-canvas-binding-collection.md)|用户2026-10-09截图明确要求：素材只显示预览；生成中禁止重复提交、已有结果再生成需确认；图片连线传递默认参考；扫码入口放平台能力表，删除刷新和下方重复框；三平台独立采集错峰执行。来源f97a80da已完成；main重新初审和组合验收，原PASS不代签当前树。不发布、不改真实Cookie。|
 |T-1101-global-gates|核对独立main工作树全局对账失败及历史收据漂移|📋 待办|—|—|[根因记录](docs/verification/t1101/global-gates.md)|前置对账76项失败含未装依赖阶段环境、历史审核收据和教训检查；本轮安装依赖后重跑真实Gate。范围外旧类型/契约/短预算仍关联T-1018/T-1081；不得补拍历史PASS。|
-|T-1108|核对画布连线引用保存回读及浏览器短观察窗口|✅|PASS[REV:7725159d945d]|PASS:54ebbd993813|[实际缺陷](docs/features/t1108-canvas-public-observation.md) [详情](BACKLOG-details.md#t-1108)|见详情。|
 |T-1109|修复超时验证入口默认10秒初始化导致原测试未执行|🔨|PASS[REV:a85dda74b249]|待验|[SPEC](docs/features/t1109-timeout-verification-default-budget.md)|实际timeout-policy额外backend beforeAll10秒超时，25例skip；原静态27保留。仅明确真实Vitest test/hook至少120秒，保原断言/退出码/更长局部预算，不删除Gate或改构建。先独评再修公共入口。|
 |T-1110|核对浏览器验收开发资源ChunkLoadError与测试状态准备竞态|📋 待办|—|—|[实际缺陷](docs/features/t1110-browser-development-resource-diagnosis.md)|用户要求有问题建task；fa09真实两条旅程0PASS/2FAIL，绑定页ChunkLoadError无法加载，第一例旧状态被仍运行页面自动保存覆盖。原trace/log保留；后者在T1108原范围先离开再准备，前者根因未知，核真实静态响应/开发缓存和并发，不删断言或用旧PASS代签。|
 |T-1107|核对平台公共接口新增操作与发布归属回归失败|🔨|PASS[REV:9c9181db2c1c]|待验|[实际缺陷](docs/features/t1107-platform-public-regression.md)|全功能验收额外公共真链24例实际22PASS/2FAIL：账号操作数5变6，发布锚冲突首轮200而旧断言期待拒绝；重试又409。先核main合并前基线与真实组/项目归属，再独评修复产品或过期夹具；保原断言/失败/权限，不删除历史洗绿。|
@@ -80,7 +68,7 @@
 |T-1020|统一可视化推荐、作品承接与科学运营观测|📋 待办|待审|待验|[SPEC](docs/features/creator-operations/README.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-e6765fb61ec296f6)。|
 |T-1017|简化内容雷达：按账号定位一键生成可编辑改写稿|🔨 待办|PASS[REV:d2fb4541c82d]|待验|[SPEC](docs/features/t1017-content-radar-rewrite-first.md)|原范围和历史证据见[完整记录](BACKLOG-details.md#t1080-retained-row-00c1555a12c0e894)。|
 
-|T-1015|核实剩余教训失败并校准过期回归断言|📋 待办|—|—|[实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015) [状态与原审核历史](BACKLOG-details.md#t1173-t-1015-same-identity-history)|见详情。|
+|T-1015|核实剩余教训失败并校准过期回归断言|🔨 待办|—|—|[实测清单](docs/verification/t1014-reconcile-triage.md) [详情](BACKLOG-details.md#t-1015) [状态与原审核历史](BACKLOG-details.md#t1173-t-1015-same-identity-history)|见详情。|
 |T-1004|冻结共享能力协议与 NomiFun 迁移依赖|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md) [状态与原审核历史](BACKLOG-details.md#t1173-t-1004-same-identity-history)|T-1003 评审；固定依赖闭包、宿主端口、协议与架构门卫。|
 |T-1005|实现多步计划、连续执行与原任务续跑|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md)|依赖 T-1004；模型规划与重规划，保留回执和成本，停止恢复可核验。|
 |T-1006|接入统一工具网关与长结果回读|📋 待办|—|—|[SPEC](docs/features/t1003-agent-workbench.md) [状态与原审核历史](BACKLOG-details.md#t1173-t-1006-same-identity-history)|依赖 T-1004；工具发现、进度、取消、错误和费用共用原执行链。|

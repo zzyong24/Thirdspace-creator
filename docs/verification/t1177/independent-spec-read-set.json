@@ -1,0 +1,173 @@
+{
+  "schema": "creatoros-independent-read-set/v1",
+  "task": "T-1177",
+  "review_kind": "initial",
+  "scope": "仅当前SPEC独立初审；非实现/运行验收",
+  "captured_at": "2026-10-10T00:47:44.143457+00:00",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "spec_sha256": "3af9e931d3449e51684a2cd7b23f4474c53e5ad607d3185a9536cf6cc8751331",
+  "entries": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "4d17af5bd9396277a577090a8b09ed84eefc445bc15bcf385e72994bd380367d",
+      "bytes": 60869,
+      "inspection": "顶部T1177待审，T1015原归属；整文件实际字节"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1177-dashboard-rollup-fixture.md",
+      "sha256": "3af9e931d3449e51684a2cd7b23f4474c53e5ad607d3185a9536cf6cc8751331",
+      "bytes": 2772,
+      "inspection": "全文最终首段已澄清日志SHA与receipt.logSha256"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143,
+      "inspection": "R-DASHBOARD/R-ACCOUNT/R-REVIEW、诚实缺数、query-services归属与发布范围"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "bytes": 8130,
+      "inspection": "本会话既有读取与本轮所有者段；实际字节哈希"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819,
+      "inspection": "本会话已读维护/独立审核及历史失败真实性规则"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3",
+      "bytes": 50753,
+      "inspection": "本会话已读阶段4-build，未签ship"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "bytes": 84,
+      "inspection": "本会话已读3.29.0匹配，当前实际字节"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "bytes": 44912,
+      "inspection": "LED050完整命令，串行frontend/backend、原预算与retry0不改"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reviewctl.mjs",
+      "sha256": "dde682e0ad114048daa5cfd8686a1450ccf902a8ab56a48411e88399a51ccc15",
+      "bytes": 56241,
+      "inspection": "本会话已读spec-review-round/v2及初审finding消费者，未执行"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/queries/dashboard-read-performance.test.ts",
+      "sha256": "9000ac33284295a044e5df19ce8dce563afb36b7e94b2f8350938c26a9b83f24",
+      "bytes": 6421,
+      "inspection": "全文4旧用例；两个未满足DashboardRollup的mock与unknown强转"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/application/queries/dashboard.ts",
+      "sha256": "2935ed2b83f5feace29fc952ac0c54c9c33b919215d0ed67530925f4009f86a5",
+      "bytes": 21088,
+      "inspection": "端口类型、单请求解析、并行读取、粉丝失败恢复、指标/完播率实际消费"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/analytics/analytics.service.ts",
+      "sha256": "7c59961587df8df933ab54956a2ed14d689cacbd641da781adff7d0e9f617cba",
+      "bytes": 8091,
+      "inspection": "完整AnalyticsService/getDashboardRollup类型与user/workspace/IDs转发"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/analytics/analytics.repository.ts",
+      "sha256": "631ec714af3e62c72895a291e40d99c8d55bd49b2fca05e03d6687250a9ad295",
+      "bytes": 21757,
+      "inspection": "DashboardRollup13必填字段及真实getDashboardRollup/metricNumber返回逻辑"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/analytics/index.ts",
+      "sha256": "ccbd6ebbb3fff821884692c86cbe259b483dc2ba4f9706f586a65273bfb3a26f",
+      "bytes": 2045,
+      "inspection": "公开AnalyticsService类型导出；不用改barrel或sharedfixture"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/analytics/analytics.service.test.ts",
+      "sha256": "5d3d70c7a2f1f0689a7ec25837dd2a814d00ebbaaa5c8ff8c29b1b47ad4d285b",
+      "bytes": 12747,
+      "inspection": "无快照缺指标null/finishCount0既有合同段"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/analytics/analytics.repository.integration.test.ts",
+      "sha256": "746be4e476080e4b821a014120d7a2d8d0050a4967de4b8ccdc3de089a5a551a",
+      "bytes": 22609,
+      "inspection": "无快照null与真实views=0稀疏边界段"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/src/modules/query-services/query-services.service.ts",
+      "sha256": "ab01647a1eb9cb5a30099207d4d50639579be31543907ea204b38d7874fa1077",
+      "bytes": 20349,
+      "inspection": "实际createDashboardQueryService成功与compose失败空metrics消费78–174"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src/server/dashboard-query-projection.ts",
+      "sha256": "3509b695ee09938455863f498c07bbeef22ddf6f3390bab63d831a2aa7838691",
+      "bytes": 1025,
+      "inspection": "全文，缓存完整原AnalyticsService返回，不构造漏字段对象"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/tsconfig.json",
+      "sha256": "472e6845c342ef97120b0f32cfb78ece67131c8eb5e37671b46a5740195ff6a6",
+      "bytes": 337,
+      "inspection": "全文，strict/include src，包含此测试的typed夹具静态约束"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/backend/package.json",
+      "sha256": "ee9db46bbe172a6d8f6f634b30733321cbf2c64409659c746991484da356e9bf",
+      "bytes": 1462,
+      "inspection": "全文，原typecheck tsc--noEmit与module类型导出消费者"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/SKILL.md",
+      "sha256": "5796cf1b3b9f3de2d45c8e754e3df2146735aa14b266b7c32e2cb4c8638f4c1f",
+      "bytes": 4021,
+      "inspection": "本会话已加载产品维护流程，未运行任何流程工具"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/VERSION",
+      "sha256": "db8c5f26ffadff528c3c988af09e26339ee629b449372f4a62f0c357f7329dfc",
+      "bytes": 7,
+      "inspection": "本会话已读3.29.0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led050-current-diagnostic.json",
+      "sha256": "c0f4455f7c91ab2ed17936e8a1e18d6fc86e8f86b0339b83d6c02820859e8a7e",
+      "bytes": 755,
+      "inspection": "本轮root实际LED050完整包装receipt exit1，不是本复核执行"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led050-current-diagnostic.log",
+      "sha256": "fe316b0286d3656c9418af7704379d25e49650ad284060c4f9371fd755db4f84",
+      "bytes": 5029,
+      "inspection": "全文，frontend7PASS、backend45PASS3FAIL；三个当前断言原因"
+    }
+  ],
+  "actual_red_receipt": {
+    "receipt": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led050-current-diagnostic.json",
+    "receipt_sha256": "c0f4455f7c91ab2ed17936e8a1e18d6fc86e8f86b0339b83d6c02820859e8a7e",
+    "log": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led050-current-diagnostic.log",
+    "log_sha256": "fe316b0286d3656c9418af7704379d25e49650ad284060c4f9371fd755db4f84",
+    "receipt_logSha256": "fe316b0286d3656c9418af7704379d25e49650ad284060c4f9371fd755db4f84",
+    "hash_matches": true,
+    "exit_code": 1,
+    "elapsed_seconds": 125.03125533403363,
+    "frontend": "7 PASS",
+    "backend": "45 PASS / 3 FAIL",
+    "note": "真实原完整LED050的两段均执行，3失败仅dashboard-read-performance.test.ts；本复核未运行任何命令"
+  },
+  "write_set": [
+    "backend/src/application/queries/dashboard-read-performance.test.ts"
+  ],
+  "execution_boundary": "仅文件/Git读取与本私有目录工件写入；未改仓库、SPEC、任务、源代码、消费者、配置、守卫或预算，未运行测试、验证器、产品CLI、服务、DB、模型、真实客户端/平台/profile。"
+}

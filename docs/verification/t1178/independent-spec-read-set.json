@@ -1,0 +1,215 @@
+{
+  "schema": "independent-read-set/v1",
+  "task_id": "T-1178",
+  "review_kind": "initial",
+  "reviewer": "/root/t1159_fix_recheck_recovery",
+  "reviewed_at_utc": "2026-10-10T01:01:31.057768+00:00",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "head": "335b1b5e055b1c8cb0935fe7f512409532236592",
+  "verdict": "PASS_SPEC_INITIAL_BOUNDED",
+  "spec_sha256": "db792b5640469348504aa6f1ffa795d2f1259cc25dd07a9f8d9a40f122a34411",
+  "constitution_sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+  "reads": [
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG.md",
+      "sha256": "5ff998bff70effc9d2da039cbbce1cb9d0dc1286a5f220aea93035f37ed1d458",
+      "bytes": 54507,
+      "read_scope": "顶部 T1178 行及相邻任务状态；完整字节 SHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/features/t1178-package-resource-contract.md",
+      "sha256": "db792b5640469348504aa6f1ffa795d2f1259cc25dd07a9f8d9a40f122a34411",
+      "bytes": 2217,
+      "read_scope": "全文；最终当前版本"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT.md",
+      "sha256": "7cd17b98aca09893058fbe3499f394b5dcdd3406874c3660032462d80bf43b7c",
+      "bytes": 17389,
+      "read_scope": "定位、当前主线和开放任务段；完整字节 SHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/PROJECT_CONTEXT.md",
+      "sha256": "a74ec6498a8e06fe574f86ec96c51a99076672b717d103b26b25578bd2a1ed3c",
+      "bytes": 1316,
+      "read_scope": "全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/AGENTS.md",
+      "sha256": "c53bd9f14bb368cdf4d2462e36397c33d17463c5a0253cc7209cbf359c5c044a",
+      "bytes": 6819,
+      "read_scope": "全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/ARTIFACT_MANIFEST.yaml",
+      "sha256": "b6d36f09002159fd0ca2bbbc936c8c98e9aa3f553b1ba272fd6de640d9f4e1d3",
+      "bytes": 50753,
+      "read_scope": "project.current_stage/frontier 及阶段定义；完整字节 SHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/SYSTEM_ARCHITECTURE.md",
+      "sha256": "eb1826d4c09054df622d9718c38ca372bd19833e72bd1a752757631a5747c1df",
+      "bytes": 8130,
+      "read_scope": "物理边界与安全职责段；完整字节 SHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/.skill-version",
+      "sha256": "059101410c6bd35df37979a7fc91d59aa840a79aa794736772fe04c45a43838d",
+      "bytes": 84,
+      "read_scope": "全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/docs/产品定位.md",
+      "sha256": "86bc2c8add6a01ebf5b2ecf9de05d448770ca14a4e0bdbbf376fffc6387e3800",
+      "bytes": 37143,
+      "read_scope": "文档事实规则及 R-DESKTOP 发布验收；完整字节 SHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/scripts/desktop/windows-runtime-config.test.mjs",
+      "sha256": "70afc320cc7b80231c9f03559d2109c73f1eb8040e460f2b423dcbf618607349",
+      "bytes": 4392,
+      "read_scope": "全文：原第一例与其它五例"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/tauri.conf.json",
+      "sha256": "90f04c45450e308452399b548ab6d8e7025a7e60485492526e21dbc89d8daa6f",
+      "bytes": 1786,
+      "read_scope": "全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/tauri.windows.conf.json",
+      "sha256": "b2576caef0cfa0c6a78ed4aa9d24307da57b8b916f5a8f2376e57197780bb1f1",
+      "bytes": 381,
+      "read_scope": "全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/src-tauri/THIRD_PARTY_NOTICES.md",
+      "sha256": "164b46fc33639cb2e79cba8abea46e7daccc285d9c19343178823e8ec964e962",
+      "bytes": 1620,
+      "read_scope": "全文，仅核资源为既有声明文件，不作完整许可证审核"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/orchestrator/process/reconcile.config.json",
+      "sha256": "8443c7d6c28a5eefff1a6b0ae5b4652a4c1c5b4a57acf2568dd9c5dfeadcdf44",
+      "bytes": 44912,
+      "read_scope": "LED-006 原完整命令与 onFail；完整字节 SHA"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/SKILL.md",
+      "sha256": "5796cf1b3b9f3de2d45c8e754e3df2146735aa14b266b7c32e2cb4c8638f4c1f",
+      "bytes": 4021,
+      "read_scope": "此前完整加载；本轮核入口、事实归属、maintenance 和任务包适用范围"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/VERSION",
+      "sha256": "db8c5f26ffadff528c3c988af09e26339ee629b449372f4a62f0c357f7329dfc",
+      "bytes": 7,
+      "read_scope": "全文，与项目版本一致 3.29.0"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/skills/product-to-code-orchestrator/prompts/stage-router.md",
+      "sha256": "dd656d4b0d886aee9fafa10b61a1db9554e1d424c533dd79693f28ff7447cf1e",
+      "bytes": 1339,
+      "read_scope": "全文"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led006-current-diagnostic.json",
+      "sha256": "67b1a39c71d114ab0bfc45c4edff159486bc580ce01577e2d5fbadf9b9851aa8",
+      "bytes": 755,
+      "read_scope": "全文，原命令及退出码/时长/logSha256"
+    },
+    {
+      "path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led006-current-diagnostic.log",
+      "sha256": "cb48cdced5769f5cf02b956ccc86b6017d471227909747957835d1424606bdfb",
+      "bytes": 3033,
+      "read_scope": "全文，原失败详情/重试/完整汇总"
+    }
+  ],
+  "git_sources": [
+    {
+      "path": "frontend/src-tauri/tauri.conf.json",
+      "source": "git:65781a811da57b50a3446fb74e081143bff317e6:frontend/src-tauri/tauri.conf.json",
+      "commit": "65781a811da57b50a3446fb74e081143bff317e6",
+      "git_blob": "9b4691b04cb753db6e0092e9b7cc7061f04b7f72",
+      "sha256": "90f04c45450e308452399b548ab6d8e7025a7e60485492526e21dbc89d8daa6f",
+      "bytes": 1786,
+      "resources": [
+        "sidecar.tar.gz",
+        "THIRD_PARTY_NOTICES.md"
+      ],
+      "current_file_bytes_equal": true
+    },
+    {
+      "path": "frontend/src-tauri/tauri.windows.conf.json",
+      "source": "git:65781a811da57b50a3446fb74e081143bff317e6:frontend/src-tauri/tauri.windows.conf.json",
+      "commit": "65781a811da57b50a3446fb74e081143bff317e6",
+      "git_blob": "d8e06deaed81ddfac62293d031e72e265c944dd6",
+      "sha256": "b2576caef0cfa0c6a78ed4aa9d24307da57b8b916f5a8f2376e57197780bb1f1",
+      "bytes": 381,
+      "resources": [
+        "sidecar.tar.gz",
+        "THIRD_PARTY_NOTICES.md"
+      ],
+      "current_file_bytes_equal": true
+    }
+  ],
+  "readonly_git_checks": [
+    {
+      "argv": [
+        "git",
+        "show",
+        "--format=fuller",
+        "--stat",
+        "65781a811da57b50a3446fb74e081143bff317e6",
+        "--",
+        "frontend/src-tauri/tauri.conf.json",
+        "frontend/src-tauri/tauri.windows.conf.json"
+      ],
+      "result": "两资源配置由该提交新增声明文件，原 tar 保留"
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--no-ext-diff",
+        "HEAD",
+        "--",
+        "frontend/scripts/desktop/windows-runtime-config.test.mjs",
+        "frontend/src-tauri/tauri.conf.json",
+        "frontend/src-tauri/tauri.windows.conf.json",
+        "frontend/src-tauri/THIRD_PARTY_NOTICES.md",
+        "frontend/scripts/desktop/build-sidecar.mjs",
+        "frontend/src-tauri/windows/installer-hooks.nsh",
+        "frontend/src-tauri/build.rs",
+        "frontend/src-tauri/src/lib.rs"
+      ],
+      "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "output_bytes": 0,
+      "result": "本片原测试、资源配置、声明及相关 runtime/构建源码当前无未提交 diff；未审核其它任务变更"
+    }
+  ],
+  "red_evidence": {
+    "receipt_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led006-current-diagnostic.json",
+    "log_path": "/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1015-led006-current-diagnostic.log",
+    "exit_code": 1,
+    "elapsed_seconds": 2.0262746249791235,
+    "tests_passed": 42,
+    "tests_failed": 1,
+    "file_count": 3,
+    "log_sha256": "cb48cdced5769f5cf02b956ccc86b6017d471227909747957835d1424606bdfb",
+    "receipt_log_sha256_matches": true,
+    "old_retry_x2_retained": true
+  },
+  "approved_code_write_set": [
+    "frontend/scripts/desktop/windows-runtime-config.test.mjs"
+  ],
+  "findings": [],
+  "excluded_claims": [
+    "当前实施或GREEN",
+    "Windows真实安装及GUI/WebView首启",
+    "原生App和所有功能验收",
+    "完整canonical或T1015完成",
+    "真实profile、平台/模型执行、微信研究恢复"
+  ],
+  "actions": "仅读取文件/Git与写本私有目录；未执行测试、验证器、产品CLI、服务、DB、模型或真实客户端。"
+}

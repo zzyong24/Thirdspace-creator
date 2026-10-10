@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "vitest",
+    "run",
+    "src/components/shell/shell.test.tsx",
+    "src/components/shell/app-shell.test.tsx",
+    "--retry=0"
+  ],
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "startedAt": "2026-10-10T00:43:20.938778+00:00",
+  "finishedAt": "2026-10-10T00:43:25.460378+00:00",
+  "exitCode": 0,
+  "elapsedSeconds": 4.521364375017583,
+  "logSha256": "1645221836b15d7eea740793652f185b0e2c291bc5807561ccccb99bae9e7799"
+}
