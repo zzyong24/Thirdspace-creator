@@ -1448,3 +1448,5 @@
 {"ts":"2026-10-10T11:58:58.194Z","actor":"taskctl","action":"start","task":"T-1200","sha_before":"30ac1ff1636b","sha_after":"0ee5e5f92acb"}
 {"ts":"2026-10-10T12:40:07.099Z","actor":"taskctl","action":"start","task":"T-1201","sha_before":"fdd9035a1563","sha_after":"2c8a1d306f90"}
 {"ts":"2026-10-10T12:48:21.611Z","actor":"taskctl","action":"start","task":"T-1202","sha_before":"9d87ec9b1660","sha_after":"8d645655020e"}
+{"ts":"2026-10-10T13:46:58.908Z","actor":"taskctl","action":"start","task":"T-1205","sha_before":"a68a2e7e66cc","sha_after":"ead53033ddeb"}
+{"ts":"2026-10-10T13:50:14.182Z","actor":"taskctl","action":"complete","task":"T-1205","evidence":"docs/verification/t1205/RESULTS.md：sharp原生文件恢复，host与随包server.app实际PNG8x8/95bytes均exit0；原构建失败、rebuild空操作及裸Node布局失败保留。无产品/构建/锁/测试变更；完整reconcile29ERROR/0WARN归T1204，不代签父任务或新安装包。","sha_before":"ead53033ddeb","sha_after":"6cdfe6b8e11b"}

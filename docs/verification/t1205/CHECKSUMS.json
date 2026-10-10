@@ -1,0 +1,34 @@
+[
+  {
+    "path": "docs/verification/t1205/package-local.log.gz",
+    "sha256OfOriginal": "96414f0063b31e2d8f46ca7610bad5da718d20e5974dc6586b98471d825131bd"
+  },
+  {
+    "path": "docs/verification/t1205/sharp-rebuild.log.gz",
+    "sha256OfOriginal": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "docs/verification/t1205/sharp-require-first.log.gz",
+    "sha256OfOriginal": "a20226187044aa7145658315ac7becc295aeea870be0f445e17b4416a45bb4ae"
+  },
+  {
+    "path": "docs/verification/t1205/sharp-libvips.log.gz",
+    "sha256OfOriginal": "a7487a38f9185f9ccba59bb764271e38fbb25094ea97f22e038dbd671f4fea79"
+  },
+  {
+    "path": "docs/verification/t1205/sharp-prebuild.log.gz",
+    "sha256OfOriginal": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "docs/verification/t1205/sharp-host-smoke.log.gz",
+    "sha256OfOriginal": "1a40cbe707a5b151fe01080ddbdfc74e10328ca774a390a2c22b3fdaecbf057b"
+  },
+  {
+    "path": "docs/verification/t1205/sharp-shipped-node-smoke.log.gz",
+    "sha256OfOriginal": "f33ac420385d8e662c29b88b0871adaeae741c5e82a371e575efdc077548f340"
+  },
+  {
+    "path": "docs/verification/t1205/sharp-shipped-layout-smoke.log.gz",
+    "sha256OfOriginal": "2da7d49879f9a10f8c17592bf71347e47afb4174f9f7a284fc98a13dce1b0d15"
+  }
+]
