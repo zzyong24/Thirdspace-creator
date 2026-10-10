@@ -1,0 +1,14 @@
+{
+  "head": "582f25d6fa2a3723ca2a24079ec82330911ac165",
+  "clean": true,
+  "fixedPackageExitCode": 0,
+  "basicTests": {
+    "files": 4,
+    "passed": 45
+  },
+  "canonicalDownloadsPackages": [
+    "CreatorOS-1.2.0.dmg"
+  ],
+  "notarized": false,
+  "noBackup": true
+}

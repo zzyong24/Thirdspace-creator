@@ -1,0 +1,23 @@
+{
+  "sourceHead": "582f25d6fa2a3723ca2a24079ec82330911ac165",
+  "nativePid": 4372,
+  "connected": true,
+  "serviceProcesses": [
+    {
+      "pid": 4490,
+      "ppid": 4372,
+      "listenPort": 57024
+    }
+  ],
+  "httpHomeLoadRecords": [
+    "[CreatorOS] MAIN_PAGE_LOAD_FINISHED http://127.0.0.1:57024/"
+  ],
+  "runtimeStampMatches": true,
+  "markers": [
+    "[sidecar] [CreatorOS] SIDECAR_STARTUP_VERIFIED",
+    "[license] CHANNEL_RUNTIME_DIGEST_MISMATCH",
+    "[CreatorOS] MAIN_PAGE_LOAD_FINISHED http://127.0.0.1:57024/"
+  ],
+  "explicitBusinessWrites": 0,
+  "boundary": "真实安装版进程、直属HTTP监听及HTTP首页完成事件，不代签屏幕眼验/全功能。"
+}

@@ -1,0 +1,22 @@
+{
+  "sourceHead": "582f25d6fa2a3723ca2a24079ec82330911ac165",
+  "artifact": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "artifactSha256": "2dd2dcb2eda709822cef15d4be50e8e588d8b5d9f1f87a3795f29d91873a0e47",
+  "installedContents": {
+    "Contents/MacOS/CreatorOS": {
+      "sha256": "bddcd4fcf033c6e69fb4af3602971cf35b17ad72dd95e0dbaf5ddcd46050ad1c",
+      "matchesBuild": true
+    },
+    "Contents/Resources/sidecar.tar.gz": {
+      "sha256": "753ee336429d0e1cf1a289cce469f097445a63c1e4a75292fd9193c36130f0b2",
+      "matchesBuild": true
+    },
+    "Contents/Info.plist": {
+      "sha256": "c73a5d55331d915719807ac7330aab4710cbfd3988335911929dfb6b67adcfc9",
+      "matchesBuild": true
+    }
+  },
+  "noBackup": true,
+  "localAdhoc": true,
+  "notarized": false
+}

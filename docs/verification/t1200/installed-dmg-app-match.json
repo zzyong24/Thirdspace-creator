@@ -1,0 +1,7 @@
+{
+  "imageAppCodesignExit": 0,
+  "Contents/MacOS/CreatorOS": "matches installed and build",
+  "Contents/Resources/sidecar.tar.gz": "matches installed and build",
+  "Contents/Info.plist": "matches installed and build",
+  "detachExitCode": 0
+}

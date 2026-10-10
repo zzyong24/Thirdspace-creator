@@ -1,0 +1,39 @@
+{
+  "groups": 5,
+  "originalJobsUnchanged": 14,
+  "groupJobCounts": [
+    6,
+    6,
+    0,
+    0,
+    2
+  ],
+  "addedJobCount": 0,
+  "readiness": [
+    {
+      "platform": "douyin",
+      "planEvidence": "verified",
+      "collectAvailable": true
+    },
+    {
+      "platform": "douyin",
+      "planEvidence": "verified",
+      "collectAvailable": true
+    },
+    {
+      "platform": "xiaohongshu",
+      "planEvidence": "missing",
+      "collectAvailable": true
+    }
+  ],
+  "assertedFields": [
+    "accountId",
+    "sourceKind",
+    "schedule",
+    "target",
+    "enabled"
+  ],
+  "explicitBusinessWrites": 0,
+  "readbackSha256": "f444c926200b462426e4dd020eef5758b5e30fc8156997a8d38d1c45e34b18d9",
+  "firstStatusProbe": "CONNECTION_NOT_FOUND，启动刚发起时首次失败已保留；稍后公开连接与重启均成功。"
+}

@@ -1,0 +1,30 @@
+{
+  "installed-artifact-checks.json": {
+    "sha256": "2c7a6cfd62316d7f0f113a9acc7becf8d266e7780e4e0a096af5474285e106ad"
+  },
+  "installed-startup-result.json": {
+    "sha256": "0d12d256dc515948eb4ea6499cf6b800db862d3f07b47b5059fc98585fb561d9"
+  },
+  "installed-dmg-app-match.json": {
+    "sha256": "a5315a4cfa81865559a5190ffd39e6cb61eca1d7d38d9fb160fdc88c138e642c"
+  },
+  "installed-packaging-final-state.json": {
+    "sha256": "cd64ce207307991c955842585169f1bf6e8925710b66b98bd2ef10540c242444"
+  },
+  "package-basic-retry.log": {
+    "path": "/Users/zyongzhu/.codex/creatoros-verification/t1199-20261010/package-basic-retry.log",
+    "sha256": "025ca1cf696056c6663b15e04131f2307746f4b2a4a95258688b086e4e50c282"
+  },
+  "package-local-retry.log": {
+    "path": "/Users/zyongzhu/.codex/creatoros-verification/t1199-20261010/package-local-retry.log",
+    "sha256": "72d9c8f8a974d2e7d39122d7bc96b3eb500b847198d47c45d37b85db2fee9364"
+  },
+  "installed-dmg-verify.log": {
+    "path": "/Users/zyongzhu/.codex/creatoros-verification/t1199-20261010/installed-dmg-verify.log",
+    "sha256": "a62c29fb125ea5bef54a39e3ec021f1dd5d79bdd7ca4ff266f1eacac651bdf7d"
+  },
+  "installed-codesign-verify.log": {
+    "path": "/Users/zyongzhu/.codex/creatoros-verification/t1199-20261010/installed-codesign-verify.log",
+    "sha256": "aa4f9044a733c3c148c2c96c621d75b44597faafc0928de30a067c87c34e828a"
+  }
+}
