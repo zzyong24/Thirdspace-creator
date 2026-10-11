@@ -1,10 +1,12 @@
 import {createHash} from 'node:crypto';
+import {z} from 'zod';
 import type {executionCalls,executionTasks} from '@creatoros/backend';
-import {chatWorkerInputSchema,codexModelSpecSchema,structuredGenerationInputSchema,externalChatStartSchema,frozenExecutionEngine,isContinuousExecutionBudget,workerTaskInputSchema,videoFrozenSchema} from '@creatoros/contract/execution-worker';
+import {chatWorkerInputSchema,codexModelSpecSchema,structuredGenerationInputSchema,intelligenceRewriteInputSchema,externalChatStartSchema,frozenExecutionEngine,isContinuousExecutionBudget,workerTaskInputSchema,videoFrozenSchema} from '@creatoros/contract/execution-worker';
 import {canonicalJson} from '../ai/canonical-json';
 type Task=typeof executionTasks.$inferSelect;
 type Call=typeof executionCalls.$inferSelect;
 const object=(value:unknown):Record<string,unknown>=>value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{};
+const intelligenceGenerationInputSchema=z.union([structuredGenerationInputSchema,intelligenceRewriteInputSchema]);
 /** SEMANTIC_BOUNDARY_ALLOW: 只核验原期限和真实协议身份，不选择内容或取得再次提交权。 */
 export function codexReadDeadlineAvailable(task:Task,stamp:string){
  return task.deadlineAt===null
@@ -30,13 +32,13 @@ export function originalCodexReadBinding(task:Task,call:Call){
  }else{
   let identity=call.parentCallId?object(object(payload.chatModelIdentities)[call.parentCallId]).identity:payload.modelIdentity;
   const matchingStage=(value:unknown)=>{
-   const stage=object(value),frozen=structuredGenerationInputSchema.safeParse(stage.input);
+   const stage=object(value),frozen=(intelligence?intelligenceGenerationInputSchema:structuredGenerationInputSchema).safeParse(stage.input);
    if(!frozen.success||frozen.data.skillSnapshot.userId!==task.userId||frozen.data.skillSnapshot.accountId!==task.accountId||(frozen.data.skillSnapshot.groupId??null)!==(task.groupId??null))return undefined;
    const prefix=`${frozen.data.operationKey}/model/`,suffix=call.operationKey.slice(prefix.length);
    return call.parentCallId===null&&call.operationKey.startsWith(prefix)&&/^[1-9][0-9]*$/.test(suffix)&&object(stage.identity).capability===frozen.data.capability?stage.identity:undefined;
   };
   if(intelligence){
-   const frozen=object(payload.intelligenceGeneration),generation=structuredGenerationInputSchema.safeParse(frozen.input);
+   const frozen=object(payload.intelligenceGeneration),generation=intelligenceGenerationInputSchema.safeParse(frozen.input);
    if(!generation.success||generation.data.operationKey!==`intelligence:${task.id}`||generation.data.capability!==(task.kind==='topic_preview'?'topic.generate':'script.draft'))return null;
    identity=matchingStage(frozen);
   }else if(input.success&&input.data.kind==='scheduled.flywheel'){

@@ -36,3 +36,5 @@ pnpm exec vitest run src/modules/execution/chat-model-pause-recovery.test.ts src
 原 text 恢复曾因未知旧模型调用的 appendStreamEvents 拒绝而实际失败，修复为只读回收直接结算，不伪造新流事件。图片初次失败来自测试 resolver 包缺 kind:image；已补真实 credential 包，未放松 strict 执行 schema。聊天准备 fixture 的 nextId/无秘密 identity 和 Workbench descriptor 缺失均按真实契约修正。混合 Host 前缀及原稿 ACK 的真实失败也保留原报告；修复未放开未知工具执行。
 
 所有 `codex-recovery-first/second/third/fourth/fifth/image-sixth/chat-*/closed/final-closure` 失败报告保留，不补写为前置 PASS。隔离 bundle 位于临时 `ai-worker/dist/t1238-recovery-*` 并测试结束删除，不覆盖整体 dist，不使用真实用户库或官方账户，不执行发布。
+
+兼容 canonical 新增正文标签：仅原 intelligence 保存输入接受严格 `intelligenceRewriteInputSchema`（null/object 正文契约），其余 structured/flywheel 约束不变，当场标签回归先 3PASS/2FAIL、修复后 5PASS/0FAIL（`codex-recovery-intelligence-label-red.json` / `codex-recovery-intelligence-label-green.json`，test/hook 180000ms、retry 0、maxWorkers 1），canonical 新入口整链由主线程合并验证。

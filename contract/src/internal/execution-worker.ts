@@ -421,6 +421,11 @@ export const structuredGenerationInputSchema=z.object({
   kind:z.literal("model.structured"),operationKey:z.string().min(1).max(200),capability:z.string().min(1),maxOutputTokens:z.number().int().positive().max(65536),
   skillId:z.string().min(1),skillSnapshot:workerSkillSnapshotSchema,facets:z.record(z.string(),z.string()),timeoutMs:z.number().int().positive().optional(),
 }).strict().refine(value=>value.skillSnapshot.skills.some(skill=>skill.skillId===value.skillId && skill.effective.outputSchema!==null),"结构化任务缺少冻结输出契约");
+/** SEMANTIC_BOUNDARY_ALLOW: 已选正文模式的私有机械协议，不推断内容、不授予执行权。 */
+export const intelligenceRewriteInputSchema=z.object(structuredGenerationInputSchema.shape).extend({
+  intelligenceText:z.literal("rewrite_only"),capability:z.literal("topic.generate"),skillId:z.literal("intelligence.topic-adapted-draft"),
+}).strict().refine(value=>value.skillSnapshot.skills.length===1 && value.skillSnapshot.skills[0]?.skillId===value.skillId,"正文任务必须冻结唯一正文 Skill")
+ .refine(value=>{if(value.facets.mode!=="topic_preview")return false;try{const target=JSON.parse(value.facets.target??"null");return target!==null && typeof target==="object" && !Array.isArray(target) && target.generationMode==="rewrite_only";}catch{return false;}},"正文任务模式与冻结目标不符");
 /** 原调度业务任务的执行标记；模型阶段只由后端固定能力端口准备。 */
 // 纯浏览器流量/评论采集没有模型阶段；仅这些显式 sourceKind 允许真实 resolver 的空 Skill 清单。
 // 其他调度/结构化/聊天路径继续使用 workerSkillSnapshotSchema 的 min(1)。
@@ -436,7 +441,7 @@ export const scheduledFlywheelTaskInputSchema=z.discriminatedUnion("sourceKind",
 ]);
 /** 用户单条对标转写的真实业务执行标记，不进入项目转写工作流。 */
 export const benchmarkTranscribeTaskInputSchema=z.object({kind:z.literal("benchmark.transcribe"),workId:z.string().min(1),awemeId:z.string().min(1).max(128),sourceId:z.string().min(1),sourceExternalAccountId:z.string(),configuration:transcribeTaskInputSchema.shape.configuration}).strict();
-export const workerTaskInputSchema=z.union([assetAsrInput,benchmarkTranscribeTaskInputSchema,scheduledFlywheelTaskInputSchema,transcribeTaskInputSchema,assetGenerationInputSchema,modelGenerationInputSchema,structuredGenerationInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
+export const workerTaskInputSchema=z.union([assetAsrInput,benchmarkTranscribeTaskInputSchema,scheduledFlywheelTaskInputSchema,transcribeTaskInputSchema,assetGenerationInputSchema,modelGenerationInputSchema,structuredGenerationInputSchema,intelligenceRewriteInputSchema,agenticWorkerInputSchema,chatWorkerInputSchema]);
 const structuredUsageSchema=z.object({inputTokens:z.number().nonnegative().nullable(),outputTokens:z.number().nonnegative().nullable(),cachedTokens:z.number().nonnegative().nullable(),totalTokens:z.number().nonnegative().nullable()});
 const completionViolationSchema=z.object({code:z.string(),path:z.string(),message:z.string()});
 export const workerStructuredResultSchema=z.object({

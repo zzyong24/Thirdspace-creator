@@ -14,7 +14,7 @@ async function stopOwned(server){
 (async()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'creatoros-t1238-settings-'));
  const port=await availablePort();const log=fs.openSync(path.join(__dirname,'ui-journey-server.txt'),'w');
- const server=spawn('pnpm',['exec','next','dev','--hostname','127.0.0.1','--port',String(port)],{cwd:path.join(root,'frontend'),detached:true,stdio:['ignore','pipe','pipe'],env:{...process.env,PGLITE_DATA_DIR:path.join(dir,'db'),CREATOROS_MEDIA_ROOT:path.join(dir,'media'),CREATOROS_DOUYIN_AUTH_DIR:path.join(dir,'douyin'),CREATOROS_WEB_AUTH_DIR:path.join(dir,'web'),CREATOROS_DISABLE_SCHEDULER:'1',CREATOROS_DISABLE_BACKGROUND_DRIVERS:'1',CREATOROS_DEV_MODE:'1'}});
+ const server=spawn('pnpm',['exec','next','dev','--hostname','127.0.0.1','--port',String(port)],{cwd:path.join(root,'frontend'),detached:true,stdio:['ignore','pipe','pipe'],env:{...process.env,DATABASE_URL:'',PGLITE_DATA_DIR:path.join(dir,'db'),CREATOROS_MEDIA_ROOT:path.join(dir,'media'),CREATOROS_DOUYIN_AUTH_DIR:path.join(dir,'douyin'),CREATOROS_WEB_AUTH_DIR:path.join(dir,'web'),CREATOROS_DISABLE_SCHEDULER:'1',CREATOROS_DISABLE_BACKGROUND_DRIVERS:'1',CREATOROS_DEV_MODE:'1'}});
  let resolveReady;const ready=new Promise(resolve=>{resolveReady=resolve;});let source='';
  for(const stream of [server.stdout,server.stderr])stream.on('data',chunk=>{fs.writeSync(log,chunk);source+=chunk.toString();if(source.includes('SIDECAR_STARTUP_VERIFIED'))resolveReady();});
  try{

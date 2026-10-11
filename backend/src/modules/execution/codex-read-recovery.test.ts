@@ -1,5 +1,5 @@
 import {expect,it} from 'vitest';
-import {codexExecutionSpec,createExecutionRoute} from '@creatoros/contract/execution-worker';
+import {codexExecutionSpec,createExecutionRoute,intelligenceRewriteInputSchema,workerTaskInputSchema,structuredGenerationInputSchema} from '@creatoros/contract/execution-worker';
 import {originalCodexReadBinding} from './codex-read-recovery';
 type Task=Parameters<typeof originalCodexReadBinding>[0];type Call=Parameters<typeof originalCodexReadBinding>[1];
 function owner(kind:'topic_preview'|'script_candidate'|'scheduled.flywheel'){
@@ -13,4 +13,13 @@ it.each(['topic_preview','script_candidate','scheduled.flywheel'] as const)('原
  const f=owner(kind);expect(originalCodexReadBinding(f.task,f.call)).toMatchObject({threadId:'original-thread',turnId:'original-turn'});
  expect(originalCodexReadBinding({...f.task,ownerType:kind==='scheduled.flywheel'?'project':'ai_task'},f.call)).toBeNull();expect(originalCodexReadBinding(f.task,{...f.call,executionTaskId:'foreign'})).toBeNull();expect(originalCodexReadBinding({...f.task,groupId:'foreign'},f.call)).toBeNull();
  const payload=f.task.payload as any,frozen=kind==='scheduled.flywheel'?payload.flywheelStages.original:payload.intelligenceGeneration;const changed={...frozen,identity:{...frozen.identity,engine:'pi'}};expect(originalCodexReadBinding({...f.task,payload:{...payload,...(kind==='scheduled.flywheel'?{flywheelStages:{original:changed}}:{intelligenceGeneration:changed})}},f.call)).toBeNull();
+});
+
+it.each([null,{type:'object'}])('原 intelligenceText 正文冻结契约 %j 可只读恢复，错误owner拒绝',outputSchema=>{
+ const f=owner('topic_preview'),payload=f.task.payload as any,original=payload.intelligenceGeneration.input,skillId='intelligence.topic-adapted-draft';
+ const input=intelligenceRewriteInputSchema.parse({...original,intelligenceText:'rewrite_only',skillId,facets:{mode:'topic_preview',target:JSON.stringify({generationMode:'rewrite_only'})},skillSnapshot:{...original.skillSnapshot,skills:[{...original.skillSnapshot.skills[0],skillId,effective:{...original.skillSnapshot.skills[0].effective,outputSchema}}]}});
+ expect(workerTaskInputSchema.parse(input)).toEqual(input);expect(structuredGenerationInputSchema.safeParse(input).success).toBe(false);
+ const task={...f.task,payload:{...payload,intelligenceGeneration:{...payload.intelligenceGeneration,input}}};
+ expect(originalCodexReadBinding(task,f.call)).toMatchObject({threadId:'original-thread',turnId:'original-turn'});
+ expect(originalCodexReadBinding({...task,ownerType:'project'},f.call)).toBeNull();expect(originalCodexReadBinding({...task,kind:'script_candidate',ownerType:'project'},f.call)).toBeNull();
 });
