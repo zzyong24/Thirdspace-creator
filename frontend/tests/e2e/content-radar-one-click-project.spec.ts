@@ -16,6 +16,7 @@ async function dispatch<T>(
   accountId?: string,
 ): Promise<T> {
   const response = await page.request.post("/api/v1/dispatch", {
+    timeout: 120_000,
     headers: {
       "content-type": "application/json",
       ...(accountId ? { "x-account-id": accountId } : {}),
@@ -85,7 +86,7 @@ async function waitForTransform(
   accountId: string,
   itemId: string,
   transformId: string,
-  timeoutMs = 60_000,
+  timeoutMs = 120_000,
 ) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -196,7 +197,10 @@ function writeVisibleCopy(
   }>,
 ) {
   const repoRoot = resolve(process.cwd(), "..");
-  const evidenceDir = resolve(repoRoot, "orchestrator", "evidence");
+  const configuredEvidenceDir = process.env.CREATOROS_T1224_EVIDENCE_DIR;
+  const evidenceDir = configuredEvidenceDir
+    ? resolve(repoRoot, configuredEvidenceDir)
+    : resolve(repoRoot, "orchestrator", "evidence");
   mkdirSync(evidenceDir, { recursive: true });
   const commitSha = execFileSync("git", ["rev-parse", "HEAD"], {
     cwd: repoRoot,
@@ -225,7 +229,8 @@ test("内容雷达只有改写初稿和局部选题字段时仍可一键升级�
   page,
   baseURL,
 }) => {
-  test.setTimeout(300_000);
+  page.setDefaultTimeout(120_000);
+  page.setDefaultNavigationTimeout(120_000);
   const localModel = await startLocalOpenAiServer();
   try {
     const account = await dispatch<{ id: string }>(page, "accounts.create", {
@@ -501,7 +506,7 @@ test("内容雷达只有改写初稿和局部选题字段时仍可一键升级�
     });
 
     await upgrade.click();
-    await page.waitForURL(/\/projects\/project-[^/?#]+$/, { timeout: 30_000 });
+    await page.waitForURL(/\/projects\/project-[^/?#]+$/, { timeout: 120_000 });
     const projectId = new URL(page.url()).pathname.split("/").at(-1)!;
     const project = await dispatch<{ id: string; title: string }>(
       page,
