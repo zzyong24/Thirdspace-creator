@@ -9600,7 +9600,8 @@
         "orchestrator/context/T-1238.md",
         "orchestrator/DECISION_LOG.md",
         "orchestrator/ARTIFACT_MANIFEST.yaml",
-        "BACKLOG.md"
+        "BACKLOG.md",
+        "frontend/src/features/intelligence/intelligence-workbench.test.tsx"
       ],
       "verify_commands": {
         "implementation": [
