@@ -1,0 +1,7 @@
+# 当场独立复核
+
+独立只读 Agent scheduled_membership_review 初审指出SPEC归档语义不准确，原FAIL保留：实际归档组私有采集已有allowArchived豁免，账号仍须active。修订后方案复审PASS。实际SQL及精确迁移注册静态复核PASS：只改两个版本、全局历史排除、同user join、NOWAIT异常子事务退让、hash及前置/参考catalog尾顺序正确。
+
+复核建议补当前成员v1但有同号其它历史/另一user历史、旧AI/execution冻结值、105库及PG并发。已加入对应真实隔离矩阵；当前专项17/17通过。复核不签Task Packet或安装版，context-compile因缺task binding实际失败，不将其记PASS；实现由主会话串行完成。
+
+公共链测试首轮因DTO不返回accountId而失败，改为公开任务字段与隔离持久账号断言；第二轮因注入旧页面版本而期待runNow拒绝，但该入口沿真实job派生版本，防重返回原任务。改以实际AI准入核过期冻结版本仍拒绝；跨user/跨组原公开拒绝断言保留。两轮失败日志均保留，不改产品权限或吞409。

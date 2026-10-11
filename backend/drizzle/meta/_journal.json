@@ -743,6 +743,13 @@
       "when": 1791043200004,
       "tag": "0131_platform_native_reports",
       "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1791043200005,
+      "tag": "0132_legacy_scheduled_job_membership",
+      "breakpoints": true
     }
   ]
 }

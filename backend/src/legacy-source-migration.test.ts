@@ -65,7 +65,7 @@ it('正常104升级仅修复可证明三来源NULL，所有内容/父归属/历�
   after=await snapshot(opened.client);
   for(const [table,values] of Object.entries(before!))expect(['ai_conversations','article_anchors','graphic_post_anchors'].includes(table)?omitGroup(after[table]!):after[table]).toEqual(['ai_conversations','article_anchors','graphic_post_anchors'].includes(table)?omitGroup(values):values);
   const ledger=(await opened.client.query<{hash:string;created_at:number}>('SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id')).rows;
-  expect(ledger.slice(0,oldLedger!.length)).toEqual(oldLedger!);expect(ledger).toHaveLength(oldLedger!.length+1);expect(ledger.at(-1)?.created_at).toBe(1791043200003);
+  expect(ledger.slice(0,oldLedger!.length)).toEqual(oldLedger!);expect(ledger).toHaveLength(oldLedger!.length+3);expect(ledger.at(-1)?.created_at).toBe(1791043200005);
  }finally{await opened.client.close();}
  const second=await createDb({dataDir});try{expect(await snapshot(second.client)).toEqual(after!);expect((await second.client.query('SELECT * FROM drizzle.__drizzle_migrations WHERE created_at=1791043200003')).rows).toHaveLength(1);}finally{await second.client.close();}
 });
@@ -98,9 +98,11 @@ it.each(['transfer','return-with-history','wrong-artifact-type','wrong-artifact-
  }finally{await opened.client.close();}
 });
 
-it('0130SQL身份和105尾精确追加，旧104 journal及历史迁移固定不漂移',{timeout:120000,retry:0},async()=>{
+it('0130SQL身份及当前107尾精确追加，旧104 journal及历史迁移固定不漂移',{timeout:120000,retry:0},async()=>{
  const journal=JSON.parse(await readFile(join(folder,'meta/_journal.json'),'utf8'));
- expect(journal.entries).toHaveLength(105);expect(journal.entries[104]).toEqual({idx:104,version:'7',when:1791043200003,tag:'0130_legacy_source_ownership',breakpoints:true});
+ expect(journal.entries).toHaveLength(107);expect(journal.entries[104]).toEqual({idx:104,version:'7',when:1791043200003,tag:'0130_legacy_source_ownership',breakpoints:true});
+ expect(journal.entries[105]).toEqual({idx:105,version:'7',when:1791043200004,tag:'0131_platform_native_reports',breakpoints:true});
+ expect(journal.entries[106]).toEqual({idx:106,version:'7',when:1791043200005,tag:'0132_legacy_scheduled_job_membership',breakpoints:true});
  const digest=(value:string)=>createHash('sha256').update(value).digest('hex');
  expect(digest(await readFile(join(folder,'0128_workspace_convergence.sql'),'utf8'))).toBe('60cac883f02fa7fcd83051264bd6a63ec49132369c7c983b36e34e979a2f7713');
  expect(digest(await readFile(join(folder,'0129_workbench_artifact_convergence.sql'),'utf8'))).toBe('e4a8e08ec392d781ba6401d6f6389ec0fcaf4fb18a06aa51945864ce63951113');
