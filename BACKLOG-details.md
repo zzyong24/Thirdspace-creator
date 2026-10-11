@@ -2426,3 +2426,63 @@ T-1014仅迁移看板原说明，状态和验收未改：
 - `/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/BACKLOG-archive.md:1107`；原文件SHA `d7617bd903e42bce0b3104778f7edd91a96bfe103d6759eb4fc894fbe2f853f8`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。
 - `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG.md:154`；原文件SHA `00183b6a057a6e52c7503d61dbeafd0c388d99bc965640a1fa33cb329be76939`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。
 - `/Users/zyongzhu/.codex/creatoros-verification/t1117-20261009/t1171-before/BACKLOG-archive.md:1011`；原文件SHA `e674a00f1b5622478b4baeed165ffbb81634fdca2080c7dc19ef79b861aa6c40`；原行SHA `819a57a30efc7d7cdb8881fbc23157359967a42ddd17b8af9455e2cf0d7c897f`。
+
+<a id="b-43efc28c7f95"></a>
+
+## T-1223 2026-10-11 压缩前完整条目
+
+|T-1223|修复截图总览把历史运行记录当用例数及重复锚点|🔨 待办|—|待验|[范围与验收](docs/features/t1223-verification-gallery-record-identity.md)|3912FAIL与3913PASS同testId实际保留，但generator按每行标cases且同HTML id；只修报告计数/唯一锚点，保全历史状态和原图，待独评。|
+
+
+<a id="b-7cb36965e02b"></a>
+
+## T-1222 2026-10-11 压缩前完整条目
+
+|T-1222|核对文章图文编导的空态与功能指引脱离当前稿件|📋 待办|—|待验|[截图与范围](docs/features/t1222-director-context-guidance.md)|3911实际文章和图文编导截图仍提示最近评论出选题；当前组件空态/placeholder通用写死。先核正式稿件target与功能目录，按oil原tokens统一上下文指引和实际可用动作，不能只改文案冒签AI工具可用。|
+
+
+<a id="b-5c5bdde4c800"></a>
+
+## T-1221 2026-10-11 压缩前完整条目
+
+|T-1221|校准双工作区切换端到端旧账号选择器|🔨 待办|—|—|[范围与验收](docs/features/t1221-group-switch-e2e.md)|原T1207 A项目可见后data-account-id超时；仅按T1022真实members/data-group-id/组镜像校准，保两账号原公共创建、跨组无残影与返回刷新回读，不改权限或掩盖兼容缺陷。|
+
+
+<a id="b-7f8c12919103"></a>
+
+## T-1217 2026-10-11 压缩前完整条目
+
+|T-1217|修复内容雷达来源任务在旧账号和冻结组范围间卡住|🔨 待办|—|—|[诊断与验收](docs/features/t1217-source-sync-workspace.md)|3901公共来源创建后恢复实际OwnershipError，旧source/run的NULL组与execution冻结legacy组不一致；先隔离完整链RED，独评精确写集，保跨组/转组/停控/原ID。|
+
+
+<a id="b-50cf413f8280"></a>
+
+## T-1207 2026-10-11 压缩前完整条目
+
+|T-1207|用 Playwright/App 自动化对全功能建立逐项验收并留图|🔨 待办|—|待验|[验收范围与路径](docs/features/t1207-full-feature-acceptance.md)|用户要求以需求/验收标准驱动AI编写流程与用例、子Agent实际跑E2E、每个可达页面和场景留截图供明日复核。覆盖现有46个浏览器E2E及全路由截图；桌面原生须按真实Appium/宿主能力单列，报告外部平台/模型动作限制与所有失败，不触碰真实账号或用户数据。|
+
+
+<a id="b-ba8271fca89d"></a>
+
+## T-1208 2026-10-11 压缩前完整条目
+
+|T-1208|复核T-1207暴露的浏览器功能失败并修复确认缺陷|🔨 待办|—|待验|[复核范围与验收标准](docs/features/t1208-t1207-e2e-failure-triage.md)|T1207基线120例中39失败、8超时；专项修正后T1069/T954/T1159通过。已确认并修复无视频作品剪辑页卡在恢复态，组件与隔离浏览器回归通过；其余定位中心、内容雷达、项目、账号/作品、发布日历、剪辑、画布等继续按逐例索引和截图复现定因。|
+
+
+<a id="b-577cb0da68f4"></a>
+
+## T-1204 2026-10-11 压缩前完整条目
+
+|T-1204|核对本轮全局对账29项失败及新增触发项|🔨 待办|—|—|[实际诊断](docs/features/t1204-current-reconcile-failures.md)|T1199/T1200本轮完整reconcile --concise实际exit1，29ERROR/0WARN；输出仅保前5项，其余24未打印，不能猜成旧24项。保原日志与统计，核看板过大、旧receipt及LED041/057等真实失败，不修改门卫或洗绿；父任务仍待验。|
+
+<a id="b-331e63446d8d"></a>
+
+|T-1224|校准内容雷达公共旅程的短测试预算与证据输出|🔨 待办|—|待验|[范围与验收](docs/features/t1224-radar-e2e-budget-evidence.md)|原transform等待60秒/导航30秒未被overlay覆盖；窄校准后重跑完整来源到项目旅程，保旧失败和独立证据，不改产品或断言。|
+
+<a id="b-f2fe4887cb75"></a>
+
+|T-1217|修复内容雷达来源任务在旧账号和冻结组范围间卡住|🔨 待办|—|—|[诊断与验收](docs/features/t1217-source-sync-workspace.md)|旧NULL来源与冻结组不一致；30例通过后扩大旧回归暴露取消/防丢保护/删除父闭包，修复中。 [原记录](BACKLOG-details.md#b-7f8c12919103)|
+
+<a id="b-2a871e9f9f38"></a>
+
+|T-1101|修复画布素材选择、生成防重复与连线透传，整合三平台扫码绑定及错峰采集|🔨|PASS[REV:146ff2046c2c]|待验|[SPEC](docs/features/t1101-canvas-binding-collection.md)|用户2026-10-09截图明确要求：素材只显示预览；生成中禁止重复提交、已有结果再生成需确认；图片连线传递默认参考；扫码入口放平台能力表，删除刷新和下方重复框；三平台独立采集错峰执行。来源f97a80da已完成；main重新初审和组合验收，原PASS不代签当前树。不发布、不改真实Cookie。|

@@ -5100,3 +5100,22 @@ T1127登记时误标待验，实际任务只要求局部组件的合成五日Chr
 ## DEC-T1210-T1214-002 非产品UI任务验收列适用性校准（2026-10-11）
 
 T1210/12/13/14初建误填验收待验，taskctl实拒绝普通evidence说明并试读为frontend report；失败原样保留。独立适用性审PASS核四SPEC均无frontend-journey-contract、精确产品写集只在backend和frontend/src/server，没有改变本应用页面/组件/布局或UI consumer。平台静态Chromium为外部自动化夹具，不冒充产品UI两viewport；真实公共链/安装、隔离PG、原回归证据全部仍适用。参照DEC-T1201/T1202-001仅四行验收列校准—，状态继续taskctl及审计事件，不修改Gate/断言或补造UI报告；全局27FAIL/T1204、T1215/16/1196仍保留。
+
+
+## DEC-T1217-001 初始工作区的有界兼容与原执行收口（2026-10-11）
+
+用户已授权全功能稳定性验证、发现 bug 建 task 及时修复，并持续要求继续。选定 T1217 修订候选作为该既有故障修复的实现解释，当前独立 SPEC 复评 PASS 前不编辑产品。真实初始成员证明下 NULL 根与 canonical 初始组表示同一既有逻辑工作区；普通组权限、数据归属、公开契约和 schema 不改，旧 ID/hash/时间不迁移。无账号 RSS/web 不借历史平台账号要求新绑定；历史读取和执行准入分开。五个 intelligence 内部产品文件按修订操作/父关系矩阵闭合，原 fence 和当前成员守写入，同组锁保障两表示幂等；确定拒绝只收口当前原 execution，share_import 两段合同保留。范围与 A–H 实测要求见 SPEC 和修订候选/DEC 草案，旧候选 FAIL、两条 RED 保留。若要迁移所有权、普通组接任意 NULL、强绑平台、重发/续期则超出本决策，不沿用该授权；本决策不预签功能通过。
+
+
+DEC-T1217-001 收口补充：独评发现 source_sync 的 finish(failed) 控制特例，前置读不能保证控制优先。选既有 finish(blocked) 的 strictly-running 状态 CAS + 原 fence；控制先提交拒绝后原 claim acknowledgeControl，竞争丢失保状态，不再调 failed。过期 lease/unknown/新 owner/终态不结算。实际原 run blocked 对账仍沿既有机制；无新增 execution 写集或公开参数，当前独评复核后实施。
+
+
+### DEC-T1217-001 永久删除的最小来源证据闭包补充（2026-10-11）
+
+实际删除后Project getSourceContexts RED和独评见docs/verification/t1217/deletion-provenance-review.md。按已批准FR-CR-017/AC-CR-022及用户继续验证/修复bug授权，选择正式T1217补充中的内部精确adapterConfig证据标记、source ID机械命名空间退役业务externalKey、锁内最小source/run父闭包。业务列表/计数/读写/原ID再次访问/同identity新建仍保持永久删除合同；普通archive/pause保持。原ID/user/account/group/createdAt及受保护实体ID/hash保留，不迁移用户数据、不公开新模式或schema、不保全执行历史。syncPolicy不藏标记；未引用源物理删除。唯一新增测试白名单为intelligence.service.test.ts校准原T665与壳相冲突的私有物理断言，保原RED和全部其它保护/清理断言，另完整public消费和PG竞争必须实际通过。当前正式独立准入PASS前不改此策略。
+
+原 source-sync-runner 用户取消即时ack合同继续：确定性准入拒绝及宿主drain按原claim收口要等待已在途心跳，用户cancelOnAbort=true的即时取消不能被无条件等待心跳挂住；不改T1073旧断言、原控制权/fence/预算或新增执行权。此前扩大await导致的真实旧回归FAIL保留，稳定浏览器窗口结束后原产品窄修复并复验。
+
+2026-10-11 DEC-T1217-001 最终复核补充：依当前正式SPEC与独评真实消费者，未知SQL/transport不作确定归属拒绝；永久删除在锁内核当前execution重试/控制及双向绑定，错指针零删除。share_import无反向source事实，仅已证同组且确定终态时保无法证明可删的原task，合法来源删除继续；不新增执行权或保全部历史。裸无真实平台账号兼容须严格同user/account/kind/owner与NULL/精确legacy组、payload无矛盾，真实成员缺失不能降级。保持五产品写集、公开行为、原失败/ID/预算，实际负族与独评未完成不签GREEN。
+
+DEC-T1217-001 可见历史边界：无法证明可删的 share_import 原终态 task 保留可能仍被既有 execution.tasks.get/list 读到；避免误删的最小安全校正，不新增访问权/执行权，也不声称所有公开查询逐字不变。来源及来源run/events保持永久删除语义，不复活/续期。

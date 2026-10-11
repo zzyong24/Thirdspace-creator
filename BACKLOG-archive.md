@@ -1140,3 +1140,27 @@
 |T-1178|校准双端打包资源回归的第三方声明前置条件|✅ 待办|PASS[REV:8d538a517aa5]|—|[SPEC](docs/features/t1178-package-resource-contract.md)|原LED006当场42PASS/1FAIL：旧断言只允许tar，漏当前第三方声明；先独评只校准该测试，保单tar与无sidecar目录保护，不改包配置/流程/预算。|
 |T-1177|修复首页性能回归的稀疏指标夹具缺字段|✅ 待办|PASS[REV:e7019c7dcc42]|—|[SPEC](docs/features/t1177-dashboard-rollup-fixture.md)|原LED050实际7前端PASS、后端45PASS/3FAIL；旧夹具缺合同finishAvg导致toFixed异常，只校准该测试、保原并行/缓存/跨号/诚实缺数断言。|
 |T-1176|校准导航与封面恢复回归的过期前置条件|✅ 待办|PASS[REV:d0fefb6b762e]|—|[SPEC](docs/features/t1176-current-regression-preconditions.md)|当前LED049三处旧导航/容器断言，LED048封面用例缺真实父稿件；保原红测，独立核合同后只改两测试，原完整检查与隔离浏览器复验，不改产品/守卫/预算。|
+
+## 归档于 2026-10-11
+
+| ID | 任务 | 状态 | 审核 | 验收 | 文档 | 一句话 |
+|---|---|---|---|---|---|---|
+|T-1220|恢复画布空素材选择器的上传导航|✅ 待办|—|PASS:3efcbce4a8c7|[窄修复SPEC](docs/features/t1220-canvas-upload-navigation.md) · [旅程合同](docs/verification/t1220/PAGE_SPEC.md)|T994上传可达性仍需保留；T1069全库无total覆盖旧bounded计数。只接现有先保存再离开链，失败留原画布，浏览器点击/保存回读留图。|
+|T-1218|核对新建项目端到端用例的旧表单合同|✅ 待办|—|—|[证据与范围](docs/features/t1218-new-project-e2e-contract.md)|实际3901首例看到name/brief两段与可多选文章/图文/视频，旧例仍断言四段、竖屏9:16、项目名称。第二例停在默认5秒工作区等待，尚不能判产品错误。只按现有表单合同/独评校准测试；两例各经公|
+|T-1219|核对画布素材选择端到端旧定位器|✅ 待办|—|—|[证据与范围](docs/features/t1219-canvas-e2e-selectors.md)|旧T993新建画布按钮匹配页头和空态两处，旧图片/视频按钮名及T1021用此素材创作按钮名与实际预览+操作双按钮不一致；trace公共assets.list真实返回两素材，插入前定位器超时。仅为确认旧|
+|T-1215|核对采集未登录回归仍期待旧设置入口文案|✅ 待办|—|—|[实际失败](docs/features/t1215-collection-login-copy.md)|原runner两条未登录文案断言实失败，e5c安装源基线同两FAIL20PASS；保错误/归属严格断言，待独立校准旧设置→账户与当前账号管理扫码绑定合同。|
+|T-1216|核对全功能截图自动fixture的类型注册缺口|✅ 待办|—|—|[实际失败](docs/features/t1216-e2e-capture-fixture-type.md)|当前与e5c安装源实为同五条E2E自动截图fixture注册类型失败；新增测试两条自身类型错误已修，后端typecheck通过。保原失败，不关闭tsc或排除夹具。|
+|T-1214|修复抖音作品导出被创作者中心弹窗遮挡|✅ 待办|—|—|[实际错误与范围](docs/features/t1214-douyin-export-modal.md)|平台modal-wrap拦截投稿作品的原失败保留；显式安全关闭与叠层/隐藏/授权拒绝真实隔离Chromium通过，新a091安装一次正常公共采集三层成功。真人modal控件未观测，不补签选择器触发。|
+|T-1213|防止采集原执行被接管后旧进度回写|✅ 待办|—|—|[精确范围](docs/features/t1213-scheduled-progress-fence.md)|原e5c实际runner立即/排队旧fence两条RED，原lease事务进度窄端口七条隔离PG通过；新安装公共链原run成功，保终态原路径。完整对账待收口，不把progress-only扩称所有生命周期写均fenced。|
+|T-1212|核对安装版月明采集在导出阶段持续等待|✅ 待办|—|—|[实际诊断](docs/features/t1212-installed-export-wait.md)|真实等待根因为平台modal拦截已定位；固定export子阶段经新a091安装实际公共链回写，唯一新run三层成功0/0、attempt1，runtime18阶段到真实close。完整证据与独评保留，不签真人modal控件触发。|
+|T-1210|定位并修复采集已入队却反复租约重试且无结果|✅ 待办|—|—|[诊断与验收](docs/features/t1210-scheduled-consumption.md)|正确父查询与消费拒绝收口已e5c安装，原第三空间成功0、月明系统自行下一次成功86；本轮a091新包一次公共采集三层成功attempt1。原modal失败保留在T1214；完整全局对账待收口，不代签其他平台。|
+|T-1211|核对调度父子原回归跨用例重复命令请求号|✅ 待办|—|—|[实际诊断](docs/features/t1211-scheduled-command-fixture.md)|T1210相关原回归32通过2失败，同beforeAll库的参数化用例重复child-cancel/parent-control/retry-daily键导致真实幂等冲突；保当前与6730基线失败，仅核夹具请求号，不放宽guard或产品断言。|
+|T-1209|修复自动化立即运行被真实账号归属校验409拒绝|✅ 待办|—|—|[诊断与验收](docs/features/t1209-scheduled-run-membership.md)|用户实际报scheduledJobs.runNow采集作业与当前真实账号归属不符，自动化无法运行。核历史作业冻结版本与当前成员及手动/定时公共链；保跨组拒绝、原任务ID/排期/历史，不删除守卫或盲目重复采集。|
+|T-1206|排查打包后资源骤降并清理已结束构建中间文件|✅ 待办|—|—|[诊断与清理边界](docs/features/t1206-post-package-resource-cleanup.md)|用户反馈瞬间无内存；实际磁盘剩2.3GiB、swap用24GiB，main构建中间目录约22GiB。核无在途构建及文件占用后仅删忽略可再生缓存，保安装版/最新包/源码/用户数据/证据，不凭单点采样断言内存泄漏。|
+|T-1205|恢复本地主目录sharp原生依赖后重建当前客户端|✅ 待办|—|—|[环境SPEC](docs/features/t1205-local-sharp-native-environment.md)|ff3946f5固定打包入口实际在T225b失败：根sharp0.32.6缺build/Release/*.node。保原失败与旧安装；退出冻结，仅按已安装包自身脚本恢复忽略的本地依赖，验证真实图像处理/随包Node，不改产品/构建/锁文件/测试/检查标准，重新干净冻结构建。|
+|T-1080|汇总全部本地worktree代码到main并清理闲置目录后构建|✅ 待办|—|—|[SPEC](docs/features/t1080-local-main-worktree-consolidation.md)|用户2026-10-08明确授权全部代码本地合并至主分支、清理不用的worktree再构建，构建无需备份。先逐树核HEAD/未提交/使用情况并保留Git来源，解决冲突和验证后只删除已保留代码且未占用的目录；保留活跃会话、真实数据与既有备份，不push/tag/发布。|
+|T-1198|校准归档检查的显式隔离PG验收环境|✅ 待办|—|—|[实际诊断](docs/features/t1198-isolated-archive-gate-environment.md)|T1080完整reconcile新增LED052缺环境；只接既有55422隔离PG，保原失败，原三套与归档PG族不能skip，不改产品/断言或用户库。|
+|T-1195|校准安装验收探针的公开PID和首页事件边界|✅ 待办|—|—|[诊断与校准](docs/features/t1195-installed-startup-probe-pid.md)|T1194首探针错误把status.pid当服务PID，真实值为安装版主PID，15.006秒exit1；只校准私有验收驱动，绑定主进程/直属HTTP监听及HTTP首页事件，排除tauri启动页；原失败不覆写，不改产品。|
+|T-1194|安装当前新包并清理旧测试安装包与App副本|✅ 待办|—|—|[操作SPEC](docs/features/t1194-install-current-clean-old-packages.md)|用户2026-10-10明确要求安装当前新包并删除旧测试安装包；仅安装已核验的d91079d6本地1.2.0包，无需重建或备份。逐项核归属后清理旧制品/空包装目录，保账号、项目、素材、激活、日志、证据和源码；验证实际原生启动，不代签全功能。|
+|T-1190|核对定位生成服务的请求上下文断言|✅ 待办|PASS[REV:0c41e3239506]|—|[实际诊断](docs/features/t1190-positioning-generation-request-context-test.md)|原LED058 Worker54PASS、后端117PASS1FAIL，前端未执行；旧精确ctx期待缺实际三项组字段。先核任务来源/合同，不删除字段或以objectContaining削弱隔离。|
+|T-1187|核对编导前端回归的旧会话替身|✅ 待办|PASS[REV:1a0ed8fa1e3f]|—|[SPEC](docs/features/t1187-copilot-live-session-test-contract.md)|T1186原LED020后端274PASS、前端66PASS/18FAIL；旧替身缺currentTaskId方法。先独评核真实接口，仅补无回执null，不改产品/guard/预算，不删原恢复与SDK断言。|

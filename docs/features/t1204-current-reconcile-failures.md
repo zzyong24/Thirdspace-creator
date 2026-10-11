@@ -11,3 +11,11 @@ LED052当前总命令没带原T1198所需隔离PG变量，另原归档入口显�
 本任务无UI改动，验收适用性—。T1199/T1200保持待验，T1201/1202的测试合同实现已通过但全局收尾未代签。用户既有“发现问题建task及时修复”及先出本地可测客户端授权继续适用；本地包冻结只走原基本预检及固定入口，不推送或发布。
 
 2026-10-11 T1209当前完整reconcile --concise再次实际exit1：27ERROR/0WARN，前5仍为看板过大及上述4条旧receipt，另22项未打印，不能推断全属旧债。当前统计时间2026-10-11T02:01:31.077Z触发LED018/042/052/058/054/057/053，统计只定位触发项而不提供底层原因。本轮原日志、统计分别保存docs/verification/t1209-reconcile.log与t1209/reconcile-statistics.json；迁移17、调度110、旧来源迁移31、公共安装12作业对照均通过，不能代签全局结果。本次LED052总入口只设置CREATOROS_TEST_POSTGRES_URL，原归档门同时要求CREATOROS_ISOLATED_PG_URL；另行按原入口补齐隔离环境执行，保留此次全局失败，不改guard或断言。
+
+
+2026-10-11 T1220长对账实际exit1/28ERROR/0WARN，前5仍是BACKLOG RUNAWAY及上述四条旧receipt；另23未打印。原log docs/verification/t1220/reconcile.log。运行以9fde树启动、晚期T1217进入五产品实施，属于混源且concise不完整结果，不能代签冻结树全Gate。待稳定后完整非concise复核，保本次原退出。机械归档工具dry-run真实显示19条已✅活动行、预计仅减7.3KB，尚不能宣称看板过大消失。
+
+
+本轮已taskctl start T1204审计并执行原机械backlog-compact --all --squeeze：19条已完成行原文归档、1条长详情外置，不改状态/审核/验收。七个当前任务的长诊断整条保留在BACKLOG-details指定锚，只在活跃行简述当前目标/真实结果/剩余工作；T1062重复详情链接去重，完整范围仍在既有详情。当前health实际exit1、59.9KB，执行ID唯一、行长和状态列正常，退出2/RUNAWAY已消除，但仍超过30KB硬限及原五撞号归档告警；不是health全绿，不移除在途/暂停任务为提速。实际日志docs/verification/t1204/{backlog-compact.log,backlog-health-after-mechanical.log,backlog-health-condensed-final.log}。仍需稳定树完整reconcile逐根因对账，T1204保持进行中。
+
+新增T1224后看板重新到60.2KB实际health exit2/RUNAWAY；本轮再把T1224/T1217/T1101长诊断原行完整保存BACKLOG-details哈希锚，仅缩活动行说明，不改状态/评审/范围或删任务。实际health仍exit1/60.0KB/超过30KB硬限，RUNAWAY消失但不是health绿；日志backlog-health-after-t1224与-condensed分别保留。

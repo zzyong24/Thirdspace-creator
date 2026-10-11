@@ -9333,6 +9333,223 @@
           "git diff --check"
         ]
       }
+    },
+    "T-1217": {
+      "task_id": "T-1217",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1217-source-sync-workspace.md",
+        "backend/src/modules/intelligence/**",
+        "backend/src/modules/execution/**",
+        "backend/src/modules/platform-account/**",
+        "backend/src/workspace-scope.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1217/repair-candidate.md",
+        "docs/verification/t1217/decision-draft.md",
+        "orchestrator/DECISION_LOG.md",
+        "docs/verification/t1217/deletion-provenance-review.md",
+        "docs/superpowers/specs/2026-07-23-content-radar-restructure-design.md"
+      ],
+      "write_set": [
+        "backend/src/modules/intelligence/intelligence-workspace-scope.ts",
+        "backend/src/modules/intelligence/intelligence.service.ts",
+        "backend/src/modules/intelligence/transcript-execution-binding.ts",
+        "backend/src/modules/intelligence/project-reference.service.ts",
+        "backend/src/modules/intelligence/source-sync-runner.ts",
+        "backend/src/integration/intelligence-source-workspace.test.ts",
+        "backend/src/modules/intelligence/intelligence.service.test.ts",
+        "docs/verification/t1217/**"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir backend exec vitest run src/integration/intelligence-source-workspace.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0",
+          "pnpm --dir backend exec vitest run src/modules/intelligence/intelligence.service.test.ts src/modules/intelligence/source-sync-runner.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0",
+          "pnpm --dir backend typecheck",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "DEC-T1217-001选定修订方案，当前SPEC独评PASS前不动产品；原RED保留，逐操作矩阵/父证明/原fence与share两段合同，五文件内闭合。控制面root串行。 永久删除最小只读证据闭包与T665单条内部断言校准候选正式独评PASS后方可实施，公开删除可见语义/原取消合同保持。"
+    },
+    "T-1218": {
+      "task_id": "T-1218",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1218-new-project-e2e-contract.md",
+        "frontend/tests/e2e/new-project.spec.ts",
+        "frontend/src/features/projects/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/new-project.spec.ts",
+        "docs/verification/t1218/**"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "独评后只校准已确认旧测试，产品不改；Next运行由root串行，原失败保留。"
+    },
+    "T-1219": {
+      "task_id": "T-1219",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1219-canvas-e2e-selectors.md",
+        "frontend/tests/e2e/creative-canvas.spec.ts",
+        "frontend/src/features/creative-canvas/**",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/creative-canvas.spec.ts",
+        "docs/verification/t1219/**"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "独评后只校准已确认旧测试，产品不改；Next运行由root串行，原失败保留。"
+    },
+    "T-1220": {
+      "task_id": "T-1220",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1220-canvas-upload-navigation.md",
+        "frontend/src/features/creative-canvas/**",
+        "docs/features/t1069-installed-media-and-binding.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/src/features/creative-canvas/canvas-asset-picker.tsx",
+        "frontend/src/features/creative-canvas/canvas-editor.tsx",
+        "frontend/src/features/creative-canvas/canvas-editor.test.tsx",
+        "frontend/tests/e2e/creative-canvas.spec.ts",
+        "docs/verification/t1220/**"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "先独评；E2E写点在T1219结束后串行；不改共享素材选择或数据边界。"
+    },
+    "T-1221": {
+      "task_id": "T-1221",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1221-group-switch-e2e.md",
+        "docs/features/t1022-account-group-workspace.md",
+        "frontend/tests/e2e/zz-account-isolation.spec.ts",
+        "frontend/src/components/shell/account-switcher.tsx",
+        "frontend/src/lib/http-transport.ts",
+        "contract/src/resources/account-groups.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/zz-account-isolation.spec.ts",
+        "docs/verification/t1221/**"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec eslint tests/e2e/zz-account-isolation.spec.ts",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "独评后测试合同校准，保legacy账号公共创建/真实成员/跨组结果。仅root控制面和单Next串行。"
+    },
+    "T-1223": {
+      "task_id": "T-1223",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1223-verification-gallery-record-identity.md",
+        "docs/verification/t1207/generate-gallery.mjs",
+        "docs/verification/t1207/scenario-index.ndjson",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "docs/verification/t1207/generate-gallery.mjs",
+        "docs/verification/t1207/E2E-GALLERY.html",
+        "docs/verification/t1207/E2E-CASE-INDEX.md",
+        "docs/verification/t1223/**"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "node docs/verification/t1223/verify.mjs",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "当前独评scope PASS后仅报告计数/唯一记录锚点，保原逐行历史/状态/图片。不改scenario数据或App产品；临时真实生成RED/GREEN与完整索引验证。根控制面串行。"
+    },
+    "T-1224": {
+      "task_id": "T-1224",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1224-radar-e2e-budget-evidence.md",
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "docs/engineering/timeout-policy.md",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "docs/verification/t1224/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-e2e"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "独立范围复核后只校准测试预算与独立证据输出，原输入/断言/隔离/任务ID保持。唯一Next由root协调，控制面root串行。"
     }
   }
 }

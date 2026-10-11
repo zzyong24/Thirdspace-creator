@@ -1,0 +1,43 @@
+# T1217 最终实现独立评审
+
+## 2026-10-11 稳定代码第一轮复核
+
+本轮只读正式SPEC/DEC/Packet及五产品文件、实际相关回归日志；不启动Next、不读真实用户库/凭据、不触发采集，不重跑重型PG/PGlite。只写本评审。**当前代码存在范围内阻断，暂不能签最终实现/验收PASS。** 以下为已定位源码条件，未冒称本评审运行了负例；已当场通知root/作者补真实隔离回归。后续修复与最终哈希/结果另追加，不覆盖本轮发现。
+
+当前SPEC SHA256 `7474ffdfeb85c7dc1c03880871d460e2272d104e2e010f51a3804f5ca1dda43d`；Packet `1c7d1d81e176dfc3b5d1bed21cc8d3d9bafcdbf2f0dcc308f455b89ebe28b62f`；DEC日志 `ec2e026223c52d1f987fe0521b001e77d2856b53ae84b8e5546ec5e91e5bb4a0`。五产品锚：
+
+|文件|SHA256|
+|---|---|
+|intelligence-workspace-scope.ts|eb55f2e976cfd441b9070a0b8a68cd37f5c13f7b8c9dc2a26c7d8c7a5f3c65ef|
+|intelligence.service.ts|938daa20c240dfb15d183856508ad9671384ec1a62d94a62c18acbcb708f3f78|
+|transcript-execution-binding.ts|ac5990fa94e8fb9698f0fe66a0bcc3471aa0b0329b080fea692711200c097a4b|
+|project-reference.service.ts|7bbc60f1f1a40285817dfcd8cff4c6e5ca0abb5467b5277f3bace23966fec84a|
+|source-sync-runner.ts|6fa953a811aef4f468c18f42700fc6ae80b4f7270675678cb0537df1b92008cc|
+
+### 范围内阻断
+
+1. **未分类异常也会被标成确定准入拒绝。** source-sync-runner.ts:292 的getRun catch不分异常就closeRejectedSourceClaim；:246任意未abort异常都rejected=true，:263收口blocked。合法原claim若遇到临时SQL/transport/普通Error，后续tasks.get恢复成功，会被写SOURCE_SYNC_ADMISSION_REJECTED，而不是保原未知事实。runtimeStatus检查只保护已持久unknown_result，不保护这类未知执行结果。最低真实负族：原真实claim+机械读端临时普通Error，观察原ID/attempt/lease/status不被blocked；确定归属错误仍收口。已审核作者拟typed白名单：当前实际消费点shared OwnershipError、IntelligenceConflictError、platform-account ConflictError均由明确归属/租约/物理关联/重复内容或成员变化抛出，未见临时SQL包装成这些类；只能按真实instanceof及已审端口分类，不靠name/message/code或把execution模块另一同名类并入，adapter失败仍原failureEnvelope。
+2. **永久删除只看run缓存状态，漏当前真实重试任务。** intelligence.service.ts:3038以runs.status判在途，未读execution真值；:5481明确承认failed/blocked原run可以对应同task新attempt running的合法显式重试。该时刻永久删除可越过在途guard并:3213删除正在执行的原task。需要同锁事务读/锁实际execution和其控制/未知/queued/running状态，拒绝且零部分删除；不能只改run状态列表或取消原任务洗绿。
+3. **删除执行任务仍信内容行的单向指针。** :3151汇总run.executionTaskId、transform.aiTaskId、transcript.executionTaskId，:3213仅按ID删除execution；内容父proof不证明execution。若自有合法source/run的executionTaskId错误指向另一组/用户的无calls queued任务E，当前过滤仍接受该run并删除E。该历史写法在本次删除闭包段仍存在，不能用旧实现作为安全证明。需要同user/物理工作区及kind/owner/payload反向机械绑定，只删明确可证明属于本删除集合的真实终态任务；错指针不触碰别人记录。source_sync对应ownerType=source/ownerId及payload.sourceId；transcribe对应item；topic_preview对应item和sourceSnapshot，rewrite_only另核transformId。share_import没有source反向字段，不能从单向run指针删它。相关真实负族及策略正式补充待作者/root确认。
+
+### 已核成立的边界与当前证据
+
+- logicalGroup真实初始证明含全局account ID唯一v1、账号/组同用户、精确初始组，真实账号缺成员不能降级；withIntelligenceWrite在成员锁内再次核唯一初始history/current版本。普通组无任意NULL支路；bare支路要求全局不存在真实平台account。
+- trustedIso仅服务UTC毫秒规范，CASE先regex再安全年月日integer/闰年/月长验证，不对坏日期作timestamp cast；历史截止只作用有createdAt的根，关联由真实item/source/run/snapshot等ID父关系证明。sameOldAccount只在双方NULL强制原account相同。
+- source apply先取冻结membership锁再execution锁，同原worker/attempt/lease/fence/当前组及机械source/run双向校验，原runner显式传原claim fence。结果、checkpoint、run和execution终态同事务，未重置预算/ID/attempt。getRunByTask再次核真实source owner/payload，坏业务绑定不选别人的run写。
+- 明确用户取消finally保持原即时ack、不无条件等挂起心跳；确定拒绝/drain路径等in-flight再收口；blocked使用原finish严格running CAS及原fence，不改execution控制模块。现ack端口仅原worker/attempt参数，正常换claim会递增attempt，不把当前task回读当新claim凭证。
+- 保守transform guard只用于稿件锁、无正文workflow、删除保护；getItem/candidate/preview/Project仍完整内容父/hash证明，Project先按ref自身根列出再明确拒绝坏父，避免坏ref静默空列表。删除保护从本源已证明observation得到真实item交集，run壳只来自完整真实snapshot与同源run，不造假父。
+- 壳精确两键adapterConfig与源ID退役前缀不相交合法profile/favorites/darkhorse固定前缀及web/rss64hex身份；清配置/监控/下次时间/分类，普通archive不隐藏。业务source/run/events/membership使用非壳完整proof，snapshot evidence父允许壳但不绕同用户逻辑组或ID父；同identity新建不复活旧ID。删除与attach共享组锁，保护集在锁内重读。
+- T665测试diff仅已审source物理断言校准及最小必要run/业务隐藏补断言；原公共影响计数/item/shared/snapshot/transform/ref等断言保留。原T603/T622和T1073断言未改。实际旧7文件日志76/76PASS、216.09秒；真实项目完整41例日志41/41PASS、155.28秒。它们没有覆盖上述三条新负族，不能消除源码阻断。type日志及作者实际exit0、boundary无新增且5基线保留；timeout-policy旧总exit1仍在。
+
+补充删除策略必要界线：T665裸旧fixture确实payload={}、同user/account/source_sync/source owner/终态，但原HEAD真实startRun已写payload.sourceId，不能仅凭fixture称历史真人数据必缺payload。若保裸无平台账号旧合同，至少严格实际无account、同user/account、task.group只NULL或原精确legacy表示、明确kind/owner双向关联，payload存在相反事实仍拒绝。真实账号/组不可借该例外，跨用户/跨组/坏owner/baretask负族须实际发生。share_import无法证明可删时保原终态execution而清本源业务内容，可避免扩大删除；这是确定性保原、不新增执行权，但须正式SPEC/DEC明确该保留边界，active/unknown不可被当终态跳过。
+
+当前等待新实现hash、上述真实RED/GREEN、全部最终族及公共浏览器旅程证据；不将前置scope PASS或部分已过回归代签整体任务完成。
+
+## 2026-10-11 正式安全收口补充范围准入
+
+已重新读正式SPEC尾“最终复核发现的拒绝分类与删除执行绑定”及DEC补充。该精确安全修复**范围准入PASS**；本轮第一轮产品锚的三条阻断仍待实现/实测，未因此变成实现PASS。当前正式SPEC SHA256 `75b769c57bf3e1edda2507e00d3e4038e5a30f358017f470aacc0c9c84a6a419`；Packet `2f90e4b99509939fa2acf45fd3f7589567157206d86f6cb1bd09b81e26b0955e`；DEC日志 `625971f9f5a3946c2f3475291b28b5d2f35f89a6fa2abca5adb7ce8a201b3bc0`。
+
+正式补充已限定三个真实typed错误类及已审机械消费者，普通SQL/transport/配置/adapter异常不依name/code误归；新增当前真实execution重试/控制/未知在途检查和逐族双向ID/owner/payload证明，错指针零部分删除；bare兼容明确全局没有真实平台账号、原user/account、NULL或精确legacy组、真实反向owner及payload无矛盾，缺真实member不降级。share_import没有反向source事实，不能从run指针删除；仅同工作区已证明确定终态且无未完成控制/未知/在途时，合法来源删除清本源内容并保无法证明可删的原execution，不新增关系或执行权。五产品/已审测试白名单、原旧失败和断言保持。
+
+以上是在原任务安全/永久删除和引用保护授权内兑现机械边界，无新增用户确认需求。表述上须精确：保原share终态task可能让既有execution.tasks.get/list继续回读该历史任务，不能声称删除前后所有公开历史查询逐字相同；本次不新增端点/权限/复活或续期，来源列表、源run/events及旧sourceID仍保持永久删除业务语义。已通知root记录此实际可观察差别。后续必须真实验retry在途、不同user/group/owner的run/transform/transcript坏task指针、bare矛盾及合法分享源删除；之前41/76的日志不能代签后增族。
