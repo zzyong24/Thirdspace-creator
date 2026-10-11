@@ -1,0 +1,12 @@
+{
+  "observedAt": "2026-10-11T03:37:15.669340+00:00",
+  "execution": {
+    "id": "exec_5f756f20-37e8-4daa-bf76-e3c3ceae327e",
+    "kind": "ai_task",
+    "groupId": "grp_legacy_acct-ae1a8346-9",
+    "accountId": "acct-ae1a8346-9",
+    "status": "succeeded",
+    "attempt": 1,
+    "errorCode": null
+  }
+}

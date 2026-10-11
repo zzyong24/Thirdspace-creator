@@ -13,3 +13,5 @@ BUILD产品写集仅frontend/src/server/ingestion/douyin-cdp.ts，测试新增fr
 不改身份校验、采集可见性、下载格式、任务ID/预算/归属/调度、网关/默认超时；与T1212/T1213同包。先独评、当场RED再实现；本任务不证明既有raw错误文案已全部脱敏。
 
 安装见证采用T1212已明确的一次公共验收规则：仅确认同job无running后，当前已授权账号的正常runNow；保所有旧ID/失败/结果，不重复pending。隔离弹窗结构与真人实际是否出现分别报告。
+
+当场新包见证：a091de271实际构建/安装/启动通过，一次正常公共新run-92346e38-f95c-4be1-a683-737fa131b479于03:35:42.351Z三层成功、attempt1、真实新增/更新0；公共固定子阶段和新runtime十八阶段均可读。原HTTP提交回执记录脚本错误未保存，已仅回读同一ID，未重发或补造requestId/deduped。真人modal内部未观测，不代签selector触发；独立复核和完整证据见docs/verification/t1212/REPORT.md。全局对账结果另补，不称全功能完成。

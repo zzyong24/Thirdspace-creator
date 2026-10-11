@@ -3,7 +3,7 @@
 > 本文件由 `node orchestrator/process/pmem.mjs sync` 生成,**勿手改生成段**。
 > 人写的「定位/为什么」改 pmem.mjs 顶部常量与 SYSTEM_ARCHITECTURE.md。
 
-LAST_SYNCED: main @ e5cdb4406
+LAST_SYNCED: main @ a091de271
 
 ## 这是什么(定位)
 
@@ -23,8 +23,8 @@ CreatorOS —— 一个编导式的自媒体内容生产系统(非项目管理�
 
 ## 开放任务(欠债)
 
-- [wip] T-1212 核对安装版月明采集在导出阶段持续等待
-- [wip] T-1210 定位并修复采集已入队却反复租约重试且无结果
+- [open] T-1215 核对采集未登录回归仍期待旧设置入口文案
+- [open] T-1216 核对全功能截图自动fixture的类型注册缺口
 - [wip] T-1207 用 Playwright/App 自动化对全功能建立逐项验收并留图
 - [wip] T-1208 复核T-1207暴露的浏览器功能失败并修复确认缺陷
 - [wip] T-1199 查明并修复账号组内其他已绑定媒体定时任务不可见

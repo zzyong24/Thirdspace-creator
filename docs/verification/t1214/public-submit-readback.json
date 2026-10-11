@@ -1,0 +1,29 @@
+{
+  "observedAt": "2026-10-11T03:33:47.126561+00:00",
+  "runNowCalls": 1,
+  "submissionResponseLostByProbe": true,
+  "probeError": "AttributeError: nullable error field read as dict; not product failure",
+  "requestId": null,
+  "newRuns": [
+    {
+      "id": "run-92346e38-f95c-4be1-a683-737fa131b479",
+      "jobId": "job-ae1a8346-11",
+      "aiTaskId": "ai-task-5f539a0f-193",
+      "status": "running",
+      "itemsNew": 0,
+      "itemsUpdated": 0,
+      "startedAt": "2026-10-11T03:33:24.203Z",
+      "finishedAt": null
+    }
+  ],
+  "priorRunStatuses": [
+    {
+      "id": "run-65c331df-6c9f-4429-bc44-20d59ec1766c",
+      "status": "succeeded"
+    },
+    {
+      "id": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+      "status": "failed"
+    }
+  ]
+}

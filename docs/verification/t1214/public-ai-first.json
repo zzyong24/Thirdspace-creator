@@ -1,0 +1,17 @@
+{
+  "observedAt": "2026-10-11T03:34:03.874848+00:00",
+  "runId": "run-92346e38-f95c-4be1-a683-737fa131b479",
+  "ai": {
+    "id": "ai-task-5f539a0f-193",
+    "userId": "user-zyongzhu",
+    "groupId": "grp_legacy_acct-ae1a8346-9",
+    "accountId": null,
+    "status": "running",
+    "taskType": "scheduled.self.metrics",
+    "executionTaskId": "exec_5f756f20-37e8-4daa-bf76-e3c3ceae327e",
+    "startedAt": null,
+    "finishedAt": null,
+    "createdAt": null,
+    "errorCode": null
+  }
+}

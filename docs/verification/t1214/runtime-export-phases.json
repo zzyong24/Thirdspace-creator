@@ -1,0 +1,24 @@
+{
+  "sourceHead": "a091de271aed5185678da82d51baae0eb7025248",
+  "phaseEvents": [
+    "browser",
+    "channel",
+    "login",
+    "page",
+    "navigate",
+    "initialize",
+    "modal",
+    "posts_click",
+    "posts_wait",
+    "list_click",
+    "list_wait",
+    "date",
+    "refresh",
+    "export_click",
+    "download_event",
+    "download_finish",
+    "file_read",
+    "close"
+  ],
+  "boundary": "仅固定导出机械阶段日志，不包含页面正文、Cookie、路径或错误"
+}

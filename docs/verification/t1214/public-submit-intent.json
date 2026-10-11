@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-10-11T03:33:23.884403+00:00",
+  "sourceHead": "a091de271aed5185678da82d51baae0eb7025248",
+  "operation": "scheduledJobs.runNow",
+  "groupId": "grp_legacy_acct-ae1a8346-9",
+  "accountId": "acct-ae1a8346-9",
+  "jobId": "job-ae1a8346-11",
+  "idempotencyKey": "t1214-installed-collection-afa4bc5d-8063-42cf-b1b5-5d5f412a38f7",
+  "attempted": true,
+  "priorRuns": [
+    "run-65c331df-6c9f-4429-bc44-20d59ec1766c",
+    "run-4f1bbadf-5506-4090-ae34-12a727fb60ac"
+  ]
+}

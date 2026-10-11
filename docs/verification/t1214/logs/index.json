@@ -1,5 +1,25 @@
 [
   {
+    "name": "ai-get-operation-current.log",
+    "bytes": 5389,
+    "sha256": "84b24aaed0db2e5c00591c2e9d8290e8dbbe93d37e8fbe14e2ce8c4e924f6b8d"
+  },
+  {
+    "name": "ai-operation-current.log",
+    "bytes": 108,
+    "sha256": "831d7d1a7b4a88c4710b42298b5beacfc5b95e9e625bcb0645f0a85a017edbf0"
+  },
+  {
+    "name": "execution-operation-current.log",
+    "bytes": 24387,
+    "sha256": "4678d0a8444cfae6d7bb8e514e8b45f10bcf88fa24ffcdfda25436d9572dbf6e"
+  },
+  {
+    "name": "freeze-final-result.log",
+    "bytes": 1029,
+    "sha256": "700953f74ad0c8a82e6b13d057019f5b4d03b238b83781effe62c36b34aa4140"
+  },
+  {
     "name": "frontend-e5c-type-baseline.log",
     "bytes": 706,
     "sha256": "d8e651f5729e4e960e08257afc68ee293dba12f79db89bd089281dd2361a7621"
@@ -10,6 +30,11 @@
     "sha256": "16aee7f4da735f3caaf8e4bbe311c3b1ecf7cc7bdfb6935e48498124f3e4a7b3"
   },
   {
+    "name": "frontend-related-long-budget.log",
+    "bytes": 548,
+    "sha256": "b06b72973c74c37d1a32d6c694d8cfc35558c56390f149f7c046a7073976f417"
+  },
+  {
     "name": "frontend-type-final.log",
     "bytes": 706,
     "sha256": "d8e651f5729e4e960e08257afc68ee293dba12f79db89bd089281dd2361a7621"
@@ -18,6 +43,16 @@
     "name": "frontend-type.log",
     "bytes": 1465,
     "sha256": "5a04c2c826cacc3dc4196abd6ecef86f33e46c3207b67acd9bb2f2161b51231d"
+  },
+  {
+    "name": "install-package.log",
+    "bytes": 422,
+    "sha256": "d4f6acc24b04952734aaeb2728d036e59ca8decf3d945a468b7608ed279435d7"
+  },
+  {
+    "name": "jobs-operation-current.log",
+    "bytes": 5048,
+    "sha256": "2449862f0536f8785ca27658f1ec983d29d9560a52744fefb1c188f1f5bcb6b8"
   },
   {
     "name": "modal-progress-final.log",
@@ -33,5 +68,60 @@
     "name": "modal-red.log",
     "bytes": 3461,
     "sha256": "f0c14b4d61812c389b2b8b59e081ee209ee140ee3d17b41b96411f8519f10179"
+  },
+  {
+    "name": "operations-current.log",
+    "bytes": 9760913,
+    "sha256": "a5a676ffc49d04eea1b66b84be9cfdd2708ca6ea45984122bc05d5327f6af771"
+  },
+  {
+    "name": "operations-installed-current.log",
+    "bytes": 9760913,
+    "sha256": "a5a676ffc49d04eea1b66b84be9cfdd2708ca6ea45984122bc05d5327f6af771"
+  },
+  {
+    "name": "package-basic-frozen.log",
+    "bytes": 870,
+    "sha256": "b7ce406776451765d747fc5839e899d350a0be15df35e554c918547636490c6e"
+  },
+  {
+    "name": "package-basic-preflight.log",
+    "bytes": 837,
+    "sha256": "3d47a660a7d34f7fb7124b15c0bb06c9f37477128541fcaaf2c1ecc72ff3a556"
+  },
+  {
+    "name": "package-inspection.log",
+    "bytes": 840,
+    "sha256": "c88ae8b96d415e352bb349435ce712964a713a7b7dcd654833f00b2818fa9414"
+  },
+  {
+    "name": "package-local.log",
+    "bytes": 114260,
+    "sha256": "a24bd6180e6712d7d44b1bf290f33f3169ce263a2c3cd35c0b5c81226f6e2933"
+  },
+  {
+    "name": "public-observation.log",
+    "bytes": 2810,
+    "sha256": "5b15b9bc7d208c0be42e3db457bff87dd888b68c09dd9d9692c1f2a17b133576"
+  },
+  {
+    "name": "runNow-operation-current.log",
+    "bytes": 2259,
+    "sha256": "3ddcf4f04ef528d185b5237cedb6b9137e1996c0ec85336eb3d117d84e3393e7"
+  },
+  {
+    "name": "runs-operation-current.log",
+    "bytes": 5338,
+    "sha256": "23b055e58ae3e01198183feffa71c938508cc57ce2489c7c3ca2699f161dfc8f"
+  },
+  {
+    "name": "startup-probe.log",
+    "bytes": 774,
+    "sha256": "315b7d72f534b077cdd44264f51a3421848ab4e7891f4280d84fde55c5e5d893"
+  },
+  {
+    "name": "wait-for-home.log",
+    "bytes": 48,
+    "sha256": "48f69c2aa5a6314eb3f61c130cb101712d1e06bd8c3b228d4fdc352b4d45d255"
   }
 ]

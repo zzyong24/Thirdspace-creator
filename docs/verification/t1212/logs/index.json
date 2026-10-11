@@ -1,5 +1,10 @@
 [
   {
+    "name": "archive-guard-explicit-environment.log",
+    "bytes": 531,
+    "sha256": "c1775f0500076cee5cd82977c6c6f9bc73ff9a47ecbb9b6a5b712de84886f29a"
+  },
+  {
     "name": "backend-regression.log",
     "bytes": 4762,
     "sha256": "6e8b8718768910c1a17ca794193d6018e43bec62862ec9c0bf76bb267fcbbfd3"
@@ -65,9 +70,24 @@
     "sha256": "d0b912e29e86c07ade7a03ce3a79d71dcccc672eed6f110e45406ccc0b88c1ad"
   },
   {
+    "name": "pmem-sync-closure.log",
+    "bytes": 116,
+    "sha256": "ca8044a46a12fbaa2022490cc85f627bb41cc29fad5ee9161562cf18f89377d7"
+  },
+  {
+    "name": "pmem-sync-final.log",
+    "bytes": 116,
+    "sha256": "1a46ee9345a097d7af7de34f571feedf83d4194f88c8aca3d86668360b69c7d1"
+  },
+  {
     "name": "pmem-sync.log",
     "bytes": 116,
     "sha256": "58f45e3ae0e84f9efe4cd778ec25306f328ee3fcec095cf7189315035c7f0bb4"
+  },
+  {
+    "name": "reconcile.log",
+    "bytes": 12586,
+    "sha256": "3f2679c38648651bc649cb1fcbe92fec1d1bc2ff3aa762d98a7b0afe8bd15619"
   },
   {
     "name": "runner-e5c-baseline.log",

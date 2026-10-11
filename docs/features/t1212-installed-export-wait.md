@@ -36,3 +36,5 @@ flowchart LR
 03:01:15原月明run失败，公开原错误明确平台modal拦pointer；其后原定时系统自行创建新run于03:09:57成功86新增。没有人工重复提交。T1214修复该弹窗变体，T1213保护旧进度，T1212仍以细阶段闭合诊断。
 
 隔离PG现有self→runner全链与真实Chromium导出分段通过，尚未在同一测试里串生产persistence adapter，不能写模拟全链PASS。沿用户已明确授权逐个功能验收、使用当前安装app测试：新包安装及启动核验后，先公开确认该job所有run终态，再只调用一次正常公共scheduledJobs.runNow作新安装版验收，记录新AI/run/execution ID、当前请求号、阶段与终态；不复用旧failed ID，不将新验收称原恢复，不取消/重发任何pending，不触私人CDP、DB或凭据。若存在running即只读等原完成，不提交新动作。此真实链验证生产适配器与归属/lease装配，成功计数按真实0/更新/新增，不伪造。既有明确全功能验收授权已覆盖该可逆采集操作，不新增对外发布/授权/绑定/模型调用或生产配置。
+
+当场新包见证：a091de271实际构建/安装/启动通过，一次正常公共新run-92346e38-f95c-4be1-a683-737fa131b479于03:35:42.351Z三层成功、attempt1、真实新增/更新0；公共固定子阶段和新runtime十八阶段均可读。原HTTP提交回执记录脚本错误未保存，已仅回读同一ID，未重发或补造requestId/deduped。真人modal内部未观测，不代签selector触发；独立复核和完整证据见docs/verification/t1212/REPORT.md。全局对账结果另补，不称全功能完成。

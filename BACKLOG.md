@@ -9,12 +9,12 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1215|核对采集未登录回归仍期待旧设置入口文案|📋 待办|—|—|[实际失败](docs/features/t1215-collection-login-copy.md)|本轮54例52PASS2FAIL：原runner未登录断言期待设置→账户，当前已账号管理扫码绑定。保原失败并核e5c基线，不改产品或放宽状态/归属洗绿。|
-|T-1216|核对全功能截图自动fixture的类型注册缺口|📋 待办|—|—|[实际失败](docs/features/t1216-e2e-capture-fixture-type.md)|frontend类型实报test-environment.ts t1207ScenarioCapture未声明及四隐式any；本轮新增测试自身2类型错误已修，原五项先核安装源基线，不关闭tsc或排除E2E夹具。|
-|T-1214|修复抖音作品导出被创作者中心弹窗遮挡|🔨 待办|—|待验|[实际错误与范围](docs/features/t1214-douyin-export-modal.md)|月明原run03:01:15真实failed，公开错误明确modal-wrap拦截投稿作品点击，原只关我知道了。补可见弹窗显式关闭控件，不强制点击或点击确认/授权；真实隔离浏览器重现并保旧导出，新包观察原自动任务。|
-|T-1213|防止采集原执行被接管后旧进度回写|🔨 待办|—|待验|[精确范围](docs/features/t1213-scheduled-progress-fence.md)|T1212独评确认原采集progress写入只查AbortSignal，心跳前旧fence仍可反写原run。补原lease事务进度端口与真实装配，保原生命周期/任务ID/预算，不绕过归属；隔离PG重现当前与已排队旧报告。|
-|T-1212|核对安装版月明采集在导出阶段持续等待|🔨 待办|—|待验|[实际诊断](docs/features/t1212-installed-export-wait.md)|e5c新包已安装，原两组消费均推进；第三空间真实导出2行后终态成功0，月明原run/exec保持export超7分钟且心跳更新、attempt11不增长；公开creator-center冷却false。先只读核池/宿主租约/页面操作/下载等待，不猜根因、不重发或取消原任务；补证据后独评精确写集。|
-|T-1210|定位并修复采集已入队却反复租约重试且无结果|🔨 待办|—|待验|[诊断与验收](docs/features/t1210-scheduled-consumption.md)|T1209安装版409已消除，两组原self.metrics自动创建真实run；但执行checkpoint空、心跳仅领取推进，attempt由1到3，尚未完成。核真实飞轮消费/冻结绑定/父子租约和收口；保原任务、账号归属、预算与历史，不手动重发或绕过准入。|
+|T-1215|核对采集未登录回归仍期待旧设置入口文案|📋 待办|—|—|[实际失败](docs/features/t1215-collection-login-copy.md)|原runner两条未登录文案断言实失败，e5c安装源基线同两FAIL20PASS；保错误/归属严格断言，待独立校准旧设置→账户与当前账号管理扫码绑定合同。|
+|T-1216|核对全功能截图自动fixture的类型注册缺口|📋 待办|—|—|[实际失败](docs/features/t1216-e2e-capture-fixture-type.md)|当前与e5c安装源实为同五条E2E自动截图fixture注册类型失败；新增测试两条自身类型错误已修，后端typecheck通过。保原失败，不关闭tsc或排除夹具。|
+|T-1214|修复抖音作品导出被创作者中心弹窗遮挡|✅ 待办|—|—|[实际错误与范围](docs/features/t1214-douyin-export-modal.md)|平台modal-wrap拦截投稿作品的原失败保留；显式安全关闭与叠层/隐藏/授权拒绝真实隔离Chromium通过，新a091安装一次正常公共采集三层成功。真人modal控件未观测，不补签选择器触发。|
+|T-1213|防止采集原执行被接管后旧进度回写|✅ 待办|—|—|[精确范围](docs/features/t1213-scheduled-progress-fence.md)|原e5c实际runner立即/排队旧fence两条RED，原lease事务进度窄端口七条隔离PG通过；新安装公共链原run成功，保终态原路径。完整对账待收口，不把progress-only扩称所有生命周期写均fenced。|
+|T-1212|核对安装版月明采集在导出阶段持续等待|✅ 待办|—|—|[实际诊断](docs/features/t1212-installed-export-wait.md)|真实等待根因为平台modal拦截已定位；固定export子阶段经新a091安装实际公共链回写，唯一新run三层成功0/0、attempt1，runtime18阶段到真实close。完整证据与独评保留，不签真人modal控件触发。|
+|T-1210|定位并修复采集已入队却反复租约重试且无结果|✅ 待办|—|—|[诊断与验收](docs/features/t1210-scheduled-consumption.md)|正确父查询与消费拒绝收口已e5c安装，原第三空间成功0、月明系统自行下一次成功86；本轮a091新包一次公共采集三层成功attempt1。原modal失败保留在T1214；完整全局对账待收口，不代签其他平台。|
 |T-1211|核对调度父子原回归跨用例重复命令请求号|✅ 待办|—|—|[实际诊断](docs/features/t1211-scheduled-command-fixture.md)|T1210相关原回归32通过2失败，同beforeAll库的参数化用例重复child-cancel/parent-control/retry-daily键导致真实幂等冲突；保当前与6730基线失败，仅核夹具请求号，不放宽guard或产品断言。|
 |T-1209|修复自动化立即运行被真实账号归属校验409拒绝|✅ 待办|—|—|[诊断与验收](docs/features/t1209-scheduled-run-membership.md)|用户实际报scheduledJobs.runNow采集作业与当前真实账号归属不符，自动化无法运行。核历史作业冻结版本与当前成员及手动/定时公共链；保跨组拒绝、原任务ID/排期/历史，不删除守卫或盲目重复采集。|
 |T-1207|用 Playwright/App 自动化对全功能建立逐项验收并留图|🔨 待办|—|待验|[验收范围与路径](docs/features/t1207-full-feature-acceptance.md)|用户要求以需求/验收标准驱动AI编写流程与用例、子Agent实际跑E2E、每个可达页面和场景留截图供明日复核。覆盖现有46个浏览器E2E及全路由截图；桌面原生须按真实Appium/宿主能力单列，报告外部平台/模型动作限制与所有失败，不触碰真实账号或用户数据。|
