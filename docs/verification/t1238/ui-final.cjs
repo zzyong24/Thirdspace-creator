@@ -16,7 +16,7 @@ try{
  expect(independentModelProbeRequests).toBe(0);
  evidence.preferenceLoading={heldRequests:heldPreferenceRequests,independentModelProbeRequests,modelControlsAbsent:true};
  await page.screenshot({path:path.resolve('docs/verification/t1238/settings-preference-loading.png'),fullPage:true});
-}finally{releasePreference();await page.unroute('**/api/v1/dispatch');}
+}finally{releasePreference();await page.unrouteAll({behavior:'wait'});}
 const choice=page.getByRole('combobox',{name:'编导引擎'});await expect(choice).toBeEnabled();await expect(choice).toHaveValue('codex');await expect(page.locator('[data-slot="codex-model-capabilities"]')).toBeVisible();console.log('check completed');await checkpoint('服务Codex读回且显示免文本/生图配置');
 await choice.selectOption('pi');await expect(choice).toBeEnabled();await expect(choice).toHaveValue('pi');await expect(page.locator('[data-slot="codex-model-capabilities"]')).toHaveCount(0);await checkpoint('真实PATCH切Pi并恢复原模型配置卡');
 await model(page);await expect(choice).toHaveValue('pi');await checkpoint('刷新保留服务Pi');

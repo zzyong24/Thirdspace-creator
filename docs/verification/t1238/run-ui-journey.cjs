@@ -13,8 +13,14 @@ async function stopOwned(server){
 }
 (async()=>{
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'creatoros-t1238-settings-'));
+ // 使用当前Next真实配置的完整默认值，只隔离构建缓存与dev锁；不改产品配置或复用他人服务。
+ const loadConfig=require(path.join(root,'frontend/node_modules/next/dist/server/config.js')).default;
+ const {PHASE_DEVELOPMENT_SERVER}=require(path.join(root,'frontend/node_modules/next/constants.js'));
+ const config=await loadConfig(PHASE_DEVELOPMENT_SERVER,path.join(root,'frontend'));
+ const isolatedDistDir=path.join('.next',path.basename(dir));
+ const isolatedConfig={...config,distDir:isolatedDistDir};
  const port=await availablePort();const log=fs.openSync(path.join(__dirname,'ui-journey-server.txt'),'w');
- const server=spawn('pnpm',['exec','next','dev','--hostname','127.0.0.1','--port',String(port)],{cwd:path.join(root,'frontend'),detached:true,stdio:['ignore','pipe','pipe'],env:{...process.env,DATABASE_URL:'',PGLITE_DATA_DIR:path.join(dir,'db'),CREATOROS_MEDIA_ROOT:path.join(dir,'media'),CREATOROS_DOUYIN_AUTH_DIR:path.join(dir,'douyin'),CREATOROS_WEB_AUTH_DIR:path.join(dir,'web'),CREATOROS_DISABLE_SCHEDULER:'1',CREATOROS_DISABLE_BACKGROUND_DRIVERS:'1',CREATOROS_DEV_MODE:'1'}});
+ const server=spawn('pnpm',['exec','next','dev','--hostname','127.0.0.1','--port',String(port)],{cwd:path.join(root,'frontend'),detached:true,stdio:['ignore','pipe','pipe'],env:{...process.env,__NEXT_PRIVATE_STANDALONE_CONFIG:JSON.stringify(isolatedConfig),DATABASE_URL:'',PGLITE_DATA_DIR:path.join(dir,'db'),CREATOROS_MEDIA_ROOT:path.join(dir,'media'),CREATOROS_DOUYIN_AUTH_DIR:path.join(dir,'douyin'),CREATOROS_WEB_AUTH_DIR:path.join(dir,'web'),CREATOROS_DISABLE_SCHEDULER:'1',CREATOROS_DISABLE_BACKGROUND_DRIVERS:'1',CREATOROS_DEV_MODE:'1'}});
  let resolveReady;const ready=new Promise(resolve=>{resolveReady=resolve;});let source='';
  for(const stream of [server.stdout,server.stderr])stream.on('data',chunk=>{fs.writeSync(log,chunk);source+=chunk.toString();if(source.includes('SIDECAR_STARTUP_VERIFIED'))resolveReady();});
  try{
@@ -23,5 +29,5 @@ async function stopOwned(server){
   const code=await new Promise((resolve,reject)=>{script.once('error',reject);script.once('exit',resolve);});
   if(code!==0)throw Error('真实设置操作失败 '+code);
   console.log('真实隔离设置旅程完成');
- }finally{await stopOwned(server);fs.closeSync(log);fs.rmSync(dir,{recursive:true,force:true});}
+ }finally{await stopOwned(server);fs.closeSync(log);fs.rmSync(dir,{recursive:true,force:true});fs.rmSync(path.join(root,'frontend',isolatedDistDir),{recursive:true,force:true});}
 })().catch(error=>{console.error(error);process.exitCode=1;});
