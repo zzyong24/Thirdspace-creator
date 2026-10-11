@@ -9,3 +9,5 @@ reviewer：子Agent /root/scheduled_membership_review；只读，不参与产品
 T1211另独立范围PASS：beforeAll共库参数化取消/retry确实复用同键不同真实目标，只给三个请求号加f.id，不动产品或原断言。6730基线当场3失败10通过、当前候选原三文件2失败32通过如实保留。实现与GREEN另记录。
 
 终审当场scope PASS：实际test diff仅三个键追加f.id，所有原输入/控制/断言/guard/预算保留；finally实际在await心跳后读interrupted，无扩大写集。reviewer只读查看当前相关原日志3文件34/34通过，不代签安装。
+
+打包私有预检额外精确夹具分类：reviewer只读核vendor evaluate.rs blob 1dfa669882591d07be0f95292f78223969fdb3c9，SHA256 34dfbf28c9ef37c3187d71c35c96fdb72eae5da137c6759644c1d077ffc5e771，与单测script_audit_summary_redacts_high_entropy_in_preview的硬编码去敏输入一致。仅此哈希，不做路径或token通配豁免，不打印token值。

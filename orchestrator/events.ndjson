@@ -1458,3 +1458,5 @@
 {"ts":"2026-10-11T02:07:46.702Z","actor":"taskctl","action":"start","task":"T-1210","sha_before":"557ef7d9cc6d","sha_after":"5e4347eb3d09"}
 {"ts":"2026-10-11T02:08:28.868Z","actor":"taskctl","action":"complete","task":"T-1209","evidence":"6730a15e；docs/verification/t1209/REPORT.md：迁移17、调度110、旧来源31、归档59、基本打包45、后端类型和无新边界违规；新包安装首页与12原作业公共对照通过。完整reconcile27ERROR保留T1204，静态超时27项保留T1081；采集消费重试T1210继续，不签全功能或外部完成。","sha_before":"3da90e2d3bc6","sha_after":"972907c54387"}
 {"ts":"2026-10-11T02:23:59.427Z","actor":"taskctl","action":"start","task":"T-1211","sha_before":"7146290c0964","sha_after":"cd29b3c51fae"}
+{"ts":"2026-10-11T02:44:25.389Z","actor":"taskctl","action":"complete","task":"T-1211","evidence":"e5cdb440627551584a5e6b1bfe979ad3f5e90832；独立scope终审PASS；6730原基线10PASS3FAIL保留，仅三个夹具键加f.id，当前正确相关三文件34/34PASS；T1210产品根因另任务。完整reconcile exit1 27ERROR/0WARN、触发LED集合与T1209完全一致，打印五项为既有看板/旧收据、其余22未展开由T1204保留核对；不签全局全绿。","sha_before":"cd29b3c51fae","sha_after":"2be7059e93b6"}
+{"ts":"2026-10-11T02:54:50.181Z","actor":"taskctl","action":"start","task":"T-1212","sha_before":"c2bbc3e4c9d5","sha_after":"0a2a7640338e"}

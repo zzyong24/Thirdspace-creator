@@ -1,0 +1,28 @@
+[
+  {
+    "group": "thirdspace",
+    "jobIdsUnchanged": true,
+    "jobs": 6,
+    "changedFields": {
+      "job-f8155c54-134": [],
+      "job-f8155c54-133": [],
+      "job-b944fd09-477": [],
+      "job-b944fd09-476": [],
+      "job-b944fd09-475": [],
+      "job-b944fd09-474": []
+    }
+  },
+  {
+    "group": "moonlit",
+    "jobIdsUnchanged": true,
+    "jobs": 6,
+    "changedFields": {
+      "job-f191c0da-83": [],
+      "job-ae1a8346-14": [],
+      "job-ae1a8346-13": [],
+      "job-ae1a8346-12": [],
+      "job-ae1a8346-11": [],
+      "split-82d82fb7882b2861a1ccda28c76c7141": []
+    }
+  }
+]

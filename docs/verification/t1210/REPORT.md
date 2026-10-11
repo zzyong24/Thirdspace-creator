@@ -10,7 +10,7 @@ T1209已消除旧作业归属版本409，但安装版原两组采集仍未进入
 |仅父查询/comments修复|9通过5失败，异常收口尚未修及一条夹具断言问题；全部原日志保留|
 |消费初修|13通过1失败（心跳错误码）；未据此签全通过|
 |核心消费最终回归|14/14通过，无skip，含双数据库的指标/评论真实group→resolver→controls→driver→父子attach→runner→结果→父对账|
-|补充物理归属|2/2通过，其余14按名称筛除未再执行；坏run ID只收口原run，错owner不改两份业务记录|
+|补充物理归属|原2/2通过、14筛除；安装后按冻结e5c源码完整16/16一次通过，无skip，含隔离PostgreSQL；坏run ID只收口原run，错owner不改业务记录|
 |后端类型|本轮最终typecheck exit0|
 |相关飞轮绑定/账号并发原回归|两文件42/42通过；首命令还传入不存在的child测试名，未把该文件冒签通过，另用正确路径实跑|
 |相关父子/执行/driver原回归|原32通过2失败保留；T1211仅三个夹具请求号加原fixture ID，复验三文件34/34通过|
@@ -21,7 +21,7 @@ T1209已消除旧作业归属版本409，但安装版原两组采集仍未进入
 
 独立只读reviewer分别给诊断范围、精确产品三文件、真实正常链scope修复和最终实现PASS；结果只签这些范围，不代签测试/安装。其最后非阻断建议已采纳：finally等心跳后重新读中止状态，避免晚停控漏确认。context-compile实际exit2缺task binding；未声称产生有效Task Packet，原失败留存，root按明确SPEC写集整合。
 
-完整reconcile仍以当场最终退出结果为准，待记录；原T1204全局欠债不由局部通过抹除。当前报告尚未签本轮安装或外部平台采集成功，后续新包原任务续跑单列真实证据。
+完整reconcile当场exit1、27ERROR/0WARN，打印前5项、其余22项未展开；统计触发集合与T1209对比另存reconcile-statistics.json，不假定全部范围外。原T1204全局欠债不由局部通过抹除。当前报告尚未签本轮安装或外部平台采集成功，后续新包原任务续跑单列真实证据。
 
 ```mermaid
 flowchart LR
@@ -31,3 +31,13 @@ flowchart LR
  B --> E[校验错误收口且保留原ID]
  C --> E
 ```
+
+## 新包与安装（当场证据）
+
+冻结e5cdb440627551584a5e6b1bfe979ad3f5e90832，干净复用构建树，四版本1.2.0；13121个提交blob扫描，四个精确去敏测试夹具已独评分类，无未分类凭据形状，完整跟踪文件哈希构建前后不变。最初私有冻结探针Cargo包名/子串误匹配/逐对象进程开销保留失败记录；只校准私有验收驱动，未改产品、仓库Gate、断言或候选。官方入口成功，冻结树45/45打包基本测试通过。
+
+DMG：`/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg`，SHA256 `12d544e274c16724c8091dab5c913aab4b73418d17beadf2d7bd8aa17541e6fa`；runtime SHA `eec88fbbf3f5f3c127e596b03e9cd9d4b4ec10989821f69547578e82dffe2d79`。hdiutil verify、构建App及DMG内App codesign均通过，二者runtime/shell哈希一致，0132迁移与journal源码精确一致。仅本地ad-hoc，未公证。
+
+原安装helper已替换`/Applications/CreatorOS.app`并启动，未做备份。新原生PID90836，直属服务PID91089、HTTP60862，真实HTTP首页完成事件、公开CLI connected及runtime stamp与本轮tar一致；不是tauri启动页代签。12条原job所有字段、ID/排期/目标/归属均与安装前完全一致，未调用真实runNow。
+
+原第三空间run/AI/execution已succeeded，新增/更新0；原始导出确有2行，明细落库0，保留真实0，不冒签非零。月明原任务已进入fetch→export并持续心跳，当前尚待终态，后续观察另补。原配置同步CHANNEL_RUNTIME_DIGEST_MISMATCH/502、两条旧intelligence.sync失败依然存在，由T1196保留，不算本次修复。未进行原生Appium或全功能截图代签。

@@ -98,5 +98,50 @@
     "source": "timeout-policy.log",
     "bytes": 11387,
     "compressedBytes": 2966
+  },
+  {
+    "source": "consumption-frozen-all16.log",
+    "bytes": 239,
+    "compressedBytes": 202
+  },
+  {
+    "source": "freeze-final-result.log",
+    "bytes": 1029,
+    "compressedBytes": 642
+  },
+  {
+    "source": "install-package.log",
+    "bytes": 423,
+    "compressedBytes": 309
+  },
+  {
+    "source": "package-basic-frozen.log",
+    "bytes": 874,
+    "compressedBytes": 330
+  },
+  {
+    "source": "package-inspection.log",
+    "bytes": 840,
+    "compressedBytes": 573
+  },
+  {
+    "source": "package-local.log",
+    "bytes": 114248,
+    "compressedBytes": 14776
+  },
+  {
+    "source": "reconcile.log",
+    "bytes": 831,
+    "compressedBytes": 526
+  },
+  {
+    "source": "startup-probe.log",
+    "bytes": 936,
+    "compressedBytes": 534
+  },
+  {
+    "source": "wait-for-home.log",
+    "bytes": 48,
+    "compressedBytes": 66
   }
 ]

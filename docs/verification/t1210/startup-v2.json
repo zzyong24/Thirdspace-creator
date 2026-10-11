@@ -1,0 +1,56 @@
+{
+  "startedAt": "2026-10-11T02:45:41.649219+00:00",
+  "finishedAt": "2026-10-11T02:45:45.505193+00:00",
+  "sourceHead": "e5cdb440627551584a5e6b1bfe979ad3f5e90832",
+  "connected": true,
+  "access": "full",
+  "nativePid": 90836,
+  "nativeCommand": "90836     1 /Applications/CreatorOS.app/Contents/MacOS/CreatorOS",
+  "serviceProcesses": [
+    {
+      "pid": 91089,
+      "ppid": 90836,
+      "command": "next-server (v16.2.9)",
+      "listenPort": 60862
+    }
+  ],
+  "mainPageLoadRecords": [
+    "[CreatorOS] MAIN_PAGE_LOAD_FINISHED http://127.0.0.1:60862/"
+  ],
+  "installedRuntimeStamp": "sha256:eec88fbbf3f5f3c127e596b03e9cd9d4b4ec10989821f69547578e82dffe2d79",
+  "cliRecords": [
+    {
+      "argv": [
+        "/Users/zyongzhu/.local/bin/creatoros",
+        "status"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 3.3792970000067726,
+      "logSha256": "c2ed03b39798bbe1859b1d7c6fdf586da099a4a70736061678b65e70728c88aa",
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1210/status-v2.log"
+    },
+    {
+      "argv": [
+        "/Users/zyongzhu/.local/bin/creatoros",
+        "access",
+        "status"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.3130499590188265,
+      "logSha256": "f7b844debd1512488d92b654c50ea6dffbef844e28b1065a22175da7d69724fa",
+      "log": "/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1210/access-v2.log"
+    }
+  ],
+  "startupMarkers": [
+    "[license] CHANNEL_RUNTIME_DIGEST_MISMATCH",
+    "[sidecar] [CreatorOS] SIDECAR_STARTUP_VERIFIED",
+    "[client-config] phase=config_sync reason=unknown trigger=startup status=blocked http_status=502",
+    "[sidecar] [ai-task-runner] taskId=ai-task-0f0dcc73-145 taskType=scheduled.intelligence.sync status=failed finishReason=null usage=null candidateCount=0",
+    "[sidecar] [ai-task-runner] taskId=ai-task-0f0dcc73-313 taskType=scheduled.intelligence.sync status=failed finishReason=null usage=null candidateCount=0",
+    "[CreatorOS] MAIN_PAGE_LOAD_FINISHED http://127.0.0.1:60862/",
+    "[sidecar] [client-config] {\"phase\":\"refresh\",\"status\":\"failed\",\"errorCode\":\"CLIENT_CONFIG_NETWORK_UNAVAILABLE\",\"retryable\":true}"
+  ],
+  "explicitNewModelCalls": 0,
+  "explicitBusinessWrites": 0,
+  "boundary": "真实安装版主进程、直属HTTP监听、公开健康与HTTP首页完成事件；非屏幕眼验或全功能验收。原首探针PID误解失败完整保留。"
+}
