@@ -25,7 +25,10 @@ const {scheduledCollectors,scheduledSignals,flywheelSourceKinds,scheduledFlywhee
   const collectFlywheel:ScheduledFlywheelCollector=(ctx,task,scope)=>enqueueCollectionRun(ctx,()=>scheduledSignals.run(scope.signal,async()=>{
     scope.signal.throwIfAborted();
     await runScheduledCollection(ctx,task,{
-      ai:scope.ai,runs:{updateRun:(c,id,patch)=>{scope.signal.throwIfAborted();return schedulingService.updateRun(c,id,patch);}},
+      ai:scope.ai,runs:{updateRun:(c,id,patch)=>{scope.signal.throwIfAborted();
+        // 仅进度快照走原fence事务；ai终态已结算后，原runner收口不重新启动准入。
+        if(Object.keys(patch).length===1&&Object.hasOwn(patch,'progress'))return scope.writeProgress(c,id,patch.progress??null);
+        return schedulingService.updateRun(c,id,patch);}},
       collectors:Object.fromEntries(Object.entries(scheduledCollectors).map(([kind,collect])=>{const guarded:ScheduledCollector=async(c,t,report,execution)=>{scope.signal.throwIfAborted();const result=await collect(c,t,progress=>{scope.signal.throwIfAborted();report(progress);},execution);scope.signal.throwIfAborted();return result;};return [kind,guarded];})),isNotLoggedInError:isNotLoggedInError,now:deps.now,
     });
     if (ports.afterSuccessfulMetricsCollection || ports.afterSuccessfulCollection || ports.afterFailedCollection) {

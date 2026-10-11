@@ -5179,10 +5179,14 @@ readMetrics: async (ctx: RequestContext, capturedAt: string) => (await loadDouyi
         // 公开恢复必须能重新发现，不能被当前库里的 knownAwemeIds 提前截断。
         knownAwemeIds: undefined,
       }),
-readExport: async (ctx: RequestContext) => (await loadDouyinCdp()).fetchDouyinWorkListExport(
-          { signal:scheduledSignals.getStore(), authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId) }, // [T-136] 按当前号登录态
-          { gateway: douyinGateway },
-        ),
+readExport: async (ctx, onProgress) => {
+          // 准备也走原采集进度；回调为内部同步report，不另开任务或浏览器。
+          try { void Promise.resolve(onProgress?.("prepare")).catch(() => {}); } catch { /* 诊断不阻断原导出 */ }
+          return (await loadDouyinCdp()).fetchDouyinWorkListExport(
+            { signal:scheduledSignals.getStore(), authDir: await douyinAuthDirFor(ctx.accountId,scheduledSignals.getStore(),ctx.userId), onProgress },
+            { gateway: douyinGateway },
+          );
+        },
 readCachedCovers: (ctx,externalIds)=>intelligenceService.findCachedCovers(ctx,{platform:"douyin",externalIds}),
 readCover: async (ctx: RequestContext, awemeId: string) => (await loadDouyinCdp()).fetchDouyinCoverUrl({
               signal:scheduledSignals.getStore(),

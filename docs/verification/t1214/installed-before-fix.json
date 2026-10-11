@@ -1,0 +1,35 @@
+{
+  "observedAt": "2026-10-11T03:13:29.512765+00:00",
+  "sourceInstalled": "e5cdb440627551584a5e6b1bfe979ad3f5e90832",
+  "readOnlyPublicOperation": "jobRuns.listByJob",
+  "requestId": "req-c9ca766f-1178",
+  "manualResubmitted": false,
+  "runs": [
+    {
+      "id": "run-65c331df-6c9f-4429-bc44-20d59ec1766c",
+      "aiTaskId": "ai-task-c9ca766f-323",
+      "status": "succeeded",
+      "itemsNew": 86,
+      "itemsUpdated": 0,
+      "progress": null,
+      "startedAt": "2026-10-11T03:01:20.082Z",
+      "finishedAt": "2026-10-11T03:09:57.952Z",
+      "modalInterceptsPointer": false,
+      "postsTabClickTimeout": false,
+      "errorPresent": false
+    },
+    {
+      "id": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+      "aiTaskId": "ai-task-0f0dcc73-304",
+      "status": "failed",
+      "itemsNew": 0,
+      "itemsUpdated": 0,
+      "progress": null,
+      "startedAt": "2026-10-11T01:55:01.164Z",
+      "finishedAt": "2026-10-11T03:01:15.875Z",
+      "modalInterceptsPointer": true,
+      "postsTabClickTimeout": true,
+      "errorPresent": true
+    }
+  ]
+}

@@ -1460,3 +1460,5 @@
 {"ts":"2026-10-11T02:23:59.427Z","actor":"taskctl","action":"start","task":"T-1211","sha_before":"7146290c0964","sha_after":"cd29b3c51fae"}
 {"ts":"2026-10-11T02:44:25.389Z","actor":"taskctl","action":"complete","task":"T-1211","evidence":"e5cdb440627551584a5e6b1bfe979ad3f5e90832；独立scope终审PASS；6730原基线10PASS3FAIL保留，仅三个夹具键加f.id，当前正确相关三文件34/34PASS；T1210产品根因另任务。完整reconcile exit1 27ERROR/0WARN、触发LED集合与T1209完全一致，打印五项为既有看板/旧收据、其余22未展开由T1204保留核对；不签全局全绿。","sha_before":"cd29b3c51fae","sha_after":"2be7059e93b6"}
 {"ts":"2026-10-11T02:54:50.181Z","actor":"taskctl","action":"start","task":"T-1212","sha_before":"c2bbc3e4c9d5","sha_after":"0a2a7640338e"}
+{"ts":"2026-10-11T03:03:50.395Z","actor":"taskctl","action":"start","task":"T-1213","sha_before":"33cd21854b6d","sha_after":"b839bbdc306b"}
+{"ts":"2026-10-11T03:06:36.910Z","actor":"taskctl","action":"start","task":"T-1214","sha_before":"c4d3f6648a89","sha_after":"190c94a7880f"}

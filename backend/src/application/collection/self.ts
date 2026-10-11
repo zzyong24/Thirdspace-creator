@@ -7,6 +7,31 @@ import { matchDetailsToPublications, toDetailMetricRecords, visibilityFromDetail
 import { decideVisibleDouyinCollection } from "./visible-douyin-collection";
 import { runDouyinHeavyBackfill } from "./douyin-heavy-backfill";
 
+// 固定的机械执行阶段；不接收平台正文、异常或账号文件路径。
+export const DOUYIN_EXPORT_PHASE_MESSAGES = {
+ prepare: '准备导出所需的账号会话',
+ browser: '等待采集浏览器与账号会话',
+ channel: '等待平台采集通道',
+ login: '校验导出登录态',
+ page: '准备作品明细页面',
+ navigate: '打开作品数据中心',
+ initialize: '等待作品数据中心加载',
+ modal: '关闭遮挡作品页面的引导弹窗',
+ posts_click: '切换到投稿作品',
+ posts_wait: '等待投稿列表入口',
+ list_click: '打开投稿列表',
+ list_wait: '等待作品导出工具栏',
+ date: '准备作品日期范围',
+ refresh: '刷新作品明细数据',
+ export_click: '请求导出作品明细',
+ download_event: '等待平台生成导出文件',
+ download_finish: '等待导出文件下载完成',
+ file_read: '读取已下载的作品明细',
+ close: '等待采集浏览器资源释放',
+} as const;
+export type DouyinExportPhase = keyof typeof DOUYIN_EXPORT_PHASE_MESSAGES;
+export type DouyinExportProgress = (phase: DouyinExportPhase) => void | Promise<void>;
+
 /** 同账号公开作品采集：确认可见性后写入，再按原任务补齐封面和归因。 */
 export function createSelfCollector(ports:{
 sync?:Pick<import("../../modules/analytics").PublicationSyncService,"due"|"settle"|"read">;
@@ -33,7 +58,7 @@ resolveCoverBackfillLimit:()=>number;
 configuration:{CREATOROS_TRANSCRIBE_BACKFILL_BATCH_LIMIT?:string;CREATOROS_LEARNING_GROUNDING_MIN_METRICS?:string;CREATOROS_TOPIC_ATTRIBUTION_LIMIT?:string;CREATOROS_ATTRIBUTION_VIRAL_MULTIPLE?:string;CREATOROS_ATTRIBUTION_LOW_MULTIPLE?:string};
 readMetrics:(ctx:RequestContext,capturedAt:string)=>Promise<{incomplete?:boolean;records:import("../../modules/ingestion").MetricRecord[];identity:Parameters<ReturnType<typeof import("../../modules/ingestion").createIngestionService>["ingestApprovedDouyinBatch"]>[1]["identity"]}>;
 enqueueTraffic?:(ctx:RequestContext,visibleIds:ReadonlySet<string>)=>Promise<unknown>;
-readExport:(ctx:RequestContext)=>Promise<Uint8Array>;
+readExport:(ctx:RequestContext,onProgress?:DouyinExportProgress)=>Promise<Uint8Array>;
 readCover:(ctx:RequestContext,awemeId:string)=>Promise<{coverUrl?:string}>;
 readCachedCovers?:(ctx:RequestContext,externalIds:string[])=>Promise<Array<{externalId:string;coverUrl:string}>>;
 downloadDouyinImage:(url:string)=>Promise<{bytes:Uint8Array;mimeType:string}>;
@@ -249,7 +274,11 @@ return async (ctx, target, report) => {
         // [gate-F7 插装点⑤] creator-center 导出限流(注真单例)。
         // [T-152] 阶段②:导出明细 xlsx(点「刷新数据」+「导出数据」,慢阶段)。
         report({ stage: "export", processed: 0, total: null, message: "导出作品明细数据" });
-        const bytes = await readExport(ctx);
+        const bytes = await readExport(ctx, phase => {
+          checkScheduledSignal();
+          if (!Object.hasOwn(DOUYIN_EXPORT_PHASE_MESSAGES, phase)) return;
+          report({stage: `export_${phase}`, processed: 0, total: null, message: DOUYIN_EXPORT_PHASE_MESSAGES[phase]});
+        });
         // 2) 解析 16 字段明细(纯,exceljs 读内存 buffer)。
         // [T-152] 阶段③:解析明细(N 条)。
         report({ stage: "parse", processed: 0, total: null, message: "解析明细数据" });

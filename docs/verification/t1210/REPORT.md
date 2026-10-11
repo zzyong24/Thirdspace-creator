@@ -41,3 +41,7 @@ DMG：`/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg`，SHA256 `12d544e274c16724
 原安装helper已替换`/Applications/CreatorOS.app`并启动，未做备份。新原生PID90836，直属服务PID91089、HTTP60862，真实HTTP首页完成事件、公开CLI connected及runtime stamp与本轮tar一致；不是tauri启动页代签。12条原job所有字段、ID/排期/目标/归属均与安装前完全一致，未调用真实runNow。
 
 原第三空间run/AI/execution已succeeded，新增/更新0；原始导出确有2行，明细落库0，保留真实0，不冒签非零。月明原任务已进入fetch→export并持续心跳，当前尚待终态，后续观察另补。原配置同步CHANNEL_RUNTIME_DIGEST_MISMATCH/502、两条旧intelligence.sync失败依然存在，由T1196保留，不算本次修复。未进行原生Appium或全功能截图代签。
+
+## 后续真实终态（2026-10-11）
+
+月明原run于03:01:15.875Z失败，公开错误明确平台modal-wrap拦截投稿作品点击，另登记T1214。原定时系统自行创建下一次run，并于03:09:57.952Z成功新增86条作品、更新0；未手动重发。第三空间原run成功0保持真实记录。此证明原消费进入真实平台及结果落库，不能推定所有平台任务成功。证据见../t1214/installed-before-fix.json。

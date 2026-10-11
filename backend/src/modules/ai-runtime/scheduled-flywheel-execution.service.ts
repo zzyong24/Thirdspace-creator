@@ -24,7 +24,7 @@ import {teardownFacets,type BenchmarkTeardownPort} from './benchmark-teardown-ru
 import type {ScheduledCollectionAiPort,ScheduledCollectionTask} from './scheduled-collection-runner';
 
 export interface ScheduledFlywheelModels {teardown:BenchmarkTeardownPort;attribute:TopicAttributionPort;triage:FavoritesTriagePort;distillKnowledge:FavoritesKnowledgeDistillPort;transcribeOne:FavoritesTranscribePort}
-export interface ScheduledFlywheelScope {execution:ExecutionRef;signal:AbortSignal;ai:ScheduledCollectionAiPort;models:ScheduledFlywheelModels}
+export interface ScheduledFlywheelScope {execution:ExecutionRef;signal:AbortSignal;ai:ScheduledCollectionAiPort;models:ScheduledFlywheelModels;writeProgress:(ctx:RequestContext,runId:string,progress:Record<string,unknown>|null)=>Promise<void>}
 export interface ScheduledFlywheelDeps extends FlywheelGenerationDeps {
  createFavoritesAsr?(runWorker:ReturnType<typeof createExecutionFlywheelGenerationService>['runWorker']):{transcribe(ref:ExecutionRef,ctx:RequestContext,input:{itemId:string;awemeId:string},signal:AbortSignal):Promise<string|null>};
 }
@@ -278,9 +278,18 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
     await scope.tx.insert(aiTaskSteps).values({...input,id:stepId,aiTaskId:task.id,stepNo:(last?.stepNo??0)+1,createdAt:now()}).onConflictDoNothing();
    });
   },async markSucceeded(c,id){checkInput(c,id);await finish('succeeded');},async markFailed(c,id,message){checkInput(c,id);await finish('failed',message);}};
+  const writeProgress:ScheduledFlywheelScope['writeProgress']=async(c,runId,progress)=>{
+   // 写入本身在原执行行锁事务内核对租约；不能用心跳或signal代替当前fence。
+   if(c.userId!==ctx.userId||c.accountId!==ctx.accountId||c.groupId!==ctx.groupId||runId!==bound.input.jobRunId)throw new Error('采集进度归属与原运行不符');
+   await leases.withLease(ref,'admission',async scope=>{
+    const current=await bindScheduledFlywheel(scope);signal.throwIfAborted();
+    if(current.input.jobRunId!==runId)throw new Error('采集进度与原运行绑定不符');
+    await scope.tx.update(jobRuns).set({progress}).where(eq(jobRuns.id,runId));
+   });
+  };
   let heartbeatInFlight:Promise<void>|undefined,verificationFailure:unknown;
   const timer=setInterval(()=>{if(finished||checking)return;checking=true;heartbeatInFlight=verify().then(async()=>{await tasks.heartbeat({taskId:ref.executionTaskId,workerId:claim.lease.workerId,attempt:ref.attempt,leaseSeconds:300});}).catch(error=>{verificationFailure=error;control.abort();}).finally(()=>{checking=false;heartbeatInFlight=undefined;});},10000);
-  try{await scopeStore.run({ref,signal},()=>collector(ctx,task,{execution:ref,signal,ai,models}));if(!finished){await verify();throw new Error('飞轮采集器未提交原任务终态');}}
+  try{await scopeStore.run({ref,signal},()=>collector(ctx,task,{execution:ref,signal,ai,models,writeProgress}));if(!finished){await verify();throw new Error('飞轮采集器未提交原任务终态');}}
   catch(error){
    if(error instanceof ScheduledFlywheelSuspended){
     // job_run只是运行投影：等待重试保留进行中，其余明确呈现挂起/失败，不改execution权威。

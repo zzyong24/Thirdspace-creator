@@ -1,0 +1,11 @@
+# T1213 原采集进度与执行租约绑定
+
+用户要求明显bug及时修复；T1212独评发现旧消费在新attempt/fence接管、原10秒心跳尚未abort时可通过createCollectionExecution runs.updateRun写原job_run.progress；已排队写入也只看signal。此为源码确认的既有竞态，非月明等待根因证据。
+
+BUILD，产品精确写集：backend/src/modules/ai-runtime/scheduled-flywheel-execution.service.ts、backend/src/application/scheduling/collection-execution.ts；测试新增backend/src/integration/scheduled-export-progress.test.ts，与T1212共同使用实际createSelfCollector/导出外部端口夹具。
+
+在原ScheduledFlywheelScope新增私有writeProgress(ctx,runId,progress)窄端口。回写必须使用当前执行ref经原leases.withLease(admission)事务，bindScheduledFlywheel再次证明当前原AI/run/job/真实组成员，核ctx user/group/account及runId，signal与原租约/父子/attempt/fence/停止守卫成立后，用该事务更新原run.progress。不得check-then-act或重新开启执行，不改公开端点/schema/归属/任务/预算/lease/心跳。原ai生命周期端口仍唯一结算结果、取消和unknown；writeProgress只能改进度，不能任意生命周期patch。
+
+createCollectionExecution中仅patch键为progress的runner写入转给scope.writeProgress；其他既有终态patch沿原路径不变，不在ai.finish清lease后再次要求admission导致旧成功失败。终态原AI端口先已原事务清progress，runnerflush现有顺序保留。新端口拒绝只拒绝该旧进度，不触碰新执行/业务行或自动重发。
+
+验收：先真RED；真实组公共定时/立即链冻结claimconsume与createCollectionExecution、原runner默认节流、self采集组合，固定export_prepare/export_browser等实际写原run；显式55422隔离PG换fence心跳前主动旧report与已排队旧progress均拒绝，原run已有progress不变、ID/预算/新fence不变。取消/父停止/错误run或ctx拒绝、正常完成/旧成功回归。真实平台等待点仍须T1212新包观测，不把隔离当真人结果。独立范围审、类型/边界与相关回归；保原全局失败。

@@ -1,3 +1,4 @@
+import type {DouyinExportPhase, DouyinExportProgress} from "@creatoros/backend/application/collection/self";
 import { applyBrowserTimeoutPolicy } from "./browser-timeouts";
 import { completionWaitMs, executionTimeoutMs } from "@creatoros/contract/timeout-policy";
 import {commentExternalId,type CommentRecord} from "@creatoros/backend/application/collection/comment-ingestion";
@@ -2502,6 +2503,7 @@ const TOAST_NO_DATA_CODES = [
 ];
 
 export interface FetchWorkListExportOptions {
+  onProgress?: DouyinExportProgress;
   signal?: AbortSignal;
   authDir: string;
 }
@@ -2760,11 +2762,45 @@ async function isLoggedInExport(ctx: ExportCapableContext): Promise<boolean> {
  * 端口注入(openContext/readFile),故装配 + 失败分类可确定性单测,不碰真抖音/真 Chromium。
  * 真选择器已经真创作者中心验证(DATA-2 扫码验导航;T-036 headed 探针验日期面板:39 行 → 74 行)。
  */
+/** 只定位当前遮挡层里显式关闭控件；不解释弹窗正文或点击授权/确认。
+ * 自包含页内函数：桌面压缩/混淆后仍可由Playwright序列化。 */
+function markVisibleExportModalCloseInPage(_arg: null): number {
+  for (const previous of document.querySelectorAll('[data-cos-export-modal-close]')) previous.removeAttribute('data-cos-export-modal-close');
+  const visible = (element: Element) => {
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0) return false;
+    for (let ancestor: Element | null = element; ancestor; ancestor = ancestor.parentElement) {
+      const style = getComputedStyle(ancestor);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0' || ancestor.getAttribute('aria-hidden') === 'true') return false;
+    }
+    return true;
+  };
+  const dialogs = Array.from(document.querySelectorAll('.douyin-creator-pc-modal-wrap,[role="dialog"]')).reverse();
+  for (const dialog of dialogs) {
+    if (!visible(dialog)) continue;
+    const controls = dialog.querySelectorAll('.douyin-creator-pc-modal-close,button[aria-label="Close"],button[aria-label="close"],button[aria-label="关闭"],[role="button"][aria-label="Close"],[role="button"][aria-label="关闭"]');
+    for (const control of controls) {
+      if (!visible(control) || control.hasAttribute('disabled') || control.getAttribute('aria-disabled') === 'true') continue;
+      const rect = control.getBoundingClientRect();
+      const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+      if (!hit || (hit !== control && !control.contains(hit))) continue;
+      control.setAttribute('data-cos-export-modal-close', '1');
+      return 1;
+    }
+  }
+  return 0;
+}
+
 export async function fetchDouyinWorkListExport(
   opts: FetchWorkListExportOptions,
   deps: FetchWorkListExportDeps = {},
 ): Promise<Uint8Array> {
   opts.signal?.throwIfAborted();
+  const notify = (phase: DouyinExportPhase) => {
+    // 通知只记录固定机械阶段；不可因诊断失败反杀导出或泄露原始错误。
+    console.info("[douyin-export-progress]", {event: "export_phase", phase});
+    try { void Promise.resolve(opts.onProgress?.(phase)).catch(() => {}); } catch { /* best-effort */ }
+  };
   const openCtx =
     deps.openContext ??
     ((authDir, headless, signal) =>
@@ -2778,6 +2814,7 @@ export async function fetchDouyinWorkListExport(
   const downloadTimeoutMs = deps.downloadTimeoutMs === 0 ? 0 : executionTimeoutMs(deps.downloadTimeoutMs, 180_000); // 大账号导出保留生成时间；注入超时仍可覆盖
   const gateway = deps.gateway ?? instantNoopGateway; // [gate-F7 插装点⑤] creator-center 整个导出一次限流
 
+  notify("browser");
   const ctx = await openCtx(opts.authDir, true, opts.signal);
   const lifetime = bindAbortContext(opts.signal, () => ctx.close());
   // [gate-F6] download 超时时探到的「当前暂无数据可导出」toast 结果(true=内容空非频控)。
@@ -2802,10 +2839,11 @@ export async function fetchDouyinWorkListExport(
 
   try {
     opts.signal?.throwIfAborted();
+    notify("channel");
     return await withDouyinChannel(
       gateway,
       "creator-center",
-      () => runExportOnce(ctx, { signal:opts.signal, downloadTimeoutMs, readFile, onDownloadTimeout: (v) => { sawNoDataToast = v; } }),
+      () => runExportOnce(ctx, { notify, signal:opts.signal, downloadTimeoutMs, readFile, onDownloadTimeout: (v) => { sawNoDataToast = v; } }),
       mapExportErr,
       opts.signal,
     );
@@ -2813,6 +2851,7 @@ export async function fetchDouyinWorkListExport(
     opts.signal?.throwIfAborted();
     throw error;
   } finally {
+    notify("close");
     await lifetime.close(); // 等待真实 context 停止；关闭失败不伪装已释放 profile
   }
 }
@@ -2822,38 +2861,54 @@ export async function fetchDouyinWorkListExport(
 async function runExportOnce(
   ctx: ExportCapableContext,
   args: {
+    notify: (phase: DouyinExportPhase) => void;
     signal?: AbortSignal;
     downloadTimeoutMs: number;
     readFile: (path: string) => Promise<Uint8Array>;
     onDownloadTimeout: (hasNoDataToast: boolean) => void;
   },
 ): Promise<Uint8Array> {
-  const { downloadTimeoutMs, readFile, onDownloadTimeout } = args;
+  const { downloadTimeoutMs, readFile, onDownloadTimeout, notify } = args;
   args.signal?.throwIfAborted();
   {
+    notify("login");
     if (!(await isLoggedInExport(ctx))) throw new DouyinNotLoggedInError();
+    notify("page");
     const page = ctx.pages()[0] ?? (await ctx.newPage());
     applyBrowserTimeoutPolicy(page);
 
     // 1) 强制导航旧版数据中心作品分析(TzFilm 坑:不设旧版 URL → Garfish 不加载,按钮找不到)。
     //    [T-202] 加退避重试:xlsx 导出这一步撞瞬时超时是真机 self.detail 跑不完的头号根因。
+    notify("navigate");
     await gotoWithRetry(page, CREATOR_DATA_CENTER_CONTENT, {
       timeoutMs: executionTimeoutMs(60_000),
       label: "data-center-content(xlsx 导出)",
       signal:args.signal,
     });
     // 等 Garfish 微前端初始化(真机 ~15s;DATA-2 已验)。
+    notify("initialize");
     await page.waitForTimeout(15_000);
     await debugShot(page, "01-after-garfish.png");
 
     // 2) 关首屏引导 modal(「新增直播复盘能力」)—— 盖住交互,不关点不到 tab。找不到不致命,
     //    但 modal 存在时会拦截 tab 点击(真机踩坑:未关 modal → 点投稿作品无效 → 停在直播场次 →
     //    找不到投稿列表 → 旧修复失败)。故点完再确认它消失(轮询「我知道了」不再可见)。
+    notify("modal");
     if (await markAndClick(page, MODAL_GOTIT_CODES, { silent: true, timeout: executionTimeoutMs(3_000) })) {
       await page.waitForTimeout(800);
     }
     // 二次兜底:若引导 modal 仍在(多页引导 / 变体),再点一次并等其消失(最多 ~4s)。
     for (let i = 0; i < 4; i++) {
+      args.signal?.throwIfAborted();
+      const closeMarked = await page.evaluate(markVisibleExportModalCloseInPage, null).catch(() => 0);
+      if (closeMarked) {
+        try {
+          await page.locator('[data-cos-export-modal-close="1"]').click({timeout: executionTimeoutMs(2_000)});
+        } catch { args.signal?.throwIfAborted(); }
+        await page.waitForTimeout(1_000);
+        // 下一轮重新确认可见遮挡层；不能保留旧元素或假装已关闭。
+        continue;
+      }
       const stillThere = await page
         .evaluate(hasVisibleByCharCodesInPage, MODAL_GOTIT_CODES)
         .catch(() => false);
@@ -2875,6 +2930,7 @@ async function runExportOnce(
       // [T-463] 2026-07-22 补:silent 点击失败会返 false 无声吞掉。第 3 轮改非 silent 抛出,
       //   把点击的真实错误暴露给上层日志(而非泛泛 "未见投稿列表子tab" 空描述)。
       const isLast = attempt === 2;
+      notify("posts_click");
       try {
         const ok = await markAndClick(page, TAB_POSTS_CODES, {
           silent: !isLast,
@@ -2886,6 +2942,7 @@ async function runExportOnce(
       } catch (err) {
         lastClickErr = err instanceof Error ? err.message : String(err);
       }
+      notify("posts_wait");
       listVisible = await waitForVisibleByCharCodes(page, SUBTAB_LIST_CODES, {
         tries: 15,
         intervalMs: 1_000,
@@ -2900,6 +2957,7 @@ async function runExportOnce(
     }
 
     // 4) 切到「投稿列表」子tab —— 「刷新数据」+ 出 `作品列表.xlsx` 的「导出数据」只在此视图。
+    notify("list_click");
     const listOk = await markAndClick(page, SUBTAB_LIST_CODES, {
       silent: true,
     });
@@ -2909,6 +2967,7 @@ async function runExportOnce(
       );
     }
     // 等投稿列表视图渲染出「导出数据」(该视图特有的导出;轮询而非固定 sleep)。
+    notify("list_wait");
     await waitForVisibleByCharCodes(page, BTN_EXPORT_CODES, {
       tries: 6,
       intervalMs: 1_000,
@@ -2921,6 +2980,7 @@ async function runExportOnce(
     //      (真机验:39 行 → 74 行)。整段 silent:任一步失败仍可按默认范围导出,只是覆盖少,
     //      绝不因此挡导出。「全部」点击即应用并收面板;若面板开了却没点到 preset,再点一次
     //      「投稿列表」子tab 收面板,防悬浮层遮住后面的刷新/导出按钮。
+    notify("date");
     const pickerMarked = await page
       .evaluate(markDatePickerInPage, null)
       .catch(() => 0);
@@ -2964,6 +3024,7 @@ async function runExportOnce(
     }
 
     // 5) 点「刷新数据」确保数据最新(找不到不致命,可能页面已最新)。
+    notify("refresh");
     await markAndClick(page, BTN_REFRESH_CODES, { silent: true });
     await page.waitForTimeout(4_000);
 
@@ -2971,6 +3032,7 @@ async function runExportOnce(
     //    事件,不被 Chromium 当脚本点击拦下载)。页面此时有多个"导出数据"(直播场次/投稿概览/投稿表现/
     //    投稿列表)—— 必须点**投稿列表视图**那个,故就近锚定「刷新数据」(仅存于投稿列表工具条)同容器的
     //    导出;锚定失败(版式变化)兜底用最深匹配的通用标记。
+    notify("export_click");
     let exportMarked = await page
       .evaluate(markExportNearRefreshInPage, {
         exportCodes: BTN_EXPORT_CODES,
@@ -3014,6 +3076,7 @@ async function runExportOnce(
     //    「当前暂无数据可导出」的图集/无数据号永不触发 download → 必然超时)先探 no-data toast:
     //    有 toast = 内容空非频控(content-error 不退避);无 toast = 疑似频控(export-download-timeout
     //    → throttled)。探测结果经 onDownloadTimeout 回传给 mapExportErr 定分类,原超时错照旧抛出。
+    notify("download_event");
     let download: { path(): Promise<string> };
     try {
       download = await downloadPromise;
@@ -3026,8 +3089,10 @@ async function runExportOnce(
       await debugShot(page, "03-download-timeout.png");
       throw timeoutErr; // 原超时错向上传(withDouyinChannel 据 mapExportErr 分类后仍抛)
     }
+    notify("download_finish");
     const path = await download.path();
     args.signal?.throwIfAborted();
+    notify("file_read");
     const bytes = await readFile(path);
     args.signal?.throwIfAborted();
 

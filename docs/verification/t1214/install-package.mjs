@@ -1,0 +1,12 @@
+import {readFileSync,writeFileSync,createReadStream} from 'node:fs';
+import {spawnSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+import {installAndLaunchLocalMacApp} from '/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend/scripts/desktop/package-local.mjs';
+const n='/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1214';
+const p=JSON.parse(readFileSync(`${n}/package-inspection.json`));
+const sha=async path=>{const h=createHash('sha256');for await(const chunk of createReadStream(path))h.update(chunk);return h.digest('hex');};
+if(await sha(p.artifactPath)!==p.artifactSha256)throw Error('制品变更');
+const oldNativePids=spawnSync('pgrep',['-f','^/Applications/CreatorOS.app/Contents/MacOS/CreatorOS$'],{encoding:'utf8'}).stdout.trim();
+const commands=[],startedAt=new Date().toISOString();
+const result=installAndLaunchLocalMacApp({frontendDir:'/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator/frontend',spawn(command,args,options){const actualArgs=command==='open'?['--stdout',`${n}/native.stdout.log`,'--stderr',`${n}/native.stderr.log`,...args]:args;const r=spawnSync(command,actualArgs,options);commands.push({command,args:actualArgs,status:r.status});return r;}});
+const r={startedAt,finishedAt:new Date().toISOString(),sourceHead:p.sourceHead,artifactSha256:p.artifactSha256,runtimeTarSha256:p.runtimeTarSha256,oldNativePids,...result,noBackup:true,commands};writeFileSync(`${n}/installation.json`,JSON.stringify(r,null,2)+'\n');console.log(JSON.stringify({...r,commands:undefined}));
