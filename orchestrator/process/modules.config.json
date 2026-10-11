@@ -9281,6 +9281,58 @@
         ]
       },
       "scope_note": "独评PASS 2268aac2，仅既有确切人话测试，保复杂排期锁/用户重选/精确新cron/原保存次数，root串行。"
+    },
+    "T-1215": {
+      "task_id": "T-1215",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1215-collection-login-copy.md",
+        "backend/src/modules/ai-runtime/scheduled-collection-runner.test.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "backend/src/modules/ai-runtime/scheduled-collection-runner.test.ts",
+        "docs/verification/t1215/**"
+      ],
+      "scope_note": "只修改现有测试；独立核对后按SPEC执行。共享看板/DEC/状态由主会话串行管理。",
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir backend exec vitest run src/modules/ai-runtime/scheduled-collection-runner.test.ts",
+          "git diff --check"
+        ]
+      }
+    },
+    "T-1216": {
+      "task_id": "T-1216",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1216-e2e-capture-fixture-type.md",
+        "frontend/tests/helpers/test-environment.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/tests/helpers/test-environment.ts",
+        "docs/verification/t1216/**"
+      ],
+      "scope_note": "只修改现有测试；独立核对后按SPEC执行。共享看板/DEC/状态由主会话串行管理。",
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check"
+        ]
+      }
     }
   }
 }

@@ -111,7 +111,7 @@ async function writeScenarioEvidence(
   }
 }
 
-export const test = base.extend({
+export const test = base.extend<{ t1207ScenarioCapture: void }>({
   context: async ({ context }, provide) => {
     const externalNetworkAttempts: ExternalNetworkAttempt[] = [];
     externalAttemptsByContext.set(context, externalNetworkAttempts);

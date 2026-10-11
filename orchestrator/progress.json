@@ -4,10 +4,10 @@
     "work_branch": "main"
   },
   "summary": {
-    "verticals": 96,
+    "verticals": 99,
     "tasks_done": 62,
-    "tasks_total": 198,
-    "tasks_pending": 136,
+    "tasks_total": 201,
+    "tasks_pending": 139,
     "verticals_complete": 18
   },
   "verticals": [
@@ -7012,6 +7012,56 @@
       "step_read_set": {},
       "step_exclusive_resources": {},
       "commits": {}
+    },
+    {
+      "id": "T-1215",
+      "task_id": "T-1215",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "backend/src/modules/ai-runtime/scheduled-collection-runner.test.ts",
+        "docs/verification/t1215/**"
+      ],
+      "read_set": [
+        "docs/features/t1215-collection-login-copy.md",
+        "backend/src/modules/ai-runtime/scheduled-collection-runner.test.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ]
+    },
+    {
+      "id": "T-1216",
+      "task_id": "T-1216",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "step_depends_on": {},
+      "write_set": [
+        "frontend/tests/helpers/test-environment.ts",
+        "docs/verification/t1216/**"
+      ],
+      "read_set": [
+        "docs/features/t1216-e2e-capture-fixture-type.md",
+        "frontend/tests/helpers/test-environment.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ]
     }
   ],
   "leases": {
