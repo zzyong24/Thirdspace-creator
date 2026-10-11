@@ -1,0 +1,5 @@
+Error: 真实初始偏好写入失败
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1238/ui-final.cjs:3:707
+Error: 真实设置操作失败 1
+    at /Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1238/run-ui-journey.cjs:24:21
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)

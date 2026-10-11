@@ -287,6 +287,10 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         if(saved.revision!==checkpoint.revision+1)throw new Error("CHECKPOINT_REVISION_MISMATCH");
       };
       if(input.kind!=="model.generate")throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
+      // Pi 对账中的原检查点仍在任何调用预留前停止；Codex才核原回合只读证明。
+      const reconciliationModel=initialCheckpoint.recovery === "requires_reconciliation"
+        ? await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema) : undefined;
+      if(reconciliationModel && !("engine" in reconciliationModel))throw new GenerationFailure("unknown_result","CHECKPOINT_REQUIRES_RECONCILIATION");
       const operationKey = input.operationKey;
       const reservation = workerReservationSchema.parse(await call(execution, "reserveCall", {operationKey, maxOutputTokens: input.maxOutputTokens}, signal));
       callId = reservation.callId;
@@ -297,7 +301,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         reason = "completed";
         return;
       }
-      const model = await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema);
+      const model = reconciliationModel ?? await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema);
       const codex="engine" in model;
       const originalNative=codex&&['started','unknown'].includes(reservation.status)
         ? z.object({threadId:z.string().min(1),turnId:z.string().min(1)}).passthrough().safeParse(await call(execution,'readCodexCall',{callId},signal)) : undefined;
