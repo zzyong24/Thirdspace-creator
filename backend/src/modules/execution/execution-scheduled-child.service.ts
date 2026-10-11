@@ -7,7 +7,7 @@ const payload=(row:Row)=>row.payload as Record<string,unknown>;
 export function scheduledChildId(row:Row):string|undefined{const value=payload(row).__scheduledChild as {executionTaskId?:unknown}|undefined;return typeof value?.executionTaskId==='string'?value.executionTaskId:undefined;}
 function scheduledInput(child:Row):{jobId?:string;jobRunId?:string}{
  const input=payload(child).modelInput as {kind?:string;sourceKind?:string;jobId?:string;jobRunId?:string;facets?:Record<string,string>};
- if(input?.kind==='scheduled.flywheel'&&['benchmark','self.detail','self.metrics','self.traffic','favorites'].includes(input.sourceKind??''))return {jobId:input.jobId,jobRunId:input.jobRunId};
+ if(input?.kind==='scheduled.flywheel'&&['benchmark','self.detail','self.metrics','self.traffic','comments','favorites'].includes(input.sourceKind??''))return {jobId:input.jobId,jobRunId:input.jobRunId};
  try{return JSON.parse(input?.facets?.__dailyTopic??'null')??{};}catch{throw new ConflictError('调度子任务冻结来源无效');}
 }
 export function assertScheduledChild(parent:Row,child:Row){
@@ -64,7 +64,8 @@ export async function findScheduledParent(tx:Parameters<Parameters<Db['transacti
  if(ai.executionTaskId!==child.id||ai.userId!==child.userId||ai.accountId!==child.accountId)throw new ConflictError('每日子任务归属无效');
  const [run]=await tx.select().from(jobRuns).where(and(eq(jobRuns.aiTaskId,ai.id),eq(jobRuns.userId,child.userId)));
  if(!run?.scheduledFor)return undefined;
- const parents=await tx.select().from(executionTasks).where(and(eq(executionTasks.kind,'automation_sync'),eq(executionTasks.ownerType,'scheduled_job'),eq(executionTasks.ownerId,run.jobId),eq(executionTasks.userId,child.userId),workspaceFilter(executionTasks,child),sql`${executionTasks.payload}->>'scheduledFor' = ${run.scheduledFor}`));
+ // execution.kind 是任务类型；整行传入会被误认成 WorkspaceKey.kind。
+ const parents=await tx.select().from(executionTasks).where(and(eq(executionTasks.kind,'automation_sync'),eq(executionTasks.ownerType,'scheduled_job'),eq(executionTasks.ownerId,run.jobId),eq(executionTasks.userId,child.userId),workspaceFilter(executionTasks,{groupId:child.groupId,accountId:child.accountId}),sql`${executionTasks.payload}->>'scheduledFor' = ${run.scheduledFor}`));
  if(parents.length!==1)throw new ConflictError('每日子任务缺少唯一调度父任务');
  const parent=parents[0]!;const reverse=payload(child).parentExecutionTaskId;if(reverse&&reverse!==parent.id)throw new ConflictError('每日父任务绑定不一致');return parent;
 }

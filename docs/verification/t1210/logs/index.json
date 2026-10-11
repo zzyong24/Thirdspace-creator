@@ -1,0 +1,102 @@
+[
+  {
+    "source": "backend-typecheck-final.log",
+    "bytes": 106,
+    "compressedBytes": 111
+  },
+  {
+    "source": "backend-typecheck-first.log",
+    "bytes": 106,
+    "compressedBytes": 111
+  },
+  {
+    "source": "boundary-first.log",
+    "bytes": 779,
+    "compressedBytes": 574
+  },
+  {
+    "source": "consumption-final-regression.log",
+    "bytes": 239,
+    "compressedBytes": 202
+  },
+  {
+    "source": "consumption-first-red.log",
+    "bytes": 4453,
+    "compressedBytes": 1415
+  },
+  {
+    "source": "consumption-full-red.log",
+    "bytes": 4143,
+    "compressedBytes": 1334
+  },
+  {
+    "source": "consumption-parent-fix-regression.log",
+    "bytes": 3122,
+    "compressedBytes": 1047
+  },
+  {
+    "source": "consumption-physical-binding-regression.log",
+    "bytes": 250,
+    "compressedBytes": 211
+  },
+  {
+    "source": "consumption-postgres-red.log",
+    "bytes": 1259,
+    "compressedBytes": 708
+  },
+  {
+    "source": "consumption-product-fix-regression.log",
+    "bytes": 1291,
+    "compressedBytes": 669
+  },
+  {
+    "source": "consumption-test-final-typecheck.log",
+    "bytes": 106,
+    "compressedBytes": 111
+  },
+  {
+    "source": "consumption-test-typecheck-first.log",
+    "bytes": 2250,
+    "compressedBytes": 787
+  },
+  {
+    "source": "consumption-test-typecheck-second.log",
+    "bytes": 106,
+    "compressedBytes": 111
+  },
+  {
+    "source": "context-compile.log",
+    "bytes": 117,
+    "compressedBytes": 126
+  },
+  {
+    "source": "package-basic.log",
+    "bytes": 841,
+    "compressedBytes": 307
+  },
+  {
+    "source": "related-authority-final.log",
+    "bytes": 2148,
+    "compressedBytes": 890
+  },
+  {
+    "source": "related-authority-green.log",
+    "bytes": 562,
+    "compressedBytes": 412
+  },
+  {
+    "source": "related-consumption-first.log",
+    "bytes": 241,
+    "compressedBytes": 203
+  },
+  {
+    "source": "scheduled-child-baseline-6730.log",
+    "bytes": 2876,
+    "compressedBytes": 1017
+  },
+  {
+    "source": "timeout-policy.log",
+    "bytes": 11387,
+    "compressedBytes": 2966
+  }
+]
