@@ -44,8 +44,8 @@ async function stopOwned(server){
     if(current===item.generated&&JSON.stringify(parsed)===JSON.stringify(previous))fs.writeFileSync(item.file,item.before);
     else fs.writeFileSync(item.file,JSON.stringify(parsed,null,2)+'\n');
    }else{
-    if(current===item.generated&&item.before!==null)fs.writeFileSync(item.file,item.before);
-    else{const previousImport=item.before?.split('\n').find(line=>line.startsWith('import ')&&line.includes('/types/routes.d.ts'))??'';fs.writeFileSync(item.file,current.split('\n').map(line=>line.includes(isolatedDistDir+'/types/routes.d.ts')?previousImport:line).join('\n'));}
+    const previousImport=item.before?.split('\n').find(line=>line.startsWith('import ')&&line.includes('/types/routes.d.ts'))??'';
+    fs.writeFileSync(item.file,current.split('\n').map(line=>line.includes(isolatedDistDir+'/types/routes.d.ts')?previousImport:line).join('\n'));
    }
   }
   fs.closeSync(log);fs.rmSync(dir,{recursive:true,force:true});fs.rmSync(path.join(root,'frontend',isolatedDistDir),{recursive:true,force:true});}
