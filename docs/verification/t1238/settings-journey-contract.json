@@ -13,7 +13,8 @@
     "frontend/src/features/copilot/assistant-engine-selector.tsx",
     "frontend/src/proxy.ts",
     "docs/verification/t1238/ui-final.cjs",
-    "docs/verification/t1238/run-ui-journey.cjs"
+    "docs/verification/t1238/run-ui-journey.cjs",
+    "frontend/src/features/settings/settings-page.tsx"
   ],
   "required_checks": [
     {
