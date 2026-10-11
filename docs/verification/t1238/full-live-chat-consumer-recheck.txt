@@ -1,0 +1,1721 @@
+T-1238 实际聊天会话消费者异步偏好 fixture 红绿证据（2026-10-11）
+工作树：/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator
+本轮互斥产品写集仅：frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx。
+用户/主线程原指定 features/copilot 同名路径不存在；rg 找到实际 server/ai-runtime 路径后主线程明确确认授权。错误路径 no test files found 只属寻址，未计红测。
+
+归属：本任务 T-1238 改为后端 getPreferences/patchPreferences 异步真值，consumer原 mock只有 listAITasks/listConversations/listMessages；useAssistantEngine无法 ready，合法SSE请求没有入场，15条消费者断言红。属于本任务fixture，不能记旧债。
+修复：mock提供两个真实偏好端口；beforeEach隔离mock后的后端Pi值，await loadAssistantEngine(true)后才挂载真实Copilot/SDK和提交。
+未改生产代码或ready门；没有mock useAssistantEngine/Chat；仍通过原session factory注入真实SDK，SSE/metadata/cancel/resume/归属/淘汰原断言与计数保持。
+consumer本身没有 writeAssistantEngine动作，异步准备在未挂载界面前 await；mounted交互原有async act保持。
+
+当场结果（全部retry0，test/hook180000）：
+- 原consumer单文件 RED：15 FAIL / 1 PASS，16原用例，20:34:34，退出1。
+- 修后consumer单文件 GREEN：16 PASS / 0 SKIP，20:35:07，退出0。
+- 修后interaction+consumer组合：2文件77 PASS / 0 SKIP，20:35:29，退出0，无unhandled error。
+interaction原61条断言保留，consumer原16条断言保留，没有删除/跳过来造绿。
+本文件记录jsdom/真实SDK消费者fixture，不冒充账户E2E；源码最终type/reconcile/commit由主线程统一。
+
+RED COMMAND:
+pnpm --dir frontend exec vitest run src/server/ai-runtime/live-chat-session.consumer.test.tsx --retry=0 --testTimeout=180000 --hookTimeout=180000
+RED EXIT CODE: 1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:18707) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx (16 tests | 15 failed) 15627ms
+   × 实际metadata waiting_user关联原回执，纯text+error离开后仍保护 1039ms
+   × 实际metadata unknown_result关联原回执，纯text+error离开后仍保护 1041ms
+   × 实际metadata paused关联原回执，纯text+error离开后仍保护 1030ms
+   × 实际metadata succeeded终态不把错误会话长期保护 1027ms
+   × 实际metadata failed终态不把错误会话长期保护 1026ms
+   × 实际metadata cancelled终态不把错误会话长期保护 1028ms
+   × metadata等待状态但missing控制回执不冒充可靠任务关联 1034ms
+   × metadata等待状态但mismatch控制回执不冒充可靠任务关联 1042ms
+   × 卸载/切scope后迟到waiting metadata只保护原会话，不改新scope 1037ms
+   × 同消息原ID显式resume waiting→succeeded后解除保护，不自动重建任务 1036ms
+   × 实际停止按钮接受cancel_requested只放弃本地观察，退出后可回收且不伪写终态 1042ms
+   × 停止command HTTP 403不释放/不中断，仍保护原运行会话 1032ms
+   × 停止command HTTP 500不释放/不中断，仍保护原运行会话 1030ms
+   × 迟到旧stop不停止新的turn流，也不覆盖其观察归属 1035ms
+   × 迟到旧stop不停止新的scope流，也不覆盖其观察归属 1033ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 15 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际metadata waiting_user关联原回执，纯text+error离开后仍保护
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际metadata unknown_result关联原回执，纯text+error离开后仍保护
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际metadata paused关联原回执，纯text+error离开后仍保护
+AssertionError: expected 'ready' to be 'error' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "error"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:75:49
+     73|  vi.stubGlobal('fetch',vi.fn(async()=>sseResponse(status)));
+     74|  const {mounted,key,original}=await startConsumer(`metadata-${status}`…
+     75|  await waitFor(()=>expect(original.chat.status).toBe('error'));
+       |                                                 ^
+     76|  expect(original.chat.messages.at(-1)?.parts).toEqual([{type:'text',te…
+     77|  expect(original.chat.messages.at(-1)?.metadata).toEqual({execution:{e…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际metadata succeeded终态不把错误会话长期保护
+AssertionError: expected undefined to deeply equal { execution: { …(2) } }
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+- Expected:
+{
+  "execution": {
+    "executionTaskId": "original-execution",
+    "status": "succeeded",
+  },
+}
+
++ Received:
+undefined
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:87:68
+     85|  const {mounted,key,original}=await startConsumer(`terminal-${status}`…
+     86|  await waitFor(()=>expect(['ready','error']).toContain(original.chat.s…
+     87|  await waitFor(()=>expect(original.chat.messages.at(-1)?.metadata).toE…
+       |                                                                    ^
+     88|  mounted.unmount();await act(async()=>{await Promise.resolve();});pres…
+     89|  expect(getLiveChatSession(key)).not.toBe(original);expect(original.tr…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际metadata failed终态不把错误会话长期保护
+AssertionError: expected undefined to deeply equal { execution: { …(2) } }
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+- Expected:
+{
+  "execution": {
+    "executionTaskId": "original-execution",
+    "status": "failed",
+  },
+}
+
++ Received:
+undefined
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:87:68
+     85|  const {mounted,key,original}=await startConsumer(`terminal-${status}`…
+     86|  await waitFor(()=>expect(['ready','error']).toContain(original.chat.s…
+     87|  await waitFor(()=>expect(original.chat.messages.at(-1)?.metadata).toE…
+       |                                                                    ^
+     88|  mounted.unmount();await act(async()=>{await Promise.resolve();});pres…
+     89|  expect(getLiveChatSession(key)).not.toBe(original);expect(original.tr…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际metadata cancelled终态不把错误会话长期保护
+AssertionError: expected undefined to deeply equal { execution: { …(2) } }
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+- Expected:
+{
+  "execution": {
+    "executionTaskId": "original-execution",
+    "status": "cancelled",
+  },
+}
+
++ Received:
+undefined
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:87:68
+     85|  const {mounted,key,original}=await startConsumer(`terminal-${status}`…
+     86|  await waitFor(()=>expect(['ready','error']).toContain(original.chat.s…
+     87|  await waitFor(()=>expect(original.chat.messages.at(-1)?.metadata).toE…
+       |                                                                    ^
+     88|  mounted.unmount();await act(async()=>{await Promise.resolve();});pres…
+     89|  expect(getLiveChatSession(key)).not.toBe(original);expect(original.tr…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > metadata等待状态但missing控制回执不冒充可靠任务关联
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > metadata等待状态但mismatch控制回执不冒充可靠任务关联
+AssertionError: expected 'ready' to be 'error' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "error"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:94:49
+     92|  vi.stubGlobal('fetch',vi.fn(async()=>sseResponse('waiting_user',kind=…
+     93|  const {mounted,key,original}=await startConsumer(`receipt-${kind}`);
+     94|  await waitFor(()=>expect(original.chat.status).toBe('error'));
+       |                                                 ^
+     95|  mounted.unmount();await act(async()=>{await Promise.resolve();});pres…
+     96|  expect(getLiveChatSession(key)).not.toBe(original);
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/15]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 卸载/切scope后迟到waiting metadata只保护原会话，不改新scope
+AssertionError: expected 'ready' to be 'submitted' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "submitted"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:103:49
+
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/15]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 同消息原ID显式resume waiting→succeeded后解除保护，不自动重建任务
+AssertionError: expected 'ready' to be 'error' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "error"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:124:49
+    122|  vi.stubGlobal('fetch',request);
+    123|  const {mounted,key,original}=await startConsumer('resume-metadata');
+    124|  await waitFor(()=>expect(original.chat.status).toBe('error'));
+       |                                                 ^
+    125|  expect(request).toHaveBeenCalledTimes(1);
+    126|  expect(screen.getByText('自动恢复中')).toBeInTheDocument();
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/15]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际停止按钮接受cancel_requested只放弃本地观察，退出后可回收且不伪写终态
+AssertionError: expected 'ready' to be 'streaming' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "streaming"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:170:49
+    168|  }));
+    169|  const {mounted,key,original}=await startConsumer('stop-group');
+    170|  await waitFor(()=>expect(original.chat.status).toBe('streaming'));
+       |                                                 ^
+    171|  await waitFor(()=>expect(original.chat.messages.at(-1)?.metadata).toE…
+    172|  fireEvent.click(screen.getByTestId('stop-button'));
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/15]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 停止command HTTP 403不释放/不中断，仍保护原运行会话
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 停止command HTTP 500不释放/不中断，仍保护原运行会话
+AssertionError: expected 'ready' to be 'streaming' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "streaming"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:186:49
+
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/15]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 迟到旧stop不停止新的turn流，也不覆盖其观察归属
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 迟到旧stop不停止新的scope流，也不覆盖其观察归属
+AssertionError: expected 'ready' to be 'streaming' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "streaming"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:204:49
+    202|  }));
+    203|  const {mounted,original}=await startConsumer(`late-stop-${change}-a`);
+    204|  await waitFor(()=>expect(original.chat.status).toBe('streaming'));
+       |                                                 ^
+    205|  fireEvent.click(screen.getByTestId('stop-button'));
+    206|  await waitFor(()=>expect(release).toBeDefined());
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/15]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  15 failed | 1 passed (16)
+   Start at  20:34:34
+   Duration  19.64s (transform 1.48s, setup 302ms, import 2.58s, tests 15.63s, environment 993ms)
+
+
+GREEN COMMAND:
+pnpm --dir frontend exec vitest run src/server/ai-runtime/live-chat-session.consumer.test.tsx --retry=0 --testTimeout=180000 --hookTimeout=180000
+GREEN EXIT CODE: 0
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:19242) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  20:35:07
+   Duration  11.63s (transform 1.31s, setup 225ms, import 2.18s, tests 8.30s, environment 745ms)
+
+
+COMBINED COMMAND:
+pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-interactions.test.tsx src/server/ai-runtime/live-chat-session.consumer.test.tsx --retry=0 --testTimeout=180000 --hookTimeout=180000
+COMBINED EXIT CODE: 0
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:19488) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19487) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  2 passed (2)
+      Tests  77 passed (77)
+   Start at  20:35:29
+   Duration  10.72s (transform 2.21s, setup 221ms, import 3.61s, tests 11.43s, environment 802ms)
+

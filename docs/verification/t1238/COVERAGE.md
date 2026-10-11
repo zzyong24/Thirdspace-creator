@@ -1,6 +1,6 @@
 # T-1238 逐功能覆盖矩阵
 
-2026-10-11 当前独立工作树的源码与当场证据快照。范围来自 FR/AC-1238-1～7，完整功能没有按版本切割。官方账户已实际验证结构化文本、独立生图、参考图编辑和图片理解四类调用；真实公共设置与宽窄界面操作已留证。23类功能没有逐族全部跑完真实模型，安装版也未验。unknown恢复混合工具投影、独立FINAL_REVIEW复核、最终类型及全局Gate仍由主线程收尾，不能据此签上线完成。
+2026-10-11 当前独立工作树的源码与当场证据快照。范围来自 FR/AC-1238-1～7，完整功能没有按版本切割。官方账户已实际验证结构化文本、独立生图、参考图编辑和图片理解四类调用；真实公共设置与宽窄界面操作已留证。23类功能没有逐族全部跑完真实模型，安装版也未验。unknown恢复混合工具投影、独立FINAL_REVIEW复核与最终类型已完成；全量门卫发现的相关夹具回归正在按原命令关闭，不能据此签全局全绿或上线完成。
 
 大白话：选 Codex 后，设置只选择一个引擎。每个新任务记住创建时的选择，后续步骤与恢复继续使用同一选择；模型只交付候选，原服务负责保存。下面逐项区分代码已接通、隔离协议通过、真实账户公共入口已验证。
 
@@ -26,8 +26,8 @@ flowchart LR
 | FR/AC-3 全生图 | 原资产/封面 Worker 接官方内置生图媒体回执，原归属与 checksum/大小/暂存/lease回收。 | 公共asset.generate第五轮原ai-task-a46c818b-48→原group采纳→assets.get/downloadUrl→[真实PNG 1041054 bytes](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/public-image-blob-group-after-adopt-fifth.json)；参考图原ai-task-a46c818b-74同样采纳并[下载PNG 1414662 bytes](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/public-image-reference-blob.json)，主线程目视蓝圆改绿圆。[官方账本](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/public-native-ledger.json)记录真实gpt-6.1-sol、usage、原thread/turn与settled call。四次原失败保留；封面/图文/文章/聊天各族尚未逐项真实回收。 |
 | FR/AC-4 冻结/继承/恢复 | route-freeze相关、新任务排期、原Pi不覆盖、跨用户/组/时刻拒绝已有当场回归；视频原冻结端口2PASS。知识蒸馏原绝对期限、未知只恢复原turn。 | 日选题预检已贯通原 aiTaskId，归因转父scope；新增actual组合根4PASS验证日选题、两类素材和归因：原Codex→切Pi无key，API resolver0。不能仅凭创建冻结测试签全部消费者。 |
 | FR/AC-5 能力失败和不回退 | 设置状态失败、未登录、图片能力false与保存失败当场组件PASS；知识 unknown/取消/已启动恢复与未结算不交全文PASS；Codex fixture不触碰PiHTTP。 | 实际登录能力GET已由主线程验证文本/理解/生图true；真实套餐/额度失败及账户取消/未知恢复未逐项真机执行。 |
-| FR/AC-6 原边界不削弱 | 知识真实ID/active/401/404、原候选、不直接建知识；PGlite/Worker/Pi整链验证原账本。图文/文章保原CAS/来源校验；Agentic候选7、研究2隔离PASS。 | 原 checkpoint24仍有4个既有request-id/幂等失败保留；真实参考图与候选采纳下载已通过，公共并发保存仍未做真机重复竞态；其账本/旧fence/保存ACK丢失有实际服务回归。 |
-| FR/AC-7 设置免文本/图片配置且Pi兼容 | 模型区域6当场PASS：Codex无两卡，ASR/视频保留，切Pi显示旧配置且不重写模型配置；设置3文件共20PASS。 | 已保留1366与390宽旧界面基线；实际浏览器7项已通过(ui-final.json)，真实PATCH切换Pi/Codex、刷新和双窗口同步，390宽控件可完整操作。保存失败为明确标注的503故障注入，保留原服务Codex值。宽窄截图主线程已目视。 |
+| FR/AC-6 原边界不削弱 | 知识真实ID/active/401/404、原候选、不直接建知识；PGlite/Worker/Pi整链验证原账本。图文/文章保原CAS/来源校验；Agentic候选7、研究2隔离PASS。 | 原checkpoint完整24项红4保留；两行fixture恢复请求号按task.id隔离后原24PASS/0SKIP（checkpoint-original-fixture-fixed.txt），不拿另26/31项代签；真实参考图与候选采纳下载已通过，公共并发保存仍未做真机重复竞态；其账本/旧fence/保存ACK丢失有实际服务回归。 |
+| FR/AC-7 设置免文本/图片配置且Pi兼容 | 模型区域6当场PASS：Codex无两卡，ASR/视频保留，切Pi显示旧配置且不重写模型配置；设置3文件共20PASS。 | 已保留1366与390宽旧界面基线；实际浏览器10项已通过(ui-final.json)，真实PATCH切换Pi/Codex、刷新和双窗口同步，390宽控件可完整操作。保存失败为明确标注的503故障注入，保留原服务Codex值。宽窄截图主线程已目视。 |
 
 ## 功能入口与真实执行
 
@@ -87,8 +87,23 @@ T1227 前端 `chat-task-submission.integration.test.ts` 索引7/10是 `review.sc
 | [图片理解第三原task](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/public-image-understanding-state-third.json)、[实际理解结果](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/public-image-understanding-results-third.json) | 原ai-task-7f12bd42-50 / exec_f87c6a87-facb-4864-871e-667b4be782dd已succeeded；实际读取原group绿圆PNG，tags图表，description“白底中央绿色实心圆，可用于状态标识或几何概念讲解。”并写原素材。 | [原001失败](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/public-image-understanding-first-current.json)、[原002失败](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/public-image-understanding-second-current.json)保留。旧account门和SDK7图base64误计预算分别有真实红/绿回归，不能把回归fixture当真机；真机成功以第三原任务为准。 |
 | [真实设置10项](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/ui-final.json)、[宽窗](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/settings-model-after-wide.png)、[窄窗](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/settings-model-after-narrow.png)、[保存失败](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/settings-save-failure.png) | fresh隔离实际浏览器、临时数据库10项通过：保存Pi/Codex、刷新、双窗口同步、1366×900/390×900操作、503保存失败保持原服务Codex、加载防重复、未登录、生图不可用与移除注入后实际Codex连接；截图主线程已目视。[相关4文件24PASS](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/frontend-final-configuration.txt)当场通过。 | 503、未登录与生图不可用是明确故障注入，非真实生产故障；单测试用户，第二真人登录未另验。原HMR代理阻断失败及webpack依赖编译失败留存，不签webpack构建绿。 |
 | [素材workspace真实红](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/asset-processing-group-red.txt)、[修后2项绿](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/asset-processing-group-green.txt)、[聊天工具闭环报告](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/orchestrator/probes/T-1238/chat-tool-closure/README.md) | 原account门拒绝本组图确实红；修为workspaceFilter后原group/file/version/跨组2项真实PGlite通过。SDK7图片真实reservation红1→绿2，再加production尺寸1414662bytes/输出65536/预算1M，最终独立3PASS。 | 每图65536是预留策略，不冒称官方计费硬上界；图片仍完整参与摘要。预算3项与backend5文件102不同批，不相加。 |
-| [聊天工具闭环报告](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/orchestrator/probes/T-1238/chat-tool-closure/README.md) | contract目录23、frontend附件/聊天2文件63、backend5文件102/0SKIP、Worker8文件60/0SKIP；Worker tsc实际exit0。原Pi、hooks/draft、Workbench、图片附件、未知root严格恢复与ACK丢失消费者有隔离协议/真实服务证据。 | 不是真实账户完整聊天工具E2E；公共unknown恢复混合工具投影最后回归与独立消费复核仍收尾。先前子集/重复同文件不得相加。 |
+| [聊天工具闭环报告](/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/orchestrator/probes/T-1238/chat-tool-closure/README.md) | contract目录23、frontend附件/聊天2文件63、backend5文件102/0SKIP、Worker8文件60/0SKIP；Worker tsc实际exit0。原Pi、hooks/draft、Workbench、图片附件、未知root严格恢复与ACK丢失消费者有隔离协议/真实服务证据。 | 不是真实账户完整聊天工具E2E；公共unknown恢复混合工具投影已由26项恢复整链及独立复核关闭；仍未做真实账户unknown生命周期。先前子集/重复同文件不得相加。 |
 
 当前真实官方四类调用已留证，但尚不能宣称23功能逐族账户真机、官方账户成片视觉审核、真实套餐/额度失败、公开unknown生命周期真机或安装包已验。只有已发生的证据记录为通过。
 
 独立[FINAL_REVIEW](FINAL_REVIEW.json)已完成，5项源码发现复核关闭，恢复整链独立26PASS/0FAIL；原失败保留。主线程最后frontend/backend/worker/contract类型检查实际exit0；完整迁移26项、核心预算与真实公共链路已有原证据。最终门卫见 [GATES.md](GATES.md)，全局历史失败不签全绿。
+
+共享目录追加整合回归：正文/Worker51PASS、原回合恢复31PASS、三包类型exit0、Worker build exit0；重建后真实设置10项最后强制断言“文本与生图可用”，见integrated-ui-final-built.json。原编译/环境/旧Pi预留失败另留，源码与其他会话改动三方合并保留，未提交其它会话变化。
+
+## 完整门卫引出的相关回归
+
+全量原对账32ERROR保留为reconcile-final.txt，不将其全部归为历史欠债。异步引擎偏好迁移使旧聊天fixture没有真实get/patch回执，实际interactions红57项、consumer红15项；补合同并等待真实就绪后完整LED059后端20/前端67PASS，interaction+consumer组合77PASS/0SKIP。新增视觉Worker resolver在生命周期fixture遗漏，单变量补齐后真实停止观察1PASS，停止后sweep不增且计时器0。生产就绪门与资源释放逻辑未降低。
+
+LED054原chat-worker-entry红10项由每例共享数据库留下待认领任务、默认1秒观察及拒绝末尾应partial的旧断言引起：改独立真实数据库和原合同断言后，完整frontend25PASS/5SKIP、Worker30PASS、backend74PASS；不删生产历史、deny仍execute0且保存partial卡与finish。LED058完整Worker56、backend118、frontend145PASS：pending采纳按现存disabled合同，异步偏好按真实回执。各批有重叠，不相加。原红及修后full-*-fixture-fixed.txt均保留；最终全量结果见GATES。
+
+完整LED061修后实际exit0，26文件352PASS/0FAIL；五组7/113/72/132/28按同一完整命令记录，和其它回执不叠加。真实生命周期停止后查询不增、timer0；100次串行/并行均liveBuffers0，原历史内存文件保持。
+
+原检查点遗留四个失败已另按准确原单文件复现并修验：原24项20PASS/4FAIL，真实幂等门拒绝同一user/account/请求号对应不同taskIds；仅fixture两行按原task.id隔离请求号后完整24PASS/0SKIP。同请求重投、水位、unknown和ACK断言全部保留，生产服务未改，见checkpoint-original-recheck.txt / checkpoint-original-fixture-fixed.txt。
+
+
+设置加载与共享媒体凭证护栏另按真实红→绿验证，最终3文件43PASS/0SKIP。偏好未读完不会先出现独立文本/图片卡或发探测；服务ID仅恢复原公开服务成员，未知/受管ID不公开。独立/共享最新浏览器10项均通过，独立探测0次、延迟本轮真实GET1次；真实ASR/视频原配置与Pi切回保持。独立复核和测试器并发元数据清理证据见PENDING_GUARD_REVIEW.md、GATES.md，不扩写为23功能全族真机或安装版。

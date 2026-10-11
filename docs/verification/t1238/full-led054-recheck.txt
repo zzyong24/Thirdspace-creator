@@ -1,0 +1,190 @@
+LED-054 actual own-worktree recheck
+Original check: pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/workbench-artifact-lineage.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0
+Each configured package segment is run even after earlier failure, without retries; test/hook timeout 180000ms, maxWorkers 1.
+
+Command: pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:12713) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:13033) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  2 passed (2)
+      Tests  25 passed | 5 skipped (30)
+   Start at  20:24:13
+   Duration  20.21s (transform 2.60s, setup 196ms, import 3.71s, tests 15.24s, environment 746ms)
+
+
+EXIT_CODE=0
+
+Command: pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/ai-worker
+
+
+ Test Files  1 passed (1)
+      Tests  30 passed (30)
+   Start at  20:24:33
+   Duration  3.58s (transform 1.92s, setup 0ms, import 3.16s, tests 276ms, environment 0ms)
+
+
+EXIT_CODE=0
+
+Command: pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/workbench-artifact-lineage.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/backend
+
+stderr | src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'approval' dynamic=false resolverFailure=false
+[execution-worker-port] task=execution-task-874ae1ad-8ebb-4d73-80b5-8147d9e53fb8 port=readCheckpoint category=Error code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'unknown' dynamic=false resolverFailure=false
+[execution-worker-port] task=execution-task-88d134da-ba83-4785-a1a2-bdf6c72938e9 port=startAgenticTool category=Error code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'revoked' dynamic=false resolverFailure=false
+[execution-worker-port] task=execution-task-0beaf54c-1ef7-41e3-af36-20a42ae6fe54 port=reserveAgenticTool category=Error code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'late-denied' dynamic=false resolverFailure=false
+[execution-worker-port] task=execution-task-6bbbd20f-4366-4fd6-b202-9cd785317b30 port=checkChatToolApproval category=Error code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'late-denied' dynamic=false resolverFailure=false
+[execution-worker-port] task=execution-task-6bbbd20f-4366-4fd6-b202-9cd785317b30 port=commitResult category=Error code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'approval' dynamic=true resolverFailure=false
+[execution-worker-port] task=execution-task-405a0654-329c-49d4-8b8a-38b5daaa4aad port=checkChatToolApproval category=Error code=HOST_PORT_REJECTED
+
+stderr | src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'approval' dynamic=true resolverFailure=false
+[execution-worker-port] task=execution-task-405a0654-329c-49d4-8b8a-38b5daaa4aad port=commitResult category=Error code=HOST_PORT_REJECTED
+
+ ❯ src/integration/chat-worker-entry.test.ts (25 tests | 10 failed) 41384ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：'approval' dynamic=false resolverFailure=false 1043ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：'denied' dynamic=false resolverFailure=false 15029ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：'unknown' dynamic=false resolverFailure=false 1041ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：'revoked' dynamic=false resolverFailure=false 1049ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：'login' dynamic=false resolverFailure=false 1079ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：'late-denied' dynamic=false resolverFailure=false 1031ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：'live' dynamic=false resolverFailure=false 1039ms
+   × 正式聊天子进程通过宿主完成并保留执行事实：'approval' dynamic=true resolverFailure=false 1043ms
+   × 动态工具解析不响应取消时，pause 仍能停止且迟到返回不能调用模型 74ms
+   × 动态工具解析不响应取消时，unknown 仍能停止且迟到返回不能调用模型 1044ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'approval' dynamic=false resolverFailure=false
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'login' dynamic=false resolverFailure=false
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'late-denied' dynamic=false resolverFailure=false
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'approval' dynamic=true resolverFailure=false
+AssertionError: expected 'running' to be 'waiting_user' // Object.is equality
+
+Expected: "waiting_user"
+Received: "running"
+
+ ❯ src/integration/chat-worker-entry.test.ts:93:62
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'denied' dynamic=false resolverFailure=false
+AssertionError: expected 'partial' to be 'succeeded' // Object.is equality
+
+Expected: "succeeded"
+Received: "partial"
+
+ ❯ vi.waitFor.timeout src/integration/chat-worker-entry.test.ts:106:61
+    104|     grant=true;await createPersistentTaskService(db).command(ctx,{task…
+    105|    }
+    106|    await vi.waitFor(async()=>expect((await state()).status).toBe(mode=…
+       |                                                             ^
+    107|    const streamEvents=await db.select().from(executionStreamEvents).wh…
+    108|    expect(streamEvents.filter(event=>event.chunk.type==="text-delta").…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'unknown' dynamic=false resolverFailure=false
+AssertionError: expected 'running' to be 'unknown_result' // Object.is equality
+
+Expected: "unknown_result"
+Received: "running"
+
+ ❯ src/integration/chat-worker-entry.test.ts:89:61
+     87|    await vi.waitFor(async()=>expect((await state()).status).toBe("canc…
+     88|   }else if(mode==="unknown" || mode==="missing-tools"){
+     89|    await vi.waitFor(async()=>expect((await state()).status).toBe(mode=…
+       |                                                             ^
+     90|    expect(requests).toBe(mode==="unknown"?1:0);expect(execute).toHaveB…
+     91|   }else{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'revoked' dynamic=false resolverFailure=false
+AssertionError: expected 'running' to be 'waiting_user' // Object.is equality
+
+Expected: "waiting_user"
+Received: "running"
+
+ ❯ src/integration/chat-worker-entry.test.ts:93:62
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 正式聊天子进程通过宿主完成并保留执行事实：'live' dynamic=false resolverFailure=false
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/integration/chat-worker-entry.test.ts:76:143
+     74|   if(mode==="live"){
+     75|     const stream=createExecutionStreamService(db);
+     76|     await vi.waitFor(async()=>expect((await stream.read(ctx,submission…
+       |                                                                                                                                               ^
+     77|     expect((await state()).status).toBe("running");
+     78|     const stop=new AbortController(),subscription=subscribeExecutionSt…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 动态工具解析不响应取消时，pause 仍能停止且迟到返回不能调用模型
+ConflictError: 任务状态不允许执行 pause: status=queued, attempt=0/3
+ ❯ commandTarget src/modules/execution/persistent-task.service.ts:284:9
+    282|     return "queued";
+    283|   }
+    284|   throw new ConflictError(
+       |         ^
+    285|     `任务状态不允许执行 ${command}: status=${status}, attempt=${attempt}/${maxA…
+    286|   );
+ ❯ src/modules/execution/persistent-task.service.ts:595:282
+ ❯ execute src/modules/execution/persistent-task.service.ts:591:59
+ ❯ ../node_modules/.pnpm/@electric-sql+pglite@0.2.17/node_modules/@electric-sql/pglite/src/base.ts:430:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+ FAIL  src/integration/chat-worker-entry.test.ts > 动态工具解析不响应取消时，unknown 仍能停止且迟到返回不能调用模型
+AssertionError: expected "vi.fn()" to be called 1 times, but got 8 times
+ ❯ src/integration/chat-worker-entry.test.ts:174:58
+    172|  }
+    173|  try{
+    174|   host.start();await vi.waitFor(()=>expect(resolveTools).toHaveBeenCal…
+       |                                                          ^
+    175|   if(resolverFails){
+    176|    if(mode==="unknown")await vi.waitFor(async()=>expect((await state()…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  10 failed | 64 passed (74)
+   Start at  20:24:38
+   Duration  111.98s (transform 6.03s, setup 0ms, import 12.15s, tests 99.23s, environment 0ms)
+
+
+EXIT_CODE=1
+
+归属定位（只读，未修改源码）：
+前端25PASS/5SKIP，Worker30PASS，backend64PASS/10FAIL；10个失败均chat-worker-entry.test.ts，另外三个backend文件通过。
+多例在原vi.waitFor默认1000ms观察失败（CLI test/hook180000不覆盖内部观察值）；fixture共享db、全局claimNext，失败后仍有任务残留，pause实际当前任务queued/attempt0与resolveTools触发、unknown resolveTools8次表明串扰，尚不能证明所有这些失败只是fixture而无生产回归。
+denied-alone单独实跑0PASS/1FAIL/24SKIP仍实际partial；chat-receipt-projection原toolFailureReceiptVersion=1 tailFailed规则在末次blocked permission且无交付产物时合法partial与失败说明，测试期待succeeded不匹配当前契约；该规则/测试相对4df342497无改动，但未实跑历史基线，不补称历史PASS。
+独立诊断输出：full-led054-isolated-diagnosis.json、full-led054-denied-alone.json；均保留真实失败，未改生产门或删除断言。拟最小处理文件backend/src/integration/chat-worker-entry.test.ts，等待主线程互斥分配。

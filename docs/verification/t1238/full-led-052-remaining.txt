@@ -1,0 +1,14 @@
+实际完整命令：node docs/verification/t1022/run-archive-guard.mjs
+file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1022/run-archive-guard.mjs:6
+ const value=process.env[key];if(!value)throw Error('归档执行门需要显式隔离PG配置：'+key);
+                                              ^
+
+Error: 归档执行门需要显式隔离PG配置：CREATOROS_TEST_POSTGRES_URL
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1022/run-archive-guard.mjs:6:47
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:639:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v25.9.0
+
+实际exit=1

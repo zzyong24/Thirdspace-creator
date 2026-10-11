@@ -9,7 +9,7 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
-|T-1238|本地Codex统一执行文本与生图并免独立模型配置|🔨 待办|PASS[REV:6b70a2a85595]|待验|[用户确认与合同](docs/features/t1238-codex-unified-text-image-engine.md)|用户明确继续实现：Codex承担文本与生图，页面/子任务/后台统一路由，无供应商回退；先独评合同，保旧任务与原失败。|
+|T-1238|本地Codex统一执行文本与生图并免独立模型配置|✅ 待办|PASS[REV:6b70a2a85595]|PASS:77b939320ddf|[用户确认与合同](docs/features/t1238-codex-unified-text-image-engine.md)|用户明确继续实现：Codex承担文本与生图，页面/子任务/后台统一路由，无供应商回退；先独评合同，保旧任务与原失败。|
 |T-1224|校准内容雷达公共旅程的短测试预算与证据输出|🔨 待办|—|待验|[范围与验收](docs/features/t1224-radar-e2e-budget-evidence.md)|独评后仅校准测试预算及证据目录，再跑原公共旅程。 [原记录](BACKLOG-details.md#b-331e63446d8d)|
 |T-1223|修复截图总览把历史运行记录当用例数及重复锚点|🔨 待办|—|待验|[范围与验收](docs/features/t1223-verification-gallery-record-identity.md)|真实历史记录误计及重复锚点已独评，报告生成器正在RED/GREEN验证；保全部旧图/结果。 [原记录](BACKLOG-details.md#b-43efc28c7f95)|
 |T-1222|核对文章图文编导的空态与功能指引脱离当前稿件|📋 待办|—|待验|[截图与范围](docs/features/t1222-director-context-guidance.md)|文章图文编导固定全局指引；真实editorTarget会在发送前准备。待核功能目录、独评和候选链。 [原记录](BACKLOG-details.md#b-7cb36965e02b)|
@@ -22,7 +22,7 @@
 |T-1201|核对知识图谱错误提示回归的旧原始异常断言|🔨 待办|—|—|[实际诊断](docs/features/t1201-knowledge-graph-error-contract.md)|T1200实际知识回归19文件148例中147PASS、1FAIL；原图谱测试期望原始无LLM凭据字符串，当前组件显示人话错误。保失败，先核真实错误合同，不削弱断言或改产品洗绿。|
 |T-1202|核对自动化复杂排期编辑的旧术语断言|🔨 待办|—|—|[实际诊断](docs/features/t1202-automation-cadence-error-contract.md)|T1199自动化原回归113PASS6FAIL，五例为本任务多平台文案已授权变化，另复杂cron旧期待无法反解而实际已有用户友好说明。保失败，先核合同，不改时间或删除保存保护。|
 |T-1203|消除自动化既有React编译与effect静态检查欠债|📋 待办|—|待验|[实际诊断](docs/features/t1203-automation-react-lint-debt.md)|T1199实lint触发旧effects/ref等错误，HEAD stdin基线也失败。保真实结果，新增依赖/声明先修，既有静态债单列；不得关闭规则或删切组/轮询保护洗绿。|
-|T-1204|核对本轮全局对账29项失败及新增触发项|🔨 待办|—|—|[实际诊断](docs/features/t1204-current-reconcile-failures.md)|多次全局对账失败原日志保留；已机械归档完成行，稳定树仍需完整非concise逐根因核对。 [原记录](BACKLOG-details.md#b-577cb0da68f4)|
+|T-1204|核对本轮全局对账29项失败及新增触发项|🔨 待办|—|—|[实际诊断](docs/features/t1204-current-reconcile-failures.md)|多次全局对账失败原日志保留；已机械归档完成行，稳定树仍需完整非concise逐根因核对。 [原记录](BACKLOG-details.md#b-577cb0da68f4) T-1238收尾实测保留22条范围外静态短超时、T-1026 write_set进度生成失败；完整全量对账原回执见docs/verification/t1238/reconcile-final.txt，禁止把本任务通过扩写为全局全绿。|
 |T-1197|核对旧外部MCP窄权限配对来源与当前账号组兼容|📋 待办|—|待验|[SPEC](docs/features/t1197-external-agent-pairing-source-convergence.md)|T1080独立分支审计实发现71d2cc77未投用配对源码缺口；原来源与27文件保留，先核授权/账号组/凭据及0101同号迁移，不恢复已淘汰ACP、不假称全CLI等价窄grant。|
 |T-1196|排查新安装版启动配置同步502与运行摘要拒绝|📋 待办|—|—|[实际诊断](docs/features/t1196-installed-config-sync-502.md)|T1194新包真启动HTTP首页正常、CLI连接正常；同时日志CHANNEL_RUNTIME_DIGEST_MISMATCH、展示副本同步502、config_sync blocked502。保失败和已激活事实，核真实同步消费者/返回来源，不猜网络或绕过摘要/验签，不重置激活。|
 |T-1193|核对结果待确认时的重复发送暗示与恢复状态可读性|📋 待办|—|—|[实际诊断](docs/features/t1193-copilot-unknown-request-presentation.md)|fresh视觉及独立receipt确认等待回执时同原话预填、生成disabled=false；POST仍1，未签重复请求。另核真实字号与短高分段阅读，先精确独评，不清新草稿或阻断合法创作。|

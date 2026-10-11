@@ -5124,3 +5124,12 @@ DEC-T1217-001 可见历史边界：无法证明可删的 share_import 原终态 
 ## DEC-T1238-001 · 2026-10-11 · 本地Codex统一文本与内置生图
 
 用户明确“codex”并要求继续实现，正常选择Codex后不调用独立文本或生图模型。这取代T1057合同候选中仍需单独图片模型的推论，授权补齐全系统文本/图片路由、后端默认偏好及真实内置生图回收。新任务冻结、子任务继承、后台共用；旧Pi任务保持原账本事实，不静默回退。复用随包官方app-server及现有execution_tasks/候选服务，不新增任务权。原生生图实际由Codex登录/套餐/provider能力决定；真实图片字节回收到任务空间，不能读取任意Codex home路径或用供应商API伪称Codex。视频、ASR/Embedding及宿主基础设施不因本次文本/图片要求扩大范围。前置独立评审与实际红→绿、公共链/真实文本生图验收仍需发生，未发生不签PASS；不授权外部发布或购买新服务。
+
+
+## DEC-T1238-002：偏好就绪前保护与媒体凭证公开映射
+
+Date: 2026-10-11
+Status: decided within DEC-T1238-001 confirmed scope
+用户依据：已确认选择Codex时文本与图片不要求独立模型配置，原ASR/视频能力保留。实施选择：未读取可信服务偏好前不展示独立文本/图片卡、引导或启用其连接测试；Pi就绪保原卡，Codex就绪免两类配置。渠道共享媒体服务按已有明确capability→serviceId关联保留，禁止服务名称猜测。原client公开services及原PUT端口已使用该opaque ID；脱敏只恢复该公开user_input集合成员的关联，未知/受管ID仍null，provider/baseUrl/名称/其它实现信息仍清空。不新增API字段、权限或数据归属，不修改原任意ID/受管Key拒绝；仅落实原已确认范围，未新增产品方向选择。
+
+当场证据：pending/cards/services真实红4、真实sanitize投影红1→最终三文件43PASS/0SKIP；独立只读复核实际canonical ready/defaultProbe/testSession、媒体共享服务和原PUT边界无新增阻断。真实浏览器新增有限延迟偏好GET与模型探测计数验收，最终状态以ui-final.json及GATES.md为准，不把fixture写成真机。

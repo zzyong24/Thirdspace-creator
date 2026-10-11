@@ -45,5 +45,5 @@ flowchart LR
 - 真账户文本/生图/public asset.generate 由主线程执行，本文件未代其补写真机 PASS。public 图片理解第三轮真账户已 succeeded，绿圆真实描述与原素材保存见 docs/verification/t1238/public-image-understanding-results-third.json；前两失败保留。
 - 主线程已只读原 PGlite payload，确认失败图片请求的 base64 被旧算法当文本导致预算拒绝；`docs/verification/t1238/public-image-understanding-budget-second.json`、`public-image-understanding-binding-second.json` 是原失败证据。修复后 intent003 真账户执行已 succeeded，原 task/exec 的 state/results-third.json 回执保留。
 - 19:28:28 `node tools/timeout-policy/verify.mjs` 退出 1，静态扫描保留 vendor reference editors 与其它既有短超时诊断；其随后节点/contract/worker/backend/frontend/MCP 分组通过。不增豁免，不写全绿。
-- 旧 checkpoint 四条请求 ID / 幂等失败、其它代理已报告的编译/旧重试失败仍需总 Gate 核验；本文件不抹去这些失败。全仓类型检查以最终主线程结果为准。
+- 旧checkpoint四条原请求号/幂等fixture失败保留；准确原单文件当场红24项20PASS/4FAIL→仅fixture请求号按task.id隔离→完整24PASS/0SKIP，证据见docs/verification/t1238/checkpoint-original-{recheck,fixture-fixed}.txt。同请求重投、水位、unknown及ACK断言和生产保护保留，不能拿其它26/31项代签。其它原编译/旧重试失败留存，最终类型和总Gate见GATES.md。
 - 本代理最后一轮 backend 类型检查未报告本代理文件错误；退出 2 来自并行恢复代理新 `codex-read-recovery.integration.test.ts` 三处类型错误（宿主 now/nextId 与 effect 推断），已回传 owner 修复。不能据此写 backend 全类型检查 PASS。
