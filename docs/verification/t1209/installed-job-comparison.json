@@ -1,0 +1,156 @@
+{
+  "recordedAt": "2026-10-11T01:52:37.458024+00:00",
+  "groups": [
+    {
+      "groupId": "grp_legacy_acct-ae1a8346-9",
+      "accountId": "acct-ae1a8346-9",
+      "requestIdBefore": "req-f394bff8-1529",
+      "requestIdAfter": "req-0f0dcc73-137",
+      "jobs": [
+        {
+          "id": "job-f191c0da-83",
+          "kind": "self.traffic",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "changedFields": [
+            "groupVersion",
+            "membershipVersion"
+          ],
+          "stableConfiguration": true
+        },
+        {
+          "id": "job-ae1a8346-14",
+          "kind": "intelligence.sync",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "changedFields": [
+            "groupVersion",
+            "membershipVersion"
+          ],
+          "stableConfiguration": true
+        },
+        {
+          "id": "job-ae1a8346-13",
+          "kind": "topic.daily",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "changedFields": [
+            "groupVersion",
+            "membershipVersion"
+          ],
+          "stableConfiguration": true
+        },
+        {
+          "id": "job-ae1a8346-12",
+          "kind": "comments",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "changedFields": [
+            "groupVersion",
+            "membershipVersion"
+          ],
+          "stableConfiguration": true
+        },
+        {
+          "id": "job-ae1a8346-11",
+          "kind": "self.metrics",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "changedFields": [
+            "groupVersion",
+            "membershipVersion"
+          ],
+          "stableConfiguration": true
+        },
+        {
+          "id": "split-82d82fb7882b2861a1ccda28c76c7141",
+          "kind": "self.detail",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "changedFields": [
+            "groupVersion",
+            "membershipVersion"
+          ],
+          "stableConfiguration": true
+        }
+      ]
+    },
+    {
+      "groupId": "grp_legacy_acct-b944fd09-473",
+      "accountId": "acct-b944fd09-473",
+      "requestIdBefore": "req-f394bff8-1531",
+      "requestIdAfter": "req-0f0dcc73-136",
+      "jobs": [
+        {
+          "id": "job-f8155c54-134",
+          "kind": "self.detail",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "changedFields": [
+            "groupVersion",
+            "membershipVersion"
+          ],
+          "stableConfiguration": true
+        },
+        {
+          "id": "job-f8155c54-133",
+          "kind": "self.traffic",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "changedFields": [
+            "groupVersion",
+            "membershipVersion"
+          ],
+          "stableConfiguration": true
+        },
+        {
+          "id": "job-b944fd09-477",
+          "kind": "intelligence.sync",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "changedFields": [
+            "groupVersion",
+            "membershipVersion"
+          ],
+          "stableConfiguration": true
+        },
+        {
+          "id": "job-b944fd09-476",
+          "kind": "topic.daily",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "changedFields": [
+            "groupVersion",
+            "membershipVersion"
+          ],
+          "stableConfiguration": true
+        },
+        {
+          "id": "job-b944fd09-475",
+          "kind": "comments",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "changedFields": [
+            "groupVersion",
+            "membershipVersion"
+          ],
+          "stableConfiguration": true
+        },
+        {
+          "id": "job-b944fd09-474",
+          "kind": "self.metrics",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "changedFields": [
+            "groupVersion",
+            "membershipVersion"
+          ],
+          "stableConfiguration": true
+        }
+      ]
+    }
+  ],
+  "totalJobs": 12,
+  "result": "PASS",
+  "boundary": "Installed public read verifies migrated existing jobs and unchanged configuration; no explicit external collection triggered"
+}

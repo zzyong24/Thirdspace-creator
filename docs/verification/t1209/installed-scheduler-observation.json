@@ -1,0 +1,56 @@
+{
+  "recordedAt": "2026-10-11T01:58:35.168582+00:00",
+  "result": "both_groups_admitted",
+  "explicitRunNowCalls": 0,
+  "observations": [
+    {
+      "operation": "jobRuns.listByJob",
+      "requestId": "req-0f0dcc73-305",
+      "groupId": "grp_legacy_acct-ae1a8346-9",
+      "accountId": "acct-ae1a8346-9",
+      "data": [
+        {
+          "id": "run-4f1bbadf-5506-4090-ae34-12a727fb60ac",
+          "userId": "user-zyongzhu",
+          "groupId": "grp_legacy_acct-ae1a8346-9",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "jobId": "job-ae1a8346-11",
+          "aiTaskId": "ai-task-0f0dcc73-304",
+          "status": "running",
+          "itemsNew": 0,
+          "itemsUpdated": 0,
+          "error": null,
+          "progress": null,
+          "startedAt": "2026-10-11T01:55:01.164Z",
+          "finishedAt": null
+        }
+      ]
+    },
+    {
+      "operation": "jobRuns.listByJob",
+      "requestId": "req-0f0dcc73-224",
+      "groupId": "grp_legacy_acct-b944fd09-473",
+      "accountId": "acct-b944fd09-473",
+      "data": [
+        {
+          "id": "run-5efd8bb4-530f-42d1-8830-6f3bb379f195",
+          "userId": "user-zyongzhu",
+          "groupId": "grp_legacy_acct-b944fd09-473",
+          "groupVersion": 1,
+          "membershipVersion": 1,
+          "jobId": "job-b944fd09-474",
+          "aiTaskId": "ai-task-0f0dcc73-152",
+          "status": "running",
+          "itemsNew": 0,
+          "itemsUpdated": 0,
+          "error": null,
+          "progress": null,
+          "startedAt": "2026-10-11T01:52:32.752Z",
+          "finishedAt": null
+        }
+      ]
+    }
+  ],
+  "boundary": "原定时器自动触发后的公开只读观察，running不等于采集完成"
+}

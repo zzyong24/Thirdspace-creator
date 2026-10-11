@@ -1,0 +1,37 @@
+{
+  "ok": true,
+  "operation": "execution.tasks.get",
+  "requestId": "req-0f0dcc73-324",
+  "groupId": "grp_legacy_acct-b944fd09-473",
+  "accountId": "acct-b944fd09-473",
+  "data": {
+    "id": "exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729",
+    "userId": "user-zyongzhu",
+    "accountId": "acct-b944fd09-473",
+    "groupId": "grp_legacy_acct-b944fd09-473",
+    "groupVersion": 1,
+    "membershipVersion": 1,
+    "kind": "ai_task",
+    "ownerType": "ai_task",
+    "ownerId": "ai-task-0f0dcc73-152",
+    "status": "running",
+    "retryAt": null,
+    "priority": 100,
+    "idempotencyKey": "ai:ai-task-0f0dcc73-152",
+    "checkpoint": null,
+    "leaseOwner": "flywheel-drain:6b0c050b-aca1-4421-bf4f-8f50bda985f9",
+    "leaseExpiresAt": "2026-10-11T02:02:35.184Z",
+    "heartbeatAt": "2026-10-11T01:57:35.184Z",
+    "attempt": 2,
+    "maxAttempts": 3,
+    "errorCode": null,
+    "errorMessage": null,
+    "costEstimate": null,
+    "createdAt": "2026-10-11T01:52:32.773Z",
+    "updatedAt": "2026-10-11T01:57:35.184Z"
+  },
+  "meta": {
+    "requestId": "req-0f0dcc73-324"
+  },
+  "error": null
+}

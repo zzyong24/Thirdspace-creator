@@ -1,0 +1,61 @@
+{
+  "result": "FAIL",
+  "exitCode": 1,
+  "errors": 27,
+  "warnings": 0,
+  "printedErrors": 5,
+  "unprintedErrors": 22,
+  "latestLessonTimestamp": "2026-10-11T02:01:31.077Z",
+  "triggeredLessons": {
+    "LED-018": {
+      "fireCount": 242,
+      "lastFiredAt": "2026-10-11T02:01:31.077Z",
+      "firstRedAt": "2026-08-12T06:10:15.204Z",
+      "registeredAt": "2026-08-09T15:10:13.259Z",
+      "deterrence": false
+    },
+    "LED-042": {
+      "fireCount": 143,
+      "lastFiredAt": "2026-10-11T02:01:31.077Z",
+      "firstRedAt": "2026-09-09T08:18:14.908Z",
+      "registeredAt": "2026-08-18T13:11:48.917Z",
+      "deterrence": false
+    },
+    "LED-052": {
+      "fireCount": 32,
+      "lastFiredAt": "2026-10-11T02:01:31.077Z",
+      "firstRedAt": "2026-10-04T19:15:46.254Z",
+      "registeredAt": "2026-10-04T19:01:56.494Z",
+      "deterrence": false
+    },
+    "LED-058": {
+      "fireCount": 29,
+      "lastFiredAt": "2026-10-11T02:01:31.077Z",
+      "firstRedAt": "2026-10-08T11:43:38.850Z",
+      "registeredAt": "2026-09-21T15:10:03.744Z",
+      "deterrence": false
+    },
+    "LED-054": {
+      "fireCount": 32,
+      "lastFiredAt": "2026-10-11T02:01:31.077Z",
+      "firstRedAt": "2026-09-22T09:02:17.450Z",
+      "registeredAt": "2026-09-21T18:53:36.332Z",
+      "deterrence": false
+    },
+    "LED-057": {
+      "fireCount": 3,
+      "lastFiredAt": "2026-10-11T02:01:31.077Z",
+      "firstRedAt": "2026-10-10T13:41:10.600Z",
+      "registeredAt": "2026-10-08T11:43:38.850Z",
+      "deterrence": false
+    },
+    "LED-053": {
+      "fireCount": 28,
+      "lastFiredAt": "2026-10-11T02:01:31.077Z",
+      "firstRedAt": "2026-10-08T13:45:28.128Z",
+      "registeredAt": "2026-10-06T08:05:06.035Z",
+      "deterrence": false
+    }
+  },
+  "boundary": "当前统计标出触发项但不包含其底层错误；其余未打印项不得猜为全部旧债。原全局欠债继续T-1204，静态27项T-1081。"
+}

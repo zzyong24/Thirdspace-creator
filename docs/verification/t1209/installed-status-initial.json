@@ -1,0 +1,7 @@
+{
+  "ok": false,
+  "error": {
+    "code": "CONNECTION_NOT_FOUND",
+    "message": "没有可用的 CreatorOS CLI 连接。请先启动 CreatorOS，并在设置中开启本次启动的 CLI 完整访问。"
+  }
+}

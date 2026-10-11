@@ -1455,3 +1455,5 @@
 {"ts":"2026-10-10T16:43:53.241Z","actor":"taskctl","action":"start","task":"T-1207","sha_before":"3aa7231d6dbd","sha_after":"7f0737a24e48"}
 {"ts":"2026-10-10T20:40:20.244Z","actor":"taskctl","action":"start","task":"T-1208","sha_before":"8ead37b0e1f0","sha_after":"7786f752873d"}
 {"ts":"2026-10-11T01:28:26.676Z","actor":"taskctl","action":"start","task":"T-1209","sha_before":"bd6fec1b8125","sha_after":"33316bb2adfe"}
+{"ts":"2026-10-11T02:07:46.702Z","actor":"taskctl","action":"start","task":"T-1210","sha_before":"557ef7d9cc6d","sha_after":"5e4347eb3d09"}
+{"ts":"2026-10-11T02:08:28.868Z","actor":"taskctl","action":"complete","task":"T-1209","evidence":"6730a15e；docs/verification/t1209/REPORT.md：迁移17、调度110、旧来源31、归档59、基本打包45、后端类型和无新边界违规；新包安装首页与12原作业公共对照通过。完整reconcile27ERROR保留T1204，静态超时27项保留T1081；采集消费重试T1210继续，不签全功能或外部完成。","sha_before":"3da90e2d3bc6","sha_after":"972907c54387"}

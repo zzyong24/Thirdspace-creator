@@ -1,0 +1,33 @@
+{
+  "recordedAt": "2026-10-11T01:52:51.380112+00:00",
+  "result": "PASS",
+  "nativePid": 58836,
+  "publicHealth": {
+    "ok": true,
+    "mode": "installed",
+    "connected": true,
+    "access": "full",
+    "productId": "creatoros",
+    "packageId": "cloud.aitongban.creatoros",
+    "pid": 58836,
+    "expiresAt": 1791769916334
+  },
+  "httpHomeLoaded": [
+    "[CreatorOS] MAIN_PAGE_LOAD_FINISHED http://127.0.0.1:62247/"
+  ],
+  "serviceProcesses": [
+    {
+      "pid": 59280,
+      "ppid": 58836,
+      "port": 62247
+    }
+  ],
+  "runtimeStampMatches": true,
+  "startupWarnings": [
+    "[license] CHANNEL_RUNTIME_DIGEST_MISMATCH",
+    "[license] 同步展示副本到 sidecar 失败(HTTP 502 Bad Gateway)",
+    "[license] 同步展示副本到 sidecar 失败(HTTP 502 Bad Gateway)",
+    "[client-config] phase=config_sync reason=unknown trigger=startup status=blocked http_status=502"
+  ],
+  "boundary": "真实安装版首页完成事件、公开健康及原生直属服务；非全功能截图验收。启动warning保留。"
+}

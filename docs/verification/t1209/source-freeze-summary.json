@@ -1,0 +1,30 @@
+{
+  "recordedAt": "2026-10-11T01:42:37.102008+00:00",
+  "head": "6730a15eab7749edf999dc5399c8497c6fa3eaa5",
+  "cwd": "/Users/zyongzhu/.codex/worktrees/t1062-client-integration/Thirdspace-creator",
+  "clean": true,
+  "versions": {
+    "package": "1.2.0",
+    "tauri": "1.2.0",
+    "cargo": "1.2.0",
+    "lock": "1.2.0"
+  },
+  "scannedCommittedBlobs": 13054,
+  "secretShapeFindings": [],
+  "knownExactFixtureMatches": [
+    {
+      "object": "0b263ac60d6e32dcb3f26eab23b5eea61007ebc5",
+      "sha256": "f18c8abc124b461da4202fb16d8ef35746d96dba53936cab484790212b16c2da"
+    },
+    {
+      "object": "35df881277612177df692a530474b9470a55cdce",
+      "sha256": "fd0a8513d5bd3f85e5338930aa1a7e56d80792d33193182d8b8203372945ca3e"
+    },
+    {
+      "object": "11d02816c9d92d4e8180bab16f56ee4b87b4aa12",
+      "sha256": "47b4fc408f4f1013c0ee25a795165833ad5c55ab21088be471136b7440999eab"
+    }
+  ],
+  "fullArchive": "source-freeze.json.gz",
+  "fullArchiveSha256": "ca3faf02b34f8f009155e7a7c31172d7e6ca0212ba1c6e5abf86edf6b56a02b9"
+}

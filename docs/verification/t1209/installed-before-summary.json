@@ -1,0 +1,160 @@
+[
+  {
+    "requestId": "req-f394bff8-1529",
+    "groupId": "grp_legacy_acct-ae1a8346-9",
+    "accountId": "acct-ae1a8346-9",
+    "jobs": [
+      {
+        "id": "job-f191c0da-83",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "sourceKind": "self.traffic",
+        "schedule": "15 */2 * * *",
+        "enabled": true,
+        "createdAt": "2026-09-11T11:49:59.700Z",
+        "updatedAt": "2026-09-11T11:55:19.414Z"
+      },
+      {
+        "id": "job-ae1a8346-14",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "sourceKind": "intelligence.sync",
+        "schedule": "0 9 * * *",
+        "enabled": true,
+        "createdAt": "2026-08-04T13:02:50.895Z",
+        "updatedAt": "2026-09-13T08:29:50.314Z"
+      },
+      {
+        "id": "job-ae1a8346-13",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "sourceKind": "topic.daily",
+        "schedule": "32 10 * * *",
+        "enabled": false,
+        "createdAt": "2026-08-04T13:02:50.891Z",
+        "updatedAt": "2026-09-15T01:26:44.727Z"
+      },
+      {
+        "id": "job-ae1a8346-12",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "sourceKind": "comments",
+        "schedule": "30 */2 * * *",
+        "enabled": true,
+        "createdAt": "2026-08-04T13:02:50.886Z",
+        "updatedAt": "2026-08-04T13:03:04.606Z"
+      },
+      {
+        "id": "job-ae1a8346-11",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "sourceKind": "self.metrics",
+        "schedule": "0 */2 * * *",
+        "enabled": true,
+        "createdAt": "2026-08-04T13:02:50.878Z",
+        "updatedAt": "2026-08-04T13:02:50.878Z"
+      },
+      {
+        "id": "split-82d82fb7882b2861a1ccda28c76c7141",
+        "accountId": "acct-ae1a8346-9",
+        "groupId": "grp_legacy_acct-ae1a8346-9",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "sourceKind": "self.detail",
+        "schedule": "45 */2 * * *",
+        "enabled": true,
+        "createdAt": "2026-08-04T13:02:50.878Z",
+        "updatedAt": "2026-08-04T13:02:50.878Z"
+      }
+    ]
+  },
+  {
+    "requestId": "req-f394bff8-1531",
+    "groupId": "grp_legacy_acct-b944fd09-473",
+    "accountId": "acct-b944fd09-473",
+    "jobs": [
+      {
+        "id": "job-f8155c54-134",
+        "accountId": "acct-b944fd09-473",
+        "groupId": "grp_legacy_acct-b944fd09-473",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "sourceKind": "self.detail",
+        "schedule": "45 */2 * * *",
+        "enabled": true,
+        "createdAt": "2026-09-26T01:23:10.220Z",
+        "updatedAt": "2026-09-26T01:23:10.220Z"
+      },
+      {
+        "id": "job-f8155c54-133",
+        "accountId": "acct-b944fd09-473",
+        "groupId": "grp_legacy_acct-b944fd09-473",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "sourceKind": "self.traffic",
+        "schedule": "15 */2 * * *",
+        "enabled": true,
+        "createdAt": "2026-09-26T01:23:10.213Z",
+        "updatedAt": "2026-09-26T01:23:10.213Z"
+      },
+      {
+        "id": "job-b944fd09-477",
+        "accountId": "acct-b944fd09-473",
+        "groupId": "grp_legacy_acct-b944fd09-473",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "sourceKind": "intelligence.sync",
+        "schedule": "0 */2 * * *",
+        "enabled": true,
+        "createdAt": "2026-09-23T11:55:36.261Z",
+        "updatedAt": "2026-09-23T11:55:36.261Z"
+      },
+      {
+        "id": "job-b944fd09-476",
+        "accountId": "acct-b944fd09-473",
+        "groupId": "grp_legacy_acct-b944fd09-473",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "sourceKind": "topic.daily",
+        "schedule": "14 12 * * *",
+        "enabled": false,
+        "createdAt": "2026-09-23T11:55:36.257Z",
+        "updatedAt": "2026-09-23T11:55:36.257Z"
+      },
+      {
+        "id": "job-b944fd09-475",
+        "accountId": "acct-b944fd09-473",
+        "groupId": "grp_legacy_acct-b944fd09-473",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "sourceKind": "comments",
+        "schedule": "30 */2 * * *",
+        "enabled": true,
+        "createdAt": "2026-09-23T11:55:36.250Z",
+        "updatedAt": "2026-09-23T11:55:36.250Z"
+      },
+      {
+        "id": "job-b944fd09-474",
+        "accountId": "acct-b944fd09-473",
+        "groupId": "grp_legacy_acct-b944fd09-473",
+        "groupVersion": null,
+        "membershipVersion": null,
+        "sourceKind": "self.metrics",
+        "schedule": "0 */2 * * *",
+        "enabled": true,
+        "createdAt": "2026-09-23T11:55:36.240Z",
+        "updatedAt": "2026-09-23T11:55:36.240Z"
+      }
+    ]
+  }
+]

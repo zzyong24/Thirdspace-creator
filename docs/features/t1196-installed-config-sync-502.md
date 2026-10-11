@@ -6,6 +6,8 @@
 
 同轮还有 `scheduled.intelligence.sync` 自动任务失败，归原T1098启动后定期同步诊断，保真实原ID；并不建立替代任务或将该历史任务重发。此任务登记是有限诊断，不是根因或修复完成，不影响用户使用已加载首页的新客户端，也不恢复微信与上传研究预算。
 
+2026-10-11 T1209新包4e82ba9690a85de58a86b3965ffdaf241df526beb00f3bddd1e4fd9155f04e0e的安装版再次实际记录同样摘要/502；之后还有phase=refresh failed及config_sync security_error blocked，errorCode=CLIENT_CONFIG_ACCESS_CHANGED。公开CLI仍connected/full、实际HTTP首页已加载。原观测startup-verification.json及native日志在docs/verification/t1209；此新增错误仍需核实际消费者，不推断失去激活、泄露或当前409原因。
+
 ```mermaid
 flowchart LR
  A[新包真实启动] --> B[首页与本地服务正常]

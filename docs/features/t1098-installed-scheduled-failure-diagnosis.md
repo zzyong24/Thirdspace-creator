@@ -17,3 +17,7 @@ flowchart LR
 ```
 
 本文件是缺陷登记和待核诊断，尚不是产品改动准入SPEC。无代码、合同、数据库或权限变化；T1095本地启动已通过的事实与后台同步失败分别保留。
+
+2026-10-11 T1209修复旧作业缺版本的409后，当前安装版原调度器在两组自动创建self.metrics真实run（run-5efd8bb4-530f-42d1-8830-6f3bb379f195与run-4f1bbadf-5506-4090-ae34-12a727fb60ac），均membership/group版本1、running、error=null；这些事实已能区分准入问题与外部执行尚未完成。原ai-task-f394bff8-1465 intelligence同步失败仍保留，新ai-task-0f0dcc73-148/153/316同步成功；第1次对标页导航超时、第2次恢复并取得33条公开作品。
+
+公开execution.tasks.get还观察exec_90e4dc58-d3ee-4b9f-8a8d-5a91afdaf729对应ai-task-0f0dcc73-152，running、attempt=2/maxAttempts=3，checkpoint=null，heartbeatAt=2026-10-11T01:57:35.184Z/leaseExpiresAt=02:02:35.184Z。这是当前观察而不是“卡死”或根因判定；后续须核租约推进、工作者和原最终结果，不能由running签外部采集成功。原公开只读证据docs/verification/t1209/installed-collector-execution.json，本轮没有显式手动触发、取消、替代任务或改变定时配置。
