@@ -1,6 +1,7 @@
+import {runCodexAgenticInWorker} from './codex-agentic-worker-run';
 import { z } from "zod";
 import type {Context,StreamFunction} from "@earendil-works/pi-ai";
-import {agenticWorkerInputSchema,workerModelSpecSchema,agenticToolReservationSchema,agenticToolOutcomeSchema,type WorkerPort} from "@creatoros/contract/execution-worker";
+import {agenticWorkerInputSchema,executionModelSpecSchema,agenticToolReservationSchema,agenticToolOutcomeSchema,type WorkerPort} from "@creatoros/contract/execution-worker";
 import {createPiAgenticEngine,createLoopController,type AgenticTool} from "../runtime/agentic";
 import {wrapDurablePiStream} from "./durable-pi-stream";
 import {runDurableAgenticTool} from "./durable-agentic-tool";
@@ -16,10 +17,11 @@ const checkpointSchema=z.object({revision:z.number().int().nonnegative(),ledgerS
   budget:z.object({maxCalls:z.number().int().positive().nullable(),maxTokens:z.number().int().positive().nullable()})});
 /** Rebuild the Pi transcript by replaying durable calls from the initial frozen context. */
 export async function runAgenticInWorker(
-  rawInput:z.infer<typeof agenticWorkerInputSchema>,rawModel:z.infer<typeof workerModelSpecSchema>,
+  rawInput:z.infer<typeof agenticWorkerInputSchema>,rawModel:z.infer<typeof executionModelSpecSchema>,
   parentSignal:AbortSignal,call:Call,onText?:(text:string)=>void,researchTools?:ResearchToolExecutor,
 ){
-  const input=agenticWorkerInputSchema.parse(rawInput);const model=workerModelSpecSchema.parse(rawModel);
+  const input=agenticWorkerInputSchema.parse(rawInput);const model=executionModelSpecSchema.parse(rawModel);
+  if("engine" in model)return runCodexAgenticInWorker(input,model,parentSignal,call,onText,researchTools);
   const stop=new AbortController();const signal=AbortSignal.any([parentSignal,stop.signal]);
   signal.throwIfAborted();
   if(!model.authStyle)throw new GenerationFailure("waiting_user","AGENT_AUTH_STYLE_REQUIRED");

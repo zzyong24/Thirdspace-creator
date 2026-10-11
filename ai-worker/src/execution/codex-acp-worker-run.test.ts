@@ -2,11 +2,13 @@ import {afterEach, expect, it, vi} from 'vitest';
 import type {SessionNotification} from '@agentclientprotocol/sdk';
 import type {WorkerPort} from '@creatoros/contract/execution-worker';
 
-const boundaries = vi.hoisted(() => ({host:vi.fn(),bridge:vi.fn(),directory:vi.fn(),prompt:vi.fn()}));
+const boundaries = vi.hoisted(() => ({host:vi.fn(),bridge:vi.fn(),directory:vi.fn(),prompt:vi.fn(),nativeSession:vi.fn(),recover:vi.fn()}));
 vi.mock('./codex-acp-host',() => ({createCodexAcpHost:boundaries.host}));
 vi.mock('./external-task-mcp-bridge',() => ({startExternalTaskMcpBridge:boundaries.bridge}));
 // 原 helper 模块回引本 runner；替换宿主边界，避免测试触发另一条 native 执行路径。
 vi.mock('./external-chat-worker-run',() => ({externalAgentWorkingDirectory:boundaries.directory,externalChatPrompt:boundaries.prompt}));
+vi.mock('./codex-app-server',async original=>({...await original<typeof import('./codex-app-server')>(),createControlledCodexSession:boundaries.nativeSession}));
+vi.mock('./codex-native-turn',()=>({recoverCodexNativeTurn:boundaries.recover}));
 import {runCodexAcpInWorker} from './codex-acp-worker-run';
 import {CodexHostError} from './codex-app-server';
 import {GenerationFailure} from './generation-error';
@@ -57,6 +59,7 @@ function fixture() {
   const ports:Partial<Record<WorkerPort,PortHandler>> = {
     reserveExternalChatTurn:()=>({callId,status:'reserved'}),
     listExternalTaskTools:()=>({tools:[{name:'read_project',version:'1',description:'读取项目',inputSchema:{type:'object'}}]}),
+    bindCodexCall:()=>({}),
     startExternalChatTurn:()=>({callId,status:'started',sessionId}),
     recordExternalChatProviderTurn:data=>({callId,status:'started',sessionId,providerTurnId:data.providerTurnId}),
     recoverExternalChatImage:()=>({status:'missing'}),
@@ -239,4 +242,37 @@ it('客户端关闭失败仍关闭桥，不能覆盖已结算成功或原 unknow
   await expect(g.run()).rejects.toMatchObject({outcome:'unknown_result',errorCode:'CODEX_ACP_HOST_FAILED'});
   expect(g.settlements()).toEqual([{callId,status:'unknown'}]);
   expect(g.client.close).toHaveBeenCalledTimes(1);expect(g.bridge.close).toHaveBeenCalledTimes(1);
+});
+it('ACP只绑定实际session，工具MCP桥消费新Worker目录，原turn元数据出现后再补真实绑定',async()=>{
+ const f=fixture();const value={...input,executionEngine:'codex',tools:[{name:'material.screenshot',effect:'committed',version:'1',description:'原截帧',parameters:{type:'object'}}]} as Input;
+ f.ports.listExternalTaskTools=()=>({tools:[{name:'material.screenshot',version:'1',description:'截帧',inputSchema:{type:'object'}}]});
+ f.ports.recordCodexToolCall=()=>({});f.ports.checkChatToolApproval=()=>({status:'not-applicable'});
+ f.ports.reserveAgenticTool=()=>({callId:'ordinary-host',status:'reserved',toolName:'material_screenshot',input:{url:'https://example.com'}});
+ f.ports.startAgenticTool=()=>({callId:'ordinary-host',status:'started'});
+ const outcome={status:'ok',summary:'隔离宿主回执',evidence:[],data:{kind:'material.screenshot',asset:{id:'asset'}},error:null,continuation:null,sideEffect:'committed'};
+ f.ports.executeAgenticTool=()=>outcome;f.ports.settleAgenticTool=data=>({callId:'ordinary-host',status:data.status});
+ f.client.prompt.mockImplementationOnce(async()=>{expect(f.called('bindCodexCall')[0]?.[1]).toEqual({callId,threadId:sessionId});const bridgeCall=boundaries.bridge.mock.calls[0]![0].call;expect(await bridgeCall('executeExternalTaskTool',{turnCallId:callId,toolCallId:'actual-mcp-request',toolName:'material.screenshot',input:{url:'https://example.com'}},f.controller.signal)).toMatchObject({status:'settled',outcome});f.emit({sessionUpdate:'agent_message_chunk',content:{type:'text',text:'已返回真实截帧回执'}});return {stopReason:'end_turn',_meta:{creatoros:{codex:{threadId:sessionId,turnId:providerTurnId,status:'completed'}}}};});
+ expect(await runCodexAcpInWorker(value,f.controller.signal,f.call)).toEqual({callId});expect(f.called('recordCodexToolCall')[0]?.[1]).toEqual({callId,toolCallId:'actual-mcp-request',toolName:'material_screenshot',input:JSON.stringify({url:'https://example.com'})});expect(f.called('bindCodexCall').at(-1)?.[1]).toEqual({callId,threadId:sessionId,turnId:providerTurnId});
+});
+
+it('ACP已unknown原真实thread/turn只读恢复，不发prompt或建立新会话',async()=>{
+ const f=fixture(),close=vi.fn();f.ports.reserveExternalChatTurn=()=>({callId,status:'unknown',sessionId,providerTurnId,protocolKind:'acp',protocolVersion:1});
+ f.ports.readCheckpoint=()=>({replayableGenerationToolCallIds:[]});f.ports.readCodexCall=()=>({threadId:sessionId,turnId:providerTurnId});boundaries.nativeSession.mockResolvedValue({rpc:{close}});boundaries.recover.mockResolvedValue({sessionId,providerTurnId,text:'原回合真实已完成',usage:null});
+ expect(await f.run()).toEqual({callId});expect(boundaries.recover).toHaveBeenCalledWith(expect.anything(),sessionId,providerTurnId);expect(f.client.prompt).not.toHaveBeenCalled();expect(boundaries.host).not.toHaveBeenCalled();expect(close).toHaveBeenCalledTimes(1);
+});
+it('ACP已授权图片以原协议image content block传递，排空预算保持两分钟',async()=>{
+ const f=fixture();boundaries.prompt.mockImplementation((_input,images:Array<{url:string}>)=>{images.push({url:'data:image/png;base64,AQID'});return '用户图片';});
+ expect(await f.run()).toEqual({callId});expect(f.client.prompt.mock.calls[0]?.[1]).toEqual([{type:'text',text:'用户图片'},{type:'image',mimeType:'image/png',data:'AQID'}]);expect(f.client.waitForSessionUpdatesIdle).toHaveBeenCalledWith({idleMs:0,timeoutMs:120000});
+});
+
+it('ACP原native累计用量先落事实再cancel原session，不把used或外来turn计账',async()=>{
+ const f=fixture();f.ports.bindCodexCall=data=>({budgetExceeded:Boolean(data.observedUsage)});
+ f.client.prompt.mockImplementationOnce(async()=>{
+  f.emit({sessionUpdate:'usage_update',used:999,size:200000});
+  f.emit({sessionUpdate:'session_info_update',_meta:{creatoros:{codex:{threadId:'foreign',turnId:providerTurnId,usage:{inputTokens:3,outputTokens:4,totalTokens:7}}}}});
+  f.emit({sessionUpdate:'session_info_update',_meta:{creatoros:{codex:{threadId:sessionId,turnId:providerTurnId,usage:{inputTokens:3,outputTokens:4,totalTokens:7}}}}});
+  return {stopReason:'end_turn',_meta:{creatoros:{codex:{threadId:sessionId,turnId:providerTurnId,status:'completed'}}}};
+ });
+ await expect(f.run()).rejects.toMatchObject({outcome:'unknown_result',errorCode:'CODEX_TOKEN_BUDGET_EXCEEDED'});
+ expect(f.called('bindCodexCall').filter(([,data])=>record(data).observedUsage).map(([,data])=>data)).toEqual([{callId,observedUsage:{inputTokens:3,outputTokens:4,totalTokens:7}}]);expect(f.client.cancel).toHaveBeenCalledWith(sessionId);expect(f.settlements()).toEqual([{callId,status:'unknown'}]);
 });

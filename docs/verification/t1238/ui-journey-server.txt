@@ -1,0 +1,67 @@
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://127.0.0.1:63109
+- Network:       http://127.0.0.1:63109
+✓ Ready in 449ms
+[CreatorOS] SIDECAR_STARTUP_VERIFIED
+
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+ POST /api/v1/dispatch 200 in 18.6s (next.js: 2.6s, proxy.ts: 216ms, application-code: 15.8s)
+ GET /settings 200 in 3.8s (next.js: 1045ms, proxy.ts: 3ms, application-code: 2.7s)
+ POST /api/v1/dispatch 200 in 16ms (next.js: 1947µs, proxy.ts: 2ms, application-code: 12ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 19ms (next.js: 8ms, proxy.ts: 5ms, application-code: 6ms)
+ POST /api/web-session 200 in 189ms (next.js: 78ms, proxy.ts: 5ms, application-code: 106ms)
+ POST /api/v1/dispatch 200 in 207ms (next.js: 184ms, proxy.ts: 6ms, application-code: 17ms)
+ POST /api/v1/dispatch 200 in 234ms (next.js: 206ms, proxy.ts: 8ms, application-code: 20ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 253ms (next.js: 37ms, proxy.ts: 203ms, application-code: 14ms)
+ POST /api/v1/dispatch 200 in 117ms (next.js: 34ms, proxy.ts: 36ms, application-code: 48ms)
+ POST /api/web-session 200 in 150ms (next.js: 29ms, proxy.ts: 53ms, application-code: 69ms)
+ POST /api/v1/dispatch 200 in 80ms (next.js: 13ms, proxy.ts: 21ms, application-code: 47ms)
+ GET /api/chat/engines 200 in 233ms (next.js: 140ms, proxy.ts: 67ms, application-code: 26ms)
+ POST /api/v1/dispatch 200 in 14ms (next.js: 2ms, proxy.ts: 3ms, application-code: 9ms)
+ GET /settings 200 in 716ms (next.js: 5ms, proxy.ts: 6ms, application-code: 706ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 103ms (next.js: 43ms, proxy.ts: 35ms, application-code: 25ms)
+ POST /api/v1/dispatch 200 in 267ms (next.js: 109ms, proxy.ts: 39ms, application-code: 119ms)
+ POST /api/web-session 200 in 281ms (next.js: 81ms, proxy.ts: 35ms, application-code: 165ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 307ms (next.js: 238ms, proxy.ts: 51ms, application-code: 18ms)
+ POST /api/v1/dispatch 200 in 335ms (next.js: 252ms, proxy.ts: 62ms, application-code: 21ms)
+ POST /api/web-session 200 in 369ms (next.js: 229ms, proxy.ts: 36ms, application-code: 104ms)
+ POST /api/v1/dispatch 200 in 160ms (next.js: 8ms, proxy.ts: 110ms, application-code: 43ms)
+ GET /settings 200 in 562ms (next.js: 4ms, proxy.ts: 2ms, application-code: 556ms)
+ POST /api/v1/dispatch 200 in 21ms (next.js: 2ms, proxy.ts: 5ms, application-code: 14ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 36ms (next.js: 16ms, proxy.ts: 9ms, application-code: 11ms)
+ POST /api/v1/dispatch 200 in 73ms (next.js: 38ms, proxy.ts: 9ms, application-code: 25ms)
+ POST /api/web-session 200 in 77ms (next.js: 29ms, proxy.ts: 8ms, application-code: 40ms)
+ POST /api/v1/dispatch 200 in 89ms (next.js: 66ms, proxy.ts: 11ms, application-code: 11ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 114ms (next.js: 29ms, proxy.ts: 67ms, application-code: 17ms)
+ POST /api/web-session 200 in 116ms (next.js: 18ms, proxy.ts: 66ms, application-code: 31ms)
+ POST /api/v1/dispatch 200 in 63ms (next.js: 3ms, proxy.ts: 43ms, application-code: 17ms)
+ POST /api/v1/dispatch 200 in 32ms (next.js: 5ms, proxy.ts: 7ms, application-code: 20ms)
+ POST /api/v1/dispatch 200 in 38ms (next.js: 8ms, proxy.ts: 9ms, application-code: 22ms)
+ GET /api/chat/engines 200 in 643ms (next.js: 5ms, proxy.ts: 29ms, application-code: 609ms)
+ POST /api/v1/dispatch 200 in 84ms (next.js: 6ms, proxy.ts: 5ms, application-code: 73ms)
+ GET /settings 200 in 633ms (next.js: 4ms, proxy.ts: 4ms, application-code: 625ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 32ms (next.js: 12ms, proxy.ts: 8ms, application-code: 11ms)
+ POST /api/v1/dispatch 200 in 95ms (next.js: 26ms, proxy.ts: 7ms, application-code: 62ms)
+ POST /api/v1/dispatch 200 in 112ms (next.js: 86ms, proxy.ts: 8ms, application-code: 18ms)
+ POST /api/web-session 200 in 151ms (next.js: 118ms, proxy.ts: 11ms, application-code: 22ms)
+[CreatorOS] DISPATCH_FAILED {"operation":"ingestion.douyin.status","errorName":"AccountRequiredError","errorCode":"AccountRequiredError"}
+ POST /api/v1/dispatch 428 in 184ms (next.js: 139ms, proxy.ts: 11ms, application-code: 34ms)
+ POST /api/v1/dispatch 200 in 67ms (next.js: 12ms, proxy.ts: 25ms, application-code: 31ms)
+ POST /api/web-session 200 in 99ms (next.js: 42ms, proxy.ts: 27ms, application-code: 30ms)
+ GET /api/chat/engines 200 in 7.5s (next.js: 5ms, proxy.ts: 7ms, application-code: 7.5s)
+ GET /api/chat/engines 200 in 4.3s (next.js: 4ms, proxy.ts: 3ms, application-code: 4.3s)
+ GET /api/chat/engines 200 in 3.1s (next.js: 2ms, proxy.ts: 3ms, application-code: 3.1s)
+ GET /api/chat/engines 200 in 446ms (next.js: 4ms, proxy.ts: 3ms, application-code: 439ms)
+ POST /api/v1/dispatch 200 in 15ms (next.js: 3ms, proxy.ts: 5ms, application-code: 7ms)
+ POST /api/v1/dispatch 200 in 15ms (next.js: 3ms, proxy.ts: 4ms, application-code: 8ms)
+ POST /api/v1/dispatch 200 in 13ms (next.js: 2ms, proxy.ts: 4ms, application-code: 6ms)
+ GET /api/chat/engines 200 in 3.0s (next.js: 1204µs, proxy.ts: 1416µs, application-code: 3.0s)
+ GET /api/chat/engines 200 in 443ms (next.js: 1616µs, proxy.ts: 3ms, application-code: 439ms)

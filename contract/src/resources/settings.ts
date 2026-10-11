@@ -28,6 +28,7 @@ export const userPreferenceResource = z.object({
   autosaveEnabled: z.boolean(),
   fileNamingRule: z.string(),
   analyticsEnabled: z.boolean(),
+  assistantExecutionEngine: z.enum(["pi", "codex"]).nullable().default(null),
 });
 export type UserPreferenceResource = z.infer<typeof userPreferenceResource>;
 

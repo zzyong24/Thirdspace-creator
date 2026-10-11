@@ -1,0 +1,60 @@
+[
+  {
+    "executionTaskId": "exec_4d4ccc15-7b21-4534-8117-a8905066a072",
+    "aiTaskId": "ai-task-a46c818b-48",
+    "status": "succeeded",
+    "callId": "call_b428abe7-5568-40ef-85ea-07ad736d3470",
+    "callStatus": "settled",
+    "kind": "model",
+    "engine": "codex",
+    "threadId": "01a12aa4-b184-7673-81ee-ac040fc51c37",
+    "turnId": "01a12aa4-b2b7-7a92-ac06-eb1748cca5d8",
+    "usage": {
+      "inputTokens": 33703,
+      "totalTokens": 33847,
+      "outputTokens": 144
+    },
+    "totalTokens": 33847,
+    "nativeResult": {
+      "itemId": "call_f7711119da7a41e7af225e91c23f541f",
+      "checksum": "sha256:fa1699c26812764f4414434fbb1a1bdf515d378c78154b8795aa7c898f580cb1",
+      "model": "gpt-6.1-sol",
+      "usage": {
+        "inputTokens": 33703,
+        "totalTokens": 33847,
+        "outputTokens": 144,
+        "thoughtTokens": 0,
+        "cachedReadTokens": 0
+      }
+    }
+  },
+  {
+    "executionTaskId": "exec_63281043-c310-4541-85bf-1b51141f1bc3",
+    "aiTaskId": "ai-task-a46c818b-74",
+    "status": "succeeded",
+    "callId": "call_1ae9ade3-5290-49c5-b273-6d92df3535aa",
+    "callStatus": "settled",
+    "kind": "model",
+    "engine": "codex",
+    "threadId": "01a12ab1-15da-7b20-a284-f39c7e21b197",
+    "turnId": "01a12ab1-16fa-73a1-be55-701c94b0bed4",
+    "usage": {
+      "inputTokens": 37595,
+      "totalTokens": 37763,
+      "outputTokens": 168
+    },
+    "totalTokens": 37763,
+    "nativeResult": {
+      "itemId": "call_89b80c401633491b8e8aad2b0c7e32fe",
+      "checksum": "sha256:b6f573c10f728efdfb0114e5bb4b0c940890cc8882daf8e1f6e3a3df7abfece7",
+      "model": "gpt-6.1-sol",
+      "usage": {
+        "inputTokens": 37595,
+        "totalTokens": 37763,
+        "outputTokens": 168,
+        "thoughtTokens": 0,
+        "cachedReadTokens": 17152
+      }
+    }
+  }
+]

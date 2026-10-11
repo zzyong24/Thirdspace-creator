@@ -30,3 +30,4 @@ export function resolveFlywheelWorkerPath(cwd=process.cwd(),desktop=process.env.
 export function resolveModelProbeWorkerPath(cwd=process.cwd(),desktop=process.env.CREATOROS_DESKTOP==="1"){return resolveWorkerPath("model-probe-worker.cjs","MODEL_PROBE_WORKER_BUILD_MISSING",cwd,desktop);}
 
 export function resolveCodexStatusWorkerPath(cwd=process.cwd(),desktop=process.env.CREATOROS_DESKTOP==="1"){return resolveWorkerPath("codex-status-worker.cjs","CODEX_STATUS_WORKER_BUILD_MISSING",cwd,desktop);}
+export function resolveVideoVisualReviewWorkerPath(cwd=process.cwd(),desktop=process.env.CREATOROS_DESKTOP==="1"){return resolveWorkerPath('video-visual-review-worker.cjs','VIDEO_VISUAL_REVIEW_WORKER_BUILD_MISSING',cwd,desktop);}

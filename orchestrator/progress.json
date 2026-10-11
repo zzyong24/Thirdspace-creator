@@ -7260,6 +7260,64 @@
       "exclusive_resources": [
         "creatoros-next-e2e"
       ]
+    },
+    {
+      "id": "T-1238",
+      "task_id": "T-1238",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        {
+          "step": "implementation",
+          "status": "pending"
+        }
+      ],
+      "blocked_reason": null,
+      "depends_on": [],
+      "write_set": [
+        "contract/src/**",
+        "backend/src/**",
+        "backend/drizzle/0133_assistant_execution_engine.sql",
+        "backend/drizzle/meta/_journal.json",
+        "ai-worker/src/**",
+        "ai-worker/scripts/**",
+        "ai-worker/vendor/**",
+        "frontend/src/server/**",
+        "frontend/src/app/api/knowledge/**",
+        "frontend/src/features/settings/**",
+        "frontend/src/features/copilot/**",
+        "frontend/src/features/article/article-result-actions.tsx",
+        "frontend/src/features/projects/graphic-post-results.tsx",
+        "frontend/src/features/projects/publication-result-actions.tsx",
+        "frontend/src/features/projects/video-output-workbench.tsx",
+        "frontend/src/lib/codex-capability-explanation.ts",
+        "frontend/src/proxy.ts",
+        "frontend/src/proxy.test.ts",
+        "frontend/scripts/**",
+        "docs/verification/t1238/**",
+        "orchestrator/probes/T-1238/**",
+        "docs/features/t1238-codex-unified-text-image-engine.md",
+        "docs/features/t1238-codex-unified-text-image-engine.review.md",
+        "orchestrator/process/reconcile.config.json",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1238.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/ARTIFACT_MANIFEST.yaml",
+        "BACKLOG.md"
+      ],
+      "read_set": [
+        "docs/features/t1238-codex-unified-text-image-engine.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/**",
+        "backend/src/**",
+        "ai-worker/src/**",
+        "frontend/src/**"
+      ],
+      "commits": {}
     }
   ],
   "leases": {

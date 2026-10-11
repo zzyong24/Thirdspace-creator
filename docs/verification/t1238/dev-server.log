@@ -1,0 +1,36 @@
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:53625
+- Network:       http://192.168.0.107:53625
+✓ Ready in 504ms
+[CreatorOS] SIDECAR_STARTUP_VERIFIED
+
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+ POST /api/v1/dispatch 200 in 7.0s (next.js: 1847ms, proxy.ts: 118ms, application-code: 5.0s)
+ POST /api/v1/dispatch 200 in 3.8s (next.js: 1963µs, proxy.ts: 6ms, application-code: 3.8s)
+ GET /api/chat/engines 200 in 4.2s (next.js: 174ms, proxy.ts: 14ms, application-code: 4.0s)
+[api/knowledge/classify] failed: Error [EffectiveSkillSnapshotError]: [SKILL_SNAPSHOT_ACCOUNT_MISMATCH] 解析 Skill snapshot 缺少有效 user/account owner
+    at accountMismatch (../backend/src/modules/ai-runtime/effective-skill-snapshot.ts:504:9)
+    at <unknown> (../backend/src/modules/ai-runtime/effective-skill-snapshot.ts:565:14)
+    at Object.runWithResolvedEffectiveSkills [as runWithEffectiveSkills] (src/server/persistence-client.ts:2953:28)
+    at POST (src/app/api/knowledge/classify/route.ts:68:42)
+  502 |   details: Record<string, unknown>,
+  503 | ): never {
+> 504 |   throw new EffectiveSkillSnapshotError(
+      |         ^
+  505 |     "SKILL_SNAPSHOT_ACCOUNT_MISMATCH",
+  506 |     message,
+  507 |     details, {
+  code: 'SKILL_SNAPSHOT_ACCOUNT_MISMATCH',
+  details: { userId: 'user-eb780691-1', accountId: null },
+  status: 403
+}
+ POST /api/knowledge/classify 400 in 2.1s (next.js: 1917ms, proxy.ts: 31ms, application-code: 156ms)
+ POST /api/v1/dispatch 200 in 777ms (next.js: 722ms, proxy.ts: 33ms, application-code: 22ms)
+[ai-task-runner] taskId=ai-task-12b7a425-13 taskType=asset.generate status=failed finishReason=null usage=null candidateCount=0
+ POST /api/v1/dispatch 200 in 71ms (next.js: 37ms, proxy.ts: 2ms, application-code: 32ms)
+ POST /api/knowledge/classify 200 in 16.2s (next.js: 653ms, proxy.ts: 31ms, application-code: 15.5s)
+ POST /api/v1/dispatch 200 in 1385ms (next.js: 1301ms, proxy.ts: 70ms, application-code: 13ms)
+[ai-task-runner] taskId=ai-task-12b7a425-16 taskType=asset.generate status=failed finishReason=null usage=null candidateCount=0
+ POST /api/v1/dispatch 200 in 2.0s (next.js: 1858ms, proxy.ts: 90ms, application-code: 70ms)
+ POST /api/v1/dispatch 200 in 1312ms (next.js: 1225ms, proxy.ts: 70ms, application-code: 17ms)

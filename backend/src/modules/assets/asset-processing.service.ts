@@ -4,11 +4,12 @@ import type { z } from 'zod';
 import { assetProcessingInputSchema, materialExtractionSchema } from '@creatoros/contract/execution-worker';
 import { assets, assetFiles } from './assets.db-schema';
 import { OwnershipError } from './assets.errors';
+import {workspaceFilter} from '../../workspace-scope';
 type Target = z.infer<typeof assetProcessingInputSchema>;
 /** 仅原文件仍为当前版本时写抽取/描述；锁顺序 asset→file。 */
 export function createAssetProcessingService() {
     const lock = async (tx: Db, ctx: RequestContext, target: Target) => {
-        const [asset] = await tx.select().from(assets).where(and(eq(assets.id, target.assetId), eq(assets.userId, ctx.userId), eq(assets.accountId, ctx.accountId ?? ''))).for('update');
+        const [asset] = await tx.select().from(assets).where(and(eq(assets.id, target.assetId), eq(assets.userId, ctx.userId), workspaceFilter(assets,ctx))).for('update');
         if (!asset || !['active', 'pending'].includes(asset.status) || asset.currentFileId !== target.fileId)
             throw new OwnershipError('素材版本或归属已变化');
         if (target.fileId) {

@@ -10,7 +10,7 @@ import {closeChatResearchResources} from "./chat-research-worker";
 import {runChatInWorker} from "./chat-worker-run";
 import {closeTopicWorkerResources} from "./topic-worker-reads";
 import { generateStructuredInWorker } from "./structured-worker-generation";
-import { streamText } from "ai";
+import { generateText, streamText } from "ai";
 import { modelFor } from "../runtime/provider-factory";
 import { createExecutionWorker } from "./worker-runtime";
 import { generationFailure } from "./generation-error";
@@ -34,6 +34,12 @@ const worker = createExecutionWorker({
   supportsChatStructured:true,
   send(message) {if (process.connected) process.send!(message);},
   async generate(input, spec, signal, onText) {
+    if("engine" in spec){
+      try{const result=await generateText({model:modelFor(spec),prompt:input.prompt,system:input.system,maxOutputTokens:input.maxOutputTokens,maxRetries:0,abortSignal:signal});
+        signal.throwIfAborted();if(!result.text.trim())throw Error('CODEX_TEXT_RESULT_UNKNOWN');
+        await onText(result.text);return {text:result.text,usage:result.totalUsage};
+      }catch(error){throw generationFailure(error,false);}
+    }
     let streamFailed = false;
     let streamError: unknown;
     const result = streamText({model: modelFor(spec), prompt: input.prompt, system: input.system,

@@ -196,3 +196,12 @@ it('T1110迁移后必须有真实0131回执，旧完整前缀不得冒充新runt
   await expect(assertMigrationConverged(store.db as never,folder)).rejects.toThrow('0131');
  }finally{await store.client.close();}
 },180000);
+
+it('T1238迁移后必须有真实0133回执与列，旧完整前缀不得宣称偏好已准备',async()=>{
+ const store=await createDb();try{
+  const hash=createHash('sha256').update(await readFile(join(folder,'0133_assistant_execution_engine.sql'),'utf8')).digest('hex');
+  const col=(await readCatalog(store.db)).columns.find(c=>c.table_name==='user_preferences'&&c.column_name==='assistant_execution_engine');expect(col?.is_nullable).toBe('YES');
+  await store.client.query('DELETE FROM drizzle.__drizzle_migrations WHERE hash=$1',[hash]);
+  await expect(assertMigrationConverged(store.db as never,folder)).rejects.toThrow('0133');
+ }finally{await store.client.close();}
+},180000);

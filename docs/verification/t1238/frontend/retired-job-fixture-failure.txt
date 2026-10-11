@@ -1,0 +1,43 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:56389) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56416) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56422) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/server/codex-frozen-preflight.integration.test.ts
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+
+ ❯ src/server/codex-frozen-preflight.integration.test.ts (4 tests | 1 failed) 7226ms
+   × 真实公共原采集任务/归因adapter预检：原Codex父切Pi无key后按原lease检查，不误判未配置 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/codex-frozen-preflight.integration.test.ts > 真实公共原采集任务/归因adapter预检：原Codex父切Pi无key后按原lease检查，不误判未配置
+ValidationError: 该兼容任务已退役，请使用作品数据同步或内容雷达
+ ❯ Object.createJob ../backend/src/modules/scheduling/scheduling.service.ts:213:15
+    211|       await assertWritableWorkspace(db,ctx,{allowArchived:backgroundCo…
+    212|       if (retiredSourceKinds.has(input.sourceKind)&&!(input.systemMana…
+    213|         throw new ValidationError(
+       |               ^
+    214|           "该兼容任务已退役，请使用作品数据同步或内容雷达",
+    215|         );
+ ❯ Object.request ../backend/src/modules/scheduling/scheduling.transport.ts:56:27
+ ❯ Object.request src/lib/page-read-cache.server.ts:109:18
+ ❯ call src/server/codex-frozen-preflight.integration.test.ts:29:61
+ ❯ src/server/codex-frozen-preflight.integration.test.ts:64:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 32 passed (33)
+   Start at  19:10:46
+   Duration  22.79s (transform 7.71s, setup 388ms, import 13.13s, tests 7.29s, environment 1.38s)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/codex-frozen-preflight.integration.test.ts src/app/api/knowledge/classify/route.test.ts src/app/api/knowledge/distill/route.test.ts src/app/api/knowledge/knowledge-worker-routes.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1

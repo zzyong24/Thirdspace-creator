@@ -1,3 +1,5 @@
+import {userPreferences} from '@creatoros/backend';
+import {createExecutionRoute} from '@creatoros/contract/execution-worker';
 import {PRIVATE_COLLECTION_SOURCE_KINDS,assertPrivateCollectorJob,assertExecutionTaskWorkspaceAdmission} from '../scheduling';
 import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {lockWorkspaceMembership,assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
@@ -8,7 +10,9 @@ import {uncommittedChatTaskCalls} from "./chat-task-submission-recovery";
 import {recoverableChatNodeParents} from "./chat-generation-recovery";
 import {recoverableWorkbenchPlanCalls} from "./workbench-plan-recovery";
 import {recoverableBrowserObservationFailures} from "./workbench-browser-observation-recovery";
-import {unconfirmedModelCalls,resumableChatModelCalls,recoverableChatModelRetryAnchor,isChatReplayRecoveryError} from "./model-call-recovery";
+import {recoverableCodexModelCalls,unconfirmedModelCalls,resumableChatModelCalls,recoverableChatModelRetryAnchor,isChatReplayRecoveryError} from "./model-call-recovery";
+import {codexReadDeadlineAvailable} from './codex-read-recovery';
+import {recoverableCodexProposalParents} from './chat-generation-recovery';
 import {createDailyTopicRunService} from "../scheduling";
 import {scheduledChildId,assertScheduledChild,scheduledParentProjection} from "./execution-scheduled-child.service";
 import { createHash, randomUUID } from "node:crypto";
@@ -345,6 +349,8 @@ export function createPersistentTaskService(
       }
       const stamp = now();
       const executionBudget = input.executionBudget === undefined ? null : executionBudgetSchema.parse(isContinuousExecutionBudget(input.executionBudget)&&input.maxAttempts!==undefined?{...input.executionBudget,maxAttempts:input.maxAttempts}:input.executionBudget);
+      const [preference]=await tx.select().from(userPreferences).where(eq(userPreferences.userId,ctx.userId));
+      const executionRoute=input.payload.executionRoute??createExecutionRoute(preference?.assistantExecutionEngine==='codex'?'codex':'pi');
       const row = {
         executionBudget,
         deadlineAt: executionBudget === null ? null : newExecutionBudgetDeadline(executionBudget, stamp),
@@ -357,7 +363,7 @@ export function createPersistentTaskService(
         status: "queued",
         priority: input.priority ?? 0,
         idempotencyKey: input.idempotencyKey,
-        payload: input.payload,
+        payload: {...input.payload,executionRoute},
         checkpoint: null,
         leaseOwner: null,
         leaseExpiresAt: null,
@@ -418,6 +424,8 @@ export function createPersistentTaskService(
       // 模型身份、恢复认可等宿主执行状态不改变最初入队请求的幂等身份。
       const existingRequestPayload = {...asPayload(existing?.payload)};
       delete existingRequestPayload.modelIdentity;
+      // 宿主补的默认冻结值不改变原入队请求；显式父路由仍逐字核验。
+      if(input.payload.executionRoute===undefined)delete existingRequestPayload.executionRoute;
       delete existingRequestPayload.filePredispatchRecoveries;
       delete existingRequestPayload.researchBlockedAcknowledgedThroughSequence;
       delete existingRequestPayload.researchBlockedAcknowledgedCallIds;
@@ -561,9 +569,19 @@ export function createPersistentTaskService(
         }
         const resumeModels=new Map<string,typeof executionCalls.$inferSelect[]>();
         const resumeAnchors=new Map<string,string>();
+        const codexReadOnlyResume=new Set<string>();
+        const blockedCodexResume=new Set<string>();
         if(input.command==="resume"){
           for(const row of rows.filter(row=>effectiveIds.includes(row.id)&&["paused","unknown_result"].includes(row.status))){
             const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)).orderBy(asc(executionCalls.sequence));
+            const originalNative=recoverableCodexModelCalls(row,calls),pending=calls.filter(call=>['started','unknown'].includes(call.status));
+            const codexParents=recoverableCodexProposalParents(row,calls);
+            // 未知工具动作不能借模型恢复许可重放；原预算/期限/尝试次数仍守同一任务。
+            if(originalNative.length&&!calls.some(call=>call.status==='reserved')&&pending.every(call=>originalNative.some(native=>native.id===call.id)||codexParents.includes(call.id))&&
+              row.leaseOwner===null&&row.leaseExpiresAt===null&&executionAttemptAvailable(row.executionBudget,row.attempt,row.maxAttempts)&&
+              codexReadDeadlineAvailable(row,now()))codexReadOnlyResume.add(row.id);
+            const frozen=asPayload(row.payload),engine=(frozen.executionRoute as {engine?:string}|undefined)?.engine??(frozen.modelInput as {executionEngine?:string}|undefined)?.executionEngine;
+            if(engine==='codex'&&pending.length&&!codexReadOnlyResume.has(row.id))blockedCodexResume.add(row.id);
             const safe=resumableChatModelCalls(row,calls);
             if(safe.length)resumeModels.set(row.id,safe);
             else {const anchor=recoverableChatModelRetryAnchor(row,calls);if(anchor)resumeAnchors.set(row.id,anchor.id);}
@@ -572,7 +590,8 @@ export function createPersistentTaskService(
         const targetById = new Map(
           rows.filter(row=>effectiveIds.includes(row.id)).map((row) => [
             row.id,
-            input.command==='resume' && row.status==='unknown_result' && (resumeModels.has(row.id)||resumeAnchors.has(row.id)) ? 'queued' :
+            blockedCodexResume.has(row.id) ? row.status as PersistentTaskStatus :
+            input.command==='resume' && ['paused','unknown_result'].includes(row.status) && (resumeModels.has(row.id)||resumeAnchors.has(row.id)||codexReadOnlyResume.has(row.id)) ? 'queued' :
             (input.command==='pause' && row.status==='queued' && (parents.some(parent=>scheduledChildId(parent)===row.id) || ['self.traffic','self.metrics'].includes((asPayload(row.payload).modelInput as {kind?:string;sourceKind?:string}|undefined)?.sourceKind??''))) ? 'paused' : commandTarget(
               row.status as PersistentTaskStatus,
               input.command,
@@ -615,6 +634,7 @@ export function createPersistentTaskService(
               status: target,
               ...(recoveredModels ? {retryOfCallId:recoveredModels.at(-1)!.id,lastErrorCode:null,lastErrorMessage:null} : {}),
               ...(resumeAnchors.has(taskId)?{retryOfCallId:resumeAnchors.get(taskId)!,lastErrorCode:null,lastErrorMessage:null}:{}),
+              ...(codexReadOnlyResume.has(taskId)?{lastErrorCode:null,lastErrorMessage:null}:{}),
               ...(acknowledgedPayload ? {payload: acknowledgedPayload} : {}),
               ...(clearLease
                 ? {
@@ -950,7 +970,7 @@ export function createPersistentTaskService(
           // 绑定取消须由专属恢复端口确认 owned staging 窗口停止及清理，不能按租约期限假报已取消。
           if(row.kind === "account_binding")continue;
           let target: PersistentTaskStatus | "unknown_result";
-          const calls = row.kind === "ai_task" ? await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)) : [];
+          const calls = ["ai_task","topic_preview","script_candidate"].includes(row.kind) ? await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,row.id)) : [];
           // 丢锚路径在专用helper核验租约；不以该新增门替代计划/产物等既有专用恢复证明。
           const retryAnchor=recoverableChatModelRetryAnchor(row,calls);
           const lastPhysical=calls.slice().sort((a,b)=>a.sequence-b.sequence).at(-1);
@@ -984,7 +1004,7 @@ export function createPersistentTaskService(
           // 原操作键上记为 superseded，再由重试预算控制续跑；工具和异步 provider job
           // 仍须保持未知并按原键对账。
           const originalRetryOfCallId=row.retryOfCallId;
-          const safeModels=["running","unknown_result"].includes(row.status)?unconfirmedModelCalls(calls):[];
+          const safeModels=["running","unknown_result"].includes(row.status)?unconfirmedModelCalls(row,calls):[];
           const safeModelStatuses=new Map(safeModels.map(call=>[call.id,call.status]));
           const safeModelIds=new Set(safeModels.map(call=>call.id));
           for(const call of safeModels)call.status="superseded";
@@ -1005,12 +1025,19 @@ export function createPersistentTaskService(
           // 外部副作用仍有 started/unknown 回执时继续等待专用对账。专用对账已经把原调用
           // 结算后，允许同一任务重新入队；否则产物虽已恢复，Agent loop 仍会永久停住。
           const unresolvedCalls=calls.some(call=>call.status==="started"||call.status==="unknown");
-          if(row.status==="unknown_result"&&!recoveredModels&&unresolvedCalls)continue;
+          const nativeReads=recoverableCodexModelCalls(row,calls);
+          const nativeReadIds=new Set(nativeReads.map(call=>call.id));
+          const codexParents=recoverableCodexProposalParents(row,calls);
+          const codexReadOnly=nativeReads.length>0&&!calls.some(call=>call.status==='reserved')&&calls.every(call=>!['started','unknown'].includes(call.status)||nativeReadIds.has(call.id)||codexParents.includes(call.id)||completedParents.includes(call.id))&&
+            codexReadDeadlineAvailable(row,stamp)&&executionAttemptAvailable(row.executionBudget,row.attempt,row.maxAttempts);
+          if(row.status==="unknown_result"&&!recoveredModels&&unresolvedCalls&&!codexReadOnly)continue;
 
           if (row.status === "pause_requested") {
             target = "paused";
           } else if (row.status === "cancel_requested") {
             target = "cancelled";
+          } else if (codexReadOnly) {
+            target="queued";
           } else if (calls.some(call => (call.status === "started" && !completedParents.includes(call.id)) || (call.status === "unknown" && !assetCalls.includes(call.id)))) {
             target = "unknown_result";
           } else if (row.deadlineAt && Date.parse(row.deadlineAt) <= Date.parse(stamp)) {

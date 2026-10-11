@@ -193,3 +193,21 @@ it("纯图片使用原 pending 收据，只保存一次；错 session、旧租�
  await f.service.settle(f.ref,{callId:turn.callId,status:'settled',receipt:imageReceipt});await f.service.commit(f.ref,{callId:turn.callId});
  const rows=await f.rows();expect(rows.messages[1]?.parts).toEqual(expect.arrayContaining([expect.objectContaining({type:'tool-native.image',output:expect.objectContaining({kind:'native.image'})})]));expect((await db.select().from(assets).where(eq(assets.id,row.id)))[0]?.status).toBe('pending');
 });
+
+it('原生聊天图片真实item/turn/字节摘要保存回放与最终回执，跨turn及摘要替换拒绝',async()=>{
+ const f=await fixture(true),turn=await f.service.reserve(f.ref,{}),thread='native-image-thread',providerTurnId='native-image-turn';
+ await f.service.prepareThread(f.ref,{callId:turn.callId,sessionId:thread,protocolKind:'codex-app-server',protocolVersion:1});await f.service.start(f.ref,{callId:turn.callId,sessionId:thread,protocolKind:'codex-app-server',protocolVersion:1});await f.service.recordProviderTurn(f.ref,{callId:turn.callId,providerTurnId});
+ const [row]=await db.select().from(executionTasks).where(eq(executionTasks.id,f.ref.executionTaskId)),payload={...row!.payload as object,codexCalls:{[turn.callId]:{threadId:thread,turnId:providerTurnId}}};await db.update(executionTasks).set({payload}).where(eq(executionTasks.id,row!.id));
+ const {createHash}=await import('node:crypto'),bytes=new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0]),nativeSource={providerTurnId,itemId:'actual-imageGeneration-item',checksum:createHash('sha256').update(bytes).digest('hex')},identity={callId:turn.callId,sessionId:thread,toolCallId:nativeSource.itemId,imageIndex:0,nativeSource};
+ await expect(f.service.saveImage(f.ref,{...identity,nativeSource:{...nativeSource,providerTurnId:'foreign'},mimeType:'image/png',bytes})).rejects.toThrow();await expect(f.service.saveImage(f.ref,{...identity,nativeSource:{...nativeSource,checksum:'b'.repeat(64)},mimeType:'image/png',bytes})).rejects.toThrow();
+ const saved=await f.service.saveImage(f.ref,{...identity,mimeType:'image/png',bytes});expect(await f.service.recoverImage(f.ref,identity)).toEqual(saved);
+ const receipt={schemaVersion:1,engine:'codex',protocolKind:'codex-app-server',protocolVersion:1,sessionId:thread,turnId:turn.callId,providerTurnId,stopReason:'end_turn',text:'',images:[saved.receipt],usage:null};
+ await f.service.settle(f.ref,{callId:turn.callId,status:'settled',receipt});await f.service.commit(f.ref,{callId:turn.callId});expect((await f.rows()).messages[1]?.parts).toEqual(expect.arrayContaining([expect.objectContaining({type:'tool-native.image'})]));
+});
+
+it('原图片附件public Assets服务读取真实字节，图片不存在/跨组仍拒绝归属',async()=>{
+ const {createAccountGroupService}=await import('../platform-account'),{createAssetsService,createAssetRepository,createPendingGeneratedAssetService}=await import('../assets');
+ const base={userId:'chat-image-group-owner',requestId:'group-image',source:'user' as const},deps={db,now,nextId:(p:string)=>`${p}-${++counter}`},groups=createAccountGroupService(deps),a=await groups.create(base,{name:'图片所属组',idempotencyKey:'image-a'}),b=await groups.create(base,{name:'另一组',idempotencyKey:'image-b'});
+ const root=await mkdtemp(join(tmpdir(),'t1238-owned-image-'));storageRoots.push(root);const storage=createLocalFsObjectStorage({rootPath:root,publicBaseUrl:'/blob'},{nextKey:()=>`owned-${++counter}`}),objectStorageForCtx=async()=>storage,pending=createPendingGeneratedAssetService({...deps,objectStorageForCtx,authorize:async()=>{}}),bytes=new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0]),owner={...base,groupId:a.id};
+ const image=await pending.submit(owner,{operationKey:'owned-chat-image',assetType:'image',mimeType:'image/png',name:'已授权图片',bytes}),assetsService=createAssetsService(createAssetRepository(db,deps),objectStorageForCtx,deps);expect((await assetsService.getAssetBytes(owner,image.assetId))?.bytes).toEqual(bytes);await expect(assetsService.getAssetBytes({...base,groupId:b.id},image.assetId)).rejects.toThrow();await expect(assetsService.getAssetBytes(owner,'missing-image')).rejects.toThrow();
+});

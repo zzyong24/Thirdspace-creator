@@ -1,0 +1,6 @@
+(node:44883) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+JSON report written to /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/video-visual-runtime-red.json
+undefined
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run scripts/desktop/execution-worker-runtime.test.mjs --maxWorkers=1 --retry=0 --testTimeout=180000 --hookTimeout=180000 --reporter=json --outputFile=../docs/verification/t1238/video-visual-runtime-red.json

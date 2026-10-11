@@ -4,7 +4,8 @@ import {normalizeTopics,topicArraySchema,reviewInsightsSchema,knowledgeDistillSc
 import {chatDiagnosisKeys,projectChatDiagnosis} from "../ai-runtime/chat-diagnosis-node";
 import {normalizeDiagnosis} from "../ai-runtime/calibration-diagnose-runner";
 import {executionEvidence} from "../../schema/intelligence";
-import {recoverableChatNodeParents} from "./chat-generation-recovery";
+import {recoverableChatNodeParents,recoverableCodexStructuredParents,recoverableCodexSettledProposalParents} from "./chat-generation-recovery";
+import {originalCodexReadBinding} from './codex-read-recovery';
 import {createExecutionWorkerOutcomeService} from "./execution-worker-outcome.service";
 import {isDeepStrictEqual} from "node:util";
 import {z} from "zod";
@@ -21,7 +22,7 @@ import {createExecutionLeaseService} from "./execution-lease.service";
 import {createExecutionCallLedgerService} from "./execution-call-ledger.service";
 import {createExecutionNodePreparationService} from "./execution-node-preparation.service";
 import {createExecutionChatModelIdentityService} from "./execution-chat-model-identity.service";
-import {createAgenticToolBinding} from "./agentic-tool-binding";
+import {latestAgenticRootCall,createAgenticToolBinding} from "./agentic-tool-binding";
 import type {ChatBackendTool} from "./execution-chat-tool-ports.service";
 import {ConflictError} from "./execution.errors";
 const preparationSchema=z.object({node:chatStructuredNodeSchema,discovery:z.object({sessionId:z.string().min(1),candidateId:z.string().min(1),candidateRevision:z.number().int()}).strict().nullable(),maxOutputTokens:z.number().int().positive().max(65536),skillSnapshot:workerSkillSnapshotSchema}).strict();
@@ -39,12 +40,13 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
  function find(task:Parameters<typeof binding.forCall>[0],calls:Call[],callId:string){
   const parent=calls.find(call=>call.id===callId);
   if(!parent || parent.kind!=="tool" || parent.parentCallId || parent.toolExecutionClaimId)throw new ConflictError("生成缺少真实 Worker 父工具");
-  const bound=binding.forCall(task,calls,parent);
+  const readonlyRecovery=[...recoverableCodexStructuredParents(task,calls),...recoverableCodexSettledProposalParents(task,calls)].includes(parent.id);
+  const bound=binding.forCall(task,calls,parent,readonlyRecovery?{readonlyRecovery:true}:undefined);
   if(bound.execution!=="worker.structured-node" || !["topic.enrich","positioning.generate","calibration.diagnose","topic.generate","review.analyze","knowledge.distill"].includes(bound.executionToolName) || bound.effect!=="proposal" || bound.validationOutcome)throw new ConflictError("当前父工具不是有效结构化生成");
   return {parent,bound};
  }
  function current(calls:Call[],found:ReturnType<typeof find>){
-  if(!["started","settled"].includes(found.parent.status) || (found.parent.status!=="settled" && calls.filter(call=>call.kind==="model" && !call.parentCallId).at(-1)?.id!==found.bound.modelCallId))throw new ConflictError("生成父工具不属于当前可执行回合");
+  if(!["started","settled"].includes(found.parent.status) || (found.parent.status!=="settled" && latestAgenticRootCall(calls)?.id!==found.bound.modelCallId))throw new ConflictError("生成父工具不属于当前可执行回合");
  }
  async function base(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
   const {callId}=parentRequest.parse(raw);signal?.throwIfAborted();
@@ -131,7 +133,7 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
     const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
     const found=find(task,calls,callId);current(calls,found);
     const recoverable=recoverableChatNodeParents(task,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,task.id)));
-    if(found.parent.status!=="started" || !recoverable.structured.includes(callId))throw new ConflictError("原任务没有可回放的生成记录");
+    if(found.parent.status!=="started" || (!recoverable.structured.includes(callId)&&![...recoverableCodexStructuredParents(task,calls),...recoverableCodexSettledProposalParents(task,calls)].includes(callId)))throw new ConflictError("原任务没有可回放的生成记录");
     groups(calls,callId,value.operationKey);
     signal?.throwIfAborted();await tx.update(executionCalls).set({startedAttempt:ref.attempt,updatedAt:(deps.now??(()=>new Date().toISOString()))()}).where(eq(executionCalls.id,callId));
     return {callId,status:"started" as const};
@@ -155,6 +157,8 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
    if(expected.status!=="next-request" || expected.consumed!==index-1 || !isDeepStrictEqual(input.request,expected.request))throw new ConflictError("生成模型请求不符合原节点与回执");
    const call=await ledger.reserve(ref,{kind:"model",operationKey:input.operationKey,parentCallId:input.callId,inputDigest:generationRequestDigest(input.request),reservedTokens:Buffer.byteLength(JSON.stringify(input.request))+1024+value.maxOutputTokens,...(input.retryOfCallId?{retryOfCallId:input.retryOfCallId}:{})},(calls,task)=>{
     const found=find(task,calls,input.callId);current(calls,found);
+    const tail=groups(calls,input.callId,value.operationKey).children.at(-1);
+    if(tail&&found.parent.startedAttempt!==null&&tail.startedAttempt!==null&&found.parent.startedAttempt>tail.startedAttempt&&recoverableCodexStructuredParents(task,calls).includes(input.callId)&&!calls.some(existing=>existing.parentCallId===input.callId&&existing.operationKey===input.operationKey))throw new ConflictError('原生只读恢复不能新增生成调用');
     if(found.bound.inputDigest!==value.bound.inputDigest || !isDeepStrictEqual(groups(calls,input.callId,value.operationKey).result.slice(0,index-1),tree.result.slice(0,index-1)))throw new ConflictError("预留前生成调用事实改变");
     if(input.retryOfCallId){const previous=tree.result[index-1]?.at(-1);if(task.retryOfCallId!==input.retryOfCallId || previous?.id!==input.retryOfCallId || !recoverableModelFailure(previous) || previous.startedAttempt===ref.attempt || found.parent.startedAttempt!==ref.attempt)throw new ConflictError("子模型重试尚未获得原任务恢复许可");}
    });
@@ -174,8 +178,14 @@ export function createExecutionChatGenerationService(db:Db,deps:Parameters<typeo
   async settle(ref:ExecutionRef,raw:unknown){
    const {callId,...input}=workerPortInputSchemas.settleChatGenerationModel.parse(raw);
    const call=await ledger.settle(ref,callId,input,child=>{
-    if(child.kind!=="model" || !child.parentCallId || (child.status==="unknown" && input.status!=="unknown") || (child.status==="started" && child.startedAttempt!==ref.attempt))throw new ConflictError("生成回执不属于可结算的当前调用");
-   },(calls,task)=>{const child=calls.find(call=>call.id===callId)!;find(task,calls,child.parentCallId!);});
+    if(child.kind!=="model" || !child.parentCallId)throw new ConflictError("生成回执不属于可结算的当前调用");
+   },(calls,task)=>{
+    const child=calls.find(call=>call.id===callId)!,found=find(task,calls,child.parentCallId!);
+    if((child.status==='unknown'&&input.status!=='unknown')||(child.status==='started'&&child.startedAttempt!==ref.attempt)){
+     const native=originalCodexReadBinding(task,child),metadata=z.record(z.string(),z.json()).safeParse(input.status==='settled'?input.providerResult?.providerMetadata?.codex:undefined);
+     if(!native||!recoverableCodexStructuredParents(task,calls).includes(found.parent.id)||found.parent.startedAttempt!==ref.attempt||input.status!=='settled'||!metadata.success||metadata.data.threadId!==native.threadId||metadata.data.turnId!==native.turnId)throw new ConflictError('生成回执缺少原生只读恢复证明');
+    }
+   });
    return {callId:call.id,status:call.status};
   },
   async complete(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){

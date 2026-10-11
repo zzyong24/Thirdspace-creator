@@ -271,6 +271,7 @@ export type ChromiumDownloader = (
 export type VideoVisualReviewer = (
   ctx: RequestContext,
   input: { bytes: Uint8Array; mimeType: "image/jpeg"; prompt: string },
+  scope: { parentTaskId: string; deadlineAt: number | null; signal: AbortSignal },
 ) => Promise<string | null>;
 
 export interface VideoVisualReview {
@@ -1278,7 +1279,7 @@ export function createVideoRenderExecutor(
             bytes: await fs.readFile(contactSheet),
             mimeType: "image/jpeg",
             prompt: VIDEO_VISUAL_REVIEW_PROMPT,
-          });
+          }, { parentTaskId: sandbox.taskId, deadlineAt: opts.deadlineAt ?? null, signal });
           if (raw) {
             visualReview =
               parseVideoVisualReview(raw) ?? {

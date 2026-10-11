@@ -1,0 +1,6 @@
+locator.click: Target page, context or browser has been closed
+Call log:
+[2m  - waiting for getByRole('button', { name: '模型配置', exact: true })[22m
+
+    at model (/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/ui-final.cjs:2:1031)
+    at async /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/ui-final.cjs:3:1

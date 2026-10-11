@@ -22,6 +22,8 @@ import { assertLoopType, classifyLoopType, type LoopType } from "./agentic/loop-
 export interface ExecutorRunOpts {
   /** 超时/丢弃中止贯通(T-239c 模式):executor 应尽早响应 abort。 */
   signal: AbortSignal;
+  /** 原任务冻结的绝对期限；null为原任务明确无固定总期限。 */
+  deadlineAt?: number | null;
   /** 步骤流上报(落 ai_task_steps,喂前端步骤日志)。 */
   reportStep: (text: string) => Promise<void>;
   /**

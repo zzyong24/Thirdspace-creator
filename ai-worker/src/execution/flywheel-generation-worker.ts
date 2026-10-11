@@ -1,7 +1,7 @@
 import { findGenerationFailure } from "./generation-error";
 import { StructuredOutputError, findStructuredOutputError } from "../nodes/structured-output-error";
 import {z} from 'zod';
-import {workerReservationSchema,workerStartReceiptSchema,type WorkerPort,type structuredGenerationInputSchema,type workerModelSpecSchema} from '@creatoros/contract/execution-worker';
+import {workerReservationSchema,workerStartReceiptSchema,type WorkerPort,type structuredGenerationInputSchema,type executionModelSpecSchema} from '@creatoros/contract/execution-worker';
 import {createDurableGenerationModel} from './durable-generation-model';
 import {GenerationFailure,generationFailure} from './generation-error';
 import {modelFor} from '../runtime/provider-factory';
@@ -12,7 +12,7 @@ import {runChatStructuredSequence} from './chat-structured-sequence';
 import {chatStructuredNodeSchema} from '@creatoros/contract/execution-worker';
 
 /** 只执行后端冻结的对标拆解能力；不接任意模板、脚本或工具。 */
-export async function generateFlywheelInWorker(input:z.infer<typeof structuredGenerationInputSchema>,spec:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
+export async function generateFlywheelInWorker(input:z.infer<typeof structuredGenerationInputSchema>,spec:z.infer<typeof executionModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
  if(!['benchmark.teardown','topic.attribution','favorites.triage','knowledge.distill'].includes(input.capability)||input.skillId!==input.capability)throw new GenerationFailure('failed','FLYWHEEL_CAPABILITY_INVALID');
  let lastCallId:string|undefined;
  const model=createDurableGenerationModel({model:modelFor(spec),operationKey:input.operationKey,signal,ports:{

@@ -1,0 +1,16 @@
+{
+  "data": {
+    "id": "pref-user-eb780691-1",
+    "userId": "user-eb780691-1",
+    "defaultHome": "dashboard",
+    "defaultCreationMode": "guided",
+    "defaultVisibility": "private",
+    "autosaveEnabled": true,
+    "fileNamingRule": "",
+    "analyticsEnabled": false,
+    "assistantExecutionEngine": "codex"
+  },
+  "meta": {
+    "requestId": "req-a46c818b-52"
+  }
+}

@@ -1,3 +1,4 @@
+import {CodexHostError} from './codex-app-server-protocol';
 import { classifyLlmError, getRetryAfterMs } from "../runtime/retry-policy";
 
 /** 只传白名单诊断，不保留原始供应商请求、响应或凭据。 */
@@ -10,6 +11,10 @@ export class GenerationFailure extends Error {
 }
 
 export function generationFailure(error: unknown, hasOutput: boolean, options: {allowUnconfirmedModelRetry?: boolean} = {}): GenerationFailure {
+  if(error instanceof CodexHostError){
+    const unavailable=['CODEX_LOGIN_REQUIRED','CODEX_IMAGE_CAPABILITY_UNAVAILABLE','CODEX_IMAGE_MODEL_UNAVAILABLE','CODEX_RUNTIME_UNAVAILABLE','CODEX_VERSION_UNSUPPORTED','CODEX_CAPABILITY_UNVERIFIED','CODEX_CALL_AUTHORITY_REQUIRED','CODEX_PARENT_DEADLINE_REQUIRED'];
+    return new GenerationFailure(!hasOutput&&unavailable.includes(error.code)?'waiting_user':'unknown_result',error.code);
+  }
   const classified = classifyLlmError(error);
   // 默认只有明确 HTTP 拒绝可据响应分类；模型候选调用可显式选择废弃后续跑。
   if (!hasOutput && error && typeof error === "object") {

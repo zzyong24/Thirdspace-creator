@@ -1,0 +1,260 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:38411) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:38412) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:38413) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:38414) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/copilot/use-assistant-engine.test.tsx (10 tests | 10 failed) 21ms
+     × 默认 CreatorOS 直接可用，不读取本地 Codex 16ms
+     × 存量 Codex 偏好从实际 API 读状态，并复用当前账号 header 1ms
+     × 同窗设置变化立即同步，退出 Codex 取消在途状态请求 1ms
+     × 跨窗 storage 与账号变更同步；忽略旧账号未遵守取消的晚回执 0ms
+     × 同窗切账号广播重新读取，卸载会取消请求及晚回执 1ms
+     × 设置重新检查同时刷新打开的聊天，单实例在途请求先取消 0ms
+     × 真实状态读取失败显示未核实，重新检查可恢复 0ms
+     × 只写入失败时仍执行会话内选择，另一个窗口的新选择会接管 0ms
+     × 不可写的存储仍保留本次会话的真实用户选择 0ms
+     × StrictMode 取消首个挂载请求，不产生重复状态调用 0ms
+ ❯ src/features/settings/assistant-engine-card.test.tsx (2 tests | 2 failed) 158ms
+     × 使用原键保存选择并读取真实 Codex 状态；不需要服务端假偏好 145ms
+     × 检查中按钮不会并发重复提交，真实失败后允许重查 11ms
+stderr | src/app/api/knowledge/classify/route.test.ts > POST /api/knowledge/classify > runner 抛错(无凭据/产出不可用)→ 400 { error }(诚实失败,前端内联展示)
+[api/knowledge/classify] failed: Error: 无可用 LLM 凭据
+    at /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend/src/app/api/knowledge/classify/route.test.ts:86:44
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64
+
+ ❯ src/app/api/knowledge/classify/route.test.ts (4 tests | 2 failed) 20ms
+     × 正常归类 → 200 { classification }(无 cookie 走本机主用户直通) 6ms
+     × runner 抛错(无凭据/产出不可用)→ 400 { error }(诚实失败,前端内联展示) 2ms
+stderr | src/app/api/knowledge/distill/route.test.ts > POST /api/knowledge/distill > runner 抛错(无凭据/产出不可用)→ 400 { error }(诚实失败,前端内联展示)
+[api/knowledge/distill] failed: Error: 无可用 LLM 凭据
+    at /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend/src/app/api/knowledge/distill/route.test.ts:92:43
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64
+
+ ❯ src/app/api/knowledge/distill/route.test.ts (4 tests | 2 failed) 21ms
+     × 正常蒸馏 → 200 { atoms, suggestedTags }(无 cookie 走本机主用户直通) 7ms
+     × runner 抛错(无凭据/产出不可用)→ 400 { error }(诚实失败,前端内联展示) 3ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 16 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T-1055 共享编导偏好及真实状态 > 默认 CreatorOS 直接可用，不读取本地 Codex
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T-1055 共享编导偏好及真实状态 > 存量 Codex 偏好从实际 API 读状态，并复用当前账号 header
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T-1055 共享编导偏好及真实状态 > 同窗设置变化立即同步，退出 Codex 取消在途状态请求
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T-1055 共享编导偏好及真实状态 > 跨窗 storage 与账号变更同步；忽略旧账号未遵守取消的晚回执
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T-1055 共享编导偏好及真实状态 > 同窗切账号广播重新读取，卸载会取消请求及晚回执
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T-1055 共享编导偏好及真实状态 > 设置重新检查同时刷新打开的聊天，单实例在途请求先取消
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T-1055 共享编导偏好及真实状态 > 真实状态读取失败显示未核实，重新检查可恢复
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T-1055 共享编导偏好及真实状态 > 只写入失败时仍执行会话内选择，另一个窗口的新选择会接管
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T-1055 共享编导偏好及真实状态 > 不可写的存储仍保留本次会话的真实用户选择
+ FAIL  src/features/copilot/use-assistant-engine.test.tsx > T-1055 共享编导偏好及真实状态 > StrictMode 取消首个挂载请求，不产生重复状态调用
+Error: 引擎设置尚未就绪
+ ❯ writeAssistantEngine src/features/copilot/assistant-engine.ts:34:38
+     32|  if(typeof window==='undefined')throw Error('引擎保存需要本地界面');
+     33|  if(!state.ready)await loadAssistantEngine();
+     34|  if(!state.ready||state.saving)throw Error('引擎设置尚未就绪');
+       |                                      ^
+     35|  if(engine===state.engine)return state.engine;
+     36|  generation++;emit({saving:true,error:null});
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/16]⎯
+
+ FAIL  src/features/settings/assistant-engine-card.test.tsx > T-1055 设置的真实编导引擎卡 > 使用原键保存选择并读取真实 Codex 状态；不需要服务端假偏好
+AssertionError: expected "fetch" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st fetch call:
+
+    Array [
+      "/api/v1/dispatch",
+      Object {
+        "body": "{"id":"settings.preferences.get","input":{}}",
+        "credentials": "same-origin",
+        "headers": Object {
+          "content-type": "application/json",
+        },
+        "method": "POST",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/features/settings/assistant-engine-card.test.tsx:16:23
+     14|     const select = screen.getByRole("combobox", {name: "编导引擎"});
+     15|     expect(select).toHaveValue("pi");
+     16|     expect(fetch).not.toHaveBeenCalled();
+       |                       ^
+     17|     fireEvent.change(select, {target: {value: "codex"}});
+     18|     expect(localStorage.getItem("creatoros:assistant-engine:v1")).toBe…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/16]⎯
+
+ FAIL  src/features/settings/assistant-engine-card.test.tsx > T-1055 设置的真实编导引擎卡 > 检查中按钮不会并发重复提交，真实失败后允许重查
+Error: expect(element).toBeDisabled()
+
+Received element is not disabled:
+  <button
+  class="inline-flex min-h-10 items-center rounded-control border border-border bg-surface px-4 text-sm font-medium text-foreground hover:bg-surface-subtle disabled:opacity-50"
+  type="button"
+/>
+ ❯ src/features/settings/assistant-engine-card.test.tsx:29:21
+     27|     render(<AssistantEngineCard />);
+     28|     const recheck = screen.getByRole("button", {name: "重新检查"});
+     29|     expect(recheck).toBeDisabled();
+       |                     ^
+     30|     await waitFor(() => expect(fetch).toHaveBeenCalledOnce());
+     31|     fireEvent.click(recheck);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/16]⎯
+
+ FAIL  src/app/api/knowledge/classify/route.test.ts > POST /api/knowledge/classify > 正常归类 → 200 { classification }(无 cookie 走本机主用户直通)
+AssertionError: expected "vi.fn()" to be called with arguments: [ { userId: 'u-1' }, …(2) ]
+
+Received:
+
+  1st vi.fn() call:
+
+@@ -2,10 +2,19 @@
+    {
+      "userId": "u-1",
+    },
+    {
+      "content": "倒入的原文",
++     "signal": AbortSignal {
++       Symbol(kEvents): Map {},
++       Symbol(events.maxEventTargetListeners): 0,
++       Symbol(events.maxEventTargetListenersWarned): false,
++       Symbol(kHandlers): Map {},
++       Symbol(kAborted): false,
++       Symbol(kReason): undefined,
++       Symbol(kComposite): false,
+      },
++   },
+    {
+-     "resolveModelSpec": [Function Mock],
++     "runKnowledgeGeneration": undefined,
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/app/api/knowledge/classify/route.test.ts:78:34
+     76|     expect(resolveLocalContext).toHaveBeenCalledTimes(1);
+     77|     // runner 收到 trim 后的 content + 组合根的 resolveModelSpec 端口
+     78|     expect(runKnowledgeClassify).toHaveBeenCalledWith(
+       |                                  ^
+     79|       { userId: "u-1" },
+     80|       { content: "倒入的原文" },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/16]⎯
+
+ FAIL  src/app/api/knowledge/classify/route.test.ts > POST /api/knowledge/classify > runner 抛错(无凭据/产出不可用)→ 400 { error }(诚实失败,前端内联展示)
+Error: [vitest] No "KnowledgeGenerationPendingError" export is defined on the "@creatoros/backend/modules/ai-runtime" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+vi.mock(import("@creatoros/backend/modules/ai-runtime"), async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    // your mocked methods
+  }
+})
+
+ ❯ Module.POST src/app/api/knowledge/classify/route.ts:83:66
+
+ ❯ src/app/api/knowledge/classify/route.test.ts:87:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/16]⎯
+
+ FAIL  src/app/api/knowledge/distill/route.test.ts > POST /api/knowledge/distill > 正常蒸馏 → 200 { atoms, suggestedTags }(无 cookie 走本机主用户直通)
+AssertionError: expected "vi.fn()" to be called with arguments: [ { userId: 'u-1' }, …(2) ]
+
+Received:
+
+  1st vi.fn() call:
+
+@@ -2,10 +2,19 @@
+    {
+      "userId": "u-1",
+    },
+    {
+      "content": "倒入的原文",
++     "signal": AbortSignal {
++       Symbol(kEvents): Map {},
++       Symbol(events.maxEventTargetListeners): 0,
++       Symbol(events.maxEventTargetListenersWarned): false,
++       Symbol(kHandlers): Map {},
++       Symbol(kAborted): false,
++       Symbol(kReason): undefined,
++       Symbol(kComposite): false,
+      },
++   },
+    {
+-     "resolveModelSpec": [Function Mock],
++     "runKnowledgeGeneration": undefined,
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/app/api/knowledge/distill/route.test.ts:84:33
+     82|     expect(resolveLocalContext).toHaveBeenCalledTimes(1);
+     83|     // runner 收到 trim 后的 content + 组合根的 resolveModelSpec 端口
+     84|     expect(runKnowledgeDistill).toHaveBeenCalledWith(
+       |                                 ^
+     85|       { userId: "u-1" },
+     86|       { content: "倒入的原文" },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/16]⎯
+
+ FAIL  src/app/api/knowledge/distill/route.test.ts > POST /api/knowledge/distill > runner 抛错(无凭据/产出不可用)→ 400 { error }(诚实失败,前端内联展示)
+Error: [vitest] No "KnowledgeGenerationPendingError" export is defined on the "@creatoros/backend/modules/ai-runtime" mock. Did you forget to return it from "vi.mock"?
+If you need to partially mock a module, you can use "importOriginal" helper inside:
+
+vi.mock(import("@creatoros/backend/modules/ai-runtime"), async (importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    // your mocked methods
+  }
+})
+
+ ❯ Module.POST src/app/api/knowledge/distill/route.ts:88:66
+
+ ❯ src/app/api/knowledge/distill/route.test.ts:93:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/16]⎯
+
+
+ Test Files  4 failed (4)
+      Tests  16 failed | 4 passed (20)
+   Start at  18:47:11
+   Duration  2.56s (transform 2.92s, setup 767ms, import 5.00s, tests 220ms, environment 2.74s)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/features/copilot/use-assistant-engine.test.tsx src/features/settings/assistant-engine-card.test.tsx src/app/api/knowledge/classify/route.test.ts src/app/api/knowledge/distill/route.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000

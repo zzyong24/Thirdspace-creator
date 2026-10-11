@@ -1,0 +1,321 @@
+{
+  "checks": [
+    "服务Codex读回且显示免文本/生图配置",
+    "真实PATCH切Pi并恢复原模型配置卡",
+    "刷新保留服务Pi",
+    "两个真实浏览器窗口同步服务Codex",
+    "390窄窗引擎控件完整可操作",
+    "刷新保留服务Codex",
+    "故障注入PATCH503保留原Codex服务值并显示失败",
+    "故障注入加载与未登录：检查中防重复，提示在Codex登录，保留免API配置",
+    "故障注入生图不可用：展示实际能力限制，不引导配置独立生图API",
+    "移除故障注入后真实重新检查Codex登录可用"
+  ],
+  "responses": [
+    {
+      "id": "settings.preferences.get",
+      "input": {},
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-5a2a1338-1",
+          "userId": "user-5a2a1338-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "codex"
+        },
+        "meta": {
+          "requestId": "req-5a2a1338-10"
+        }
+      }
+    },
+    {
+      "id": "settings.preferences.patch",
+      "input": {
+        "body": {
+          "assistantExecutionEngine": "pi"
+        }
+      },
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-5a2a1338-1",
+          "userId": "user-5a2a1338-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "pi"
+        },
+        "meta": {
+          "requestId": "req-5a2a1338-14"
+        }
+      }
+    },
+    {
+      "id": "settings.preferences.get",
+      "input": {},
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-5a2a1338-1",
+          "userId": "user-5a2a1338-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "pi"
+        },
+        "meta": {
+          "requestId": "req-5a2a1338-23"
+        }
+      }
+    },
+    {
+      "id": "settings.preferences.patch",
+      "input": {
+        "body": {
+          "assistantExecutionEngine": "codex"
+        }
+      },
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-5a2a1338-1",
+          "userId": "user-5a2a1338-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "codex"
+        },
+        "meta": {
+          "requestId": "req-5a2a1338-34"
+        }
+      }
+    },
+    {
+      "id": "settings.preferences.get",
+      "input": {},
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-5a2a1338-1",
+          "userId": "user-5a2a1338-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "codex"
+        },
+        "meta": {
+          "requestId": "req-5a2a1338-42"
+        }
+      }
+    },
+    {
+      "id": "settings.preferences.patch",
+      "input": {
+        "body": {
+          "assistantExecutionEngine": "pi"
+        }
+      },
+      "status": 503,
+      "body": {
+        "error": {
+          "code": "Unavailable",
+          "message": "测试保存失败"
+        }
+      }
+    },
+    {
+      "id": "settings.preferences.get",
+      "input": {},
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-5a2a1338-1",
+          "userId": "user-5a2a1338-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "codex"
+        },
+        "meta": {
+          "requestId": "req-5a2a1338-50"
+        }
+      }
+    },
+    {
+      "id": "settings.preferences.get",
+      "input": {},
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-5a2a1338-1",
+          "userId": "user-5a2a1338-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "codex"
+        },
+        "meta": {
+          "requestId": "req-5a2a1338-51"
+        }
+      }
+    },
+    {
+      "id": "settings.preferences.get",
+      "input": {},
+      "status": 200,
+      "body": {
+        "data": {
+          "id": "pref-user-5a2a1338-1",
+          "userId": "user-5a2a1338-1",
+          "defaultHome": "dashboard",
+          "defaultCreationMode": "guided",
+          "defaultVisibility": "private",
+          "autosaveEnabled": true,
+          "fileNamingRule": "",
+          "analyticsEnabled": false,
+          "assistantExecutionEngine": "codex"
+        },
+        "meta": {
+          "requestId": "req-5a2a1338-52"
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "captures": [
+    {
+      "checkpoint": "服务Codex读回且显示免文本/生图配置",
+      "check_ids": [
+        "AC-UI-1"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "设置\n\n账号、偏好与系统\n\n账户\n偏好\n外观\n模型配置\n数据服务\n技能\n存储\n执行引擎\n新创作、编导对话和后台任务使用同一引擎。\n使用引擎\n保存后对新任务生效。在途任务与原任务恢复沿用已选引擎。\nCreatorOS\n本地 Codex\n\n正在检查本地 Codex…\n\n重新检查\n\n文本创作、图片理解和生图由本地 Codex 执行\n\n使用 Codex 登录，无需填写文本或生图模型密钥。语音转文字和视频生成仍使用各自的配置。\n\n语音转文字（按需）\n可配置 ASR 加快转录；未配置时仍可使用本地 Whisper。\n语音转文字（建议配置）\n建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢；后台会按小批次慢慢补齐历史逐字稿。\n未配置\n选择供应商后只需确认模型名并填写 Key；技术参数在高级设置。\nASR 供应商\nQwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。\n选择 ASR 供应商\n模型\n填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。\n密钥\n粘贴 API Key(存于本地库)。建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢。\n高级设置（自定义供应商）\n测试的是已保存的配置(改动请先保存)\n测试连接\n保存语音转文字（建议配置）配置\n视频生成（按需）\n2 项\n配置备份\n导出 / 导入全部模型配置(重置工作区、换机后的兜底)\n\n导出文件包含模型密钥(以本机密钥加密;未启用加密的环境等同明文)。请妥善保管,不要发送给他人。 密文只在本机可解:换机导入时配置仍会导入,但密钥需重新填写。\n\n导出配置\n导入配置\n关闭"
+    },
+    {
+      "checkpoint": "真实PATCH切Pi并恢复原模型配置卡",
+      "check_ids": [
+        "AC-UI-2"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "设置\n\n账号、偏好与系统\n\n账户\n偏好\n外观\n模型配置\n数据服务\n技能\n存储\n执行引擎\n新创作、编导对话和后台任务使用同一引擎。\n使用引擎\n保存后对新任务生效。在途任务与原任务恢复沿用已选引擎。\nCreatorOS\n本地 Codex\n\n使用 CreatorOS 当前模型配置\n\n本地模型正在使用 · 暂时无法取得渠道配置\n\n你可以继续编辑本地配置，保存后会作为当前或备用配置使用。\n\n重点配置\n文本模型负责创作。建议配置 ASR 转录模型，避免本地转录时间过长；未配置时仍可使用本地 Whisper。\n配置手册\n模型配置\n选择模型服务并填写模型和密钥；特殊接口设置可在高级设置中修改。\n供应商预设\n选一个供应商快速填入接口地址 / 格式;所有字段仍可自由改(参考起始值,可能随供应商变动)。模型名一律自由填(不预置候选,以服务商最新为准)。选「自定义」不填充。\nAnthropic 官方\n模型\n模型 id 自由填(示例:claude-opus-4-8;仅示例,以你的服务商最新型号为准)。\n密钥\n粘贴 API Key(存于本地库)。\n高级设置\n仅保存\n会先保存当前填写，再按正式调用方式测试\n保存并测试\n语音转文字（建议配置）\n建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢；后台会按小批次慢慢补齐历史逐字稿。\n未配置\n选择供应商后只需确认模型名并填写 Key；技术参数在高级设置。\nASR 供应商\nQwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。\n选择 ASR 供应商\n模型\n填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。\n密钥\n粘贴 API Key(存于本地库)。建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢。\n高级设置（自定义供应商）\n测试的是已保存的配置(改动请先保存)\n测试连接\n保存语音转文字（建议配置）配置\n创作媒体(按需)\n2 项\n配置备份\n导出 / 导入全部模型配置(重置工作区、换机后的兜底)\n\n导出文件包含模型密钥(以本机密钥加密;未启用加密的环境等同明文)。请妥善保管,不要发送给他人。 密文只在本机可解:换机导入时配置仍会导入,但密钥需重新填写。\n\n导出配置\n导入配置\n关闭"
+    },
+    {
+      "checkpoint": "刷新保留服务Pi",
+      "check_ids": [
+        "AC-UI-3"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "设置\n\n账号、偏好与系统\n\n账户\n偏好\n外观\n模型配置\n数据服务\n技能\n存储\n执行引擎\n新创作、编导对话和后台任务使用同一引擎。\n使用引擎\n保存后对新任务生效。在途任务与原任务恢复沿用已选引擎。\nCreatorOS\n本地 Codex\n\n使用 CreatorOS 当前模型配置\n\n本地模型正在使用 · 暂时无法取得渠道配置\n\n你可以继续编辑本地配置，保存后会作为当前或备用配置使用。\n\n重点配置\n文本模型负责创作。建议配置 ASR 转录模型，避免本地转录时间过长；未配置时仍可使用本地 Whisper。\n配置手册\n模型配置\n选择模型服务并填写模型和密钥；特殊接口设置可在高级设置中修改。\n供应商预设\n选一个供应商快速填入接口地址 / 格式;所有字段仍可自由改(参考起始值,可能随供应商变动)。模型名一律自由填(不预置候选,以服务商最新为准)。选「自定义」不填充。\nAnthropic 官方\n模型\n模型 id 自由填(示例:claude-opus-4-8;仅示例,以你的服务商最新型号为准)。\n密钥\n粘贴 API Key(存于本地库)。\n高级设置\n仅保存\n会先保存当前填写，再按正式调用方式测试\n保存并测试\n语音转文字（建议配置）\n建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢；后台会按小批次慢慢补齐历史逐字稿。\n未配置\n选择供应商后只需确认模型名并填写 Key；技术参数在高级设置。\nASR 供应商\nQwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。\n选择 ASR 供应商\n模型\n填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。\n密钥\n粘贴 API Key(存于本地库)。建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢。\n高级设置（自定义供应商）\n测试的是已保存的配置(改动请先保存)\n测试连接\n保存语音转文字（建议配置）配置\n创作媒体(按需)\n2 项\n配置备份\n导出 / 导入全部模型配置(重置工作区、换机后的兜底)\n\n导出文件包含模型密钥(以本机密钥加密;未启用加密的环境等同明文)。请妥善保管,不要发送给他人。 密文只在本机可解:换机导入时配置仍会导入,但密钥需重新填写。\n\n导出配置\n导入配置\n关闭"
+    },
+    {
+      "checkpoint": "两个真实浏览器窗口同步服务Codex",
+      "check_ids": [
+        "AC-UI-4"
+      ],
+      "viewport": {
+        "width": 1366,
+        "height": 900
+      },
+      "text": "设置\n\n账号、偏好与系统\n\n账户\n偏好\n外观\n模型配置\n数据服务\n技能\n存储\n执行引擎\n新创作、编导对话和后台任务使用同一引擎。\n使用引擎\n保存后对新任务生效。在途任务与原任务恢复沿用已选引擎。\nCreatorOS\n本地 Codex\n\n正在检查本地 Codex…\n\n重新检查\n\n文本创作、图片理解和生图由本地 Codex 执行\n\n使用 Codex 登录，无需填写文本或生图模型密钥。语音转文字和视频生成仍使用各自的配置。\n\n语音转文字（按需）\n可配置 ASR 加快转录；未配置时仍可使用本地 Whisper。\n语音转文字（建议配置）\n建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢；后台会按小批次慢慢补齐历史逐字稿。\n未配置\n选择供应商后只需确认模型名并填写 Key；技术参数在高级设置。\nASR 供应商\nQwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。\n选择 ASR 供应商\n模型\n填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。\n密钥\n粘贴 API Key(存于本地库)。建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢。\n高级设置（自定义供应商）\n测试的是已保存的配置(改动请先保存)\n测试连接\n保存语音转文字（建议配置）配置\n视频生成（按需）\n2 项\n配置备份\n导出 / 导入全部模型配置(重置工作区、换机后的兜底)\n\n导出文件包含模型密钥(以本机密钥加密;未启用加密的环境等同明文)。请妥善保管,不要发送给他人。 密文只在本机可解:换机导入时配置仍会导入,但密钥需重新填写。\n\n导出配置\n导入配置\n关闭"
+    },
+    {
+      "checkpoint": "390窄窗引擎控件完整可操作",
+      "check_ids": [
+        "AC-UI-5"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "text": "设置\n\n账号、偏好与系统\n\n账户\n偏好\n外观\n模型配置\n数据服务\n技能\n存储\n执行引擎\n新创作、编导对话和后台任务使用同一引擎。\n使用引擎\n保存后对新任务生效。在途任务与原任务恢复沿用已选引擎。\nCreatorOS\n本地 Codex\n\n正在检查本地 Codex…\n\n重新检查\n\n文本创作、图片理解和生图由本地 Codex 执行\n\n使用 Codex 登录，无需填写文本或生图模型密钥。语音转文字和视频生成仍使用各自的配置。\n\n语音转文字（按需）\n可配置 ASR 加快转录；未配置时仍可使用本地 Whisper。\n语音转文字（建议配置）\n建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢；后台会按小批次慢慢补齐历史逐字稿。\n未配置\n选择供应商后只需确认模型名并填写 Key；技术参数在高级设置。\nASR 供应商\nQwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。\n选择 ASR 供应商\n模型\n填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。\n密钥\n粘贴 API Key(存于本地库)。建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢。\n高级设置（自定义供应商）\n测试的是已保存的配置(改动请先保存)\n测试连接\n保存语音转文字（建议配置）配置\n视频生成（按需）\n2 项\n配置备份\n导出 / 导入全部模型配置(重置工作区、换机后的兜底)\n\n导出文件包含模型密钥(以本机密钥加密;未启用加密的环境等同明文)。请妥善保管,不要发送给他人。 密文只在本机可解:换机导入时配置仍会导入,但密钥需重新填写。\n\n导出配置\n导入配置\n关闭"
+    },
+    {
+      "checkpoint": "刷新保留服务Codex",
+      "check_ids": [
+        "AC-UI-6"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "text": "设置\n\n账号、偏好与系统\n\n账户\n偏好\n外观\n模型配置\n数据服务\n技能\n存储\n执行引擎\n新创作、编导对话和后台任务使用同一引擎。\n使用引擎\n保存后对新任务生效。在途任务与原任务恢复沿用已选引擎。\nCreatorOS\n本地 Codex\n\n正在检查本地 Codex…\n\n重新检查\n\n文本创作、图片理解和生图由本地 Codex 执行\n\n使用 Codex 登录，无需填写文本或生图模型密钥。语音转文字和视频生成仍使用各自的配置。\n\n语音转文字（按需）\n可配置 ASR 加快转录；未配置时仍可使用本地 Whisper。\n语音转文字（建议配置）\n建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢；后台会按小批次慢慢补齐历史逐字稿。\n未配置\n选择供应商后只需确认模型名并填写 Key；技术参数在高级设置。\nASR 供应商\nQwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。\n选择 ASR 供应商\n模型\n填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。\n密钥\n粘贴 API Key(存于本地库)。建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢。\n高级设置（自定义供应商）\n测试的是已保存的配置(改动请先保存)\n测试连接\n保存语音转文字（建议配置）配置\n视频生成（按需）\n2 项\n配置备份\n导出 / 导入全部模型配置(重置工作区、换机后的兜底)\n\n导出文件包含模型密钥(以本机密钥加密;未启用加密的环境等同明文)。请妥善保管,不要发送给他人。 密文只在本机可解:换机导入时配置仍会导入,但密钥需重新填写。\n\n导出配置\n导入配置\n关闭"
+    },
+    {
+      "checkpoint": "故障注入PATCH503保留原Codex服务值并显示失败",
+      "check_ids": [
+        "AC-UI-7"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "text": "设置\n\n账号、偏好与系统\n\n账户\n偏好\n外观\n模型配置\n数据服务\n技能\n存储\n执行引擎\n新创作、编导对话和后台任务使用同一引擎。\n使用引擎\n保存后对新任务生效。在途任务与原任务恢复沿用已选引擎。\nCreatorOS\n本地 Codex\n\n引擎保存失败，请重试\n\n重新检查\n\n文本创作、图片理解和生图由本地 Codex 执行\n\n使用 Codex 登录，无需填写文本或生图模型密钥。语音转文字和视频生成仍使用各自的配置。\n\n语音转文字（按需）\n可配置 ASR 加快转录；未配置时仍可使用本地 Whisper。\n语音转文字（建议配置）\n建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢；后台会按小批次慢慢补齐历史逐字稿。\n未配置\n选择供应商后只需确认模型名并填写 Key；技术参数在高级设置。\nASR 供应商\nQwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。\n选择 ASR 供应商\n模型\n填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。\n密钥\n粘贴 API Key(存于本地库)。建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢。\n高级设置（自定义供应商）\n测试的是已保存的配置(改动请先保存)\n测试连接\n保存语音转文字（建议配置）配置\n视频生成（按需）\n2 项\n配置备份\n导出 / 导入全部模型配置(重置工作区、换机后的兜底)\n\n导出文件包含模型密钥(以本机密钥加密;未启用加密的环境等同明文)。请妥善保管,不要发送给他人。 密文只在本机可解:换机导入时配置仍会导入,但密钥需重新填写。\n\n导出配置\n导入配置\n关闭"
+    },
+    {
+      "checkpoint": "故障注入加载与未登录：检查中防重复，提示在Codex登录，保留免API配置",
+      "check_ids": [
+        "AC-UI-8"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "text": "设置\n\n账号、偏好与系统\n\n账户\n偏好\n外观\n模型配置\n数据服务\n技能\n存储\n执行引擎\n新创作、编导对话和后台任务使用同一引擎。\n使用引擎\n保存后对新任务生效。在途任务与原任务恢复沿用已选引擎。\nCreatorOS\n本地 Codex\n\n本地 Codex 尚未登录，请先在 Codex 中登录\n\n重新检查\n\n文本创作、图片理解和生图由本地 Codex 执行\n\n使用 Codex 登录，无需填写文本或生图模型密钥。语音转文字和视频生成仍使用各自的配置。\n\n语音转文字（按需）\n可配置 ASR 加快转录；未配置时仍可使用本地 Whisper。\n语音转文字（建议配置）\n建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢；后台会按小批次慢慢补齐历史逐字稿。\n未配置\n选择供应商后只需确认模型名并填写 Key；技术参数在高级设置。\nASR 供应商\nQwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。\n选择 ASR 供应商\n模型\n填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。\n密钥\n粘贴 API Key(存于本地库)。建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢。\n高级设置（自定义供应商）\n测试的是已保存的配置(改动请先保存)\n测试连接\n保存语音转文字（建议配置）配置\n视频生成（按需）\n2 项\n配置备份\n导出 / 导入全部模型配置(重置工作区、换机后的兜底)\n\n导出文件包含模型密钥(以本机密钥加密;未启用加密的环境等同明文)。请妥善保管,不要发送给他人。 密文只在本机可解:换机导入时配置仍会导入,但密钥需重新填写。\n\n导出配置\n导入配置\n关闭"
+    },
+    {
+      "checkpoint": "故障注入生图不可用：展示实际能力限制，不引导配置独立生图API",
+      "check_ids": [
+        "AC-UI-9"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "text": "设置\n\n账号、偏好与系统\n\n账户\n偏好\n外观\n模型配置\n数据服务\n技能\n存储\n执行引擎\n新创作、编导对话和后台任务使用同一引擎。\n使用引擎\n保存后对新任务生效。在途任务与原任务恢复沿用已选引擎。\nCreatorOS\n本地 Codex\n\n本地 Codex 已连接 · 0.159.3 · 文本可用，生图能力当前不可用\n\n重新检查\n\n文本创作、图片理解和生图由本地 Codex 执行\n\n使用 Codex 登录，无需填写文本或生图模型密钥。语音转文字和视频生成仍使用各自的配置。\n\n语音转文字（按需）\n可配置 ASR 加快转录；未配置时仍可使用本地 Whisper。\n语音转文字（建议配置）\n建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢；后台会按小批次慢慢补齐历史逐字稿。\n未配置\n选择供应商后只需确认模型名并填写 Key；技术参数在高级设置。\nASR 供应商\nQwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。\n选择 ASR 供应商\n模型\n填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。\n密钥\n粘贴 API Key(存于本地库)。建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢。\n高级设置（自定义供应商）\n测试的是已保存的配置(改动请先保存)\n测试连接\n保存语音转文字（建议配置）配置\n视频生成（按需）\n2 项\n配置备份\n导出 / 导入全部模型配置(重置工作区、换机后的兜底)\n\n导出文件包含模型密钥(以本机密钥加密;未启用加密的环境等同明文)。请妥善保管,不要发送给他人。 密文只在本机可解:换机导入时配置仍会导入,但密钥需重新填写。\n\n导出配置\n导入配置\n关闭"
+    },
+    {
+      "checkpoint": "移除故障注入后真实重新检查Codex登录可用",
+      "check_ids": [
+        "AC-UI-10"
+      ],
+      "viewport": {
+        "width": 390,
+        "height": 900
+      },
+      "text": "设置\n\n账号、偏好与系统\n\n账户\n偏好\n外观\n模型配置\n数据服务\n技能\n存储\n执行引擎\n新创作、编导对话和后台任务使用同一引擎。\n使用引擎\n保存后对新任务生效。在途任务与原任务恢复沿用已选引擎。\nCreatorOS\n本地 Codex\n\n本地 Codex 已连接 · 0.159.3 · 文本与生图可用\n\n重新检查\n\n文本创作、图片理解和生图由本地 Codex 执行\n\n使用 Codex 登录，无需填写文本或生图模型密钥。语音转文字和视频生成仍使用各自的配置。\n\n语音转文字（按需）\n可配置 ASR 加快转录；未配置时仍可使用本地 Whisper。\n语音转文字（建议配置）\n建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢；后台会按小批次慢慢补齐历史逐字稿。\n未配置\n选择供应商后只需确认模型名并填写 Key；技术参数在高级设置。\nASR 供应商\nQwen 优先改善四川话、闽南语、吴语和粤语识别；小米 MiMo 与已有 OpenAI 兼容 ASR 仍可选。\n选择 ASR 供应商\n模型\n填写供应商控制台中的准确模型名。Qwen 方言识别使用 qwen3-asr-flash；小米 MiMo 使用 mimo-v2.5-asr。\n密钥\n粘贴 API Key(存于本地库)。建议配置 ASR 转录模型，避免本地转录时间过长。未配置时仍可使用本地 Whisper，但处理较慢。\n高级设置（自定义供应商）\n测试的是已保存的配置(改动请先保存)\n测试连接\n保存语音转文字（建议配置）配置\n视频生成（按需）\n2 项\n配置备份\n导出 / 导入全部模型配置(重置工作区、换机后的兜底)\n\n导出文件包含模型密钥(以本机密钥加密;未启用加密的环境等同明文)。请妥善保管,不要发送给他人。 密文只在本机可解:换机导入时配置仍会导入,但密钥需重新填写。\n\n导出配置\n导入配置\n关闭"
+    }
+  ],
+  "observedAt": "2026-10-11T11:56:35.178Z"
+}

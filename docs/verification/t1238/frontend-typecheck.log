@@ -1,0 +1,20 @@
+
+> creatoros-frontend@1.2.0 typecheck /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+> next typegen && tsc --noEmit
+
+Generating route types...
+✓ Types generated successfully
+../ai-worker/src/execution/codex-app-server.ts(42,9): error TS2741: Property 'NODE_ENV' is missing in type '{}' but required in type 'ProcessEnv'.
+../backend/src/modules/ai-runtime/cover-runner.ts(155,29): error TS2339: Property 'displayModelKey' does not exist on type 'ModelSpec'.
+  Property 'displayModelKey' does not exist on type '{ engine: "codex"; protocolKind: "codex-app-server"; runtimeVersion: "0.159.3"; requestedModel?: string | undefined; }'.
+src/app/api/knowledge/classify/route.ts(74,13): error TS2353: Object literal may only specify known properties, and 'resolveModelSpec' does not exist in type 'KnowledgeClassifyDeps'.
+src/app/api/knowledge/comment-sift/route.ts(135,13): error TS2353: Object literal may only specify known properties, and 'resolveModelSpec' does not exist in type 'CommentQaSiftDeps'.
+src/app/api/knowledge/distill/route.ts(76,13): error TS2353: Object literal may only specify known properties, and 'resolveModelSpec' does not exist in type 'KnowledgeDistillDeps'.
+src/app/api/knowledge/relate/route.ts(82,13): error TS2353: Object literal may only specify known properties, and 'resolveModelSpec' does not exist in type 'KnowledgeRelateDeps'.
+src/server/persistence-client.ts(5801,5): error TS2322: Type '(c: RequestContext, capability: "image.generate" | "image.edit" | "video.generate", store: Db | undefined) => Promise<{ engine: "codex"; protocolKind: "codex-app-server"; runtimeVersion: "0.159.3"; requestedModel?: string | undefined; } | { ...; }>' is not assignable to type '(ctx: RequestContext, capability: "image.generate" | "image.edit" | "video.generate", store?: Db | undefined) => Promise<{ provider: string; model: string; }>'.
+  Type 'Promise<{ engine: "codex"; protocolKind: "codex-app-server"; runtimeVersion: "0.159.3"; requestedModel?: string | undefined; } | { provider: string; model: string; }>' is not assignable to type 'Promise<{ provider: string; model: string; }>'.
+    Type '{ engine: "codex"; protocolKind: "codex-app-server"; runtimeVersion: "0.159.3"; requestedModel?: string | undefined; } | { provider: string; model: string; }' is not assignable to type '{ provider: string; model: string; }'.
+      Type '{ engine: "codex"; protocolKind: "codex-app-server"; runtimeVersion: "0.159.3"; requestedModel?: string | undefined; }' is missing the following properties from type '{ provider: string; model: string; }': provider, model
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  creatoros-frontend@1.2.0 typecheck: `next typegen && tsc --noEmit`
+Exit status 2

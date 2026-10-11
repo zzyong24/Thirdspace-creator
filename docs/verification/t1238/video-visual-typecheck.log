@@ -1,0 +1,5 @@
+src/modules/execution/agentic-tool-binding.ts(65,89): error TS2345: Argument of type '{ name: string; version: string; }' is not assignable to parameter of type '{ name: string; effect: string; execution?: string | undefined; }'.
+  Property 'effect' is missing in type '{ name: string; version: string; }' but required in type '{ name: string; effect: string; execution?: string | undefined; }'.
+undefined
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 2: tsc --noEmit

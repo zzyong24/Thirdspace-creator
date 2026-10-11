@@ -2,6 +2,7 @@ import {accountGroups} from "../../schema/account-groups";
 import {beforeAll,afterAll,it,expect,vi} from "vitest";
 import {createDb,aiTasks,aiTaskResults,executionTasks,executionCalls,eq,type Db} from "@creatoros/backend";
 import {createAssetBusinessExecutionService} from "./asset-business-execution.service";
+import {createExecutionRoute,codexExecutionSpec} from '@creatoros/contract/execution-worker';
 let db:Db,connection:Awaited<ReturnType<typeof createDb>>,seq=0;
 beforeAll(async()=>{connection=await createDb();db=connection.db;});afterAll(async()=>connection.client.close());
 const stamp="2026-09-06T00:00:00.000Z",ctx={userId:"asset-entry-user",accountId:"asset-entry-account",requestId:"test",source:"user" as const};
@@ -18,6 +19,14 @@ it("新素材准备冻结规格但不保存密钥，重放不重新解析模型"
  expect(row.payload).toMatchObject({modelInput:{kind:"asset.generate",mediaKind:"image",provider:"openai",model:"image-model",runtimeOptionsDigest:expect.stringMatching(/^sha256:/)}});
  expect(JSON.stringify(row)).not.toContain("private-token");expect(row.deadlineAt).toBe("2026-09-06T00:10:00.000Z");
  f.resolveSpec.mockRejectedValue(new Error("配置变化"));expect(await f.service.prepare(ctx,f.id)).toEqual(mapped);expect(f.resolveSpec).toHaveBeenCalledTimes(1);
+});
+it('Codex图片凭据的kind不覆盖业务协议，冻结原engine且不需要API字段',async()=>{
+ const f=await fixture({runtimeData:{executionRoute:createExecutionRoute('codex')}});
+ const service=createAssetBusinessExecutionService(db,{now:()=>stamp,budget:{maxCalls:6,maxTokens:100000,deadlineMs:600000},resolveSpec:async()=>({...codexExecutionSpec(),kind:'image' as const}),assertProject:f.assertProject});
+ const mapped=await service.prepare(ctx,f.id),row=(await db.select().from(executionTasks).where(eq(executionTasks.id,mapped.executionTaskId)))[0]!;
+ expect(row.payload).toMatchObject({executionRoute:{engine:'codex'},modelInput:{kind:'asset.generate',mediaKind:'image',engine:'codex'}});
+ expect((row.payload as {modelInput:object}).modelInput).not.toHaveProperty('provider');
+ expect((row.payload as {modelInput:object}).modelInput).not.toHaveProperty('token');
 });
 it.each(["checkpoint","retry","result"])("旧 %s 事实沿原恢复账本，不建立新付费提交",async variant=>{
  const original=variant==='retry'?await fixture():undefined;

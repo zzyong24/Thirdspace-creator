@@ -1,0 +1,76 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/backend
+
+ ❯ src/modules/ai-runtime/knowledge-worker-routing.test.ts (5 tests | 4 failed) 8ms
+   × 同步 'knowledge.classify' 必须经持久Worker端口而不在宿主调用API 3ms
+   × 同步 'knowledge.distill' 必须经持久Worker端口而不在宿主调用API 1ms
+   × 同步 'knowledge.relate' 必须经持久Worker端口而不在宿主调用API 1ms
+   × 同步 'comment.qa-sift' 必须经持久Worker端口而不在宿主调用API 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/ai-runtime/knowledge-worker-routing.test.ts > 同步 'knowledge.classify' 必须经持久Worker端口而不在宿主调用API
+Error: HOST_API_FORBIDDEN
+ ❯ Object.<anonymous> src/modules/ai-runtime/knowledge-worker-routing.test.ts:13:99
+     11|  {skillId:'comment.qa-sift',run:runCommentQaSift,input:{comments:[{sig…
+     12| ])('同步 $skillId 必须经持久Worker端口而不在宿主调用API',{timeout:120000,retry:0},asyn…
+     13|  const runKnowledgeGeneration=vi.fn().mockResolvedValue(output),resolv…
+       |                                                                                                   ^
+     14|  const signal=new AbortController().signal;
+     15|  const result=await (run as Function)(context,{...input,signal},{runKn…
+ ❯ runKnowledgeClassify src/modules/ai-runtime/knowledge-classify-runner.ts:80:27
+ ❯ src/modules/ai-runtime/knowledge-worker-routing.test.ts:15:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/modules/ai-runtime/knowledge-worker-routing.test.ts > 同步 'knowledge.distill' 必须经持久Worker端口而不在宿主调用API
+Error: HOST_API_FORBIDDEN
+ ❯ Object.<anonymous> src/modules/ai-runtime/knowledge-worker-routing.test.ts:13:99
+     11|  {skillId:'comment.qa-sift',run:runCommentQaSift,input:{comments:[{sig…
+     12| ])('同步 $skillId 必须经持久Worker端口而不在宿主调用API',{timeout:120000,retry:0},asyn…
+     13|  const runKnowledgeGeneration=vi.fn().mockResolvedValue(output),resolv…
+       |                                                                                                   ^
+     14|  const signal=new AbortController().signal;
+     15|  const result=await (run as Function)(context,{...input,signal},{runKn…
+ ❯ runKnowledgeDistill src/modules/ai-runtime/knowledge-distill-runner.ts:178:27
+ ❯ src/modules/ai-runtime/knowledge-worker-routing.test.ts:15:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/modules/ai-runtime/knowledge-worker-routing.test.ts > 同步 'knowledge.relate' 必须经持久Worker端口而不在宿主调用API
+Error: HOST_API_FORBIDDEN
+ ❯ Object.<anonymous> src/modules/ai-runtime/knowledge-worker-routing.test.ts:13:99
+     11|  {skillId:'comment.qa-sift',run:runCommentQaSift,input:{comments:[{sig…
+     12| ])('同步 $skillId 必须经持久Worker端口而不在宿主调用API',{timeout:120000,retry:0},asyn…
+     13|  const runKnowledgeGeneration=vi.fn().mockResolvedValue(output),resolv…
+       |                                                                                                   ^
+     14|  const signal=new AbortController().signal;
+     15|  const result=await (run as Function)(context,{...input,signal},{runKn…
+ ❯ runKnowledgeRelate src/modules/ai-runtime/knowledge-relate-runner.ts:94:27
+ ❯ src/modules/ai-runtime/knowledge-worker-routing.test.ts:15:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/modules/ai-runtime/knowledge-worker-routing.test.ts > 同步 'comment.qa-sift' 必须经持久Worker端口而不在宿主调用API
+Error: HOST_API_FORBIDDEN
+ ❯ Object.<anonymous> src/modules/ai-runtime/knowledge-worker-routing.test.ts:13:99
+     11|  {skillId:'comment.qa-sift',run:runCommentQaSift,input:{comments:[{sig…
+     12| ])('同步 $skillId 必须经持久Worker端口而不在宿主调用API',{timeout:120000,retry:0},asyn…
+     13|  const runKnowledgeGeneration=vi.fn().mockResolvedValue(output),resolv…
+       |                                                                                                   ^
+     14|  const signal=new AbortController().signal;
+     15|  const result=await (run as Function)(context,{...input,signal},{runKn…
+ ❯ runCommentQaSift src/modules/ai-runtime/comment-qa-sift-runner.ts:103:27
+ ❯ src/modules/ai-runtime/knowledge-worker-routing.test.ts:15:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 1 passed (5)
+   Start at  18:25:09
+   Duration  239ms (transform 50ms, setup 0ms, import 65ms, tests 8ms, environment 0ms)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/ai-runtime/knowledge-worker-routing.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000

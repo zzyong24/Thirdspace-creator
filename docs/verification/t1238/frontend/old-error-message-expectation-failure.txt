@@ -1,0 +1,52 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:41380) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:41379) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:41378) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/app/api/knowledge/distill/route.test.ts > POST /api/knowledge/distill > runner 抛错(无凭据/产出不可用)→ 400 { error }(诚实失败,前端内联展示)
+[api/knowledge/distill] failed: Error: 无可用 LLM 凭据
+    at /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend/src/app/api/knowledge/distill/route.test.ts:93:43
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+    at new Promise (<anonymous>)
+    at runWithCancel (file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)
+    at file:///Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/node_modules/.pnpm/@vitest+runner@4.1.8/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64
+
+ ❯ src/app/api/knowledge/distill/route.test.ts (4 tests | 1 failed) 21ms
+     × runner 抛错(无凭据/产出不可用)→ 400 { error }(诚实失败,前端内联展示) 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/app/api/knowledge/distill/route.test.ts > POST /api/knowledge/distill > runner 抛错(无凭据/产出不可用)→ 400 { error }(诚实失败,前端内联展示)
+AssertionError: expected '还没有可用的 AI 模型。完成设置后，回到这里即可继续。' to contain '无可用 LLM 凭据'
+
+Expected: "无可用 LLM 凭据"
+Received: "还没有可用的 AI 模型。完成设置后，回到这里即可继续。"
+
+ ❯ src/app/api/knowledge/distill/route.test.ts:97:24
+     95|     expect(res.status).toBe(400);
+     96|     const json = (await res.json()) as { error: string };
+     97|     expect(json.error).toContain("无可用 LLM 凭据");
+       |                        ^
+     98|   });
+     99| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 20 passed (21)
+   Start at  18:51:16
+   Duration  5.67s (transform 9.76s, setup 549ms, import 14.09s, tests 63ms, environment 1.84s)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/app/api/knowledge/classify/route.test.ts src/app/api/knowledge/distill/route.test.ts src/app/api/knowledge/knowledge-worker-routes.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000

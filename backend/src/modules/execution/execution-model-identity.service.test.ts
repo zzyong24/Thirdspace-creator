@@ -135,7 +135,7 @@ it.each([
   await expect(
     f.identity.pin(f.ref, "script", { ...spec, ...change }),
   ).rejects.toThrow();
-  expect((await f.identity.read(f.ref)).model).toBe("original");
+  expect(((await f.identity.read(f.ref)) as {model:string}).model).toBe("original");
 });
 it("首次解析仍需匹配任务能力，未绑定不能凭当前配置读取", async () => {
   const f = await fixture();
@@ -203,5 +203,5 @@ it("取消或换租约后不能返回旧执行的凭据身份", async () => {
     ...spec,
     token: "rotated",
   });
-  expect((await f.identity.read(fresh)).model).toBe("original");
+  expect(((await f.identity.read(fresh)) as {model:string}).model).toBe("original");
 });

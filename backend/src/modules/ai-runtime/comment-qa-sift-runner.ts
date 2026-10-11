@@ -1,20 +1,17 @@
+import type {KnowledgeGenerationPort} from "./knowledge-generation.types";
 import type { RequestContext } from "@creatoros/contract";
-import type { ModelSpec, CommentQaSiftOutput } from "@creatoros/ai-worker";
+import type { CommentQaSiftOutput } from "@creatoros/ai-worker";
 
 // 评论回流蒸馏筛 runner(comment.qa-sift,T-092 SPEC §2.1 ②)—— 三级去噪门的 AI 层。
-// 输入 = 硬规则预筛后的评论批(signalId+rawText+likeCount),同步跑一次结构化节点,
+// 输入 = 硬规则预筛后的评论批(signalId+rawText+likeCount),由原持久任务在受控 Worker 生成,
 // 产 qa 原子候选 `{ candidates: [{title,note,sourceNote,signalIds}] }`,由
 // /api/knowledge/comment-sift 路由返回给前端渲**回流确认门**(可勾选/改 title/改 note),
 // 人点「采纳选中 N 条」才逐条 knowledge.create(type='qa')物化 —— AI 只产候选铁律。
 //
 // 空候选是合法结果(评论全是夸赞/水贴就空,不编问题);凭据/模型失败直接抛错。
-// 模型按 capability "comment.qa-sift" 经 model-config 解析(可配铁律,不写死)。
 
 export interface CommentQaSiftDeps {
-  resolveModelSpec: (
-    ctx: RequestContext,
-    capability: string,
-  ) => Promise<ModelSpec>;
+  runKnowledgeGeneration: KnowledgeGenerationPort;
 }
 
 /** 送入模板的评论投影(预筛后)。 */
@@ -86,12 +83,12 @@ export function normalizeQaCandidates(
 }
 
 /**
- * 跑一次 comment.qa-sift —— resolveModelSpec("comment.qa-sift") + runStructuredNode。
+ * 跑一次 comment.qa-sift —— 持久 Worker 候选端口。
  * 空输入直接诚实返回空(不打模型)。
  */
 export async function runCommentQaSift(
   ctx: RequestContext,
-  input: { comments: ReadonlyArray<SiftCommentInput> },
+  input: { comments: ReadonlyArray<SiftCommentInput>; signal?: AbortSignal },
   deps: CommentQaSiftDeps,
 ): Promise<{ candidates: QaCandidate[] }> {
   const comments = input.comments.filter(
@@ -100,13 +97,6 @@ export async function runCommentQaSift(
   if (comments.length === 0) {
     return { candidates: [] };
   }
-  const spec = await deps.resolveModelSpec(ctx, "comment.qa-sift");
-  const { modelFor, runStructuredNode, getTemplate } =
-    await import("@creatoros/ai-worker");
-  const { object } = await runStructuredNode<CommentQaSiftOutput>({
-    model: modelFor(spec),
-    template: getTemplate("comment.qa-sift"),
-    facets: { comments: buildCommentsFacet(comments) },
-  });
-  return { candidates: normalizeQaCandidates(object, comments) };
+  input.signal?.throwIfAborted();
+  return await deps.runKnowledgeGeneration(ctx, {skillId: "comment.qa-sift", inputData: {comments}}, input.signal) as { candidates: QaCandidate[] };
 }

@@ -1,3 +1,5 @@
+import {userPreferences} from '@creatoros/backend';
+import {createExecutionRoute} from '@creatoros/contract/execution-worker';
 import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
 import {lockWorkspaceMembership} from "../platform-account/membership-lock.service";
 import { createContinuousExecutionBudget } from "@creatoros/contract/execution-worker";
@@ -84,7 +86,8 @@ export function createChatTurnSubmissionService(db:Db,deps:{
         await deps.assertProject(ctx,snapshot.conversation.projectId);
       }
       const historyDigest=chatHistoryDigest(snapshot);
-      const executionEngine=requestedEngine??"pi";
+      const [preference]=requestedEngine===undefined?await db.select().from(userPreferences).where(eq(userPreferences.userId,ctx.userId)):[];
+      const executionEngine=requestedEngine??(preference?.assistantExecutionEngine==="codex"?"codex":"pi");
       const {hostContext:rawHostContext,...assembly}=await deps.assemble(ctx,structuredClone(snapshot),{executionEngine});
       // 先通过严格 schema，再统一成数据库 JSON 形态；可选 undefined 不得进入摘要后在落库时消失。
       const hostContext=rawHostContext===undefined?undefined:JSON.parse(JSON.stringify(validateChatHostContext(rawHostContext,{userId:ctx.userId,accountId:ctx.accountId??null,groupId:ctx.groupId,projectId:snapshot.conversation.projectId}))) as ChatHostContext;
@@ -105,7 +108,7 @@ export function createChatTurnSubmissionService(db:Db,deps:{
         if(chatHistoryDigest(current)!==historyDigest)throw new ConflictError("聊天来源在装配期间改变，请重新提交");
         const taskId=nextId("ai-task"),stamp=now();
         await tx.insert(aiTasks).values({id:taskId,userId:ctx.userId,accountId:frozenScope.accountId,groupId:frozenScope.groupId,groupVersion:frozenScope.groupVersion,membershipVersion:frozenScope.membershipVersion,projectId:current.conversation.projectId,taskType:"copilot.assist",status:"queued",requestedAt:stamp,idempotencyKey:`chat:${current.sourceMessage.id}`,inputData:{kind:"chat.run",conversationId:current.conversation.id,sourceMessageId:current.sourceMessage.id,historyMessageIds:current.messages.map(message=>message.id),historyDigest,modelInputDigest:chatInputDigest(modelInput),...(hostContext?{hostContextDigest:chatHostContextDigest(hostContext)}:{})}});
-        const execution=await createPersistentTaskService(store,{now,nextId}).enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:taskId,idempotencyKey:`chat:${current.sourceMessage.id}`,executionBudget:createContinuousExecutionBudget(),payload:{aiTaskId:taskId,artifactProtocolVersion:2,terminalPlanFailurePolicyVersion:1,toolValidationRecoveryVersion:1,toolFailureReceiptVersion:1,modelInput,...(hostContext?{hostContext}:{})}});
+        const execution=await createPersistentTaskService(store,{now,nextId}).enqueue(ctx,{kind:"ai_task",ownerType:"ai_task",ownerId:taskId,idempotencyKey:`chat:${current.sourceMessage.id}`,executionBudget:createContinuousExecutionBudget(),payload:{aiTaskId:taskId,executionRoute:createExecutionRoute(executionEngine,requestedEngine===undefined?"preference":"chat-explicit"),artifactProtocolVersion:2,terminalPlanFailurePolicyVersion:1,toolValidationRecoveryVersion:1,toolFailureReceiptVersion:1,modelInput,...(hostContext?{hostContext}:{})}});
 
         if(execution.ownerId!==taskId)throw new ConflictError("源消息已有不同的执行绑定");
         await tx.update(aiTasks).set({executionTaskId:execution.id}).where(eq(aiTasks.id,taskId));

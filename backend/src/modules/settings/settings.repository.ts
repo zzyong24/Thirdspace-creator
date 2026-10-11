@@ -108,6 +108,8 @@ export interface AssetTypeUsage {
 
 // The contract PATCH body — every key optional; only provided keys are written.
 export interface PreferencePatch {
+  assistantExecutionEngine?: "pi" | "codex";
+  initializeAssistantExecutionEngine?: true;
   defaultHome?: string;
   defaultCreationMode?: "guided" | "flexible" | "freeform";
   defaultVisibility?: "private" | "unlisted" | "public";

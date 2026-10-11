@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {coverImageReadinessSchema,workerReservationSchema,workerStartReceiptSchema,type structuredGenerationInputSchema,type workerModelSpecSchema,type WorkerPort} from "@creatoros/contract/execution-worker";
+import {coverImageReadinessSchema,workerReservationSchema,workerStartReceiptSchema,type structuredGenerationInputSchema,type executionModelSpecSchema,type WorkerPort} from "@creatoros/contract/execution-worker";
 import {getTemplate} from "../prompt/registry";
 import {runWithEffectiveSkillSnapshot} from "../prompt/effective-skill-runtime";
 import {runStructuredNode} from "../nodes/structured-node";
@@ -8,7 +8,7 @@ import {createDurableGenerationModel} from "./durable-generation-model";
 import {runAssetInWorker,generateAssetInWorkerRuntime} from "./asset-worker-run";
 import {GenerationFailure} from "./generation-error";
 /** 文案与图片在同一个持久任务内执行；模型结果与图片字节均先结算再提交候选。 */
-export async function runCoverInWorker(input:z.infer<typeof structuredGenerationInputSchema>,spec:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
+export async function runCoverInWorker(input:z.infer<typeof structuredGenerationInputSchema>,spec:z.infer<typeof executionModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
  if(!["cover.brief","graphic.card-brief"].includes(input.skillId)||input.capability!=="copy.generate")throw new Error("COVER_TASK_MISMATCH");
  const model=createDurableGenerationModel({model:modelFor(spec),operationKey:input.operationKey,signal,ports:{
   reserve:async request=>{try{return workerReservationSchema.parse(await call("reserveCoverModel",JSON.parse(JSON.stringify(request)),signal));}catch{signal.throwIfAborted();throw new GenerationFailure("unknown_result","COVER_MODEL_RESERVATION_UNKNOWN");}},
@@ -33,5 +33,5 @@ export async function runCoverInWorker(input:z.infer<typeof structuredGeneration
    referenceImage=z.object({bytes:z.instanceof(Uint8Array),mimeType:z.string().min(1)}).parse(await call("readCoverReference",{callId:imageCallId},currentSignal));
   }
   return generateAssetInWorkerRuntime(imageInput,credential,currentSignal,{...options,...(referenceImage?{referenceImage}:{})});
- });
+ },async(callId,currentSignal)=>prepared.reference?z.object({bytes:z.instanceof(Uint8Array),mimeType:z.string().min(1)}).parse(await call("readCoverReference",{callId},currentSignal)):undefined);
 }

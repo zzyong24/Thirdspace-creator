@@ -1,16 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
 
-// knowledge.relate runner 单测(T-091)—— mock ai-worker 的 runStructuredNode,验证:
-// capability 按 "knowledge.relate" 解析(可配不写死)、facet 拼装/截断、归一逻辑
-// (未知 id / 自连 / 空 reason / 重复对滤掉;空候选诚实返回不抛错)、<2 原子不打模型。
-
-const runStructuredNode = vi.fn();
-vi.mock("@creatoros/ai-worker", () => ({
-  modelFor: vi.fn(() => ({}) as never),
-  runStructuredNode: (...args: unknown[]) => runStructuredNode(...args),
-  getTemplate: (id: string) => ({ id }),
-}));
+// T-1238：归一工具保持原合同；公共 runner 只向原持久任务端口提交。
 
 import {
   runKnowledgeRelate,
@@ -21,12 +12,7 @@ import {
 } from "./knowledge-relate-runner";
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
-const okSpec = {
-  apiFormat: "anthropic" as const,
-  baseUrl: null,
-  model: "claude-opus-4-8",
-  token: "k",
-};
+
 
 const atoms: RelateAtomInput[] = [
   { id: "k-1", knowledgeType: "claim", title: "上下文工程是核心", sourceNote: null },
@@ -34,9 +20,7 @@ const atoms: RelateAtomInput[] = [
   { id: "k-3", knowledgeType: "quote", title: "把模型当同事", sourceNote: null },
 ];
 
-beforeEach(() => {
-  runStructuredNode.mockReset();
-});
+
 
 describe("buildAtomsFacet", () => {
   it("每行 [id] (type) title — sourceNote;无出处不拼破折号", () => {
@@ -87,43 +71,19 @@ describe("normalizeRelateCandidates", () => {
   });
 });
 
-describe("runKnowledgeRelate", () => {
-  it('capability 按 "knowledge.relate" 解析;返回归一后的候选', async () => {
-    const resolveModelSpec = vi.fn().mockResolvedValue(okSpec);
-    runStructuredNode.mockResolvedValue({
-      object: {
-        candidates: [
-          { sourceId: "k-2", targetId: "k-1", relationType: "supports", reason: "实测支撑观点" },
-        ],
-      },
-    });
-    const out = await runKnowledgeRelate(ctx, { atoms }, { resolveModelSpec });
-    expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "knowledge.relate");
-    expect(out.candidates).toHaveLength(1);
-    const call = runStructuredNode.mock.calls[0]![0] as {
-      template: { id: string };
-      facets: { atoms: string };
-    };
-    expect(call.template.id).toBe("knowledge.relate");
-    expect(call.facets.atoms).toContain("[k-1] (claim)");
+describe("runKnowledgeRelate（受控任务端口）", () => {
+  it("保留原响应形状并透传请求信号", {timeout:120_000,retry:0}, async () => {
+    const output={ candidates: [] }; const runKnowledgeGeneration=vi.fn(async()=>output),signal=new AbortController().signal;
+    const input={ atoms };
+    expect(await runKnowledgeRelate(ctx, {...input,signal}, {runKnowledgeGeneration})).toEqual(output);
+    expect(runKnowledgeGeneration).toHaveBeenCalledWith(ctx, {skillId:"knowledge.relate",inputData:input}, signal);
   });
-
-  it("原子 <2 条 → 直接诚实空,不打模型", async () => {
-    const resolveModelSpec = vi.fn();
-    const out = await runKnowledgeRelate(
-      ctx,
-      { atoms: atoms.slice(0, 1) },
-      { resolveModelSpec },
-    );
-    expect(out.candidates).toEqual([]);
-    expect(resolveModelSpec).not.toHaveBeenCalled();
-    expect(runStructuredNode).not.toHaveBeenCalled();
+  it("空输入不创建执行任务", {timeout:120_000,retry:0}, async () => {
+    const runKnowledgeGeneration=vi.fn(); expect(await runKnowledgeRelate(ctx, { atoms: atoms.slice(0, 1) }, {runKnowledgeGeneration})).toEqual({candidates: []});
+    expect(runKnowledgeGeneration).not.toHaveBeenCalled();
   });
-
-  it("resolveModelSpec 失败向上抛(没配 key 诚实报错)", async () => {
-    const resolveModelSpec = vi.fn().mockRejectedValue(new Error("无可用 LLM 凭据"));
-    await expect(
-      runKnowledgeRelate(ctx, { atoms }, { resolveModelSpec }),
-    ).rejects.toThrow("无可用 LLM 凭据");
+  it("原任务失败向上透传，不在宿主绕过配置调用模型", {timeout:120_000,retry:0}, async () => {
+    const runKnowledgeGeneration=vi.fn(async()=>{throw Error("原知识任务等待核对");});
+    await expect(runKnowledgeRelate(ctx, { atoms }, {runKnowledgeGeneration})).rejects.toThrow("原知识任务等待核对");
   });
 });

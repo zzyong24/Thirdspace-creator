@@ -1,0 +1,831 @@
+[
+  {
+    "event": "response",
+    "url": "/settings",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/15kf_%40xzdarcy_react-timeline-editor_dist_react-timeline-editor_08dt179.css",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/_1x-ftxi._.css",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_20py-0r._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_compiled_13rs0fo._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/0vvp_%40swc_helpers_cjs_0vb02wp._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_1anvha4._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-latin-wght-normal.0l4v9ytfc_iwv.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_08t99eb._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_compiled_react-dom_0c93zn0._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_compiled_next-devtools_index_1u6pdm6.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/turbopack-frontend_1heczps._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_19-assk._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_app_layout_tsx_00tj34d._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_client_06tbt5t._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_client_components_builtin_global-error_1ufskdi.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_03tol28._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/node_modules__pnpm_1q-k3hx._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-118-wght-normal.35kki43rrysx_.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-117-wght-normal.2olicw0ohz54o.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-116-wght-normal.22tk8mt-tznk2.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-115-wght-normal.3jnnrkqb9vsp8.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-119-wght-normal.3tp2rdvijri58.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-113-wght-normal.14-a0ntw7ykqy.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-111-wght-normal.1elhdyp0hximn.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_draft-workbench_0zalubm._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/contract_src_1q5ig3e._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/contract_src_internal_1myq32o._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/contract_src_operations_1qeg9ah._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/contract_src_resources_0sz8jwk._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_production_rough-cut-workbench_tsx_1nariab._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_production_production-workbench_tsx_1vdo65n._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_reference-editors_0atiq9w._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_copilot_chat-system-action-card_tsx_1q4io3h._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_copilot_chat-context-cards_tsx_0g5l1f5._.js",
+    "status": 200
+  },
+  {
+    "event": "console",
+    "type": "info",
+    "message": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_0uohwjp._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_production_0yibki4._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_copilot_ai-copilot-content_tsx_1_2kn1g._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_fixtures_0tn-a3k._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_0efnj-2._.js",
+    "status": 200
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=glAUXDpCAfsURq8n5pcJO' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_components_0cnmxd2._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_1dawcgg._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_copilot_11xvpty._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1a7c_zod_v3_1uhum-n._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/06co_lucide-react_dist_esm_1w_--zt._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1hn7_tailwind-merge_dist_bundle-mjs_mjs_04a_myf._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1s-4_%40radix-ui_react-select_dist_index_mjs_0i7qvb8._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/node_modules__pnpm_0yrqkuv._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1a7c_zod_v4_0_p_dem._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/node_modules__pnpm_1bo_1_f._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/15kf_%40xzdarcy_react-timeline-editor_dist_index_es_0qrzdsa.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1lu__swr_dist_1wai8c7._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1_33_micromark_dev_lib_0cqgvao._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_app_(creator)_layout_tsx_1ufskdi._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_app_(creator)_error_tsx_1uclyob._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/04qb_ai_dist_index_1s8l_38.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1g_1_micromark-core-commonmark_dev_lib_1iz2svp._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_app_(creator)_error_tsx_0p-_bn4._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/0m18_ai_dist_index_0ipiy_i.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_app_(creator)_not-found_tsx_0p-_bn4._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_app_(creator)_settings_page_tsx_0p-_bn4._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_01amt19._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/node_modules__pnpm_1e88ssk._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_17b0uiu._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsay._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_0msp-zx._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/node_modules__pnpm_1aoue7m._.js",
+    "status": 200
+  },
+  {
+    "event": "initialBody",
+    "text": "CreatorOS\n首页\n创作者总览\n定位中心\n内容雷达\n选题\n项目\n知识库\n素材中心\n创作画布\n发布中心\n运营分析\n自动化\n设置\n帮助与反馈\n当前账号组\n载入账号组…\n?\n创作者\n个人版\n设置\n\n账号、偏好与系统"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=glAUXDpCAfsURq8n5pcJO' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=glAUXDpCAfsURq8n5pcJO' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=glAUXDpCAfsURq8n5pcJO' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=glAUXDpCAfsURq8n5pcJO' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=glAUXDpCAfsURq8n5pcJO' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=glAUXDpCAfsURq8n5pcJO' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=glAUXDpCAfsURq8n5pcJO' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=glAUXDpCAfsURq8n5pcJO' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=glAUXDpCAfsURq8n5pcJO' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=glAUXDpCAfsURq8n5pcJO' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=glAUXDpCAfsURq8n5pcJO' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=glAUXDpCAfsURq8n5pcJO' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "response",
+    "url": "/settings",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/_1x-ftxi._.css",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/15kf_%40xzdarcy_react-timeline-editor_dist_react-timeline-editor_08dt179.css",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-111-wght-normal.1elhdyp0hximn.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-113-wght-normal.14-a0ntw7ykqy.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-115-wght-normal.3jnnrkqb9vsp8.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-116-wght-normal.22tk8mt-tznk2.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-117-wght-normal.2olicw0ohz54o.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-118-wght-normal.35kki43rrysx_.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-119-wght-normal.3tp2rdvijri58.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/media/noto-sans-sc-latin-wght-normal.0l4v9ytfc_iwv.woff2",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_20py-0r._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_compiled_react-server-dom-turbopack_05nvpn1._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_compiled_13rs0fo._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_08t99eb._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_compiled_react-dom_0c93zn0._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_client_06tbt5t._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_1anvha4._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_compiled_next-devtools_index_1u6pdm6.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/0vvp_%40swc_helpers_cjs_0vb02wp._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/turbopack-frontend_1heczps._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_19-assk._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_03tol28._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_app_layout_tsx_00tj34d._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_dist_client_components_builtin_global-error_1ufskdi.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/node_modules__pnpm_1q-k3hx._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_draft-workbench_0zalubm._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/contract_src_1q5ig3e._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_reference-editors_0atiq9w._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/contract_src_internal_1myq32o._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/contract_src_operations_1qeg9ah._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/contract_src_resources_0sz8jwk._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_production_rough-cut-workbench_tsx_1nariab._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_copilot_chat-context-cards_tsx_0g5l1f5._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_copilot_chat-system-action-card_tsx_1q4io3h._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_production_production-workbench_tsx_1vdo65n._.js",
+    "status": 200
+  },
+  {
+    "event": "console",
+    "type": "info",
+    "message": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_production_0yibki4._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_0uohwjp._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_copilot_ai-copilot-content_tsx_1_2kn1g._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_fixtures_0tn-a3k._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_components_0cnmxd2._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_copilot_11xvpty._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_0efnj-2._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1a7c_zod_v3_1uhum-n._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1cps_next_1dawcgg._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/06co_lucide-react_dist_esm_1w_--zt._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1hn7_tailwind-merge_dist_bundle-mjs_mjs_04a_myf._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1s-4_%40radix-ui_react-select_dist_index_mjs_0i7qvb8._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/node_modules__pnpm_0yrqkuv._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/node_modules__pnpm_1bo_1_f._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1a7c_zod_v4_0_p_dem._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/15kf_%40xzdarcy_react-timeline-editor_dist_index_es_0qrzdsa.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/04qb_ai_dist_index_1s8l_38.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1lu__swr_dist_1wai8c7._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1_33_micromark_dev_lib_0cqgvao._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/1g_1_micromark-core-commonmark_dev_lib_1iz2svp._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/0m18_ai_dist_index_0ipiy_i.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_app_(creator)_layout_tsx_1ufskdi._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_app_(creator)_error_tsx_1uclyob._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_app_(creator)_error_tsx_0p-_bn4._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_app_(creator)_not-found_tsx_0p-_bn4._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_app_(creator)_settings_page_tsx_0p-_bn4._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_01amt19._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/node_modules__pnpm_1e88ssk._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/frontend_src_features_0msp-zx._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsay._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_17b0uiu._.js",
+    "status": 200
+  },
+  {
+    "event": "response",
+    "url": "/_next/static/chunks/node_modules__pnpm_1aoue7m._.js",
+    "status": 200
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=hdR3SKBfL3C5E0VGa4RNu' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=hdR3SKBfL3C5E0VGa4RNu' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=hdR3SKBfL3C5E0VGa4RNu' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=hdR3SKBfL3C5E0VGa4RNu' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=hdR3SKBfL3C5E0VGa4RNu' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=hdR3SKBfL3C5E0VGa4RNu' failed: Error during WebSocket handshake: net::ERR_INVALID_HTTP_RESPONSE"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=hdR3SKBfL3C5E0VGa4RNu' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=hdR3SKBfL3C5E0VGa4RNu' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=hdR3SKBfL3C5E0VGa4RNu' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=hdR3SKBfL3C5E0VGa4RNu' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=hdR3SKBfL3C5E0VGa4RNu' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=hdR3SKBfL3C5E0VGa4RNu' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+    "event": "console",
+    "type": "error",
+    "message": "WebSocket connection to 'ws://127.0.0.1:53625/_next/webpack-hmr?id=hdR3SKBfL3C5E0VGa4RNu' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED"
+  },
+  {
+    "event": "failed",
+    "url": "/settings",
+    "reason": "net::ERR_CONNECTION_REFUSED"
+  }
+]

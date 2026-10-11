@@ -1,9 +1,11 @@
+import {frozenExecutionEngine,codexExecutionSpec} from '@creatoros/contract/execution-worker';
+import {createExecutionCodexCallService} from '../execution/execution-codex-call.service';
 import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
 import {z} from "zod";
 import {eq,executionTasks,type Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
-import {isContinuousExecutionBudget,structuredGenerationInputSchema,workerModelSpecSchema,workerSkillSnapshotSchema,workerPortInputSchemas,type ExecutionRef} from "@creatoros/contract/execution-worker";
+import {isContinuousExecutionBudget,structuredGenerationInputSchema,executionModelSpecSchema,workerSkillSnapshotSchema,workerPortInputSchemas,type ExecutionRef} from "@creatoros/contract/execution-worker";
 import {IntelligenceGenerationSuspended} from "./topic-preview-runner";
 import {createExecutionWorkerOutcomeService} from "../execution/execution-worker-outcome.service";
 import {createExecutionLeaseService} from "../execution/execution-lease.service";
@@ -46,7 +48,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
   const item=z.object({title:z.string().nullable().optional(),authorName:z.string().nullable().optional(),platform:z.string().optional(),canonicalUrl:z.string()});
   const stable=mode==="topic_preview"?z.object({generationMode:z.enum(["rewrite_only","strategy_backed"]).optional(),transformId:z.string(),item,positioning:z.unknown().nullable().optional(),positioningVersionId:z.string().nullable().optional(),personalizationStatus:z.enum(["applied","not_applied"]).optional(),transcript:z.object({hash:z.string(),text:z.string()})}).parse(target):z.object({strategy:z.string(),sources:z.array(z.object({item,transform:z.object({outputSnapshot:z.json()}),transcript:z.object({text:z.string()})}))}).parse(target);
   const sourceDigest=hash(stable),capability=mode==="topic_preview"?"topic.generate":"script.draft";
-  const spec=workerModelSpecSchema.parse(await deps.resolveModelSpec(ctx,capability));
+  const spec=executionModelSpecSchema.parse(frozenExecutionEngine(task.payload)==="codex"?codexExecutionSpec():await deps.resolveModelSpec(ctx,capability));
   const {identity}=prepareExecutionModelIdentity(capability,spec);
   let frozen=task.payload && typeof task.payload==="object"?(task.payload as Record<string,unknown>).intelligenceGeneration:undefined;
   if(!frozen){
@@ -72,6 +74,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
   const ports:Parameters<typeof supervision.run>[0]["ports"]={
    async validate(current,kind){if(closedPorts)throw new Error("INTELLIGENCE_PORTS_CLOSED");if(!isDeepStrictEqual(current,ref))throw new Error("INTELLIGENCE_CLAIM_MISMATCH");await leases.withLease(ref,kind,async()=>{});},
    async invoke(current,port,raw){
+    if(port==='bindCodexCall'||port==='readCodexCall'||port==='recordCodexToolCall')return createExecutionCodexCallService(db).invoke(current,port,raw);
     if(port==="readTaskContext"){await verify();return saved.input;}
     if(port==="resolveModelCredential"){await verify();if(workerPortInputSchemas.resolveModelCredential.parse(raw).capability!==capability)throw new Error("INTELLIGENCE_CAPABILITY_MISMATCH");return spec;}
     if(port==="heartbeat"){await verify();return deps.tasks.heartbeat({taskId:ref.executionTaskId,workerId:claim.lease.workerId,attempt:ref.attempt,leaseSeconds:300});}

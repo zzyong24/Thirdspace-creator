@@ -1,0 +1,31 @@
+{
+  "data": {
+    "id": "exec_e9e3bd54-71fa-4615-ae21-af3b79ee9dee",
+    "userId": "user-eb780691-1",
+    "accountId": "acct-12b7a425-8",
+    "groupId": "grp_legacy_acct-12b7a425-8",
+    "groupVersion": 1,
+    "membershipVersion": 1,
+    "kind": "ai_task",
+    "ownerType": "ai_task",
+    "ownerId": "ai-task-79b627e2-103",
+    "status": "failed",
+    "retryAt": null,
+    "priority": 0,
+    "idempotencyKey": "ai:ai-task-79b627e2-103",
+    "checkpoint": null,
+    "leaseOwner": null,
+    "leaseExpiresAt": null,
+    "heartbeatAt": null,
+    "attempt": 1,
+    "maxAttempts": 3,
+    "errorCode": "WORKER_EXECUTION_INTERRUPTED",
+    "errorMessage": "执行停止，等待恢复或诊断",
+    "costEstimate": null,
+    "createdAt": "2026-10-11T11:04:13.461Z",
+    "updatedAt": "2026-10-11T11:04:14.670Z"
+  },
+  "meta": {
+    "requestId": "req-79b627e2-105"
+  }
+}

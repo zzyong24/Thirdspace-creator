@@ -33,7 +33,7 @@ import type {
 } from "./app-server/v2";
 import {toTokenCount} from "./TokenCount";
 import { stripShellPrefix } from "./CommandUtils";
-import {creatorOsTurnMeta} from "./CreatorOsPolicy";
+import {creatorOsTurnMeta,creatorOsUsageMeta} from "./CreatorOsPolicy";
 import {AcpToolCallRenderer} from "./tool-calls/AcpToolCallRenderer";
 import {CommandReporter} from "./tool-calls/reporters/CommandReporter";
 import {CompactionReporter} from "./tool-calls/reporters/CompactionReporter";
@@ -1168,15 +1168,11 @@ export class CodexEventHandler {
 
         const used = this.sessionState.lastTokenUsage?.totalTokens;
         const size = this.sessionState.modelContextWindow;
+        const nativeMeta=process.env["CREATOROS_ACP_POLICY"]===undefined?undefined:creatorOsUsageMeta(params.threadId,params.turnId,params.tokenUsage.total);
         if (used == null || size == null || size <= 0) {
-            return null;
+            return nativeMeta?{sessionUpdate:"session_info_update",_meta:nativeMeta}:null;
         }
-
-        return {
-            sessionUpdate: "usage_update",
-            used,
-            size,
-        };
+        return {sessionUpdate:"usage_update",used,size,...(nativeMeta?{_meta:nativeMeta}:{})};
     }
 
     private handleRateLimitsUpdated(params: AccountRateLimitsUpdatedNotification): void {

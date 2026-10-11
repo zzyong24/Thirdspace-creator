@@ -1,0 +1,73 @@
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://localhost:53627
+- Network:       http://192.168.0.107:53627
+✓ Ready in 435ms
+[CreatorOS] SIDECAR_STARTUP_VERIFIED
+
+[secret-crypto] 未取到 master key(fd 通道 / CREATOROS_MASTER_KEY / .master-key 文件兜底均缺失或非法)—— 使用开发降级 key。桌面端应由 Tauri 经 ChildStdin 或文件兜底提供;此降级弱于 keychain。
+[persistence] 模型密钥本地加密使用降级 master key(未取到 keychain key)。桌面端应由 Tauri keyring 注入 CREATOROS_MASTER_KEY;此降级安全性弱于 keychain。
+[seed] win-video-tutor 已按 module 挂 22 条 tag
+[page-read] operation=settings.storage.get durationMs=1784
+ GET /settings 200 in 178ms (next.js: 6ms, proxy.ts: 14ms, application-code: 158ms)
+ GET /settings 200 in 17.3s (next.js: 672ms, proxy.ts: 129ms, application-code: 16.5s)
+ POST /api/v1/dispatch 200 in 1396ms (next.js: 1368ms, proxy.ts: 4ms, application-code: 24ms)
+ POST /api/v1/dispatch 200 in 49ms (next.js: 26ms, proxy.ts: 8ms, application-code: 16ms)
+ POST /api/v1/dispatch 200 in 57ms (next.js: 42ms, proxy.ts: 8ms, application-code: 7ms)
+ POST /api/web-session 200 in 133ms (next.js: 114ms, proxy.ts: 7ms, application-code: 12ms)
+ POST /api/web-session 200 in 34ms (next.js: 14ms, proxy.ts: 4ms, application-code: 16ms)
+ POST /api/v1/dispatch 200 in 50ms (next.js: 11ms, proxy.ts: 26ms, application-code: 13ms)
+ POST /api/v1/dispatch 200 in 30ms (next.js: 6ms, proxy.ts: 5ms, application-code: 18ms)
+ GET /settings 200 in 298ms (next.js: 38ms, proxy.ts: 25ms, application-code: 235ms)
+ GET /api/chat/engines 200 in 314ms (next.js: 173ms, proxy.ts: 17ms, application-code: 124ms)
+ POST /api/v1/dispatch 200 in 678ms (next.js: 50ms, proxy.ts: 8ms, application-code: 620ms)
+ POST /api/v1/dispatch 200 in 681ms (next.js: 6ms, proxy.ts: 7ms, application-code: 667ms)
+ GET /settings 200 in 736ms (next.js: 4ms, proxy.ts: 5ms, application-code: 727ms)
+ POST /api/v1/dispatch 200 in 183ms (next.js: 44ms, proxy.ts: 28ms, application-code: 111ms)
+ POST /api/v1/dispatch 200 in 213ms (next.js: 154ms, proxy.ts: 37ms, application-code: 21ms)
+ POST /api/v1/dispatch 200 in 250ms (next.js: 199ms, proxy.ts: 29ms, application-code: 23ms)
+ POST /api/web-session 200 in 382ms (next.js: 152ms, proxy.ts: 31ms, application-code: 200ms)
+ POST /api/v1/dispatch 200 in 43ms (next.js: 21ms, proxy.ts: 5ms, application-code: 18ms)
+ POST /api/web-session 200 in 59ms (next.js: 16ms, proxy.ts: 5ms, application-code: 39ms)
+ GET /settings 200 in 617ms (next.js: 3ms, proxy.ts: 3ms, application-code: 611ms)
+ POST /api/v1/dispatch 200 in 113ms (next.js: 3ms, proxy.ts: 5ms, application-code: 105ms)
+ POST /api/v1/dispatch 200 in 54ms (next.js: 11ms, proxy.ts: 8ms, application-code: 35ms)
+ POST /api/web-session 200 in 122ms (next.js: 4ms, proxy.ts: 8ms, application-code: 110ms)
+ POST /api/v1/dispatch 200 in 138ms (next.js: 115ms, proxy.ts: 9ms, application-code: 14ms)
+ POST /api/web-session 200 in 40ms (next.js: 17ms, proxy.ts: 15ms, application-code: 8ms)
+ POST /api/v1/dispatch 200 in 70ms (next.js: 25ms, proxy.ts: 15ms, application-code: 30ms)
+ POST /api/v1/dispatch 200 in 67ms (next.js: 7ms, proxy.ts: 9ms, application-code: 51ms)
+ POST /api/v1/dispatch 200 in 32ms (next.js: 5ms, proxy.ts: 7ms, application-code: 20ms)
+ GET /api/chat/engines 200 in 714ms (next.js: 3ms, proxy.ts: 25ms, application-code: 685ms)
+ POST /api/v1/dispatch 200 in 2.6s (next.js: 25ms, proxy.ts: 29ms, application-code: 2.5s)
+ POST /api/v1/dispatch 200 in 2.5s (next.js: 4ms, proxy.ts: 339ms, application-code: 2.2s)
+ GET /settings 200 in 272ms (next.js: 6ms, proxy.ts: 2ms, application-code: 264ms)
+ POST /api/v1/dispatch 200 in 1467ms (next.js: 51ms, proxy.ts: 8ms, application-code: 1409ms)
+ POST /api/v1/dispatch 200 in 19ms (next.js: 1524µs, proxy.ts: 3ms, application-code: 14ms)
+ POST /api/v1/dispatch 200 in 1491ms (next.js: 6ms, proxy.ts: 15ms, application-code: 1470ms)
+ POST /api/v1/dispatch 200 in 126ms (next.js: 58ms, proxy.ts: 11ms, application-code: 57ms)
+ POST /api/v1/dispatch 200 in 174ms (next.js: 116ms, proxy.ts: 30ms, application-code: 28ms)
+ POST /api/web-session 200 in 187ms (next.js: 98ms, proxy.ts: 30ms, application-code: 58ms)
+ POST /api/web-session 200 in 20ms (next.js: 6ms, proxy.ts: 4ms, application-code: 10ms)
+ POST /api/v1/dispatch 200 in 41ms (next.js: 18ms, proxy.ts: 4ms, application-code: 20ms)
+ GET /api/chat/engines 200 in 1046ms (next.js: 4ms, proxy.ts: 5ms, application-code: 1037ms)
+ POST /api/v1/dispatch 200 in 405ms (next.js: 154ms, proxy.ts: 31ms, application-code: 220ms)
+ POST /api/v1/dispatch 200 in 412ms (next.js: 31ms, proxy.ts: 11ms, application-code: 370ms)
+✓ Compiled in 795ms
+✓ Finished filesystem cache database compaction in 10.4s
+✓ Compiled in 496ms
+ POST /api/v1/dispatch 200 in 979ms (next.js: 449ms, proxy.ts: 33ms, application-code: 497ms)
+ POST /api/v1/dispatch 200 in 310ms (next.js: 6ms, proxy.ts: 7ms, application-code: 296ms)
+ POST /api/v1/dispatch 200 in 156ms (next.js: 20ms, proxy.ts: 22ms, application-code: 114ms)
+ POST /api/v1/dispatch 404 in 33ms (next.js: 5ms, proxy.ts: 9ms, application-code: 19ms)
+✓ Finished filesystem cache database compaction in 13.1s
+ POST /api/v1/dispatch 200 in 494ms (next.js: 125ms, proxy.ts: 96ms, application-code: 273ms)
+ GET /api/v1/blob/groups/grp_legacy_acct-12b7a425-8/image/committed-a90fa8d3a1163270446eb06261efb27d29fe920337a571c6107960dd87918b86?exp=1791719378203&token=656420d102b0a49f9f2ae055b062b2efd1d77e8074f54e5f3795f6143a13f6e1&scope=eyJ1c2VySWQiOiJ1c2VyLWViNzgwNjkxLTEiLCJncm91cElkIjoiZ3JwX2xlZ2FjeV9hY2N0LTEyYjdhNDI1LTgiLCJhY2NvdW50SWQiOiJhY2N0LTEyYjdhNDI1LTgifQ 200 in 9.7s (next.js: 9.6s, application-code: 62ms)
+ POST /api/v1/dispatch 200 in 163ms (next.js: 2ms, proxy.ts: 3ms, application-code: 158ms)
+[execution-worker-port] task=exec_0648c934-d14c-491e-a0b8-2ea0420cab30 port=readProcessingAsset category=OwnershipError code=HOST_PORT_REJECTED
+✓ Compiled in 782ms
+ POST /api/v1/dispatch 200 in 50ms (next.js: 6ms, proxy.ts: 2ms, application-code: 41ms)
+ POST /api/v1/dispatch 200 in 19ms (next.js: 1157µs, proxy.ts: 1847µs, application-code: 16ms)
+✓ Compiled in 519ms
+✓ Compiled in 1219ms
+✓ Compiled in 414ms
+✓ Compiled in 256ms

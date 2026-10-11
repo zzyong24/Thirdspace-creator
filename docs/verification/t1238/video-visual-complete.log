@@ -1,0 +1,17 @@
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+         ╵                                                     ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+         ╵                                                     ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+JSON report written to /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/video-visual-complete.json

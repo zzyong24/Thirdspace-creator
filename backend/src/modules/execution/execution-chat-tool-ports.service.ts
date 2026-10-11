@@ -1,3 +1,4 @@
+import {recoverableCodexProposalParents,recoverableCodexSettledProposalParents} from './chat-generation-recovery';
 import {workspaceFilter} from "../../workspace-scope";
 import {createExecutionChatRedfoxService} from "./execution-chat-redfox.service";
 import {createExecutionChatScriptDraftService} from "./execution-chat-script-draft.service";
@@ -15,7 +16,7 @@ import type { RequestContext } from "@creatoros/contract";
 import { agenticToolOutcomeSchema, workerToolResultReceiptSchema, chatWorkerInputSchema, chatToolApprovalReceiptSchema, workerPortInputSchemas, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { chatInputDigest } from "../ai/chat-turn-submission.service";
 import { createExecutionLeaseService } from "./execution-lease.service";
-import { createAgenticToolBinding, type AgenticBackendTool } from "./agentic-tool-binding";
+import { latestAgenticRootCall,agenticToolOperationKey,createAgenticToolBinding, type AgenticBackendTool } from "./agentic-tool-binding";
 import { createExecutionAgenticToolPorts } from "./execution-agentic-tool-ports.service";
 import { ConflictError } from "./execution.errors";
 type Approval=z.infer<typeof chatToolApprovalReceiptSchema>;
@@ -50,10 +51,12 @@ export function createExecutionChatToolPorts(db:Db,deps:{now?:()=>string;budget:
   await validateTask(ref);
   return leases.withLease(ref,"admission",async({tx,task,context})=>{
    const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
-   const bound=binding.bind(task,calls,request);
+   const original=calls.find(call=>call.operationKey===agenticToolOperationKey(request.modelCallId,request.toolCallId));
+   const readonlyRecovery=original&&[...recoverableCodexProposalParents(task,calls),...recoverableCodexSettledProposalParents(task,calls)].includes(original.id);
+   const bound=binding.bind(task,calls,request,readonlyRecovery?{readonlyRecovery:true}:undefined);
    // 回放已确认工具允许读取原授权结果；未执行工具只能来自当前模型回合。
    const previous=calls.find(call=>call.operationKey===bound.operationKey);
-   if(previous?.status!=="settled" && calls.filter(call=>call.kind==="model" && !call.parentCallId).at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能取得新授权");
+   if(previous?.status!=="settled" && latestAgenticRootCall(calls)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能取得新授权");
    return {bound,context,previous};
   });
  }

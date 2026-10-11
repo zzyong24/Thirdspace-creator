@@ -1,0 +1,198 @@
+{
+  "schema": "code-review-round/v1",
+  "task_id": "T-1238",
+  "review_kind": "independent_source",
+  "mechanism": "独立人工源码审查 + 当场现有隔离测试；未调用SPEC评审工具，未伪装工具PASS。可用mcp__code_review仅pull_requests_checks，不能保存源码评审。",
+  "review_state": "completed_no_open_source_findings",
+  "workspace": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator",
+  "reviewer": "/root/codex_contract_review",
+  "findings": [
+    {
+      "id": "CR-001",
+      "severity": "blocking",
+      "status": "resolved_source_rechecked",
+      "anchors": [
+        "FR-1238-5",
+        "AC-1238-5"
+      ],
+      "title": "公共预检把Codex实际安全错误改为API模型未配置",
+      "evidence": [
+        "frontend/src/server/persistence-client.ts:3230",
+        "frontend/src/features/article/article-result-actions.tsx:66"
+      ],
+      "reproduction": "Codex未登录或生图能力不可用时调用文本/封面/图卡等公共预检，catch统一返回MODEL_NOT_CONFIGURED，页面引导检查模型配置。",
+      "constraint": "保留已验证的Codex安全原因，公共界面给出对应中文说明；API供应商调用仍为0。",
+      "recheck": "所有相关公共probe catch仅保codexCapabilityReasonSchema安全枚举；4个UI消费者使用codexCapabilityExplanation中文解释。"
+    },
+    {
+      "id": "CR-002",
+      "severity": "blocking",
+      "status": "resolved_source_rechecked",
+      "anchors": [
+        "FR-1238-3",
+        "AC-1238-6"
+      ],
+      "title": "真实JPEG/WebP结果被资产服务声明为PNG",
+      "evidence": [
+        "ai-worker/src/execution/codex-image-generation.ts:25",
+        "backend/src/modules/execution/execution-asset-result.service.ts"
+      ],
+      "reproduction": "原生结果为合法JPEG/WebP时，Worker保留原byte/checksum，backend save的image分支仍固定image/png，保存读回MIME错误。",
+      "constraint": "在原call/原checksum校验后按真实字节确认允许的MIME，不扩大路径/权限或读取Codex home。",
+      "recheck": "原native checksum byte匹配后嗅探允许PNG/JPEG/WebP；独立选中Codex的4个PGlite服务用例实际PASS（其余54 selector SKIP）。"
+    },
+    {
+      "id": "CR-003",
+      "severity": "blocking",
+      "status": "resolved_source_and_consumer_rechecked",
+      "anchors": [
+        "FR-1238-4",
+        "AC-1238-6"
+      ],
+      "title": "公开unknown生命周期无法进入原Codex回合只读恢复",
+      "evidence": [
+        "backend/src/modules/execution/persistent-task.service.ts:568",
+        "backend/src/modules/execution/persistent-task.service.ts:1012",
+        "backend/src/modules/execution/model-call-recovery.ts:85"
+      ],
+      "reproduction": "原Codex call已经绑定thread/turn，Worker退出后任务unknown_result；官方原turn完成时，resume仅允许Pi模型回收，reconcile对未结算unknown直接continue，底层read-only恢复无公开入口。",
+      "constraint": "仅原绑定started/unknown回合可获原任务新lease并只读核对；不supersede、不新turn、不新deadline、不重置费用；期限耗尽保持unknown诊断。",
+      "recheck": "公开resume/scan只入原native started/unknown读取，continuous原null期限合法；intelligence/flywheel/transcribe/video仅原冻结身份。strict原父prepared摘要/原身份/子序列/native绑定校验接实际授权、restore、模型读取、原CAS和工具投影；混合已settled host前缀只读保留。独立最后真实PGlite+Worker整套26PASS，原call/thread/turn/deadline/费用保持，坏证明拒绝，ACK重复及草稿子提交无重复。",
+      "final_recheck_evidence": [
+        "backend/src/modules/execution/codex-read-recovery.ts",
+        "backend/src/modules/execution/chat-generation-recovery.ts",
+        "backend/src/modules/execution/persistent-task.service.ts",
+        "backend/src/modules/execution/execution-chat-tool-ports.service.ts",
+        "backend/src/modules/execution/chat-tool-stream-projection.service.ts",
+        "backend/src/modules/execution/execution-chat-task-submission.service.ts",
+        "ai-worker/src/execution/external-chat-recovery.ts",
+        "backend/src/modules/execution/codex-read-recovery.integration.test.ts"
+      ]
+    },
+    {
+      "id": "CR-004",
+      "severity": "blocking",
+      "status": "resolved_source_rechecked",
+      "anchors": [
+        "FR-1238-4",
+        "AC-1238-4"
+      ],
+      "title": "旧Pi雷达/飞轮阶段仍从当前Codex偏好解析规格",
+      "evidence": [
+        "backend/src/modules/intelligence/intelligence-generation-bridge.ts:49",
+        "backend/src/modules/execution/execution-flywheel-generation.service.ts:35",
+        "frontend/src/server/persistence-client.ts:4004",
+        "frontend/src/server/persistence-client.ts:5089"
+      ],
+      "reproduction": "创建Pi原雷达topic_preview/script_candidate或飞轮任务后切Codex；旧Pi分支调无owner resolveModelSpec，返回当前Codex规格。未冻结stage被Codex授权拒绝，冻结stage则身份变化拒绝。聊天同根问题已通过传owner及Pi反向防护修复。",
+      "constraint": "实际消费者按真实原execution绑定解析冻结引擎，不能用当前偏好替代旧Pi事实或假造aiTaskId。",
+      "recheck": "resolvePiModelSpec不读当前引擎；intelligence/flywheel已冻结Pi分支明确调用该解析器，聊天Pi分支传真实owner并有Pi->Codex pin拒绝。"
+    },
+    {
+      "id": "CR-005",
+      "severity": "blocking",
+      "status": "resolved_source_rechecked",
+      "anchors": [
+        "FR-1238-6",
+        "AC-1238-6"
+      ],
+      "title": "通用文本和图片原回合缺少实际用量预算守卫",
+      "evidence": [
+        "ai-worker/src/runtime/codex-provider.ts:46",
+        "ai-worker/src/execution/codex-image-generation.ts:18",
+        "backend/src/modules/execution/execution-codex-call.service.ts:32",
+        "ai-worker/src/execution/external-chat-worker-run.ts:91"
+      ],
+      "reproduction": "原任务接近maxTokens，官方连续tokenUsage通知超限；通用provider只持久usage，图片不监听usage，均继续等completed。启动前的reserved估算不能守住已运行回合，request.maxOutputTokens亦未传给Codex。 原native聊天也没有onUsage，在completed之前退出会漏存已观测费用。",
+      "constraint": "共用原task预算与当前真实usage观测，超限打断同turn、保账本与unknown；不虚构官方硬cap，不重发。",
+      "recheck": "通用text/image/nativechat监听原usage；bind先保存费用，再返回原task预算超限。native仅interrupt同turn并保unknown；ACP通过随包官方事件_meta保存真实累计并cancel同session，hasNativeUsage防ACP last/缓存输入覆盖累计。最新ACP/nativechat/native-turn/tools四文件31用例独立实际PASS，原后台费用3用例独立PASS。"
+    }
+  ],
+  "executed_validation": [
+    {
+      "command": "pnpm --filter @creatoros/ai-worker exec vitest run src/execution/codex-native-turn.test.ts src/execution/asset-codex-worker-run.test.ts src/execution/codex-agentic-worker-run.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0 --maxWorkers=1",
+      "result": "3 files / 19 passed",
+      "classification": "官方RPC/worker隔离fixture；不是实际账户验收"
+    },
+    {
+      "result": "首次命令含本版不支持的--minWorkers，exit1且未运行测试；修正命令后实际成功。",
+      "classification": "命令失败保留"
+    },
+    {
+      "command": "pnpm --filter @creatoros/backend exec vitest run src/modules/execution/execution-asset-result.service.test.ts -t 'Codex' --testTimeout=120000 --hookTimeout=120000 --retry=0 --maxWorkers=1",
+      "result": "4 passed / 54 selector skipped",
+      "classification": "真实PGlite服务+临时owned object fixture；不是账户Codex真机"
+    },
+    {
+      "command": "pnpm --filter @creatoros/backend exec tsc --noEmit",
+      "result": "exit0",
+      "classification": "独立当场后端类型检查；后续改动仍需owner最终检查"
+    },
+    {
+      "command": "pnpm --filter @creatoros/backend exec vitest run src/modules/execution/execution-codex-call.service.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0 --maxWorkers=1",
+      "result": "1 file / 3 passed",
+      "classification": "真实PGlite绑定/原usage/预算守卫隔离用例"
+    },
+    {
+      "command": "pnpm --filter @creatoros/ai-worker exec vitest run src/execution/codex-acp-worker-run.test.ts src/execution/codex-external-chat-native-run.test.ts src/execution/codex-native-turn.test.ts src/execution/external-chat-tools.test.ts --testTimeout=120000 --hookTimeout=120000 --retry=0 --maxWorkers=1",
+      "result": "4 files / 31 passed",
+      "classification": "独立最新协议/合法工具/inline附件/旧ACP恢复/用量预算隔离回归；含此前native-turn，不累计总数"
+    },
+    {
+      "command": "pnpm --filter @creatoros/backend exec vitest run src/modules/execution/codex-read-recovery.integration.test.ts --testTimeout=180000 --hookTimeout=180000 --retry=0 --maxWorkers=1",
+      "result": "11 passed / 2 failed",
+      "classification": "真实PGlite+Worker subprocess；图片fixture resolveSpec缺必需kind:image，resolveAssetCredential ZodError，未到原thread/read；失败不覆盖"
+    },
+    {
+      "command": "pnpm --filter @creatoros/ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/external-chat-recovery.test.ts --testTimeout=180000 --hookTimeout=180000 --retry=0 --maxWorkers=1",
+      "result": "2 files / 8 passed",
+      "classification": "独立新增Codex不废弃原call、原strict hooks/draft名单消费者隔离回归；与单文件4PASS重叠不累计"
+    },
+    {
+      "command": "pnpm --filter @creatoros/backend exec vitest run src/modules/execution/codex-read-recovery.integration.test.ts --testTimeout=180000 --hookTimeout=180000 --retry=0 --maxWorkers=1",
+      "result": "13 passed / 3 failed (16 cases)",
+      "classification": "独立第二次运行：原13全部通过；新增三真实ChatWorker场景在fixture createConversation缺nextId失败，未入恢复链；失败保留"
+    },
+    {
+      "command": "pnpm --filter @creatoros/backend exec vitest run src/modules/execution/execution-generation-ports.service.test.ts --testTimeout=180000 --hookTimeout=180000 --retry=0 --maxWorkers=1",
+      "result": "1 file / 3 passed",
+      "classification": "独立真实服务SDK7图片data envelope视觉预留；完整字节摘要不可变、非图不绕预算、原冻结输出不可变"
+    },
+    {
+      "command": "pnpm --filter @creatoros/backend exec vitest run src/modules/execution/codex-read-recovery.integration.test.ts --testTimeout=180000 --hookTimeout=180000 --retry=0 --maxWorkers=1",
+      "result": "1 file / 26 passed / 0 failed, 2026-10-11 19:54:17 Asia/Shanghai",
+      "classification": "独立最终真实PGlite+Worker subprocess+实际授权/投影/原CAS整链；官方RPC端点受控fixture，非账户真机。含前13及所有增量，不累加重叠数量。"
+    }
+  ],
+  "observed_public_evidence": [
+    "public-knowledge-second.json真实结构化结果",
+    "public-image-state-fifth.json awaiting_confirmation/runtime succeeded",
+    "public-image-results-fifth.json generated_asset",
+    "public-image-adopt-group-fifth.json 原同Ai任务采纳succeeded",
+    "public-image-blob-group-after-adopt-fifth.json status200 PNG1041054bytes",
+    "public-image-fifth.png 已独立view_image确认真实蓝色圆形图标，非空或文字假图",
+    "ui-final.json 已独立读取7项实际设置证据，失败保存明确503注入；截图由主代理目视",
+    "public-model-config-empty.json 七类真实配置无secret/provider/model",
+    "public-image-reference-adopt.json 原同task/group采纳succeeded",
+    "public-image-reference-blob.json PNG1414662bytes",
+    "public-image-reference-download-success.json 原group下载URL",
+    "public-image-reference.png 已独立view_image确认绿色圆形白背景",
+    "public-image-understanding-state-third.json 原asset.classify task/exec succeeded",
+    "public-image-understanding-results-third.json 原已采纳绿圆PNG被真实官方账户识别为白底绿色实心圆；001 unknown与002预算拒绝保留"
+  ],
+  "limitations": [
+    "本审查没有逐功能执行全部真实账户公共整链、实际套餐/额度失败和未知回合真机；共享fixture或单个公共成功不代签这些族。",
+    "真实设置截图由主代理目视，本审查只核实际GET/PATCH/刷新/双窗结果和源码，不另签独立视觉审美评审。",
+    "全局Gate、最终类型检查、完整reconcile、迁移和安装版验收由主代理实际汇总；曾有独立backend tsc exit0不能代签后续修改。"
+  ],
+  "withdrawn_unsubstantiated_hypotheses": [
+    "HOST_PORT_TIMEOUT不属于网络重试模式，实际IPC bind错误被安全归为HOST_PORT_REJECTED；未把该猜测登记成可复现发现。最新Codex关闭allowUnconfirmedModelRetry守卫作为合同防御已源码复核。"
+  ],
+  "conclusion": "已按SPEC完整写集独立审查，5个稳定源码发现均已复核修复，当前没有未关闭可复现源码阻断；隔离回归不代签全部真实账户或全局验收。",
+  "open_findings": [],
+  "source_scope_additions_rechecked": [
+    "backend/src/modules/assets/asset-processing.service.ts采用原workspaceFilter，仍绑定user/原group/真实asset/file版本；不会把group资产误当account所有",
+    "backend/src/modules/execution/execution-generation-ports.service.ts只识别SDK7已授权图片data封装计量，原完整encoded请求摘要和实际usage预算保持",
+    "frontend/src/proxy.ts只排除Next内部webpack-hmr，知识与dispatch匹配保护保持"
+  ]
+}

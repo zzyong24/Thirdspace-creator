@@ -1,0 +1,27 @@
+{
+  "data": {
+    "id": "asset-generated-50aabe8c75493ed9cf85d6b94b55ba955764af5038b4696f811d845007494bf6",
+    "userId": "user-eb780691-1",
+    "currentFileId": "afile-generated-50aabe8c75493ed9cf85d6b94b55ba955764af5038b4696f811d845007494bf6",
+    "assetType": "image",
+    "name": "生成白色背景的蓝色圆形极简图标，无文字。 · 生成图",
+    "description": "视觉方案:生成白色背景的蓝色圆形极简图标，无文字。",
+    "status": "active",
+    "isFavorite": false,
+    "mimeType": "image/png",
+    "fileSize": 1041054,
+    "width": 1254,
+    "height": 1254,
+    "durationMs": null,
+    "extractStatus": null,
+    "materialSummary": null,
+    "extractedText": null,
+    "sourceUrl": null,
+    "deletedAt": null,
+    "createdAt": "2026-10-11T11:07:06.121Z",
+    "updatedAt": "2026-10-11T11:12:49.468Z"
+  },
+  "meta": {
+    "requestId": "req-a46c818b-61"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "data": {
+    "id": "ai-task-a46c818b-48",
+    "userId": "user-eb780691-1",
+    "groupId": "grp_legacy_acct-12b7a425-8",
+    "groupVersion": 1,
+    "membershipVersion": 1,
+    "projectId": null,
+    "contentOutputId": null,
+    "taskType": "asset.generate",
+    "status": "succeeded",
+    "inputData": {
+      "kind": "image",
+      "mode": "text_to_image",
+      "prompt": "生成白色背景的蓝色圆形极简图标，无文字。",
+      "aspectRatio": "1:1"
+    },
+    "modelKey": "codex",
+    "idempotencyKey": "legacy-account:acct-12b7a425-8:asset.generate:t1238-public-native-image-005",
+    "attemptId": "t1238-public-native-image-005",
+    "requestFingerprint": "sha256:f5f0681beb95f462699a349b5de6551d23a46541aa1440ef7a203e8697ca241f",
+    "retryOfTaskId": null,
+    "requestedAt": "2026-10-11T11:06:29.086Z",
+    "startedAt": null,
+    "completedAt": "2026-10-11T11:12:49.473Z",
+    "errorMessage": null
+  },
+  "meta": {
+    "requestId": "req-a46c818b-60"
+  }
+}

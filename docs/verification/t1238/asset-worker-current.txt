@@ -1,0 +1,114 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/asset-codex-worker-run.test.ts (5 tests | 4 failed) 10ms
+   × 新Codex图片reserved先启动，只用原生图片transport，不提前恢复或调用API 5ms
+   × 未知Codex图片只读原回合，不再次start或调用API 1ms
+   × 保存ACK丢失只核对原已提交素材，不重复生图 0ms
+   × 参考图片读取拒绝时不能启动或降级成纯文生图 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/asset-codex-worker-run.test.ts > 新Codex图片reserved先启动，只用原生图片transport，不提前恢复或调用API
+ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "codex-app-server"
+    ],
+    "path": [
+      "protocolKind"
+    ],
+    "message": "Invalid input: expected \"codex-app-server\""
+  }
+]
+ ❯ Module.runAssetInWorker src/execution/asset-worker-run.ts:35:47
+     33|    if(recovered.status==='committed')return {callId,text:JSON.stringif…
+     34|   }
+     35|   const credential=codexAssetCredentialSchema.parse(await call('resolv…
+       |                                               ^
+     36|   if(credential.runtimeVersion!==input.runtimeVersion)throw new Genera…
+     37|   let reference:{bytes:Uint8Array;mimeType:string}|undefined;
+ ❯ src/execution/asset-codex-worker-run.test.ts:11:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/execution/asset-codex-worker-run.test.ts > 未知Codex图片只读原回合，不再次start或调用API
+ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "codex-app-server"
+    ],
+    "path": [
+      "protocolKind"
+    ],
+    "message": "Invalid input: expected \"codex-app-server\""
+  }
+]
+ ❯ Module.runAssetInWorker src/execution/asset-worker-run.ts:35:47
+     33|    if(recovered.status==='committed')return {callId,text:JSON.stringif…
+     34|   }
+     35|   const credential=codexAssetCredentialSchema.parse(await call('resolv…
+       |                                               ^
+     36|   if(credential.runtimeVersion!==input.runtimeVersion)throw new Genera…
+     37|   let reference:{bytes:Uint8Array;mimeType:string}|undefined;
+ ❯ src/execution/asset-codex-worker-run.test.ts:16:2
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/execution/asset-codex-worker-run.test.ts > 保存ACK丢失只核对原已提交素材，不重复生图
+ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "codex-app-server"
+    ],
+    "path": [
+      "protocolKind"
+    ],
+    "message": "Invalid input: expected \"codex-app-server\""
+  }
+]
+ ❯ Module.runAssetInWorker src/execution/asset-worker-run.ts:35:47
+     33|    if(recovered.status==='committed')return {callId,text:JSON.stringif…
+     34|   }
+     35|   const credential=codexAssetCredentialSchema.parse(await call('resolv…
+       |                                               ^
+     36|   if(credential.runtimeVersion!==input.runtimeVersion)throw new Genera…
+     37|   let reference:{bytes:Uint8Array;mimeType:string}|undefined;
+ ❯ src/execution/asset-codex-worker-run.test.ts:20:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/execution/asset-codex-worker-run.test.ts > 参考图片读取拒绝时不能启动或降级成纯文生图
+AssertionError: expected [Function] to throw error including '参考版本不属于当前组' but got '[\n  {\n    "code": "invalid_value",\…'
+
+- Expected
++ Received
+
+- 参考版本不属于当前组
++ [
++   {
++     "code": "invalid_value",
++     "values": [
++       "codex-app-server"
++     ],
++     "path": [
++       "protocolKind"
++     ],
++     "message": "Invalid input: expected \"codex-app-server\""
++   }
++ ]
+
+ ❯ src/execution/asset-codex-worker-run.test.ts:27:382
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  4 failed | 17 passed (21)
+   Start at  19:07:20
+   Duration  677ms (transform 420ms, setup 0ms, import 1.04s, tests 21ms, environment 0ms)
+

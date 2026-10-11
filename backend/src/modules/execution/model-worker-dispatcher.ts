@@ -1,3 +1,4 @@
+import {createExecutionCodexCallService} from './execution-codex-call.service';
 import {createAgenticToolBinding} from "./agentic-tool-binding";
 import {chatWorkerInputSchema} from "@creatoros/contract/execution-worker";
 import {createExecutionMomentsModelService} from "../moments";
@@ -51,7 +52,7 @@ import { createExecutionCheckpointService } from "./execution-checkpoint.service
 import { createExecutionGenerationPorts } from "./execution-generation-ports.service";
 import { eq,executionTasks,executionCalls,type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
-import { workerPortInputSchemas,workerModelSpecSchema,type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { workerPortInputSchemas,executionModelSpecSchema,type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { createExecutionCandidateService,type ExecutionCandidateDeps } from "../ai/execution-candidate.service";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionWorkerCallPorts } from "./execution-worker-call-ports.service";
@@ -181,9 +182,14 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
   let timer:ReturnType<typeof setTimeout>|undefined;
   let draining:Promise<number>|undefined;
   const report=(code:string)=>{try{deps.onError?.(code);}catch{/* 诊断订阅故障不改变执行。 */}};
-  const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,extraEnv:deps.executionMode==="chat.run"?localCodexWorkerEnv():undefined,shutdownGraceMs:1000,ports:{
+  const createSupervisor=()=>createWorkerSupervisor({entryPath:deps.entryPath,extraEnv:localCodexWorkerEnv(),shutdownGraceMs:1000,ports:{
     async validate(ref,mode){if(stopping && mode==="admission")throw new Error("WORKER_HOST_STOPPING");await leases.withLease(ref,mode,async()=>{});},
     async invoke(ref,port,raw){
+      if(port==='bindCodexCall'||port==='readCodexCall'||port==='recordCodexToolCall'){
+        const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error('STALE_EXECUTION');
+        const work=createExecutionCodexCallService(db).invoke(ref,port,raw);
+        scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
+      }
       if(["resolveVideoModel","reserveVideoModel","recordVideoStep","saveVideoCheckpoint","saveVideoResult"].includes(port)){
         const scope=activeTools.get(executionKey(ref));if(!scope||!video)throw new Error("VIDEO_PORT_UNAVAILABLE");
         const work=video.invoke(ref,port,raw,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
@@ -238,7 +244,11 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
           const work=port==="saveExternalChatImage"?externalChat.saveImage(ref,raw,scope.controller.signal):externalChat.recoverImage(ref,raw,scope.controller.signal);scope.pending.add(work);try{return await work;}finally{scope.pending.delete(work);}
         }
         if(port==="settleExternalChatTurn")return externalChat.settle(ref,raw);
-        if(port==="commitExternalChatResult")return externalChat.commit(ref,raw);
+        if(port==="commitExternalChatResult"){
+          const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error('STALE_EXECUTION');
+          await getChatTools(ref);const tools=await scope.externalToolMap!;
+          return externalChat.commit(ref,raw,(task,rows,tool)=>createAgenticToolBinding(tools).forCall(task,rows,tool));
+        }
       }
       if(externalTaskTools&&(port==="listExternalTaskTools"||port==="executeExternalTaskTool")){
         const scope=activeTools.get(executionKey(ref));if(!scope)throw new Error("STALE_EXECUTION");
@@ -406,7 +416,7 @@ function createDispatcher(db:Db,deps:(ModelWorkerDispatcherDeps&{executionMode:"
         const modelInput=await calls.readTaskContext(ref);
         if(!("capability" in modelInput)||input.capability!==modelInput.capability)throw new Error("MODEL_CAPABILITY_MISMATCH");
         const scope=await leases.withLease(ref,"admission",async({context,task})=>({context,aiTaskId:task.ownerId}));
-        const credential=workerModelSpecSchema.parse(await deps.resolveModelCredential(scope.context,input.capability,{aiTaskId:scope.aiTaskId,executionTaskId:ref.executionTaskId}));
+        const credential=executionModelSpecSchema.parse(await deps.resolveModelCredential(scope.context,input.capability,{aiTaskId:scope.aiTaskId,executionTaskId:ref.executionTaskId}));
         // 凭据解析期间可能取消，返回私有凭据前再检查当前执行。
         return modelIdentity.pin(ref,input.capability,credential);
       }

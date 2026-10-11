@@ -1,0 +1,155 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:55736) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/app/api/knowledge/knowledge-worker-routes.test.ts (21 tests | 8 failed) 31ms
+     × classify 只传group header也交给原Context，不强加账号选择 5ms
+     × distill 只传group header也交给原Context，不强加账号选择 1ms
+     × relate 只传group header也交给原Context，不强加账号选择 1ms
+     × comment-sift 只传group header也交给原Context，不强加账号选择 0ms
+     × classify 跨组拒绝先消费group header且不读数据或提交候选 1ms
+     × distill 跨组拒绝先消费group header且不读数据或提交候选 0ms
+     × relate 跨组拒绝先消费group header且不读数据或提交候选 0ms
+     × comment-sift 跨组拒绝先消费group header且不读数据或提交候选 0ms
+(node:55978) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/app/api/knowledge/distill/route.test.ts (4 tests | 1 failed) 19ms
+     × 正常蒸馏 → 200 { atoms, suggestedTags }(无 cookie 走本机主用户直通) 6ms
+(node:56007) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/app/api/knowledge/classify/route.test.ts (4 tests | 1 failed) 19ms
+     × 正常归类 → 200 { classification }(无 cookie 走本机主用户直通) 5ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/app/api/knowledge/knowledge-worker-routes.test.ts > T-1238 四类知识真实公共路由和原runner合同 > classify 只传group header也交给原Context，不强加账号选择
+ FAIL  src/app/api/knowledge/knowledge-worker-routes.test.ts > T-1238 四类知识真实公共路由和原runner合同 > distill 只传group header也交给原Context，不强加账号选择
+ FAIL  src/app/api/knowledge/knowledge-worker-routes.test.ts > T-1238 四类知识真实公共路由和原runner合同 > relate 只传group header也交给原Context，不强加账号选择
+ FAIL  src/app/api/knowledge/knowledge-worker-routes.test.ts > T-1238 四类知识真实公共路由和原runner合同 > comment-sift 只传group header也交给原Context，不强加账号选择
+AssertionError: expected "vi.fn()" to be called with arguments: [ undefined, null, { …(2) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+@@ -1,7 +1,7 @@
+  [
+-   undefined,
++   null,
+    null,
+    {
+      "groupId": "actual-group",
+      "rejectInvalidToken": true,
+    },
+
+
+Number of calls: 1
+
+ ❯ src/app/api/knowledge/knowledge-worker-routes.test.ts:39:73
+     37|   const groupCtx={...ctx,accountId:undefined,groupId:'actual-group'};p…
+     38|   const req=request(path,{'x-group-id':'actual-group'}),response=await…
+     39|   expect(response.status).toBe(200);expect(ports.resolveRequestContext…
+       |                                                                         ^
+     40|   expect(ports.runKnowledgeGeneration).toHaveBeenCalledWith(groupCtx,e…
+     41|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  src/app/api/knowledge/knowledge-worker-routes.test.ts > T-1238 四类知识真实公共路由和原runner合同 > classify 跨组拒绝先消费group header且不读数据或提交候选
+ FAIL  src/app/api/knowledge/knowledge-worker-routes.test.ts > T-1238 四类知识真实公共路由和原runner合同 > distill 跨组拒绝先消费group header且不读数据或提交候选
+ FAIL  src/app/api/knowledge/knowledge-worker-routes.test.ts > T-1238 四类知识真实公共路由和原runner合同 > relate 跨组拒绝先消费group header且不读数据或提交候选
+ FAIL  src/app/api/knowledge/knowledge-worker-routes.test.ts > T-1238 四类知识真实公共路由和原runner合同 > comment-sift 跨组拒绝先消费group header且不读数据或提交候选
+AssertionError: expected "vi.fn()" to be called with arguments: [ undefined, null, { …(2) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+@@ -1,7 +1,7 @@
+  [
+-   undefined,
++   null,
+    null,
+    {
+      "groupId": "another-owner-group",
+      "rejectInvalidToken": true,
+    },
+
+
+Number of calls: 1
+
+ ❯ src/app/api/knowledge/knowledge-worker-routes.test.ts:45:73
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  src/app/api/knowledge/distill/route.test.ts > POST /api/knowledge/distill > 正常蒸馏 → 200 { atoms, suggestedTags }(无 cookie 走本机主用户直通)
+AssertionError: expected "vi.fn()" to be called with arguments: [ undefined, null, { …(2) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+@@ -1,7 +1,7 @@
+  [
+-   undefined,
++   null,
+    null,
+    {
+      "groupId": null,
+      "rejectInvalidToken": true,
+    },
+
+
+Number of calls: 1
+
+ ❯ src/app/api/knowledge/distill/route.test.ts:88:35
+     86|     expect(json.suggestedTags).toEqual(["主题"]);
+     87|     expect(resolveLocalContext).toHaveBeenCalledTimes(1);
+     88|     expect(resolveRequestContext).toHaveBeenCalledWith(undefined,null,…
+       |                                   ^
+     89|     // runner 收到 trim 后的 content + 组合根的受控 Worker 候选端口和请求取消信号
+     90|     expect(runKnowledgeDistill).toHaveBeenCalledWith(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  src/app/api/knowledge/classify/route.test.ts > POST /api/knowledge/classify > 正常归类 → 200 { classification }(无 cookie 走本机主用户直通)
+AssertionError: expected "vi.fn()" to be called with arguments: [ undefined, null, { …(2) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+@@ -1,7 +1,7 @@
+  [
+-   undefined,
++   null,
+    null,
+    {
+      "groupId": null,
+      "rejectInvalidToken": true,
+    },
+
+
+Number of calls: 1
+
+ ❯ src/app/api/knowledge/classify/route.test.ts:82:35
+     80|     expect(json.classification.title).toBe("一条笔记");
+     81|     expect(resolveLocalContext).toHaveBeenCalledTimes(1);
+     82|     expect(resolveRequestContext).toHaveBeenCalledWith(undefined,null,…
+       |                                   ^
+     83|     // runner 收到 trim 后的 content + 组合根的受控 Worker 候选端口和请求取消信号
+     84|     expect(runKnowledgeClassify).toHaveBeenCalledWith(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+
+ Test Files  3 failed | 1 passed (4)
+      Tests  10 failed | 22 passed (32)
+   Start at  19:09:37
+   Duration  24.41s (transform 8.50s, setup 442ms, import 14.54s, tests 7.42s, environment 1.40s)
+
+undefined
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/server/codex-frozen-preflight.integration.test.ts src/app/api/knowledge/classify/route.test.ts src/app/api/knowledge/distill/route.test.ts src/app/api/knowledge/knowledge-worker-routes.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1

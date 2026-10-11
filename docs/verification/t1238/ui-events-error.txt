@@ -1,0 +1,3 @@
+locator.waitFor: Timeout 180000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('tab', { name: '模型配置' }) to be visible[22m

@@ -1,0 +1,22 @@
+{
+  "id": "exec_c2b9c4f7-b6bf-4b86-943b-7576cdd81560",
+  "budget": {
+    "maxCalls": 6,
+    "maxTokens": 1000000,
+    "deadlineMs": 1800000
+  },
+  "deadlineAt": "2026-10-11T12:10:05.971Z",
+  "lastErrorCode": "MODEL_RESERVATION_REJECTED",
+  "modelInput": {
+    "kind": "model.structured",
+    "capability": "asset.classify",
+    "maxOutputTokens": 65536
+  },
+  "executionRoute": {
+    "engine": "codex",
+    "source": "preference",
+    "protocolKind": "codex-app-server",
+    "schemaVersion": 1,
+    "runtimeVersion": "0.159.3"
+  }
+}

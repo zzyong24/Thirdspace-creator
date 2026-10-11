@@ -662,6 +662,23 @@ stages:
       仍被 T-635/T-639/T-638/T-637/T-634 的既有过期回执阻断，已在 Gate 诚实记录。
 
 
+  "T-1238-4-build":
+    status: "draft"
+    gate: "T1238 scoped tests + public Codex + settings journey + types + boundary + orphan"
+    gate_status: "not-run"
+    confirmation_required: false
+    artifacts:
+      - existing: "docs/features/t1238-codex-unified-text-image-engine.md"
+      - existing: "docs/verification/t1238/COVERAGE.md"
+      - existing: "docs/verification/t1238/FINAL_REVIEW.md"
+      - existing: "docs/verification/t1238/ui-final.json"
+      - existing: "docs/verification/t1238/public-native-ledger.json"
+    notes: >
+      DEC-T1238-001确认文本、图片理解与内置生图统一范围；独评合同REV6b70a2a85595。
+      已真实执行Codex结构化文本、无独立key生图与参考编辑、原组采纳下载及设置双窗操作。
+      未签所有功能官方账户逐族真机或安装版发布；恢复与图片理解公共复验收尾中。
+      超时全局既有22条静态失败与完整reconcile既有债由T1204保留，不能伪称全局全绿。
+
 stage_defaults:
   valid_statuses:
     - "not-started"

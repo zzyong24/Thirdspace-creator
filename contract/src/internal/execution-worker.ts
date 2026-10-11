@@ -1,3 +1,5 @@
+import {codexModelSpecSchema} from './execution-engine';
+export * from './execution-engine';
 import {assetAsrInput} from './asset-asr';
 import {assetAsrPortInputs} from './asset-asr-ports';
 export * from './asset-asr';
@@ -101,6 +103,7 @@ export const executionRefSchema = z.object({
 }).strict();
 export type ExecutionRef = z.infer<typeof executionRefSchema>;
 export const workerPortSchema = z.enum([
+  "readCodexCall","bindCodexCall","recordCodexToolCall",
  ...Object.keys(assetAsrPortInputs) as Array<keyof typeof assetAsrPortInputs>,
   "settleCoverModel",
   ...Object.keys(transcribeWorkflowPortSchemas) as Array<keyof typeof transcribeWorkflowPortSchemas>,
@@ -138,7 +141,7 @@ export const externalChatUsageSchema=z.object({
   cachedReadTokens:z.number().int().nonnegative().nullable().optional(),
   cachedWriteTokens:z.number().int().nonnegative().nullable().optional(),
 }).strict().nullable();
-export const externalChatImageIdentitySchema=z.object({callId:operationKeySchema,sessionId:z.string().min(1).max(512),toolCallId:operationKeySchema,imageIndex:z.number().int().min(0).max(15)}).strict();
+export const externalChatImageIdentitySchema=z.object({callId:operationKeySchema,sessionId:z.string().min(1).max(512),toolCallId:operationKeySchema,imageIndex:z.number().int().min(0).max(15),nativeSource:z.object({providerTurnId:z.string().min(1).max(512),itemId:operationKeySchema,checksum:z.string().regex(/^[a-f0-9]{64}$/)}).strict().optional()}).strict();
 export const externalChatImageReceiptSchema=externalChatImageIdentitySchema.omit({callId:true,sessionId:true}).extend({assetId:z.string().min(1),fileId:z.string().min(1),assetType:z.literal("image"),name:z.string().min(1).max(1000),checksum:z.string().regex(/^[a-f0-9]{64}$/),byteLength:z.number().int().positive().max(30*1024*1024),committedAt:z.string().min(1)}).strict();
 export const externalChatReceiptSchema=z.object({schemaVersion:z.literal(1),engine:externalChatEngineSchema,protocolKind:z.enum(["acp","codex-app-server"]).optional(),providerTurnId:z.string().min(1).max(512).optional(),protocolVersion:z.number().int().positive(),sessionId:z.string().min(1).max(512),turnId:operationKeySchema,stopReason:z.enum(["end_turn","max_tokens","max_turn_requests","refusal","cancelled"]),text:z.string().max(2_000_000),images:z.array(externalChatImageReceiptSchema).max(16).optional(),imageFailures:z.array(z.object({toolCallId:operationKeySchema,imageIndex:z.number().int().min(0).max(15),code:z.string().min(1).max(128)}).strict()).max(16).optional(),usage:externalChatUsageSchema}).strict().refine(value=>Boolean(value.text.trim()||value.images?.length),"外部 Agent 未返回可保存正文或图片");
 export const externalChatStartSchema=z.object({schemaVersion:z.literal(1),engine:externalChatEngineSchema,protocolKind:z.enum(["acp","codex-app-server"]).optional(),providerTurnId:z.string().min(1).max(512).optional(),protocolVersion:z.number().int().positive(),sessionId:z.string().min(1).max(512),turnId:operationKeySchema,status:z.literal("started")}).strict();
@@ -191,6 +194,9 @@ export const chatResearchPreparationSchema=z.object({available:z.boolean(),query
 
 /** 每个命名端口都有单独的载荷边界；身份字段不得从 Worker 注入。 */
 export const workerPortInputSchemas = {
+  recordCodexToolCall:z.object({callId:operationKeySchema,toolCallId:operationKeySchema,toolName:z.string().min(1).max(256),input:z.string().max(1000000)}).strict(),
+  readCodexCall:z.object({callId:operationKeySchema}).strict(),
+  bindCodexCall:z.object({callId:operationKeySchema,threadId:z.string().min(1).max(512).optional(),turnId:z.string().min(1).max(512).optional(),modelFacts:z.object({model:z.string().max(512).nullable(),modelProvider:z.string().max(512).nullable()}).strict().optional(),observedUsage:workerUsageSchema.optional(),nativeResult:z.object({itemId:z.string().min(1).max(512),checksum:z.string().regex(/^sha256:[a-f0-9]{64}$/),model:z.string().max(512).nullable(),usage:z.object({inputTokens:z.number().int().nonnegative().nullable(),outputTokens:z.number().int().nonnegative().nullable(),totalTokens:z.number().int().nonnegative().nullable(),cachedReadTokens:z.number().int().nonnegative().nullable(),thoughtTokens:z.number().int().nonnegative().nullable()}).strict().nullable()}).strict().optional()}).strict(),
  ...assetAsrPortInputs,
   ...videoPortInputSchemas,
   readWorkbenchPlan:z.object({modelCallId:operationKeySchema}).strict(),
@@ -292,7 +298,7 @@ export const workerPortInputSchemas = {
   executeEvidenceRead:z.object({callId:operationKeySchema}).strict(),
   reserveAgenticModel: reserveAgenticModelSchema,
   executeAgenticTool:z.object({callId:operationKeySchema}).strict(),
-  commitAgenticResult:z.object({actualEngine:z.literal("pi"),summary:z.string().max(10000),stopReason:z.enum(["completed","max_steps","budget_exhausted","aborted","llm_error"]),lastModelCallId:operationKeySchema,toolCallIds:z.array(operationKeySchema).max(10000)}).strict(),
+  commitAgenticResult:z.object({actualEngine:z.enum(["pi","codex"]),summary:z.string().max(10000),stopReason:z.enum(["completed","max_steps","budget_exhausted","aborted","llm_error"]),lastModelCallId:operationKeySchema,toolCallIds:z.array(operationKeySchema).max(10000)}).strict(),
   reserveAgenticTool: reserveAgenticToolSchema,
   settleAgenticTool: settleAgenticToolSchema,
   resolveChatFallbackCredential: z.object({operationKey:operationKeySchema}).strict(),
@@ -360,14 +366,16 @@ export const workerModelSpecSchema = z.object({
   displayModelKey: z.literal("channel-managed").optional(),
   structuredOutputs: z.boolean().optional(),
 });
+export const executionModelSpecSchema=z.union([workerModelSpecSchema,codexModelSpecSchema]);
 /** 后处理只消费已确认的 ASR 原文；固定输入与回执不含凭据。 */
 export const transcribePostprocessResultSchema=z.discriminatedUnion("applied",[
   z.object({applied:z.literal(true),transcript:z.string().min(1).max(2_000_000)}).strict(),
   z.object({applied:z.literal(false),transcript:z.string().max(2_000_000),reason:z.string().min(1).max(1000)}).strict(),
 ]);
-export const transcribePostprocessIdentitySchema=workerModelSpecSchema.omit({token:true,baseUrl:true}).extend({
+const apiTranscribePostprocessIdentitySchema=workerModelSpecSchema.omit({token:true,baseUrl:true}).extend({
   schemaVersion:z.literal(1),capability:z.literal("video.subtitles"),baseUrlDigest:z.string().regex(/^sha256:[a-f0-9]{64}$/),customEndpoint:z.boolean(),
 }).strict();
+export const transcribePostprocessIdentitySchema=z.union([apiTranscribePostprocessIdentitySchema,codexModelSpecSchema.extend({schemaVersion:z.literal(1),capability:z.literal('video.subtitles')}).strict()]);
 export const transcribePostprocessPlanSchema=z.object({
   schemaVersion:z.literal(1),sourceDigest:z.string().regex(/^sha256:[a-f0-9]{64}$/),
   transcript:z.string().max(2_000_000),accountPositioning:z.string().max(200000).optional(),title:z.string().max(10000).optional(),
@@ -375,7 +383,7 @@ export const transcribePostprocessPlanSchema=z.object({
   maxOutputTokens:z.number().int().positive().max(65536),identity:transcribePostprocessIdentitySchema.nullable(),operationKey:operationKeySchema,
 }).strict();
 export const transcribePostprocessPreparationSchema=z.discriminatedUnion("status",[
-  z.object({status:z.literal("prepared"),plan:transcribePostprocessPlanSchema,spec:workerModelSpecSchema.strict()}).strict(),
+  z.object({status:z.literal("prepared"),plan:transcribePostprocessPlanSchema,spec:executionModelSpecSchema}).strict(),
   z.object({status:z.literal("restored"),result:transcribePostprocessResultSchema}).strict(),
 ]);
 export const transcribePostprocessReservationSchema=z.union([
@@ -450,9 +458,9 @@ export const chatToolApprovalReceiptSchema=z.discriminatedUnion("status",[
 export const chatCommitReceiptSchema=z.object({resultId:z.string().min(1),aiTaskId:z.string().min(1),messageId:z.string().min(1),outcome:z.enum(["succeeded","partial"])}).strict();
 export {assetGenerationInputSchema,providerJobSchema,providerJobReadSchema,providerJobRecordSchema} from "./asset-generation";
 
-export {assetCredentialSchema,assetRuntimeOptionsSchema,assetResultReceiptSchema} from "./asset-generation";
+export {assetCredentialSchema,assetRuntimeOptionsSchema,assetResultReceiptSchema,executionAssetCredentialSchema,codexAssetCredentialSchema} from "./asset-generation";
 
-export {localCodexStatusSchema,localCodexStatusRequestSchema,localCodexStatusResponseSchema} from "./local-codex-status";
+export {codexCapabilityReasonSchema,localCodexStatusSchema,localCodexStatusRequestSchema,localCodexStatusResponseSchema} from "./local-codex-status";
 
 export {momentsModelTaskInput,momentsModelOutput,momentsFrozenProof,momentsRetryReservation,momentsFrozenLineage} from "./moments-model";
 

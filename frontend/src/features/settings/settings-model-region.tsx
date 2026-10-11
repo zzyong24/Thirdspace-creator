@@ -17,7 +17,10 @@ import { AiCreditCenterCard, ChannelManagedModelCard, ChannelServiceCredentialCa
 import { CollapsibleModelGroup } from "./collapsible-model-group";
 import { MultimodalModelCard } from "./multimodal-model-configuration";
 import { ModelConfigurationCard } from "./text-model-configuration";
+import { useAssistantEngine } from "@/features/copilot/use-assistant-engine";
 export function SettingsModelRegion({ viewModel, modelAuthority, highlight }: { viewModel: SettingsViewModel; modelAuthority?: ModelAuthorityState; highlight: string | null }) {
+  const {engine, preference}=useAssistantEngine();
+  const usesCodex=preference.ready&&engine==="codex";
 
   const usesManagedCredits = modelAuthority?.services?.some(
     (service) =>
@@ -60,7 +63,10 @@ export function SettingsModelRegion({ viewModel, modelAuthority, highlight }: { 
       className="flex flex-col gap-card-gap"
     >
       <AssistantEngineCard />
-      {modelAuthority?.authority === "channel" ||
+      {usesCodex ? <div data-slot="codex-model-capabilities" className="rounded-xl border border-brand/25 bg-brand/5 px-4 py-3">
+        <p className="text-sm font-semibold text-foreground">文本创作、图片理解和生图由本地 Codex 执行</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">使用 Codex 登录，无需填写文本或生图模型密钥。语音转文字和视频生成仍使用各自的配置。</p>
+      </div> : modelAuthority?.authority === "channel" ||
         !viewModel.model.hasSecret ? (
         <div
           data-slot="model-authority-status"
@@ -114,17 +120,17 @@ export function SettingsModelRegion({ viewModel, modelAuthority, highlight }: { 
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-0.5">
             <span className="text-sm font-semibold text-foreground">
-              {usesManagedCredits ? "当前模型能力" : "重点配置"}
+              {usesCodex ? "语音转文字（按需）" : usesManagedCredits ? "当前模型能力" : "重点配置"}
             </span>
             <span className="text-xs text-muted-foreground">
-              {usesManagedCredits
+              {usesCodex ? "可配置 ASR 加快转录；未配置时仍可使用本地 Whisper。" : usesManagedCredits
                 ? "文本创作与语音转文字由当前权益提供，无需配置服务商或密钥。语音能力暂未同步时仍可使用本地转写。"
                 : "文本模型负责创作。建议配置 ASR 转录模型，避免本地转录时间过长；未配置时仍可使用本地 Whisper。"}
             </span>
           </div>
-          {usesManagedCredits ? null : <ModelConfigurationManual />}
+          {usesCodex || usesManagedCredits ? null : <ModelConfigurationManual />}
         </div>
-        {capabilityCard(
+        {!usesCodex && capabilityCard(
           "default",
           "文本创作模型",
           "text-model",
@@ -155,11 +161,11 @@ export function SettingsModelRegion({ viewModel, modelAuthority, highlight }: { 
       {/* [T-645] 普通用户只需理解创作媒体模型。搜索、embedding、素材归类、
                     文案审核和备用模型仍保留底层 capability 与历史配置兼容，但不再暴露配置卡。 */}
       <CollapsibleModelGroup
-        title="创作媒体(按需)"
+        title={usesCodex ? "视频生成（按需）" : "创作媒体(按需)"}
         highlight={highlight}
         highlightKeys={["image-model", "video-model"]}
       >
-        {capabilityCard(
+        {!usesCodex && capabilityCard(
           "image.generate",
           "文生图模型",
           "image-model",

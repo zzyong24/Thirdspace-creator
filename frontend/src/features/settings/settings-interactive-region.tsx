@@ -291,12 +291,12 @@ export function SettingsDialog({
         </div>
 
         {/* 主体:左竖 Tab 栏 + 右内容区 (各自框内滚动). */}
-        <div className="flex min-h-0 flex-1">
+        <div className="flex min-h-0 flex-1 flex-col sm:flex-row">
           {/* 左侧竖向 Tab 栏. */}
           <nav
             data-slot="settings-tabs"
             aria-label="设置分类导航"
-            className="flex w-44 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border/70 bg-surface-subtle/40 p-2"
+            className="flex w-full shrink-0 flex-row gap-0.5 overflow-x-auto border-b border-border/70 bg-surface-subtle/40 p-2 sm:w-44 sm:flex-col sm:overflow-y-auto sm:border-b-0 sm:border-r"
           >
             {SETTINGS_DIALOG_TABS.map((t) => {
               const TabIcon = t.icon;
@@ -311,7 +311,7 @@ export function SettingsDialog({
                   data-active={active}
                   onClick={() => setTab(t.id)}
                   className={cn(
-                    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+                    "flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
                     active
                       ? "bg-brand-soft text-brand"
                       : "text-muted-foreground hover:bg-surface-subtle hover:text-foreground",
@@ -327,7 +327,7 @@ export function SettingsDialog({
           {/* 右侧内容区:每个 Tab panel 各自框内滚动 (不是一屏铺满). */}
           <div
             data-slot="settings-panels"
-            className="min-w-0 flex-1 overflow-y-auto px-6 py-5"
+            className="min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5"
           >
             <SettingsPanel tabId="account" active={tab}>
               <div data-slot="main-settings" className="flex flex-col gap-card-gap">

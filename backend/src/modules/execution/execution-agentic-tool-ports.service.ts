@@ -7,7 +7,7 @@ import { agenticToolOutcomeSchema, workerPortInputSchemas, workerToolResultRecei
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { ConflictError } from "./execution.errors";
-import {createAgenticToolBinding,type AgenticBackendTool} from "./agentic-tool-binding";
+import {latestAgenticRootCall,createAgenticToolBinding,type AgenticBackendTool} from "./agentic-tool-binding";
 export type {AgenticBackendTool} from "./agentic-tool-binding";
 const hash=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).digest("hex");
 type Call=typeof executionCalls.$inferSelect;
@@ -64,7 +64,7 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
     if(call.status==="settled")return {kind:"replay" as const,call};
     if(call.status!=="started" || call.startedAttempt!==ref.attempt)throw new ConflictError("工具未获当前执行许可或须对账");
     if(call.toolExecutionClaimId)return {kind:"waiting" as const,call};
-    if(calls.filter(row=>row.kind==="model" && !row.parentCallId).at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能执行");
+    if(latestAgenticRootCall(calls)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能执行");
     const handler=deps.tools[bound.executionToolName]?.execute,committer=(task.payload as Record<string,unknown>).artifactProtocolVersion===2
      ?deps.tools[bound.executionToolName]?.commitAndSettle:undefined;
     const unknownMarker=(task.payload as Record<string,unknown>).artifactProtocolVersion===2?deps.tools[bound.executionToolName]?.markUnknown:undefined;
@@ -143,11 +143,11 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
    const state=await ledger.inspect(ref);
    const bound=await leases.withLease(ref,"admission",async({task})=>binding(task,state.calls,request));
    const previous=state.calls.find(call=>call.operationKey===bound.operationKey);
-   if(!previous && state.calls.filter(call=>call.kind==="model" && !call.parentCallId).at(-1)?.id!==bound.modelCallId)throw new ConflictError("模型回合已被后续决策替代");
+   if(!previous && latestAgenticRootCall(state.calls)?.id!==bound.modelCallId)throw new ConflictError("模型回合已被后续决策替代");
    const call=await ledger.reserve(ref,{operationKey:bound.operationKey,inputDigest:bound.inputDigest,kind:"tool",reservedTokens:0},(calls,task)=>{
     const current=binding(task,calls,request);
     if(current.inputDigest!==bound.inputDigest)throw new ConflictError("工具定义在预留期间改变");
-    if(!calls.some(call=>call.operationKey===bound.operationKey) && calls.filter(call=>call.kind==="model" && !call.parentCallId).at(-1)?.id!==bound.modelCallId)throw new ConflictError("模型回合在预留期间改变");
+    if(!calls.some(call=>call.operationKey===bound.operationKey) && latestAgenticRootCall(calls)?.id!==bound.modelCallId)throw new ConflictError("模型回合在预留期间改变");
    });
    return agenticToolReservationSchema.parse({callId:call.id,status:call.status,toolName:bound.toolName,input:bound.input,...(bound.validationOutcome?{validationOutcome:bound.validationOutcome}:{}),...(call.status==="settled" && call.resultText?{receipt:JSON.parse(call.resultText)}:{})});
   },
@@ -155,7 +155,7 @@ export function createExecutionAgenticToolPorts(db:Db,deps:Parameters<typeof cre
    const {callId}=workerPortInputSchemas.startAgenticTool.parse(raw);
    const call=await ledger.start(ref,callId,(call,calls,task)=>{
     const bound=bindingForCall(task,calls,call);
-    if(calls.filter(candidate=>candidate.kind==="model" && !candidate.parentCallId).at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合的工具不能再启动");
+    if(latestAgenticRootCall(calls)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合的工具不能再启动");
    });return {callId:call.id,status:call.status};
   },
 

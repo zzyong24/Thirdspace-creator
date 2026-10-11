@@ -1,3 +1,6 @@
+import {createExecutionRoute} from '@creatoros/contract/execution-worker';
+import {createExecutionCodexCallService} from './execution-codex-call.service';
+import {createHash} from 'node:crypto';
 import {createExecutionWorkerOutcomeService} from "./execution-worker-outcome.service";
 import {createProjectsService,createProjectRepository} from "../projects";
 import {createAssetsService,createAssetRepository} from "../assets";
@@ -22,13 +25,13 @@ beforeAll(async()=>{connection=await createDb();db=connection.db;root=await mkdt
 afterAll(async()=>{await connection.client.close();await rm(root,{recursive:true,force:true});});
 const budget={maxCalls:3,maxTokens:10000,deadlineMs:60000};
 const bytes=new Uint8Array([1,2,3]);
-async function fixture(mediaKind:"image"|"video"="video"){
+async function fixture(mediaKind:"image"|"video"="video",codex=false){
  const id=`asset-result-${++sequence}`,ctx={userId:id,accountId:id,requestId:id,source:"user" as const};
  const now=()=>"2026-09-06T00:00:00.000Z";
  const input={kind:"asset.generate",mediaKind,capability:`${mediaKind}.generate`,operationKey:"asset/original",prompt:"画面",provider:"minimax",model:"MiniMax-H3",baseUrl:null};
  await db.insert(aiTasks).values({id,userId:id,accountId:id,taskType:"asset.generate",idempotencyKey:id,inputData:{kind:mediaKind,prompt:input.prompt},requestedAt:now()});
  const mapped=await createExecutionAuthorityService(db,{now}).bindAiTask(ctx,id);
- await db.update(executionTasks).set({payload:{aiTaskId:id,modelInput:input}}).where(eq(executionTasks.id,mapped.executionTaskId));
+ await db.update(executionTasks).set({payload:{aiTaskId:id,...(codex?{executionRoute:createExecutionRoute('codex')}:{}),modelInput:codex?{kind:'asset.generate',engine:'codex',protocolKind:'codex-app-server',runtimeVersion:'0.159.3',mediaKind:'image',capability:'image.generate',operationKey:input.operationKey,prompt:input.prompt,mode:'text_to_image'}:input}}).where(eq(executionTasks.id,mapped.executionTaskId));
  const tasks=createPersistentTaskService(db,{now}),claim=(await tasks.claimTask({taskId:mapped.executionTaskId,workerId:"worker"}))!;
  const ref={executionTaskId:mapped.executionTaskId,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken};
  const storage=createLocalFsObjectStorage({rootPath:join(root,id),publicBaseUrl:"/blob"},{nextKey:()=>"unused"});
@@ -321,4 +324,22 @@ it.each(["ready","missing-job","wrong-job","attempts","deadline","cancel","pause
  expect(await work).toEqual({status:variant==="ready"?"retry_wait":"unknown_result",retryAt:variant==="ready"?"2026-09-06T00:00:40.000Z":null});
  expect(await f.tasks.claimTask({taskId:f.ref.executionTaskId,workerId:"early"})).toBeNull();
  expect((await db.select().from(executionCalls).where(eq(executionCalls.id,f.call.id)))[0]).toMatchObject({status:"unknown",startedAttempt:f.ref.attempt,reservedTokens:128});
+});
+
+it.each(['image/png','image/jpeg','image/webp'] as const)('Codex原图片%s按真实字节格式保存；新租约只读原回合而不重发',async mime=>{
+ const f=await fixture('image',true);await f.service.start(f.ref,f.call.id);
+ const original=mime==='image/png'?new Uint8Array([137,80,78,71,13,10,26,10,0,0,0,0]):mime==='image/jpeg'?new Uint8Array([255,216,255,0,0,0,0,0,0,0,0,0]):new Uint8Array(Buffer.from('RIFF0000WEBP'));
+ const binder=createExecutionCodexCallService(db,{now:f.now});
+ await binder.invoke(f.ref,'bindCodexCall',{callId:f.call.id,threadId:'original-thread',turnId:'original-turn',nativeResult:{itemId:'original-image',checksum:'sha256:'+createHash('sha256').update(original).digest('hex'),model:'observed-model',usage:null}});
+ const next=await f.resume();await expect(f.service.start(next,f.call.id)).rejects.toThrow();
+ await expect(f.service.save(next,f.call.id,new Uint8Array([9]))).rejects.toThrow('原回合事实');
+ const receipt=await f.service.save(next,f.call.id,original);
+ expect((await db.select().from(assetFiles).where(eq(assetFiles.id,receipt.fileId)))[0]?.mimeType).toBe(mime);
+ expect(await f.service.recover(next,f.call.id)).toEqual({status:'committed',receipt});
+ const state=await f.ledger.inspect(next);expect(state.calls).toHaveLength(1);expect(state.calls[0]).toMatchObject({startedAttempt:1,status:'settled',totalTokens:null});
+});
+it('Codex无原native字节绑定不能保存伪图或借Pi供应商回执',async()=>{
+ const f=await fixture('image',true);await f.service.start(f.ref,f.call.id);
+ await expect(f.service.save(f.ref,f.call.id,bytes)).rejects.toThrow('原回合事实');
+ expect(await db.select().from(assets).where(eq(assets.userId,f.id))).toHaveLength(0);
 });

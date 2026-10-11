@@ -1,0 +1,27 @@
+{
+  "data": {
+    "id": "asset-generated-a90fa8d3a1163270446eb06261efb27d29fe920337a571c6107960dd87918b86",
+    "userId": "user-eb780691-1",
+    "currentFileId": "afile-generated-a90fa8d3a1163270446eb06261efb27d29fe920337a571c6107960dd87918b86",
+    "assetType": "image",
+    "name": "保留参考图片的白色背景和圆形布局，将蓝色圆形改为 · 生成图",
+    "description": "视觉方案:保留参考图片的白色背景和圆形布局，将蓝色圆形改为绿色。不要增加文字。",
+    "status": "active",
+    "isFavorite": false,
+    "mimeType": "image/png",
+    "fileSize": 1414662,
+    "width": 1254,
+    "height": 1254,
+    "durationMs": null,
+    "extractStatus": null,
+    "materialSummary": null,
+    "extractedText": null,
+    "sourceUrl": null,
+    "deletedAt": null,
+    "createdAt": "2026-10-11T11:20:48.386Z",
+    "updatedAt": "2026-10-11T11:33:15.147Z"
+  },
+  "meta": {
+    "requestId": "req-7721a047-93"
+  }
+}
