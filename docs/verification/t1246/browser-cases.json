@@ -1,0 +1,5093 @@
+{
+  "schemaVersion": 1,
+  "task": "T-1246",
+  "language": "zh-CN",
+  "kind": "AI编写的浏览器验收计划，非执行结果",
+  "preparedAt": "2026-10-11T14:17:04.267600+00:00",
+  "sourceCommitAtPlan": "4df3424972831acfdd091056b3045b2472120692",
+  "candidate": {
+    "state": "awaiting-root-freeze",
+    "directory": null,
+    "commit": null,
+    "packageSha256": null,
+    "executionDirectory": null,
+    "warning": "计划时共享目录含未提交整合；sourceCommitAtPlan不等于候选或已验版本"
+  },
+  "sources": [
+    "docs/features/t1246-integrated-dev-package-acceptance.md",
+    "docs/features/t1207-full-feature-acceptance.md",
+    "docs/features/t1238-codex-unified-text-image-engine.md",
+    "docs/verification/t1238/COVERAGE.md",
+    "docs/features/t1245-automations-narrow-layout.md",
+    "frontend/playwright.config.ts",
+    "frontend/tests/helpers/test-environment.ts",
+    "frontend/tests/helpers/network-policy.ts"
+  ],
+  "process": {
+    "orchestratorVersion": "3.29.0",
+    "installedMatchesProject": true,
+    "stage": "4-build：整合验收准备，父线程负责控制面/打包；本子任务仅编计划",
+    "playwrightSkillVersion": "2.4.0",
+    "missingSkillReferences": "安装仅含SKILL.md，core指南引用文件缺失；使用正文已读取规则，不伪称已读取缺失指南"
+  },
+  "scope": {
+    "originalSpecFiles": 54,
+    "pageDeclarations": 38,
+    "runtimeCaseCount": null,
+    "firstRound": "完整首轮先逐例执行/记录；不修产品、不修改原断言、不新增skip、retry0",
+    "desktopBoundary": "浏览器不代签开发包App启动/安装/导航，Appium由主线程另分派",
+    "externalBoundary": "不真实登录/扫码/发布第三方作品；仅本地模型调用及明确隔离外部fixture；官方Codex调用逐项单列"
+  },
+  "timing": {
+    "requestMinMs": 120000,
+    "expectMinMs": 120000,
+    "actionMinMs": 120000,
+    "navigationMinMs": 120000,
+    "captureMinMs": 120000,
+    "testMinMs": 180000,
+    "hookMinMs": 180000,
+    "retries": 0,
+    "outerFormula": "outer >= sum(各串行阶段与排队/Worker启动/原子节点剩余预算) + teardown余量；每例=max(原更长test预算,180000,按串行链计算预算)，suite总预算=全部case上界之和+启动+清理。不能用180000外层包多个120000正执行。",
+    "taskBudget": "读原持久task截止时间；不足立即停止且保原ID/状态，continuous按原null协议；不续期限、不自动重发",
+    "audit": "原spec显式20/30/60/90秒与expect12/15/60秒、request默认需逐处升至最短；CLI配置无法覆盖局部值；更长预算保留。"
+  },
+  "preconditions": [
+    {
+      "id": "P-FREEZE",
+      "state": "pending",
+      "detail": "主线程交付整合候选目录、干净commit、四版本、源码/Worker dist/构建清单SHA、开发包SHA与独立执行目录；当前canonical HEAD 4df…且dirty，不是候选。"
+    },
+    {
+      "id": "P-INVENTORY",
+      "state": "pending",
+      "detail": "冻结树运行Playwright --list导出真实参数化case总数/testIds；与54文件和当前38page声明比对，新增文件也纳入；不把静态138等标题声明当实际数量。"
+    },
+    {
+      "id": "P-TIMING",
+      "state": "pending",
+      "detail": "隔离执行目录预算适配仅允许提高时间，不改原assert/data/selection；静态审计+运行元数据证明request/expect/action120000，test/hook180000，保更长原预算，所有层retry0。CLI --timeout不足以覆盖test.setTimeout及显式expect短预算。需冻结测试/driver原SHA及预算差异。"
+    },
+    {
+      "id": "P-EVIDENCE",
+      "state": "pending",
+      "detail": "隔离证据driver对全部runtime case开启trace并成功/失败PNG；既有helper自动图写t1207、部分spec写t1232/t1075等目录，须保原证据并复制/关联t1246，不覆盖历史。trace不能只retain-on-failure，capture本身120000。"
+    },
+    {
+      "id": "P-STARTUP",
+      "state": "pending",
+      "detail": "pnpm dev触发predev重建Worker；启动前预构建并冻结dist或主线程交付明确已核启动方式，运行不得偷偷变更候选源码/产物。原产品门不可旁路。"
+    },
+    {
+      "id": "P-ISOLATION",
+      "state": "pending",
+      "detail": "全新creatoros-playwright-*根下真实PGlite/媒体/.auth，每例unique资源/幂等键；同批不可两server共用单写者库；禁止继承真实数据库/secret。"
+    },
+    {
+      "id": "P-NATIVE",
+      "state": "pending",
+      "detail": "交付官方Codex真实可用会话、套餐/图片能力及宿主出站审计；独立text/image配置为空。官方调用需Worker侧许可官方域，不解除浏览器loopback网络边界；所有其他第三方出站拒绝。缺登录/额度记阻塞非PASS。"
+    },
+    {
+      "id": "P-ASR",
+      "state": "pending",
+      "detail": "T1062两个音频旅程强制离线ASR准入，原代码还固定backendCommit b1cd…；冻结候选可能不符，先原样执行保原FAIL，不能fake/skip或安装下载洗绿。根审查旧准入与新候选归属后再集中修复。"
+    },
+    {
+      "id": "P-SCHEDULER",
+      "state": "pending",
+      "detail": "原全套配置disableScheduler，后台验收另隔离实例用真实公共立即运行及原Worker认领；若要定时扫描须冻结准入，不冒称全套已有后台执行。"
+    }
+  ],
+  "routeInventory": [
+    {
+      "pathPattern": "/projects/new",
+      "source": "frontend/src/app/(creator)/@modal/(.)projects/new/page.tsx",
+      "interceptedModal": true,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/accounts",
+      "source": "frontend/src/app/(creator)/accounts/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "automations-group-media-jobs.spec.ts",
+        "platform-work-catalog.spec.ts",
+        "t1159-wechat-native-report.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/accounts/works",
+      "source": "frontend/src/app/(creator)/accounts/works/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "automations-group-media-jobs.spec.ts",
+        "platform-work-catalog.spec.ts",
+        "t1159-wechat-native-report.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/assets",
+      "source": "frontend/src/app/(creator)/assets/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "assets.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/automations",
+      "source": "frontend/src/app/(creator)/automations/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "automations-run-now-public.spec.ts",
+        "automations-group-media-jobs.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/calendar",
+      "source": "frontend/src/app/(creator)/calendar/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "t1136-calendar-dialog-layout.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/canvases/[canvasId]",
+      "source": "frontend/src/app/(creator)/canvases/[canvasId]/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "creative-canvas.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/canvases",
+      "source": "frontend/src/app/(creator)/canvases/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "creative-canvas.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/daily-report",
+      "source": "frontend/src/app/(creator)/daily-report/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/experience",
+      "source": "frontend/src/app/(creator)/experience/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "experience.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/intelligence",
+      "source": "frontend/src/app/(creator)/intelligence/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "content-radar-one-click-project.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/knowledge",
+      "source": "frontend/src/app/(creator)/knowledge/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "knowledge-library.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/overview",
+      "source": "frontend/src/app/(creator)/overview/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/",
+      "source": "frontend/src/app/(creator)/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "smoke.spec.ts",
+        "app-shell.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/positioning",
+      "source": "frontend/src/app/(creator)/positioning/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "recent-data-safety.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/[projectId]/article",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/article/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/[projectId]/image",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/image/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/[projectId]/moments/[momentsId]",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/moments/[momentsId]/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/[projectId]/outputs/[outputId]/image",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/outputs/[outputId]/image/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/[projectId]/outputs/[outputId]/video",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/outputs/[outputId]/video/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/[projectId]",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/[projectId]/planning",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/planning/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/[projectId]/production",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/production/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/[projectId]/publishing",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/publishing/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/[projectId]/research",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/research/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/[projectId]/review",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/review/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/[projectId]/script",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/script/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/[projectId]/work",
+      "source": "frontend/src/app/(creator)/projects/[projectId]/work/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/create",
+      "source": "frontend/src/app/(creator)/projects/create/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects/new",
+      "source": "frontend/src/app/(creator)/projects/new/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/projects",
+      "source": "frontend/src/app/(creator)/projects/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "projects.spec.ts",
+        "new-project.spec.ts",
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/publishing",
+      "source": "frontend/src/app/(creator)/publishing/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "publishing-center.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/search",
+      "source": "frontend/src/app/(creator)/search/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "search.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/settings",
+      "source": "frontend/src/app/(creator)/settings/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "settings.spec.ts",
+        "settings-responsive-layout.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/topics",
+      "source": "frontend/src/app/(creator)/topics/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "audience-task-topics.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/activate",
+      "source": "frontend/src/app/activate/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/login",
+      "source": "frontend/src/app/login/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    },
+    {
+      "pathPattern": "/register",
+      "source": "frontend/src/app/register/page.tsx",
+      "interceptedModal": false,
+      "existingSpecs": [
+        "t1207-supplemental-route-matrix.spec.ts"
+      ],
+      "additionalCase": "INT-ROUTES",
+      "coverage": "真实公共创建所得ID；动态详情每个分支实际访问；历史redirect保留原断言并另记当前行为",
+      "status": "planned"
+    }
+  ],
+  "originalSuites": [
+    {
+      "id": "ORIG-001",
+      "path": "frontend/tests/e2e/ai-copilot.spec.ts",
+      "sha256AtPlan": "d48625c8fde48cc8b17a0919eba7a2be98b776e2e1f2cb14c9bb9f87aa7838cf",
+      "function": "全局编导弹层、关闭、Esc/返回与发送合同",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"opens the centered dialog from any page via ?copilot=open\"",
+          "sourceLine": 19,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"close button removes only ?copilot=open and preserves the pathname\"",
+          "sourceLine": 45,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"Escape closes the dialog\"",
+          "sourceLine": 54,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"browser Back closes the dialog\"",
+          "sourceLine": 61,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"submit button does not post a real network request\"",
+          "sourceLine": 68,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-002",
+      "path": "frontend/tests/e2e/ai-nonblocking-recovery.spec.ts",
+      "sha256AtPlan": "a2719518f5b0aaf7de7ad0ba6eb9cdc9d640b6699d8d128e2dd86a23659da703",
+      "function": "无模型引导、同轮断线恢复与停止重连",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"E2E-T1022-01 没有模型时保留输入并直达模型设置\"",
+          "sourceLine": 113,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"E2E-T1022-02 / E2E-T1023-01 临时失败沿同一轮自动恢复并交付完整结果\"",
+          "sourceLine": 137,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"E2E-T1023-02 / E2E-T1023-03 持续提交失败会停止自动请求，继续恢复仍沿原轮完成\"",
+          "sourceLine": 192,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"E2E-T1023-04 已收到持久任务回执时停止重连也明确保留后台任务\"",
+          "sourceLine": 253,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 193,
+          "expression": "test.setTimeout(30_000)"
+        },
+        {
+          "sourceLine": 254,
+          "expression": "test.setTimeout(20_000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 114,
+          "expression": "page.route(\"**/api/chat\", (route) =>"
+        },
+        {
+          "sourceLine": 115,
+          "expression": "route.fulfill({"
+        },
+        {
+          "sourceLine": 140,
+          "expression": "page.route(\"**/api/chat\", async (route) => {"
+        },
+        {
+          "sourceLine": 148,
+          "expression": "route.fulfill({"
+        },
+        {
+          "sourceLine": 156,
+          "expression": "route.fulfill({"
+        },
+        {
+          "sourceLine": 196,
+          "expression": "page.route(\"**/api/chat\", async (route) => {"
+        },
+        {
+          "sourceLine": 206,
+          "expression": "route.fulfill({"
+        },
+        {
+          "sourceLine": 213,
+          "expression": "route.fulfill({"
+        },
+        {
+          "sourceLine": 256,
+          "expression": "page.route(\"**/api/chat\", async (route) => {"
+        },
+        {
+          "sourceLine": 258,
+          "expression": "route.fulfill({"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "ai.conversations.list"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-003",
+      "path": "frontend/tests/e2e/ai-recovery-guidance.spec.ts",
+      "sha256AtPlan": "500b8cd4407df0553c843a7a99dd14e6987fbb63372715271d119363f64fe0e0",
+      "function": "未配置/定位缺失/额度与未知失败引导",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"E2E-T913-01 模型未配置时直接打开模型配置\"",
+          "sourceLine": 115,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"E2E-T913-02 定位缺失时直达定位中心\"",
+          "sourceLine": 149,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"E2E-T913-03 自带 AI 额度不足时只显示真实额度入口\"",
+          "sourceLine": 194,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"E2E-T913-04 / E2E-T913-05 未知故障自动恢复且不泄露内部状态\"",
+          "sourceLine": 217,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [
+        {
+          "sourceLine": 116,
+          "expression": "page.route(\"**/api/chat\", (route) =>"
+        },
+        {
+          "sourceLine": 117,
+          "expression": "route.fulfill({"
+        },
+        {
+          "sourceLine": 150,
+          "expression": "page.route(\"**/api/chat\", (route) =>"
+        },
+        {
+          "sourceLine": 151,
+          "expression": "route.fulfill({"
+        },
+        {
+          "sourceLine": 195,
+          "expression": "page.route(\"**/api/chat\", (route) =>"
+        },
+        {
+          "sourceLine": 196,
+          "expression": "route.fulfill({"
+        },
+        {
+          "sourceLine": 222,
+          "expression": "page.route(\"**/api/chat\", (route) => {"
+        },
+        {
+          "sourceLine": 224,
+          "expression": "route.fulfill({"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "ai.conversations.list"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-004",
+      "path": "frontend/tests/e2e/ai-reliability-recovery.spec.ts",
+      "sha256AtPlan": "d45f2d894a833baa06fc300f579597dcb8f6f6005c57e283f8e20be7bc93a5b1",
+      "function": "视频决策终态与显式重跑来源",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"视频决策失败可见、终态停轮询，重新运行显式携带来源任务\"",
+          "sourceLine": 57,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 61,
+          "expression": "test.setTimeout(90_000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 153,
+          "expression": "page.route(\"**/api/v1/dispatch\", async (route) => {"
+        },
+        {
+          "sourceLine": 160,
+          "expression": "route.fulfill({"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "ai.tasks.create",
+        "ai.tasks.get",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-005",
+      "path": "frontend/tests/e2e/all-routes.spec.ts",
+      "sha256AtPlan": "f6056f25cd6d1eb29846260b0544c10dcfea83bb8011a59f3729de99d69d4b4a",
+      "function": "原ROUTES全部页的单壳与激活状态",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "`route ${route.id} (${route.pathname}) renders with single shell and correct active state`",
+          "sourceLine": 18,
+          "runtimeExpansionPending": true
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-006",
+      "path": "frontend/tests/e2e/app-shell.spec.ts",
+      "sha256AtPlan": "b4f525af6bf0e90914ba32284356d989f604fe0897d0633e2541339694286d0b",
+      "function": "侧栏、头部、焦点、滚动与间距",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"renders one Sidebar and one TopHeader on the root route\"",
+          "sourceLine": 17,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"lists the seven approved primary nav items\"",
+          "sourceLine": 31,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"derives the active nav item from the pathname\"",
+          "sourceLine": 47,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"focus order: sidebar -> top header -> page content\"",
+          "sourceLine": 58,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"the page scroll area is the only scrollable region in the main frame\"",
+          "sourceLine": 109,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"dashboard wheel scroll stays inside the Radix viewport\"",
+          "sourceLine": 119,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"applies shared page spacing tokens in the browser\"",
+          "sourceLine": 187,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-007",
+      "path": "frontend/tests/e2e/asr-configuration.spec.ts",
+      "sha256AtPlan": "06ebc8a2282965c0bcf67274900d72d23a36f54ae0dbb07575177a18c890162b",
+      "function": "ASR预设和高级字段",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"普通路径只需预设、模型与 Key，高级字段可按需展开\"",
+          "sourceLine": 16,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-008",
+      "path": "frontend/tests/e2e/assets.spec.ts",
+      "sha256AtPlan": "1e6cc00ff998df2fa6a92e53c71164f98a94e802c85b53549c9b1a3d15b67a53",
+      "function": "素材库详情与真实空组上传入口",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"renders the assets gallery with toolbar, type sidebar, and detail panel\"",
+          "sourceLine": 264,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"clicking a different card updates the AssetDetailPanel\"",
+          "sourceLine": 374,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"真实空账号组显示零素材并能打开系统文件选择器\"",
+          "sourceLine": 486,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 271,
+          "expression": "test.setTimeout(6_600_000)"
+        },
+        {
+          "sourceLine": 272,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 273,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        },
+        {
+          "sourceLine": 381,
+          "expression": "test.setTimeout(8_400_000)"
+        },
+        {
+          "sourceLine": 382,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 383,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        },
+        {
+          "sourceLine": 492,
+          "expression": "test.setTimeout(2_400_000)"
+        },
+        {
+          "sourceLine": 493,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 494,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "assets.get",
+        "assets.list",
+        "assets.uploads.complete",
+        "assets.uploads.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-009",
+      "path": "frontend/tests/e2e/audience-task-topics.spec.ts",
+      "sha256AtPlan": "e40b020ab87c15a1e77488712ade293c80ad79a5e0e92e0b7ceeadd72e336571",
+      "function": "普通选题保留、退役入口与历史配置",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "`九宫格退役、普通选题入口保留及历史配置无损 ${viewport.width}`",
+          "sourceLine": 5,
+          "runtimeExpansionPending": true
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 6,
+          "expression": "test.setTimeout(240000)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "topics.workspace.get",
+        "topics.workspace.save"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-010",
+      "path": "frontend/tests/e2e/automations-group-media-jobs.spec.ts",
+      "sha256AtPlan": "17c8beeeee88f9583d3c1f59aa2ec389ca5fabd87a07479bb3cad0a8837df0c7",
+      "function": "自动化组/平台/账号筛选与历史作业",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"组总览读到真实多平台作业，平台与账号筛选只收窄私有作业并保留共享项\"",
+          "sourceLine": 85,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"切换账号组只改变工作区列表，回到原组后原 job ID 与排期仍相同\"",
+          "sourceLine": 128,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"归档账号的历史作业仍可读，按账号筛选会标明归档状态\"",
+          "sourceLine": 166,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"没有作业的账号组显示真实无计划空态和账号入口\"",
+          "sourceLine": 184,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "accounts.archive",
+        "accounts.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-011",
+      "path": "frontend/tests/e2e/automations-run-now-public.spec.ts",
+      "sha256AtPlan": "748976450dc39d1f59991c79a624775cd993ffc6cd5e57b36c27cb635cf0e1a7",
+      "function": "立即运行、同job/run任务、T1245窄窗筛选与详情关闭",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"组内真实作业通过立即运行准入并保原任务显示待扫码\"",
+          "sourceLine": 229,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 230,
+          "expression": "test.setTimeout(86_400_000)"
+        },
+        {
+          "sourceLine": 231,
+          "expression": "page.setDefaultTimeout(REQUEST_MS)"
+        },
+        {
+          "sourceLine": 232,
+          "expression": "page.setDefaultNavigationTimeout(REQUEST_MS)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-012",
+      "path": "frontend/tests/e2e/built-in-ip-course.spec.ts",
+      "sha256AtPlan": "9b3fbd72b747b53d67add6b5c79e1eceafd004cc03e7e17bd6c4ed57c0836224",
+      "function": "内置课程目录和真实学习进度",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"内置 IP 课程从目录到学习进度形成连续真实旅程\"",
+          "sourceLine": 48,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-013",
+      "path": "frontend/tests/e2e/channel-public-links.spec.ts",
+      "sha256AtPlan": "7cd345588ffed00c11d527e852203d297bbb2341a8f64db4ed21fa3a7581ee2b",
+      "function": "包级公开链接与反馈入口",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"设置页不展示常驻官网入口，人工反馈仍只使用包级链接\"",
+          "sourceLine": 28,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [
+        {
+          "sourceLine": 63,
+          "expression": "page.route(\"**/api/v1/local/open-url\", async (route) => {"
+        },
+        {
+          "sourceLine": 64,
+          "expression": "route.fulfill({"
+        }
+      ],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-014",
+      "path": "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+      "sha256AtPlan": "36544f17be3766f5c62752dfd71a0c7aa7c9b87e80f64a778ecfede8f2fe1f31",
+      "function": "雷达改写初稿一键转真实项目",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"内容雷达只有改写初稿和局部选题字段时仍可一键升级项目\"",
+          "sourceLine": 488,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 492,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 493,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 233,
+          "expression": "createServer((request, response) => {"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "accountGroups.list",
+        "accounts.create",
+        "intelligence.items.get",
+        "intelligence.items.list",
+        "intelligence.runs.get",
+        "intelligence.sources.create",
+        "intelligence.transcripts.uploadManual",
+        "intelligence.transforms.previewTopic",
+        "projects.get",
+        "settings.models.put"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-015",
+      "path": "frontend/tests/e2e/copilot-project-reference.spec.ts",
+      "sha256AtPlan": "d975762567f50956853d872d5bb09bf9399d9a531788f73bfe3690fc38f659f7",
+      "function": "项目引用长标题与窄窗",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"长标题只显示一次，正文不重复，窄屏不溢出\"",
+          "sourceLine": 54,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-016",
+      "path": "frontend/tests/e2e/creative-canvas.spec.ts",
+      "sha256AtPlan": "0b99bc21babdb3859ccf5f39d2ebb12ce63088e8297e8c6f94ba496fc9390edd",
+      "function": "画布保存、重开、版本、来源与跨组",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"T-993 画布可保存、重开，切换账号后列表和直链隔离\"",
+          "sourceLine": 40,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T-993 首次自动选账号后画布可创建，新增节点不会重叠\"",
+          "sourceLine": 91,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T-993 视口缩放只保存在本地，不改画布内容版本\"",
+          "sourceLine": 153,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T-993 双指滚动平移、组合键缩放，节点文字仍可独立滚动\"",
+          "sourceLine": 176,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T-993 旧版无尺寸画布可读，保存后补默认尺寸且连线不丢\"",
+          "sourceLine": 194,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T-993 当前账号图片与视频能插入画布并实际预览\"",
+          "sourceLine": 220,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T-994 作品素材入口、项目画布过滤与安全返回\"",
+          "sourceLine": 246,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T-994 画布版本冲突时不离开并给出恢复动作\"",
+          "sourceLine": 310,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T-994 生成结果就地保留并加入当前作品（模拟任务回执）\"",
+          "sourceLine": 328,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T-1021 首页案例独立浏览、取消无写入，多页模板创建原画布并可重新读取\"",
+          "sourceLine": 373,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T-1021 资产独立上传，选用追加原画布并冻结真实文件\"",
+          "sourceLine": 395,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "'T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟模型回执）'",
+          "sourceLine": 416,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "'T-1101 三平台表格直接打开扫码弹窗，无重复刷新和下方扫码区'",
+          "sourceLine": 508,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 41,
+          "expression": "test.setTimeout(600_000)"
+        },
+        {
+          "sourceLine": 417,
+          "expression": "test.setTimeout(7_200_000)"
+        },
+        {
+          "sourceLine": 417,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 417,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        },
+        {
+          "sourceLine": 509,
+          "expression": "test.setTimeout(7_200_000)"
+        },
+        {
+          "sourceLine": 509,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 509,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 341,
+          "expression": "page.route(\"**/api/v1/dispatch\",async route=>{"
+        },
+        {
+          "sourceLine": 344,
+          "expression": "route.fulfill({json:{data:[{id:\"mock-link-1\",canvasId:canvas.id,nodeId,attemptId:\"mock-attempt-123456\",taskId,mediaKind:\"image\",inputRevision:2,inputDigest:\"a\".repeat(64),referenceFileId:null,referenceChecksum:null,resultAssetId:assetId,createdAt:stamp,updatedAt:stamp}],meta:{requestId:\"mock-list\",page:1,pageSize:100,total:1}}});return;"
+        },
+        {
+          "sourceLine": 347,
+          "expression": "route.fulfill({json:{data:{status:\"available\",phase:taskStatus===\"succeeded\"?\"confirmed\":\"candidate\",origin:{canvasId:canvas.id,generationLinkId:\"mock-link-1\",nodeId,attemptId:\"mock-attempt-123456\",inputRevision:2,inputDigest:\"a\".repeat(64),taskId,resultId:\"mock-result-1\",executionTaskId,callId},file:{assetId,assetFileId:fileId},checksum,assetType:\"image\",name:\"结果操作预览.png\",assetStatus:taskStatus===\"succeeded\"?\"active\":\"pending\",taskStatus},meta:{requestId:\"mock-material\"}}});return;"
+        },
+        {
+          "sourceLine": 351,
+          "expression": "route.fulfill({json:{data:{id:taskId,userId:canvas.userId,projectId:null,contentOutputId:null,taskType:\"asset.generate\",status:taskStatus,executionTaskId,inputData:{prompt:\"秋季新品广告\",mode:\"text_to_image\"},modelKey:\"mock/image\",idempotencyKey:\"mock-idempotency\",attemptId:\"mock-attempt-123456\",requestFingerprint:`sha256:${\"a\".repeat(64)}`,retryOfTaskId:null,requestedAt:stamp,startedAt:stamp,completedAt:stamp,errorMessage:null},meta:{requestId:\"mock-task\"}}});return;"
+        },
+        {
+          "sourceLine": 353,
+          "expression": "route.fulfill({status:503,json:{error:{code:\"ExternalDependencyError\",message:\"模拟关联失败\"},meta:{requestId:\"mock-link-failure\"}}});return;}"
+        },
+        {
+          "sourceLine": 425,
+          "expression": "page.route('**/api/v1/dispatch',async route=>{"
+        },
+        {
+          "sourceLine": 434,
+          "expression": "route.fulfill({json:{data,meta:{requestId:'fixture-t1101',page:1,pageSize:100,total:Array.isArray(data)?data.length:1}}});return;}await route.continue();"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "accountGroups.members.previewTransfer",
+        "accountGroups.members.transfer",
+        "accounts.create",
+        "ai.tasks.confirm",
+        "ai.tasks.get",
+        "assets.fileDownloadUrl",
+        "assets.get",
+        "assets.uploads.complete",
+        "assets.uploads.create",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-017",
+      "path": "frontend/tests/e2e/draft-ammo-media-preview.spec.ts",
+      "sha256AtPlan": "2e789a839eaf4611d9863dfd6aee1ff64579c8310c76862c1f30564c125eb643",
+      "function": "稿面视频预览及键盘操作",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"稿面视频素材双击与键盘均可真实预览，刷新和小窗口仍保持\"",
+          "sourceLine": 49,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 53,
+          "expression": "test.setTimeout(14_400_000)"
+        },
+        {
+          "sourceLine": 54,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 55,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "assets.downloadUrl",
+        "assets.uploads.complete",
+        "assets.uploads.create",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-018",
+      "path": "frontend/tests/e2e/experience.spec.ts",
+      "sha256AtPlan": "ae77c80bbdadd145848df806a69cad9af65d01062ac51b72f5d39314faa3fc4e",
+      "function": "原经验工作台入口合同",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"renders the adjudication workbench on the /experience route\"",
+          "sourceLine": 19,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-019",
+      "path": "frontend/tests/e2e/group-skill-customization.spec.ts",
+      "sha256AtPlan": "ad9f7f6cd052467698bacda10daa3c421cc0d215a327bda498cca3bc3f1d6b80",
+      "function": "组级Skill首写、CAS、版本、失败及隔离",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"空账号组通过设置页定制官方 Skill 的首写入口可用\"",
+          "sourceLine": 124,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"账号组 Skill 首写、刷新、二次 CAS、历史与跨组版本归属\"",
+          "sourceLine": 587,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"同组双页面保存只接受一个 CAS revision 并保留冲突草稿\"",
+          "sourceLine": 948,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"切组 RSC 与原组保存回执迟到时阻止旧写并通过 ABA 保持归属\"",
+          "sourceLine": 1177,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"组内 Skill 历史回滚与恢复默认通过真实按钮新增版本并刷新保留\"",
+          "sourceLine": 1598,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 128,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 129,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        },
+        {
+          "sourceLine": 592,
+          "expression": "test.setTimeout(86_400_000)"
+        },
+        {
+          "sourceLine": 593,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 594,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        },
+        {
+          "sourceLine": 953,
+          "expression": "test.setTimeout(86_400_000)"
+        },
+        {
+          "sourceLine": 954,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 955,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        },
+        {
+          "sourceLine": 1182,
+          "expression": "test.setTimeout(86_400_000)"
+        },
+        {
+          "sourceLine": 1183,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 1184,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        },
+        {
+          "sourceLine": 1603,
+          "expression": "test.setTimeout(86_400_000)"
+        },
+        {
+          "sourceLine": 1604,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 1605,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 1283,
+          "expression": "route.fulfill({ response });"
+        },
+        {
+          "sourceLine": 1336,
+          "expression": "route.fulfill({ response });"
+        },
+        {
+          "sourceLine": 1360,
+          "expression": "page.route(\"**/*\", trackedGroupRscRoute);"
+        },
+        {
+          "sourceLine": 1361,
+          "expression": "page.route(\"**/api/v1/dispatch\", trackedDispatchRoute);"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accountGroups.archive",
+        "accountGroups.create",
+        "accountGroups.get",
+        "settings.prompts.get",
+        "settings.prompts.list",
+        "settings.prompts.put",
+        "settings.prompts.rollback",
+        "settings.prompts.versions.list"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-020",
+      "path": "frontend/tests/e2e/knowledge-library.spec.ts",
+      "sha256AtPlan": "8eed8c2b0d52323d921b2f80da1d3cfa7c948e1c28d45f7ea94158f3b5ddb840",
+      "function": "知识真实读写、整理、项目引用、归属和恢复",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "`library-journey ${viewport.width} 真实读写、整理与项目引用`",
+          "sourceLine": 53,
+          "runtimeExpansionPending": true
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 57,
+          "expression": "test.setTimeout(600000)"
+        },
+        {
+          "sourceLine": 58,
+          "expression": "page.setDefaultTimeout(120000)"
+        },
+        {
+          "sourceLine": 59,
+          "expression": "page.setDefaultNavigationTimeout(180000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 138,
+          "expression": "route.fulfill({ response });"
+        },
+        {
+          "sourceLine": 142,
+          "expression": "page.route(\"**/api/v1/dispatch\", saveRecovery);"
+        },
+        {
+          "sourceLine": 298,
+          "expression": "page.route(\"**/api/v1/dispatch\", async (route) => {"
+        },
+        {
+          "sourceLine": 306,
+          "expression": "route.fulfill({ response });"
+        },
+        {
+          "sourceLine": 323,
+          "expression": "page.route(\"**/api/v1/dispatch\", async (route) => {"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "knowledge.create",
+        "knowledge.folders.list",
+        "knowledge.get",
+        "knowledge.list",
+        "knowledge.revisions.list",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-021",
+      "path": "frontend/tests/e2e/media-root-isolation.spec.ts",
+      "sha256AtPlan": "cb063f9b66416e3d927c9df9ec73b89c60a279ff2b5eac8f57224c908d7bf717",
+      "function": "媒体私有根、上传下载与错组拒绝",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根\"",
+          "sourceLine": 79,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 80,
+          "expression": "test.setTimeout(4_200_000)"
+        },
+        {
+          "sourceLine": 81,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 82,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "assets.downloadUrl",
+        "assets.get",
+        "assets.list",
+        "assets.uploads.complete",
+        "assets.uploads.create",
+        "settings.storage.get"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-022",
+      "path": "frontend/tests/e2e/new-project.spec.ts",
+      "sha256AtPlan": "3a71276a6e3a07a6bf6d476c10d1ddf6a89e776850c25d7854077bd1fbe86d31",
+      "function": "新建项目弹层、格式选择与真实创建",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"opens from the dashboard, follows the current form contract, and creates selected formats\"",
+          "sourceLine": 102,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"creates and enters the new project workspace when requested\"",
+          "sourceLine": 145,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "projects.get",
+        "projects.outputs.list"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-023",
+      "path": "frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts",
+      "sha256AtPlan": "96bf68efbb7c2d805f98c08f1562df746a4a228d22f7d33bea19bfb479bb4421",
+      "function": "新号/已有作品与低高度身份入口",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"重新打开后真实回到首页，并保留新号/已有作品两条连续路径\"",
+          "sourceLine": 52,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"低高度窗口始终保留账号和用户身份\"",
+          "sourceLine": 132,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-024",
+      "path": "frontend/tests/e2e/overlay-routing.spec.ts",
+      "sha256AtPlan": "1317d8b2983491b1f3f99aae3af43ff00d8fb8dee8e11839d3331511ffcf4297",
+      "function": "直达与拦截弹层、URL及返回",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"direct visit to /projects/new renders the new-project overlay shell\"",
+          "sourceLine": 18,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"?copilot=open on / opens the copilot overlay and preserves pathname\"",
+          "sourceLine": 39,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"pressing Back closes the copilot overlay before leaving the page\"",
+          "sourceLine": 65,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"Tab focus stays inside an open overlay\"",
+          "sourceLine": 83,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-025",
+      "path": "frontend/tests/e2e/platform-work-catalog.spec.ts",
+      "sha256AtPlan": "4affe819097d810612e0c38bb68b737648f85c085d2367d83d69126092a9fac1",
+      "function": "平台目录、真实空态、目标与归属",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"平台作品页按当前账号显示真实空目录和待核验能力\"",
+          "sourceLine": 13,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"本地账号完成多平台目标项目与发布草稿，账号归属隔离\"",
+          "sourceLine": 42,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"账号页绑定成功后可直接切换到对应的小红书与快手作品页\"",
+          "sourceLine": 102,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [
+        {
+          "sourceLine": 114,
+          "expression": "page.route(\"**/api/v1/dispatch\", async (route) => {"
+        },
+        {
+          "sourceLine": 120,
+          "expression": "route.fulfill({ status: 200, contentType: \"application/json\", body: JSON.stringify({"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "projects.create",
+        "projects.get",
+        "projects.outputs.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-026",
+      "path": "frontend/tests/e2e/production-broll-remove.spec.ts",
+      "sha256AtPlan": "cbc30cfd36b44e68d41986e0ffda4a34c808398788092c11eafe40aacfdeb1cb",
+      "function": "B-roll移除版本与刷新",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧素材\"",
+          "sourceLine": 95,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 99,
+          "expression": "test.setTimeout(90_000)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "assets.uploads.complete",
+        "assets.uploads.create",
+        "projects.create",
+        "projects.outputs.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-027",
+      "path": "frontend/tests/e2e/production-empty-workbench.spec.ts",
+      "sha256AtPlan": "5a5194fd6e32acaa765d8d086b539b4d1cb699849c7f0f21c902a2bc95d45dd4",
+      "function": "空视频工程导入人物视频",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"新项目无视频作品时可进入剪辑备料并导入人物视频\"",
+          "sourceLine": 43,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 47,
+          "expression": "test.setTimeout(120_000)"
+        },
+        {
+          "sourceLine": 48,
+          "expression": "page.setDefaultTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-028",
+      "path": "frontend/tests/e2e/projects.spec.ts",
+      "sha256AtPlan": "11fd30f1ef86d1b61025c904947202c7e364554a88a520ce1722fba7e9893f88",
+      "function": "项目排期新增、修改与取消",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"可在项目行新增、修改并取消发布排期\"",
+          "sourceLine": 45,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-029",
+      "path": "frontend/tests/e2e/publish-package-readback.spec.ts",
+      "sha256AtPlan": "34a5f45bc28998f964f0c856045d0005bb78a8aa04cac46ee682ee49f4e287ca",
+      "function": "发布物料完整读回与窄窗",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"查看发布物料优先回读完整简介与标签，刷新和小窗口仍保持\"",
+          "sourceLine": 48,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 52,
+          "expression": "test.setTimeout(90_000)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "projects.create",
+        "projects.outputs.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-030",
+      "path": "frontend/tests/e2e/publishing-center.spec.ts",
+      "sha256AtPlan": "94e6a7bc49a7a6671ab24539b4d2b8be2576436b80c506e3f9a110ada299782f",
+      "function": "发布日历与真实排期",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"真实项目排期出现在 70/30 日历视图，旧重复列表已移除\"",
+          "sourceLine": 45,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accounts.calendar.entries.create",
+        "accounts.create",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-031",
+      "path": "frontend/tests/e2e/publishing-workspace.spec.ts",
+      "sha256AtPlan": "17c01a1df224d51c0a9f98e6540980b50e156a54a46916ff5da70fa49d1014c1",
+      "function": "旧发布链接进入稿面",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"旧发布阶段链接进入当前项目稿面的发布区\"",
+          "sourceLine": 16,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-032",
+      "path": "frontend/tests/e2e/qwen-asr-configuration.spec.ts",
+      "sha256AtPlan": "469b7eca9607e9c504d95111f443d36494c370782fc00c5cfba514daae9f4f0c",
+      "function": "Qwen ASR真实字段保存",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"选择 Qwen 后带出可直接保存的真实 provider、模型与接口\"",
+          "sourceLine": 4,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-033",
+      "path": "frontend/tests/e2e/recent-data-safety.spec.ts",
+      "sha256AtPlan": "15a0a75156f3b43707a61efd407a940c01a5e8063443e2cba46b5810791cc679",
+      "function": "定位正式母版保留与信源级联删除",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"已有定位进入从零前采时，正式母版和历史始终可见，搜索默认国内中文\"",
+          "sourceLine": 78,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"信源确认删除后从工作台消失，并展示真实级联清理结果\"",
+          "sourceLine": 182,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 82,
+          "expression": "test.setTimeout(90_000)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "intelligence.sources.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-034",
+      "path": "frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts",
+      "sha256AtPlan": "dd62b0b6ae16492d9fbb7d1ea4f592eaba63dcee6a6449ff94e343f905990701",
+      "function": "同组稿件空复盘诊断入口",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"真实同组稿件在桌面、窄屏与刷新后显示内容诊断入口\"",
+          "sourceLine": 275,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 279,
+          "expression": "test.setTimeout(TEST_TIMEOUT_MS)"
+        },
+        {
+          "sourceLine": 280,
+          "expression": "page.setDefaultTimeout(REQUEST_TIMEOUT_MS)"
+        },
+        {
+          "sourceLine": 281,
+          "expression": "page.setDefaultNavigationTimeout(REQUEST_TIMEOUT_MS)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "projects.create",
+        "projects.get"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-035",
+      "path": "frontend/tests/e2e/review-history.spec.ts",
+      "sha256AtPlan": "f005b82d69cd981e9e1f795fe43a656bd577a6dd4b9801c27f5afe5c2570343d",
+      "function": "手工洞察历史与窄窗",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"手动洞察可从历史记录读回，时间友好且窄屏不溢出\"",
+          "sourceLine": 44,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-036",
+      "path": "frontend/tests/e2e/search.spec.ts",
+      "sha256AtPlan": "1ed7b0550aad02e6140f266d36d7a254acc000b1d02e861265bbd4d6ec93acd0",
+      "function": "全局搜索和URL查询",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"renders the global search structure on the /search route\"",
+          "sourceLine": 20,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"URL ?q=... is reflected in the search input value\"",
+          "sourceLine": 93,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-037",
+      "path": "frontend/tests/e2e/semantic-material-generation.spec.ts",
+      "sha256AtPlan": "068897604ef89a38ae3b88809d86ae84d60be198dac40e7b2e350e9804378d78",
+      "function": "图片/视频候选预填且不自动发送",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"图片按确认稿需要预填多个候选，视频默认预填一个候选，点击不自动发送\"",
+          "sourceLine": 48,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-038",
+      "path": "frontend/tests/e2e/settings-responsive-layout.spec.ts",
+      "sha256AtPlan": "975f1a4f426562c3cfaad3f691bcd1b0d555f4f8bf017b8ae924715d9b6d47ea",
+      "function": "设置宽窄布局、分类、草稿",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"[T-1237] 设置在窄屏与桌面保持分类可达、正文完整和未提交草稿\"",
+          "sourceLine": 292,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 293,
+          "expression": "page.setDefaultTimeout(REQUEST_BUDGET)"
+        },
+        {
+          "sourceLine": 294,
+          "expression": "page.setDefaultNavigationTimeout(REQUEST_BUDGET)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-039",
+      "path": "frontend/tests/e2e/settings.spec.ts",
+      "sha256AtPlan": "4283e507e25ad9270a6f7fcb41ae2bca7e64d209ba45838a40efc12909648e13",
+      "function": "设置真实保存、密钥脱敏、本地模型协议与刷新",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"[T-606] 模型来源状态在桌面与 390px 都可辨认且本地表单可用\"",
+          "sourceLine": 139,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"renders the settings structure on the /settings route\"",
+          "sourceLine": 158,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"[T-1232] 账户昵称由真实 UI 保存并公开读回同用户及刷新\"",
+          "sourceLine": 243,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"[T-1232] 自动保存偏好由真实开关保存并读回 userId 及刷新\"",
+          "sourceLine": 261,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"[T-1232] 外观主题与密度按本地消费者持久并返回刷新\"",
+          "sourceLine": 283,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"[T-1232] 默认本地模型真实保存及正式流式文本探针并脱敏读回\"",
+          "sourceLine": 309,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"[T-1232] RedFox 密钥真实保存及移除公开脱敏读回并刷新\"",
+          "sourceLine": 368,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 136,
+          "expression": "page.setDefaultTimeout(REQUEST_BUDGET)"
+        },
+        {
+          "sourceLine": 137,
+          "expression": "page.setDefaultNavigationTimeout(REQUEST_BUDGET)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 106,
+          "expression": "createServer((request, response) => {"
+        }
+      ],
+      "publicOperationLiterals": [
+        "settings.models.put",
+        "settings.models.test",
+        "settings.preferences.patch",
+        "settings.redfox.delete",
+        "settings.redfox.put"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-040",
+      "path": "frontend/tests/e2e/shared-resource-lifecycle.spec.ts",
+      "sha256AtPlan": "2b3e7f7068822a3e0614d168ec5cf4003f584aa9dc2e29ba2e7627f7728f27ea",
+      "function": "共享资源空态、失败及重读",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"TEST-T1105-RESOURCE 共享资源真实空态、刷新返回与失败重读\"",
+          "sourceLine": 5,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 6,
+          "expression": "test.setTimeout(7_200_000)"
+        },
+        {
+          "sourceLine": 7,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 8,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 35,
+          "expression": "route.fulfill({status:500,contentType:\"application/json\",body:JSON.stringify({error:{code:\"TestReadFailure\",message:\"验收读取失败\"}})});return;"
+        },
+        {
+          "sourceLine": 39,
+          "expression": "page.route(\"**/api/v1/dispatch\",failedRead);"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accountGroups.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-041",
+      "path": "frontend/tests/e2e/smoke.spec.ts",
+      "sha256AtPlan": "359a0678903ba447af114beedfeebda0d71a552ab1a750481297220cda88eb61",
+      "function": "应用根容器",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"root route exposes the CreatorOS application container\"",
+          "sourceLine": 3,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-042",
+      "path": "frontend/tests/e2e/t1062-group-native-rough.spec.ts",
+      "sha256AtPlan": "528289d5e59bddf83a95a27fc0d7d129c37cf82579d65c70dd76197b110da609",
+      "function": "纯组创建、原生剪辑、ASR、组切换与首载时序",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "'纯组无平台账号仍可通过真实创建弹层创建项目、保存画布和打开原生剪辑'",
+          "sourceLine": 362,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "'同组多个账号/平台筛选保留dirty和真实native实例，公共保存始终冻结组根'",
+          "sourceLine": 398,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "'跨组时取消真实在途素材响应，旧组晚到结果不能回写或继续保存'",
+          "sourceLine": 420,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "'真实迁组历史画布保留account出处，group归属可读写；错误组读回明确结束loading'",
+          "sourceLine": 446,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "`真实默认ASR与原生原声：${kind === 'normal' ? '普通AAC完整自然播放、单独核对、明确采用与保存刷新' : '非零视频起点仅此项手工降级，原工程仍可保存'}`",
+          "sourceLine": 484,
+          "runtimeExpansionPending": true
+        },
+        {
+          "titleExpression": "'真实首载组列表延迟时不发创建，根就绪后文章可创建保存刷新'",
+          "sourceLine": 640,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "'真实首次RSC同步中手动切B：旧A完成不能放行，B就绪才可创建保存刷新'",
+          "sourceLine": 697,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "'真实首载RSC一直未交付：有界超时后显式整页重试，同B根可创建保存回读'",
+          "sourceLine": 822,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 485,
+          "expression": "test.setTimeout(600_000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 220,
+          "expression": "createServer(async (request, response) => {"
+        },
+        {
+          "sourceLine": 428,
+          "expression": "page.route('**/api/v1/dispatch', async route => {"
+        },
+        {
+          "sourceLine": 432,
+          "expression": "route.fulfill({ response: actual }); } catch (error) { if (!/closed|aborted|canceled|disposed|finished/i.test(String(error))) throw error; }"
+        },
+        {
+          "sourceLine": 652,
+          "expression": "page.route('**/api/v1/dispatch', async route => {"
+        },
+        {
+          "sourceLine": 663,
+          "expression": "route.fulfill({ response });"
+        },
+        {
+          "sourceLine": 731,
+          "expression": "page.route(`**${path}*`, async route => {"
+        },
+        {
+          "sourceLine": 750,
+          "expression": "route.fulfill({ response }); row.delivery = 'fulfilled'; }"
+        },
+        {
+          "sourceLine": 853,
+          "expression": "page.route('**/projects*', async route => {"
+        },
+        {
+          "sourceLine": 864,
+          "expression": "route.fulfill({ response }); observation.delivery = 'late-fulfilled'; }"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accountGroups.get",
+        "accountGroups.list",
+        "accountGroups.members.previewTransfer",
+        "accountGroups.members.transfer",
+        "accountGroups.migration.apply",
+        "accountGroups.migration.preview",
+        "accounts.create",
+        "assets.fileDownloadUrl",
+        "assets.list",
+        "assets.uploads.complete",
+        "assets.uploads.create",
+        "projects.create",
+        "projects.get",
+        "projects.outputs.create",
+        "projects.outputs.list",
+        "settings.models.list",
+        "settings.models.put",
+        "settings.storage.put"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。",
+        "两个音频分支须真实离线ASR缓存/网络准入；缺前置保留原FAIL，不skip或替换fake ASR。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-043",
+      "path": "frontend/tests/e2e/t1069-asset-picker.spec.ts",
+      "sha256AtPlan": "36391a48eca43e3eded6dd14d590f32a3468a7d4fef1eaa40d2cf31543320245",
+      "function": "全库分页、照片精确选用与取消",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "'公共全库分页与模板照片选择：后页可见、搜索和取消保留精确照片'",
+          "sourceLine": 20,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 21,
+          "expression": "test.setTimeout(259_200_000)"
+        },
+        {
+          "sourceLine": 21,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 21,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "assets.search",
+        "assets.uploads.complete",
+        "assets.uploads.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-044",
+      "path": "frontend/tests/e2e/t1069-media-tab-session.spec.ts",
+      "sha256AtPlan": "a7f75ff9177c465d8c279a700348f67ca9e251956cb71665ad8c8c11d9d5c311",
+      "function": "本地视频导入、切Tab与工程保存",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "'本地视频逐个导入、未保存切Tab返回、保存刷新保留原素材和工程'",
+          "sourceLine": 12,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 13,
+          "expression": "test.setTimeout(1_800_000)"
+        },
+        {
+          "sourceLine": 13,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 13,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "projects.create",
+        "projects.outputs.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-045",
+      "path": "frontend/tests/e2e/t1070-director-editor.spec.ts",
+      "sha256AtPlan": "f05eb72d068cc2768d799fe715441c3a02db329380418dcb60d4f4929f836757",
+      "function": "文章/图文版本、编导、HTML及ZIP交付",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"真实文章保存、指定版本刷新、同项目编导窄屏打开、NoteRelay HTML交付\"",
+          "sourceLine": 83,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"真实图文三卡保存刷新，NoteRelay翻页与ZIP可用，旧图片入口与历史保留\"",
+          "sourceLine": 178,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 88,
+          "expression": "test.setTimeout(1_800_000)"
+        },
+        {
+          "sourceLine": 89,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 90,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        },
+        {
+          "sourceLine": 183,
+          "expression": "test.setTimeout(1_800_000)"
+        },
+        {
+          "sourceLine": 184,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 185,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-046",
+      "path": "frontend/tests/e2e/t1136-calendar-dialog-layout.spec.ts",
+      "sha256AtPlan": "c528fa43b3787159e773df78ba8a423e11ff4554386ed1049f7863dade87807c",
+      "function": "四尺寸排期弹层、真实回读与失败草稿",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"T-1136 当前真实排期长名称的四种窗口尺寸\"",
+          "sourceLine": 78,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T-1136 真实保存回读重开、目标转组重选与失败保留输入\"",
+          "sourceLine": 97,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T-1136 读取中及共享反馈、参考素材弹窗仍可操作\"",
+          "sourceLine": 144,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 79,
+          "expression": "test.setTimeout(600_000)"
+        },
+        {
+          "sourceLine": 79,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 79,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        },
+        {
+          "sourceLine": 98,
+          "expression": "test.setTimeout(720_000)"
+        },
+        {
+          "sourceLine": 98,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 98,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        },
+        {
+          "sourceLine": 145,
+          "expression": "test.setTimeout(600_000)"
+        },
+        {
+          "sourceLine": 145,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 145,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 117,
+          "expression": "page.route(\"**/api/v1/dispatch\",async route=>{"
+        },
+        {
+          "sourceLine": 119,
+          "expression": "route.fulfill({status:409,contentType:\"application/json\",body:JSON.stringify({data:null,error:{code:\"ConflictError\",message:\"隔离测试：一次保存失败\"}})});return;}"
+        },
+        {
+          "sourceLine": 150,
+          "expression": "page.route(\"**/api/v1/dispatch\",async route=>{"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "accountGroups.get",
+        "accountGroups.members.previewTransfer",
+        "accountGroups.members.transfer",
+        "accounts.create",
+        "assets.uploads.complete",
+        "assets.uploads.create",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-047",
+      "path": "frontend/tests/e2e/t1140-picker-low-height.spec.ts",
+      "sha256AtPlan": "7e83385dce28ed66077b8632833ab927c2cf03a424d637b434b51f60a855212d",
+      "function": "六尺寸素材预览、搜索、精确选用",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"T-1140 六种窗口完整预览、统一滚动、搜索与取消不写\"",
+          "sourceLine": 86,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T-1140 精确选用、正式回读、刷新返回与原gallery流程\"",
+          "sourceLine": 114,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 87,
+          "expression": "test.setTimeout(1_200_000)"
+        },
+        {
+          "sourceLine": 87,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 87,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        },
+        {
+          "sourceLine": 115,
+          "expression": "test.setTimeout(900_000)"
+        },
+        {
+          "sourceLine": 115,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 115,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 143,
+          "expression": "page.route(\"**/api/v1/dispatch\",async route=>{if(route.request().postDataJSON()?.id===\"assets.search\"&&injected===0){injected++;await route.fulfill({status:503,contentType:\"application/json\",body:JSON.stringify({data:null,error:{code:\"ServiceUnavailableError\",message:\"素材读取暂时失败，请重试\"}})});return;}await route.fallback();});"
+        },
+        {
+          "sourceLine": 143,
+          "expression": "route.fulfill({status:503,contentType:\"application/json\",body:JSON.stringify({data:null,error:{code:\"ServiceUnavailableError\",message:\"素材读取暂时失败，请重试\"}})});return;}await route.fallback();});"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "assets.search",
+        "assets.uploads.complete",
+        "assets.uploads.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-048",
+      "path": "frontend/tests/e2e/t1149-cover-aspect-group.spec.ts",
+      "sha256AtPlan": "4f4740185171f9d0b51b60602b09899ad00bfb67c38d036c9933a7d5f3ffbf2d",
+      "function": "画幅能力、组引用与保存重试",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"T1149 共同支持画幅同步、正式保存、刷新返回及重复修改\"",
+          "sourceLine": 52,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"T1149 能力禁用、两个模式入口保引用与保存失败后公开重试\"",
+          "sourceLine": 69,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 53,
+          "expression": "test.setTimeout(900_000)"
+        },
+        {
+          "sourceLine": 53,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 53,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        },
+        {
+          "sourceLine": 70,
+          "expression": "test.setTimeout(900_000)"
+        },
+        {
+          "sourceLine": 70,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 70,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 36,
+          "expression": "page.route(\"**/api/v1/dispatch\",async route=>{"
+        },
+        {
+          "sourceLine": 38,
+          "expression": "route.fulfill({json:{data:canvasGenerationCapabilitiesResource.parse({modes:[{mode:\"text_to_image\",available:true,model:\"文字能力合成样本\",reason:null,aspectRatios:text},{mode:\"image_to_image\",available:true,model:\"参考能力合成样本\",reason:null,aspectRatios:image},{mode:\"text_to_video\",available:false,model:null,reason:\"本轮不调用视频模型\"},{mode:\"image_to_video\",available:false,model:null,reason:\"本轮不调用视频模型\"}]}),meta:{requestId:\"declared-capability-fixture\"}}});"
+        },
+        {
+          "sourceLine": 79,
+          "expression": "page.route(\"**/api/v1/dispatch\",async route=>{if(route.request().postDataJSON()?.id===\"canvas.save\"&&injected===0){injected++;await route.fulfill({status:503,json:{data:null,error:{code:\"ServiceUnavailableError\",message:\"画布保存暂时失败，请重试\"}}});return;}await route.fallback();});"
+        },
+        {
+          "sourceLine": 79,
+          "expression": "route.fulfill({status:503,json:{data:null,error:{code:\"ServiceUnavailableError\",message:\"画布保存暂时失败，请重试\"}}});return;}await route.fallback();});"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "assets.uploads.complete",
+        "assets.uploads.create",
+        "assets.visualTemplates.list",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-049",
+      "path": "frontend/tests/e2e/t1159-wechat-native-report.spec.ts",
+      "sha256AtPlan": "df40efd73678a1d7d36d251ebe17164a5d57f9affde00d7b9396f0e0c554a200",
+      "function": "两微信账号真实0报告及拒绝",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"T1159 两微信账号从组成员进入真实0报告，刷新返回与身份拒绝\"",
+          "sourceLine": 22,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 24,
+          "expression": "test.setTimeout(25_200_000)"
+        },
+        {
+          "sourceLine": 25,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 25,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "accounts.bind.start",
+        "accounts.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-050",
+      "path": "frontend/tests/e2e/t1207-supplemental-route-matrix.spec.ts",
+      "sha256AtPlan": "ffc6608f45171773095d345f84a54f691a44f610310f6a3a561964bb2549a4cf",
+      "function": "当前侧栏、业务详情、产物、画布及历史跳转",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "`侧栏入口「${label}」${pathname} 显示真实主内容`",
+          "sourceLine": 131,
+          "runtimeExpansionPending": true
+        },
+        {
+          "titleExpression": "\"账号管理页可以打开\"",
+          "sourceLine": 143,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"当前账号的作品目录页可以打开\"",
+          "sourceLine": 147,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"项目快速创建路由显示真实内容\"",
+          "sourceLine": 151,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"发布中心日历子页可以打开\"",
+          "sourceLine": 155,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "`项目「${label}」路由显示真实内容或有效重定向`",
+          "sourceLine": 171,
+          "runtimeExpansionPending": true
+        },
+        {
+          "titleExpression": "\"文章工作台读取真实隔离文章作品\"",
+          "sourceLine": 181,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"图文工作台按真实隔离作品 ID 打开\"",
+          "sourceLine": 186,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"图文深链按真实隔离作品 ID 打开\"",
+          "sourceLine": 191,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"视频工作台按真实隔离作品 ID 打开\"",
+          "sourceLine": 196,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"项目画布详情按真实隔离画布 ID 打开\"",
+          "sourceLine": 201,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"朋友圈工作台按真实隔离稿件 ID 打开\"",
+          "sourceLine": 205,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "`旧入口「${route}」有效回到本地首页`",
+          "sourceLine": 211,
+          "runtimeExpansionPending": true
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "accounts.create",
+        "projects.create",
+        "projects.outputs.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-051",
+      "path": "frontend/tests/e2e/t954-director-review.spec.ts",
+      "sha256AtPlan": "c7c45a8124d49101d25c43b95fb0e581ab15e26ea986b5bef1dd109d0e61b7d8",
+      "function": "无发布数据复盘、空补采与诊断",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "'T954 无发布数据的真实复盘页面可用，补采返回空结果，诊断入口不强制成功经验'",
+          "sourceLine": 10,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 11,
+          "expression": "test.setTimeout(180_000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 42,
+          "expression": "page.route('**/api/chat',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'T954_SMOKE_MODEL_NOT_INVOKED'})}));"
+        },
+        {
+          "sourceLine": 42,
+          "expression": "route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'T954_SMOKE_MODEL_NOT_INVOKED'})}));"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accountGroups.create",
+        "accounts.create",
+        "projects.create",
+        "review.analyze"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-052",
+      "path": "frontend/tests/e2e/web-material-read-save.spec.ts",
+      "sha256AtPlan": "8b7c7ff4813a5b1331548953c03dd844690a3fb2570568b4e3e6904f08d47de4",
+      "function": "全文阅读成功后稳定素材保存",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"搜索线索只能阅读全文，成功后才允许按稳定素材保存到当前项目\"",
+          "sourceLine": 36,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 40,
+          "expression": "test.setTimeout(60_000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 28,
+          "expression": "route.fulfill({"
+        },
+        {
+          "sourceLine": 142,
+          "expression": "route.fulfill({"
+        },
+        {
+          "sourceLine": 176,
+          "expression": "route.fulfill({"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accounts.create",
+        "ai.conversations.list",
+        "assets.commit",
+        "projects.create"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-053",
+      "path": "frontend/tests/e2e/wechat-article-workbench.spec.ts",
+      "sha256AtPlan": "e95cf6934602f5be9f388310a8b553b869d97ee93359b213e68fe5962cb97e94",
+      "function": "文章手写/Worker候选/用户采纳和跨账号",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"公众号文章从项目目标到手写版本、刷新回读和跨账号隔离\"",
+          "sourceLine": 39,
+          "runtimeExpansionPending": false
+        },
+        {
+          "titleExpression": "\"公众号文章经独立模型 Worker 生成候选，用户审读采纳后刷新回读\"",
+          "sourceLine": 119,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 120,
+          "expression": "test.setTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [
+        {
+          "sourceLine": 131,
+          "expression": "createServer((request, response) => {"
+        }
+      ],
+      "publicOperationLiterals": [
+        "accountGroups.list",
+        "accounts.create",
+        "assets.uploads.complete",
+        "assets.uploads.create",
+        "projects.create",
+        "projects.get",
+        "projects.outputs.list",
+        "settings.models.put"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签",
+        "包含拦截/本地server线索；冻结前逐处标注：延迟透传、故障注入、应用响应mock、外部协议fixture。mock应用响应的子段只签界面容错。"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "ORIG-054",
+      "path": "frontend/tests/e2e/zz-account-isolation.spec.ts",
+      "sha256AtPlan": "d3c1a982870b4bd36c45a8ed2f3fff2b53093862fadb8fc8e173ee2de05b5a18",
+      "function": "账号切换项目无残影",
+      "staticTitleDeclarations": [
+        {
+          "titleExpression": "\"A 号只见 A 的项目;切到 B 号后只见 B 的(无残影)\"",
+          "sourceLine": 77,
+          "runtimeExpansionPending": false
+        }
+      ],
+      "runtimeCaseCount": null,
+      "timingDeclarations": [
+        {
+          "sourceLine": 78,
+          "expression": "page.setDefaultTimeout(120_000)"
+        },
+        {
+          "sourceLine": 79,
+          "expression": "page.setDefaultNavigationTimeout(120_000)"
+        }
+      ],
+      "networkControlSites": [],
+      "publicOperationLiterals": [
+        "accountGroups.list",
+        "accounts.create",
+        "projects.create",
+        "projects.get"
+      ],
+      "boundary": [
+        "真实应用HTTP和页面操作；逐个operation以原源码/trace核对，不因标题写“真实”就整例代签"
+      ],
+      "selection": "完整文件、全部参数化展开，不grep掉失败，不新增skip/fixme/only",
+      "expected": "保留每条原断言；标题或夹具与冻结产品合同冲突也先真实执行记FAIL，首轮结束才归因/修复",
+      "data": "本轮私有PGlite/媒体/.auth；每例唯一group/account/project/task Id及幂等键，不删旧任务",
+      "evidence": [
+        "每个实际runtime case成功/失败PNG",
+        "trace.zip",
+        "原testId/title/file/URL/viewport/status",
+        "涉及写入：原resource/task Id公共HTTP读回及脱敏回执"
+      ],
+      "status": "planned"
+    }
+  ],
+  "additionalCases": [
+    {
+      "id": "INT-ROUTES",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "完整当前页面/弹层入口及原静态路由合同",
+      "entries": "见routeInventory",
+      "steps": [
+        "真实创建group、account及各类project/output/canvas/moments，保存返回ID",
+        "访问每个当前page路由及侧栏入口；弹层点开、Esc、返回和刷新",
+        "遍历空新组、长标题与404错组详情"
+      ],
+      "expected": [
+        "页面单壳、真实主内容、空数据为0",
+        "真实按钮有操作或合法disabled状态",
+        "历史重定向与原静态ROUTES断言若不一致保留原FAIL"
+      ],
+      "data": "两组两账号，文章/图文/视频作品各一，画布/朋友圈各一；每个ID由公共创建返回",
+      "executionBoundary": "real-app",
+      "generationKeys": [],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-ENGINE",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "Codex免独立文本/生图配置与服务偏好",
+      "entries": "/settings → AI执行引擎/模型配置",
+      "steps": [
+        "在隔离用户清空独立文本及图片配置；读回脱敏配置确实为空",
+        "保存Codex，刷新；第二窗口读回并切换，再读第一窗口",
+        "保持ASR/视频/Embedding原配置，记录独立文本图片probe请求数",
+        "宽窄截图；切Pi展示原卡，切回Codex无卡"
+      ],
+      "expected": [
+        "Codex不要求文本/图片API key、不触发其探测或API resolver",
+        "默认引擎来自服务读回；未读完偏好不先挂旧卡/发探测",
+        "切Pi不覆盖原配置/旧任务，ASR和视频仍遵原能力"
+      ],
+      "data": "临时用户；配置回执仅provider/model/hasSecret，不保存secret/token",
+      "executionBoundary": "real-app",
+      "generationKeys": [],
+      "readback": [
+        "冻结合同的引擎偏好GET/PATCH/GET",
+        "模型配置脱敏公共列表",
+        "网络与宿主API解析/出站见证：text/image 0；仅浏览器0不足以证明Worker0"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-ENGINE-FAIL",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "引擎偏好加载/保存失败与Codex未登录、图片不可用",
+      "entries": "/settings",
+      "steps": [
+        "保真实GET延迟到达；确认未就绪不出现独立模型卡",
+        "明确标注一次503保存故障注入，失败后移除注入真实GET",
+        "受控外部Codex能力fixture返回未登录/图片不可用；检查引导及输入保留"
+      ],
+      "expected": [
+        "错误可见、失败保存不伪造成功值、不自动切Pi",
+        "能力不足不调用独立API、不吞错误",
+        "故障移除后真实公共读回；登录账户能力另独立真验"
+      ],
+      "data": "隔离用户＋可审计故障注入",
+      "executionBoundary": "real-app + explicit UI fault injection / external capability fixture",
+      "generationKeys": [],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "延迟",
+        "503",
+        "未登录",
+        "图片能力false",
+        "宽窄",
+        "刷新"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-PI",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "原Pi公共模型兼容与旧任务保持Pi",
+      "entries": "/settings、文章/编导",
+      "steps": [
+        "Pi配本地HTTP协议fixture，经真实模型保存/连接测试",
+        "公共创建文本任务并冻结Pi；切Codex后原任务完成",
+        "比较请求、原task/call Id、身份和冻结期限，刷新已采纳正文"
+      ],
+      "expected": [
+        "原合法Pi继续原供应商，配置不被Codex清空",
+        "不改历史Pi身份；模型候选需用户采纳后落库",
+        "fixture成功只签协议兼容，非官方Pi真实认证"
+      ],
+      "data": "隔离假密钥＋loopback模型协议server，原Pi任务",
+      "executionBoundary": "real-app + external Pi HTTP fixture",
+      "generationKeys": [],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-TEXT-WRITE",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "文章与视频脚本正文",
+      "entries": [
+        "/projects/[projectId]/article",
+        "/projects/[projectId]/script"
+      ],
+      "steps": [
+        "每个generationKey单独展开成实际runtime case，真实UI按钮触发原公共任务",
+        "Codex且独立文本/图片配置为空；正常已确认资料触发候选",
+        "记录task/execution/call及父子Id，结果到达前不模拟应用响应",
+        "采纳需用户点击；刷新读原资源版本；非法/空输入另验拒绝"
+      ],
+      "expected": [
+        "每个独立入口确实可交付合法候选，原领域服务保ID/组/版本/CAS",
+        "文本/图片API请求与resolver为0，原Codex模型账本有真实绑定",
+        "normal成功不代签空稿；空稿合法拒绝保原partial/finish，禁止副作用",
+        "无入口或真实外部前置不可用则记覆盖缺口/阻塞，不按共享helper PASS"
+      ],
+      "data": "每例唯一项目/组、有效稿件和来源；知识group-only和历史account各一；后台唯一job与原排期",
+      "executionBoundary": "official-Codex-real-app (每个key独立真调用；缺前置为blocked) + explicitly external source fixture where needed",
+      "generationKeys": [
+        "wechat.article-draft",
+        "script.draft"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [
+        "冻结运行目录及真实Codex登录/能力证据",
+        "联网研究/采集用受控外部来源fixture，不向第三方真实发布；模型调用仍独立标native",
+        "ASR本体仅真实离线准入；视频本体保持原能力，不用Codex零配置代签",
+        "后台原公共立即运行/受控调度认领需实际同ID；全套浏览器默认disableScheduler，不能假称cron已执行"
+      ],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-TEXT-PLAN",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "主张、创作约定、大纲",
+      "entries": [
+        "/projects/[projectId]/planning"
+      ],
+      "steps": [
+        "每个generationKey单独展开成实际runtime case，真实UI按钮触发原公共任务",
+        "Codex且独立文本/图片配置为空；正常已确认资料触发候选",
+        "记录task/execution/call及父子Id，结果到达前不模拟应用响应",
+        "采纳需用户点击；刷新读原资源版本；非法/空输入另验拒绝"
+      ],
+      "expected": [
+        "每个独立入口确实可交付合法候选，原领域服务保ID/组/版本/CAS",
+        "文本/图片API请求与resolver为0，原Codex模型账本有真实绑定",
+        "normal成功不代签空稿；空稿合法拒绝保原partial/finish，禁止副作用",
+        "无入口或真实外部前置不可用则记覆盖缺口/阻塞，不按共享helper PASS"
+      ],
+      "data": "每例唯一项目/组、有效稿件和来源；知识group-only和历史account各一；后台唯一job与原排期",
+      "executionBoundary": "official-Codex-real-app (每个key独立真调用；缺前置为blocked) + explicitly external source fixture where needed",
+      "generationKeys": [
+        "planning.thesis",
+        "planning.contract",
+        "planning.outline"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [
+        "冻结运行目录及真实Codex登录/能力证据",
+        "联网研究/采集用受控外部来源fixture，不向第三方真实发布；模型调用仍独立标native",
+        "ASR本体仅真实离线准入；视频本体保持原能力，不用Codex零配置代签",
+        "后台原公共立即运行/受控调度认领需实际同ID；全套浏览器默认disableScheduler，不能假称cron已执行"
+      ],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-TEXT-REVIEW",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "脚本审查、平台改写、复盘",
+      "entries": [
+        "/projects/[projectId]/script",
+        "/projects/[projectId]/publishing",
+        "/projects/[projectId]/review"
+      ],
+      "steps": [
+        "每个generationKey单独展开成实际runtime case，真实UI按钮触发原公共任务",
+        "Codex且独立文本/图片配置为空；正常已确认资料触发候选",
+        "记录task/execution/call及父子Id，结果到达前不模拟应用响应",
+        "采纳需用户点击；刷新读原资源版本；非法/空输入另验拒绝"
+      ],
+      "expected": [
+        "每个独立入口确实可交付合法候选，原领域服务保ID/组/版本/CAS",
+        "文本/图片API请求与resolver为0，原Codex模型账本有真实绑定",
+        "normal成功不代签空稿；空稿合法拒绝保原partial/finish，禁止副作用",
+        "无入口或真实外部前置不可用则记覆盖缺口/阻塞，不按共享helper PASS"
+      ],
+      "data": "每例唯一项目/组、有效稿件和来源；知识group-only和历史account各一；后台唯一job与原排期",
+      "executionBoundary": "official-Codex-real-app (每个key独立真调用；缺前置为blocked) + explicitly external source fixture where needed",
+      "generationKeys": [
+        "script.review",
+        "publish.platform_adapt",
+        "review.analyze"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [
+        "冻结运行目录及真实Codex登录/能力证据",
+        "联网研究/采集用受控外部来源fixture，不向第三方真实发布；模型调用仍独立标native",
+        "ASR本体仅真实离线准入；视频本体保持原能力，不用Codex零配置代签",
+        "后台原公共立即运行/受控调度认领需实际同ID；全套浏览器默认disableScheduler，不能假称cron已执行"
+      ],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-TEXT-POST",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "图文、分段改文与发布物料",
+      "entries": [
+        "/projects/[projectId]/image",
+        "/projects/[projectId]/article",
+        "/projects/[projectId]/publishing"
+      ],
+      "steps": [
+        "每个generationKey单独展开成实际runtime case，真实UI按钮触发原公共任务",
+        "Codex且独立文本/图片配置为空；正常已确认资料触发候选",
+        "记录task/execution/call及父子Id，结果到达前不模拟应用响应",
+        "采纳需用户点击；刷新读原资源版本；非法/空输入另验拒绝"
+      ],
+      "expected": [
+        "每个独立入口确实可交付合法候选，原领域服务保ID/组/版本/CAS",
+        "文本/图片API请求与resolver为0，原Codex模型账本有真实绑定",
+        "normal成功不代签空稿；空稿合法拒绝保原partial/finish，禁止副作用",
+        "无入口或真实外部前置不可用则记覆盖缺口/阻塞，不按共享helper PASS"
+      ],
+      "data": "每例唯一项目/组、有效稿件和来源；知识group-only和历史account各一；后台唯一job与原排期",
+      "executionBoundary": "official-Codex-real-app (每个key独立真调用；缺前置为blocked) + explicitly external source fixture where needed",
+      "generationKeys": [
+        "graphic.post-text",
+        "wechat.article-text",
+        "publication.text"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [
+        "冻结运行目录及真实Codex登录/能力证据",
+        "联网研究/采集用受控外部来源fixture，不向第三方真实发布；模型调用仍独立标native",
+        "ASR本体仅真实离线准入；视频本体保持原能力，不用Codex零配置代签",
+        "后台原公共立即运行/受控调度认领需实际同ID；全套浏览器默认disableScheduler，不能假称cron已执行"
+      ],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-TEXT-MOMENTS",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "朋友圈与作品审核",
+      "entries": [
+        "/projects/[projectId]/moments/[momentsId]",
+        "/accounts/works"
+      ],
+      "steps": [
+        "每个generationKey单独展开成实际runtime case，真实UI按钮触发原公共任务",
+        "Codex且独立文本/图片配置为空；正常已确认资料触发候选",
+        "记录task/execution/call及父子Id，结果到达前不模拟应用响应",
+        "采纳需用户点击；刷新读原资源版本；非法/空输入另验拒绝"
+      ],
+      "expected": [
+        "每个独立入口确实可交付合法候选，原领域服务保ID/组/版本/CAS",
+        "文本/图片API请求与resolver为0，原Codex模型账本有真实绑定",
+        "normal成功不代签空稿；空稿合法拒绝保原partial/finish，禁止副作用",
+        "无入口或真实外部前置不可用则记覆盖缺口/阻塞，不按共享helper PASS"
+      ],
+      "data": "每例唯一项目/组、有效稿件和来源；知识group-only和历史account各一；后台唯一job与原排期",
+      "executionBoundary": "official-Codex-real-app (每个key独立真调用；缺前置为blocked) + explicitly external source fixture where needed",
+      "generationKeys": [
+        "moments text",
+        "work review"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [
+        "冻结运行目录及真实Codex登录/能力证据",
+        "联网研究/采集用受控外部来源fixture，不向第三方真实发布；模型调用仍独立标native",
+        "ASR本体仅真实离线准入；视频本体保持原能力，不用Codex零配置代签",
+        "后台原公共立即运行/受控调度认领需实际同ID；全套浏览器默认disableScheduler，不能假称cron已执行"
+      ],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-TEXT-DISCOVERY",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "选题补充偏好、定位与标定",
+      "entries": [
+        "/topics",
+        "/positioning"
+      ],
+      "steps": [
+        "每个generationKey单独展开成实际runtime case，真实UI按钮触发原公共任务",
+        "Codex且独立文本/图片配置为空；正常已确认资料触发候选",
+        "记录task/execution/call及父子Id，结果到达前不模拟应用响应",
+        "采纳需用户点击；刷新读原资源版本；非法/空输入另验拒绝"
+      ],
+      "expected": [
+        "每个独立入口确实可交付合法候选，原领域服务保ID/组/版本/CAS",
+        "文本/图片API请求与resolver为0，原Codex模型账本有真实绑定",
+        "normal成功不代签空稿；空稿合法拒绝保原partial/finish，禁止副作用",
+        "无入口或真实外部前置不可用则记覆盖缺口/阻塞，不按共享helper PASS"
+      ],
+      "data": "每例唯一项目/组、有效稿件和来源；知识group-only和历史account各一；后台唯一job与原排期",
+      "executionBoundary": "official-Codex-real-app (每个key独立真调用；缺前置为blocked) + explicitly external source fixture where needed",
+      "generationKeys": [
+        "topic.generate",
+        "topic.enrich",
+        "topic.preference",
+        "positioning.generate",
+        "calibration.diagnose",
+        "calibration.score"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [
+        "冻结运行目录及真实Codex登录/能力证据",
+        "联网研究/采集用受控外部来源fixture，不向第三方真实发布；模型调用仍独立标native",
+        "ASR本体仅真实离线准入；视频本体保持原能力，不用Codex零配置代签",
+        "后台原公共立即运行/受控调度认领需实际同ID；全套浏览器默认disableScheduler，不能假称cron已执行"
+      ],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-TEXT-RESEARCH",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "调研、来源相似性与编导建议",
+      "entries": [
+        "/projects/[projectId]/research",
+        "编导"
+      ],
+      "steps": [
+        "每个generationKey单独展开成实际runtime case，真实UI按钮触发原公共任务",
+        "Codex且独立文本/图片配置为空；正常已确认资料触发候选",
+        "记录task/execution/call及父子Id，结果到达前不模拟应用响应",
+        "采纳需用户点击；刷新读原资源版本；非法/空输入另验拒绝"
+      ],
+      "expected": [
+        "每个独立入口确实可交付合法候选，原领域服务保ID/组/版本/CAS",
+        "文本/图片API请求与resolver为0，原Codex模型账本有真实绑定",
+        "normal成功不代签空稿；空稿合法拒绝保原partial/finish，禁止副作用",
+        "无入口或真实外部前置不可用则记覆盖缺口/阻塞，不按共享helper PASS"
+      ],
+      "data": "每例唯一项目/组、有效稿件和来源；知识group-only和历史account各一；后台唯一job与原排期",
+      "executionBoundary": "official-Codex-real-app (每个key独立真调用；缺前置为blocked) + explicitly external source fixture where needed",
+      "generationKeys": [
+        "research.gather_material",
+        "script.source_similarity",
+        "copilot.assist"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [
+        "冻结运行目录及真实Codex登录/能力证据",
+        "联网研究/采集用受控外部来源fixture，不向第三方真实发布；模型调用仍独立标native",
+        "ASR本体仅真实离线准入；视频本体保持原能力，不用Codex零配置代签",
+        "后台原公共立即运行/受控调度认领需实际同ID；全套浏览器默认disableScheduler，不能假称cron已执行"
+      ],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-TEXT-MEDIA",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "素材分类、文本提取与匹配",
+      "entries": [
+        "/assets",
+        "/projects/[projectId]/research",
+        "/projects/[projectId]/production"
+      ],
+      "steps": [
+        "每个generationKey单独展开成实际runtime case，真实UI按钮触发原公共任务",
+        "Codex且独立文本/图片配置为空；正常已确认资料触发候选",
+        "记录task/execution/call及父子Id，结果到达前不模拟应用响应",
+        "采纳需用户点击；刷新读原资源版本；非法/空输入另验拒绝"
+      ],
+      "expected": [
+        "每个独立入口确实可交付合法候选，原领域服务保ID/组/版本/CAS",
+        "文本/图片API请求与resolver为0，原Codex模型账本有真实绑定",
+        "normal成功不代签空稿；空稿合法拒绝保原partial/finish，禁止副作用",
+        "无入口或真实外部前置不可用则记覆盖缺口/阻塞，不按共享helper PASS"
+      ],
+      "data": "每例唯一项目/组、有效稿件和来源；知识group-only和历史account各一；后台唯一job与原排期",
+      "executionBoundary": "official-Codex-real-app (每个key独立真调用；缺前置为blocked) + explicitly external source fixture where needed",
+      "generationKeys": [
+        "asset.classify",
+        "material.extract",
+        "material.match"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [
+        "冻结运行目录及真实Codex登录/能力证据",
+        "联网研究/采集用受控外部来源fixture，不向第三方真实发布；模型调用仍独立标native",
+        "ASR本体仅真实离线准入；视频本体保持原能力，不用Codex零配置代签",
+        "后台原公共立即运行/受控调度认领需实际同ID；全套浏览器默认disableScheduler，不能假称cron已执行"
+      ],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-TEXT-VIDEO",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "视频决策与项目重建",
+      "entries": [
+        "/projects/[projectId]/production",
+        "/projects/[projectId]/work"
+      ],
+      "steps": [
+        "每个generationKey单独展开成实际runtime case，真实UI按钮触发原公共任务",
+        "Codex且独立文本/图片配置为空；正常已确认资料触发候选",
+        "记录task/execution/call及父子Id，结果到达前不模拟应用响应",
+        "采纳需用户点击；刷新读原资源版本；非法/空输入另验拒绝"
+      ],
+      "expected": [
+        "每个独立入口确实可交付合法候选，原领域服务保ID/组/版本/CAS",
+        "文本/图片API请求与resolver为0，原Codex模型账本有真实绑定",
+        "normal成功不代签空稿；空稿合法拒绝保原partial/finish，禁止副作用",
+        "无入口或真实外部前置不可用则记覆盖缺口/阻塞，不按共享helper PASS"
+      ],
+      "data": "每例唯一项目/组、有效稿件和来源；知识group-only和历史account各一；后台唯一job与原排期",
+      "executionBoundary": "official-Codex-real-app (每个key独立真调用；缺前置为blocked) + explicitly external source fixture where needed",
+      "generationKeys": [
+        "video.decisions",
+        "reconstruct.project"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [
+        "冻结运行目录及真实Codex登录/能力证据",
+        "联网研究/采集用受控外部来源fixture，不向第三方真实发布；模型调用仍独立标native",
+        "ASR本体仅真实离线准入；视频本体保持原能力，不用Codex零配置代签",
+        "后台原公共立即运行/受控调度认领需实际同ID；全套浏览器默认disableScheduler，不能假称cron已执行"
+      ],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-TEXT-KNOWLEDGE-AI",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "知识分类、全文蒸馏、关联与评论提炼",
+      "entries": [
+        "/knowledge",
+        "/accounts/works",
+        "/projects/[projectId]/research"
+      ],
+      "steps": [
+        "每个generationKey单独展开成实际runtime case，真实UI按钮触发原公共任务",
+        "Codex且独立文本/图片配置为空；正常已确认资料触发候选",
+        "记录task/execution/call及父子Id，结果到达前不模拟应用响应",
+        "采纳需用户点击；刷新读原资源版本；非法/空输入另验拒绝"
+      ],
+      "expected": [
+        "每个独立入口确实可交付合法候选，原领域服务保ID/组/版本/CAS",
+        "文本/图片API请求与resolver为0，原Codex模型账本有真实绑定",
+        "normal成功不代签空稿；空稿合法拒绝保原partial/finish，禁止副作用",
+        "无入口或真实外部前置不可用则记覆盖缺口/阻塞，不按共享helper PASS"
+      ],
+      "data": "每例唯一项目/组、有效稿件和来源；知识group-only和历史account各一；后台唯一job与原排期",
+      "executionBoundary": "official-Codex-real-app (每个key独立真调用；缺前置为blocked) + explicitly external source fixture where needed",
+      "generationKeys": [
+        "knowledge.classify",
+        "knowledge.distill",
+        "knowledge.relate",
+        "comment.qa-sift"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [
+        "冻结运行目录及真实Codex登录/能力证据",
+        "联网研究/采集用受控外部来源fixture，不向第三方真实发布；模型调用仍独立标native",
+        "ASR本体仅真实离线准入；视频本体保持原能力，不用Codex零配置代签",
+        "后台原公共立即运行/受控调度认领需实际同ID；全套浏览器默认disableScheduler，不能假称cron已执行"
+      ],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-TEXT-INTELLIGENCE",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "雷达/灵感生成、改写初稿与转项目",
+      "entries": [
+        "/intelligence"
+      ],
+      "steps": [
+        "每个generationKey单独展开成实际runtime case，真实UI按钮触发原公共任务",
+        "Codex且独立文本/图片配置为空；正常已确认资料触发候选",
+        "记录task/execution/call及父子Id，结果到达前不模拟应用响应",
+        "采纳需用户点击；刷新读原资源版本；非法/空输入另验拒绝"
+      ],
+      "expected": [
+        "每个独立入口确实可交付合法候选，原领域服务保ID/组/版本/CAS",
+        "文本/图片API请求与resolver为0，原Codex模型账本有真实绑定",
+        "normal成功不代签空稿；空稿合法拒绝保原partial/finish，禁止副作用",
+        "无入口或真实外部前置不可用则记覆盖缺口/阻塞，不按共享helper PASS"
+      ],
+      "data": "每例唯一项目/组、有效稿件和来源；知识group-only和历史account各一；后台唯一job与原排期",
+      "executionBoundary": "official-Codex-real-app (每个key独立真调用；缺前置为blocked) + explicitly external source fixture where needed",
+      "generationKeys": [
+        "intelligence generation",
+        "intelligence.rewrite-text"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [
+        "冻结运行目录及真实Codex登录/能力证据",
+        "联网研究/采集用受控外部来源fixture，不向第三方真实发布；模型调用仍独立标native",
+        "ASR本体仅真实离线准入；视频本体保持原能力，不用Codex零配置代签",
+        "后台原公共立即运行/受控调度认领需实际同ID；全套浏览器默认disableScheduler，不能假称cron已执行"
+      ],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-TEXT-BACKGROUND",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "每日选题与定时归因/收藏/对标",
+      "entries": [
+        "/automations",
+        "/topics",
+        "/intelligence"
+      ],
+      "steps": [
+        "每个generationKey单独展开成实际runtime case，真实UI按钮触发原公共任务",
+        "Codex且独立文本/图片配置为空；正常已确认资料触发候选",
+        "记录task/execution/call及父子Id，结果到达前不模拟应用响应",
+        "采纳需用户点击；刷新读原资源版本；非法/空输入另验拒绝"
+      ],
+      "expected": [
+        "每个独立入口确实可交付合法候选，原领域服务保ID/组/版本/CAS",
+        "文本/图片API请求与resolver为0，原Codex模型账本有真实绑定",
+        "normal成功不代签空稿；空稿合法拒绝保原partial/finish，禁止副作用",
+        "无入口或真实外部前置不可用则记覆盖缺口/阻塞，不按共享helper PASS"
+      ],
+      "data": "每例唯一项目/组、有效稿件和来源；知识group-only和历史account各一；后台唯一job与原排期",
+      "executionBoundary": "official-Codex-real-app (每个key独立真调用；缺前置为blocked) + explicitly external source fixture where needed",
+      "generationKeys": [
+        "scheduled.topic.daily",
+        "scheduled flywheel"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [
+        "冻结运行目录及真实Codex登录/能力证据",
+        "联网研究/采集用受控外部来源fixture，不向第三方真实发布；模型调用仍独立标native",
+        "ASR本体仅真实离线准入；视频本体保持原能力，不用Codex零配置代签",
+        "后台原公共立即运行/受控调度认领需实际同ID；全套浏览器默认disableScheduler，不能假称cron已执行"
+      ],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-TEXT-TRANSCRIBE",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "ASR转录后的文本整理",
+      "entries": [
+        "/projects/[projectId]/production",
+        "/accounts/works"
+      ],
+      "steps": [
+        "每个generationKey单独展开成实际runtime case，真实UI按钮触发原公共任务",
+        "Codex且独立文本/图片配置为空；正常已确认资料触发候选",
+        "记录task/execution/call及父子Id，结果到达前不模拟应用响应",
+        "采纳需用户点击；刷新读原资源版本；非法/空输入另验拒绝"
+      ],
+      "expected": [
+        "每个独立入口确实可交付合法候选，原领域服务保ID/组/版本/CAS",
+        "文本/图片API请求与resolver为0，原Codex模型账本有真实绑定",
+        "normal成功不代签空稿；空稿合法拒绝保原partial/finish，禁止副作用",
+        "无入口或真实外部前置不可用则记覆盖缺口/阻塞，不按共享helper PASS"
+      ],
+      "data": "每例唯一项目/组、有效稿件和来源；知识group-only和历史account各一；后台唯一job与原排期",
+      "executionBoundary": "official-Codex-real-app (每个key独立真调用；缺前置为blocked) + explicitly external source fixture where needed",
+      "generationKeys": [
+        "transcribe postprocess"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [
+        "冻结运行目录及真实Codex登录/能力证据",
+        "联网研究/采集用受控外部来源fixture，不向第三方真实发布；模型调用仍独立标native",
+        "ASR本体仅真实离线准入；视频本体保持原能力，不用Codex零配置代签",
+        "后台原公共立即运行/受控调度认领需实际同ID；全套浏览器默认disableScheduler，不能假称cron已执行"
+      ],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-IMAGE-ASSET",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "独立生图",
+      "entries": [
+        "/assets"
+      ],
+      "steps": [
+        "无独立图片或文本API配置；真实UI提交原图片任务",
+        "参考图由本组实际上传/生成，保file Id/sha/原引用权限",
+        "等原任务候选；明确点击采纳；用原group公共下载URL取真实PNG",
+        "校验HTTP200、mime、非零字节、checksum并留候选/采纳截图；查看真实图片"
+      ],
+      "expected": [
+        "原Codex生图候选回收可用，API文本/生图调用0",
+        "无自动落领域库；采纳正确原资源/版本/组",
+        "参考图/跨组/失效引用明确拒绝，原在途/unknown不重发"
+      ],
+      "data": "两组；中性白底几何图或无隐私测试插图，真实本组PNG参考图；每key一独立任务",
+      "executionBoundary": "official-Codex-real-app",
+      "generationKeys": [
+        "asset.generate image"
+      ],
+      "readback": [
+        "原图片aiTask与execution状态",
+        "原asset.get及公开download URL和blob字节/sha",
+        "原thread/turn/call与采纳receipt，凭据不落报告"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-IMAGE-REF",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "参考图编辑",
+      "entries": [
+        "/assets",
+        "编导图片附件"
+      ],
+      "steps": [
+        "无独立图片或文本API配置；真实UI提交原图片任务",
+        "参考图由本组实际上传/生成，保file Id/sha/原引用权限",
+        "等原任务候选；明确点击采纳；用原group公共下载URL取真实PNG",
+        "校验HTTP200、mime、非零字节、checksum并留候选/采纳截图；查看真实图片"
+      ],
+      "expected": [
+        "原Codex生图候选回收可用，API文本/生图调用0",
+        "无自动落领域库；采纳正确原资源/版本/组",
+        "参考图/跨组/失效引用明确拒绝，原在途/unknown不重发"
+      ],
+      "data": "两组；中性白底几何图或无隐私测试插图，真实本组PNG参考图；每key一独立任务",
+      "executionBoundary": "official-Codex-real-app",
+      "generationKeys": [
+        "asset.generate image_to_image"
+      ],
+      "readback": [
+        "原图片aiTask与execution状态",
+        "原asset.get及公开download URL和blob字节/sha",
+        "原thread/turn/call与采纳receipt，凭据不落报告"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-IMAGE-COVER",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "视频封面",
+      "entries": [
+        "/projects/[projectId]/work",
+        "/projects/[projectId]/publishing"
+      ],
+      "steps": [
+        "无独立图片或文本API配置；真实UI提交原图片任务",
+        "参考图由本组实际上传/生成，保file Id/sha/原引用权限",
+        "等原任务候选；明确点击采纳；用原group公共下载URL取真实PNG",
+        "校验HTTP200、mime、非零字节、checksum并留候选/采纳截图；查看真实图片"
+      ],
+      "expected": [
+        "原Codex生图候选回收可用，API文本/生图调用0",
+        "无自动落领域库；采纳正确原资源/版本/组",
+        "参考图/跨组/失效引用明确拒绝，原在途/unknown不重发"
+      ],
+      "data": "两组；中性白底几何图或无隐私测试插图，真实本组PNG参考图；每key一独立任务",
+      "executionBoundary": "official-Codex-real-app",
+      "generationKeys": [
+        "cover.generate"
+      ],
+      "readback": [
+        "原图片aiTask与execution状态",
+        "原asset.get及公开download URL和blob字节/sha",
+        "原thread/turn/call与采纳receipt，凭据不落报告"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-IMAGE-CARDS",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "图卡、文章配图、系列图",
+      "entries": [
+        "/projects/[projectId]/image",
+        "/projects/[projectId]/article",
+        "编导"
+      ],
+      "steps": [
+        "无独立图片或文本API配置；真实UI提交原图片任务",
+        "参考图由本组实际上传/生成，保file Id/sha/原引用权限",
+        "等原任务候选；明确点击采纳；用原group公共下载URL取真实PNG",
+        "校验HTTP200、mime、非零字节、checksum并留候选/采纳截图；查看真实图片"
+      ],
+      "expected": [
+        "原Codex生图候选回收可用，API文本/生图调用0",
+        "无自动落领域库；采纳正确原资源/版本/组",
+        "参考图/跨组/失效引用明确拒绝，原在途/unknown不重发"
+      ],
+      "data": "两组；中性白底几何图或无隐私测试插图，真实本组PNG参考图；每key一独立任务",
+      "executionBoundary": "official-Codex-real-app",
+      "generationKeys": [
+        "graphic.card.generate",
+        "文章配图",
+        "系列图"
+      ],
+      "readback": [
+        "原图片aiTask与execution状态",
+        "原asset.get及公开download URL和blob字节/sha",
+        "原thread/turn/call与采纳receipt，凭据不落报告"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-VISION",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "图片理解和成片可选视觉审查",
+      "entries": [
+        "/assets",
+        "/projects/[projectId]/production"
+      ],
+      "steps": [
+        "上传或用INT-IMAGE的同组真实PNG，经分类按钮理解内容",
+        "真实小成片安全输出后触发原可选视觉审核，记录原parent→child及deadline",
+        "能力不可用/审核失败明确标注fixture分支，下载同成片"
+      ],
+      "expected": [
+        "图片完整进入原调用摘要并真实得到结果",
+        "父原引擎/剩余期限被子任务继承，不能按每帧续期",
+        "可选审核不可用保安全成片导出；错误归属仍拒绝"
+      ],
+      "data": "同组绿圆PNG、小视频/可安全输出工程；视频能力按原配置",
+      "executionBoundary": "official-Codex-real-app + external unavailable fixture (分别记结果)",
+      "generationKeys": [
+        "asset.classify vision",
+        "video.visual-review"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-CHAT",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "Codex聊天、图片附件、工具目录、子模型与候选采纳",
+      "entries": [
+        "任意页编导弹层",
+        "项目Workbench"
+      ],
+      "steps": [
+        "真实Codex会话传入本组图片及项目引用",
+        "目录中实际调用read/structured-node/hooks/draft/生图；每类单独展开",
+        "正常候选审读采纳；外部副作用必须经既有确认",
+        "刷新聊天记录、已落版本、父子任务和真实图片下载"
+      ],
+      "expected": [
+        "完整合法目录/输入没有模型API配置门",
+        "不假按钮、不自动采纳；权限拒绝不执行effect",
+        "每族真实工具调用与原thread/turn/task映射，不用仅native文本代签工具族"
+      ],
+      "data": "独立本组项目/稿件/PNG；长标题；一安全read前缀＋各类子任务",
+      "executionBoundary": "official-Codex-real-app",
+      "generationKeys": [
+        "chat.run Codex",
+        "worker.structured-node/proposal",
+        "worker.script-hooks/proposal",
+        "worker.script-draft/committed",
+        "chat image generation"
+      ],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-FREEZE",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "父子及后台冻结、切引擎不迁移在途任务",
+      "entries": [
+        "/settings",
+        "编导",
+        "/automations",
+        "项目生成入口"
+      ],
+      "steps": [
+        "先Codex创建父任务及待认领后台任务，记录冻结引擎/预算",
+        "在原任务尚在途时切Pi；执行原子节点、后处理、视觉审查、后台阶段",
+        "再Pi创建独立任务，切Codex；验证原Pi仍Pi",
+        "刷新/取消/期限耗尽时继续只读原ID，无隐式创建第二task/call"
+      ],
+      "expected": [
+        "父子/后台读原已冻结engine；API resolver为0（Codex族）",
+        "原Pi不换身份；不会给旧父重新newturn、retryOf或续deadline",
+        "调度窗口/owner/group一致；真实启动不能仅预检读回代签"
+      ],
+      "data": "每族独立原parent/child/job/task；两个窗口；Pi本地协议fixture和真实Codex分列",
+      "executionBoundary": "real-app + official Codex / Pi external fixture",
+      "generationKeys": [],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "structured子任务",
+        "聊天hooks/draft",
+        "后台每日选题/飞轮",
+        "transcribe文本后处理",
+        "video.visual-review",
+        "排期创建→切换→执行",
+        "取消/过期"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-RECOVERY",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "unknown/ACK只读恢复与原预算、拒绝族",
+      "entries": [
+        "编导恢复入口",
+        "后台任务详情"
+      ],
+      "steps": [
+        "仅受控外部Codex协议fixture丢一次ACK/返回unknown，原真实公共任务仍保ID",
+        "公共恢复原task；按原真实绑定thread/turn只读thread/read",
+        "先已settled host工具前缀，后structured/hooks/draft unknown，恢复后身份/credential再读",
+        "无binding、错误组/fence、过期、取消各独立真实公共拒绝"
+      ],
+      "expected": [
+        "有严格proof才读原turn并结算同call；没有turn仍unknown",
+        "turn/start与API spy0；不supersede、不重发、deadline/attempts不扩权",
+        "混合工具投影保持原顺序，script-draft提交沿原CAS/receipt不重复建资源"
+      ],
+      "data": "隔离外部protocol fixture，真实应用Worker/服务/数据库；禁止直接DB伪造PASS",
+      "executionBoundary": "real-app + controlled external Codex protocol fixture; 非官方账户unknown生命周期",
+      "generationKeys": [],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "文本/图片resume",
+        "过期扫描",
+        "structured/hooks/draft子模型",
+        "ACK后identity重读",
+        "七族损坏proof",
+        "continuous原null期限与bounded非法null"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-GROUP",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "账号组/账号归属、切组晚回与共享资源",
+      "entries": [
+        "/accounts",
+        "/projects",
+        "/assets",
+        "/knowledge",
+        "/automations",
+        "/canvases"
+      ],
+      "steps": [
+        "建立A/B两组各账号，同组group-only内容和account历史内容",
+        "A创建项目/知识/图片/任务，切B试列表与A直链/公共读回",
+        "用延迟透传真实A响应，切B后交付；确认不污染B",
+        "回A刷新相同ID；错组URL/媒体下载拒绝"
+      ],
+      "expected": [
+        "同组合法group-only无需绑账号；跨组404/明确拒绝",
+        "晚响应不回写；历史来源保留不篡归属",
+        "真实数量为0/空，原任务历史保留"
+      ],
+      "data": "两真实测试组、各平台账号、group-only资源、A/B唯一标识",
+      "executionBoundary": "real-app + response delay passthrough (不替换业务内容)",
+      "generationKeys": [],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-KNOWLEDGE",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "知识库完整读写、整理、版本与同步",
+      "entries": [
+        "/knowledge",
+        "项目引用选择器",
+        "/accounts/works"
+      ],
+      "steps": [
+        "执行原library两种宽度完整旅程及所有版本/保存失败assert",
+        "新增390宽知识创建/分类/编辑/CAS/整理/引用/刷新",
+        "原账号作品知识同步，经真实公共同步任务到知识资源读回",
+        "重复点击/错误组/无来源/失败恢复不重复领域写入"
+      ],
+      "expected": [
+        "知识数据由原服务落库，候选未采纳不写",
+        "正文、标题、标签、目录、来源和revision公开读回相符",
+        "同步原task与知识Id可追溯，错组或无效ID拒绝"
+      ],
+      "data": "知识A/B、本组项目、历史账号作品，长标题/正文、受控外部作品来源",
+      "executionBoundary": "real-app + external platform source fixture; official Codex AI节点另标",
+      "generationKeys": [],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-T1245",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "自动化筛选与详情关闭在稳定宽窄窗可达",
+      "entries": [
+        "/automations → 平台/账号筛选 → 立即运行 → 原运行详情"
+      ],
+      "steps": [
+        "完整运行原automations-run-now-public，不删几何/同job/错组assert",
+        "390×844、900×900、1536×1024等侧栏CSS到稳定值且跨两次观察",
+        "长组名/账号名/错误说明，逐个筛选与快捷动作，打开原详情",
+        "真实点击关闭/重开、Esc，刷新原job/run状态；1600×低高度另验"
+      ],
+      "expected": [
+        "页与筛选无横向溢出、label/下拉可见可选，文字不逐字挤压",
+        "close在dialog可视区内且不被标题/error覆盖；真实操作成功",
+        "job/run/aiTask/execution原ID保持；待扫码明确但不扫码不真实登录"
+      ],
+      "data": "同组多平台唯一job、长文本原运行；真实采集未授权动作不执行",
+      "executionBoundary": "real-app",
+      "generationKeys": [],
+      "readback": [
+        "原job公共GET",
+        "立即运行返回原run/task/execution IDs",
+        "原运行详情公开读回",
+        "错误组404"
+      ],
+      "variants": [
+        "390×844",
+        "900×900",
+        "1536×1024",
+        "低高度",
+        "长标题/错误",
+        "关闭重开/刷新"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    },
+    {
+      "id": "INT-NAV",
+      "requirement": [
+        "AC-1246-3",
+        "AC-1246-4"
+      ],
+      "title": "导航、弹层局部打开、性能与生命周期",
+      "entries": [
+        "侧栏全部入口",
+        "新建/编导/日历/素材弹层"
+      ],
+      "steps": [
+        "保原overlay/app-shell/素材picker/日历完整用例",
+        "同页链接/按钮打开弹层后原稿dirty仍在；Esc/返回/刷新",
+        "真实筛选/详情导航保路由；媒体Tab返回保持原native实例",
+        "终态/卸载检查轮询单在途和停止，关联原ID"
+      ],
+      "expected": [
+        "局部开弹层不等整页/不丢草稿；实际导航显示正确入口",
+        "折叠大对象按需，过期结果不写；no假按钮",
+        "资源释放不能删任务或禁合法操作"
+      ],
+      "data": "长正文/100历史项的私有测试数据，真实小媒体，disabled/空态",
+      "executionBoundary": "real-app",
+      "generationKeys": [],
+      "readback": [
+        "原公共接口脱敏HTTP回执；端点由冻结合同ENDPOINTS验证，不编造私有读回API"
+      ],
+      "variants": [
+        "正常",
+        "空态/非法输入明确拒绝",
+        "失败可恢复但不自动重发未知副作用",
+        "刷新原状态",
+        "1366×900与390×844"
+      ],
+      "evidence": [
+        "操作前后真实页面PNG（1366×900；390×844；相关弹层另900×900/低高度）",
+        "全程trace.zip和console/pageerror/requestfailed原日志",
+        "原公共HTTP任务/资源Id、状态、候选与用户采纳后相同Id读回",
+        "冻结候选commit、测试源码SHA、真实viewport/URL/时间与边界标签"
+      ],
+      "preconditions": [],
+      "status": "planned",
+      "result": null
+    }
+  ],
+  "expansionPolicy": {
+    "generationKeys": "每个key为独立case/真实任务；不能一族第一个PASS签其他key。原有case若已完整覆盖可关联其真实testId，不重复计数。",
+    "states": "表列每个variant单独记录实际证据；无UI对应入口记录可达性缺口，后端port测试不能代签浏览器。",
+    "widths": "保留原视口全集；新增整合宽1366×900、窄390×844，自动化另900×900/1536×1024、弹层低高度按原spec。",
+    "count": "冻结后--list真实展开和新spec清单才有执行总数，计划静态声明不是执行case数。"
+  },
+  "evidenceContract": {
+    "directory": "docs/verification/t1246/<round>/<candidateSha>/browser",
+    "requiredFields": [
+      "round",
+      "candidateCommit",
+      "packageSha256",
+      "originalSpecSha256",
+      "executedDriverSha256",
+      "testId",
+      "file",
+      "titlePath",
+      "caseId",
+      "requirement",
+      "startedAt",
+      "endedAt",
+      "url",
+      "viewport",
+      "status",
+      "boundary",
+      "screenshotPaths",
+      "tracePath",
+      "taskIds",
+      "parentTaskIds",
+      "executionIds",
+      "callIds",
+      "resourceIds",
+      "publicReadbackPath",
+      "consolePath",
+      "networkAuditPath",
+      "failureId"
+    ],
+    "statuses": [
+      "planned",
+      "pass",
+      "fail",
+      "blocked",
+      "not-run",
+      "original-skip"
+    ],
+    "redaction": "不保存secret/token/cookie/登录态明文，trace访问仅本轮内部；回执保必要真实IDs/usage/sha。",
+    "sameId": "读原id终态及resource版本；错误/unknown保原state；手动新提交另id另case，不抹首轮。",
+    "issueFields": [
+      "failureId",
+      "firstObservedAt",
+      "caseId",
+      "candidateCommit",
+      "exactStep",
+      "expected",
+      "actual",
+      "sameTaskState",
+      "screenshot",
+      "trace",
+      "rawError",
+      "rootCauseState",
+      "ownership",
+      "fixRound"
+    ],
+    "classification": "测试夹具/合同漂移、候选回归、环境前置、外部能力、原范围外欠债须证据定位；初见unknown不默认旧债。"
+  },
+  "runOrder": [
+    "冻结所有P-*前置并列运行清单、预算与网络范围",
+    "冷启动本轮隔离服务核原bundle/端口/readiness",
+    "完整54已有文件所有参数化case；失败继续收集后续case，不重跑改首轮数",
+    "新增INT-*逐key/state；官方Codex真调用和protocol fixture分开批次/私有数据根",
+    "逐例成功失败截图、trace、同ID公共读回；立即追加问题，首轮不自修",
+    "完整首轮收束实际通过/失败/阻塞/未运行和入口缺口",
+    "主线程集中修复并独评，重新冻结/打包；重跑原失败及必要原完整范围，保首轮不可改"
+  ],
+  "commandsPendingFreeze": [
+    "cd <frozenExecutionDirectory>/frontend && pnpm exec playwright test --project=e2e --list",
+    "cd <frozenExecutionDirectory>/frontend && pnpm exec playwright test --project=e2e --workers=1 --retries=0 --timeout=180000 --trace=on --reporter=json,html",
+    "上述第二条必须配合已经冻结的request/expect/hook与局部更长test预算适配；仅CLI不构成合规，不先执行。",
+    "新增验收spec路径和profile在冻结清单由主线程授权，当前只编案例不写spec或共享config。"
+  ]
+}

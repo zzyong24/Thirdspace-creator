@@ -1,7 +1,7 @@
 /** T957: request serialization only. Loopback fixture rejects every request; no real model, DB or credential access. */
 import {createServer} from 'node:http';
 import {it as test,beforeAll as before,afterAll as after} from 'vitest';
-import type {ModelSpec} from './provider-factory';
+import type {ApiModelSpec} from './provider-factory';
 import assert from 'node:assert/strict';
 import {createPiProviderModel} from './pi-provider';
 import {runChatPiLoop} from './chat/chat-pi-loop';
@@ -18,7 +18,7 @@ before(async()=>{await new Promise<void>(r=>server.listen(0,'127.0.0.1',r));base
 after(async()=>{console.warn=originalWarn;console.error=originalError;server.closeAllConnections();await new Promise<void>(r=>server.close(()=>r()));});
 const system='fixture-system-before\n'+USER_FACING_RESPONSE_POLICY;
 const latest='fixture-latest-user:只生成一张选题卡';
-const model=(apiFormat:ModelSpec["apiFormat"])=>createPiProviderModel({apiFormat,baseUrl,model:'fixture-model',token:'fixture-not-a-secret'});
+const model=(apiFormat:ApiModelSpec["apiFormat"])=>createPiProviderModel({apiFormat,baseUrl,model:'fixture-model',token:'fixture-not-a-secret'});
 async function captured(run:()=>PromiseLike<unknown>){const start=requests.length;await assert.rejects(async()=>await run());assert.equal(requests.length,start+1,'one refused request, no retries');return requests.at(-1)!;}
 for(const apiFormat of ['openai_chat','openai_responses','anthropic'] as const)test(`1. HTTP serialization preserves system/latest user: ${apiFormat}`,async()=>{
  const {body,path}=await captured(()=>model(apiFormat).doGenerate({prompt:[{role:'system',content:system},{role:'user',content:[{type:'text',text:'fixture-old-user'}]},{role:'assistant',content:[{type:'text',text:'fixture-old-assistant'}]},{role:'user',content:[{type:'text',text:latest}]}],maxOutputTokens:128,abortSignal:AbortSignal.timeout(8000)}));

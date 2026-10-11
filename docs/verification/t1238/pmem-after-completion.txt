@@ -1,0 +1,1 @@
+✓ pmem sync 完成 → PROJECT.md (codex/local-codex-unified-engine @ ebd31b714) · 边界剩余 5 · 开放任务 200 · codegraph 跳过

@@ -1,0 +1,46 @@
+LED-058 fixture correction actual recheck; original red reports retained
+Original check: pnpm --dir ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts src/execution/chat-tool-input-liveness.test.ts src/runtime/pi-provider-http.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0
+Each configured segment runs with test/hook180000ms retry0 maxWorkers1.
+
+Command: pnpm --dir ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts src/execution/chat-tool-input-liveness.test.ts src/runtime/pi-provider-http.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/ai-worker
+
+
+ Test Files  6 passed (6)
+      Tests  56 passed (56)
+   Start at  20:34:26
+   Duration  4.88s (transform 891ms, setup 0ms, import 2.30s, tests 1.83s, environment 0ms)
+
+
+EXIT_CODE=0
+
+Command: pnpm --dir backend exec vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/backend
+
+
+ Test Files  5 passed (5)
+      Tests  118 passed (118)
+   Start at  20:34:31
+   Duration  51.41s (transform 3.30s, setup 0ms, import 10.31s, tests 40.33s, environment 0ms)
+
+
+EXIT_CODE=0
+
+Command: pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:19383) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:19577) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  3 passed (3)
+      Tests  145 passed (145)
+   Start at  20:35:23
+   Duration  25.99s (transform 4.26s, setup 305ms, import 6.56s, tests 17.95s, environment 701ms)
+
+
+EXIT_CODE=0

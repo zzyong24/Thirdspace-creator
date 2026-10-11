@@ -9550,6 +9550,1297 @@
         ]
       },
       "scope_note": "独立范围复核后只校准测试预算与独立证据输出，原输入/断言/隔离/任务ID保持。唯一Next由root协调，控制面root串行。"
+    },
+    "T-1225": {
+      "task_id": "T-1225",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1225-assets-gallery-real-fixtures.md",
+        "frontend/tests/e2e/assets.spec.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "frontend/tests/e2e/creative-canvas.spec.ts",
+        "contract/src/operations/assets.ts",
+        "frontend/specs/page-specs.md",
+        "docs/verification/t1208/20261011-remaining-contract-triage.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/assets.spec.ts",
+        "docs/verification/t1225/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-e2e"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "独评后只補真实公开上传夹具与同ID页面/公共读回，保原断言/失败。仅PNG不代签其它媒体或AI；唯一Next串行。"
+    },
+    "T-1226": {
+      "task_id": "T-1226",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1226-playwright-media-root-isolation.md",
+        "backend/src/modules/assets/media-root.ts",
+        "backend/src/modules/settings/settings.service.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/app/api/v1/blob/[...key]/route.ts",
+        "frontend/playwright.config.ts",
+        "contract/src/operations/assets.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "backend/src/modules/assets/media-root.ts",
+        "backend/src/modules/assets/media-root.test.ts",
+        "frontend/playwright.config.ts",
+        "frontend/tests/e2e/media-root-isolation.spec.ts",
+        "docs/verification/t1226/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-e2e"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir backend exec vitest run src/modules/assets/media-root.test.ts --testTimeout 120000 --hookTimeout 120000",
+          "pnpm --dir backend exec tsc --noEmit",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "独评后无持久自定义root默认读取既有env，测试启动覆盖fresh媒体根；不动HOME/签名/归属/迁移/真实目录，实际公开upload/download验证。"
+    },
+    "T-1229": {
+      "task_id": "T-1229",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1229-radar-topic-output-recovery-diagnosis.md",
+        "backend/src/modules/intelligence/intelligence-generation-bridge.ts",
+        "backend/src/modules/execution/execution-flywheel-generation.service.ts",
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "docs/verification/t1224/browser-3914/BROWSER_VERIFICATION_REPORT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/internal/execution-worker.ts",
+        "ai-worker/src/execution/worker-runtime.ts",
+        "ai-worker/src/execution/intelligence-generation-worker-entry.ts",
+        "ai-worker/src/execution/intelligence-generation-worker.ts",
+        "backend/src/modules/ai-runtime/effective-skill-snapshot.ts",
+        "backend/src/modules/execution/execution-authority.service.ts",
+        "backend/src/modules/execution/execution-model-identity.service.ts",
+        "backend/src/modules/execution/execution-worker-call-ports.service.ts"
+      ],
+      "write_set": [
+        "contract/src/internal/execution-worker.ts",
+        "ai-worker/src/execution/worker-runtime.ts",
+        "ai-worker/src/execution/intelligence-generation-worker-entry.ts",
+        "backend/src/modules/intelligence/intelligence-generation-bridge.ts",
+        "backend/src/modules/intelligence/intelligence-rewrite-official.integration.test.ts",
+        "contract/src/internal/execution-worker.test.ts",
+        "ai-worker/src/execution/worker-runtime.test.ts",
+        "ai-worker/src/execution/intelligence-generation-worker.test.ts",
+        "docs/verification/t1229/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-e2e",
+        "creatoros-heavy-db-tests"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir contract exec vitest run src/internal/execution-worker.test.ts --config ../docs/verification/t1229/contract-test.config.mts --retry=0 --maxWorkers=1 --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir ai-worker exec vitest run src/execution/worker-runtime.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0 --maxWorkers=1 --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir backend exec vitest run src/modules/intelligence/intelligence-rewrite-official.integration.test.ts --retry=0 --maxWorkers=1 --testTimeout=1200000 --hookTimeout=240000",
+          "pnpm --dir contract exec tsc --noEmit",
+          "pnpm --dir ai-worker exec tsc --noEmit",
+          "pnpm --dir backend exec tsc --noEmit",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node tools/timeout-policy/verify.mjs",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "正式SPEC eacec680…及repair-scope-independent-review前置PASS，精确4产品/4测试。先真实official/effective完整链RED，再私有正文标签/专用capability GREEN；generic structured拒绝不放松，旧frozen原样、原ID/账本/期限/unknown保留。3917自然退出后串行实施，不动原E2E替身。"
+    },
+    "T-1231": {
+      "task_id": "T-1231",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1231-radar-promoted-project-scope.md",
+        "docs/verification/t1229/browser-3918/trace-minimal-evidence.json",
+        "docs/verification/t1229/browser-3918/REPORT.md",
+        "docs/features/t1022-account-group-workspace.md",
+        "docs/features/t1221-group-switch-e2e.md",
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "frontend/tests/e2e/zz-account-isolation.spec.ts",
+        "frontend/src/features/intelligence/intelligence-workbench-api.ts",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/request-context.server.ts",
+        "frontend/src/components/shell/account-switcher.tsx",
+        "frontend/src/app/api/v1/dispatch/route.ts",
+        "backend/src/workspace-scope.ts",
+        "backend/src/modules/candidate/candidate.service.ts",
+        "backend/src/modules/projects/projects.service.ts",
+        "backend/src/modules/projects/projects.repository.ts",
+        "contract/src/operations/account-groups.ts",
+        "contract/src/resources/account-groups.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "docs/verification/t1231/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-e2e",
+        "creatoros-heavy-db-tests"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec eslint tests/e2e/content-radar-one-click-project.spec.ts",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check",
+          "env -u CREATOROS_PLAYWRIGHT_DATA_ROOT CREATOROS_TEST_PORT=3919 CREATOROS_T1224_EVIDENCE_DIR=docs/verification/t1231/browser-3919/visible-copy pnpm --dir frontend exec playwright test tests/e2e/content-radar-one-click-project.spec.ts --config=../docs/verification/t1208/budget-recheck.config.ts --project=e2e --workers=1 --retries=0 --output=../docs/verification/t1231/browser-3919/test-output"
+        ]
+      },
+      "scope_note": "只校准3918已证旧account-only读取与UI纯组升级的测试scope；原正族/标题/ID/幂等/模型替身保留，新增镜像、刷新及严格错组拒绝。独评后实施，单Next串行、全部旧FAIL保留。"
+    },
+    "T-1232": {
+      "task_id": "T-1232",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1232-settings-dialog-public-verification.md",
+        "docs/verification/t1208/20261011-remaining-contract-triage.md",
+        "frontend/tests/e2e/settings.spec.ts",
+        "docs/features/t962-operations-sync-redfox.md",
+        "docs/superpowers/specs/2026-07-25-model-configuration-experience-redesign.page-spec.md",
+        "orchestrator/DECISION_LOG.md",
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "frontend/src/features/settings/settings-page.tsx",
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "frontend/src/app/(creator)/settings/page.tsx",
+        "contract/src/operations/settings.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1232/diagnosis-and-candidate.md",
+        "contract/src/resources/settings.ts",
+        "contract/src/operations/auth.ts",
+        "frontend/src/features/settings/text-model-configuration.tsx",
+        "frontend/src/features/settings/model-connection-test.tsx",
+        "frontend/src/features/settings/redfox-configuration.tsx",
+        "frontend/src/features/settings/skills-data.ts",
+        "frontend/src/features/settings/skills-section.tsx",
+        "backend/src/modules/settings/settings.service.ts",
+        "backend/src/modules/settings/settings.repository.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "frontend/playwright.config.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        "docs/verification/t1232/scope-independent-review.md",
+        "frontend/src/lib/contract-client.ts"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/settings.spec.ts",
+        "docs/verification/t1232/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec eslint tests/e2e/settings.spec.ts",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check",
+          "env -u CREATOROS_PLAYWRIGHT_DATA_ROOT CREATOROS_TEST_PORT=3929 pnpm --dir frontend exec playwright test tests/e2e/settings.spec.ts --config=../docs/verification/t1208/budget-recheck.config.ts --project=e2e --workers=1 --retries=0 --output=../docs/verification/t1232/browser-3929/test-output"
+        ]
+      },
+      "scope_note": "scope独评f0666544通过；仅原settings spec测试校准并追加五种UI真实闭环，T606逐字/title-ID/有效卡不变量保留。Skill定制/storage迁移/原生宿主/真实供应商待验。root冻结并准入后才能单Next3921/worker1/retry0，不与3920或其他重型Gate并行。 3928 Skill公共旅程实际4PASS/exit0/80源HEAD同/自然清理后，原4283 settings七例整体回归在3929，保持所有原断言/模板/模型本地fixture/120秒预算不变，不覆盖旧FAIL；before-settings-3929归档固定visible-copy14PNG+两JSON且11旧settings截图均已独立归档。"
+    },
+    "T-1233": {
+      "task_id": "T-1233",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1233-radar-body-fixture-protocol.md",
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "docs/verification/t1231/browser-3919/REPORT.md",
+        "docs/verification/t1231/browser-3919/visible-copy/T-1231-visible-copy.json",
+        "contract/src/resources/intelligence.ts",
+        "contract/src/resources/projects.ts",
+        "backend/src/modules/intelligence/intelligence-generation-bridge.ts",
+        "ai-worker/src/execution/intelligence-generation-worker.ts",
+        "frontend/src/features/intelligence/intelligence-workbench-api.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/resources/candidate.ts",
+        "frontend/src/features/intelligence/intelligence-workbench-types.ts",
+        "frontend/src/features/intelligence/topic-candidate-editor.tsx",
+        "ai-worker/src/execution/durable-generation-model.ts",
+        "ai-worker/src/runtime/provider-factory.ts",
+        "contract/src/operations/intelligence.ts",
+        "backend/src/modules/intelligence/topic-preview-runner.ts",
+        "frontend/src/features/draft-workbench/topic-card.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-page.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-data.ts",
+        "frontend/src/features/script/script-rich-editor.tsx",
+        "frontend/src/features/script/script-structure-view.tsx",
+        "backend/src/modules/intelligence/intelligence.service.ts",
+        "docs/verification/t1233/diagnosis-and-candidate.md",
+        "docs/verification/t1233/scope-independent-review.md",
+        "ai-worker/src/runtime/pi-provider.ts",
+        "ai-worker/src/runtime/pi-provider-codec.ts",
+        "ai-worker/src/runtime/pi-provider-json-compat.test.ts",
+        "ai-worker/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js",
+        "docs/verification/t1233/scope-independent-review-round2.md"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "docs/verification/t1233/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec eslint tests/e2e/content-radar-one-click-project.spec.ts",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check",
+          "env -u CREATOROS_PLAYWRIGHT_DATA_ROOT CREATOROS_TEST_PORT=3920 CREATOROS_T1224_EVIDENCE_DIR=docs/verification/t1233/browser-3920/visible-copy pnpm --dir frontend exec playwright test tests/e2e/content-radar-one-click-project.spec.ts --config=../docs/verification/t1208/budget-recheck.config.ts --project=e2e --workers=1 --retries=0 --output=../docs/verification/t1233/browser-3920/test-output"
+        ]
+      },
+      "scope_note": "原scope Round1 FAIL保留，Round2 15fc2b29候选PASS后只改单一radar spec。按真实wire stream字段JSON/SSE正文，不按prompt词；原T1231所有scope/idem/负族保留，公共正文/seed/同task及真实屏内截图。root源码冻结并给窗口后单Next3920，禁止与3921或重型Gate并行。"
+    },
+    "T-1234": {
+      "task_id": "T-1234",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1234-group-skill-customize-availability.md",
+        "docs/features/t1022-account-group-workspace.md",
+        "docs/superpowers/specs/2026-07-24-account-skill-overlay-replacement.md",
+        "docs/superpowers/specs/2026-07-24-account-skill-overlay-contract.md",
+        "frontend/src/app/(creator)/settings/page.tsx",
+        "frontend/src/features/settings/skills-data.ts",
+        "frontend/src/features/settings/skills-section.tsx",
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "contract/src/operations/settings.ts",
+        "contract/src/resources/settings.ts",
+        "backend/src/modules/settings/settings.service.ts",
+        "backend/src/modules/settings/settings.repository.ts",
+        "backend/src/modules/settings/group-skill-overlay.integration.test.ts",
+        "frontend/tests/e2e/settings.spec.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/contract-client.ts",
+        "frontend/src/lib/account-events.ts",
+        "frontend/src/features/settings/skills-data.test.ts",
+        "frontend/src/features/settings/skills-section.test.tsx",
+        "frontend/tests/helpers/test-environment.ts",
+        "frontend/playwright.config.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        ".agents/skills/oil-ui-pro/SKILL.md",
+        ".agents/skills/oil-ui-pro/references/existing-project.md",
+        ".agents/skills/oil-ui-pro/references/interaction-and-state.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "frontend/src/styles/tokens.css",
+        "frontend/tests/e2e/assets.spec.ts",
+        "frontend/tests/e2e/media-root-isolation.spec.ts",
+        "frontend/src/components/shell/account-switcher.tsx",
+        "frontend/tests/e2e/zz-account-isolation.spec.ts",
+        "docs/verification/t1234/3922-test-candidate.md",
+        "frontend/src/app/(creator)/layout.tsx",
+        "frontend/src/app/(creator)/page.tsx",
+        "backend/src/db.ts",
+        "backend/src/workspace-scope.ts",
+        "backend/src/modules/platform-account/account-group.service.ts",
+        "backend/src/schema/platform-account.ts",
+        "contract/src/index.ts",
+        "docs/verification/t1234/browser-3927-green/history-recovery-candidate.md",
+        "docs/verification/t1234/browser-3927-green/case4-flow-candidate.md",
+        "docs/verification/t1234/browser-3927-independent-diagnosis.md",
+        "frontend/src/components/shell/sidebar.tsx",
+        "docs/verification/t1234/response-waiter-settlement-candidate.md",
+        "docs/verification/t1234/ui-rollback-default-diagnosis-and-candidate.md",
+        "docs/verification/t1234/ui-rollback-default-scope-review.md"
+      ],
+      "write_set": [
+        "frontend/src/features/settings/skills-data.ts",
+        "frontend/src/features/settings/skills-section.tsx",
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "frontend/src/features/settings/skills-data.test.ts",
+        "frontend/src/features/settings/skills-section.test.tsx",
+        "frontend/tests/e2e/group-skill-customization.spec.ts",
+        "docs/verification/t1234/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec eslint src/features/settings/skills-data.ts src/features/settings/skills-section.tsx src/features/settings/settings-interactive-region.tsx src/features/settings/skills-data.test.ts src/features/settings/skills-section.test.tsx tests/e2e/group-skill-customization.spec.ts",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "pnpm --dir frontend exec vitest run src/features/settings/skills-data.test.ts src/features/settings/skills-section.test.tsx --maxWorkers=1 --testTimeout=240000 --hookTimeout=120000 --retry=0",
+          "pnpm --dir frontend exec vitest run src/features/copilot/ai-copilot-interactions.test.tsx src/features/knowledge/knowledge-dump-zone.test.tsx src/features/topics/topics-interactions.test.tsx src/components/overlays/overlay-routing.test.tsx src/lib/copilot-navigation.test.ts src/features/copilot/chat-tool-trace.test.tsx src/features/automations/run-controls.test.tsx src/features/automations/cadence.test.ts --maxWorkers=1 --testTimeout=240000 --hookTimeout=120000 --retry=0",
+          "node orchestrator/process/boundary-scan.mjs",
+          "git diff --check",
+          "pnpm --dir backend exec tsx ../docs/verification/t1234/workspace-repository-probe.mts",
+          "env -u CREATOROS_PLAYWRIGHT_DATA_ROOT CREATOROS_TEST_PORT=3928 pnpm --dir frontend exec playwright test tests/e2e/group-skill-customization.spec.ts --config=../docs/verification/t1208/budget-recheck.config.ts --project=e2e --workers=1 --retries=0 --output=../docs/verification/t1234/browser-3928/test-output",
+          "env -u CREATOROS_PLAYWRIGHT_DATA_ROOT CREATOROS_TEST_PORT=3930 pnpm --dir frontend exec playwright test tests/e2e/group-skill-customization.spec.ts --grep \"组内 Skill 历史回滚与恢复默认通过真实按钮新增版本并刷新保留\" --config=../docs/verification/t1208/budget-recheck.config.ts --project=e2e --workers=1 --retries=0 --output=../docs/verification/t1234/browser-3930/test-output"
+        ]
+      },
+      "scope_note": "3924真实目标RED exit1/disabled120秒/0PUT/74source+HEAD同后，原完整三产品候选独评PASS生效。三现产品+两原unit+新E2E完整七族，不改backend/contract/sharedtransport/原4283/T1237布局。产品作者仅3src+2unit，E2E作者仅新spec，源写窗口无Next。先有效component RED再GREEN，最终统一types/独评/冻结，root单Next公共GREEN，原FAIL保全。 最终GREEN独立目录3927，不覆盖3924真实RED；原26断言保全和最终组件67/67真实PASS记录独立保留。类型/LED047/边界及新E2E准备独评先行，源稳定后root单次自然运行。 3927实际2PASS2FAIL原图trace全部保留；history a9a5afa7与真实Modal导航case4 64b50b由独评合并scope PASS，下一源窗口仅新Skill E2E修真实就绪/关闭/Link步骤，不改产品、不force或脚本scope，不把取消算晚回执。root冻结后新3928目录运行一次。 46a真实types0、timeout-policy1仅静态27HEAD既有（执行166PASS）、boundary0旧5与diff0，原receipt稳定保留。独评对新spec三个response waiter立即settled/finally有限join及各case外层预算校准scope PASS；只同spec收尾不改4283/业务/请求或断言，最终新类型后3928单次运行。 3928实际4PASS/3929原settings7PASS后，候选affc4524独评窄PASS，仅末尾追加第五UI回滚/默认成功case；原830e完整前缀/所有旧case/helper保持，docs内AST预算加第五目标。产品/contract/单元/helper配置及新增CAS负例/policy恢复均禁改。统一静态+源码独评冻结后单次3930仅新增case，fresh/worker1/retry0，保旧图与失败。"
+    },
+    "T-1235": {
+      "task_id": "T-1235",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1235-density-reload-persistence.md",
+        "docs/features/t1232-settings-dialog-public-verification.md",
+        "frontend/src/app/layout.tsx",
+        "frontend/src/components/shell/theme-sync.tsx",
+        "frontend/src/components/shell/theme-sync.test.tsx",
+        "frontend/src/components/shell/pre-hydration-scripts.test.tsx",
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "frontend/tests/e2e/settings.spec.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "frontend/playwright.config.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        ".agents/skills/oil-ui-pro/SKILL.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/src/app/globals.css"
+      ],
+      "write_set": [
+        "frontend/src/app/layout.tsx",
+        "frontend/src/components/shell/theme-sync.tsx",
+        "frontend/src/components/shell/theme-sync.test.tsx",
+        "frontend/src/components/shell/pre-hydration-scripts.test.tsx",
+        "docs/verification/t1235/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/components/shell/theme-sync.test.tsx src/components/shell/pre-hydration-scripts.test.tsx src/features/settings/settings-interactive-region.test.tsx --retry=0 --maxWorkers=1 --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "env -u CREATOROS_PLAYWRIGHT_DATA_ROOT CREATOROS_TEST_PORT=3923 pnpm --dir frontend exec playwright test tests/e2e/settings.spec.ts --grep \"外观主题与密度\" --config=../docs/verification/t1208/budget-recheck.config.ts --project=e2e --workers=1 --retries=0 --output=../docs/verification/t1235/browser-3923/test-output"
+        ]
+      },
+      "scope_note": "独立scope b48895/487e67 PASS后准2源2原tests+docs，先真实聚焦组件RED后修改GREEN。原settings4283完全不改，原FAIL图字节保全后单Next3923真实原case；3922与其它源修改不可同窗口，原theme/handshake/security/cleanup不回归。"
+    },
+    "T-1236": {
+      "task_id": "T-1236",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1236-model-probe-visible-result.md",
+        "docs/features/t1232-settings-dialog-public-verification.md",
+        "frontend/src/features/settings/model-connection-test.tsx",
+        "frontend/src/features/settings/text-model-configuration.tsx",
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "frontend/src/features/settings/use-model-configuration-mutation.ts",
+        "frontend/src/features/settings/use-settings-mutation.ts",
+        "frontend/src/features/settings/multimodal-model-configuration.tsx",
+        "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "frontend/tests/e2e/settings.spec.ts",
+        "frontend/src/lib/contract-client.ts",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/account-events.ts",
+        "contract/src/operations/settings.ts",
+        "frontend/src/server/settings-model-test-wrap.ts",
+        ".agents/skills/oil-ui-pro/SKILL.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/src/features/settings/settings-page.tsx",
+        "frontend/src/app/(creator)/settings/page.tsx",
+        "contract/src/resources/settings.ts",
+        "docs/verification/t1236/diagnosis-and-candidate.md",
+        "docs/verification/t1236/late-refresh-candidate.md",
+        "docs/verification/t1236/implementation-independent-review.md"
+      ],
+      "write_set": [
+        "frontend/src/features/settings/model-connection-test.tsx",
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "frontend/src/features/settings/text-model-configuration.tsx",
+        "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "frontend/src/features/settings/use-model-configuration-mutation.ts",
+        "docs/verification/t1236/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec vitest run src/features/settings/settings-interactive-region.test.tsx --retry=0 --maxWorkers=1 --testTimeout=120000 --hookTimeout=120000",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "env -u CREATOROS_PLAYWRIGHT_DATA_ROOT CREATOROS_TEST_PORT=3926 pnpm --dir frontend exec playwright test tests/e2e/settings.spec.ts --grep \"默认本地模型\" --config=../docs/verification/t1208/budget-recheck.config.ts --project=e2e --workers=1 --retries=0 --output=../docs/verification/t1236/browser-3926/test-output"
+        ]
+      },
+      "scope_note": "原三产品候选独评PASS，实证迟到refresh双RED后第四专用hook7eef28ba独评scope PASS。仅四现产品+一原组件test+docs，shared mutation/HTTP/原4283不动。私有typed过期控制只跳旧刷新，入口先于error/pending、成功/异常双路径复核；当前真实错误保原。补ABA/apiFormat失效族。无Next源写窗口，统一冻结后root才放公共3926。"
+    },
+    "T-1237": {
+      "task_id": "T-1237",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1237-settings-narrow-layout.md",
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "frontend/src/features/settings/settings-page.tsx",
+        "frontend/tests/e2e/settings.spec.ts",
+        "frontend/src/components/ui/dialog.tsx",
+        "frontend/src/components/ui/tabs.tsx",
+        ".agents/skills/oil-ui-pro/SKILL.md",
+        ".agents/skills/oil-ui-pro/references/existing-project.md",
+        ".agents/skills/oil-ui-pro/references/interaction-and-state.md",
+        "docs/features/t1022-account-group-workspace/UI_RULES.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1237/diagnosis-and-candidate.md",
+        "frontend/playwright.config.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "docs/verification/t1208/budget-recheck.config.ts"
+      ],
+      "write_set": [
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "frontend/tests/e2e/settings-responsive-layout.spec.ts",
+        "docs/verification/t1237/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec tsc --noEmit",
+          "env -u CREATOROS_PLAYWRIGHT_DATA_ROOT CREATOROS_TEST_PORT=3925 pnpm --dir frontend exec playwright test tests/e2e/settings-responsive-layout.spec.ts --config=../docs/verification/t1208/budget-recheck.config.ts --project=e2e --workers=1 --retries=0 --output=../docs/verification/t1237/browser-3925/test-output"
+        ]
+      },
+      "scope_note": "独评一产品class/新布局spec PASS，纯样式不制造RED；旧实图为视觉基线，绑定仅Dialogclass+新E2E。md前全宽2/3列导航和正文，md+原双栏。源写不与Next/组件冻结执行重叠，root保scope/业务/原4283。3925仅统一冻结后准入。"
+    },
+    "T-1238": {
+      "task_id": "T-1238",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1238-codex-unified-text-image-engine.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "contract/src/**",
+        "backend/src/**",
+        "ai-worker/src/**",
+        "frontend/src/**"
+      ],
+      "write_set": [
+        "contract/src/**",
+        "backend/src/**",
+        "backend/drizzle/0133_assistant_execution_engine.sql",
+        "backend/drizzle/meta/_journal.json",
+        "ai-worker/src/**",
+        "ai-worker/scripts/**",
+        "ai-worker/vendor/**",
+        "frontend/src/server/**",
+        "frontend/src/app/api/knowledge/**",
+        "frontend/src/features/settings/**",
+        "frontend/src/features/copilot/**",
+        "frontend/src/features/article/article-result-actions.tsx",
+        "frontend/src/features/projects/graphic-post-results.tsx",
+        "frontend/src/features/projects/publication-result-actions.tsx",
+        "frontend/src/features/projects/video-output-workbench.tsx",
+        "frontend/src/lib/codex-capability-explanation.ts",
+        "frontend/src/proxy.ts",
+        "frontend/src/proxy.test.ts",
+        "frontend/scripts/**",
+        "docs/verification/t1238/**",
+        "orchestrator/probes/T-1238/**",
+        "docs/features/t1238-codex-unified-text-image-engine.md",
+        "docs/features/t1238-codex-unified-text-image-engine.review.md",
+        "orchestrator/process/reconcile.config.json",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json",
+        "orchestrator/context/T-1238.md",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/ARTIFACT_MANIFEST.yaml",
+        "BACKLOG.md",
+        "frontend/src/features/intelligence/intelligence-workbench.test.tsx"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir contract typecheck",
+          "pnpm --dir ai-worker typecheck",
+          "pnpm --dir backend typecheck",
+          "node tools/timeout-policy/verify.mjs",
+          "node orchestrator/process/boundary-scan.mjs"
+        ]
+      },
+      "scope_note": "DEC-T1238-001已确认完整文本/图片/后台统一范围；主迁移0133与公共UI/执行恢复消费者均属已独评SPEC。冻结lineages禁止写入。源代码实现和隔离验收不冒充安装版发布；全局既有欠债单独保留。"
+    },
+    "T-1239": {
+      "task_id": "T-1239",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1239-review-learning-public-acceptance.md",
+        "docs/verification/t1208/experience-followup-diagnosis.md",
+        "BACKLOG-details.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/tests/e2e/experience.spec.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        "contract/src/operations/learnings.ts",
+        "contract/src/operations/ai.ts",
+        "backend/src/modules/ai-runtime/chat-tools.ts",
+        "backend/src/modules/ai-runtime/review-context.ts",
+        "backend/src/modules/learnings/learnings.transport.ts",
+        "backend/src/modules/learnings/learnings.service.ts",
+        "backend/src/modules/ai/ai.service.ts",
+        "frontend/src/features/copilot/chat-result-cards.tsx",
+        "frontend/src/features/review/review-analyze-island.tsx",
+        "frontend/src/features/review/review-workspace-data.ts",
+        "frontend/src/features/review/analytics-review-page.tsx",
+        "frontend/src/features/review/analytics-review-interactive-region.tsx",
+        "frontend/src/features/review/current-period-learnings.test.tsx",
+        "frontend/src/features/knowledge/knowledge-data.ts",
+        "frontend/src/features/knowledge/knowledge-workspace-header.tsx",
+        "frontend/src/app/(creator)/knowledge/page.tsx",
+        "frontend/src/server/persistence-client.ts",
+        "docs/features/t1200-knowledge-workspace-redesign.md",
+        "docs/superpowers/specs/2026-07-04-experience-relocation-design.md",
+        "docs/superpowers/specs/2026-07-13-replication-loop-linkage-design.md",
+        "docs/superpowers/specs/2026-07-29-learning-radar-dedupe-and-transcript-url-fix.md",
+        "docs/verification/t1239/browser-candidate.md",
+        "docs/features/t1238-codex-unified-text-image-engine.md",
+        "frontend/playwright.config.ts",
+        "frontend/src/app/(creator)/projects/[projectId]/review/page.tsx",
+        "backend/src/application/context/review-subject.ts",
+        "backend/src/modules/ai-runtime/creative-context.ts",
+        "frontend/tests/visual/__setup__.ts",
+        "frontend/tests/visual/__teardown__.ts",
+        "contract/src/operations/account-groups.ts",
+        "contract/src/operations/projects.ts",
+        "contract/src/operations/artifacts.ts",
+        "contract/src/operations/analytics.ts",
+        "contract/src/resources/account-groups.ts",
+        "contract/src/resources/projects.ts",
+        "contract/src/resources/artifacts.ts",
+        "frontend/tests/e2e/t1207-supplemental-route-matrix.spec.ts",
+        "frontend/tests/e2e/semantic-material-generation.spec.ts",
+        "frontend/tests/e2e/t954-director-review.spec.ts",
+        "frontend/tests/e2e/new-project.spec.ts",
+        "frontend/tests/e2e/zz-account-isolation.spec.ts",
+        "docs/verification/t1239/browser-candidate-review.md"
+      ],
+      "write_set": [
+        "docs/features/t1239-review-learning-public-acceptance.md",
+        "frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts",
+        "docs/verification/t1239/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec eslint tests/e2e/review-empty-diagnosis-entry.spec.ts",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check",
+          "env -u CREATOROS_PLAYWRIGHT_DATA_ROOT CREATOROS_TEST_PORT=3931 pnpm --dir frontend exec playwright test tests/e2e/review-empty-diagnosis-entry.spec.ts --config=../docs/verification/t1208/budget-recheck.config.ts --project=e2e --workers=1 --retries=0 --trace=on --output=../docs/verification/t1239/browser-3931/test-output"
+        ]
+      },
+      "scope_note": "当前仅只读诊断及准确浏览器候选，独立评审前不得改源码/测试/契约或运行模型/DB/Next/E2E；不得假定无指标复盘按钮可见。保T739证据边界、旧FAIL，区分聊天人工采纳与持久candidate。root负责控制文件和准入，作者只写docs/verification/t1239/**。 候选27f7453独评scope PASS后仅新独立spec与docs准入；不点击CTA、不触发模型/Task/learnings，不改旧case/helper/config。作者只源/轻量AST lint diff，root统一types/实施独评/唯一3931，原首FAIL保留。"
+    },
+    "T-1240": {
+      "task_id": "T-1240",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1240-asset-picker-public-recheck.md",
+        "frontend/tests/e2e/t1069-asset-picker.spec.ts",
+        "frontend/tests/e2e/media-root-isolation.spec.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "frontend/playwright.config.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        "docs/verification/t1207/scenario-index.ndjson",
+        "docs/features/t1226-playwright-media-root-isolation.md",
+        "frontend/src/components/media/asset-picker.tsx",
+        "frontend/src/components/media/use-asset-picker-source.ts",
+        "backend/src/modules/assets/assets.transport.ts",
+        "backend/src/modules/assets/assets.service.ts",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1240/diagnosis-and-candidate.md",
+        "docs/verification/t1240/original-put-facts-redacted.json",
+        "docs/verification/t1240/asset-picker-budget-analysis.mjs",
+        "docs/verification/t1240/asset-picker-budget-analysis.json",
+        "backend/src/modules/assets/asset-search.ts",
+        "backend/src/modules/assets/assets.repository.ts",
+        "backend/src/modules/assets/workspace-blob.service.ts",
+        "backend/src/modules/assets/object-storage.ts",
+        "backend/src/modules/assets/localfs-object-storage.ts",
+        "backend/src/modules/assets/media-root.ts",
+        "frontend/src/app/api/v1/blob/[...key]/route.ts",
+        "frontend/src/lib/request-context.server.ts",
+        "node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/package.json",
+        "node_modules/.pnpm/playwright-core@1.60.0/node_modules/playwright-core/lib/coreBundle.js",
+        "docs/verification/t1240/scope-independent-review.md"
+      ],
+      "write_set": [
+        "docs/features/t1240-asset-picker-public-recheck.md",
+        "frontend/tests/e2e/t1069-asset-picker.spec.ts",
+        "docs/verification/t1240/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec eslint tests/e2e/t1069-asset-picker.spec.ts",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check",
+          "env -u CREATOROS_PLAYWRIGHT_DATA_ROOT CREATOROS_TEST_PORT=3932 pnpm --dir frontend exec playwright test tests/e2e/t1069-asset-picker.spec.ts --config=../docs/verification/t1208/budget-recheck.config.ts --project=e2e --workers=1 --retries=0 --trace=on --output=../docs/verification/t1240/browser-3932/test-output"
+        ]
+      },
+      "scope_note": "仅只读诊断和准确候选；作者只写docs/verification/t1240/**，不改源码/测试/控制，不启模型/DB/Next/E2E/Gate。保原140及所有断言，完整预算闭合需独评后root再准。 候选d1976e独评scope PASS后仅原spec PUT组header/outer两机械点；原所有余字节、140与全部断言保持，逆两改58314303。root归档旧source/FAIL图、单writer串行、统一types/实施独评/单次3932 traceon；无新request default、无权限/业务/helper更改。"
+    },
+    "T-1241": {
+      "task_id": "T-1241",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1241-review-dev-compiler-panic.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/package.json",
+        "frontend/next.config.ts",
+        "frontend/playwright.config.ts",
+        "frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts",
+        "docs/verification/t1239/browser-3931/execution-receipt.json",
+        "docs/verification/t1239/browser-3931/browser.log",
+        "docs/verification/t1241/cache-disposition-scope-review.md",
+        "docs/verification/t1241/cache-disposition/preflight.json",
+        "docs/verification/t1241/cache-disposition/result.json"
+      ],
+      "write_set": [
+        "docs/features/t1241-review-dev-compiler-panic.md",
+        "docs/verification/t1241/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "git diff --check"
+        ]
+      },
+      "scope_note": "编译阻塞的诊断与可再生成缓存精确处置；原source/产品/config不改。当前元数据补绑定晚于诊断执行，不补拍任何前置Gate；前置真实范围独评/当场无句柄和进程/原FAIL保全证据已保存。后续3933/3934编译恢复只证明这些运行，不证明根因或全局稳定。运行后的源码未再写入。"
+    },
+    "T-1242": {
+      "task_id": "T-1242",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1242-review-pure-group-cookie-assertion.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/request-context.server.ts",
+        "frontend/src/lib/session.server.ts",
+        "docs/verification/t1239/browser-3933/account-cookie-diagnosis.md",
+        "docs/verification/t1242/scope-independent-review.md",
+        "docs/verification/t1242/implementation-independent-review.md",
+        "docs/verification/t1242/root-static-dd6-363/receipt.json",
+        "docs/verification/t1239/browser-3934/execution-receipt.json",
+        "docs/verification/t1239/browser-3934/independent-review.md"
+      ],
+      "write_set": [
+        "docs/features/t1242-review-pure-group-cookie-assertion.md",
+        "frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts",
+        "docs/verification/t1242/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec eslint tests/e2e/review-empty-diagnosis-entry.spec.ts",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "沿T1239已准入新spec的单点测试合同校准，作者获root唯一写窗在3932自然结束后执行。当前元数据补绑定晚于源码实施，不补拍前置Gate；真实独评、b9保全、严格仅空/absent而非空失败、dd62唯一diff/类型/3934公共E2E已保存。该公共运行不会自动覆盖历史输出目录；新验证必须另建fresh输出并保持worker1/retry0。产品/权限/contract/helper/config与预算不变。"
+    },
+    "T-1243": {
+      "task_id": "T-1243",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1243-draft-video-preview-recheck.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "orchestrator/T853-FRONTEND-JOURNEY.md",
+        "docs/features/t1200-knowledge-workspace-redesign.md",
+        "frontend/src/features/draft-workbench/ammo-card-list.tsx",
+        "frontend/src/features/draft-workbench/ammo-card-list.test.tsx",
+        "frontend/src/features/draft-workbench/draft-workbench-data.ts",
+        "frontend/src/components/resources/material-summary.tsx",
+        "frontend/src/components/resources/asset-live-preview.tsx",
+        "frontend/src/components/resources/asset-preview-url.ts",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/contract-client.ts",
+        "frontend/tests/e2e/draft-ammo-media-preview.spec.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "frontend/playwright.config.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        "output/content-samples/ai-copy-eval-loop/motion-preview.mp4",
+        "docs/verification/t1243/implementation-candidate.md",
+        "docs/verification/t1243/draft-ammo-media-preview.candidate.ts",
+        "docs/verification/t1243/scope-readiness-review.md",
+        "docs/verification/t1243/playback-candidate.md",
+        "docs/verification/t1243/draft-ammo-playback.candidate.ts",
+        "docs/verification/t1243/playback-scope-independent-review.md",
+        "docs/verification/t1243/browser-3936-green/independent-review.md"
+      ],
+      "write_set": [
+        "docs/features/t1243-draft-video-preview-recheck.md",
+        "frontend/src/features/draft-workbench/ammo-card-list.tsx",
+        "frontend/tests/e2e/draft-ammo-media-preview.spec.ts",
+        "docs/verification/t1243/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec eslint src/features/draft-workbench/ammo-card-list.tsx tests/e2e/draft-ammo-media-preview.spec.ts",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "主会话唯一writer串行。准确6a31测试准备候选独立准入，原输入/双击/URL惰性/视频metadata/键盘/刷新/盒边界均保留，先公共真实RED新目录3935，再仅产品kind提示一行纠错、GREEN新目录3936；两原图和同asset trace身份，不新增主动API读回，不覆盖旧T853 evidence。4h case、请求/观察120s、24h独立driver；单Next/fresh媒体库/worker1/retry0，不启动真实模型/调度任务。新增结果不得代签所有功能。 当场3936仅预览元信息PASS，保false指纹产物漂移；现2e789a补实际play/时间推进候选独立准入，仅追加原test，保全部旧断言和输入，3937独立单次，120秒play/poll且4h/24h，最多48保守槽，无产品新改/模型。"
+    },
+    "T-1244": {
+      "task_id": "T-1244",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1244-automation-run-now-login-wait.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1244/automations-run-now-public.candidate.ts",
+        "docs/verification/t1244/candidate-accuracy-and-budget.md",
+        "docs/verification/t1244/candidate-budget-analysis.json",
+        "docs/verification/t1244/scope-independent-review.md",
+        "contract/src/operations/account-groups.ts",
+        "contract/src/operations/platform-accounts.ts",
+        "contract/src/operations/scheduling.ts",
+        "contract/src/operations/ai.ts",
+        "contract/src/operations/execution.ts",
+        "contract/src/resources/scheduling.ts",
+        "contract/src/resources/ai.ts",
+        "contract/src/resources/intelligence.ts",
+        "contract/src/resources/platform-accounts.ts",
+        "contract/src/envelope.ts",
+        "frontend/src/features/automations/automations-island.tsx",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/request-context.server.ts",
+        "frontend/src/server/persistence-client.ts",
+        "backend/src/application/scheduling/collection-execution.ts",
+        "backend/src/application/scheduling/platform-collector.ts",
+        "backend/src/modules/ai-runtime/scheduled-collection-scheduler.ts",
+        "backend/src/modules/ai-runtime/scheduled-collection-runner.ts",
+        "backend/src/modules/ai-runtime/scheduled-flywheel-execution.service.ts",
+        "backend/src/modules/ai/execution-task-projection.ts",
+        "backend/src/modules/execution/persistent-task.service.ts",
+        "backend/src/modules/platform-collection/platform-collection.service.ts",
+        "frontend/playwright.config.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        "node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/worker/workerProcessEntry.js"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/automations-run-now-public.spec.ts",
+        "docs/verification/t1244/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec eslint tests/e2e/automations-run-now-public.spec.ts",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "只实施608b6a完整新单例，无产品/helper/config修改。真实隔离无binding小红书/UI启用/唯一次runNow、原runAIexecution真实授权等待、同ID公开读回和错组404、桌面390实图，不验扫码/真人采集。379保守槽、各有限请求/expect120s，case24h/命令project24h/独立driver120h，worker1/retry0/fresh DB-auth-media/单Next/HEAD实际源冻结；原FAIL和真实任务不变。"
+    },
+    "T-1245": {
+      "task_id": "T-1245",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1244-automation-run-now-login-wait.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1244/automations-run-now-public.candidate.ts",
+        "docs/verification/t1244/candidate-accuracy-and-budget.md",
+        "docs/verification/t1244/candidate-budget-analysis.json",
+        "docs/verification/t1244/scope-independent-review.md",
+        "contract/src/operations/account-groups.ts",
+        "contract/src/operations/platform-accounts.ts",
+        "contract/src/operations/scheduling.ts",
+        "contract/src/operations/ai.ts",
+        "contract/src/operations/execution.ts",
+        "contract/src/resources/scheduling.ts",
+        "contract/src/resources/ai.ts",
+        "contract/src/resources/intelligence.ts",
+        "contract/src/resources/platform-accounts.ts",
+        "contract/src/envelope.ts",
+        "frontend/src/features/automations/automations-island.tsx",
+        "frontend/src/lib/http-transport.ts",
+        "frontend/src/lib/request-context.server.ts",
+        "frontend/src/server/persistence-client.ts",
+        "backend/src/application/scheduling/collection-execution.ts",
+        "backend/src/application/scheduling/platform-collector.ts",
+        "backend/src/modules/ai-runtime/scheduled-collection-scheduler.ts",
+        "backend/src/modules/ai-runtime/scheduled-collection-runner.ts",
+        "backend/src/modules/ai-runtime/scheduled-flywheel-execution.service.ts",
+        "backend/src/modules/ai/execution-task-projection.ts",
+        "backend/src/modules/execution/persistent-task.service.ts",
+        "backend/src/modules/platform-collection/platform-collection.service.ts",
+        "frontend/playwright.config.ts",
+        "frontend/tests/helpers/test-environment.ts",
+        "docs/verification/t1208/budget-recheck.config.ts",
+        "node_modules/.pnpm/playwright@1.60.0/node_modules/playwright/lib/worker/workerProcessEntry.js",
+        "docs/features/t1245-automations-narrow-layout.md",
+        "docs/verification/t1245/automations-run-now-layout.candidate.ts",
+        "docs/verification/t1245/automations-local-css.candidate.patch",
+        "docs/verification/t1245/diagnosis-and-implementation-candidate.md",
+        "docs/verification/t1245/independent-review.md",
+        "docs/verification/t1245/candidate-budget-analysis.json",
+        "frontend/src/components/shell/sidebar.tsx",
+        "frontend/src/components/shell/app-shell.tsx",
+        "frontend/src/components/ui/scroll-area.tsx",
+        "frontend/src/styles/tokens.css"
+      ],
+      "write_set": [
+        "frontend/tests/e2e/automations-run-now-public.spec.ts",
+        "frontend/src/features/automations/automations-island.tsx",
+        "docs/features/t1245-automations-narrow-layout.md",
+        "docs/verification/t1245/**"
+      ],
+      "exclusive_resources": [
+        "creatoros-next-playwright-single-server",
+        "frontend-next-build-cache",
+        "t1207-scenario-index"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm --dir frontend exec eslint tests/e2e/automations-run-now-public.spec.ts",
+          "pnpm --dir frontend exec tsc --noEmit",
+          "git diff --check"
+        ]
+      },
+      "scope_note": "独评748976完整测试候选，原608b6a断言/唯一runNow全保留，增加稳定侧栏、390/900/1536真实滚动/几何/原job与run详情12图；先原产品3939，只有稳定RED才按局部CSS候选修，禁止为瞬态原图强改。唯一产品点island CSS，handler/API/poll/shell/config不动。643槽120s=21h26m，case/project24h、driver120h，fresh DB/auth/media单Next worker1 retry0、源与HEAD冻结。"
+    },
+    "T-1246": {
+      "task_id": "T-1246",
+      "archetype": [
+        "orchestration"
+      ],
+      "tasks": [
+        "implementation"
+      ],
+      "depends_on": [],
+      "read_set": [
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "PROJECT.md",
+        "PROJECT_CONTEXT.md",
+        "orchestrator/SYSTEM_ARCHITECTURE.md",
+        "docs/verification/t1246/source-inventory-before.json"
+      ],
+      "write_set": [
+        "BACKLOG.md",
+        "ai-worker/scripts/build.mjs",
+        "ai-worker/src/execution/agentic-worker-run.ts",
+        "ai-worker/src/execution/asset-codex-worker-run.test.ts",
+        "ai-worker/src/execution/asset-processing-worker.ts",
+        "ai-worker/src/execution/asset-worker-run.ts",
+        "ai-worker/src/execution/chat-generation-worker.ts",
+        "ai-worker/src/execution/chat-worker-run.ts",
+        "ai-worker/src/execution/codex-acp-host.ts",
+        "ai-worker/src/execution/codex-acp-policy.test.ts",
+        "ai-worker/src/execution/codex-acp-worker-run.test.ts",
+        "ai-worker/src/execution/codex-acp-worker-run.ts",
+        "ai-worker/src/execution/codex-agentic-worker-run.test.ts",
+        "ai-worker/src/execution/codex-agentic-worker-run.ts",
+        "ai-worker/src/execution/codex-app-server-protocol.ts",
+        "ai-worker/src/execution/codex-app-server.ts",
+        "ai-worker/src/execution/codex-call-context.ts",
+        "ai-worker/src/execution/codex-external-chat-native-run.test.ts",
+        "ai-worker/src/execution/codex-image-generation.ts",
+        "ai-worker/src/execution/codex-native-turn.test.ts",
+        "ai-worker/src/execution/codex-native-turn.ts",
+        "ai-worker/src/execution/codex-status-entry.ts",
+        "ai-worker/src/execution/cover-worker-run.ts",
+        "ai-worker/src/execution/durable-codex-provider.test.ts",
+        "ai-worker/src/execution/durable-generation-model.test.ts",
+        "ai-worker/src/execution/durable-generation-model.ts",
+        "ai-worker/src/execution/external-chat-native-images.ts",
+        "ai-worker/src/execution/external-chat-recovery.test.ts",
+        "ai-worker/src/execution/external-chat-recovery.ts",
+        "ai-worker/src/execution/external-chat-tools.test.ts",
+        "ai-worker/src/execution/external-chat-tools.ts",
+        "ai-worker/src/execution/external-chat-worker-run.test.ts",
+        "ai-worker/src/execution/external-chat-worker-run.ts",
+        "ai-worker/src/execution/flywheel-generation-worker.ts",
+        "ai-worker/src/execution/generation-error.ts",
+        "ai-worker/src/execution/intelligence-generation-worker-entry.ts",
+        "ai-worker/src/execution/intelligence-generation-worker.test.ts",
+        "ai-worker/src/execution/intelligence-generation-worker.ts",
+        "ai-worker/src/execution/knowledge-distill-worker.ts",
+        "ai-worker/src/execution/knowledge-worker-generation.test.ts",
+        "ai-worker/src/execution/structured-worker-generation.ts",
+        "ai-worker/src/execution/video-decisions-worker.ts",
+        "ai-worker/src/execution/video-visual-review-worker-entry.ts",
+        "ai-worker/src/execution/video-visual-review-worker-run.ts",
+        "ai-worker/src/execution/worker-entry.ts",
+        "ai-worker/src/execution/worker-runtime.test.ts",
+        "ai-worker/src/execution/worker-runtime.ts",
+        "ai-worker/src/runtime/codex-provider.ts",
+        "ai-worker/src/runtime/pi-provider-diagnostic.ts",
+        "ai-worker/src/runtime/pi-provider-embedding.ts",
+        "ai-worker/src/runtime/pi-provider-wire.test.ts",
+        "ai-worker/src/runtime/pi-provider.ts",
+        "ai-worker/src/runtime/provider-factory.ts",
+        "ai-worker/src/runtime/provider-identity.ts",
+        "ai-worker/vendor/codex-acp/src/CodexEventHandler.ts",
+        "ai-worker/vendor/codex-acp/src/CreatorOsPolicy.ts",
+        "backend/drizzle/0133_assistant_execution_engine.sql",
+        "backend/drizzle/meta/_journal.json",
+        "backend/src/application/generation/codex-runtime-freeze.test.ts",
+        "backend/src/application/generation/creative-canvas-root.ts",
+        "backend/src/application/generation/moments-model-runtime.ts",
+        "backend/src/application/generation/transactional-task-runtime.ts",
+        "backend/src/integration/chat-worker-entry.test.ts",
+        "backend/src/integration/intelligence-source-workspace.test.ts",
+        "backend/src/migration-convergence.test.ts",
+        "backend/src/migration-convergence.ts",
+        "backend/src/modules/ai-runtime/asset-business-execution.service.test.ts",
+        "backend/src/modules/ai-runtime/asset-business-execution.service.ts",
+        "backend/src/modules/ai-runtime/asset-generation-modes.ts",
+        "backend/src/modules/ai-runtime/asset-legacy-recovery.service.ts",
+        "backend/src/modules/ai-runtime/asset-processing-business-adapter.ts",
+        "backend/src/modules/ai-runtime/comment-qa-sift-runner.test.ts",
+        "backend/src/modules/ai-runtime/comment-qa-sift-runner.ts",
+        "backend/src/modules/ai-runtime/cover-runner.ts",
+        "backend/src/modules/ai-runtime/daily-topic-business-adapter.ts",
+        "backend/src/modules/ai-runtime/index.ts",
+        "backend/src/modules/ai-runtime/knowledge-classify-runner.test.ts",
+        "backend/src/modules/ai-runtime/knowledge-classify-runner.ts",
+        "backend/src/modules/ai-runtime/knowledge-distill-runner.test.ts",
+        "backend/src/modules/ai-runtime/knowledge-distill-runner.ts",
+        "backend/src/modules/ai-runtime/knowledge-generation-business-adapters.test.ts",
+        "backend/src/modules/ai-runtime/knowledge-generation-business-adapters.ts",
+        "backend/src/modules/ai-runtime/knowledge-generation.integration.test.ts",
+        "backend/src/modules/ai-runtime/knowledge-generation.service.ts",
+        "backend/src/modules/ai-runtime/knowledge-generation.types.ts",
+        "backend/src/modules/ai-runtime/knowledge-relate-runner.test.ts",
+        "backend/src/modules/ai-runtime/knowledge-relate-runner.ts",
+        "backend/src/modules/ai-runtime/knowledge-worker-routing.test.ts",
+        "backend/src/modules/ai-runtime/local-codex-status.service.ts",
+        "backend/src/modules/ai-runtime/scheduled-flywheel-execution.service.ts",
+        "backend/src/modules/ai-runtime/script-runner.ts",
+        "backend/src/modules/ai-runtime/video-decisions-business-adapter.ts",
+        "backend/src/modules/ai/agentic-proposal-staging.service.ts",
+        "backend/src/modules/ai/ai-task-commit.ts",
+        "backend/src/modules/ai/ai.service.ts",
+        "backend/src/modules/ai/chat-turn-submission.service.ts",
+        "backend/src/modules/ai/execution-agentic-candidate.service.ts",
+        "backend/src/modules/ai/execution-codex-agentic-candidate.test.ts",
+        "backend/src/modules/ai/external-chat-call-tree.ts",
+        "backend/src/modules/ai/external-chat-turn.service.test.ts",
+        "backend/src/modules/ai/external-chat-turn.service.ts",
+        "backend/src/modules/ai/external-task-tool.service.ts",
+        "backend/src/modules/assets/asset-processing-workspace.test.ts",
+        "backend/src/modules/assets/asset-processing.service.ts",
+        "backend/src/modules/assets/media-root.test.ts",
+        "backend/src/modules/assets/media-root.ts",
+        "backend/src/modules/creative-canvas/creative-canvas.service.ts",
+        "backend/src/modules/execution/agentic-tool-binding.ts",
+        "backend/src/modules/execution/asset-execution-binding.ts",
+        "backend/src/modules/execution/chat-generation-recovery.ts",
+        "backend/src/modules/execution/chat-tool-stream-projection.service.ts",
+        "backend/src/modules/execution/claimed-worker-supervision.ts",
+        "backend/src/modules/execution/codex-read-recovery.fixture.ts",
+        "backend/src/modules/execution/codex-read-recovery.integration.test.ts",
+        "backend/src/modules/execution/codex-read-recovery.test.ts",
+        "backend/src/modules/execution/codex-read-recovery.ts",
+        "backend/src/modules/execution/execution-agentic-tool-ports.service.ts",
+        "backend/src/modules/execution/execution-asset-ports.service.ts",
+        "backend/src/modules/execution/execution-asset-result.service.test.ts",
+        "backend/src/modules/execution/execution-asset-result.service.ts",
+        "backend/src/modules/execution/execution-authority.service.ts",
+        "backend/src/modules/execution/execution-call-ledger.service.ts",
+        "backend/src/modules/execution/execution-chat-generation.service.ts",
+        "backend/src/modules/execution/execution-chat-hooks.service.test.ts",
+        "backend/src/modules/execution/execution-chat-model-identity.service.test.ts",
+        "backend/src/modules/execution/execution-chat-model-identity.service.ts",
+        "backend/src/modules/execution/execution-chat-route.service.ts",
+        "backend/src/modules/execution/execution-chat-task-submission.service.ts",
+        "backend/src/modules/execution/execution-chat-text-node.service.ts",
+        "backend/src/modules/execution/execution-chat-tool-ports.service.ts",
+        "backend/src/modules/execution/execution-chat-web-read.service.ts",
+        "backend/src/modules/execution/execution-checkpoint.service.test.ts",
+        "backend/src/modules/execution/execution-checkpoint.service.ts",
+        "backend/src/modules/execution/execution-codex-call.service.test.ts",
+        "backend/src/modules/execution/execution-codex-call.service.ts",
+        "backend/src/modules/execution/execution-codex-chat-tool.test.ts",
+        "backend/src/modules/execution/execution-codex-research-evidence.test.ts",
+        "backend/src/modules/execution/execution-cover.service.ts",
+        "backend/src/modules/execution/execution-flywheel-generation.service.ts",
+        "backend/src/modules/execution/execution-generation-ports.service.test.ts",
+        "backend/src/modules/execution/execution-generation-ports.service.ts",
+        "backend/src/modules/execution/execution-model-identity.service.test.ts",
+        "backend/src/modules/execution/execution-model-identity.service.ts",
+        "backend/src/modules/execution/execution-research-evidence.service.ts",
+        "backend/src/modules/execution/execution-scheduled-child.service.test.ts",
+        "backend/src/modules/execution/execution-scheduled-child.service.ts",
+        "backend/src/modules/execution/execution-transcribe-postprocess.service.ts",
+        "backend/src/modules/execution/execution-video-codex-route.test.ts",
+        "backend/src/modules/execution/execution-video-visual-review.integration.test.ts",
+        "backend/src/modules/execution/execution-video-visual-review.service.ts",
+        "backend/src/modules/execution/execution-video.service.ts",
+        "backend/src/modules/execution/executor-registry.ts",
+        "backend/src/modules/execution/index.ts",
+        "backend/src/modules/execution/local-codex-worker-env.ts",
+        "backend/src/modules/execution/model-call-recovery.ts",
+        "backend/src/modules/execution/model-worker-dispatcher.ts",
+        "backend/src/modules/execution/persistent-task.service.test.ts",
+        "backend/src/modules/execution/persistent-task.service.ts",
+        "backend/src/modules/execution/run-execution-task.test.ts",
+        "backend/src/modules/execution/run-execution-task.ts",
+        "backend/src/modules/execution/transcribe-postprocess.integration.test.ts",
+        "backend/src/modules/execution/video-render/executor.test.ts",
+        "backend/src/modules/execution/video-render/executor.ts",
+        "backend/src/modules/execution/video-visual-codex.fixture.ts",
+        "backend/src/modules/execution/workbench-plan-history.ts",
+        "backend/src/modules/execution/workbench-plan.service.ts",
+        "backend/src/modules/intelligence/intelligence-generation-bridge.ts",
+        "backend/src/modules/intelligence/intelligence-rewrite-official.integration.test.ts",
+        "backend/src/modules/intelligence/intelligence-workspace-scope.ts",
+        "backend/src/modules/intelligence/intelligence.service.test.ts",
+        "backend/src/modules/intelligence/intelligence.service.ts",
+        "backend/src/modules/intelligence/project-reference.service.ts",
+        "backend/src/modules/intelligence/source-sync-runner.ts",
+        "backend/src/modules/intelligence/transcript-execution-binding.ts",
+        "backend/src/modules/settings/codex-engine-preferences.test.ts",
+        "backend/src/modules/settings/settings.repository.ts",
+        "backend/src/modules/settings/settings.service.test.ts",
+        "backend/src/modules/settings/settings.service.ts",
+        "backend/src/schema/settings.ts",
+        "contract/src/assistant-operation-catalog.ts",
+        "contract/src/internal/asset-generation.ts",
+        "contract/src/internal/execution-engine.ts",
+        "contract/src/internal/execution-worker.test.ts",
+        "contract/src/internal/execution-worker.ts",
+        "contract/src/internal/local-codex-status.ts",
+        "contract/src/operations/settings.ts",
+        "contract/src/resources/settings.ts",
+        "contract/tests/codex-assistant-tool-catalog.test.ts",
+        "contract/tests/codex-execution-route.test.ts",
+        "docs/features/t1246-integrated-dev-package-acceptance.md",
+        "docs/features/t1246-integrated-dev-package-acceptance.review.md",
+        "docs/verification/t1246/**",
+        "frontend/playwright.config.ts",
+        "frontend/scripts/desktop/execution-worker-runtime.mjs",
+        "frontend/scripts/desktop/execution-worker-runtime.test.mjs",
+        "frontend/src/app/api/chat/route.test.ts",
+        "frontend/src/app/api/knowledge/classify/route.test.ts",
+        "frontend/src/app/api/knowledge/classify/route.ts",
+        "frontend/src/app/api/knowledge/comment-sift/route.ts",
+        "frontend/src/app/api/knowledge/distill/route.test.ts",
+        "frontend/src/app/api/knowledge/distill/route.ts",
+        "frontend/src/app/api/knowledge/knowledge-worker-routes.test.ts",
+        "frontend/src/app/api/knowledge/relate/route.ts",
+        "frontend/src/app/layout.tsx",
+        "frontend/src/components/shell/pre-hydration-scripts.test.tsx",
+        "frontend/src/components/shell/theme-sync.test.tsx",
+        "frontend/src/components/shell/theme-sync.tsx",
+        "frontend/src/features/article/article-result-actions.tsx",
+        "frontend/src/features/assets/assets-interactive-region.tsx",
+        "frontend/src/features/automations/automations-island.tsx",
+        "frontend/src/features/copilot/ai-copilot-interactions.test.tsx",
+        "frontend/src/features/copilot/assistant-engine-selector.tsx",
+        "frontend/src/features/copilot/assistant-engine-server.test.ts",
+        "frontend/src/features/copilot/assistant-engine.ts",
+        "frontend/src/features/copilot/use-assistant-engine.test.tsx",
+        "frontend/src/features/copilot/use-assistant-engine.ts",
+        "frontend/src/features/draft-workbench/ammo-card-list.tsx",
+        "frontend/src/features/intelligence/intelligence-workbench.test.tsx",
+        "frontend/src/features/projects/graphic-post-results.tsx",
+        "frontend/src/features/projects/publication-result-actions.tsx",
+        "frontend/src/features/projects/video-output-workbench.tsx",
+        "frontend/src/features/settings/assistant-engine-card.test.tsx",
+        "frontend/src/features/settings/assistant-engine-card.tsx",
+        "frontend/src/features/settings/model-connection-test.tsx",
+        "frontend/src/features/settings/settings-interactive-region.test.tsx",
+        "frontend/src/features/settings/settings-interactive-region.tsx",
+        "frontend/src/features/settings/settings-model-region.codex.test.tsx",
+        "frontend/src/features/settings/settings-model-region.tsx",
+        "frontend/src/features/settings/settings-page.test.tsx",
+        "frontend/src/features/settings/settings-page.tsx",
+        "frontend/src/features/settings/skills-data.test.ts",
+        "frontend/src/features/settings/skills-data.ts",
+        "frontend/src/features/settings/skills-section.test.tsx",
+        "frontend/src/features/settings/skills-section.tsx",
+        "frontend/src/features/settings/text-model-configuration.tsx",
+        "frontend/src/features/settings/use-model-configuration-mutation.ts",
+        "frontend/src/lib/codex-capability-explanation.ts",
+        "frontend/src/proxy.test.ts",
+        "frontend/src/proxy.ts",
+        "frontend/src/server/ai-runtime/live-chat-session.consumer.test.tsx",
+        "frontend/src/server/chat-model-message-snapshot.test.ts",
+        "frontend/src/server/chat-model-message-snapshot.ts",
+        "frontend/src/server/codex-frozen-preflight.integration.test.ts",
+        "frontend/src/server/execution-worker-path.ts",
+        "frontend/src/server/persistence-client.lifecycle.test.ts",
+        "frontend/src/server/persistence-client.ts",
+        "frontend/src/server/prepare-chat-reply.ts",
+        "frontend/tests-t1246-generated/**",
+        "frontend/tests/e2e/assets.spec.ts",
+        "frontend/tests/e2e/automations-run-now-public.spec.ts",
+        "frontend/tests/e2e/content-radar-one-click-project.spec.ts",
+        "frontend/tests/e2e/draft-ammo-media-preview.spec.ts",
+        "frontend/tests/e2e/group-skill-customization.spec.ts",
+        "frontend/tests/e2e/media-root-isolation.spec.ts",
+        "frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts",
+        "frontend/tests/e2e/settings-responsive-layout.spec.ts",
+        "frontend/tests/e2e/settings.spec.ts",
+        "frontend/tests/e2e/t1069-asset-picker.spec.ts",
+        "orchestrator/ARTIFACT_MANIFEST.yaml",
+        "orchestrator/DECISION_LOG.md",
+        "orchestrator/context/T-1246.md",
+        "orchestrator/process/modules.config.json",
+        "orchestrator/progress.json"
+      ],
+      "verify_commands": {
+        "implementation": [
+          "pnpm -C frontend desktop:package-local",
+          "node orchestrator/process/boundary-scan.mjs",
+          "node tools/timeout-policy/verify.mjs"
+        ]
+      },
+      "scope_note": "用户授权整合已确认来源、开发包、子Agent真实验收、首轮记录后集中修复；不改共享在途源、不发布。App因用户暂不系统认证保留未验。"
     }
   }
 }

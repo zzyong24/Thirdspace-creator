@@ -1,0 +1,14 @@
+▲ Next.js 16.2.9 (Turbopack)
+- Local:         http://127.0.0.1:56378
+- Network:       http://127.0.0.1:56378
+- Environments: .env.local
+✓ Ready in 277ms
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3938
+- PID:          35083
+- Dir:          /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+- Log:          .next/dev/logs/next-development.log
+
+Run kill 35083 to stop it.
+[?25h

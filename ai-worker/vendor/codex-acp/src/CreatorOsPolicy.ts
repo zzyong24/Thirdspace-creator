@@ -66,6 +66,7 @@ function checkFixedConfig(config: ObjectValue, profile: CreatorOsPolicyProfile):
     }
     if (profile === CREATOROS_ACP_POLICY_V2 && features.non_prefixed_mcp_tool_names !== false) unverified();
     if (features.image_generation !== true) unverified();
+    if (features.omit_app_server_notification_media !== undefined && features.omit_app_server_notification_media !== false) unverified();
     const write = config.sandbox_workspace_write;
     if (write !== undefined && write !== null) {
         const roots = record(write).writable_roots;
@@ -84,7 +85,7 @@ export function readCreatorOsPolicy(env: NodeJS.ProcessEnv): CreatorOsPolicy | n
     checkFixedConfig(config, profile);
     const configKeys = new Set(["sandbox_mode", "approval_policy", "approvals_reviewer", "web_search", "features", "mcp_servers"]);
     if (Object.keys(config).some(key => !configKeys.has(key))) unverified();
-    const featureKeys = new Set<string>([...CREATOROS_DISABLED_FEATURES, "image_generation", ...(profile === CREATOROS_ACP_POLICY_V2 ? ["non_prefixed_mcp_tool_names"] : [])]);
+    const featureKeys = new Set<string>([...CREATOROS_DISABLED_FEATURES, "image_generation", "omit_app_server_notification_media", ...(profile === CREATOROS_ACP_POLICY_V2 ? ["non_prefixed_mcp_tool_names"] : [])]);
     if (Object.keys(record(config.features)).some(key => !featureKeys.has(key))) unverified();
     const servers = record(config.mcp_servers);
     for (const value of Object.values(servers)) {
@@ -110,6 +111,7 @@ export function creatorOsStartupArguments(policy: CreatorOsPolicy): string[] {
             ? `features.code_mode={enabled=false,direct_only_tool_namespaces=${JSON.stringify(directNamespaces(policy.config))}}`
             : `features.${name}=false`), 'features.image_generation=true',
         ...(policy.profile === CREATOROS_ACP_POLICY_V2 ? ['features.non_prefixed_mcp_tool_names=false'] : []),
+        ...(record(policy.config.features).omit_app_server_notification_media === false ? ['features.omit_app_server_notification_media=false'] : []),
         ...(policy.disabledMcpNames.length === 0 ? [] : [`mcp_servers={${policy.disabledMcpNames.map(name => `${JSON.stringify(name)}={enabled=false}`).join(",")}}`]),
     ]);
     const seen = new Set<string>();
@@ -125,6 +127,7 @@ export function creatorOsStartupArguments(policy: CreatorOsPolicy): string[] {
 export function assertCreatorOsConfigResponse(policy: CreatorOsPolicy, response: unknown): void {
     const config = record(record(response).config);
     checkFixedConfig(config, policy.profile);
+    if (record(policy.config.features).omit_app_server_notification_media === false && record(config.features).omit_app_server_notification_media !== false) unverified();
     if (policy.profile === CREATOROS_ACP_POLICY_V2 && !sameNames(directNamespaces(config), directNamespaces(policy.config))) unverified();
     const servers = record(config.mcp_servers);
     if (Object.keys(servers).length !== policy.disabledMcpNames.length) unverified();
@@ -215,4 +218,14 @@ export function creatorOsTurnMeta(meta: unknown, threadId: string, turn: unknown
     const creatoros = original.creatoros !== null && typeof original.creatoros === "object" && !Array.isArray(original.creatoros)
         ? original.creatoros as ObjectValue : {};
     return {...original, creatoros: {...creatoros, codex: {threadId, turnId:actual.id, status:actual.status}}};
+}
+
+/** 保留真实原生累计计量；ACP used 仅上下文容量，不能代替账单。 */
+export function creatorOsUsageMeta(threadId:unknown,turnId:unknown,total:unknown):ObjectValue|undefined{
+    if(typeof threadId!=='string'||!threadId.trim()||typeof turnId!=='string'||!turnId.trim()||!total||typeof total!=='object'||Array.isArray(total))return undefined;
+    const source=total as Record<string,unknown>,usage:Record<string,number>={};
+    for(const key of ['inputTokens','outputTokens','totalTokens']){
+        const value=source[key];if(typeof value!=='number'||!Number.isSafeInteger(value)||value<0)return undefined;usage[key]=value;
+    }
+    return {creatoros:{codex:{threadId,turnId,usage}}};
 }

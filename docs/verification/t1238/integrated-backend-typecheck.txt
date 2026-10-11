@@ -1,0 +1,7 @@
+
+> @creatoros/backend@0.1.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+> tsc --noEmit
+
+../ai-worker/src/execution/worker-runtime.ts(17,9): error TS1109: Expression expected.
+../ai-worker/src/execution/worker-runtime.ts(18,1): error TS1005: '}' expected.
+ ELIFECYCLE  Command failed with exit code 2.

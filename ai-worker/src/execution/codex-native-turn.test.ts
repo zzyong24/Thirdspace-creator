@@ -42,3 +42,24 @@ it('未知回执只读取同一turn，缺ID或未完成保留未知，不重放�
  expect(f.rpc.request).toHaveBeenCalledTimes(1);expect(f.rpc.request).toHaveBeenCalledWith('thread/read',{threadId:'thread-actual',includeTurns:true});
  await expect(recoverCodexNativeTurn(f.rpc,'thread-actual',undefined)).rejects.toThrow();expect(f.rpc.request).toHaveBeenCalledTimes(1);
 });
+it('T1238 结构化输出、授权图片及真实图片-only终态与恢复',async()=>{
+ const f=fixture();
+ const running=runCodexNativeTurn({rpc:f.rpc,mcpNames:[],cwd:'/tmp/owned-task',prompt:'生图',signal:new AbortController().signal,tools:[],outputSchema:{type:'object'},images:[{url:'data:image/png;base64,aW1hZ2U='}],...f.callbacks});
+ await vi.waitFor(()=>expect(f.callbacks.onTurn).toHaveBeenCalled());
+ expect(f.rpc.request.mock.calls.find((x:any)=>x[0]==='turn/start')?.[1]).toMatchObject({outputSchema:{type:'object'},input:[{type:'text',text:'生图'},{type:'image',url:'data:image/png;base64,aW1hZ2U='}]});
+ const item={type:'imageGeneration',id:'img-actual',status:'completed',result:'aW1hZ2U='};
+ await f.rpc.onNotification('turn/completed',{threadId:'thread-actual',turn:{id:'turn-actual',status:'completed',items:[item]}});
+ expect(await running).toMatchObject({text:'',images:[{id:'img-actual',base64:'aW1hZ2U='}]});
+ f.rpc.request.mockResolvedValueOnce({thread:{id:'thread-actual',turns:[{id:'turn-actual',status:'completed',items:[item]}]}});
+ expect(await recoverCodexNativeTurn(f.rpc,'thread-actual','turn-actual')).toMatchObject({images:[{id:'img-actual'}]});
+});
+
+it('原预算用量已超限只打断同thread/turn，不能等待completed或另发turn',async()=>{
+ const f=fixture(),observed=vi.fn(async()=>true);
+ const running=runCodexNativeTurn({rpc:f.rpc,mcpNames:[],cwd:'/tmp/task',prompt:'目标',signal:new AbortController().signal,tools:[],...f.callbacks,onUsage:observed});const caught=running.catch(e=>e);
+ await vi.waitFor(()=>expect(f.callbacks.onTurn).toHaveBeenCalled());
+ await f.rpc.onNotification('thread/tokenUsage/updated',{threadId:'thread-actual',turnId:'turn-actual',tokenUsage:{total:{inputTokens:10,outputTokens:3,totalTokens:13}}});
+ expect(observed).toHaveBeenCalledWith(expect.objectContaining({totalTokens:13}));
+ expect(f.rpc.request).toHaveBeenLastCalledWith('turn/interrupt',{threadId:'thread-actual',turnId:'turn-actual'},1000);
+ expect(await caught).toMatchObject({code:'CODEX_TOKEN_BUDGET_EXHAUSTED'});expect(f.rpc.request.mock.calls.filter((x:any)=>x[0]==='turn/start')).toHaveLength(1);
+});

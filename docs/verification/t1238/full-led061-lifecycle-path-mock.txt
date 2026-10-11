@@ -1,0 +1,10 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+{"witness":"T-1073 root dispose","sweepsBeforeStop":2,"sweepsAfterStop":2,"cronStops":1,"timersAfterStop":0}
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  20:34:36
+   Duration  26.12s (transform 5.43s, setup 124ms, import 7.64s, tests 18.14s, environment 0ms)
+

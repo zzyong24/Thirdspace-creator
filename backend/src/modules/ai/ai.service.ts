@@ -1,3 +1,4 @@
+import {frozenExecutionEngine} from '@creatoros/contract/execution-worker';
 import {PRIVATE_COLLECTION_SOURCE_KINDS} from '../scheduling';
 import {withWorkspaceParentWrite} from "../../workspace-write";
 import {requireWorkspace,workspaceKey,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
@@ -267,6 +268,7 @@ export interface ServiceDeps {
     ctx: RequestContext,
     taskType: string,
     inputData: Readonly<Record<string, unknown>>,
+    trustedRoute?: import("@creatoros/contract/execution-worker").ExecutionRoute,
   ) => Promise<Record<string, unknown>>;
 }
 
@@ -927,7 +929,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       const workspaceId=workspaceKey(ctx).id;
       const repo = repoFor(ctx, "ai.createTask", privateAdmission?scheduledCollectorJobId:undefined);
       const inputData = body.inputData ?? {};
-      const reservedFields = ["skillSnapshot", "platformPolicy"].filter((key) =>
+      const reservedFields = ["skillSnapshot", "platformPolicy", "executionRoute"].filter((key) =>
         Object.prototype.hasOwnProperty.call(inputData, key),
       );
       if (reservedFields.length > 0) {
@@ -1004,6 +1006,7 @@ export function createAiService(deps: ServiceDeps): AiService {
       // 记录稳定展示值，既不回读本地默认模型冒充渠道模型，也不把 Growth 下发的 model 泄露
       // 到 task DTO / 日志。
       const modelKey =
+        frozenExecutionEngine(runtimeData)==="codex" ? "codex" :
         runtimeData.modelAuthority === "channel-managed"
           ? "channel-managed"
           : (await repo.getModelConfig(body.taskType))?.modelName ??

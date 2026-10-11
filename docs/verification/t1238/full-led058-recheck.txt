@@ -1,0 +1,1458 @@
+LED-058 actual own-worktree recheck
+Original check: pnpm --dir ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts src/execution/chat-tool-input-liveness.test.ts src/runtime/pi-provider-http.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts --retry=0 && pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0
+Each configured package segment is run even after earlier failure, without retries; test/hook timeout 180000ms, maxWorkers 1.
+
+Command: pnpm --dir ai-worker exec vitest run src/execution/durable-generation-model.test.ts src/execution/durable-stream-model.test.ts src/execution/durable-pi-stream.test.ts src/execution/chat-tool-input-liveness.test.ts src/runtime/pi-provider-http.test.ts src/execution/intelligence-generation-worker.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/ai-worker
+
+
+ Test Files  6 passed (6)
+      Tests  56 passed (56)
+   Start at  20:26:31
+   Duration  5.00s (transform 891ms, setup 0ms, import 2.41s, tests 1.77s, environment 0ms)
+
+
+EXIT_CODE=0
+
+Command: pnpm --dir backend exec vitest run src/modules/execution/execution-call-ledger.service.test.ts src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/execution-chat-generation.service.test.ts src/modules/ai/chat-turn-completion.service.test.ts src/modules/intelligence/topic-preview-runner.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/backend
+
+
+ Test Files  5 passed (5)
+      Tests  118 passed (118)
+   Start at  20:26:36
+   Duration  48.91s (transform 3.35s, setup 0ms, import 9.70s, tests 38.34s, environment 0ms)
+
+
+EXIT_CODE=0
+
+Command: pnpm --dir frontend exec vitest run src/features/intelligence/intelligence-workbench.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/server/chat-execution-stream.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:14924) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport
+The current testing environment is not configured to support act(...)
+The current testing environment is not configured to support act(...)
+The current testing environment is not configured to support act(...)
+
+stderr | src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport
+You called act(async () => ...) without await. This could lead to unexpected testing behaviour, interleaving multiple act calls and mixing their scopes. You should - await act(async () => ...);
+
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx (61 tests | 57 failed) 16299ms
+     × [T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport 1024ms
+     × [T-1055] Codex 不可用时保留输入并指向真实设置卡 4ms
+     × 文章配图深链在已有会话仍预填，并提交可信文章与段落锚点 1002ms
+     × renders a CopilotHeader (page-specs §16 component tree) 2ms
+     × submit is disabled when empty, enabled after typing 1ms
+     × submitting calls sendMessage({text}) and clears the composer 1ms
+     × [T-233] 纯 Enter 不发送(换行),Cmd+Enter 发送 1ms
+     × [T-233] Shift+Enter 也发送(宽容两种修饰键) 1ms
+     × shows a stop button (not submit) while streaming 1ms
+     × renders assistant text parts + a topic.generate candidate card, and 采纳 calls candidates.create 1ms
+     × 同一对话展示真实计划回执和可预览产物，拒绝伪造的产物引用 1ms
+     × [T-813] 点击搜索卡阅读全文，同一轮发送可见 URL 与一次性 web.read 绑定 3ms
+     × slice 2:渲染 calibration.diagnose 工具结果为维度评分卡(只读展示) 1ms
+     × slice 2:渲染 review.analyze 工具结果为经验卡,采纳 → learnings.create 1ms
+     × [T-055b] 一键岛预填 —— 面板带 ?fn 打开且对话为空 → 话术写进输入框,绝不自动发送 1002ms
+     × [T-108] embed.request(autoSend)—— 稿面按钮请求进 rail → 自动 sendMessage 那句话术(不等回车) 1005ms
+     × [T-623] embed.request without autoSend prefills the existing rail and waits for the user 1002ms
+     × [T-954] 内容诊断省略工具命令，不继承 URL 的局改命令，纯文本答复正常结束 1002ms
+     × [T-716] 新稿面命令原子替换话术与段落锚点，不保留旧话术却暗换上下文 1003ms
+     × [T-716] 已挂载的对话 transport 每轮都读最新段落锚点，不发送首帧旧上下文 3ms
+     × [T-716] 局部改稿失败保留段落锚点，成功后仍可围绕同一段连续修订 1002ms
+     × [T-732] provider 失败后普通新消息不复用局部命令 1ms
+     × [T-716] 模型只解释却未产出局部候选时结束 loading 并保留目标段 1ms
+     × [T-732] 段落锚点失效后退出局部模式，普通消息不再被旧 selection 阻断 1ms
+     × [T-108] embed.request(autoSend)—— content_output subject 进 chip,项目 chip 仍常驻(项目上下文不丢) 1ms
+     × clicking a suggested-action chip fills the composer with its label 1ms
+     × [T-231⑨] 带 prefill 的 chip → 预填完整话术(非 label),且**不自动发送**(T-055b) 0ms
+     × [T-1022] 对话生成出错后沿原任务自动恢复，不再把重试责任交给用户 2ms
+     × [T-1022] 模型断流沿原任务自动恢复 1ms
+     × [T-1023] 连续提交失败后停止自动请求并提供继续恢复，不永久转圈 1ms
+     × [TEST-T1023-04] 已有后台任务时停止重连也不把任务说成失败 1ms
+     × [T-957] 原任务结果未知时不显示重新提交按钮：CHAT_RESULT_UNCONFIRMED 1ms
+     × [T-957] 原任务结果未知时不显示重新提交按钮：本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。 1ms
+     × [T-913] 模型未配置 → 直接打开模型设置，不再显示泛化重试 1ms
+     × [T-913] 定位未完成 → 直达定位中心，不误导去模型设置 1ms
+     × [T-715] 受管额度不足 → 显示充值入口，不显示模型设置或无意义重试 1ms
+     × [T-096 矩阵#3] 会话持久化:该 scope 存过 conversationId → 挂载读回历史(左下角开→关→再开恢复同一会话) 1008ms
+     × [T-096] 会话持久化:指针读回失败(会话被删)→ 清失效指针 + 落服务端兜底,自愈不毁档 1003ms
+     × [T-096 矩阵#4] 清 localStorage 后再开 → 服务端兜底恢复该 scope 最近会话(根因链 3/4 根治) 1002ms
+     × [T-096 矩阵#5] 选题岛「新对话」只清 surface:topics 指针,global 指针纹丝不动(不同桶互不覆盖) 7ms
+     × [T-096 矩阵#9] 历史记录:点开 → listConversations 只列当前 scope;点某条 → 读回该会话消息 1003ms
+     × 新对话:点「新对话」→ 清空会话 + 清当前 scope 的指针(同 scope 内新开一条) 7ms
+       × 输入 @ → 懒加载真项目列表(client.listProjects)并弹出补全下拉 2ms
+       × @ 后接查询串 → 按标题过滤候选 2ms
+       × 选中某项目 → @query 不进消息正文 + 显式项目引用标签保留完整 ID/标题 1ms
+       × [T-055b gate-F2] URL 选中态 → 头部常驻 @项目 chip;点 × 摘除后不再注入 2ms
+       × [T-055b gate-F2] 无任何上下文 → 显式「未关联项目」空 chip,不静默 1ms
+       × 移除项目引用 chip → chip 消失(撤销注入) 1ms
+       × 库里没有项目 → 下拉显示诚实空态(引导先建项目,不摆假行) 1ms
+       × [T-976] 聊天未知结果不变成后台核对通知，其他创作任务仍可通知 1003ms
+       × 首帧已是终态的历史任务不推通知(只播种) 1003ms
+       × 在途任务跑完 → 推 succeeded 通知卡,点 × 可关闭 1003ms
+       × 失败任务 → 通知诚实带原因 1003ms
+   × 失败或拒绝工具 output-error 显示终态，历史回放不永久转圈 1ms
+   × 失败或拒绝工具 output-denied 显示终态，历史回放不永久转圈 1ms
+   × 失败或拒绝工具 approval-responded 显示终态，历史回放不永久转圈 1ms
+   × 慢任务读取超过轮询间隔时不叠加请求，返回结果仍能停止轮询 2ms
+(node:15108) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ src/features/intelligence/intelligence-workbench.test.tsx (61 tests | 3 failed) 3984ms
+     × [T-1022] 改写阶段暂时失败保留已有结果并由原任务自动恢复 39ms
+     × [T-744] 成功但未采纳 时可直接重新生成改写稿，活动任务期间旧稿只读且不可误采纳 74ms
+     × [T-744] 已采纳且下游选题已淘汰 时可直接重新生成改写稿，活动任务期间旧稿只读且不可误采纳 70ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 60 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport
+AssertionError: expected 'pi' to be 'codex' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-text-subtle"[39m
+            [33mdata-slot[39m=[32m"context-chip-empty"[39m
+          [36m>[39m
+            [0m未关联项目 · 输入 @ 引用一个项目[0m
+          [36m</span>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"rounded-md border px-2.5 py-1 text-xs text-foreground hover:bg-surface-muted"[39m
+            [33mhref[39m=[32m"/canvases"[39m
+          [36m>[39m
+            [0m在画布中打开[0m
+          [36m</a>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex min-h-0 flex-1 flex-col gap-2"[39m
+          [33mdata-region[39m=[32m"prompt"[39m
+          [33mda...
+
+Expected: "codex"
+Received: "pi"
+
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:206:98
+    206|     render(<AICopilotContent viewModel={VM} />);
+    207|     await act(async () => {});
+    208|     expect(fetchMock.mock.calls.filter(([input]) => String(input) === …
+       |                  ^
+    209|   });
+    210|
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1055] Codex 不可用时保留输入并指向真实设置卡
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:218:28
+    216|     expect(prepare("original").executionEngine).toBe("pi");
+    217|     mockStatus = "streaming";
+    218|     view.rerender(<AICopilotContent viewModel={VM} />);
+       |                            ^
+    219|     await act(async () => {await writeAssistantEngine("codex");});
+    220|     expect(patchPreferences).toHaveBeenCalledWith({params:undefined,qu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > 文章配图深链在已有会话仍预填，并提交可信文章与段落锚点
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Proxy.waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:231:11
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > renders a CopilotHeader (page-specs §16 component tree)
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:253:72
+    253|   });
+    254|   it("[T-473] 深链/嵌入 functionKey 只消费一次，新命令到来才重新武装", () => {
+    255|     const command = createOneShotFunctionKey("topic.enrich");
+       |       ^
+    256|     expect(command.consume()).toBe("topic.enrich");
+    257|     expect(command.consume()).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > submit is disabled when empty, enabled after typing
+TestingLibraryElementError: Unable to find a label with the text of: 提交提示给 Copilot
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:259:27
+    257|     expect(command.consume()).toBeNull();
+    258|     command.sync("topic.enrich");
+    259|     expect(command.consume()).toBeNull();
+       |                           ^
+    260|     // 稿面同一个动作再次点击时 key 相同，但 nonce/命令身份已变，必须允许新一轮执行。
+    261|     command.sync("topic.enrich", "request:2");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > submitting calls sendMessage({text}) and clears the composer
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:270:29
+    268|   it("renders a CopilotHeader (page-specs §16 component tree)", () => {
+    269|     render(<AICopilotContent viewModel={VM} />);
+    270|     expect(document.querySelector('[data-slot="copilot-header"]')).not…
+       |                             ^
+    271|   });
+    272|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-233] 纯 Enter 不发送(换行),Cmd+Enter 发送
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:285:29
+    283|
+    284|   it("submitting calls sendMessage({text}) and clears the composer", a…
+    285|     const user = userEvent.setup();
+       |                             ^
+    286|     render(<AICopilotContent viewModel={VM} />);
+    287|     const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaE…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-233] Shift+Enter 也发送(宽容两种修饰键)
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:300:29
+    298|   // [T-233] Enter=换行(治打字误发);Cmd/Ctrl+Enter 或 Shift+Enter 才发送。
+    299|   it("[T-233] 纯 Enter 不发送(换行),Cmd+Enter 发送", async () => {
+    300|     const user = userEvent.setup();
+       |                             ^
+    301|     render(<AICopilotContent viewModel={VM} />);
+    302|     const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaE…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > shows a stop button (not submit) while streaming
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:309:53
+    308|
+    309|     await user.type(textarea, "第二行");
+    310|     await user.keyboard("{Meta>}{Enter}{/Meta}");
+       |               ^
+    311|     expect(sendMessage).toHaveBeenCalledWith({ text: "第一行\n第二行" });
+    312|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > renders assistant text parts + a topic.generate candidate card, and 采纳 calls candidates.create
+TestingLibraryElementError: Unable to find an element with the text: 给你出 1 个选题：. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:347:19
+    346|               items: [
+    347|                 {
+    348|                   title: "反直觉开头对你有效",
+       | ^
+    349|                   angle: "用数据打破直觉",
+    350|                   contentRole: "traffic",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > 同一对话展示真实计划回执和可预览产物，拒绝伪造的产物引用
+TestingLibraryElementError: Unable to find an element with the text: 生成 HTML 报告. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:390:19
+    388|     const plan={planRevision:1,steps:[{stepId:"report",title:"生成 HTML …
+    389|       operationRefs:["call-1"],artifactRefs:["wa-valid@1"]}]};
+    390|     const artifact={artifactId:"wa-valid",version:1,mime:"text/html",s…
+       |                   ^
+    391|       relativePath:"报告/分析.html",taskId:"task-1",provenance:[]};
+    392|     const result=(operationId:string,payload:unknown,refs:string[]=[])…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-813] 点击搜索卡阅读全文，同一轮发送可见 URL 与一次性 web.read 绑定
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "阅读全文"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:430:29
+    429|               grounding: "web",
+    430|               items: [
+    431|                 {
+       |      ^
+    432|                   title: "DeepSeek Harness 开发者预览版",
+    433|                   url: "https://example.com/harness#intro",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > slice 2:渲染 calibration.diagnose 工具结果为维度评分卡(只读展示)
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:488:11
+    486|             input: { title: "我的视频" },
+    487|             output: {
+    488|               kind: "calibration.diagnosis",
+       |           ^
+    489|               diagnosis: {
+    490|                 dimensions: [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > slice 2:渲染 review.analyze 工具结果为经验卡,采纳 → learnings.create
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:517:11
+    515|         role: "assistant",
+    516|         parts: [
+    517|           {
+       |           ^
+    518|             type: "tool-review.analyze",
+    519|             toolCallId: "tc-3",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-055b] 一键岛预填 —— 面板带 ?fn 打开且对话为空 → 话术写进输入框,绝不自动发送
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Proxy.waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:533:11
+    531|     render(<AICopilotContent viewModel={VM} />);
+    532|     expect(
+    533|       document.querySelector('[data-slot="chat-learnings-card"]'),
+       |           ^
+    534|     ).not.toBeNull();
+    535|     await user.click(screen.getByText("采纳"));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-108] embed.request(autoSend)—— 稿面按钮请求进 rail → 自动 sendMessage 那句话术(不等回车)
+AssertionError: expected "vi.fn()" to be called with arguments: [ Array(1) ]
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:571:27
+    570|     expect(sendMessage).not.toHaveBeenCalled();
+    571|     rerender(
+    572|       <AICopilotContent
+       |             ^
+    573|         viewModel={VM}
+    574|         embed={{
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-623] embed.request without autoSend prefills the existing rail and waits for the user
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Proxy.waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:602:11
+    601|       <AICopilotContent viewModel={VM} embed={{ ...embedBase, request:…
+    602|     );
+    603|     rerender(
+       |    ^
+    604|       <AICopilotContent
+    605|         viewModel={VM}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-954] 内容诊断省略工具命令，不继承 URL 的局改命令，纯文本答复正常结束
+AssertionError: expected "vi.fn()" to be called with arguments: [ { text: '判断当前稿的观看理由，不要自动改稿。' } ]
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:624:45
+    622|       ).toBe("帮我复盘,提炼可复用的爆款要素沉淀成经验。");
+    623|     });
+    624|     expect(sendMessage).not.toHaveBeenCalled();
+       |                                             ^
+    625|   });
+    626|
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-716] 新稿面命令原子替换话术与段落锚点，不保留旧话术却暗换上下文
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:663:36
+    662|         embed={{
+    663|           ...embedBase,
+    664|           request: {
+       |            ^
+    665|             functionKey: "script.patch",
+    666|             prefill: "请只改写我选中的这一段。",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-716] 已挂载的对话 transport 每轮都读最新段落锚点，不发送首帧旧上下文
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:710:38
+    710|     ).not.toBeNull();
+    711|     expect(
+    712|       document.querySelector(
+       |    ^
+    713|         '[data-slot="context-chip"][data-kind="script_section"]',
+    714|       ),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-716] 局部改稿失败保留段落锚点，成功后仍可围绕同一段连续修订
+AssertionError: expected null not to be null
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:792:13
+    790|           kind: "script_section",
+    791|           id: "section-2",
+    792|           title: "第 2 段",
+       |             ^
+    793|           artifactId: "artifact-1",
+    794|           versionId: "version-6",
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-732] provider 失败后普通新消息不复用局部命令
+TestingLibraryElementError: Unable to find a label with the text of: 提交提示给 Copilot
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:919:29
+    917|       persistKey: "project:proj-1",
+    918|       request: {
+    919|         functionKey: "script.patch",
+       |                             ^
+    920|         prefill: "请只改写我选中的这一段。",
+    921|         selection: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-716] 模型只解释却未产出局部候选时结束 loading 并保留目标段
+TestingLibraryElementError: Unable to find a label with the text of: 提交提示给 Copilot
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:971:29
+    969|       persistKey: "project:proj-1",
+    970|       request: {
+    971|         functionKey: "script.patch",
+       |                             ^
+    972|         prefill: "请只改写我选中的这一段。",
+    973|         selection: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-732] 段落锚点失效后退出局部模式，普通消息不再被旧 selection 阻断
+TestingLibraryElementError: Unable to find a label with the text of: 提交提示给 Copilot
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1084:29
+    1082|       prefill: "请只改写我选中的这一段。",
+    1083|       selection: {
+    1084|         kind: "script_section",
+       |                             ^
+    1085|         id: "section-stale",
+    1086|         title: "第 2 段",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-108] embed.request(autoSend)—— content_output subject 进 chip,项目 chip 仍常驻(项目上下文不丢)
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1221:29
+    1220|         viewModel={VM}
+    1221|         embed={{
+    1222|           ...embedBase,
+       |            ^
+    1223|           request: {
+    1224|             functionKey: "review.script",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > clicking a suggested-action chip fills the composer with its label
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1235:29
+    1233|     // 项目 chip(embed.selection)常驻(不因 request 把 subject 换成 content_outp…
+    1234|     // 且稿面常驻项目上下文不给「摘除」按钮(它是本页固定归属)。
+    1235|     const projectChip = document.querySelector(
+       |                             ^
+    1236|       '[data-slot="context-chip"][data-kind="project"][data-project-id…
+    1237|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-231⑨] 带 prefill 的 chip → 预填完整话术(非 label),且**不自动发送**(T-055b)
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1261:29
+    1259|
+    1260|   it("[T-231⑨] 带 prefill 的 chip → 预填完整话术(非 label),且**不自动发送**(T-055b)",…
+    1261|     const user = userEvent.setup();
+       |                             ^
+    1262|     render(
+    1263|       <AICopilotContent
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1022] 对话生成出错后沿原任务自动恢复，不再把重试责任交给用户
+TestingLibraryElementError: Unable to find an element with the text: 正在恢复本轮生成. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1275:19
+    1274|           ],
+    1275|         }}
+    1276|       />,
+       |        ^
+    1277|     );
+    1278|     const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaE…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1022] 模型断流沿原任务自动恢复
+TestingLibraryElementError: Unable to find an element with the text: 正在恢复本轮生成. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1289:19
+    1287|     mockError = new Error("boom");
+    1288|     mockMessages = [
+    1289|       { id: "u1", role: "user", parts: [{ type: "text", text: "你好" }] …
+       |                   ^
+    1290|     ];
+    1291|     render(<AICopilotContent viewModel={VM} />);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1023] 连续提交失败后停止自动请求并提供继续恢复，不永久转圈
+TestingLibraryElementError: Unable to find an element with the text: 正在恢复本轮生成. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1306:19
+    1304|     mockMessages = [{ id: "u1", role: "user", parts: [{ type: "text", …
+    1305|     render(<AICopilotContent viewModel={VM} />);
+    1306|     expect(screen.getByText("正在恢复本轮生成")).toBeInTheDocument();
+       |                   ^
+    1307|     expect(screen.getByText(/系统正在沿原任务自动恢复/)).toBeInTheDocument();
+    1308|     expect(document.querySelector('[data-slot="copilot-error-retry"]')…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [TEST-T1023-04] 已有后台任务时停止重连也不把任务说成失败
+TestingLibraryElementError: Unable to find an element with the text: 自动恢复暂未取得进展. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1342:19
+    1340|     fireEvent.click(continueButton);
+    1341|     expect(regenerate).toHaveBeenCalledTimes(4);
+    1342|     vi.useRealTimers();
+       |                   ^
+    1343|   });
+    1344|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-957] 原任务结果未知时不显示重新提交按钮：CHAT_RESULT_UNCONFIRMED
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-957] 原任务结果未知时不显示重新提交按钮：本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。
+TestingLibraryElementError: Unable to find an element with the text: 本轮对话已停止. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1368:19
+    1366|     vi.useFakeTimers();
+    1367|     mockError = new Error("temporary upstream failure");
+    1368|     mockMessages = [
+       |                   ^
+    1369|       { id: "u-unmount", role: "user", parts: [{ type: "text", text: "…
+    1370|     ];
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-913] 模型未配置 → 直接打开模型设置，不再显示泛化重试
+TestingLibraryElementError: Unable to find an element with the text: 完成 AI 设置后继续. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1382:19
+    1380|
+    1381|   it.each(["CHAT_RESULT_UNCONFIRMED", "本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。"…
+    1382|     mockError = new Error(message);
+       |                   ^
+    1383|     mockMessages = [{ id: "u1", role: "user", parts: [{ type: "text", …
+    1384|     render(<AICopilotContent viewModel={VM} />);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-913] 定位未完成 → 直达定位中心，不误导去模型设置
+TestingLibraryElementError: Unable to find an element with the text: 先完成账号定位. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1400:19
+    1398|
+    1399|     expect(screen.getByText("完成 AI 设置后继续")).toBeInTheDocument();
+    1400|     expect(screen.getByText("刚才输入的内容已经保留。完成设置后，回来即可继续。")).toBeInTheDoc…
+       |                   ^
+    1401|     const settings = document.querySelector(
+    1402|       '[data-slot="copilot-error-settings-link"]',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-715] 受管额度不足 → 显示充值入口，不显示模型设置或无意义重试
+TestingLibraryElementError: Unable to find an element with the text: AI 额度需要补充. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1430:19
+    1428|   it("[T-715] 受管额度不足 → 显示充值入口，不显示模型设置或无意义重试", async () => {
+    1429|     // 页面还有独立的引擎状态读取，不能消耗充值接口的回执。
+    1430|     const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation…
+       |                   ^
+    1431|       if (String(input) === "/api/v1/local/ai-credits/connect") {
+    1432|         return new Response(JSON.stringify({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-096 矩阵#3] 会话持久化:该 scope 存过 conversationId → 挂载读回历史(左下角开→关→再开恢复同一会话)
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1460:28
+    1459|     );
+    1460|     await waitFor(() =>
+    1461|       expect(openExternalUrl).toHaveBeenCalledWith(
+       |    ^
+    1462|         "https://growth.example/credits/launch#PORTAL_CODE_123",
+    1463|       ),
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-096] 会话持久化:指针读回失败(会话被删)→ 清失效指针 + 落服务端兜底,自愈不毁档
+AssertionError: expected "vi.fn()" to be called at least once
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1489:28
+    1487|           id: "m1",
+    1488|           role: "user",
+    1489|           parts: [{ type: "text", text: "上次问的" }],
+       |                            ^
+    1490|         }),
+    1491|         expect.objectContaining({
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-096 矩阵#4] 清 localStorage 后再开 → 服务端兜底恢复该 scope 最近会话(根因链 3/4 根治)
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1516:33
+    1517|       );
+    1518|     });
+    1519|   });
+       |    ^
+    1520|
+    1521|   it("[T-096 矩阵#4] 清 localStorage 后再开 → 服务端兜底恢复该 scope 最近会话(根因链 3/4 根治…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-096 矩阵#5] 选题岛「新对话」只清 surface:topics 指针,global 指针纹丝不动(不同桶互不覆盖)
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name `/新对话/`
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1543:29
+    1543|       );
+    1544|     });
+    1545|     await waitFor(() => {
+       |            ^
+    1546|       expect(window.localStorage.getItem("copilot:conv:global")).toBe(
+    1547|         "conv-latest",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-096 矩阵#9] 历史记录:点开 → listConversations 只列当前 scope;点某条 → 读回该会话消息
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1566:51
+    1568|   });
+    1569|
+    1570|   it("[T-096 矩阵#9] 历史记录:点开 → listConversations 只列当前 scope;点某条 → 读回该会话消…
+       |           ^
+    1571|     const user = userEvent.setup();
+    1572|     // 第一次调用是挂载时的服务端兜底(该 scope 无历史);第二次才是「历史记录」面板。
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[40/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > 新对话:点「新对话」→ 清空会话 + 清当前 scope 的指针(同 scope 内新开一条)
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name `/新对话/`
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1606:29
+    1606|       );
+    1607|     });
+    1608|     await waitFor(() => {
+       |            ^
+    1609|       expect(setMessages).toHaveBeenCalledWith([
+    1610|         expect.objectContaining({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[41/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > 输入 @ → 懒加载真项目列表(client.listProjects)并弹出补全下拉
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1619:31
+    1617|
+    1618|   it("新对话:点「新对话」→ 清空会话 + 清当前 scope 的指针(同 scope 内新开一条)", async () => {
+    1619|     const user = userEvent.setup();
+       |                               ^
+    1620|     window.localStorage.setItem("copilot:conv:global", "conv-existing"…
+    1621|     render(<AICopilotContent viewModel={VM} />);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[42/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > @ 后接查询串 → 按标题过滤候选
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1645:31
+    1643|       // 下拉出现 + 列出真项目。
+    1644|       const menu = await screen.findByRole("listbox", { name: "引用项目" }…
+    1645|       expect(menu).not.toBeNull();
+       |                               ^
+    1646|       expect(screen.getByText("上下文工程")).not.toBeNull();
+    1647|       expect(screen.getByText("RAG 检索优化")).not.toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[43/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > 选中某项目 → @query 不进消息正文 + 显式项目引用标签保留完整 ID/标题
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1660:31
+    1659|         { id: "proj-2", title: "RAG 检索优化" },
+    1660|       ]);
+    1661|       render(<AICopilotContent viewModel={VM} />);
+       |                     ^
+    1662|       const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAre…
+    1663|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[44/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > [T-055b gate-F2] URL 选中态 → 头部常驻 @项目 chip;点 × 摘除后不再注入
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1691:24
+    1689|       // 显式的项目引用 chip 出现(带 projectId),= 本次对话已注入该项目的可见凭证。
+    1690|       const chip = document.querySelector(
+    1691|         '[data-slot="context-chip"][data-kind="project"][data-project-…
+       |                        ^
+    1692|       );
+    1693|       expect(chip).not.toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[45/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > [T-055b gate-F2] 无任何上下文 → 显式「未关联项目」空 chip,不静默
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1707:25
+    1706|         '[data-slot="context-chip"][data-kind="project"][data-project-…
+    1707|       );
+    1708|       expect(chip).not.toBeNull();
+       |                ^
+    1709|       expect(chip!.textContent).toContain("22个没法看的复盘");
+    1710|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[46/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > 移除项目引用 chip → chip 消失(撤销注入)
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1715:31
+    1713|         document.querySelector('[data-slot="context-chip"][data-kind="…
+    1714|       ).toBeNull();
+    1715|       // 摘除后显式回落「未关联项目」空态(gate-F2:缺失不静默)。
+       |                               ^
+    1716|       expect(
+    1717|         document.querySelector('[data-slot="context-chip-empty"]'),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[47/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > 库里没有项目 → 下拉显示诚实空态(引导先建项目,不摆假行)
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1735:31
+    1733|
+    1734|       await user.type(textarea, "@");
+    1735|       await waitFor(() => expect(listProjects).toHaveBeenCalled());
+       |                               ^
+    1736|       const option = await screen.findByRole("option", { name: /上下文工程/…
+    1737|       await user.click(option);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[48/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-239g] 长任务完成对话内通知卡 > [T-976] 聊天未知结果不变成后台核对通知，其他创作任务仍可通知
+AssertionError: expected "vi.fn()" to be called at least once
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1779:45
+    1780|     });
+    1781|
+    1782|     // ready → streaming → ready 触发组件的「流式结束刷新 feed」,拿到本次 listTasks 的新结…
+       |                     ^
+    1783|     async function driveStreamingEnd(rerender: (ui: React.ReactElement…
+    1784|       mockStatus = "streaming";
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[49/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-239g] 长任务完成对话内通知卡 > 首帧已是终态的历史任务不推通知(只播种)
+AssertionError: expected "vi.fn()" to be called at least once
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1799:27
+    1797|       await new Promise((r) => setTimeout(r, 0));
+    1798|       expect(document.querySelector('[data-task-id="chat-turn"]')).toB…
+    1799|       expect(screen.queryByText("刷新状态")).not.toBeInTheDocument();
+       |                           ^
+    1800|
+    1801|       listTasks.mockResolvedValue([
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[50/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-239g] 长任务完成对话内通知卡 > 在途任务跑完 → 推 succeeded 通知卡,点 × 可关闭
+AssertionError: expected "vi.fn()" to be called at least once
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1813:45
+    1811|       listTasks.mockResolvedValue([wireTask({ status: "succeeded" })]);
+    1812|       render(<AICopilotContent viewModel={VM} />);
+    1813|       // [T-354] 次区任务 feed 已下架,等待锚改为「首轮 listTasks 已发 + flush」——播种逻辑
+       |                                             ^
+    1814|       // 本体保留(喂通知卡),首帧终态只播种、不该推任何通知卡。
+    1815|       await waitFor(() =>
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[51/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-239g] 长任务完成对话内通知卡 > 失败任务 → 通知诚实带原因
+AssertionError: expected "vi.fn()" to be called at least once
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1851:45
+    1851|       // 关闭 → 通知移除。
+    1852|       await user.click(
+    1853|         card.querySelector(
+       | ^
+    1854|           '[data-slot="task-notification-dismiss"]',
+    1855|         ) as HTMLButtonElement,
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[52/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 output-error 显示终态，历史回放不永久转圈
+TestingLibraryElementError: Unable to find an element with the text: /工具参数无效/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1875:17
+    1874|       await driveStreamingEnd(rerender);
+    1875|
+    1876|       const detail = await waitFor(() => {
+       |                ^
+    1877|         const el = document.querySelector(
+    1878|           '[data-slot="task-notification"][data-task-id="t1"] [data-sl…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[53/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 output-denied 显示终态，历史回放不永久转圈
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 approval-responded 显示终态，历史回放不永久转圈
+TestingLibraryElementError: Unable to find an element with the text: /已拒绝/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1875:17
+    1874|       await driveStreamingEnd(rerender);
+    1875|
+    1876|       const detail = await waitFor(() => {
+       |                ^
+    1877|         const el = document.querySelector(
+    1878|           '[data-slot="task-notification"][data-task-id="t1"] [data-sl…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[54/60]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 慢任务读取超过轮询间隔时不叠加请求，返回结果仍能停止轮询
+AssertionError: expected "vi.fn()" to be called 2 times, but got 0 times
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1889:21
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[55/60]⎯
+
+ FAIL  src/features/intelligence/intelligence-workbench.test.tsx > T-482 内容雷达工作区 > [T-1022] 改写阶段暂时失败保留已有结果并由原任务自动恢复
+Error: expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <button
+  class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 w-full"
+  data-slot="button"
+  disabled=""
+  type="button"
+>
+  确认写入选题池
+</button> instead
+ ❯ src/features/intelligence/intelligence-workbench.test.tsx:2920:67
+    2918|     ).toBeInTheDocument();
+    2919|     expect(screen.queryByRole("button", { name: "重试生成选题卡" })).not.toBe…
+    2920|     expect(screen.queryByRole("button", { name: "确认写入选题池" })).not.toBe…
+       |                                                                   ^
+    2921|
+    2922|     expect(stub.previewTopic).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[56/60]⎯
+
+ FAIL  src/features/intelligence/intelligence-workbench.test.tsx > T-482 内容雷达工作区 > [T-744] 成功但未采纳 时可直接重新生成改写稿，活动任务期间旧稿只读且不可误采纳
+ FAIL  src/features/intelligence/intelligence-workbench.test.tsx > T-482 内容雷达工作区 > [T-744] 已采纳且下游选题已淘汰 时可直接重新生成改写稿，活动任务期间旧稿只读且不可误采纳
+Error: expect(element).not.toBeInTheDocument()
+
+expected document not to contain element, found <button
+  class="group/button inline-flex shrink-0 items-center justify-center border bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5 w-full"
+  data-slot="button"
+  disabled=""
+  type="button"
+>
+  确认写入选题池
+</button> instead
+ ❯ src/features/intelligence/intelligence-workbench.test.tsx:3068:13
+    3066|       expect(
+    3067|         screen.queryByRole("button", { name: "确认写入选题池" }),
+    3068|       ).not.toBeInTheDocument();
+       |             ^
+    3069|       expect(screen.getByLabelText("选题候选标题")).toBeDisabled();
+    3070|       expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[57/60]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+Error: 引擎设置尚未就绪
+ ❯ Module.writeAssistantEngine src/features/copilot/assistant-engine.ts:34:38
+     32|  if(typeof window==='undefined')throw Error('引擎保存需要本地界面');
+     33|  if(!state.ready)await loadAssistantEngine();
+     34|  if(!state.ready||state.saving)throw Error('引擎设置尚未就绪');
+       |                                      ^
+     35|  if(engine===state.engine)return state.engine;
+     36|  generation++;emit({saving:true,error:null});
+
+This error originated in "src/features/copilot/ai-copilot-interactions.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "[T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  2 failed | 1 passed (3)
+      Tests  60 failed | 85 passed (145)
+     Errors  1 error
+   Start at  20:27:26
+   Duration  40.81s (transform 4.09s, setup 318ms, import 6.61s, tests 32.49s, environment 905ms)
+
+
+EXIT_CODE=1
+
+归属定位（只读，未修改源码）：
+Worker56PASS，backend118PASS，frontend85PASS/60FAIL及1个unhandled rejection。
+ai-copilot-interactions.test.tsx57FAIL：首个T1055 async引擎设置未ready，act async未await造成DOM级联；writeAssistantEngine抛引擎设置尚未就绪，属本次新增设置读取相关fixture须适配，protocol agent已独占修复，不能归旧债。
+intelligence-workbench.test.tsx3FAIL：2920及3068两族期待采纳按钮不存在，实际禁用；原topic-candidate-editor已有busy/retrying/incomplete禁用规则且editor测试已有generationPending禁用契约。相关源码/测试相对4df342497无改动，属于现有fixture状态断言不一致；未实跑历史基线，不补称历史PASS。
+本报告只解释这两LED的实际失败，不能将full reconcile32ERROR整体称为旧债。

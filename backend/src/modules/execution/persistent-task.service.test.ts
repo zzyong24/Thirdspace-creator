@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { createDb, executionTasks, eq } from "@creatoros/backend";
+import { createDb, executionTasks, userPreferences, eq } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
-import { createContinuousExecutionBudget } from "@creatoros/contract/execution-worker";
+import { createContinuousExecutionBudget,createExecutionRoute } from "@creatoros/contract/execution-worker";
 import {
   createPersistentTaskService,
   type PersistentTaskService,
@@ -110,7 +110,7 @@ describe("T-482 持久执行任务状态机", () => {
       await db.update(executionTasks).set({status:"waiting_user"}).where(eq(executionTasks.id,task.id));
       await service.command(ctxA,{taskIds:[task.id],command:"resume",idempotencyKey:"explicit-resume"});
       const [stored]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.id));
-      expect(stored?.payload).toEqual({...input.payload,researchBlockedAcknowledgedThroughSequence:0,researchBlockedAcknowledgedCallIds:[]});
+      expect(stored?.payload).toEqual({...input.payload,executionRoute:createExecutionRoute("pi"),researchBlockedAcknowledgedThroughSequence:0,researchBlockedAcknowledgedCallIds:[]});
       expect((await service.enqueue(ctxA,input)).id).toBe(task.id);
       await expect(service.enqueue(ctxA,{...input,payload:{modelInput:{kind:"agentic.run",goal:"篡改目标"}}})).rejects.toMatchObject({name:"ConflictError"});
     }finally{await client.close();}
@@ -423,3 +423,14 @@ it("领取过滤精确到用户和账号，剩余任务仍按真实优先级领�
   await expect(tasks.claimNext({...filter,excludeAccounts:[{userId:ctxA.userId,accountId:''}]})).rejects.toThrow('完整属主');
  }finally{await client.close();}
 });
+
+it('默认路由冻结不破坏原入队幂等；切偏好保持原任务，显式换引擎拒绝',async()=>{
+ const {db,client}=await createDb(),service=createPersistentTaskService(db),input={kind:'source_sync' as const,ownerType:'source' as const,ownerId:'route-owner',idempotencyKey:'frozen-route',payload:{page:1}};
+ try{
+  const original=await service.enqueue(ctxA,input);
+  await db.insert(userPreferences).values({userId:ctxA.userId,defaultHome:'dashboard',defaultCreationMode:'guided',defaultVisibility:'private',assistantExecutionEngine:'codex'}).onConflictDoUpdate({target:userPreferences.userId,set:{assistantExecutionEngine:'codex'}});
+  expect((await service.enqueue(ctxA,input)).id).toBe(original.id);
+  const [stored]=await db.select().from(executionTasks).where(eq(executionTasks.id,original.id));expect((stored!.payload as {executionRoute:unknown}).executionRoute).toEqual(createExecutionRoute('pi'));
+  await expect(service.enqueue(ctxA,{...input,payload:{...input.payload,executionRoute:createExecutionRoute('codex')}})).rejects.toMatchObject({name:'ConflictError'});
+ }finally{await client.close();}
+},180000);

@@ -5119,3 +5119,36 @@ DEC-T1217-001 收口补充：独评发现 source_sync 的 finish(failed) 控制�
 2026-10-11 DEC-T1217-001 最终复核补充：依当前正式SPEC与独评真实消费者，未知SQL/transport不作确定归属拒绝；永久删除在锁内核当前execution重试/控制及双向绑定，错指针零删除。share_import无反向source事实，仅已证同组且确定终态时保无法证明可删的原task，合法来源删除继续；不新增执行权或保全部历史。裸无真实平台账号兼容须严格同user/account/kind/owner与NULL/精确legacy组、payload无矛盾，真实成员缺失不能降级。保持五产品写集、公开行为、原失败/ID/预算，实际负族与独评未完成不签GREEN。
 
 DEC-T1217-001 可见历史边界：无法证明可删的 share_import 原终态 task 保留可能仍被既有 execution.tasks.get/list 读到；避免误删的最小安全校正，不新增访问权/执行权，也不声称所有公开查询逐字不变。来源及来源run/events保持永久删除语义，不复活/续期。
+
+DEC-T1217-001 合法终态清理补充：实际group-only RED及已审startRun证明run历史account不能替task冻结执行账号；按真实组/唯一历史member版本及可信创建时间、kind/owner/payload双向证明，NULL纯组不造成员，错成员/指针零变更。正常未confirmed候选真实settled/rejected调用FK RED，选最小原execution审计父保留，不删调用/计费/stream/evidence/AI/产物引用；盘点全部真实FK，active/unknown仍拒绝，无引用证明可删者继续原删。保留历史可由既有查询读到，源及来源run/events永久删除语义保持，不新增权限/schema/执行权。五产品写集和独立准入不扩成执行核心改造，完整新族与公共旅程待实际完成。
+
+## 2026-10-11 DEC-VERIFY-1223-1224：测试/报告工具验收条件校准
+
+独立适用性评审 docs/verification/t1224/independent-review.md 确认 T1223 是报告生成器、T1224 是原E2E预算与证据目录设施；不改变 CreatorOS 产品UI，无PAGE_SPEC或frontend-journey-contract。按技能“未激活的条件不产生缺失工件义务”，root将误填的验收列待验校准为—，不改任务状态/Gate/校验器；后续完成仍原taskctl写审计。全部正式SPEC要求保持：T1223真实RED/GREEN、原索引/图片/历史状态/唯一跳转；T1224原完整公共旅程、真实截图、原同ID读回、零retry/独立证据。没有通过就不能完成，适用性判断不代签全功能或T1217/全局失败。若未来扩大产品UI或引入合同，重新激活原门。
+
+## 2026-10-11 DEC-SOURCE-1217-TOKEN-UNKNOWN：删除复用实际账本判据
+
+用户持续验证/确认缺陷修复授权范围内，真实token settled缺usage删除RED；独立精确准入PASS，沿原ledger.assertResolved settled/null total且非requests补原source删除未确认调用查询。原requests无token已结算可用性实际正例保持，不能把费用未知任意推导为整个请求计量失败。原calls/task/evidence不删除，scope/在途/归属和五源写集不扩；最终67/原76/公共E2E仍待实测。
+
+## 2026-10-11 DEC-MEDIA-1226：补真实测试媒体默认根隔离
+
+用户持续全功能测试与明确bug修复授权；正式SPEC/Packet及docs/verification/t1226/independent-review.md精确范围准入PASS。无持久root时才沿既有CREATOROS_MEDIA_ROOT配置，空env原默认、显式持久root优先；Playwright为fresh数据根覆盖专属media环境目录。不改变HOME/os.homedir、storage.put迁移、token/工作区归属/schema/S3或真实媒体目录。实际blobroute与工厂均经settings.resolveStorageRoot；不以未消费的旧helper注释当证据。四路径已固定，允许轻量RED/单测/静态；公共上传待T1217/T1224串行结束后才跑，真正隔离闭合前T1225不得上传。
+
+
+## DEC-T1229-001 · 2026-10-11 · 雷达正文私有输入明确表达纯文本
+
+用户要求持续功能验证并及时修复确认缺陷。原3914原任务实际frozen不存在/calls0，官方正文Skill真实outputSchema=null与结构化入口矛盾。候选保原IPC运输kind，增加严格正文标签与仅intelligence entry专用能力；不放松通用结构化输出契约、不新建执行权、不给其它Worker正文调用权。新旧冻结并存，保原身份/费用/期限。正式范围见T1229 SPEC；须独立复核及真实official/effective链RED后实施，当前不是实现PASS或真实用户任务已恢复。
+
+
+## DEC-T1238-001 · 2026-10-11 · 本地Codex统一文本与内置生图
+
+用户明确“codex”并要求继续实现，正常选择Codex后不调用独立文本或生图模型。这取代T1057合同候选中仍需单独图片模型的推论，授权补齐全系统文本/图片路由、后端默认偏好及真实内置生图回收。新任务冻结、子任务继承、后台共用；旧Pi任务保持原账本事实，不静默回退。复用随包官方app-server及现有execution_tasks/候选服务，不新增任务权。原生生图实际由Codex登录/套餐/provider能力决定；真实图片字节回收到任务空间，不能读取任意Codex home路径或用供应商API伪称Codex。视频、ASR/Embedding及宿主基础设施不因本次文本/图片要求扩大范围。前置独立评审与实际红→绿、公共链/真实文本生图验收仍需发生，未发生不签PASS；不授权外部发布或购买新服务。
+
+
+## DEC-T1238-002：偏好就绪前保护与媒体凭证公开映射
+
+Date: 2026-10-11
+Status: decided within DEC-T1238-001 confirmed scope
+用户依据：已确认选择Codex时文本与图片不要求独立模型配置，原ASR/视频能力保留。实施选择：未读取可信服务偏好前不展示独立文本/图片卡、引导或启用其连接测试；Pi就绪保原卡，Codex就绪免两类配置。渠道共享媒体服务按已有明确capability→serviceId关联保留，禁止服务名称猜测。原client公开services及原PUT端口已使用该opaque ID；脱敏只恢复该公开user_input集合成员的关联，未知/受管ID仍null，provider/baseUrl/名称/其它实现信息仍清空。不新增API字段、权限或数据归属，不修改原任意ID/受管Key拒绝；仅落实原已确认范围，未新增产品方向选择。
+
+当场证据：pending/cards/services真实红4、真实sanitize投影红1→最终三文件43PASS/0SKIP；独立只读复核实际canonical ready/defaultProbe/testSession、媒体共享服务和原PUT边界无新增阻断。真实浏览器新增有限延迟偏好GET与模型探测计数验收，最终状态以ui-final.json及GATES.md为准，不把fixture写成真机。

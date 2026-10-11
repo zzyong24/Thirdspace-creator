@@ -1,0 +1,8 @@
+{
+  "date": "2026-10-11",
+  "cwd": "/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator",
+  "command": "pnpm --filter creatoros-frontend exec tsc --noEmit",
+  "exitCode": 0,
+  "rawLog": "frontend-preflight-types.txt",
+  "scope": "包含本次新增测试的实际完整frontend类型检查；非真实模型E2E"
+}

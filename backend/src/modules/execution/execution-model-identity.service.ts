@@ -3,14 +3,14 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { eq, executionTasks, type Db } from "@creatoros/backend";
 import {
-  workerModelSpecSchema,
+  workerModelSpecSchema,executionModelSpecSchema,codexModelSpecSchema,
   workerTaskInputSchema,
   type ExecutionRef,
 } from "@creatoros/contract/execution-worker";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { ConflictError } from "./execution.errors";
 
-export const executionModelIdentitySchema = workerModelSpecSchema
+const apiModelIdentitySchema = workerModelSpecSchema
   .omit({ token: true, baseUrl: true })
   .extend({
     schemaVersion: z.literal(1),
@@ -19,11 +19,13 @@ export const executionModelIdentitySchema = workerModelSpecSchema
     customEndpoint: z.boolean(),
   })
   .strict();
+export const executionModelIdentitySchema=z.union([apiModelIdentitySchema,codexModelSpecSchema.extend({schemaVersion:z.literal(1),capability:z.string().min(1)}).strict()]);
 const payloadSchema = z.record(z.string(), z.json());
 
 /** 统一无秘密身份投影；根模型与聊天子模型使用同一规则。 */
 export function prepareExecutionModelIdentity(capability: string, raw: unknown) {
-      const credential = workerModelSpecSchema.parse(raw);
+      const credential = executionModelSpecSchema.parse(raw);
+      if("engine" in credential)return {credential,identity:executionModelIdentitySchema.parse({...credential,schemaVersion:1,capability})};
       const { token: _token, baseUrl, ...spec } = credential;
       const baseUrlDigest = `sha256:${createHash("sha256").update(JSON.stringify(baseUrl)).digest("hex")}`;
       const identity = executionModelIdentitySchema.parse(

@@ -1,0 +1,82 @@
+[macos] /usr/bin/sw_vers 
+started=2026-10-11T14:17:00.720Z elapsedMs=14 exit=0
+ProductName:		macOS
+ProductVersion:		26.2
+BuildVersion:		25C56
+
+
+[xcode-path] /usr/bin/xcode-select -p
+started=2026-10-11T14:17:00.737Z elapsedMs=5 exit=0
+/Applications/Xcode.app/Contents/Developer
+
+
+[xcode-version] /usr/bin/xcodebuild -version
+started=2026-10-11T14:17:00.742Z elapsedMs=156 exit=0
+Xcode 26.6
+Build version 17F113
+
+
+[automation-tool] /usr/bin/xcrun --find automationmodetool
+started=2026-10-11T14:17:00.898Z elapsedMs=11 exit=0
+/usr/bin/automationmodetool
+
+
+[automation-status] /usr/bin/automationmodetool 
+started=2026-10-11T14:17:00.909Z elapsedMs=6 exit=0
+Automation Mode is disabled.
+This device requires user authentication to enable Automation Mode.
+
+
+[node-version] /opt/homebrew/Cellar/node/25.9.0_2/bin/node --version
+started=2026-10-11T14:17:00.915Z elapsedMs=57 exit=0
+v25.9.0
+
+
+[npm-version] /opt/homebrew/bin/npm --version
+started=2026-10-11T14:17:00.972Z elapsedMs=150 exit=0
+11.12.1
+
+
+[ffmpeg-version] /opt/homebrew/bin/ffmpeg -version
+started=2026-10-11T14:17:01.122Z elapsedMs=86 exit=0
+ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers
+built with Apple clang version 21.0.0 (clang-2100.1.1.101)
+configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/9.0.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gpl --enable-libsvtav1 --enable-libopus --enable-libx264 --enable-libmp3lame --enable-libdav1d --enable-libvmaf --enable-libvpx --enable-libx265 --enable-openssl --enable-videotoolbox --enable-audiotoolbox --enable-neon
+libavutil      61.  1.101 / 61.  1.101
+libavcodec     63.  1.101 / 63.  1.101
+libavformat    63.  1.101 / 63.  1.101
+libavdevice    63.  1.101 / 63.  1.101
+libavfilter    12.  1.101 / 12.  1.101
+libswscale     10.  1.101 / 10.  1.101
+libswresample   7.  1.101 /  7.  1.101
+
+Exiting with exit code 0
+
+
+[source-commit] /usr/bin/git rev-parse HEAD
+started=2026-10-11T14:17:01.208Z elapsedMs=17 exit=0
+4df3424972831acfdd091056b3045b2472120692
+
+
+[appium-version] /tmp/t1246-appium/node_modules/.bin/appium --version
+started=2026-10-11T14:17:01.225Z elapsedMs=584 exit=0
+3.8.0
+
+
+[installed-drivers] /tmp/t1246-appium/node_modules/.bin/appium driver list --installed
+started=2026-10-11T14:17:01.809Z elapsedMs=378 exit=0
+dbug Appium Creating hash file directory: /tmp/t1246-appium/home/node_modules/.cache/appium
+dbug Appium Updated hash of /tmp/t1246-appium/home/package.json from: (none) to: d5cca03742134afb205a0b7f4ff67cb2
+- Listing installed drivers (rerun with --verbose for more info)
+✔ Listing installed drivers (rerun with --verbose for more info)
+
+
+[mac2-doctor] /tmp/t1246-appium/node_modules/.bin/appium driver doctor mac2
+started=2026-10-11T14:17:02.187Z elapsedMs=374 exit=1
+dbug Appium Creating hash file directory: /tmp/t1246-appium/home/node_modules/.cache/appium
+Error: × The driver "mac2" is not installed
+
+Command failed: /tmp/t1246-appium/node_modules/.bin/appium driver doctor mac2
+dbug Appium Creating hash file directory: /tmp/t1246-appium/home/node_modules/.cache/appium
+Error: × The driver "mac2" is not installed
+

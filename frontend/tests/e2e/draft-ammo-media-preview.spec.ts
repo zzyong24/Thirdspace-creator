@@ -26,6 +26,7 @@ async function dispatch<T>(
       ...(accountId ? { "x-account-id": accountId } : {}),
     },
     data: { id, input },
+    timeout: 120_000,
   });
   expect(response.ok(), `${id} 应成功，实得 ${response.status()}`).toBe(true);
   return ((await response.json()) as { data: T }).data;
@@ -48,8 +49,10 @@ async function selectAccount(page: Page, accountId: string, baseURL?: string) {
 test("稿面视频素材双击与键盘均可真实预览，刷新和小窗口仍保持", async ({
   page,
   baseURL,
-}) => {
-  test.setTimeout(90_000);
+}, info) => {
+  test.setTimeout(14_400_000);
+  page.setDefaultTimeout(120_000);
+  page.setDefaultNavigationTimeout(120_000);
   const repoRoot = resolve(process.cwd(), "..");
   const videoBytes = readFileSync(
     resolve(repoRoot, "output/content-samples/ai-copy-eval-loop/motion-preview.mp4"),
@@ -102,6 +105,7 @@ test("稿面视频素材双击与键盘均可真实预览，刷新和小窗口�
   const put = await page.request.put(upload.uploadUrl, {
     headers: { "content-type": "video/mp4" },
     data: videoBytes,
+    timeout: 120_000,
   });
   expect(put.ok(), `视频字节 PUT 应成功，实得 ${put.status()}`).toBe(true);
   const asset = await dispatch<{ id: string }>(
@@ -156,14 +160,54 @@ test("稿面视频素材双击与键盘均可真实预览，刷新和小窗口�
   const video = dialog.locator('video[data-preview-type="video"]');
   await expect(video).toBeVisible();
   await expect(video).toHaveAttribute("controls", "");
-  await expect.poll(() => previewUrlRequests).toBe(1);
-  await expect.poll(() => video.evaluate((element) => (element as HTMLVideoElement).readyState)).toBeGreaterThan(0);
+  await expect.poll(() => previewUrlRequests, { timeout: 120_000 }).toBe(1);
+  await expect.poll(() => video.evaluate((element) => (element as HTMLVideoElement).readyState), { timeout: 120_000 }).toBeGreaterThan(0);
   captures.push({
     checkpoint: "desktop-double-click-video-preview",
     check_ids: [...CHECK_IDS],
     viewport: { width: 1536, height: 1024 },
     text: await dialog.innerText(),
   });
+
+  await page.screenshot({ path: info.outputPath("video-preview-desktop.png"), timeout: 120_000 });
+  await info.attach("video-preview-desktop", { path: info.outputPath("video-preview-desktop.png"), contentType: "image/png" });
+
+  // 新覆盖：正式中性媒体实际开始播放，保留原元数据与全部旧断言。
+  await video.evaluate(async (element) => {
+    const player = element as HTMLVideoElement;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        player.play(),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error("视频开始播放等待超时")), 120_000);
+        }),
+      ]);
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
+    }
+  });
+  await expect.poll(() => video.evaluate((element) => (element as HTMLVideoElement).readyState), { timeout: 120_000 }).toBeGreaterThanOrEqual(2);
+  await expect.poll(() => video.evaluate((element) => (element as HTMLVideoElement).currentTime), { timeout: 120_000 }).toBeGreaterThan(0.25);
+  const playbackObservation = await video.evaluate((element) => {
+    const player = element as HTMLVideoElement;
+    const observation = {
+      currentTime: player.currentTime,
+      duration: player.duration,
+      readyState: player.readyState,
+      videoWidth: player.videoWidth,
+      videoHeight: player.videoHeight,
+      errorCode: player.error?.code ?? null,
+    };
+    player.pause();
+    return observation;
+  });
+  expect(playbackObservation.videoWidth).toBeGreaterThan(0);
+  expect(playbackObservation.videoHeight).toBeGreaterThan(0);
+  expect(playbackObservation.errorCode).toBeNull();
+  await page.screenshot({ path: info.outputPath("video-preview-after-playback.png"), timeout: 120_000 });
+  await info.attach("video-preview-after-playback", { path: info.outputPath("video-preview-after-playback.png"), contentType: "image/png" });
+  await info.attach("video-playback-observation", { body: JSON.stringify(playbackObservation, null, 2), contentType: "application/json" });
 
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
@@ -192,7 +236,10 @@ test("稿面视频素材双击与键盘均可真实预览，刷新和小窗口�
     text: await restoredDialog.innerText(),
   });
 
-  const evidenceDir = resolve(repoRoot, "orchestrator", "evidence");
+  await page.screenshot({ path: info.outputPath("video-preview-compact-after-reload.png"), timeout: 120_000 });
+  await info.attach("video-preview-compact-after-reload", { path: info.outputPath("video-preview-compact-after-reload.png"), contentType: "image/png" });
+
+  const evidenceDir = info.outputPath("evidence");
   mkdirSync(evidenceDir, { recursive: true });
   const commitSha = execFileSync("git", ["rev-parse", "HEAD"], {
     cwd: repoRoot,

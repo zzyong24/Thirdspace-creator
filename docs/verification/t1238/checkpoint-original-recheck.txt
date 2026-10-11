@@ -1,0 +1,43 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/backend
+
+ ❯ src/modules/execution/execution-checkpoint.service.test.ts (24 tests | 4 failed) 15279ms
+     × 显式恢复不能认可含写入风险或非blocked回执：{"status":"blocked","sideEffect":"committed","code":"captcha"} 27ms
+     × 显式恢复不能认可含写入风险或非blocked回执：{"status":"blocked","sideEffect":"none","code":"unknown_commit"} 26ms
+     × 显式恢复不能认可含写入风险或非blocked回执：{"status":"error","sideEffect":"none","code":"needs_login"} 20ms
+     × 用户恢复时在途的调用之后才结算blocked，不能被旧水位自动认可 33ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/execution/execution-checkpoint.service.test.ts > 持久检查点与权威调用事实 > 显式恢复不能认可含写入风险或非blocked回执：{"status":"blocked","sideEffect":"committed","code":"captcha"}
+ FAIL  src/modules/execution/execution-checkpoint.service.test.ts > 持久检查点与权威调用事实 > 显式恢复不能认可含写入风险或非blocked回执：{"status":"blocked","sideEffect":"none","code":"unknown_commit"}
+ FAIL  src/modules/execution/execution-checkpoint.service.test.ts > 持久检查点与权威调用事实 > 显式恢复不能认可含写入风险或非blocked回执：{"status":"error","sideEffect":"none","code":"needs_login"}
+ConflictError: 同一命令请求号对应不同输入
+ ❯ restore src/modules/execution/persistent-task.service.ts:514:56
+
+ ❯ Object.command src/modules/execution/persistent-task.service.ts:672:18
+ ❯ src/modules/execution/execution-checkpoint.service.test.ts:50:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/modules/execution/execution-checkpoint.service.test.ts > 持久检查点与权威调用事实 > 用户恢复时在途的调用之后才结算blocked，不能被旧水位自动认可
+ConflictError: 同一命令请求号对应不同输入
+ ❯ restore src/modules/execution/persistent-task.service.ts:514:56
+
+ ❯ Object.command src/modules/execution/persistent-task.service.ts:672:18
+ ❯ src/modules/execution/execution-checkpoint.service.test.ts:62:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 20 passed (24)
+   Start at  20:45:17
+   Duration  18.68s (transform 2.24s, setup 0ms, import 3.26s, tests 15.28s, environment 0ms)
+
+
+实际命令：pnpm --dir backend exec vitest run src/modules/execution/execution-checkpoint.service.test.ts --testTimeout=180000 --hookTimeout=180000 --retry=0 --maxWorkers=1
+EXIT_CODE=1；24项20PASS/4FAIL；无Worker build，无源码修改。
+归属因果：describe共享checkpoint-user/checkpoint-account与同一真实DB，测试50/62行对不同taskIds复用explicit-resume幂等键，第一variant先落控制回执，后三variant与late-blocked测试被persistent-task.service.ts514的同键异输入requestDigest校验拒绝；4例未到原blocked/水位断言。
+原生产门与该测试相对4df342497保持原内容，现有fixture串扰已通过本文件实际失败验证，但未实跑历史基线，不补写历史PASS；其他26/31恢复测试不能代签这24项。
+最小建议：仅原测试对独立任务使用含task.id的真实命令请求号，或每例独立真实DB，不放松生产幂等门，不删除原归属/水位断言；当前仅只读定位，不改源码。

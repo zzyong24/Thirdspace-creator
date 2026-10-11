@@ -5,6 +5,7 @@ import {localCodexStatusSchema} from "@creatoros/contract/execution-worker";
 import {CURRENT_ACCOUNT_KEY, fetchCreatorApi, readCurrentAccountId} from "@/lib/http-transport";
 import {
   subscribeAssistantEngine,
+  readAssistantEnginePreference,serverAssistantEnginePreference,loadAssistantEngine,
   assistantEngineStatusEvent,
   readAssistantEngine,
   recheckAssistantEngine,
@@ -27,7 +28,9 @@ function subscribeAccount(refresh: () => void) {
 
 /** 偏好是原本地真值；状态仍由真实入口读取，界面迁移不创建新的执行器。 */
 export function useAssistantEngine() {
-  const engine = React.useSyncExternalStore(subscribeAssistantEngine, readAssistantEngine, () => "pi" as const);
+  const preference=React.useSyncExternalStore(subscribeAssistantEngine,readAssistantEnginePreference,()=>serverAssistantEnginePreference);
+  const engine=preference.engine;
+  React.useEffect(()=>{void loadAssistantEngine();},[]);
   const accountId = React.useSyncExternalStore(subscribeAccount, readCurrentAccountId, () => null);
   const [refresh, requestRefresh] = React.useReducer(value => value + 1, 0);
   const [read, setRead] = React.useState<StatusRead | null>(null);
@@ -66,13 +69,13 @@ export function useAssistantEngine() {
 
   const result = read?.key === key ? read.result : null;
   const checking = engine === "codex" && (read?.key !== key || read.checking);
-  const available = engine === "pi" || (!checking && !!result?.available);
-  const status = engine === "pi" ? "使用 CreatorOS 当前模型配置"
+  const available = preference.ready&&!preference.saving&&(engine === "pi" || (!checking && !!result?.available));
+  const status = preference.error?preference.error:!preference.ready?"正在读取引擎设置…":preference.saving?"正在保存引擎…":engine === "pi" ? "使用 CreatorOS 当前模型配置"
     : checking ? "正在检查本地 Codex…"
-    : result?.available ? `本地 Codex 文本会话已连接${result.version ? ` · ${result.version}` : ""}（工具执行未验证）`
+    : result?.available ? `本地 Codex 已连接${result.version ? ` · ${result.version}` : ""} · ${result.capabilities?.imageGeneration?"文本与生图可用":"文本可用，生图能力当前不可用"}`
     : result?.loginStatus === "unauthenticated" ? "本地 Codex 尚未登录，请先在 Codex 中登录"
     : result?.errorCode === "CODEX_STATUS_UNAVAILABLE" ? "本地 Codex 状态暂未核实"
     : "本地 Codex 当前不可用";
 
-  return {engine, accountId, available, checking, status, recheck: recheckAssistantEngine};
+  return {engine, preference,accountId, available, checking, status, recheck: recheckAssistantEngine};
 }

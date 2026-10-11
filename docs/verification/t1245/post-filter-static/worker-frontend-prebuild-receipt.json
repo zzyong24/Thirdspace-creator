@@ -1,0 +1,9 @@
+{
+  "command": [
+    "node",
+    "../ai-worker/scripts/build.mjs"
+  ],
+  "cwd": "frontend",
+  "exitCode": 0,
+  "elapsedSeconds": 0.924
+}

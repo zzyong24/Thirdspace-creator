@@ -1,0 +1,49 @@
+{
+  "headUnchanged": true,
+  "changes": {
+    "ai-worker/dist/video-visual-review-worker.cjs": {
+      "before": "e00044e55e7c26a61186b98a4506e8c6ae7c40fec16ee5568ecf10dc2455dd85",
+      "after": "90653c5ee24d8aa4a2493391d5015382c042c202ad0bcd16e66661686c25ab99"
+    },
+    "ai-worker/dist/codex-status-worker.cjs": {
+      "before": "74f2953765f9657d1f15d3d3f733cd6ce26e7498ac2a249eb656a45f42b41bed",
+      "after": "dd3d335c9404e982f3a5df6c8b028a9f519099b0a6c98b00b40efaec73f89cfe"
+    },
+    "ai-worker/dist/agentic-worker.cjs": {
+      "before": "50bafdb8c1fc80caa8e8473846aa2feacf6881d5e2d24e593b62ab5da34954b5",
+      "after": "eb302c8807a01b076cf098149189257f0d32f3268ec820f4842a53dadf0eb597"
+    },
+    "ai-worker/dist/codex-acp.cjs": {
+      "before": "2200680338bc6a960cfe776687c72c2e8cf977b1656e079e8e32f53690066425",
+      "after": "5d47280b293761e56ab265de90cf5ae1bee0b28ed79e798c8797598ba6fbc1a6"
+    },
+    "ai-worker/dist/browser-runtime.cjs": {
+      "before": "8f1d142e90ae22940ad96deab3b409c9e6a229f0c67180e477c31aea43130828",
+      "after": "494f692a7af153bfe0bcf6eed5ac8a03332e43acd27723da861ef34cc375de38"
+    },
+    "ai-worker/dist/model-probe-worker.cjs": {
+      "before": "ca3d53902dc78897654dd9b3c613b7040de1685073c5bba83bbdd19abb24aa26",
+      "after": "3aa57569081c1ac4e128b1dee8081563cd796e47d3e87efce25e4ba4ef807d17"
+    },
+    "ai-worker/dist/intelligence-generation-worker.cjs": {
+      "before": "f2965d29f08bc2247b0f79b28c3a75baf9f005d6053d0595a352c5edd279f6cf",
+      "after": "275d6fda16c28738d37d3138512f07ef6586996bfab271160c95e8bdcf43a12d"
+    },
+    "ai-worker/dist/intelligence-transcript-worker.cjs": {
+      "before": "aa68477dc0482a0f52885108dfd3c3fa1901e016a92d757a1cf1acfd8db24918",
+      "after": "a28860a57baff5cc16323e176c9bf7e2bc8cd98fed34ab9184edfb00c0604006"
+    },
+    "ai-worker/dist/embedding-worker.cjs": {
+      "before": "69c742f6dec5f50e436934ee362680a2e8edccf2d5379363b82800db50b4a3e4",
+      "after": "fec8f10c4ee78f5883294e0031ed8faea550862861d4302bb7d46dc1bdda17be"
+    },
+    "ai-worker/dist/execution-worker.cjs": {
+      "before": "985c6a5c942f6f4e053458d658c89aa5b17f71b805ddc9fe281239df8a9aa20a",
+      "after": "fa3cfd692cd45ddb9bd84f4398d58565d45ad65a1d849e7af13486d9ce0743e2"
+    },
+    "ai-worker/dist/flywheel-generation-worker.cjs": {
+      "before": "ac74d2c82a42de935ef65a3072e85f020866ca964987c2d77bbf3780db8bdf5d",
+      "after": "575c9477c9758ba04c7a245b2f90e43eed48c7d4896b42fbd44c51dc8f1858be"
+    }
+  }
+}

@@ -117,7 +117,7 @@ export function AmmoCardList({
             <p className="mt-1.5 truncate text-[11px] text-text-subtle">
               ↳ {item.sourceLabel}
             </p>
-            <p className="mt-1 text-[10px] text-text-subtle/70">点击阅读</p>
+            <p className="mt-1 text-[10px] text-text-subtle/70">{item.kind === "knowledge" ? "点击阅读" : "双击预览"}</p>
           </div>
         ))}
       </div>

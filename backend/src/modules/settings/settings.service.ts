@@ -243,7 +243,7 @@ export type AccountWriter = (
 ) => Promise<UserResource>;
 
 export interface SettingsService {
-  patchPreferencesIfUnchanged(ctx:RequestContext,patch:PreferencePatch,expected:Partial<PreferencePatch>):Promise<UserPreferenceResource>;
+  patchPreferencesIfUnchanged(ctx:RequestContext,patch:PreferencePatch,expected:Partial<Omit<PreferencePatch,"assistantExecutionEngine"> & {assistantExecutionEngine:"pi"|"codex"|null}>):Promise<UserPreferenceResource>;
   getAccount(ctx: RequestContext): Promise<UserResource>;
   updateAccount(
     ctx: RequestContext,
@@ -358,9 +358,10 @@ function toPreferenceResource(
     autosaveEnabled: row.autosaveEnabled,
     fileNamingRule: row.fileNamingRule,
     analyticsEnabled: row.analyticsEnabled,
+    assistantExecutionEngine: row.assistantExecutionEngine === "codex" ? "codex" : row.assistantExecutionEngine === "pi" ? "pi" : null,
   };
 }
-function defaultPreferenceResource(ctx:RequestContext):UserPreferenceResource{return {id:`pref-${ctx.userId}`,userId:ctx.userId,defaultHome:'dashboard',defaultCreationMode:'guided',defaultVisibility:'private',autosaveEnabled:true,fileNamingRule:'{date}-{title}',analyticsEnabled:false};}
+function defaultPreferenceResource(ctx:RequestContext):UserPreferenceResource{return {id:`pref-${ctx.userId}`,userId:ctx.userId,defaultHome:'dashboard',defaultCreationMode:'guided',defaultVisibility:'private',autosaveEnabled:true,fileNamingRule:'{date}-{title}',analyticsEnabled:false,assistantExecutionEngine:null};}
 export type PreferencesWritePort=<T>(ctx:RequestContext,write:(repo:Pick<SettingsRepository,'getPreferences'|'patchPreferences'>)=>Promise<T>)=>Promise<T>;
 
 function toModelResource(
@@ -606,12 +607,22 @@ export function createSettingsService(
     },
 
     async updatePreferences(ctx, patch) {
-      const write=async(repo:Pick<SettingsRepository,'getPreferences'|'patchPreferences'>)=>toPreferenceResource(ctx,await repo.patchPreferences(ctx,patch));
+      const {initializeAssistantExecutionEngine,...input}=ENDPOINTS.patchPreferences.body.parse(patch);
+      const write=async(repo:Pick<SettingsRepository,'getPreferences'|'patchPreferences'>)=>{
+        if(initializeAssistantExecutionEngine){
+          const row=await repo.getPreferences(ctx);
+          if(row?.assistantExecutionEngine!=null)return toPreferenceResource(ctx,row);
+        }
+        return toPreferenceResource(ctx,await repo.patchPreferences(ctx,input));
+      };
+      if(initializeAssistantExecutionEngine&&!withPreferencesWrite)throw new ConflictError('偏好写锁尚未装配');
       return withPreferencesWrite?withPreferencesWrite(ctx,write):write(repoForCtx(ctx));
     },
     async patchPreferencesIfUnchanged(ctx,patch,expected){
       if(!withPreferencesWrite)throw new ConflictError('偏好写锁尚未装配，请从原设置入口保存');
-      const input=ENDPOINTS.patchPreferences.body.parse(patch),keys=Object.keys(input) as (keyof PreferencePatch)[];
+      const {initializeAssistantExecutionEngine,...input}=ENDPOINTS.patchPreferences.body.parse(patch);
+      if(initializeAssistantExecutionEngine)throw new ConflictError('首次迁移须经原偏好入口');
+      const keys=Object.keys(input) as (Exclude<keyof PreferencePatch,"initializeAssistantExecutionEngine">)[];
       if(!keys.length||!isDeepStrictEqual(Object.keys(expected).sort(),Object.keys(input).sort()))throw new ConflictError('偏好候选需要完整的受改字段前值');
       return withPreferencesWrite(ctx,async repo=>{
         const row=await repo.getPreferences(ctx),current=row?toPreferenceResource(ctx,row):defaultPreferenceResource(ctx);

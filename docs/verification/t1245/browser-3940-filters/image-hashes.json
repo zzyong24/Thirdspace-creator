@@ -1,0 +1,20 @@
+{
+  "original-common-failure.png": "1d959068a744f172bd036e2dbbf86c573e49ce4fd8bde4656208fa472523f44c",
+  "test-output/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/run-now-auth-wait-narrow-after-reload.png": "edbedbca44bf0ca8b715759afe4ff8888d1ae76c3fe0db28214f8d037b8e0f49",
+  "test-output/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/t1245-900-filters.png": "b26aad76bcb28c737b288ec1327e0cb09883e78e78c02c2cc562ce56d164b7cd",
+  "test-output/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/test-failed-1.png": "1d959068a744f172bd036e2dbbf86c573e49ce4fd8bde4656208fa472523f44c",
+  "test-output/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/run-now-auth-wait-desktop.png": "68d36e360c756254d725e5f41eb7997d9541bfb92a9907f334e33465f148b585",
+  "test-output/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/t1245-390-original-run-dialog.png": "f1308aa0f789d50600ee44a048e7a785a9ac8dd73c6e59a9b947193bd02974a9",
+  "test-output/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/t1245-900-original-job.png": "b26aad76bcb28c737b288ec1327e0cb09883e78e78c02c2cc562ce56d164b7cd",
+  "test-output/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/t1245-900-quick-cards.png": "b26aad76bcb28c737b288ec1327e0cb09883e78e78c02c2cc562ce56d164b7cd",
+  "test-output/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/t1245-390-original-job.png": "d049ef19fd2749d0d7ab8d7cbdcd8138d0c30f564239c8be3bb1785bd2c5273a",
+  "test-output/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/t1245-390-quick-cards.png": "86131a202f4b978637cb6b4abd13140db4bb024e2dafcfac43ab96455fe877df",
+  "test-output/e2e-automations-run-now-public-组内真实作业通过立即运行准入并保原任务显示待扫码-e2e/t1245-390-filters.png": "86131a202f4b978637cb6b4abd13140db4bb024e2dafcfac43ab96455fe877df",
+  "html-report/data/7be54805e5b3e450b4781695c3d6582df874b044.png": "d049ef19fd2749d0d7ab8d7cbdcd8138d0c30f564239c8be3bb1785bd2c5273a",
+  "html-report/data/97c6839ebcb562accc1678162b28852d1d6a9603.png": "edbedbca44bf0ca8b715759afe4ff8888d1ae76c3fe0db28214f8d037b8e0f49",
+  "html-report/data/8315bad7a3e8eb5b899ca6b9de95fcc98fc61455.png": "f1308aa0f789d50600ee44a048e7a785a9ac8dd73c6e59a9b947193bd02974a9",
+  "html-report/data/945d5b6a0c9a3af13b6ff9247918196146fe7f9e.png": "b26aad76bcb28c737b288ec1327e0cb09883e78e78c02c2cc562ce56d164b7cd",
+  "html-report/data/c9c965a30147a7fef2ab20117dc1bce49cdac908.png": "68d36e360c756254d725e5f41eb7997d9541bfb92a9907f334e33465f148b585",
+  "html-report/data/c9f0357172f97541f8fc8d12f7ffd2f16f905b97.png": "86131a202f4b978637cb6b4abd13140db4bb024e2dafcfac43ab96455fe877df",
+  "html-report/data/3f018aefb3d3ac58437f342b8a6943ec896d8886.png": "1d959068a744f172bd036e2dbbf86c573e49ce4fd8bde4656208fa472523f44c"
+}

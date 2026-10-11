@@ -1,0 +1,3123 @@
+资源生命周期检查：pnpm --dir contract exec vitest run --config ../docs/verification/t1073/worker/contract-vitest.config.mjs src/internal/execution-worker.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/contract
+
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  20:24:28
+   Duration  597ms (transform 276ms, setup 0ms, import 429ms, tests 7ms, environment 0ms)
+
+资源生命周期检查：pnpm --dir ai-worker exec vitest run src/execution/worker-runtime.test.ts src/execution/transcribe-worker-run.test.ts src/execution/transcribe-asr-run.test.ts src/execution/transcribe-postprocess-run.test.ts src/runtime/multimodal-whisper-local.test.ts src/runtime/multimodal-whisper-local.cancel.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/ai-worker
+
+
+ Test Files  6 passed (6)
+      Tests  113 passed (113)
+   Start at  20:24:29
+   Duration  3.81s (transform 3.88s, setup 0ms, import 7.07s, tests 3.58s, environment 0ms)
+
+资源生命周期检查：pnpm --dir backend exec vitest run src/modules/execution/worker-supervisor.memory.test.ts src/modules/execution/worker-supervisor.test.ts src/modules/execution/execution-stream.service.test.ts src/modules/ai-runtime/automation-driver.test.ts src/modules/intelligence/source-sync-runner.test.ts src/application/scheduling/automation.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/backend
+
+{"witness":"T-1073 scheduler 慢窗口","wakeups":10,"active":1,"peak":1,"calls":2}
+{"witness":"T-1073 durable automation","originalIds":["execution-task_58bd8eb9-0f2b-4fc2-be2c-7956223dd871","execution-task_cbdc22f0-febf-4a10-95a2-5f211822997d"],"callbacks":10,"handlers":2,"peak":1,"status":"succeeded","attempts":[1,1]}
+{"witness":"T-1073 public source","mode":"success","simulatedMs":250000,"calls":1,"peak":1,"pendingAfter":0,"status":"succeeded","attempt":1}
+{"witness":"T-1073 public source","mode":"cancel","simulatedMs":250000,"calls":1,"peak":1,"pendingAfter":0,"status":"cancelled","attempt":1}
+{"witness":"T-1073 public source","mode":"failure","simulatedMs":250000,"calls":1,"peak":1,"pendingAfter":0,"status":"succeeded","attempt":2}
+
+ Test Files  6 passed (6)
+      Tests  72 passed (72)
+   Start at  20:24:33
+   Duration  77.43s (transform 13.70s, setup 0ms, import 23.15s, tests 125.87s, environment 0ms)
+
+本次内存观测 ipc-memory-serial-observation.json: [{"label":"baseline","returnedBuffers":0,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.85},{"label":"running-25","returnedBuffers":25,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.88},{"label":"running-50","returnedBuffers":50,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.88},{"label":"running-75","returnedBuffers":75,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.88},{"label":"running-100","returnedBuffers":100,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.87},{"label":"after-stopped","returnedBuffers":100,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.87}]
+本次内存观测 ipc-memory-parallel-observation.json: [{"label":"baseline","returnedBuffers":0,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.85},{"label":"running-100","returnedBuffers":100,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.88,"firstCompletedAudio":99,"lastCompletedAudio":0},{"label":"after-stopped","returnedBuffers":100,"liveBuffers":0,"retainedMiB":0,"externalMiB":1.88,"firstCompletedAudio":99,"lastCompletedAudio":0}]
+资源生命周期检查：pnpm --dir frontend exec vitest run src/server/ai-runtime/live-chat-session.test.ts src/server/ai-runtime/live-chat-session.consumer.test.tsx src/features/copilot/chat-script-draft-card.test.tsx src/features/copilot/chat-thesis-card.test.tsx src/features/copilot/chat-publish-package-card.test.tsx src/features/copilot/ai-copilot-interactions.test.tsx src/features/draft-workbench/use-latest-script-review.test.tsx src/features/intelligence/use-project-upgrade-queue.test.tsx src/features/intelligence/intelligence-workbench-api.test.ts src/components/resources/asset-preview-url.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:14058) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14060) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14065) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14059) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14061) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14067) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14063) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14062) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14064) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14066) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport
+The current testing environment is not configured to support act(...)
+The current testing environment is not configured to support act(...)
+The current testing environment is not configured to support act(...)
+
+stderr | src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport
+You called act(async () => ...) without await. This could lead to unexpected testing behaviour, interleaving multiple act calls and mixing their scopes. You should - await act(async () => ...);
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx (16 tests | 15 failed) 15563ms
+   × 实际metadata waiting_user关联原回执，纯text+error离开后仍保护 1041ms
+   × 实际metadata unknown_result关联原回执，纯text+error离开后仍保护 1038ms
+   × 实际metadata paused关联原回执，纯text+error离开后仍保护 1029ms
+   × 实际metadata succeeded终态不把错误会话长期保护 1027ms
+   × 实际metadata failed终态不把错误会话长期保护 1029ms
+   × 实际metadata cancelled终态不把错误会话长期保护 1028ms
+   × metadata等待状态但missing控制回执不冒充可靠任务关联 1027ms
+   × metadata等待状态但mismatch控制回执不冒充可靠任务关联 1025ms
+   × 卸载/切scope后迟到waiting metadata只保护原会话，不改新scope 1028ms
+   × 同消息原ID显式resume waiting→succeeded后解除保护，不自动重建任务 1025ms
+   × 实际停止按钮接受cancel_requested只放弃本地观察，退出后可回收且不伪写终态 1026ms
+   × 停止command HTTP 403不释放/不中断，仍保护原运行会话 1026ms
+   × 停止command HTTP 500不释放/不中断，仍保护原运行会话 1025ms
+   × 迟到旧stop不停止新的turn流，也不覆盖其观察归属 1025ms
+   × 迟到旧stop不停止新的scope流，也不覆盖其观察归属 1038ms
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx (61 tests | 57 failed) 16249ms
+     × [T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport 1026ms
+     × [T-1055] Codex 不可用时保留输入并指向真实设置卡 4ms
+     × 文章配图深链在已有会话仍预填，并提交可信文章与段落锚点 1002ms
+     × renders a CopilotHeader (page-specs §16 component tree) 2ms
+     × submit is disabled when empty, enabled after typing 1ms
+     × submitting calls sendMessage({text}) and clears the composer 1ms
+     × [T-233] 纯 Enter 不发送(换行),Cmd+Enter 发送 1ms
+     × [T-233] Shift+Enter 也发送(宽容两种修饰键) 1ms
+     × shows a stop button (not submit) while streaming 1ms
+     × renders assistant text parts + a topic.generate candidate card, and 采纳 calls candidates.create 1ms
+     × 同一对话展示真实计划回执和可预览产物，拒绝伪造的产物引用 1ms
+     × [T-813] 点击搜索卡阅读全文，同一轮发送可见 URL 与一次性 web.read 绑定 4ms
+     × slice 2:渲染 calibration.diagnose 工具结果为维度评分卡(只读展示) 1ms
+     × slice 2:渲染 review.analyze 工具结果为经验卡,采纳 → learnings.create 1ms
+     × [T-055b] 一键岛预填 —— 面板带 ?fn 打开且对话为空 → 话术写进输入框,绝不自动发送 1003ms
+     × [T-108] embed.request(autoSend)—— 稿面按钮请求进 rail → 自动 sendMessage 那句话术(不等回车) 1004ms
+     × [T-623] embed.request without autoSend prefills the existing rail and waits for the user 1001ms
+     × [T-954] 内容诊断省略工具命令，不继承 URL 的局改命令，纯文本答复正常结束 1003ms
+     × [T-716] 新稿面命令原子替换话术与段落锚点，不保留旧话术却暗换上下文 1003ms
+     × [T-716] 已挂载的对话 transport 每轮都读最新段落锚点，不发送首帧旧上下文 1ms
+     × [T-716] 局部改稿失败保留段落锚点，成功后仍可围绕同一段连续修订 1002ms
+     × [T-732] provider 失败后普通新消息不复用局部命令 1ms
+     × [T-716] 模型只解释却未产出局部候选时结束 loading 并保留目标段 1ms
+     × [T-732] 段落锚点失效后退出局部模式，普通消息不再被旧 selection 阻断 1ms
+     × [T-108] embed.request(autoSend)—— content_output subject 进 chip,项目 chip 仍常驻(项目上下文不丢) 1ms
+     × clicking a suggested-action chip fills the composer with its label 1ms
+     × [T-231⑨] 带 prefill 的 chip → 预填完整话术(非 label),且**不自动发送**(T-055b) 0ms
+     × [T-1022] 对话生成出错后沿原任务自动恢复，不再把重试责任交给用户 1ms
+     × [T-1022] 模型断流沿原任务自动恢复 1ms
+     × [T-1023] 连续提交失败后停止自动请求并提供继续恢复，不永久转圈 1ms
+     × [TEST-T1023-04] 已有后台任务时停止重连也不把任务说成失败 1ms
+     × [T-957] 原任务结果未知时不显示重新提交按钮：CHAT_RESULT_UNCONFIRMED 1ms
+     × [T-957] 原任务结果未知时不显示重新提交按钮：本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。 0ms
+     × [T-913] 模型未配置 → 直接打开模型设置，不再显示泛化重试 0ms
+     × [T-913] 定位未完成 → 直达定位中心，不误导去模型设置 0ms
+     × [T-715] 受管额度不足 → 显示充值入口，不显示模型设置或无意义重试 1ms
+     × [T-096 矩阵#3] 会话持久化:该 scope 存过 conversationId → 挂载读回历史(左下角开→关→再开恢复同一会话) 1002ms
+     × [T-096] 会话持久化:指针读回失败(会话被删)→ 清失效指针 + 落服务端兜底,自愈不毁档 1003ms
+     × [T-096 矩阵#4] 清 localStorage 后再开 → 服务端兜底恢复该 scope 最近会话(根因链 3/4 根治) 1003ms
+     × [T-096 矩阵#5] 选题岛「新对话」只清 surface:topics 指针,global 指针纹丝不动(不同桶互不覆盖) 2ms
+     × [T-096 矩阵#9] 历史记录:点开 → listConversations 只列当前 scope;点某条 → 读回该会话消息 1002ms
+     × 新对话:点「新对话」→ 清空会话 + 清当前 scope 的指针(同 scope 内新开一条) 3ms
+       × 输入 @ → 懒加载真项目列表(client.listProjects)并弹出补全下拉 1ms
+       × @ 后接查询串 → 按标题过滤候选 1ms
+       × 选中某项目 → @query 不进消息正文 + 显式项目引用标签保留完整 ID/标题 1ms
+       × [T-055b gate-F2] URL 选中态 → 头部常驻 @项目 chip;点 × 摘除后不再注入 1ms
+       × [T-055b gate-F2] 无任何上下文 → 显式「未关联项目」空 chip,不静默 1ms
+       × 移除项目引用 chip → chip 消失(撤销注入) 1ms
+       × 库里没有项目 → 下拉显示诚实空态(引导先建项目,不摆假行) 1ms
+       × [T-976] 聊天未知结果不变成后台核对通知，其他创作任务仍可通知 1002ms
+       × 首帧已是终态的历史任务不推通知(只播种) 1001ms
+       × 在途任务跑完 → 推 succeeded 通知卡,点 × 可关闭 1003ms
+       × 失败任务 → 通知诚实带原因 1002ms
+   × 失败或拒绝工具 output-error 显示终态，历史回放不永久转圈 1ms
+   × 失败或拒绝工具 output-denied 显示终态，历史回放不永久转圈 1ms
+   × 失败或拒绝工具 approval-responded 显示终态，历史回放不永久转圈 1ms
+   × 慢任务读取超过轮询间隔时不叠加请求，返回结果仍能停止轮询 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 72 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport
+AssertionError: expected 'pi' to be 'codex' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-text-subtle"[39m
+            [33mdata-slot[39m=[32m"context-chip-empty"[39m
+          [36m>[39m
+            [0m未关联项目 · 输入 @ 引用一个项目[0m
+          [36m</span>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"rounded-md border px-2.5 py-1 text-xs text-foreground hover:bg-surface-muted"[39m
+            [33mhref[39m=[32m"/canvases"[39m
+          [36m>[39m
+            [0m在画布中打开[0m
+          [36m</a>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex min-h-0 flex-1 flex-col gap-2"[39m
+          [33mdata-region[39m=[32m"prompt"[39m
+          [33mda...
+
+Expected: "codex"
+Received: "pi"
+
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:206:98
+    204|     view.rerender(<AICopilotContent viewModel={VM} />);
+    205|     act(() => writeAssistantEngine("codex"));
+    206|     await waitFor(() => expect((mockedLiveSession as {executionEngine:…
+       |                                                                                                  ^
+    207|     expect(initialChatTransport).toBe(transport);
+    208|     expect(stop).not.toHaveBeenCalled();
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1055] Codex 不可用时保留输入并指向真实设置卡
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:218:28
+    216|     const user = userEvent.setup();
+    217|     render(<AICopilotContent viewModel={VM} />);
+    218|     await user.type(screen.getByLabelText("我能帮你做什么"), "保留我的输入");
+       |                            ^
+    219|     await waitFor(() => expect(screen.getByLabelText("提交提示给 Copilot"))…
+    220|     expect(screen.getByRole("link", {name: "设置编导引擎"})).toHaveAttribute…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > 文章配图深链在已有会话仍预填，并提交可信文章与段落锚点
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Proxy.waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:231:11
+    229|       "&scope=project%3Aproject-1&prefill=" + encodeURIComponent("为此段生…
+    230|     render(<AICopilotContent viewModel={VM} />);
+    231|     await waitFor(() => expect((screen.getByLabelText("我能帮你做什么") as HT…
+       |           ^
+    232|     const body = await (initialChatTransport!.body as () => Record<str…
+    233|     expect(body).toMatchObject({chatContext: {projectId: "project-1", …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > renders a CopilotHeader (page-specs §16 component tree)
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:253:72
+    251|   it("renders a CopilotHeader (page-specs §16 component tree)", () => {
+    252|     render(<AICopilotContent viewModel={VM} />);
+    253|     expect(document.querySelector('[data-slot="copilot-header"]')).not…
+       |                                                                        ^
+    254|   });
+    255|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > submit is disabled when empty, enabled after typing
+TestingLibraryElementError: Unable to find a label with the text of: 提交提示给 Copilot
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:259:27
+    257|     const user = userEvent.setup();
+    258|     render(<AICopilotContent viewModel={VM} />);
+    259|     const submit = screen.getByLabelText("提交提示给 Copilot");
+       |                           ^
+    260|     expect(submit).toBeDisabled();
+    261|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > submitting calls sendMessage({text}) and clears the composer
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:270:29
+    268|     const user = userEvent.setup();
+    269|     render(<AICopilotContent viewModel={VM} />);
+    270|     const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaE…
+       |                             ^
+    271|     await user.type(textarea, "基于最近评论出 5 个选题");
+    272|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-233] 纯 Enter 不发送(换行),Cmd+Enter 发送
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:285:29
+    283|     const user = userEvent.setup();
+    284|     render(<AICopilotContent viewModel={VM} />);
+    285|     const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaE…
+       |                             ^
+    286|     await user.type(textarea, "第一行");
+    287|     await user.keyboard("{Enter}");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-233] Shift+Enter 也发送(宽容两种修饰键)
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:300:29
+    298|     const user = userEvent.setup();
+    299|     render(<AICopilotContent viewModel={VM} />);
+    300|     const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaE…
+       |                             ^
+    301|     await user.type(textarea, "一句话");
+    302|     await user.keyboard("{Shift>}{Enter}{/Shift}");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > shows a stop button (not submit) while streaming
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:309:53
+    307|     mockStatus = "streaming";
+    308|     render(<AICopilotContent viewModel={VM} />);
+    309|     expect(screen.queryByTestId("stop-button")).not.toBeNull();
+       |                                                     ^
+    310|     expect(screen.queryByTestId("submit-button")).toBeNull();
+    311|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > renders assistant text parts + a topic.generate candidate card, and 采纳 calls candidates.create
+TestingLibraryElementError: Unable to find an element with the text: 给你出 1 个选题：. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:347:19
+    345|
+    346|     // assistant text bubble renders.
+    347|     expect(screen.getByText("给你出 1 个选题：")).not.toBeNull();
+       |                   ^
+    348|     // candidate card renders the tool-result candidate.
+    349|     const card = document.querySelector('[data-slot="chat-candidate-ca…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > 同一对话展示真实计划回执和可预览产物，拒绝伪造的产物引用
+TestingLibraryElementError: Unable to find an element with the text: 生成 HTML 报告. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:390:19
+    388|     ]}];
+    389|     render(<AICopilotContent viewModel={VM}/>);
+    390|     expect(screen.getByText("生成 HTML 报告")).toBeTruthy();
+       |                   ^
+    391|     expect(screen.getByText("已完成 1/1 步")).toBeTruthy();
+    392|     expect(screen.getByText("正在保存报告")).toBeTruthy();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-813] 点击搜索卡阅读全文，同一轮发送可见 URL 与一次性 web.read 绑定
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "阅读全文"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:430:29
+    428|     render(<AICopilotContent viewModel={VM} />);
+    429|
+    430|     await user.click(screen.getByRole("button", { name: "阅读全文" }));
+       |                             ^
+    431|     expect(sendMessage).toHaveBeenCalledWith({
+    432|       text: "请阅读全文：https://example.com/harness#intro",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > slice 2:渲染 calibration.diagnose 工具结果为维度评分卡(只读展示)
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:488:11
+    486|     expect(
+    487|       document.querySelector('[data-slot="chat-diagnosis-card"]'),
+    488|     ).not.toBeNull();
+       |           ^
+    489|     expect(screen.getByText("4 / 5")).not.toBeNull();
+    490|     expect(screen.getByText(/综合判断/)).not.toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > slice 2:渲染 review.analyze 工具结果为经验卡,采纳 → learnings.create
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:517:11
+    515|     expect(
+    516|       document.querySelector('[data-slot="chat-learnings-card"]'),
+    517|     ).not.toBeNull();
+       |           ^
+    518|     await user.click(screen.getByText("采纳"));
+    519|     await waitFor(() => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-055b] 一键岛预填 —— 面板带 ?fn 打开且对话为空 → 话术写进输入框,绝不自动发送
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Proxy.waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:533:11
+    531|     mockSearch = "copilot=open&surface=calibration&fn=calibration.diag…
+    532|     render(<AICopilotContent viewModel={VM} />);
+    533|     await waitFor(() => {
+       |           ^
+    534|       const input = screen.getByLabelText(
+    535|         "我能帮你做什么",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-108] embed.request(autoSend)—— 稿面按钮请求进 rail → 自动 sendMessage 那句话术(不等回车)
+AssertionError: expected "vi.fn()" to be called with arguments: [ Array(1) ]
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:571:27
+    569|     // autoSend → 自动发那句审核话术(而不是写进输入框等回车)。
+    570|     await waitFor(() => {
+    571|       expect(sendMessage).toHaveBeenCalledWith({
+       |                           ^
+    572|         text: "审核这份文案:跑一遍违禁词/合规诊断,命中给逐条改写建议。",
+    573|       });
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-623] embed.request without autoSend prefills the existing rail and waits for the user
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ Proxy.waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:602:11
+    600|     );
+    601|
+    602|     await waitFor(() => {
+       |           ^
+    603|       expect(
+    604|         (screen.getByLabelText("我能帮你做什么") as HTMLTextAreaElement).valu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-954] 内容诊断省略工具命令，不继承 URL 的局改命令，纯文本答复正常结束
+AssertionError: expected "vi.fn()" to be called with arguments: [ { text: '判断当前稿的观看理由，不要自动改稿。' } ]
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:624:45
+    622|     } as const;
+    623|     const { rerender } = render(<AICopilotContent viewModel={VM} embed…
+    624|     await waitFor(() => expect(sendMessage).toHaveBeenCalledWith({ tex…
+       |                                             ^
+    625|     const body = await (initialChatTransport!.body as () => Record<str…
+    626|     expect((body.chatContext as Record<string, unknown>).functionKey).…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-716] 新稿面命令原子替换话术与段落锚点，不保留旧话术却暗换上下文
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ waitForWrapper ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:663:36
+    661|       />,
+    662|     );
+    663|     const textarea = (await screen.findByLabelText(
+       |                                    ^
+    664|       "我能帮你做什么",
+    665|     )) as HTMLTextAreaElement;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-716] 已挂载的对话 transport 每轮都读最新段落锚点，不发送首帧旧上下文
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:710:38
+    708|       <AICopilotContent viewModel={VM} embed={{ ...embedBase, request:…
+    709|     );
+    710|     expect(initialChatTransport).not.toBeNull();
+       |                                      ^
+    711|
+    712|     rerender(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-716] 局部改稿失败保留段落锚点，成功后仍可围绕同一段连续修订
+AssertionError: expected null not to be null
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:792:13
+    790|           '[data-slot="context-chip"][data-kind="script_section"]',
+    791|         ),
+    792|       ).not.toBeNull(),
+       |             ^
+    793|     );
+    794|     await user.click(screen.getByLabelText("提交提示给 Copilot"));
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-732] provider 失败后普通新消息不复用局部命令
+TestingLibraryElementError: Unable to find a label with the text of: 提交提示给 Copilot
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:919:29
+    917|       <AICopilotContent viewModel={VM} embed={embed} />,
+    918|     );
+    919|     await user.click(screen.getByLabelText("提交提示给 Copilot"));
+       |                             ^
+    920|     mockMessages = [
+    921|       {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-716] 模型只解释却未产出局部候选时结束 loading 并保留目标段
+TestingLibraryElementError: Unable to find a label with the text of: 提交提示给 Copilot
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:971:29
+    969|       <AICopilotContent viewModel={VM} embed={embed} />,
+    970|     );
+    971|     await user.click(screen.getByLabelText("提交提示给 Copilot"));
+       |                             ^
+    972|
+    973|     mockMessages = [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-732] 段落锚点失效后退出局部模式，普通消息不再被旧 selection 阻断
+TestingLibraryElementError: Unable to find a label with the text of: 提交提示给 Copilot
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1084:29
+    1082|     );
+    1083|
+    1084|     await user.click(screen.getByLabelText("提交提示给 Copilot"));
+       |                             ^
+    1085|     mockMessages = [
+    1086|       {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-108] embed.request(autoSend)—— content_output subject 进 chip,项目 chip 仍常驻(项目上下文不丢)
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1221:29
+    1219|       '[data-slot="context-chip"][data-kind="project"][data-project-id…
+    1220|     );
+    1221|     expect(projectChip).not.toBeNull();
+       |                             ^
+    1222|     expect(
+    1223|       projectChip!.querySelector('[data-slot="context-chip-remove"]'),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > clicking a suggested-action chip fills the composer with its label
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1235:29
+    1233|     const user = userEvent.setup();
+    1234|     render(<AICopilotContent viewModel={VM} />);
+    1235|     const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaE…
+       |                             ^
+    1236|     expect(textarea.value).toBe("");
+    1237|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-231⑨] 带 prefill 的 chip → 预填完整话术(非 label),且**不自动发送**(T-055b)
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1261:29
+    1259|       />,
+    1260|     );
+    1261|     const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAreaE…
+       |                             ^
+    1262|     await user.click(screen.getByText("生成脚本"));
+    1263|     // 完整话术进输入框(不是 label 字条),但绝不自动发。
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1022] 对话生成出错后沿原任务自动恢复，不再把重试责任交给用户
+TestingLibraryElementError: Unable to find an element with the text: 正在恢复本轮生成. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1275:19
+    1273|     ];
+    1274|     render(<AICopilotContent viewModel={VM} />);
+    1275|     expect(screen.getByText("正在恢复本轮生成")).toBeInTheDocument();
+       |                   ^
+    1276|     expect(screen.getByText("输入和已完成内容已保留，系统正在沿原任务自动恢复。")).toBeInTheDoc…
+    1277|     expect(document.querySelector('[data-slot="copilot-error-retry"]')…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1022] 模型断流沿原任务自动恢复
+TestingLibraryElementError: Unable to find an element with the text: 正在恢复本轮生成. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1289:19
+    1287|     mockMessages = [{ id: "u1", role: "user", parts: [{ type: "text", …
+    1288|     render(<AICopilotContent viewModel={VM} />);
+    1289|     expect(screen.getByText("正在恢复本轮生成")).toBeInTheDocument();
+       |                   ^
+    1290|     expect(screen.getByText(/系统正在沿原任务自动恢复/)).toBeInTheDocument();
+    1291|     expect(document.querySelector('[data-slot="copilot-error-retry"]')…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-1023] 连续提交失败后停止自动请求并提供继续恢复，不永久转圈
+TestingLibraryElementError: Unable to find an element with the text: 正在恢复本轮生成. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1306:19
+    1304|
+    1305|     render(<AICopilotContent viewModel={VM} />);
+    1306|     expect(screen.getByText("正在恢复本轮生成")).toBeInTheDocument();
+       |                   ^
+    1307|
+    1308|     await act(async () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [TEST-T1023-04] 已有后台任务时停止重连也不把任务说成失败
+TestingLibraryElementError: Unable to find an element with the text: 自动恢复暂未取得进展. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1342:19
+    1340|     });
+    1341|
+    1342|     expect(screen.getByText("自动恢复暂未取得进展")).toBeInTheDocument();
+       |                   ^
+    1343|     expect(screen.getByText(/后台任务和已完成内容都已保留/)).toBeInTheDocument();
+    1344|     expect(screen.queryByText(/任务失败/)).not.toBeInTheDocument();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-957] 原任务结果未知时不显示重新提交按钮：CHAT_RESULT_UNCONFIRMED
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-957] 原任务结果未知时不显示重新提交按钮：本次执行结果尚未确认，请在任务中心核对原任务，避免重复操作。
+TestingLibraryElementError: Unable to find an element with the text: 本轮对话已停止. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1368:19
+    1366|     mockMessages = [{ id: "u1", role: "user", parts: [{ type: "text", …
+    1367|     render(<AICopilotContent viewModel={VM} />);
+    1368|     expect(screen.getByText("本轮对话已停止")).toBeInTheDocument();
+       |                   ^
+    1369|     expect(screen.getByText(/外部操作未返回确认结果/)).toBeInTheDocument();
+    1370|     expect(document.querySelector('[data-slot="copilot-error-retry"]')…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-913] 模型未配置 → 直接打开模型设置，不再显示泛化重试
+TestingLibraryElementError: Unable to find an element with the text: 完成 AI 设置后继续. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1382:19
+    1380|     render(<AICopilotContent viewModel={VM} />);
+    1381|
+    1382|     expect(screen.getByText("完成 AI 设置后继续")).toBeInTheDocument();
+       |                   ^
+    1383|     expect(screen.getByText("刚才输入的内容已经保留。完成设置后，回来即可继续。")).toBeInTheDoc…
+    1384|     const settings = document.querySelector(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-913] 定位未完成 → 直达定位中心，不误导去模型设置
+TestingLibraryElementError: Unable to find an element with the text: 先完成账号定位. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1400:19
+    1398|     render(<AICopilotContent viewModel={VM} />);
+    1399|
+    1400|     expect(screen.getByText("先完成账号定位")).toBeInTheDocument();
+       |                   ^
+    1401|     expect(screen.getByText("刚才输入的内容已经保留。保存一版定位后，回来即可继续。")).toBeInTheD…
+    1402|     const positioning = document.querySelector(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-715] 受管额度不足 → 显示充值入口，不显示模型设置或无意义重试
+TestingLibraryElementError: Unable to find an element with the text: AI 额度需要补充. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1430:19
+    1428|     render(<AICopilotContent viewModel={VM} />);
+    1429|
+    1430|     expect(screen.getByText("AI 额度需要补充")).toBeInTheDocument();
+       |                   ^
+    1431|     expect(screen.getByText("刚才输入的内容已经保留。补充额度后，回来即可继续。")).toBeInTheDoc…
+    1432|     expect(document.querySelector('[data-slot="copilot-error-settings-…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-096 矩阵#3] 会话持久化:该 scope 存过 conversationId → 挂载读回历史(左下角开→关→再开恢复同一会话)
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1460:28
+    1458|
+    1459|     await waitFor(() => {
+    1460|       expect(listMessages).toHaveBeenCalledWith(
+       |                            ^
+    1461|         expect.objectContaining({
+    1462|           params: { conversationId: "conv-restore" },
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-096] 会话持久化:指针读回失败(会话被删)→ 清失效指针 + 落服务端兜底,自愈不毁档
+AssertionError: expected "vi.fn()" to be called at least once
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1489:28
+    1487|
+    1488|     await waitFor(() => {
+    1489|       expect(listMessages).toHaveBeenCalled();
+       |                            ^
+    1490|     });
+    1491|     // 失效指针被清除;随即走服务端兜底(listConversations?scope=global,mock 空 → 诚实空会话)。
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-096 矩阵#4] 清 localStorage 后再开 → 服务端兜底恢复该 scope 最近会话(根因链 3/4 根治)
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1516:33
+    1514|     // 兜底查询限定当前 scope(global),只取最近一条。
+    1515|     await waitFor(() => {
+    1516|       expect(listConversations).toHaveBeenCalledWith(
+       |                                 ^
+    1517|         expect.objectContaining({
+    1518|           query: expect.objectContaining({ page: 1, pageSize: 1, scope…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-096 矩阵#5] 选题岛「新对话」只清 surface:topics 指针,global 指针纹丝不动(不同桶互不覆盖)
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name `/新对话/`
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1543:29
+    1541|     render(<AICopilotContent viewModel={VM} />);
+    1542|
+    1543|     await user.click(screen.getByRole("button", { name: /新对话/ }));
+       |                             ^
+    1544|     // 选题岛自己的桶被清;global 桶不受影响。
+    1545|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-096 矩阵#9] 历史记录:点开 → listConversations 只列当前 scope;点某条 → 读回该会话消息
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1566:51
+    1564|     render(<AICopilotContent viewModel={VM} />);
+    1565|     // 等挂载兜底完成,避免与面板懒加载竞争 mock 队列。
+    1566|     await waitFor(() => expect(listConversations).toHaveBeenCalledTime…
+       |                                                   ^
+    1567|
+    1568|     // 点「历史记录」→ 懒加载列表(限定当前 scope=global —— 跨 scope 会话不出现)。
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[40/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > 新对话:点「新对话」→ 清空会话 + 清当前 scope 的指针(同 scope 内新开一条)
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name `/新对话/`
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1606:29
+    1604|     render(<AICopilotContent viewModel={VM} />);
+    1605|
+    1606|     await user.click(screen.getByRole("button", { name: /新对话/ }));
+       |                             ^
+    1607|     expect(setMessages).toHaveBeenCalledWith([]);
+    1608|     expect(window.localStorage.getItem("copilot:conv:global")).toBeNul…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[41/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > 输入 @ → 懒加载真项目列表(client.listProjects)并弹出补全下拉
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1619:31
+    1617|       ]);
+    1618|       render(<AICopilotContent viewModel={VM} />);
+    1619|       const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAre…
+       |                               ^
+    1620|
+    1621|       await user.type(textarea, "帮我基于 @");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[42/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > @ 后接查询串 → 按标题过滤候选
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1645:31
+    1643|       ]);
+    1644|       render(<AICopilotContent viewModel={VM} />);
+    1645|       const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAre…
+       |                               ^
+    1646|
+    1647|       await user.type(textarea, "@RAG");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[43/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > 选中某项目 → @query 不进消息正文 + 显式项目引用标签保留完整 ID/标题
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1660:31
+    1658|       listProjects.mockResolvedValue([{ id: "proj-1", title: "上下文工程" }…
+    1659|       render(<AICopilotContent viewModel={VM} />);
+    1660|       const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAre…
+       |                               ^
+    1661|
+    1662|       await user.type(textarea, "@上下");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[44/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > [T-055b gate-F2] URL 选中态 → 头部常驻 @项目 chip;点 × 摘除后不再注入
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1691:24
+    1689|         '[data-slot="context-chip"][data-kind="project"][data-project-…
+    1690|       );
+    1691|       expect(chip).not.toBeNull();
+       |                        ^
+    1692|       expect(chip!.textContent).toContain("22个没法看的复盘");
+    1693|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[45/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > [T-055b gate-F2] 无任何上下文 → 显式「未关联项目」空 chip,不静默
+AssertionError: expected null not to be null
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1707:25
+    1705|       render(<AICopilotContent viewModel={VM} />);
+    1706|       const empty = document.querySelector('[data-slot="context-chip-e…
+    1707|       expect(empty).not.toBeNull();
+       |                         ^
+    1708|       expect(empty!.textContent).toContain("未关联项目");
+    1709|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[46/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > 移除项目引用 chip → chip 消失(撤销注入)
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1715:31
+    1713|       listProjects.mockResolvedValue([{ id: "proj-1", title: "上下文工程" }…
+    1714|       render(<AICopilotContent viewModel={VM} />);
+    1715|       const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAre…
+       |                               ^
+    1716|
+    1717|       await user.type(textarea, "@");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[47/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > T-039b @项目引用 > 库里没有项目 → 下拉显示诚实空态(引导先建项目,不摆假行)
+TestingLibraryElementError: Unable to find a label with the text of: 我能帮你做什么
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1735:31
+    1733|       listProjects.mockResolvedValue([]);
+    1734|       render(<AICopilotContent viewModel={VM} />);
+    1735|       const textarea = screen.getByLabelText("我能帮你做什么") as HTMLTextAre…
+       |                               ^
+    1736|
+    1737|       await user.type(textarea, "@");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[48/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-239g] 长任务完成对话内通知卡 > [T-976] 聊天未知结果不变成后台核对通知，其他创作任务仍可通知
+AssertionError: expected "vi.fn()" to be called at least once
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1779:45
+    1777|       ]);
+    1778|       const { rerender } = render(<AICopilotContent viewModel={VM} />);
+    1779|       await waitFor(() => expect(listTasks).toHaveBeenCalled());
+       |                                             ^
+    1780|       await new Promise((r) => setTimeout(r, 0));
+    1781|       expect(document.querySelector('[data-task-id="chat-turn"]')).toB…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[49/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-239g] 长任务完成对话内通知卡 > 首帧已是终态的历史任务不推通知(只播种)
+AssertionError: expected "vi.fn()" to be called at least once
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1799:27
+    1797|       // 本体保留(喂通知卡),首帧终态只播种、不该推任何通知卡。
+    1798|       await waitFor(() =>
+    1799|         expect(listTasks).toHaveBeenCalled(),
+       |                           ^
+    1800|       );
+    1801|       await new Promise((r) => setTimeout(r, 0));
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[50/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-239g] 长任务完成对话内通知卡 > 在途任务跑完 → 推 succeeded 通知卡,点 × 可关闭
+AssertionError: expected "vi.fn()" to be called at least once
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1813:45
+    1811|       listTasks.mockResolvedValue([wireTask({ status: "running" })]);
+    1812|       const { rerender } = render(<AICopilotContent viewModel={VM} />);
+    1813|       await waitFor(() => expect(listTasks).toHaveBeenCalled());
+       |                                             ^
+    1814|       await new Promise((r) => setTimeout(r, 0));
+    1815|       expect(
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[51/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > AI Copilot composer behavior (useChat-driven, T-004) > [T-239g] 长任务完成对话内通知卡 > 失败任务 → 通知诚实带原因
+AssertionError: expected "vi.fn()" to be called at least once
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1851:45
+    1849|       const { rerender } = render(<AICopilotContent viewModel={VM} />);
+    1850|       // [T-354] 次区 feed 已下架,等待锚改为「首轮 listTasks 已发 + flush」(播种)。
+    1851|       await waitFor(() => expect(listTasks).toHaveBeenCalled());
+       |                                             ^
+    1852|       await new Promise((r) => setTimeout(r, 0));
+    1853|
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[52/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 output-error 显示终态，历史回放不永久转圈
+TestingLibraryElementError: Unable to find an element with the text: /工具参数无效/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1875:17
+    1873|   const {container}=render(<AICopilotContent viewModel={VM} />);
+    1874|   expect(container.querySelector('[data-slot="copilot-tool-running"]')…
+    1875|   expect(screen.getByText(state==="output-error"?/工具参数无效/:/已拒绝/)).toBe…
+       |                 ^
+    1876|   expect(sendMessage).not.toHaveBeenCalled();
+    1877| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[53/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 output-denied 显示终态，历史回放不永久转圈
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 失败或拒绝工具 approval-responded 显示终态，历史回放不永久转圈
+TestingLibraryElementError: Unable to find an element with the text: /已拒绝/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1875:17
+    1873|   const {container}=render(<AICopilotContent viewModel={VM} />);
+    1874|   expect(container.querySelector('[data-slot="copilot-tool-running"]')…
+    1875|   expect(screen.getByText(state==="output-error"?/工具参数无效/:/已拒绝/)).toBe…
+       |                 ^
+    1876|   expect(sendMessage).not.toHaveBeenCalled();
+    1877| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[54/72]⎯
+
+ FAIL  src/features/copilot/ai-copilot-interactions.test.tsx > 慢任务读取超过轮询间隔时不叠加请求，返回结果仍能停止轮询
+AssertionError: expected "vi.fn()" to be called 2 times, but got 0 times
+ ❯ src/features/copilot/ai-copilot-interactions.test.tsx:1889:21
+    1887|   await act(async()=>{await vi.advanceTimersByTimeAsync(8000);});
+    1888|   await act(async()=>{await vi.advanceTimersByTimeAsync(24000);});
+    1889|   expect(listTasks).toHaveBeenCalledTimes(2);
+       |                     ^
+    1890|   await act(async()=>{resolveRead([{...row,status:"succeeded"}]);});
+    1891|   await act(async()=>{await vi.advanceTimersByTimeAsync(24000);});
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[55/72]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际metadata waiting_user关联原回执，纯text+error离开后仍保护
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际metadata unknown_result关联原回执，纯text+error离开后仍保护
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际metadata paused关联原回执，纯text+error离开后仍保护
+AssertionError: expected 'ready' to be 'error' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "error"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:75:49
+     73|  vi.stubGlobal('fetch',vi.fn(async()=>sseResponse(status)));
+     74|  const {mounted,key,original}=await startConsumer(`metadata-${status}`…
+     75|  await waitFor(()=>expect(original.chat.status).toBe('error'));
+       |                                                 ^
+     76|  expect(original.chat.messages.at(-1)?.parts).toEqual([{type:'text',te…
+     77|  expect(original.chat.messages.at(-1)?.metadata).toEqual({execution:{e…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[56/72]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际metadata succeeded终态不把错误会话长期保护
+AssertionError: expected undefined to deeply equal { execution: { …(2) } }
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+- Expected:
+{
+  "execution": {
+    "executionTaskId": "original-execution",
+    "status": "succeeded",
+  },
+}
+
++ Received:
+undefined
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:87:68
+     85|  const {mounted,key,original}=await startConsumer(`terminal-${status}`…
+     86|  await waitFor(()=>expect(['ready','error']).toContain(original.chat.s…
+     87|  await waitFor(()=>expect(original.chat.messages.at(-1)?.metadata).toE…
+       |                                                                    ^
+     88|  mounted.unmount();await act(async()=>{await Promise.resolve();});pres…
+     89|  expect(getLiveChatSession(key)).not.toBe(original);expect(original.tr…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[57/72]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际metadata failed终态不把错误会话长期保护
+AssertionError: expected undefined to deeply equal { execution: { …(2) } }
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+- Expected:
+{
+  "execution": {
+    "executionTaskId": "original-execution",
+    "status": "failed",
+  },
+}
+
++ Received:
+undefined
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:87:68
+     85|  const {mounted,key,original}=await startConsumer(`terminal-${status}`…
+     86|  await waitFor(()=>expect(['ready','error']).toContain(original.chat.s…
+     87|  await waitFor(()=>expect(original.chat.messages.at(-1)?.metadata).toE…
+       |                                                                    ^
+     88|  mounted.unmount();await act(async()=>{await Promise.resolve();});pres…
+     89|  expect(getLiveChatSession(key)).not.toBe(original);expect(original.tr…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[58/72]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际metadata cancelled终态不把错误会话长期保护
+AssertionError: expected undefined to deeply equal { execution: { …(2) } }
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+- Expected:
+{
+  "execution": {
+    "executionTaskId": "original-execution",
+    "status": "cancelled",
+  },
+}
+
++ Received:
+undefined
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:87:68
+     85|  const {mounted,key,original}=await startConsumer(`terminal-${status}`…
+     86|  await waitFor(()=>expect(['ready','error']).toContain(original.chat.s…
+     87|  await waitFor(()=>expect(original.chat.messages.at(-1)?.metadata).toE…
+       |                                                                    ^
+     88|  mounted.unmount();await act(async()=>{await Promise.resolve();});pres…
+     89|  expect(getLiveChatSession(key)).not.toBe(original);expect(original.tr…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[59/72]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > metadata等待状态但missing控制回执不冒充可靠任务关联
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > metadata等待状态但mismatch控制回执不冒充可靠任务关联
+AssertionError: expected 'ready' to be 'error' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "error"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:94:49
+     92|  vi.stubGlobal('fetch',vi.fn(async()=>sseResponse('waiting_user',kind=…
+     93|  const {mounted,key,original}=await startConsumer(`receipt-${kind}`);
+     94|  await waitFor(()=>expect(original.chat.status).toBe('error'));
+       |                                                 ^
+     95|  mounted.unmount();await act(async()=>{await Promise.resolve();});pres…
+     96|  expect(getLiveChatSession(key)).not.toBe(original);
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[60/72]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 卸载/切scope后迟到waiting metadata只保护原会话，不改新scope
+AssertionError: expected 'ready' to be 'submitted' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "submitted"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:103:49
+
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[61/72]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 同消息原ID显式resume waiting→succeeded后解除保护，不自动重建任务
+AssertionError: expected 'ready' to be 'error' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "error"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:124:49
+    122|  vi.stubGlobal('fetch',request);
+    123|  const {mounted,key,original}=await startConsumer('resume-metadata');
+    124|  await waitFor(()=>expect(original.chat.status).toBe('error'));
+       |                                                 ^
+    125|  expect(request).toHaveBeenCalledTimes(1);
+    126|  expect(screen.getByText('自动恢复中')).toBeInTheDocument();
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[62/72]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 实际停止按钮接受cancel_requested只放弃本地观察，退出后可回收且不伪写终态
+AssertionError: expected 'ready' to be 'streaming' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "streaming"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:170:49
+    168|  }));
+    169|  const {mounted,key,original}=await startConsumer('stop-group');
+    170|  await waitFor(()=>expect(original.chat.status).toBe('streaming'));
+       |                                                 ^
+    171|  await waitFor(()=>expect(original.chat.messages.at(-1)?.metadata).toE…
+    172|  fireEvent.click(screen.getByTestId('stop-button'));
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[63/72]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 停止command HTTP 403不释放/不中断，仍保护原运行会话
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 停止command HTTP 500不释放/不中断，仍保护原运行会话
+AssertionError: expected 'ready' to be 'streaming' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "streaming"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:186:49
+
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[64/72]⎯
+
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 迟到旧stop不停止新的turn流，也不覆盖其观察归属
+ FAIL  src/server/ai-runtime/live-chat-session.consumer.test.tsx > 迟到旧stop不停止新的scope流，也不覆盖其观察归属
+AssertionError: expected 'ready' to be 'streaming' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex h-full min-h-0 flex-col gap-3 overflow-y-auto"[39m
+        [33mdata-slot[39m=[32m"ai-copilot-content"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex shrink-0 items-center gap-2"[39m
+          [33mdata-slot[39m=[32m"copilot-header"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"inline-flex size-8 items-center justify-center rounded-lg bg-brand-soft text-brand"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-sparkles size-4"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M20 2v4"[39m
+              [36m/>[39m
+              [36m<path[39m
+                [33md[39m=[32m"M22 4h-4"[39m
+              [36m/>[39m
+              [36m<circle[39m
+                [33mcx[39m=[32m"4"[39m
+                [33mcy[39m=[32m"20"[39m
+                [33mr[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-w-0 flex-1 flex-col"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"truncate text-sm font-semibold text-foreground"[39m
+              [33mdata-slot[39m=[32m"copilot-header-title"[39m
+            [36m>[39m
+              [0mAI 助手[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"truncate text-[11px] text-muted-foreground"[39m
+            [36m>[39m
+              [0m描述你的目标，我来帮你规划下一步[0m
+            [36m</p>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-new"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-plus size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5 12h14"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 5v14"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m新对话[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-expanded[39m=[32m"false"[39m
+              [33maria-haspopup[39m=[32m"menu"[39m
+              [33mclass[39m=[32m"inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-surface-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"[39m
+              [33mdata-slot[39m=[32m"ai-copilot-history"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"lucide lucide-clock3 lucide-clock-3 size-3.5"[39m
+                [33mfill[39m=[32m"none"[39m
+                [33mheight[39m=[32m"24"[39m
+                [33mstroke[39m=[32m"currentColor"[39m
+                [33mstroke-linecap[39m=[32m"round"[39m
+                [33mstroke-linejoin[39m=[32m"round"[39m
+                [33mstroke-width[39m=[32m"2"[39m
+                [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [33mwidth[39m=[32m"24"[39m
+                [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+              [36m>[39m
+                [36m<circle[39m
+                  [33mcx[39m=[32m"12"[39m
+                  [33mcy[39m=[32m"12"[39m
+                  [33mr[39m=[32m"10"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M12 6v6h4"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+              [0m历史记录[0m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex shrink-0 flex-wrap items-center gap-1.5"[39m
+          [33mdata-slot[39m=[32m"copilot-context-chips"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33maria-label[39m=[32m"当前项目：当前项目"[39m
+            [33mclass[39m=[32m"inline-flex min-w-0 max-w-[min(360px,70vw)] items-center gap-1.5 rounded-md border border-brand/25 bg-brand-soft px-2.5 py-1 text-xs text-brand"[39m
+            [33mdata-kind[39m=[32m"project"[39m
+            [33mdata-project-id[39m=[32m"revisit"[39m
+            [33mdata-slot[39m=[32m"context-chip"[39m
+            [33mtitle[39m=[32m"项目 · 当前项目"[39m
+          [36m>[39m
+            [36m<svg[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"lucide lucide-folder-open size-3"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m...
+
+Expected: "streaming"
+Received: "ready"
+
+ ❯ src/server/ai-runtime/live-chat-session.consumer.test.tsx:204:49
+    202|  }));
+    203|  const {mounted,original}=await startConsumer(`late-stop-${change}-a`);
+    204|  await waitFor(()=>expect(original.chat.status).toBe('streaming'));
+       |                                                 ^
+    205|  fireEvent.click(screen.getByTestId('stop-button'));
+    206|  await waitFor(()=>expect(release).toBeDefined());
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[65/72]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+Error: 引擎设置尚未就绪
+ ❯ Module.writeAssistantEngine src/features/copilot/assistant-engine.ts:34:38
+     32|  if(typeof window==='undefined')throw Error('引擎保存需要本地界面');
+     33|  if(!state.ready)await loadAssistantEngine();
+     34|  if(!state.ready||state.saving)throw Error('引擎设置尚未就绪');
+       |                                      ^
+     35|  if(engine===state.engine)return state.engine;
+     36|  generation++;emit({saving:true,error:null});
+
+This error originated in "src/features/copilot/ai-copilot-interactions.test.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "[T-1055] 设置更新同步新请求，既有消息重试保留原引擎且不重建 transport". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  2 failed | 8 passed (10)
+      Tests  72 failed | 60 passed (132)
+     Errors  1 error
+   Start at  20:25:52
+   Duration  20.86s (transform 9.65s, setup 2.84s, import 14.19s, tests 35.50s, environment 12.31s)
+
+frontend 检查失败：exit=1
+资源生命周期检查：pnpm --dir frontend exec vitest run src/server/chat-execution-stream.test.ts src/server/persistence-client.lifecycle.test.ts src/server/browser-host-dispose.test.ts --testTimeout 120000 --hookTimeout 120000 --retry 0
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+ ❯ src/server/persistence-client.lifecycle.test.ts (1 test | 1 failed) 5099ms
+   × 真实持久层 dispose 停止分钟 cron 和周期 sweep，停止后十次触发不再查询数据库 5098ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/persistence-client.lifecycle.test.ts > 真实持久层 dispose 停止分钟 cron 和周期 sweep，停止后十次触发不再查询数据库
+RuntimeError: memory access out of bounds
+ ❯ null.<anonymous> wasm:/wasm/01edd1ba:1:5838447
+ ❯ null.<anonymous> wasm:/wasm/01edd1ba:1:5845786
+ ❯ null.<anonymous> wasm:/wasm/01edd1ba:1:5845857
+ ❯ null.<anonymous> wasm:/wasm/01edd1ba:1:1063755
+ ❯ null.<anonymous> wasm:/wasm/01edd1ba:1:1065155
+ ❯ null.<anonymous> wasm:/wasm/01edd1ba:1:1044486
+ ❯ null.<anonymous> wasm:/wasm/01edd1ba:1:2363852
+ ❯ null.<anonymous> wasm:/wasm/01edd1ba:1:2353501
+ ❯ null.<anonymous> wasm:/wasm/01edd1ba:1:4524582
+ ❯ null.<anonymous> wasm:/wasm/01edd1ba:1:415864
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 27 passed (28)
+   Start at  20:26:13
+   Duration  19.69s (transform 11.75s, setup 400ms, import 14.40s, tests 30.28s, environment 0ms)
+
+frontend 检查失败：exit=1

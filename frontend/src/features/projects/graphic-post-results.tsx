@@ -1,4 +1,6 @@
 "use client";
+
+import {codexCapabilityExplanation} from '@/lib/codex-capability-explanation';
 import {useCreationClient,useCreationScope,creationScopeKey,readCreationScope} from "@/lib/creation-workspace-scope";
 
 import * as React from "react";
@@ -72,6 +74,7 @@ function MediaPreviewSession({ image, resultId, onPreviewReady, label }:MediaPre
 function capabilityExplanation(capability: CreativeCapability | undefined): string {
   if (!capability || capability.state === "unknown") return "尚未核验当前模型能否生成";
   if (capability.state === "supported") return "当前可生成";
+  const codexReason=codexCapabilityExplanation(capability.reasonCode);if(codexReason)return codexReason;
   if (capability.reasonCode === "ADAPTER_NOT_READY") return "生成能力尚未接通";
   if (capability.reasonCode === "MODEL_NOT_CONFIGURED") return "当前模型凭据不可用，请检查模型设置";
   if (capability.reasonCode === "MODEL_UNAVAILABLE") return "当前模型暂不可用";

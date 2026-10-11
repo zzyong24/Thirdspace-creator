@@ -1,0 +1,16 @@
+[
+  "pnpm",
+  "--dir",
+  "frontend",
+  "exec",
+  "playwright",
+  "test",
+  "tests/e2e/automations-run-now-public.spec.ts",
+  "--config=../docs/verification/t1208/budget-recheck.config.ts",
+  "--timeout=86400000",
+  "--project=e2e",
+  "--workers=1",
+  "--retries=0",
+  "--trace=on",
+  "--output=../docs/verification/t1245/browser-3941-final/test-output"
+]

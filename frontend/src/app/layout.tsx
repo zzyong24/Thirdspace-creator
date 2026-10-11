@@ -22,7 +22,8 @@ export const metadata: Metadata = {
 
 // 首帧前按 localStorage 应用主题(.dark),让暗/亮色在所有页面持久 + 防暗色闪烁,
 // 不再只在设置页挂载时生效。键与 settings 的 THEME_STORAGE_KEY 一致(creatoros.settings.theme)。
-const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('creatoros.settings.theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;r.classList.toggle('dark',d);r.dataset.theme=t;}catch(e){}})();`;
+// 密度也必须在任何页面刷新时恢复；独立读取避免主题探测异常跳过默认密度。
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('creatoros.settings.theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;r.classList.toggle('dark',d);r.dataset.theme=t;}catch(e){}})();(function(){var d='comfortable';try{var v=localStorage.getItem('creatoros.settings.density');if(v==='compact'||v==='comfortable')d=v;}catch(e){}document.documentElement.dataset.density=d;})();`;
 
 // [T-415 P0-B 客户端配对] 首帧前(早于 Next client bundle)patch window.fetch:给所有**同源**请求
 //   自动附握手头 `x-creatoros-handshake`。这是全局 default-deny(proxy.ts)的客户端配对——否则真机上

@@ -1,0 +1,31 @@
+{
+  "data": {
+    "id": "ai-task-d203bf05-52",
+    "userId": "user-eb780691-1",
+    "groupId": "grp_legacy_acct-12b7a425-8",
+    "groupVersion": 1,
+    "membershipVersion": 1,
+    "projectId": null,
+    "contentOutputId": null,
+    "taskType": "asset.classify",
+    "status": "failed",
+    "inputData": {
+      "assetId": "asset-generated-a90fa8d3a1163270446eb06261efb27d29fe920337a571c6107960dd87918b86"
+    },
+    "modelKey": "codex",
+    "idempotencyKey": "group:grp_legacy_acct-12b7a425-8:asset.classify:t1238-public-image-understanding-002",
+    "attemptId": "t1238-public-image-understanding-002",
+    "requestFingerprint": "sha256:dfca2e424fe6a0fc5f58c88be5a272e9bf9eae72d1857397a6fd333e79315b1a",
+    "retryOfTaskId": null,
+    "requestedAt": "2026-10-11T11:40:05.971Z",
+    "startedAt": null,
+    "completedAt": null,
+    "errorMessage": "执行停止，等待恢复或诊断",
+    "executionTaskId": "exec_c2b9c4f7-b6bf-4b86-943b-7576cdd81560",
+    "runtimeStatus": "failed",
+    "errorCode": "MODEL_RESERVATION_REJECTED"
+  },
+  "meta": {
+    "requestId": "req-7f12bd42-48"
+  }
+}

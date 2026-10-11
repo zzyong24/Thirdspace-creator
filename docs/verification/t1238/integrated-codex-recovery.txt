@@ -1,0 +1,41 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+         ╵                                                     ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+         ╵                                                    ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+          ╵                                           ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+        ╵                                                     ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+
+ Test Files  2 passed (2)
+      Tests  31 passed (31)
+   Start at  20:08:13
+   Duration  43.32s (transform 6.26s, setup 0ms, import 8.94s, tests 33.93s, environment 0ms)
+

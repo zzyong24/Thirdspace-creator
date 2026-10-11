@@ -1,0 +1,10 @@
+{
+  "versions": {
+    "frontend/package.json": "1.2.0",
+    "frontend/src-tauri/tauri.conf.json": "1.2.0",
+    "frontend/src-tauri/Cargo.toml": "1.2.0",
+    "frontend/src-tauri/Cargo.lock": "1.2.0"
+  },
+  "all_equal": true,
+  "selected_version": "现有1.2.0（用户未指定新版本）"
+}

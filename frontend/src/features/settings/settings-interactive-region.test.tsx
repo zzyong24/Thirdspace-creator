@@ -8,7 +8,9 @@
  */
 
 import * as React from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ENDPOINTS } from "@creatoros/contract";
+import { CURRENT_ACCOUNT_KEY, CURRENT_GROUP_KEY } from "@/lib/http-transport";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -203,6 +205,313 @@ function renderDialog(vm: SettingsViewModel = VM) {
   render(<SettingsDialog viewModel={vm} />);
   return document;
 }
+
+describe("[T-1236] 模型探针会话与配置生命周期", () => {
+  type ProbeReply = {ok: boolean; detail: string; status?: "ok" | "warn" | "fail"};
+  function deferred<T>() {
+    let resolve!: (value: T) => void;
+    let reject!: (error: Error) => void;
+    const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; });
+    return {promise, resolve, reject};
+  }
+  function fixture() {
+    const saved = ENDPOINTS.putModel.response.parse({
+      id: "t1236-model", userId: "t1236-user", capability: "default",
+      provider: "openai-compatible", modelName: "t1236-model-name", baseUrl: null,
+      apiFormat: "openai_chat", settings: {}, secretReference: "opaque-reference",
+      isDefault: true, hasSecret: true,
+    });
+    const initial: SettingsViewModel = {...VM, model: {
+      capability: saved.capability, provider: saved.provider, modelName: saved.modelName,
+      baseUrl: "", apiFormat: saved.apiFormat, hasSecret: false, temperature: 0.6,
+    }};
+    const echoed = {...initial, model: {...initial.model, hasSecret: true}};
+    return {saved, initial, echoed};
+  }
+  function element(slot: string) { return document.querySelector(`[data-slot="${slot}"]`)!; }
+  function category(id: string) { fireEvent.click(document.querySelector(`[role="tab"][data-tab-id="${id}"]`)!); }
+  function scopeChanged(group: string, account: string | null = null) {
+    localStorage.setItem(CURRENT_GROUP_KEY, group);
+    if(account) localStorage.setItem(CURRENT_ACCOUNT_KEY, account);
+    else localStorage.removeItem(CURRENT_ACCOUNT_KEY);
+    window.dispatchEvent(new CustomEvent("creatoros:accounts-changed", {detail: {groupId: group, source: "external", routeRefreshScheduled: true}}));
+  }
+  let previousGroup: string | null;
+  let previousAccount: string | null;
+  beforeEach(() => {
+    previousGroup = localStorage.getItem(CURRENT_GROUP_KEY);
+    previousAccount = localStorage.getItem(CURRENT_ACCOUNT_KEY);
+    localStorage.setItem(CURRENT_GROUP_KEY, "t1236-group-a");
+    localStorage.removeItem(CURRENT_ACCOUNT_KEY);
+  });
+  afterEach(() => {
+    if(previousGroup === null) localStorage.removeItem(CURRENT_GROUP_KEY);
+    else localStorage.setItem(CURRENT_GROUP_KEY, previousGroup);
+    if(previousAccount === null) localStorage.removeItem(CURRENT_ACCOUNT_KEY);
+    else localStorage.setItem(CURRENT_ACCOUNT_KEY, previousAccount);
+  });
+  async function startProbe(echo = true) {
+    const data = fixture();
+    const probe = deferred<ProbeReply>();
+    mockClient.putModel.mockResolvedValueOnce(data.saved);
+    mockClient.testModelConnection.mockImplementationOnce(() => probe.promise);
+    const tree = render(<SettingsDialog viewModel={data.initial} />);
+    category("models");
+    fireEvent.change(element("model-secret-input"), {target: {value: "t1236-neutral-key"}});
+    fireEvent.click(element("model-test-connection"));
+    await waitFor(() => expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1), {timeout: 120000});
+    if(echo) tree.rerender(<SettingsDialog viewModel={data.echoed} />);
+    return {...data, tree, probe};
+  }
+
+  it.each([
+    {status: "ok" as const, ok: true}, {status: "fail" as const, ok: false}, {status: "warn" as const, ok: true},
+  ])("同值保存回显后保留真实$status，不改结果分类", async ({status, ok}) => {
+    const run = await startProbe();
+    await act(async () => { run.probe.resolve({status, ok, detail: `t1236 ${status} detail`}); });
+    expect(element("model-test-result")).toHaveAttribute("data-status", status);
+    expect(element("model-test-result")).toHaveTextContent(`t1236 ${status} detail`);
+    expect(element("model-secret-input")).toHaveValue("");
+    expect(mockClient.putModel).toHaveBeenCalledTimes(1);
+    expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
+  }, 240000);
+
+  it("未知请求异常保真实失败原因且不自动重发", async () => {
+    const run = await startProbe();
+    await act(async () => { run.probe.reject(new Error("t1236 transport unknown")); });
+    expect(element("model-test-result")).toHaveAttribute("data-status", "fail");
+    expect(element("model-test-result")).toHaveTextContent("t1236 transport unknown");
+    expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
+  }, 240000);
+
+  it("保存失败保真实原因、probe0、没有虚构连通", async () => {
+    const data = fixture();
+    mockClient.putModel.mockRejectedValueOnce(new Error("t1236 save rejected"));
+    render(<SettingsDialog viewModel={data.initial} />);
+    category("models");
+    fireEvent.click(element("model-test-connection"));
+    await waitFor(() => expect(document.querySelector('[role="alert"]')).toHaveTextContent("t1236 save rejected"), {timeout: 120000});
+    expect(mockClient.testModelConnection).not.toHaveBeenCalled();
+    expect(element("model-test-result")).toHaveAttribute("data-status", "fail");
+  }, 240000);
+
+  it("保存回显早于beforeTest返回也继续同次probe", async () => {
+    const data = fixture();
+    mockClient.putModel.mockResolvedValueOnce(data.saved);
+    const tree = render(<SettingsDialog viewModel={data.initial} />);
+    category("models");
+    mockRouter.refresh.mockImplementationOnce(() => tree.rerender(<SettingsDialog viewModel={data.echoed} />));
+    fireEvent.click(element("model-test-connection"));
+    await waitFor(() => expect(element("model-test-result")).toHaveAttribute("data-status", "ok"), {timeout: 120000});
+    expect(mockClient.putModel).toHaveBeenCalledTimes(1);
+    expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
+  }, 240000);
+
+  it("hidden分类不取消同scope会话，返回可见真实结果", async () => {
+    const run = await startProbe();
+    category("account");
+    expect(document.querySelector('[data-slot="settings-panel"][data-tab-id="models"]')).toHaveAttribute("hidden");
+    await act(async () => { run.probe.resolve({ok: true, detail: "t1236 hidden completion"}); });
+    category("models");
+    expect(element("model-test-result")).toBeVisible();
+    expect(element("model-test-result")).toHaveTextContent("t1236 hidden completion");
+    expect(mockClient.putModel).toHaveBeenCalledTimes(1);
+    expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
+  }, 240000);
+
+  it.each([true, false])("group-only切组拒绝旧%s结果（account都null）", async ok => {
+    const run = await startProbe();
+    category("account");
+    act(() => scopeChanged("t1236-group-b"));
+    await act(async () => { run.probe.resolve({ok, detail: "t1236 old group result"}); });
+    category("models");
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+    expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
+  }, 240000);
+
+  it("切账号拒绝迟到结果", async () => {
+    const run = await startProbe();
+    act(() => scopeChanged("t1236-group-a", "t1236-account-b"));
+    await act(async () => { run.probe.resolve({ok: true, detail: "old account"}); });
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+  }, 240000);
+
+  it("真正卸载后旧结果不落在重新打开的Dialog", async () => {
+    const run = await startProbe();
+    run.tree.unmount();
+    render(<SettingsDialog viewModel={run.echoed} />);
+    category("models");
+    await act(async () => { run.probe.resolve({ok: true, detail: "unmounted response"}); });
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+    expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
+  }, 240000);
+
+  it("外部配置不同仍按原key重置表单并拒绝旧结果", async () => {
+    const run = await startProbe();
+    run.tree.rerender(<SettingsDialog viewModel={{...run.echoed, model: {...run.echoed.model, modelName: "t1236-external-model"}}} />);
+    await act(async () => { run.probe.resolve({ok: true, detail: "old configuration"}); });
+    expect(element("model-name-input")).toHaveValue("t1236-external-model");
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+  }, 240000);
+
+  it.each(["model-name-input", "model-secret-input", "model-provider-input", "model-base-url-input", "model-temperature-input"])("用户编辑%s后旧反馈失效", async slot => {
+    const run = await startProbe();
+    fireEvent.change(element(slot), {target: {value: slot === "model-temperature-input" ? "0.8" : "t1236-user-edited"}});
+    await act(async () => { run.probe.resolve({ok: true, detail: "old draft result"}); });
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+    expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
+  }, 240000);
+
+  it("双击pending按钮只有一次保存与probe", async () => {
+    const run = await startProbe();
+    fireEvent.click(element("model-test-connection"));
+    fireEvent.click(element("model-test-connection"));
+    await act(async () => { run.probe.resolve({ok: true, detail: "single request"}); });
+    expect(mockClient.putModel).toHaveBeenCalledTimes(1);
+    expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
+  }, 240000);
+
+  it("保存pending时group改变，完成保存后不向新scope发probe", async () => {
+    const data = fixture();
+    const save = deferred<unknown>();
+    mockClient.putModel.mockImplementationOnce(() => save.promise);
+    render(<SettingsDialog viewModel={data.initial} />);
+    category("models");
+    fireEvent.click(element("model-test-connection"));
+    await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1), {timeout: 120000});
+    act(() => scopeChanged("t1236-group-b"));
+    await act(async () => { save.resolve(data.saved); });
+    expect(mockClient.testModelConnection).not.toHaveBeenCalled();
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
+  }, 240000);
+
+  it("空密钥仅保存保原值且probe0", async () => {
+    const data = fixture();
+    mockClient.putModel.mockResolvedValueOnce(data.saved);
+    render(<SettingsDialog viewModel={data.echoed} />);
+    category("models");
+    fireEvent.click(element("model-save"));
+    await waitFor(() => expect(mockRouter.refresh).toHaveBeenCalledTimes(1), {timeout: 120000});
+    expect(mockClient.putModel).toHaveBeenCalledWith(expect.objectContaining({body: expect.objectContaining({secret: undefined})}));
+    expect(element("model-secret-input")).toHaveValue("");
+    expect(element("model-secret-status")).toHaveTextContent("已配置");
+    expect(mockClient.testModelConnection).not.toHaveBeenCalled();
+  }, 240000);
+
+  it("保存pending时切组，旧保存失败不归新scope表单", async () => {
+    const data = fixture();
+    const save = deferred<unknown>();
+    mockClient.putModel.mockImplementationOnce(() => save.promise);
+    render(<SettingsDialog viewModel={data.initial} />);
+    category("models");
+    fireEvent.click(element("model-test-connection"));
+    await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1), {timeout: 120000});
+    act(() => scopeChanged("t1236-group-b"));
+    await act(async () => { save.reject(new Error("t1236 previous scope save error")); });
+    expect(document.querySelector('[role="alert"]')).toBeNull();
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+    expect(mockClient.testModelConnection).not.toHaveBeenCalled();
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
+  }, 240000);
+
+  it("无广播的实际group变化也拒绝迟到probe", async () => {
+    const run = await startProbe();
+    localStorage.setItem(CURRENT_GROUP_KEY, "t1236-group-b");
+    await act(async () => { run.probe.resolve({ok: true, detail: "no event old scope"}); });
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+  }, 240000);
+
+  it("旧finally不会清新scope的正在测试或写入旧结果", async () => {
+    const run = await startProbe();
+    act(() => scopeChanged("t1236-group-b"));
+    const next = deferred<ProbeReply>();
+    mockClient.putModel.mockResolvedValueOnce(run.saved);
+    mockClient.testModelConnection.mockImplementationOnce(() => next.promise);
+    fireEvent.click(element("model-test-connection"));
+    await waitFor(() => expect(mockClient.testModelConnection).toHaveBeenCalledTimes(2), {timeout: 120000});
+    await act(async () => { run.probe.resolve({ok: true, detail: "old scope response"}); });
+    expect(element("model-test-connection")).toBeDisabled();
+    expect(element("model-test-connection")).toHaveTextContent("测试中");
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+    await act(async () => { next.resolve({ok: true, detail: "new scope response"}); });
+    expect(element("model-test-result")).toHaveTextContent("new scope response");
+    expect(mockClient.putModel).toHaveBeenCalledTimes(2);
+  }, 240000);
+
+  it("当前authority变受管时旧本地结果不可回写", async () => {
+    const run = await startProbe();
+    run.tree.rerender(<SettingsDialog viewModel={run.echoed} modelAuthority={{
+      authority: "channel", outcome: "configured", action: "当前权益模型",
+      capabilities: {default: {capability: "default", authority: "channel",
+        serviceId: "t1236-channel", serviceName: "测试权益", provider: "openai-compatible",
+        modelName: "managed-model", model: "managed-model", baseUrl: "https://example.invalid/v1", hasSecret: true}},
+    }} />);
+    await act(async () => { run.probe.resolve({ok: true, detail: "old local result"}); });
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+    expect(document.querySelector('[data-slot="model-configuration-card"]')).toBeNull();
+    expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
+  }, 240000);
+
+  it("完成后真实PUT回显仍保原结果", async () => {
+    const run = await startProbe(false);
+    await act(async () => { run.probe.resolve({ok: true, detail: "completed before echo"}); });
+    expect(element("model-test-result")).toHaveTextContent("completed before echo");
+    run.tree.rerender(<SettingsDialog viewModel={run.echoed} />);
+    expect(element("model-test-result")).toHaveTextContent("completed before echo");
+    expect(element("model-secret-input")).toHaveValue("");
+  }, 240000);
+
+  it("预设编辑使旧配置结果失效", async () => {
+    const run = await startProbe();
+    const user = userEvent.setup();
+    await user.click(element("model-preset-trigger"));
+    const preset = await waitFor(() => {
+      const node = document.querySelector('[data-slot="model-preset-item-deepseek"]');
+      expect(node).not.toBeNull(); return node!;
+    }, {timeout: 120000});
+    await user.click(preset);
+    await act(async () => { run.probe.resolve({ok: true, detail: "old preset result"}); });
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+    expect(element("model-base-url-input")).toHaveValue("https://api.deepseek.com");
+  }, 240000);
+
+  it("接口协议编辑使旧探针结果失效", async () => {
+    const run = await startProbe();
+    const user = userEvent.setup();
+    await user.click(element("model-api-format-trigger"));
+    const option = await waitFor(() => screen.getByRole("option", {name: /Anthropic/}), {timeout: 120000});
+    await user.click(option);
+    await act(async () => { run.probe.resolve({ok: true, detail: "old protocol result"}); });
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+    expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
+  }, 240000);
+
+  it("实际scope ABA后旧保存仍不refresh、不probe", async () => {
+    const data = fixture();
+    const save = deferred<unknown>();
+    mockClient.putModel.mockImplementationOnce(() => save.promise);
+    render(<SettingsDialog viewModel={data.initial} />);
+    category("models");
+    fireEvent.click(element("model-test-connection"));
+    await waitFor(() => expect(mockClient.putModel).toHaveBeenCalledTimes(1), {timeout: 120000});
+    act(() => { scopeChanged("t1236-group-b"); scopeChanged("t1236-group-a"); });
+    await act(async () => { save.resolve(data.saved); });
+    expect(mockRouter.refresh).not.toHaveBeenCalled();
+    expect(mockClient.testModelConnection).not.toHaveBeenCalled();
+    expect(document.querySelector('[role="alert"]')).toBeNull();
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+  }, 240000);
+
+  it("实际scope ABA后旧probe也不能恢复连通结果", async () => {
+    const run = await startProbe();
+    act(() => { scopeChanged("t1236-group-b"); scopeChanged("t1236-group-a"); });
+    await act(async () => { run.probe.resolve({ok: true, detail: "obsolete ABA result"}); });
+    expect(document.querySelector('[data-slot="model-test-result"]')).toBeNull();
+    expect(mockClient.putModel).toHaveBeenCalledTimes(1);
+    expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
+  }, 240000);
+});
 
 describe("Settings island wiring (needs-backend → op + refresh)", () => {
   it("打开设置不接管根布局的主题", async () => {
@@ -1630,6 +1939,39 @@ describe("Settings 诊断日志卡 (T-259)", () => {
 // [T-377] 「测试连接」:每个 capability 卡旁,点击 → settings.models.test(测已保存配置)
 // → 诚实渲「✓ 连通」/「✗ 失败:<真实原因>」。
 describe("Settings 测试连接 (T-377)", () => {
+  it("[T-1236] 真实保存回显替换表单时，同次pending探针结果仍在当前按钮旁", async () => {
+    const saved = ENDPOINTS.putModel.response.parse({
+      id: "t1236-default-model", userId: "t1236-user", capability: "default",
+      provider: "openai-compatible", modelName: "t1236-current-model",
+      baseUrl: "http://127.0.0.1:49999/v1", apiFormat: "openai_chat",
+      settings: { temperature: 0.6 }, secretReference: "opaque-reference",
+      isDefault: true, hasSecret: true,
+    });
+    let finishProbe!: (value: {ok: boolean; detail: string}) => void;
+    mockClient.putModel.mockResolvedValueOnce(saved);
+    mockClient.testModelConnection.mockImplementationOnce(() => new Promise(resolve => { finishProbe = resolve; }));
+    const initial = {...VM, model: {...VM.model, ...saved, baseUrl: saved.baseUrl ?? "", temperature: 0.6, hasSecret: false}};
+    const tree = render(<SettingsDialog viewModel={initial} />);
+    fireEvent.click(document.querySelector('[data-tab-id="models"][role="tab"]')!);
+    const originalInput = document.querySelector('[data-slot="model-name-input"]');
+    fireEvent.change(document.querySelector('[data-slot="model-secret-input"]')!, {target: {value: "t1236-neutral-key"}});
+    fireEvent.click(document.querySelector('[data-slot="model-test-connection"]')!);
+    await waitFor(() => expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1), {timeout: 120000});
+    expect(mockClient.putModel).toHaveBeenCalledTimes(1);
+    expect(mockRouter.refresh).toHaveBeenCalledTimes(1);
+    tree.rerender(<SettingsDialog viewModel={{...initial, model: {...initial.model, hasSecret: true}}} />);
+    expect(document.querySelector('[data-slot="model-name-input"]')).not.toBe(originalInput);
+    expect(document.querySelector('[data-slot="model-secret-input"]')).toHaveValue("");
+    expect(document.querySelector('[data-slot="model-secret-status"]')).toHaveTextContent("已配置");
+    await act(async () => { finishProbe({ok: true, detail: "t1236 same saved configuration"}); });
+    const result = document.querySelector('[data-slot="model-test-result"]');
+    expect(result).not.toBeNull();
+    expect(result).toHaveAttribute("data-status", "ok");
+    expect(result).toHaveTextContent("t1236 same saved configuration");
+    expect(mockClient.putModel).toHaveBeenCalledTimes(1);
+    expect(mockClient.testModelConnection).toHaveBeenCalledTimes(1);
+  }, 240000);
+
   it("[T-501] 主模型卡点「保存并测试」→ 先保存当前表单，再测试同一份配置", async () => {
     const doc = renderDialog();
     const btn = doc.querySelector(

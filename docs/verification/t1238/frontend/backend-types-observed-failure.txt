@@ -1,0 +1,8 @@
+src/modules/ai-runtime/asset-business-execution.service.ts(120,14): error TS2339: Property 'kind' does not exist on type '{ engine: "codex"; protocolKind: "codex-app-server"; runtimeVersion: "0.159.3"; requestedModel?: string | undefined; }'.
+src/modules/execution/agentic-tool-binding.ts(65,89): error TS2345: Argument of type '{ name: string; version: string; }' is not assignable to parameter of type '{ name: string; effect: string; execution?: string | undefined; }'.
+  Property 'effect' is missing in type '{ name: string; version: string; }' but required in type '{ name: string; effect: string; execution?: string | undefined; }'.
+src/modules/execution/execution-video-visual-review.integration.test.ts(34,53): error TS2554: Expected 2 arguments, but got 1.
+src/modules/execution/execution-video-visual-review.integration.test.ts(47,51): error TS2554: Expected 2 arguments, but got 1.
+undefined
+/Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/backend:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 2: tsc --noEmit

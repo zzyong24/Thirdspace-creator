@@ -720,7 +720,10 @@ describe("createVideoRenderExecutor", () => {
     const calls: EngineCalls = { ffmpegArgs: [], probed: [], rendered: [] };
     const steps: string[] = [];
     const executor = createVideoRenderExecutor(fakeEngine(calls), {
-      reviewVisuals: async (_ctx, input) => {
+      reviewVisuals: async (_ctx, input, scope) => {
+        expect(scope.parentTaskId).toBe(sandbox.taskId);
+        expect(scope.deadlineAt).toBe(1893456000000);
+        expect(scope.signal).toBeInstanceOf(AbortSignal);
         expect(input.mimeType).toBe("image/jpeg");
         expect(input.bytes.byteLength).toBeGreaterThan(0);
         expect(input.prompt).toContain("遮挡或切掉人物脸");
@@ -737,7 +740,7 @@ describe("createVideoRenderExecutor", () => {
     const result = await executor.run(
       sandbox,
       { goal: "渲染", props: props() },
-      { ...runOpts(steps), ctx: requestContext },
+      { ...runOpts(steps), ctx: requestContext, deadlineAt: 1893456000000 },
     );
 
     expect(executor.networkPosture).toBe("brain-ports");

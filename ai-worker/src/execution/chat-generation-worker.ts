@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {chatGenerationPreparationSchema,workerModelSpecSchema,workerReservationSchema,workerStartReceiptSchema,agenticToolOutcomeSchema,type WorkerPort} from "@creatoros/contract/execution-worker";
+import {chatGenerationPreparationSchema,executionModelSpecSchema,workerReservationSchema,workerStartReceiptSchema,agenticToolOutcomeSchema,type WorkerPort} from "@creatoros/contract/execution-worker";
 import {runChatStructuredSequence} from "./chat-structured-sequence";
 import {runWithEffectiveSkillSnapshot} from "../prompt/effective-skill-runtime";
 import {modelFor} from "../runtime/provider-factory";
@@ -8,7 +8,7 @@ import {generationFailure} from "./generation-error";
 import {DurableToolSuspension} from "./durable-agentic-tool";
 /** Worker 运行原结构化节点；最终候选只接受宿主依据真实回执生成的结果。 */
 export async function runChatGenerationInWorker(callId:string,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
- const spec=workerModelSpecSchema.parse(await call("resolveChatGenerationCredential",{callId},signal));
+ const spec=executionModelSpecSchema.parse(await call("resolveChatGenerationCredential",{callId},signal));
  const prepared=chatGenerationPreparationSchema.parse(await call("prepareChatGeneration",{callId},signal));
  const model=createDurableGenerationModel({model:modelFor(spec),operationKey:prepared.operationKey,signal,allowUnconfirmedModelRetry:true,ports:{
   // 模型请求是 JSON 契约；advanced IPC 会保留 SDK 的可选 undefined，必须在边界规范化。

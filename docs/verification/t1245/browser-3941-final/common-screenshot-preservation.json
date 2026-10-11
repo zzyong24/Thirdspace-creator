@@ -1,0 +1,54 @@
+{
+  "original": {
+    "schemaVersion": 1,
+    "testId": "6d09fca92676595ee8d1-925a30d511adcca21d02",
+    "titlePath": [
+      "e2e/automations-run-now-public.spec.ts",
+      "组内真实作业通过立即运行准入并保原任务显示待扫码"
+    ],
+    "title": "组内真实作业通过立即运行准入并保原任务显示待扫码",
+    "spec": "frontend/tests/e2e/automations-run-now-public.spec.ts",
+    "url": "http://127.0.0.1:3941/automations",
+    "viewport": {
+      "width": 1536,
+      "height": 1024
+    },
+    "status": "passed",
+    "acceptanceStatus": "pass",
+    "expectedStatus": "passed",
+    "retry": 0,
+    "screenshot": "screenshots/automations-run-now-public--组内真实作业通过立即运行准入并保原任务显示待扫码--4c83cfc4891336584a6d18f5f6f9fe57ea7c6fb261be338409a5cc32a0cbfed9.png",
+    "screenshotStatus": "captured",
+    "screenshotError": null,
+    "pageClosedBeforeCapture": false,
+    "externalNetworkAttempts": [],
+    "errors": []
+  },
+  "updated": {
+    "schemaVersion": 1,
+    "testId": "6d09fca92676595ee8d1-925a30d511adcca21d02",
+    "titlePath": [
+      "e2e/automations-run-now-public.spec.ts",
+      "组内真实作业通过立即运行准入并保原任务显示待扫码"
+    ],
+    "title": "组内真实作业通过立即运行准入并保原任务显示待扫码",
+    "spec": "frontend/tests/e2e/automations-run-now-public.spec.ts",
+    "url": "http://127.0.0.1:3941/automations",
+    "viewport": {
+      "width": 1536,
+      "height": 1024
+    },
+    "status": "passed",
+    "acceptanceStatus": "pass",
+    "expectedStatus": "passed",
+    "retry": 0,
+    "screenshot": "../t1245/browser-3941-final/original-common-pass.png",
+    "screenshotStatus": "captured",
+    "screenshotError": null,
+    "pageClosedBeforeCapture": false,
+    "externalNetworkAttempts": [],
+    "errors": []
+  },
+  "sha256": "9bc48e47d055ad60f6dc028e4d7a5bc3d251a26a435e6cd98f9facbf85de42a7",
+  "onlyFieldChanged": "screenshot"
+}

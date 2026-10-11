@@ -1,0 +1,9 @@
+{
+  "data": {
+    "url": "/api/v1/blob/groups/grp_legacy_acct-12b7a425-8/image/committed-a90fa8d3a1163270446eb06261efb27d29fe920337a571c6107960dd87918b86?exp=1791719378203&token=656420d102b0a49f9f2ae055b062b2efd1d77e8074f54e5f3795f6143a13f6e1&scope=eyJ1c2VySWQiOiJ1c2VyLWViNzgwNjkxLTEiLCJncm91cElkIjoiZ3JwX2xlZ2FjeV9hY2N0LTEyYjdhNDI1LTgiLCJhY2NvdW50SWQiOiJhY2N0LTEyYjdhNDI1LTgifQ",
+    "fileName": "committed-a90fa8d3a1163270446eb06261efb27d29fe920337a571c6107960dd87918b86.png"
+  },
+  "meta": {
+    "requestId": "req-7721a047-94"
+  }
+}

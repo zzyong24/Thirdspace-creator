@@ -1,3 +1,4 @@
+import {frozenExecutionEngine,codexAssetCredentialSchema} from '@creatoros/contract/execution-worker';
 import {withWorkspaceWrite} from "../../workspace-write";
 import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import {workspaceFilter} from "../../workspace-scope";
@@ -32,7 +33,7 @@ function fields(task:Task,legacyPlain=false){
  };
 }
 /** 新调用单向转交；旧素材仅恢复原 provider job 或呈现核对状态，不能重新计费。 */
-export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate",taskId:string):Promise<MultimodalSpec>;assertProject(ctx:RequestContext,id:string,tx?:Db,forUpdate?:boolean):Promise<void>;assertCanvasInput?:(ctx:RequestContext,input:{attemptId:string;inputData:unknown;taskId:string},tx:Db)=>Promise<CanvasProposalAdmission|undefined>;getReference?:(ctx:RequestContext,assetId:string,fileId?:string)=>Promise<{fileId:string;checksum:string;mimeType:string;bytes:Uint8Array}|null>}){
+export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedExecutionBudget;now?:()=>string;resolveSpec(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate",taskId:string):Promise<MultimodalSpec|import("@creatoros/contract/execution-worker").CodexModelSpec>;assertProject(ctx:RequestContext,id:string,tx?:Db,forUpdate?:boolean):Promise<void>;assertCanvasInput?:(ctx:RequestContext,input:{attemptId:string;inputData:unknown;taskId:string},tx:Db)=>Promise<CanvasProposalAdmission|undefined>;getReference?:(ctx:RequestContext,assetId:string,fileId?:string)=>Promise<{fileId:string;checksum:string;mimeType:string;bytes:Uint8Array}|null>}){
  const controller=new AbortController();
  const authority=createExecutionAuthorityService(db,{now:deps.now});
  const owned=(ctx:RequestContext,id:string)=>and(eq(aiTasks.id,id),eq(aiTasks.userId,ctx.userId),workspaceFilter(aiTasks,ctx));
@@ -106,6 +107,19 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
    let modelInput:import('zod').z.infer<typeof assetGenerationInputSchema>;
    try{
     const resolved=await awaitPreparation(()=>deps.resolveSpec(ctx,capability,task.id),signal);
+    const codex="engine" in resolved;
+    if(codex&&input.mediaKind!=="image")throw new Error("Codex视频生成能力不属于此合同");
+    if(codex){
+      const referenceAssetId=(task.inputData as Record<string,unknown>).referenceAssetId;let reference;
+      if(typeof referenceAssetId==="string"){
+        if(!deps.getReference)throw new Error("参考素材服务未配置");
+        const raw=task.inputData as Record<string,unknown>,snapshot=await deps.getReference(ctx,referenceAssetId,typeof raw.referenceFileId==="string"?raw.referenceFileId:undefined);
+        if(!snapshot||!snapshot.mimeType.startsWith("image/")||snapshot.bytes.byteLength>30*1024*1024||snapshot.checksum!==createHash("sha256").update(snapshot.bytes).digest("hex")||raw.referenceFileId!==undefined&&raw.referenceFileId!==snapshot.fileId||raw.referenceChecksum!==undefined&&raw.referenceChecksum!==snapshot.checksum)throw new Error("参考图版本或字节不符");
+        reference={assetId:referenceAssetId,fileId:snapshot.fileId,checksum:snapshot.checksum,mimeType:snapshot.mimeType};
+      }
+      const {kind:_credentialKind,...engineSpec}=resolved as typeof resolved & {kind?:unknown};
+      modelInput=assetGenerationInputSchema.parse({...input,...engineSpec,...(reference?{reference}:{})});
+    }else{
     const {token:_token,...configuration}=resolved;
     const spec=assetCredentialSchema.omit({token:true}).parse(configuration);
     if(spec.kind!==input.mediaKind)throw new Error("素材类型与模型配置不符");
@@ -128,6 +142,7 @@ export function createAssetBusinessExecutionService(db:Db,deps:{budget:BoundedEx
     const {provider,model,baseUrl,serviceId,kind:_kind,...options}=spec;
     const runtimeOptionsDigest=`sha256:${createHash("sha256").update(canonicalJson(assetRuntimeOptionsSchema.parse(options))).digest("hex")}`;
     modelInput=assetGenerationInputSchema.parse({...input,...(reference?{reference}:{}),provider,model,baseUrl,...(serviceId?{serviceId}:{}),runtimeOptionsDigest});
+    }
    }catch(error){signal.throwIfAborted();if(legacy)return prepareLegacyAssetRecovery(db,ctx,task,undefined,{deadlineMs:deps.budget.deadlineMs,now:deps.now??(()=>new Date().toISOString()),signal,assertProject:deps.assertProject});throw error;}
    if(admission)assertDeadline(admission);
    if(legacy)return prepareLegacyAssetRecovery(db,ctx,task,modelInput,{deadlineMs:deps.budget.deadlineMs,now:deps.now??(()=>new Date().toISOString()),signal,assertProject:deps.assertProject});

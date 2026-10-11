@@ -1,0 +1,10 @@
+{
+  "originalSource": "frontend/tests/e2e/automations-run-now-public.spec.ts",
+  "originalSha256": "608b6a00686d566f444115c125c8ced563843dd381fc9c592bd99ee7bd789d80",
+  "candidateSha256": "748976450dc39d1f59991c79a624775cd993ffc6cd5e57b36c27cb635cf0e1a7",
+  "inverseAdditionsByteEqual": true,
+  "addedPublicRequests": 0,
+  "addedBusinessWrites": 0,
+  "newRuntimeExecuted": false,
+  "newScreenshotCount": 12
+}

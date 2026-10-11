@@ -1,0 +1,104 @@
+{
+  "source": "docs/verification/t1245/automations-run-now-layout.candidate.ts",
+  "sourceSha256": "748976450dc39d1f59991c79a624775cd993ffc6cd5e57b36c27cb635cf0e1a7",
+  "syntaxDiagnostics": 0,
+  "caseCount": 1,
+  "method": "每个 await 边界均保守计120秒，并递归展开被调用的本地函数 helper；原30轮与新增固定3视口/2筛选/3模板上界/3原控件逐次展开。条件分支和 finally 同 promise 的重复 await 均计入，不把它们误作新请求。同步断言不计执行限时。",
+  "helpers": {
+    "inputFor": 0,
+    "request": 0,
+    "envelope": 0,
+    "call": 2,
+    "listRuns": 2,
+    "isOperation": 0,
+    "assertIdentity": 0,
+    "assertAuthWait": 0,
+    "layoutBox": 0,
+    "horizontalInside": 1,
+    "visibleInside": 3,
+    "layoutShot": 2,
+    "responsiveEvidence": 263
+  },
+  "loops": [
+    {
+      "condition": "readNo < 30",
+      "initial": "let readNo = 0",
+      "increment": "readNo += 1",
+      "iterations": 30,
+      "bodyAwaitSlotsIncludingHelpers": 10,
+      "totalSlots": 300
+    },
+    {
+      "condition": "[\"筛选媒体平台\",\"筛选平台账号\"]",
+      "iterations": 2,
+      "bodyAwaitSlotsIncludingHelpers": 5,
+      "totalSlots": 10
+    },
+    {
+      "condition": "index<3",
+      "initial": "let index=0",
+      "increment": "index+=1",
+      "iterations": 3,
+      "bodyAwaitSlotsIncludingHelpers": 7,
+      "totalSlots": 21
+    },
+    {
+      "condition": "[row.getByRole(\"switch\"),row.getByTestId(\"automation-edit\"),row.getByTestId(\"automation-login-douyin\")]",
+      "iterations": 3,
+      "bodyAwaitSlotsIncludingHelpers": 6,
+      "totalSlots": 18
+    },
+    {
+      "condition": "[{width:390,height:844},{width:900,height:900},{width:1536,height:1024}]",
+      "iterations": 3,
+      "bodyAwaitSlotsIncludingHelpers": 87,
+      "totalSlots": 261
+    }
+  ],
+  "conservativeSlots": 643,
+  "slotMs": 120000,
+  "conservativeSerialMs": 77160000,
+  "conservativeSerialHours": 21.433333333333334,
+  "candidateOuterMs": 86400000,
+  "candidateOuterHours": 24,
+  "reserveMs": 9240000,
+  "reserveHours": 2.566666666666667,
+  "candidateAuthoredApiRequestUpperBound": {
+    "fixed": 15,
+    "perOriginalIdObservation": 3,
+    "rounds": 30,
+    "total": 105,
+    "additionalUiWrites": 2,
+    "includingUiWrites": 107,
+    "excludes": "UI自带只读历史/状态轮询，不冒称107为全部HTTP上界"
+  },
+  "actualObservationIntervalsUpperBoundMs": 145000,
+  "pendingResponsePromises": "UI启用和runNow各建立一次；finally只等待同一个promise，不重发operation",
+  "driverBudget": {
+    "finiteObservationMs": 432000000,
+    "finiteObservationHours": 120,
+    "originalProjectTimeoutMs": 0,
+    "originalAfterHooksTimeoutMs": 0,
+    "reason": "Playwright1.60 calculateMaxTimeout任一参数0返回0；共享config保0，仅新单例命令追加--timeout=86400000使AfterHooks声明有限。72小时不覆盖4×24小时原声明。",
+    "commandProjectTimeoutMs": 86400000,
+    "fullDeclaredSlotsWithFiniteProject": [
+      "test/setup/body24h",
+      "AfterHooks24h",
+      "failure WorkerCleanup24h",
+      "tracing24h"
+    ],
+    "conservativeFullDeclaredMs": 345900000,
+    "reserveAfterFullDeclaredMs": 86100000,
+    "commandBudgetDecisionPendingRoot": false,
+    "historicalRootApproved": "2026-10-11父任务明确采用命令侧单例24h+独立driver120h；本脚本仅静态，不执行runtime"
+  },
+  "scope": "仅候选静态语法/预算观察；不是 TypeScript 类型或运行验收",
+  "notRun": [
+    "DB",
+    "Next",
+    "browser",
+    "model",
+    "types",
+    "Gate"
+  ]
+}

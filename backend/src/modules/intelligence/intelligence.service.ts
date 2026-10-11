@@ -1,3 +1,5 @@
+import {intelligenceWorkspaceFilter,intelligenceTransformGuardFilter,intelligenceReferenceRootFilter,withIntelligenceWrite,uniqueIntelligenceRow} from "./intelligence-workspace-scope";
+import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
 import {platformAccounts} from "../../schema/platform-account";
 import {accountGroups,accountGroupMemberships} from "../../schema/account-groups";
 import {requireWorkspace,workspaceFilter,assertWritableWorkspace} from "../../workspace-scope";
@@ -6,6 +8,7 @@ import { createHash, randomUUID } from "node:crypto";
 
 import {
   and,
+  aiTasks,
   asc,
   benchmarkSources,
   benchmarkWorks,
@@ -13,6 +16,8 @@ import {
   eq,
   executionTasks,
   executionCalls,
+  executionEvidence,
+  executionStreamEvents,
   favoritesFolders,
   favoritesItems,
   inArray,
@@ -34,6 +39,8 @@ import {
   sql,
   sourceSnapshots,
   trendSources,
+  workbenchArtifactLineages,
+  workbenchArtifactLineageVersions,
   type Db,
 } from "@creatoros/backend";
 import { contentRole as contentRoleSchema } from "@creatoros/contract";
@@ -1053,32 +1060,14 @@ export function createIntelligenceService(
   }
 
   async function ensureSystemCollections(ctx: RequestContext) {
-    const accountId = await account(ctx, "intelligence.workspace.bootstrap");
     if(ctx.groupId){const [group]=await db.select().from(accountGroups).where(and(eq(accountGroups.id,ctx.groupId),eq(accountGroups.userId,ctx.userId)));if(!group||group.status!=="active")return;}
-    const stamp = now();
-    const rows = [
-      { name: "我的收藏", sortOrder: 0 },
-      { name: "黑马发现", sortOrder: 1 },
-    ];
-    for (const row of rows) {
-      await db
-        .insert(intelligenceCollections)
-        .values({
-          id: nextId("intelligence-collection"),
-          userId: ctx.userId,
-          accountId,groupId:ctx.groupId??null,
-          parentId: null,
-          name: row.name,
-          normalizedName: normalizedName(row.name),
-          kind: "system",
-          sortOrder: row.sortOrder,
-          version: 1,
-          archivedAt: null,
-          createdAt: stamp,
-          updatedAt: stamp,
-        })
-        .onConflictDoNothing();
-    }
+    await withIntelligenceWrite(db,ctx,async(tx,frozen)=>{
+      for(const row of [{name:"我的收藏",sortOrder:0},{name:"黑马发现",sortOrder:1}]){
+        const existing=uniqueIntelligenceRow(await tx.select().from(intelligenceCollections).where(and(intelligenceWorkspaceFilter(intelligenceCollections,ctx),eq(intelligenceCollections.kind,"system"),eq(intelligenceCollections.normalizedName,normalizedName(row.name)),isNull(intelligenceCollections.parentId))).limit(2));
+        if(existing)continue;
+        await tx.insert(intelligenceCollections).values({id:nextId("intelligence-collection"),userId:ctx.userId,accountId:ctx.accountId??null,groupId:frozen.groupId,parentId:null,name:row.name,normalizedName:normalizedName(row.name),kind:"system",sortOrder:row.sortOrder,version:1,archivedAt:null,createdAt:now(),updatedAt:now()}).onConflictDoNothing();
+      }
+    });
   }
 
   async function enqueueRewriteTransform(ctx: RequestContext, transform: TransformRow) {
@@ -1102,17 +1091,18 @@ export function createIntelligenceService(
     id: string,
   ): Promise<CollectionRow> {
     const accountId = await account(ctx, "intelligence.collection");
-    const [row] = await db
+    const rows = await db
       .select()
       .from(intelligenceCollections)
       .where(
         and(
           eq(intelligenceCollections.id, id),
           eq(intelligenceCollections.userId, ctx.userId),
-          workspaceFilter(intelligenceCollections,ctx),
+          intelligenceWorkspaceFilter(intelligenceCollections,ctx),
         ),
       )
-      .limit(1);
+      .limit(2);
+    const row = uniqueIntelligenceRow(rows);
     if (!row) throw new OwnershipError("Intelligence collection not found");
     return row;
   }
@@ -1122,17 +1112,18 @@ export function createIntelligenceService(
     id: string,
   ): Promise<SourceRow> {
     const accountId = await account(ctx, "intelligence.source");
-    const [row] = await db
+    const rows = await db
       .select()
       .from(intelligenceSources)
       .where(
         and(
           eq(intelligenceSources.id, id),
           eq(intelligenceSources.userId, ctx.userId),
-          workspaceFilter(intelligenceSources,ctx),
+          intelligenceWorkspaceFilter(intelligenceSources,ctx),
         ),
       )
-      .limit(1);
+      .limit(2);
+    const row = uniqueIntelligenceRow(rows);
     if (!row) throw new OwnershipError("Intelligence source not found");
     return row;
   }
@@ -1142,17 +1133,18 @@ export function createIntelligenceService(
     id: string,
   ): Promise<RunRow> {
     const accountId = await account(ctx, "intelligence.run");
-    const [row] = await db
+    const rows = await db
       .select()
       .from(intelligenceSyncRuns)
       .where(
         and(
           eq(intelligenceSyncRuns.id, id),
           eq(intelligenceSyncRuns.userId, ctx.userId),
-          workspaceFilter(intelligenceSyncRuns,ctx),
+          intelligenceWorkspaceFilter(intelligenceSyncRuns,ctx),
         ),
       )
-      .limit(1);
+      .limit(2);
+    const row = uniqueIntelligenceRow(rows);
     if (!row) throw new OwnershipError("Intelligence run not found");
     return row;
   }
@@ -1162,17 +1154,18 @@ export function createIntelligenceService(
     id: string,
   ): Promise<ItemRow> {
     const accountId = await account(ctx, "intelligence.item");
-    const [row] = await db
+    const rows = await db
       .select()
       .from(intelligenceItems)
       .where(
         and(
           eq(intelligenceItems.id, id),
           eq(intelligenceItems.userId, ctx.userId),
-          workspaceFilter(intelligenceItems,ctx),
+          intelligenceWorkspaceFilter(intelligenceItems,ctx),
         ),
       )
-      .limit(1);
+      .limit(2);
+    const row = uniqueIntelligenceRow(rows);
     if (!row) throw new OwnershipError("Intelligence item not found");
     return row;
   }
@@ -1182,17 +1175,18 @@ export function createIntelligenceService(
     id: string,
   ): Promise<SnapshotRow> {
     const accountId = await account(ctx, "intelligence.snapshot");
-    const [row] = await db
+    const rows = await db
       .select()
       .from(sourceSnapshots)
       .where(
         and(
           eq(sourceSnapshots.id, id),
           eq(sourceSnapshots.userId, ctx.userId),
-          workspaceFilter(sourceSnapshots,ctx),
+          intelligenceWorkspaceFilter(sourceSnapshots,ctx),
         ),
       )
-      .limit(1);
+      .limit(2);
+    const row = uniqueIntelligenceRow(rows);
     if (!row) throw new OwnershipError("Intelligence snapshot not found");
     return row;
   }
@@ -1202,17 +1196,18 @@ export function createIntelligenceService(
     id: string,
   ): Promise<TransformRow> {
     const accountId = await account(ctx, "intelligence.transform");
-    const [row] = await db
+    const rows = await db
       .select()
       .from(intelligenceTransforms)
       .where(
         and(
           eq(intelligenceTransforms.id, id),
           eq(intelligenceTransforms.userId, ctx.userId),
-          workspaceFilter(intelligenceTransforms,ctx),
+          intelligenceWorkspaceFilter(intelligenceTransforms,ctx),
         ),
       )
-      .limit(1);
+      .limit(2);
+    const row = uniqueIntelligenceRow(rows);
     if (!row) throw new OwnershipError("Intelligence transform not found");
     return row;
   }
@@ -1229,7 +1224,7 @@ export function createIntelligenceService(
         and(
           eq(intelligenceTransforms.itemId, itemId),
           eq(intelligenceTransforms.userId, ctx.userId),
-          workspaceFilter(intelligenceTransforms,ctx),
+          intelligenceTransformGuardFilter(intelligenceTransforms,ctx),
         ),
       )
       .orderBy(desc(intelligenceTransforms.createdAt));
@@ -1264,15 +1259,28 @@ export function createIntelligenceService(
     ctx: RequestContext,
     source: SourceRow,
     collectionId: string | null,
+    connection?: Parameters<Parameters<Db["transaction"]>[0]>[0],
+    legacyMigration = false,
   ): Promise<SourceMembershipRow | null> {
     if (!collectionId) return null;
-    await requireCollection(ctx, collectionId);
-    const [created] = await db
+    // 一次性迁移维持原显式归属与原幂等合同，不借新版逻辑别名或成员锁迁移数据。
+    if(legacyMigration){
+      const [created]=await db.insert(intelligenceSourceCollectionMemberships).values({id:nextId("intelligence-source-membership"),userId:source.userId,accountId:source.accountId,groupId:source.groupId??null,sourceId:source.id,collectionId,createdAt:now()}).onConflictDoNothing().returning();
+      if(created)return created;
+      return (await db.select().from(intelligenceSourceCollectionMemberships).where(and(eq(intelligenceSourceCollectionMemberships.userId,source.userId),workspaceFilter(intelligenceSourceCollectionMemberships,source),eq(intelligenceSourceCollectionMemberships.sourceId,source.id),eq(intelligenceSourceCollectionMemberships.collectionId,collectionId))).limit(1))[0]??null;
+    }
+    if(!connection)return withIntelligenceWrite(db,ctx,(tx,frozen)=>ensureSourceMembership({...ctx,groupId:frozen.groupId},source,collectionId,tx));
+    const conn=connection;
+    const [collection]=await conn.select().from(intelligenceCollections).where(and(eq(intelligenceCollections.id,collectionId),intelligenceWorkspaceFilter(intelligenceCollections,ctx)));
+    if(!collection)throw new OwnershipError("来源分类不属于当前工作区");
+    const matches=await conn.select().from(intelligenceSourceCollectionMemberships).where(and(eq(intelligenceSourceCollectionMemberships.sourceId,source.id),eq(intelligenceSourceCollectionMemberships.collectionId,collectionId),intelligenceWorkspaceFilter(intelligenceSourceCollectionMemberships,ctx))).limit(2);
+    const reused=uniqueIntelligenceRow(matches);if(reused)return reused;
+    const [created] = await conn
       .insert(intelligenceSourceCollectionMemberships)
       .values({
         id: nextId("intelligence-source-membership"),
         userId: source.userId,
-        accountId: source.accountId,groupId:source.groupId??null,
+        accountId: source.accountId,groupId:ctx.groupId??source.groupId??null,
         sourceId: source.id,
         collectionId,
         createdAt: now(),
@@ -1280,13 +1288,13 @@ export function createIntelligenceService(
       .onConflictDoNothing()
       .returning();
     if (created) return created;
-    const [existing] = await db
+    const [existing] = await conn
       .select()
       .from(intelligenceSourceCollectionMemberships)
       .where(
         and(
           eq(intelligenceSourceCollectionMemberships.userId, source.userId),
-          workspaceFilter(intelligenceSourceCollectionMemberships,source),
+          intelligenceWorkspaceFilter(intelligenceSourceCollectionMemberships,ctx),
           eq(intelligenceSourceCollectionMemberships.sourceId, source.id),
           eq(
             intelligenceSourceCollectionMemberships.collectionId,
@@ -1552,7 +1560,7 @@ export function createIntelligenceService(
         )
         .limit(1);
       if (!source) throw new Error("legacy source migration failed");
-      await ensureSourceMembership(ctx, source, input.collectionId);
+      await ensureSourceMembership(ctx, source, input.collectionId,undefined,true);
       migratedSourceIds.add(source.id);
       return source;
     };
@@ -1919,6 +1927,11 @@ export function createIntelligenceService(
     run: RunRow,
     task: ExecutionTaskResourceV2,
   ): Promise<{ run: RunRow; active: boolean }> {
+    const [execution]=await db.select().from(executionTasks).where(eq(executionTasks.id,task.id));
+    const payload=execution?.payload as Record<string,unknown>|undefined;
+    if(!execution||execution.userId!==run.userId||run.executionTaskId!==execution.id||
+      (execution.kind==='source_sync'&&(execution.ownerType!=='source'||execution.ownerId!==run.sourceId||payload?.sourceId!==run.sourceId))||
+      !['source_sync','share_import'].includes(execution.kind))return {run,active:true};
     if (task.status === "queued" && run.status === "running") {
       const [updated] = await db
         .update(intelligenceSyncRuns)
@@ -2037,7 +2050,7 @@ export function createIntelligenceService(
         .from(intelligenceSyncRuns)
         .innerJoin(executionTasks, eq(executionTasks.id, intelligenceSyncRuns.executionTaskId))
         .where(and(eq(intelligenceSyncRuns.sourceId, sourceId),
-          eq(executionTasks.userId, ctx.userId), workspaceFilter(executionTasks,source),
+          eq(executionTasks.userId, ctx.userId), workspaceFilter(executionTasks,{groupId:source.groupId,accountId:source.accountId}),
           eq(executionTasks.idempotencyKey, input.idempotencyKey))).limit(1);
       if (existing) return { run: toRun(existing.run), task: await deps.tasks.get(ctx, existing.run.executionTaskId) };
     }
@@ -2103,7 +2116,7 @@ export function createIntelligenceService(
       .values({
         id: nextId("intelligence-run"),
         userId: source.userId,
-        accountId: source.accountId,groupId:source.groupId??null,
+        accountId: source.accountId,groupId:task.groupId??null,
         sourceId,
         executionTaskId: task.id,
         trigger: input.trigger,
@@ -2374,7 +2387,7 @@ export function createIntelligenceService(
           .where(
             and(
               eq(intelligenceSources.userId, ctx.userId),
-              workspaceFilter(intelligenceSources,ctx),
+              intelligenceWorkspaceFilter(intelligenceSources,ctx),
               inArray(intelligenceSources.id, sourceIds),
             ),
           );
@@ -2410,7 +2423,7 @@ export function createIntelligenceService(
         throw new Error("雷达父分类锁读必须绑定实际事务");
       const query = db.select().from(intelligenceCollections).where(and(
         eq(intelligenceCollections.id,id),eq(intelligenceCollections.userId,ctx.userId),
-        workspaceFilter(intelligenceCollections,ctx),isNull(intelligenceCollections.archivedAt),
+        intelligenceWorkspaceFilter(intelligenceCollections,ctx),isNull(intelligenceCollections.archivedAt),
       )).limit(1);
       const [row] = await (options?.forUpdate ? query.for("update") : query);
       if (!row) throw new OwnershipError("雷达分类不存在、已归档或不属于当前工作区");
@@ -2431,7 +2444,7 @@ export function createIntelligenceService(
           .where(
             and(
               eq(intelligenceCollections.userId, ctx.userId),
-              workspaceFilter(intelligenceCollections,ctx),
+              intelligenceWorkspaceFilter(intelligenceCollections,ctx),
               isNull(intelligenceCollections.archivedAt),
             ),
           )
@@ -2442,7 +2455,7 @@ export function createIntelligenceService(
           .where(
             and(
               eq(intelligenceSources.userId, ctx.userId),
-              workspaceFilter(intelligenceSources,ctx),
+              intelligenceWorkspaceFilter(intelligenceSources,ctx),
             ),
           )
           .orderBy(asc(intelligenceSources.displayName)),
@@ -2452,7 +2465,7 @@ export function createIntelligenceService(
           .where(
             and(
               eq(intelligenceSourceCollectionMemberships.userId, ctx.userId),
-              workspaceFilter(intelligenceSourceCollectionMemberships,ctx),
+              intelligenceWorkspaceFilter(intelligenceSourceCollectionMemberships,ctx),
             ),
           ),
         // 工作台只需要状态计数，不加载历史任务的输入、稿件与执行载荷。
@@ -2465,7 +2478,7 @@ export function createIntelligenceService(
           .where(
             and(
               eq(intelligenceSyncRuns.userId, ctx.userId),
-              workspaceFilter(intelligenceSyncRuns,ctx),
+              intelligenceWorkspaceFilter(intelligenceSyncRuns,ctx),
             ),
           )
           .orderBy(desc(intelligenceSyncRuns.createdAt)),
@@ -2538,30 +2551,31 @@ export function createIntelligenceService(
         const parent = await requireCollection(ctx,input.parentId);
         if (parent.archivedAt) throw new IntelligenceValidationError("父分类已归档，请重新选择");
       }
-      const [duplicate] = await db
+      return withIntelligenceWrite(db,ctx,async(tx,frozen)=>{
+      const duplicate = uniqueIntelligenceRow(await tx
         .select()
         .from(intelligenceCollections)
         .where(
           and(
             eq(intelligenceCollections.userId, ctx.userId),
-            workspaceFilter(intelligenceCollections,ctx),
+            intelligenceWorkspaceFilter(intelligenceCollections,ctx),
             input.parentId
               ? eq(intelligenceCollections.parentId, input.parentId)
               : isNull(intelligenceCollections.parentId),
             eq(intelligenceCollections.normalizedName, normalizedName(name)),
           ),
         )
-        .limit(1);
+        .limit(2));
       if (duplicate) {
         throw new IntelligenceConflictError("同级已存在同名分类");
       }
       const stamp = now();
-      const [row] = await db
+      const [row] = await tx
         .insert(intelligenceCollections)
         .values({
           id: nextId("intelligence-collection"),
           userId: ctx.userId,
-          accountId,groupId:ctx.groupId??null,
+          accountId,groupId:frozen.groupId,
           parentId: input.parentId ?? null,
           name,
           normalizedName: normalizedName(name),
@@ -2575,6 +2589,7 @@ export function createIntelligenceService(
         .returning();
       if (!row) throw new Error("failed to create collection");
       return toCollection(row);
+      });
     },
 
     async updateCollection(
@@ -2619,13 +2634,19 @@ export function createIntelligenceService(
         : current.name;
       const parentId =
         input.parentId === undefined ? current.parentId : input.parentId;
-      const [duplicate] = await db
+      return withIntelligenceWrite(db,ctx,async(tx)=>{
+      if(input.parentId){
+        let parentId:string|null=input.parentId;const visited=new Set<string>();
+        while(parentId){if(parentId===collectionId)throw new IntelligenceConflictError("分类移动会形成循环");if(visited.has(parentId))break;visited.add(parentId);const [parent]=await tx.select().from(intelligenceCollections).where(and(eq(intelligenceCollections.id,parentId),intelligenceWorkspaceFilter(intelligenceCollections,ctx)));if(!parent)throw new OwnershipError("Intelligence collection not found");parentId=parent.parentId;}
+      }
+
+      const [duplicate] = await tx
         .select()
         .from(intelligenceCollections)
         .where(
           and(
             eq(intelligenceCollections.userId, current.userId),
-            workspaceFilter(intelligenceCollections,current),
+            intelligenceWorkspaceFilter(intelligenceCollections,ctx),
             parentId
               ? eq(intelligenceCollections.parentId, parentId)
               : isNull(intelligenceCollections.parentId),
@@ -2635,7 +2656,7 @@ export function createIntelligenceService(
       if (duplicate && duplicate.id !== collectionId) {
         throw new IntelligenceConflictError("同级已存在同名分类");
       }
-      const [updated] = await db
+      const [updated] = await tx
         .update(intelligenceCollections)
         .set({
           name,
@@ -2662,6 +2683,7 @@ export function createIntelligenceService(
         throw new IntelligenceConflictError("分类版本冲突");
       }
       return toCollection(updated);
+      });
     },
 
     async deleteCollection(
@@ -2677,14 +2699,16 @@ export function createIntelligenceService(
       if (input.mode === "permanent" && !input.confirmToken) {
         throw new IntelligenceValidationError("永久删除需要确认令牌");
       }
-      return db.transaction(async (tx) => {
+      return withIntelligenceWrite(db,ctx,async (tx) => {
+        const [current]=await tx.select().from(intelligenceCollections).where(and(eq(intelligenceCollections.id,collectionId),intelligenceWorkspaceFilter(intelligenceCollections,ctx))).for("update");
+        if(!current)throw new OwnershipError("Intelligence collection not found");
         const sources = await tx
           .select()
           .from(intelligenceSources)
           .where(
             and(
               eq(intelligenceSources.userId, current.userId),
-              workspaceFilter(intelligenceSources,current),
+              intelligenceWorkspaceFilter(intelligenceSources,ctx),
               eq(intelligenceSources.collectionId, collectionId),
             ),
           );
@@ -2697,7 +2721,7 @@ export function createIntelligenceService(
                 intelligenceSourceCollectionMemberships.userId,
                 current.userId,
               ),
-              workspaceFilter(intelligenceSourceCollectionMemberships,current),
+              intelligenceWorkspaceFilter(intelligenceSourceCollectionMemberships,ctx),
               eq(
                 intelligenceSourceCollectionMemberships.collectionId,
                 collectionId,
@@ -2712,7 +2736,7 @@ export function createIntelligenceService(
                 intelligenceSourceCollectionMemberships.userId,
                 current.userId,
               ),
-              workspaceFilter(intelligenceSourceCollectionMemberships,current),
+              intelligenceWorkspaceFilter(intelligenceSourceCollectionMemberships,ctx),
               eq(
                 intelligenceSourceCollectionMemberships.collectionId,
                 collectionId,
@@ -2725,7 +2749,7 @@ export function createIntelligenceService(
           .where(
             and(
               eq(intelligenceSources.userId, current.userId),
-              workspaceFilter(intelligenceSources,current),
+              intelligenceWorkspaceFilter(intelligenceSources,ctx),
               eq(intelligenceSources.collectionId, collectionId),
             ),
           );
@@ -2735,7 +2759,7 @@ export function createIntelligenceService(
           .where(
             and(
               eq(intelligenceCollections.userId, current.userId),
-              workspaceFilter(intelligenceCollections,current),
+              intelligenceWorkspaceFilter(intelligenceCollections,ctx),
               eq(intelligenceCollections.parentId, collectionId),
             ),
           );
@@ -2785,27 +2809,28 @@ export function createIntelligenceService(
             )
           : null;
       const identity = sourceIdentity(input.config);
-      const [existing] = await db
+      const source = await withIntelligenceWrite(db,ctx,async(tx,frozen)=>{
+      const rows = await tx
         .select()
         .from(intelligenceSources)
         .where(
           and(
             eq(intelligenceSources.userId, ctx.userId),
-            workspaceFilter(intelligenceSources,ctx),
+            intelligenceWorkspaceFilter(intelligenceSources,ctx),
             eq(intelligenceSources.type, input.type),
             eq(intelligenceSources.externalKey, identity.externalKey),
           ),
         )
-        .limit(1);
-      let source = existing;
+        .limit(2);
+      let source = uniqueIntelligenceRow(rows);
       if (!source) {
         const stamp = now();
-        [source] = await db
+        [source] = await tx
           .insert(intelligenceSources)
           .values({
             id: nextId("intelligence-source"),
             userId: ctx.userId,
-            accountId,groupId:ctx.groupId??null,
+            accountId,groupId:frozen.groupId,
             collectionId: input.collectionId,
             type: input.type,
             platform: identity.platform,
@@ -2832,7 +2857,9 @@ export function createIntelligenceService(
           .returning();
       }
       if (!source) throw new Error("failed to create source");
-      await ensureSourceMembership(ctx, source, input.collectionId);
+      await ensureSourceMembership({...ctx,groupId:frozen.groupId}, source, input.collectionId,tx);
+      return source;
+      });
       const started = input.runInitial
         ? await startRun(ctx, source.id, {
             trigger: "initial",
@@ -2859,7 +2886,7 @@ export function createIntelligenceService(
       const accountId = await account(ctx, "intelligence.sources.list");
       const filters = [
         eq(intelligenceSources.userId, ctx.userId),
-        workspaceFilter(intelligenceSources,ctx),
+        intelligenceWorkspaceFilter(intelligenceSources,ctx),
       ];
       if (query.type) filters.push(eq(intelligenceSources.type, query.type));
       if (query.status) {
@@ -2880,7 +2907,7 @@ export function createIntelligenceService(
                 intelligenceSourceCollectionMemberships.userId,
                 ctx.userId,
               ),
-              workspaceFilter(intelligenceSourceCollectionMemberships,ctx),
+              intelligenceWorkspaceFilter(intelligenceSourceCollectionMemberships,ctx),
               eq(
                 intelligenceSourceCollectionMemberships.collectionId,
                 query.collectionId,
@@ -2938,7 +2965,8 @@ export function createIntelligenceService(
       const nextRunAt = monitorEnabled
         ? current.nextRunAt ?? nextDailyRunAt(now())
         : null;
-      const [updated] = await db
+      const updated=await withIntelligenceWrite(db,ctx,async(tx,frozen)=>{
+      const [updated] = await tx
         .update(intelligenceSources)
         .set({
           collectionId:
@@ -2965,8 +2993,10 @@ export function createIntelligenceService(
         .returning();
       if (!updated) throw new IntelligenceConflictError("来源版本冲突");
       if (input.collectionId) {
-        await ensureSourceMembership(ctx, updated, input.collectionId);
+        await ensureSourceMembership({...ctx,groupId:frozen.groupId}, updated, input.collectionId,tx);
       }
+      return updated;
+      });
       return presentSource(ctx, updated);
     },
 
@@ -2986,26 +3016,27 @@ export function createIntelligenceService(
       ) {
         throw new IntelligenceValidationError("永久删除确认令牌无效");
       }
-      const observations = await db
+      return withIntelligenceWrite(db,ctx,async(tx,frozen)=>{
+      const [lockedSource]=await tx.select().from(intelligenceSources).where(and(eq(intelligenceSources.id,sourceId),intelligenceWorkspaceFilter(intelligenceSources,ctx))).for("update");
+      if(!lockedSource)throw new OwnershipError("Intelligence source not found");
+      const current=lockedSource;
+      const observations = await tx
         .select()
         .from(itemSourceObservations)
-        .where(eq(itemSourceObservations.sourceId, sourceId));
-      const snapshots = await db
+        .where(and(eq(itemSourceObservations.sourceId, sourceId),intelligenceWorkspaceFilter(itemSourceObservations,ctx)));
+      const snapshots = await tx
         .select()
         .from(sourceSnapshots)
-        .where(eq(sourceSnapshots.sourceId, sourceId));
+        .where(and(eq(sourceSnapshots.sourceId, sourceId),intelligenceWorkspaceFilter(sourceSnapshots,ctx)));
       if (input.mode === "permanent") {
-        const accountId = requireAccountId(
-          ctx.accountId,
-          "intelligence.sources.delete",
-        );
-        const runs = await db
+        // RSS/web 纯组无需凭空增加平台账号；当前组已经按原写端口锁定。
+        const runs = await tx
           .select()
           .from(intelligenceSyncRuns)
           .where(
             and(
               eq(intelligenceSyncRuns.userId, ctx.userId),
-              workspaceFilter(intelligenceSyncRuns,ctx),
+              intelligenceWorkspaceFilter(intelligenceSyncRuns,ctx),
               eq(intelligenceSyncRuns.sourceId, sourceId),
             ),
           );
@@ -3027,13 +3058,13 @@ export function createIntelligenceService(
         const itemIds = [...new Set(observations.map((row) => row.itemId))];
         const projectReferences =
           itemIds.length > 0
-            ? await db
+            ? await tx
                 .select()
                 .from(projectIntelligenceReferences)
                 .where(
                   and(
                     eq(projectIntelligenceReferences.userId, ctx.userId),
-                    workspaceFilter(projectIntelligenceReferences,ctx),
+                    intelligenceReferenceRootFilter(projectIntelligenceReferences,ctx),
                     inArray(projectIntelligenceReferences.itemId, itemIds),
                   ),
                 )
@@ -3041,13 +3072,13 @@ export function createIntelligenceService(
         const confirmedTransforms =
           itemIds.length > 0
             ? (
-                await db
+                await tx
                   .select()
                   .from(intelligenceTransforms)
                   .where(
                     and(
                       eq(intelligenceTransforms.userId, ctx.userId),
-                      workspaceFilter(intelligenceTransforms,ctx),
+                      intelligenceTransformGuardFilter(intelligenceTransforms,ctx),
                       inArray(intelligenceTransforms.itemId, itemIds),
                     ),
                   )
@@ -3067,13 +3098,13 @@ export function createIntelligenceService(
         const otherObservations =
           itemIds.length > 0
             ? (
-                await db
+                await tx
                   .select()
                   .from(itemSourceObservations)
                   .where(
                     and(
                       eq(itemSourceObservations.userId, ctx.userId),
-                      workspaceFilter(itemSourceObservations,ctx),
+                      intelligenceWorkspaceFilter(itemSourceObservations,ctx),
                       inArray(itemSourceObservations.itemId, itemIds),
                     ),
                   )
@@ -3094,13 +3125,13 @@ export function createIntelligenceService(
           .map((snapshot) => snapshot.id);
         const deletableTransforms =
           deletableSnapshotIds.length > 0
-            ? await db
+            ? await tx
                 .select()
                 .from(intelligenceTransforms)
                 .where(
                   and(
                     eq(intelligenceTransforms.userId, ctx.userId),
-                    workspaceFilter(intelligenceTransforms,ctx),
+                    intelligenceWorkspaceFilter(intelligenceTransforms,ctx),
                     inArray(
                       intelligenceTransforms.sourceSnapshotId,
                       deletableSnapshotIds,
@@ -3110,13 +3141,13 @@ export function createIntelligenceService(
             : [];
         const transcriptTasks =
           deletableItemIds.length > 0
-            ? await db
+            ? await tx
                 .select()
                 .from(itemTranscripts)
                 .where(
                   and(
                     eq(itemTranscripts.userId, ctx.userId),
-                    workspaceFilter(itemTranscripts,ctx),
+                    intelligenceWorkspaceFilter(itemTranscripts,ctx),
                     inArray(itemTranscripts.itemId, deletableItemIds),
                   ),
                 )
@@ -3130,13 +3161,83 @@ export function createIntelligenceService(
             .map((transcript) => transcript.executionTaskId)
             .filter((id): id is string => Boolean(id)),
         ];
-        const runIds = runs.map((run) => run.id);
+        // 内容指针不是删除执行的授权。先证明反向绑定，再按既有组→execution锁序取真值。
+        const taskScope={groupId:frozen.groupId,accountId:frozen.accountId};
+        const ownedSourceTasks=await tx.select().from(executionTasks).where(and(
+          eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,taskScope),
+          eq(executionTasks.ownerType,'source'),eq(executionTasks.ownerId,sourceId),
+        ));
+        const inspectedIds=[...new Set([...taskIds,...ownedSourceTasks.map(task=>task.id)])].sort();
+        const inspected=inspectedIds.length?await tx.select().from(executionTasks).where(inArray(executionTasks.id,inspectedIds)):[];
+        const scoped=inspectedIds.length?await tx.select({id:executionTasks.id}).from(executionTasks).where(and(
+          eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,taskScope),inArray(executionTasks.id,inspectedIds),
+        )):[];
+        const scopedIds=new Set(scoped.map(task=>task.id));
+        const accountIds=[...new Set(inspected.flatMap(task=>task.accountId?[task.accountId]:[]))];
+        const ownedAccounts=frozen.groupId&&accountIds.length?await tx.select({id:platformAccounts.id}).from(platformAccounts).where(and(eq(platformAccounts.userId,ctx.userId),inArray(platformAccounts.id,accountIds))):[];
+        const ownedAccountIds=new Set(ownedAccounts.map(account=>account.id));
+        const frozenMembers=frozen.groupId&&accountIds.length?await tx.select().from(accountGroupMemberships).where(and(eq(accountGroupMemberships.userId,ctx.userId),eq(accountGroupMemberships.groupId,frozen.groupId),inArray(accountGroupMemberships.accountId,accountIds))):[];
+        const trustedTime=(value:string|null)=>{if(!value)return null;const parsed=Date.parse(value);return Number.isFinite(parsed)&&new Date(parsed).toISOString()===value?parsed:null;};
+        const retainedExecutionIds=new Set<string>();
+        const assertTaskBinding=(task:ExecutionTaskRow)=>{
+          const scopeMatches=frozen.groupId?task.groupId===frozen.groupId:task.accountId===frozen.accountId&&(task.groupId===null||task.groupId===`grp_legacy_${frozen.accountId}`);
+          if(task.userId!==ctx.userId||!scopeMatches||!scopedIds.has(task.id)||(frozen.groupId&&task.accountId&&!ownedAccountIds.has(task.accountId)))throw new OwnershipError('来源关联任务不属于原工作区');
+          if(frozen.groupId&&task.accountId){
+            const members=frozenMembers.filter(member=>member.accountId===task.accountId&&member.version===task.membershipVersion);
+            const created=trustedTime(task.createdAt),member=members[0],joined=trustedTime(member?.joinedAt??null),left=trustedTime(member?.leftAt??null);
+            if(members.length!==1||created===null||joined===null||joined>created||(member!.leftAt!==null&&(left===null||left<created)))throw new OwnershipError('来源关联任务缺少唯一真实冻结成员历史');
+          }
+          if(!task.payload||typeof task.payload!=='object'||Array.isArray(task.payload))throw new IntelligenceConflictError('来源关联任务缺少有效绑定');
+          const payload=task.payload as Record<string,unknown>;
+          // bare仅用于全局不存在真实平台账号的原端口；有字段矛盾也不能兼容。
+          const matches=(field:string,value:unknown)=>payload[field]===value||(!frozen.groupId&&payload[field]===undefined);
+          for(const run of runs.filter(run=>run.executionTaskId===task.id)){
+            // canonical任务消费真实冻结成员；run.accountId只是来源历史元数据。裸端口仍同原账号。
+            if(!frozen.groupId&&task.accountId!==run.accountId)throw new OwnershipError('来源运行与执行账号不符');
+            const sourceTask=task.kind==='source_sync'&&task.ownerType==='source'&&task.ownerId===sourceId&&matches('sourceId',sourceId);
+            const shareInput=payload.shareInput;
+            const shareTask=task.kind==='share_import'&&task.ownerType==='item_import'&&typeof shareInput==='string'&&task.ownerId===`share-import-${hash(shareInput).slice(0,24)}`;
+            if(!sourceTask&&!shareTask)throw new IntelligenceConflictError('来源运行与原执行任务绑定不符');
+            // 分享任务只有单向source关系；确定终态可删业务源，但不凭单指针删原execution。
+            if(shareTask)retainedExecutionIds.add(task.id);
+          }
+          for(const transcript of transcriptTasks.filter(row=>row.executionTaskId===task.id)){
+            if(task.kind!=='transcribe'||task.ownerType!=='item'||task.ownerId!==transcript.itemId||!matches('itemId',transcript.itemId))throw new IntelligenceConflictError('逐字稿与原执行任务绑定不符');
+          }
+          for(const transform of deletableTransforms.filter(row=>row.aiTaskId===task.id)){
+            if(task.kind!=='topic_preview'||task.ownerType!=='transform'||task.ownerId!==transform.itemId||!matches('itemId',transform.itemId)||!matches('sourceSnapshotId',transform.sourceSnapshotId)||(payload.transformId!==undefined&&payload.transformId!==transform.id))throw new IntelligenceConflictError('改写稿与原执行任务绑定不符');
+          }
+          if(ownedSourceTasks.some(row=>row.id===task.id)&&(task.kind!=='source_sync'||!matches('sourceId',sourceId)))throw new IntelligenceConflictError('来源执行任务的反向绑定不符');
+        };
+        inspected.forEach(assertTaskBinding);
+        const lockedExecutions=inspectedIds.length?await tx.select().from(executionTasks).where(inArray(executionTasks.id,inspectedIds)).orderBy(asc(executionTasks.id)).for('update'):[];
+        lockedExecutions.forEach(assertTaskBinding);
+        if(lockedExecutions.some(task=>!['succeeded','failed','cancelled','blocked'].includes(task.status)))throw new IntelligenceConflictError('该来源仍有执行任务或未知结果，请完成或取消后再删除');
+        const unresolvedCalls=inspectedIds.length?await tx.select({id:executionCalls.id}).from(executionCalls).where(and(inArray(executionCalls.executionTaskId,inspectedIds),or(inArray(executionCalls.status,['reserved','started','running','unknown','unknown_result','waiting_user']),and(eq(executionCalls.status,'settled'),isNull(executionCalls.totalTokens),sql`${executionCalls.accountingBasis} <> 'requests'`)))):[];
+        if(unresolvedCalls.length)throw new IntelligenceConflictError('来源执行仍有未确认的调用结果，请保留原任务');
+        // SEMANTIC_BOUNDARY_ALLOW: 仅保留真实FK的审计/计费父，不删除账本或授予访问/执行权。
+        if(inspectedIds.length){
+          const references=await Promise.all([
+            tx.select({taskId:executionCalls.executionTaskId}).from(executionCalls).where(inArray(executionCalls.executionTaskId,inspectedIds)),
+            tx.select({taskId:executionEvidence.executionTaskId}).from(executionEvidence).where(inArray(executionEvidence.executionTaskId,inspectedIds)),
+            tx.select({taskId:executionStreamEvents.executionTaskId}).from(executionStreamEvents).where(inArray(executionStreamEvents.executionTaskId,inspectedIds)),
+            tx.select({taskId:aiTasks.executionTaskId}).from(aiTasks).where(inArray(aiTasks.executionTaskId,inspectedIds)),
+            tx.select({taskId:workbenchArtifactLineages.pendingTaskId}).from(workbenchArtifactLineages).where(inArray(workbenchArtifactLineages.pendingTaskId,inspectedIds)),
+            tx.select({taskId:workbenchArtifactLineageVersions.taskId}).from(workbenchArtifactLineageVersions).where(inArray(workbenchArtifactLineageVersions.taskId,inspectedIds)),
+          ]);
+          references.flat().forEach(reference=>{if(reference.taskId)retainedExecutionIds.add(reference.taskId);});
+        }
+        const deletableExecutionIds=lockedExecutions.filter(task=>!retainedExecutionIds.has(task.id)).map(task=>task.id);
+        // 只取本 source 已证明 snapshot 与真实 run 的交集；别的来源保护不得误保父。
+        const ownProtectedSnapshots=snapshots.filter(snapshot=>protectedSnapshotIds.has(snapshot.id)&&snapshot.sourceId===sourceId);
+        const retainedRunIds=new Set(ownProtectedSnapshots.filter(snapshot=>runs.some(run=>run.id===snapshot.runId&&run.sourceId===sourceId)).map(snapshot=>snapshot.runId));
+        const runIds = runs.filter(run=>!retainedRunIds.has(run.id)).map((run) => run.id);
 
-        await db.transaction(async (tx) => {
-          if (runIds.length > 0) {
+        {
+          if (runs.length > 0) {
             await tx
               .delete(intelligenceSyncRunEvents)
-              .where(inArray(intelligenceSyncRunEvents.runId, runIds));
+              .where(inArray(intelligenceSyncRunEvents.runId, runs.map(run=>run.id)));
           }
           if (deletableTransforms.length > 0) {
             await tx
@@ -3155,7 +3256,7 @@ export function createIntelligenceService(
           }
           await tx
             .delete(itemSourceObservations)
-            .where(eq(itemSourceObservations.sourceId, sourceId));
+            .where(and(eq(itemSourceObservations.sourceId, sourceId),intelligenceWorkspaceFilter(itemSourceObservations,ctx)));
           if (deletableItemIds.length > 0) {
             await tx
               .delete(itemMetricSnapshots)
@@ -3178,21 +3279,11 @@ export function createIntelligenceService(
               .delete(intelligenceSyncRuns)
               .where(inArray(intelligenceSyncRuns.id, runIds));
           }
-          if (taskIds.length > 0) {
+          if (deletableExecutionIds.length > 0) {
             await tx
               .delete(executionTasks)
-              .where(inArray(executionTasks.id, [...new Set(taskIds)]));
+              .where(and(eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,taskScope),inArray(executionTasks.id,deletableExecutionIds)));
           }
-          await tx
-            .delete(executionTasks)
-            .where(
-              and(
-                eq(executionTasks.userId, ctx.userId),
-                workspaceFilter(executionTasks,ctx),
-                eq(executionTasks.ownerType, "source"),
-                eq(executionTasks.ownerId, sourceId),
-              ),
-            );
           await tx
             .delete(intelligenceSourceCollectionMemberships)
             .where(
@@ -3201,23 +3292,28 @@ export function createIntelligenceService(
                   intelligenceSourceCollectionMemberships.userId,
                   ctx.userId,
                 ),
-                workspaceFilter(intelligenceSourceCollectionMemberships,ctx),
+                intelligenceWorkspaceFilter(intelligenceSourceCollectionMemberships,ctx),
                 eq(
                   intelligenceSourceCollectionMemberships.sourceId,
                   sourceId,
                 ),
               ),
             );
+          if(retainedRunIds.size>0){
+            // SEMANTIC_BOUNDARY_ALLOW: 精确机械证据壳不做内容选择；合法 sourceIdentity 永不使用此前缀。
+            await tx.update(intelligenceSources).set({adapterConfig:{__creatorosProvenanceOnly:1,originalExternalKey:current.externalKey},externalKey:`__creatoros_deleted_source__:${current.id}`,browserSessionRef:null,extractionInstruction:null,monitorEnabled:false,nextRunAt:null,collectionId:null,status:"archived",version:current.version+1,updatedAt:now()}).where(and(eq(intelligenceSources.id,sourceId),intelligenceWorkspaceFilter(intelligenceSources,ctx)));
+          }else{
           await tx
             .delete(intelligenceSources)
             .where(
               and(
                 eq(intelligenceSources.id, sourceId),
                 eq(intelligenceSources.userId, ctx.userId),
-                workspaceFilter(intelligenceSources,ctx),
+                intelligenceWorkspaceFilter(intelligenceSources,ctx),
               ),
             );
-        });
+          }
+        }
 
         return {
           affectedItems: deletableItemIds.length,
@@ -3227,7 +3323,7 @@ export function createIntelligenceService(
       }
 
       const status = input.mode === "pause" ? "paused" : "archived";
-      await db
+      await tx
         .update(intelligenceSources)
         .set({
           status,
@@ -3242,6 +3338,7 @@ export function createIntelligenceService(
         preservedSnapshots: snapshots.length,
         status,
       };
+      });
     },
 
     startRun,
@@ -3262,7 +3359,7 @@ export function createIntelligenceService(
         .where(
           and(
             eq(intelligenceSources.userId, ctx.userId),
-            workspaceFilter(intelligenceSources,ctx),
+            intelligenceWorkspaceFilter(intelligenceSources,ctx),
             eq(intelligenceSources.status, "active"),
             eq(intelligenceSources.monitorEnabled, true),
             or(
@@ -3278,7 +3375,7 @@ export function createIntelligenceService(
         const [latest] = await db
           .select({ status: intelligenceSyncRuns.status })
           .from(intelligenceSyncRuns)
-          .where(eq(intelligenceSyncRuns.sourceId, source.id))
+          .where(and(eq(intelligenceSyncRuns.sourceId, source.id),intelligenceWorkspaceFilter(intelligenceSyncRuns,ctx)))
           .orderBy(desc(intelligenceSyncRuns.createdAt))
           .limit(1);
         // 登录/验证码受阻后停跑，避免每分钟重新撞站点；用户处理后手动“同步”
@@ -3352,11 +3449,15 @@ export function createIntelligenceService(
           and(
             eq(intelligenceSyncRuns.executionTaskId, taskId),
             eq(intelligenceSyncRuns.userId, ctx.userId),
-            workspaceFilter(intelligenceSyncRuns,ctx),
+            intelligenceWorkspaceFilter(intelligenceSyncRuns,ctx),
           ),
         )
         .limit(1);
       if (!run) throw new OwnershipError("Intelligence run not found");
+      const source=await requireSource(ctx,run.sourceId);
+      const [task]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,taskId),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,{groupId:ctx.groupId,accountId:ctx.accountId})));
+      const payload=task?.payload as Record<string,unknown>|undefined;
+      if(!task||task.kind!=='source_sync'||task.ownerType!=='source'||task.ownerId!==source.id||run.sourceId!==source.id||run.executionTaskId!==task.id||payload?.sourceId!==source.id)throw new IntelligenceConflictError("来源运行与原执行任务不符");
       return toRun(run);
     },
 
@@ -3381,12 +3482,15 @@ export function createIntelligenceService(
           and(
             eq(itemTranscripts.executionTaskId, taskId),
             eq(itemTranscripts.userId, ctx.userId),
-            workspaceFilter(itemTranscripts,ctx),
+            intelligenceWorkspaceFilter(itemTranscripts,ctx),
           ),
         )
         .limit(1);
       if (!transcript) throw new OwnershipError("Transcript task not found");
       const item = await requireItem(ctx, transcript.itemId);
+      const [execution]=await db.select().from(executionTasks).where(and(eq(executionTasks.id,taskId),eq(executionTasks.userId,ctx.userId),workspaceFilter(executionTasks,{groupId:ctx.groupId,accountId:ctx.accountId}))).limit(1);
+      const payload=execution?.payload as Record<string,unknown>|undefined;
+      if(!execution||execution.kind!=="transcribe"||execution.ownerType!=="item"||execution.ownerId!==item.id||payload?.itemId!==item.id)throw new OwnershipError("逐字稿任务与原作品绑定不完整");
       return {
         itemId: item.id,
         canonicalUrl: item.canonicalUrl,
@@ -3425,7 +3529,7 @@ export function createIntelligenceService(
       const [current] = await db
         .select()
         .from(itemTranscripts)
-        .where(eq(itemTranscripts.itemId, target.itemId))
+        .where(and(eq(itemTranscripts.itemId, target.itemId),intelligenceWorkspaceFilter(itemTranscripts,ctx)))
         .limit(1);
       const retainPrevious =
         input.status !== "done" && Boolean(current?.text?.trim());
@@ -3467,7 +3571,7 @@ export function createIntelligenceService(
       query: { status?: string; limit?: number; offset?: number } = {},
     ) {
       await requireSource(ctx, sourceId);
-      const filters = [eq(intelligenceSyncRuns.sourceId, sourceId)];
+      const filters = [eq(intelligenceSyncRuns.sourceId, sourceId),intelligenceWorkspaceFilter(intelligenceSyncRuns,ctx)];
       if (query.status) {
         filters.push(eq(intelligenceSyncRuns.status, query.status));
       }
@@ -3494,7 +3598,7 @@ export function createIntelligenceService(
       const events = await db
         .select()
         .from(intelligenceSyncRunEvents)
-        .where(eq(intelligenceSyncRunEvents.runId, runId))
+        .where(and(eq(intelligenceSyncRunEvents.runId, runId),intelligenceWorkspaceFilter(intelligenceSyncRunEvents,ctx)))
         .orderBy(asc(intelligenceSyncRunEvents.occurredAt));
       return { run: toRun(run), events: events.map(toEvent) };
     },
@@ -3516,7 +3620,7 @@ export function createIntelligenceService(
         .from(intelligenceItems)
         .where(and(
           eq(intelligenceItems.userId, ctx.userId),
-          workspaceFilter(intelligenceItems,ctx),
+          intelligenceWorkspaceFilter(intelligenceItems,ctx),
           eq(intelligenceItems.platform, input.platform),
           eq(intelligenceItems.type, "video"),
           inArray(intelligenceItems.externalId, externalIds),
@@ -3568,7 +3672,7 @@ export function createIntelligenceService(
         .where(
           and(
             eq(intelligenceItems.userId, ctx.userId),
-            workspaceFilter(intelligenceItems,ctx),
+            intelligenceWorkspaceFilter(intelligenceItems,ctx),
           ),
         );
       const observations = await db
@@ -3577,7 +3681,7 @@ export function createIntelligenceService(
         .where(
           and(
             eq(itemSourceObservations.userId, ctx.userId),
-            workspaceFilter(itemSourceObservations,ctx),
+            intelligenceWorkspaceFilter(itemSourceObservations,ctx),
           ),
         );
       const sources = await db
@@ -3586,7 +3690,7 @@ export function createIntelligenceService(
         .where(
           and(
             eq(intelligenceSources.userId, ctx.userId),
-            workspaceFilter(intelligenceSources,ctx),
+            intelligenceWorkspaceFilter(intelligenceSources,ctx),
           ),
         );
       rows = rows.filter((item) => item.availability !== "archived");
@@ -3600,7 +3704,7 @@ export function createIntelligenceService(
                   intelligenceSourceCollectionMemberships.userId,
                   ctx.userId,
                 ),
-                workspaceFilter(intelligenceSourceCollectionMemberships,ctx),
+                intelligenceWorkspaceFilter(intelligenceSourceCollectionMemberships,ctx),
                 eq(
                   intelligenceSourceCollectionMemberships.collectionId,
                   query.collectionId,
@@ -3648,7 +3752,7 @@ export function createIntelligenceService(
         .where(
           and(
             eq(itemTranscripts.userId, ctx.userId),
-            workspaceFilter(itemTranscripts,ctx),
+            intelligenceWorkspaceFilter(itemTranscripts,ctx),
           ),
         );
       const transcriptByItem = new Map(
@@ -3668,7 +3772,7 @@ export function createIntelligenceService(
         .where(
           and(
             eq(intelligenceTransforms.userId, ctx.userId),
-            workspaceFilter(intelligenceTransforms,ctx),
+            intelligenceTransformGuardFilter(intelligenceTransforms,ctx),
           ),
         )
         .orderBy(desc(intelligenceTransforms.createdAt));
@@ -3726,7 +3830,7 @@ export function createIntelligenceService(
         .where(
           and(
             eq(itemMetricSnapshots.userId, ctx.userId),
-            workspaceFilter(itemMetricSnapshots,ctx),
+            intelligenceWorkspaceFilter(itemMetricSnapshots,ctx),
           ),
         )
         .orderBy(desc(itemMetricSnapshots.capturedAt));
@@ -3822,15 +3926,17 @@ export function createIntelligenceService(
       let [transcript] = await db
         .select()
         .from(itemTranscripts)
-        .where(eq(itemTranscripts.itemId, itemId))
+        .where(and(eq(itemTranscripts.itemId, itemId),intelligenceWorkspaceFilter(itemTranscripts,ctx)))
         .limit(1);
       if (!transcript) {
-        [transcript] = await db
+        transcript=await withIntelligenceWrite(db,ctx,async(tx,frozen)=>{
+        let [createdTranscript] = await tx
           .insert(itemTranscripts)
           .values({
             itemId,
             userId: item.userId,
             accountId: item.accountId,
+            groupId:frozen.groupId,
             status: "not_requested",
             text: null,
             source: null,
@@ -3845,13 +3951,15 @@ export function createIntelligenceService(
           })
           .onConflictDoNothing()
           .returning();
-        if (!transcript) {
-          [transcript] = await db
+        if (!createdTranscript) {
+          [createdTranscript] = await tx
             .select()
             .from(itemTranscripts)
-            .where(eq(itemTranscripts.itemId, itemId))
+            .where(and(eq(itemTranscripts.itemId, itemId),intelligenceWorkspaceFilter(itemTranscripts,ctx)))
             .limit(1);
         }
+        return createdTranscript;
+        });
       }
       if (!transcript) throw new Error("failed to create transcript state");
       // SEMANTIC_BOUNDARY_ALLOW: 仅校准任务终态与关联逐字稿投影，不判断内容或重放外部调用。
@@ -3862,7 +3970,7 @@ export function createIntelligenceService(
           const [task] = await tx.select().from(executionTasks).where(and(
             eq(executionTasks.id, previous.executionTaskId!),
             eq(executionTasks.userId, item.userId),
-            workspaceFilter(executionTasks,item),
+            workspaceFilter(executionTasks,{groupId:item.groupId,accountId:item.accountId}),
             eq(executionTasks.kind, "transcribe"),
             eq(executionTasks.ownerType, "item"),
             eq(executionTasks.ownerId, item.id),
@@ -3877,12 +3985,12 @@ export function createIntelligenceService(
           }).where(and(
             eq(itemTranscripts.itemId, item.id),
             eq(itemTranscripts.userId, item.userId),
-            workspaceFilter(itemTranscripts,item),
+            intelligenceWorkspaceFilter(itemTranscripts,ctx),
             eq(itemTranscripts.executionTaskId, previous.executionTaskId!),
             eq(itemTranscripts.status, previous.status),
           )).returning();
           if (updated) return updated;
-          const [current] = await tx.select().from(itemTranscripts).where(eq(itemTranscripts.itemId, item.id)).limit(1);
+          const [current] = await tx.select().from(itemTranscripts).where(and(eq(itemTranscripts.itemId, item.id),intelligenceWorkspaceFilter(itemTranscripts,ctx))).limit(1);
           return current ?? previous;
         });
       }
@@ -3891,22 +3999,22 @@ export function createIntelligenceService(
         db
           .select()
           .from(itemMetricSnapshots)
-          .where(eq(itemMetricSnapshots.itemId, itemId))
+          .where(and(eq(itemMetricSnapshots.itemId, itemId),intelligenceWorkspaceFilter(itemMetricSnapshots,ctx)))
           .orderBy(desc(itemMetricSnapshots.capturedAt)),
         db
           .select()
           .from(itemSourceObservations)
-          .where(eq(itemSourceObservations.itemId, itemId))
+          .where(and(eq(itemSourceObservations.itemId, itemId),intelligenceWorkspaceFilter(itemSourceObservations,ctx)))
           .orderBy(desc(itemSourceObservations.lastSeenAt)),
         db
           .select()
           .from(sourceSnapshots)
-          .where(eq(sourceSnapshots.itemId, itemId))
+          .where(and(eq(sourceSnapshots.itemId, itemId),intelligenceWorkspaceFilter(sourceSnapshots,ctx)))
           .orderBy(desc(sourceSnapshots.capturedAt), desc(sourceSnapshots.id)),
         db
           .select()
           .from(intelligenceTransforms)
-          .where(eq(intelligenceTransforms.itemId, itemId))
+          .where(and(eq(intelligenceTransforms.itemId, itemId),intelligenceWorkspaceFilter(intelligenceTransforms,ctx)))
           .orderBy(desc(intelligenceTransforms.createdAt)),
       ]);
       const transformTasks = await Promise.all(
@@ -3996,13 +4104,13 @@ export function createIntelligenceService(
       }
 
       const stamp = now();
-      const updated = await db.transaction(async (tx) => {
+      const updated = await withIntelligenceWrite(db,ctx,async (tx) => {
         // 与任务重试/领取共用行锁；读到停止态后若任务已恢复，不能覆盖它的新结果。
         if (initial.executionTaskId) {
           const [linked] = await tx.select().from(executionTasks).where(and(
             eq(executionTasks.id, initial.executionTaskId),
             eq(executionTasks.userId, item.userId),
-            workspaceFilter(executionTasks,item),
+            workspaceFilter(executionTasks,{groupId:item.groupId,accountId:item.accountId}),
           )).limit(1).for("update");
           if (linked && ["queued", "running", "retry_wait", "pause_requested", "cancel_requested"].includes(linked.status)) {
             throw new IntelligenceConflictError("TRANSCRIPT_BUSY");
@@ -4027,7 +4135,7 @@ export function createIntelligenceService(
           and(
             eq(itemTranscripts.itemId, item.id),
             eq(itemTranscripts.userId, ctx.userId),
-            workspaceFilter(itemTranscripts,item),
+            intelligenceWorkspaceFilter(itemTranscripts,ctx),
             inArray(itemTranscripts.status, [
               "not_requested",
               "failed",
@@ -4049,7 +4157,7 @@ export function createIntelligenceService(
           and(
             eq(itemTranscripts.itemId, item.id),
             eq(itemTranscripts.userId, ctx.userId),
-            workspaceFilter(itemTranscripts,item),
+            intelligenceWorkspaceFilter(itemTranscripts,ctx),
           ),
         )
         .limit(1);
@@ -4160,7 +4268,7 @@ export function createIntelligenceService(
         .where(
           and(
             eq(intelligenceItems.userId, ctx.userId),
-            workspaceFilter(intelligenceItems,ctx),
+            intelligenceWorkspaceFilter(intelligenceItems,ctx),
             eq(intelligenceItems.platform, "douyin"),
             eq(intelligenceItems.externalId, input.item.externalId),
           ),
@@ -4172,7 +4280,7 @@ export function createIntelligenceService(
         .where(
           and(
             eq(intelligenceSources.userId, ctx.userId),
-            workspaceFilter(intelligenceSources,ctx),
+            intelligenceWorkspaceFilter(intelligenceSources,ctx),
             eq(intelligenceSources.type, "creator_profile"),
             eq(
               intelligenceSources.externalKey,
@@ -4201,7 +4309,7 @@ export function createIntelligenceService(
       let [run] = await db
         .select()
         .from(intelligenceSyncRuns)
-        .where(eq(intelligenceSyncRuns.executionTaskId, input.taskId))
+        .where(and(eq(intelligenceSyncRuns.executionTaskId, input.taskId),intelligenceWorkspaceFilter(intelligenceSyncRuns,ctx)))
         .limit(1);
       if (!run) {
         const stamp = now();
@@ -4210,7 +4318,7 @@ export function createIntelligenceService(
           .values({
             id: nextId("intelligence-run"),
             userId: ctx.userId,
-            accountId,groupId:ctx.groupId??null,
+            accountId,groupId:task.groupId??null,
             sourceId: source.id,
             executionTaskId: input.taskId,
             trigger: "manual",
@@ -4283,7 +4391,7 @@ export function createIntelligenceService(
         .where(
           and(
             eq(intelligenceItems.userId, ctx.userId),
-            workspaceFilter(intelligenceItems,ctx),
+            intelligenceWorkspaceFilter(intelligenceItems,ctx),
             eq(intelligenceItems.platform, "douyin"),
             eq(intelligenceItems.externalId, input.item.externalId),
           ),
@@ -4317,7 +4425,7 @@ export function createIntelligenceService(
         db
           .select()
           .from(itemTranscripts)
-          .where(eq(itemTranscripts.itemId, item.id))
+          .where(and(eq(itemTranscripts.itemId, item.id),intelligenceWorkspaceFilter(itemTranscripts,ctx)))
           .limit(1),
       ]);
       if (!snapshot || !transcript) {
@@ -4384,7 +4492,7 @@ export function createIntelligenceService(
         .from(intelligenceTransforms)
         .where(and(
           eq(intelligenceTransforms.userId, ctx.userId),
-          workspaceFilter(intelligenceTransforms,ctx),
+          intelligenceWorkspaceFilter(intelligenceTransforms,ctx),
           eq(intelligenceTransforms.idempotencyKey, input.idempotencyKey),
         ))
         .limit(1);
@@ -4406,7 +4514,7 @@ export function createIntelligenceService(
           and(
             eq(sourceSnapshots.itemId, item.id),
             eq(sourceSnapshots.userId, ctx.userId),
-            workspaceFilter(sourceSnapshots,ctx),
+            intelligenceWorkspaceFilter(sourceSnapshots,ctx),
           ),
         )
         .orderBy(desc(sourceSnapshots.capturedAt), desc(sourceSnapshots.id))
@@ -4417,7 +4525,7 @@ export function createIntelligenceService(
       const [transcript] = await db
         .select()
         .from(itemTranscripts)
-        .where(eq(itemTranscripts.itemId, item.id))
+        .where(and(eq(itemTranscripts.itemId, item.id),intelligenceWorkspaceFilter(itemTranscripts,ctx)))
         .limit(1);
       if (
         !transcript ||
@@ -4428,6 +4536,7 @@ export function createIntelligenceService(
           "请先等待这条作品的逐字稿完成，再生成改写稿",
         );
       }
+      const transcriptText=transcript.text.trim();
       // T-1017: 客户端旧 positioningVersionId 只为兼容保留，不作为当前定位依据。
       // 无正式母版时仍创建通用改写任务，并明确记录没有应用定位。内部批量升级维持旧链。
       const strategyBacked = input.strategyBacked === true;
@@ -4445,16 +4554,19 @@ export function createIntelligenceService(
       if (!strategyBacked) {
         // 先发布不可变来源记录，再让任务进入可领取队列。IPC/进程恢复可按 transformId 接上同一记录。
         const stamp = now();
-        const [inserted] = await db.insert(intelligenceTransforms).values({
-          id: nextId("intelligence-transform"), userId: ctx.userId, accountId,groupId:ctx.groupId??null, itemId: item.id, sourceSnapshotId: snapshot.id,
+        const row = await withIntelligenceWrite(db,ctx,async(tx,frozen)=>{
+        const [inserted] = await tx.insert(intelligenceTransforms).values({
+          id: nextId("intelligence-transform"), userId: ctx.userId, accountId,groupId:frozen.groupId, itemId: item.id, sourceSnapshotId: snapshot.id,
           kind: "topic", positioningVersionId, aiTaskId: null, idempotencyKey: input.idempotencyKey, status: "candidate", targetTopicId: null,
           outputSnapshot: { generationMode: "rewrite_only", positioningSnapshot, personalizationStatus,
-            transcriptText: transcript.text!.trim(), transcriptHash: `sha256:${hash(transcript.text!.trim())}` }, createdAt: stamp, updatedAt: stamp,
+            transcriptText: transcriptText, transcriptHash: `sha256:${hash(transcriptText)}` }, createdAt: stamp, updatedAt: stamp,
         }).onConflictDoNothing().returning();
-        const row = inserted ?? (await db.select().from(intelligenceTransforms).where(and(
-          eq(intelligenceTransforms.userId, ctx.userId), workspaceFilter(intelligenceTransforms,ctx), eq(intelligenceTransforms.idempotencyKey, input.idempotencyKey),
+        const row = inserted ?? (await tx.select().from(intelligenceTransforms).where(and(
+          eq(intelligenceTransforms.userId, ctx.userId), intelligenceWorkspaceFilter(intelligenceTransforms,ctx), eq(intelligenceTransforms.idempotencyKey, input.idempotencyKey),
         )).limit(1))[0];
         if (!row || row.itemId !== item.id || row.sourceSnapshotId !== snapshot.id) throw new IntelligenceConflictError("IDEMPOTENCY_KEY_ALREADY_BOUND_TO_DIFFERENT_SOURCE");
+        return row;
+        });
         return enqueueRewriteTransform(ctx, row);
       }
       const task = await deps.tasks.enqueue(ctx, {
@@ -4468,17 +4580,18 @@ export function createIntelligenceService(
           itemId: item.id,
           sourceSnapshotId: snapshot.id,
           positioningVersionId,
-          ...(strategyBacked ? {} : { positioningSnapshot, personalizationStatus, transcriptText: transcript.text.trim(), transcriptHash: `sha256:${hash(transcript.text.trim())}` }),
+          ...(strategyBacked ? {} : { positioningSnapshot, personalizationStatus, transcriptText: transcriptText, transcriptHash: `sha256:${hash(transcriptText)}` }),
         },
         priority: 20,
       });
-      const [existing] = await db
+      return withIntelligenceWrite(db,ctx,async(tx,frozen)=>{
+      const [existing] = await tx
         .select()
         .from(intelligenceTransforms)
         .where(
           and(
             eq(intelligenceTransforms.userId, ctx.userId),
-            workspaceFilter(intelligenceTransforms,ctx),
+            intelligenceWorkspaceFilter(intelligenceTransforms,ctx),
             eq(
               intelligenceTransforms.idempotencyKey,
               input.idempotencyKey,
@@ -4493,12 +4606,12 @@ export function createIntelligenceService(
         return { transform: toTransform(existing), task };
       }
       const stamp = now();
-      const [created] = await db
+      const [created] = await tx
         .insert(intelligenceTransforms)
         .values({
           id: nextId("intelligence-transform"),
           userId: ctx.userId,
-          accountId,groupId:ctx.groupId??null,
+          accountId,groupId:frozen.groupId,
           itemId: item.id,
           sourceSnapshotId: snapshot.id,
           kind: "topic",
@@ -4510,7 +4623,7 @@ export function createIntelligenceService(
               generationMode: "rewrite_only",
               positioningSnapshot,
               personalizationStatus,
-              transcriptHash: `sha256:${hash(transcript.text.trim())}`,
+              transcriptHash: `sha256:${hash(transcriptText)}`,
             },
           targetTopicId: null,
           createdAt: stamp,
@@ -4519,6 +4632,7 @@ export function createIntelligenceService(
         .returning();
       if (!created) throw new Error("failed to create intelligence transform");
       return { transform: toTransform(created), task };
+      });
     },
 
     async getTopicPreviewForExecution(
@@ -4557,7 +4671,7 @@ export function createIntelligenceService(
           and(
             (pendingTransformId ? or(eq(intelligenceTransforms.aiTaskId, taskId), eq(intelligenceTransforms.id, pendingTransformId)) : eq(intelligenceTransforms.aiTaskId, taskId)),
             eq(intelligenceTransforms.userId, ctx.userId),
-            workspaceFilter(intelligenceTransforms,ctx),
+            intelligenceWorkspaceFilter(intelligenceTransforms,ctx),
           ),
         )
         .limit(1);
@@ -4581,7 +4695,7 @@ export function createIntelligenceService(
       const [transcript] = await db
         .select()
         .from(itemTranscripts)
-        .where(eq(itemTranscripts.itemId, item.id))
+        .where(and(eq(itemTranscripts.itemId, item.id),intelligenceWorkspaceFilter(itemTranscripts,ctx)))
         .limit(1);
       if (
         !transcript ||
@@ -4643,7 +4757,7 @@ export function createIntelligenceService(
           and(
             eq(intelligenceTransforms.itemId, item.id),
             eq(intelligenceTransforms.userId, ctx.userId),
-            workspaceFilter(intelligenceTransforms,ctx),
+            intelligenceWorkspaceFilter(intelligenceTransforms,ctx),
           ),
         )
         .orderBy(desc(intelligenceTransforms.createdAt));
@@ -4722,7 +4836,7 @@ export function createIntelligenceService(
       const [currentTranscript] = await db
         .select()
         .from(itemTranscripts)
-        .where(eq(itemTranscripts.itemId, transform.itemId))
+        .where(and(eq(itemTranscripts.itemId, transform.itemId),intelligenceWorkspaceFilter(itemTranscripts,ctx)))
         .limit(1);
       const currentText = currentTranscript?.text?.trim() ?? "";
       const currentTranscriptHash = currentText
@@ -4926,7 +5040,7 @@ export function createIntelligenceService(
         const [currentTranscript] = await db
           .select()
           .from(itemTranscripts)
-          .where(eq(itemTranscripts.itemId, transform.itemId))
+          .where(and(eq(itemTranscripts.itemId, transform.itemId),intelligenceWorkspaceFilter(itemTranscripts,ctx)))
           .limit(1);
         const currentText = currentTranscript?.text?.trim() ?? "";
         const currentTranscriptHash = currentText ? `sha256:${hash(currentText)}` : null;
@@ -4980,7 +5094,7 @@ export function createIntelligenceService(
       const [currentTranscript] = await db
         .select()
         .from(itemTranscripts)
-        .where(eq(itemTranscripts.itemId, transform.itemId))
+        .where(and(eq(itemTranscripts.itemId, transform.itemId),intelligenceWorkspaceFilter(itemTranscripts,ctx)))
         .limit(1);
       const currentText = currentTranscript?.text?.trim() ?? "";
       const currentTranscriptHash = currentText
@@ -5100,7 +5214,7 @@ export function createIntelligenceService(
           throw new IntelligenceConflictError("REWRITE_DRAFT_POSITIONING_PROVENANCE_INVALID");
         }
         const [transcript] = await db.select().from(itemTranscripts)
-          .where(eq(itemTranscripts.itemId, transform.itemId)).limit(1);
+          .where(and(eq(itemTranscripts.itemId, transform.itemId),intelligenceWorkspaceFilter(itemTranscripts,ctx))).limit(1);
         const currentTranscript = transcript?.text?.trim() ?? "";
         if (
           transcript?.status !== "done" ||
@@ -5414,6 +5528,8 @@ export function createIntelligenceService(
       input: {
         runId: string;
         lease: { workerId: string; attempt: number };
+        /** source runner 的原 claim 凭证；不能以当前行的 fence 冒充传入凭证。 */
+        expectedFence?:string;
         envelope: IntelligenceAdapterEnvelope;
         terminal: boolean;
       },
@@ -5435,7 +5551,7 @@ export function createIntelligenceService(
         const observations = await db
           .select()
           .from(itemSourceObservations)
-          .where(eq(itemSourceObservations.runId, run.id));
+          .where(and(eq(itemSourceObservations.runId, run.id),intelligenceWorkspaceFilter(itemSourceObservations,ctx)));
         return {
           run: toRun(run),
           itemIds: [...new Set(observations.map((row) => row.itemId))],
@@ -5459,38 +5575,50 @@ export function createIntelligenceService(
       let updated = 0;
       const itemIds: string[] = [];
       await db.transaction(async (tx) => {
-        // 与取消/恢复抢同一任务行锁；取消先提交时，采集结果不能随后写入。
+        // 先按唯一成员端口锁账号/member/组，再锁 execution；不能反向加锁。
+        const [snapshot]=await tx.select().from(executionTasks).where(eq(executionTasks.id,run.executionTaskId));
+        if(!snapshot||snapshot.userId!==ctx.userId)throw new OwnershipError("采集执行不属于当前工作区");
+        await assertFrozenWorkspaceMembership(tx,{userId:snapshot.userId,groupId:snapshot.groupId,accountId:snapshot.accountId,groupVersion:snapshot.groupVersion,membershipVersion:snapshot.membershipVersion});
         const [execution] = await tx.select().from(executionTasks)
           .where(eq(executionTasks.id, run.executionTaskId)).for("update");
         if (!execution || execution.userId !== ctx.userId || execution.accountId !== accountId ||
             execution.status !== "running" || execution.leaseOwner !== input.lease.workerId ||
-            execution.attempt !== input.lease.attempt || !execution.leaseExpiresAt || execution.leaseExpiresAt <= now()) {
+            execution.attempt !== input.lease.attempt || !execution.leaseExpiresAt || execution.leaseExpiresAt <= now() ||
+            (input.expectedFence!==undefined&&execution.fenceToken!==input.expectedFence) || execution.fenceToken!==snapshot.fenceToken ||
+            execution.groupId!==snapshot.groupId || execution.accountId!==snapshot.accountId || execution.membershipVersion!==snapshot.membershipVersion ||
+            (ctx.groupId!==undefined&&ctx.groupId!==null&&execution.groupId!==ctx.groupId)) {
           throw new IntelligenceConflictError("采集任务已停止或执行租约已失效");
         }
 
+        const [lockedRun]=await tx.select().from(intelligenceSyncRuns).where(and(eq(intelligenceSyncRuns.id,run.id),intelligenceWorkspaceFilter(intelligenceSyncRuns,ctx))).for("update");
+        const [lockedSource]=await tx.select().from(intelligenceSources).where(and(eq(intelligenceSources.id,run.sourceId),intelligenceWorkspaceFilter(intelligenceSources,ctx)));
+        const payload=execution.payload as Record<string,unknown>;
+        const sourceBinding=execution.kind==='source_sync'&&execution.ownerType==='source'&&execution.ownerId===run.sourceId&&payload.sourceId===run.sourceId;
+        const shareBinding=execution.kind==='share_import'&&execution.ownerType==='item_import';
+        if(!lockedRun||!lockedSource||lockedRun.executionTaskId!==execution.id||lockedRun.sourceId!==lockedSource.id||!(sourceBinding||shareBinding))throw new IntelligenceConflictError("采集运行与原任务来源不符");
         for (const candidate of input.envelope.items) {
           const url = canonicalUrl(candidate.canonicalUrl);
           const urlHash = hash(url);
           const identity = candidate.externalId
             ? and(
                 eq(intelligenceItems.userId, ctx.userId),
-                workspaceFilter(intelligenceItems,ctx),
+                intelligenceWorkspaceFilter(intelligenceItems,ctx),
                 eq(intelligenceItems.platform, candidate.platform),
                 eq(intelligenceItems.type, candidate.type),
                 eq(intelligenceItems.externalId, candidate.externalId),
               )
             : and(
                 eq(intelligenceItems.userId, ctx.userId),
-                workspaceFilter(intelligenceItems,ctx),
+                intelligenceWorkspaceFilter(intelligenceItems,ctx),
                 eq(intelligenceItems.platform, candidate.platform),
                 eq(intelligenceItems.type, candidate.type),
                 eq(intelligenceItems.canonicalUrlHash, urlHash),
               );
-          let [item] = await tx
+          let item = uniqueIntelligenceRow(await tx
             .select()
             .from(intelligenceItems)
             .where(identity)
-            .limit(1);
+            .limit(2));
           if (item) {
             [item] = await tx
               .update(intelligenceItems)
@@ -5517,7 +5645,7 @@ export function createIntelligenceService(
               .values({
                 id: nextId("intelligence-item"),
                 userId: ctx.userId,
-                accountId,groupId:ctx.groupId??null,
+                accountId,groupId:execution.groupId,
                 type: candidate.type,
                 platform: candidate.platform,
                 externalId: candidate.externalId,
@@ -5546,7 +5674,7 @@ export function createIntelligenceService(
             .values({
               itemId: item.id,
               userId: ctx.userId,
-              accountId,groupId:ctx.groupId??null,
+              accountId,groupId:execution.groupId,
               status: "not_requested",
               text: null,
               source: null,
@@ -5566,7 +5694,7 @@ export function createIntelligenceService(
               .values({
                 id: nextId("intelligence-metric"),
                 userId: ctx.userId,
-                accountId,groupId:ctx.groupId??null,
+                accountId,groupId:execution.groupId,
                 itemId: item.id,
                 capturedAt: stamp,
                 likeCount: candidate.metrics.likeCount,
@@ -5586,7 +5714,7 @@ export function createIntelligenceService(
             .where(
               and(
                 eq(itemSourceObservations.userId, ctx.userId),
-                workspaceFilter(itemSourceObservations,ctx),
+                intelligenceWorkspaceFilter(itemSourceObservations,ctx),
                 eq(itemSourceObservations.itemId, item.id),
                 eq(itemSourceObservations.sourceId, run.sourceId),
                 eq(itemSourceObservations.externalRef, externalRef),
@@ -5608,7 +5736,7 @@ export function createIntelligenceService(
             await tx.insert(itemSourceObservations).values({
               id: nextId("intelligence-observation"),
               userId: ctx.userId,
-              accountId,groupId:ctx.groupId??null,
+              accountId,groupId:execution.groupId,
               itemId: item.id,
               sourceId: run.sourceId,
               runId: run.id,
@@ -5626,6 +5754,7 @@ export function createIntelligenceService(
               .from(sourceSnapshots)
               .where(
                 and(
+                  intelligenceWorkspaceFilter(sourceSnapshots,ctx),
                   eq(sourceSnapshots.sourceId, run.sourceId),
                   eq(sourceSnapshots.runId, run.id),
                   eq(sourceSnapshots.itemId, item.id),
@@ -5640,7 +5769,7 @@ export function createIntelligenceService(
               await tx.insert(sourceSnapshots).values({
                 id: nextId("intelligence-snapshot"),
                 userId: ctx.userId,
-                accountId,groupId:ctx.groupId??null,
+                accountId,groupId:execution.groupId,
                 sourceId: run.sourceId,
                 runId: run.id,
                 itemId: item.id,
@@ -5694,7 +5823,7 @@ export function createIntelligenceService(
         await tx.insert(intelligenceSyncRunEvents).values({
           id: nextId("intelligence-run-event"),
           userId: ctx.userId,
-          accountId,groupId:ctx.groupId??null,
+          accountId,groupId:execution.groupId,
           runId: run.id,
           step: input.envelope.upstreamEvidence.adapter,
           status: terminalStatus,
@@ -5765,7 +5894,7 @@ export function createIntelligenceService(
         const [transcript] = await db
           .select()
           .from(itemTranscripts)
-          .where(eq(itemTranscripts.itemId, itemId))
+          .where(and(eq(itemTranscripts.itemId, itemId),intelligenceWorkspaceFilter(itemTranscripts,ctx)))
           .limit(1);
         if (
           transcript &&
@@ -5806,6 +5935,7 @@ export function createIntelligenceService(
             itemId,
             userId: item.userId,
             accountId: item.accountId,
+            groupId:task.groupId??null,
             status: "queued",
             text: null,
             source: null,

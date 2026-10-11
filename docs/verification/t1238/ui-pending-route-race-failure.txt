@@ -1,0 +1,13 @@
+node:internal/process/promises:332
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+route.continue: Route is already handled!
+    at /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/ui-final.cjs:8:199 {
+  name: 'Error'
+}
+
+Node.js v25.9.0
+Error: 真实设置操作失败 1
+    at /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/docs/verification/t1238/run-ui-journey.cjs:24:21
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)

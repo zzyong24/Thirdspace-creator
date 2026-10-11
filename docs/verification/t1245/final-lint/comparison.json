@@ -1,0 +1,17 @@
+{
+  "unchangedMessages": true,
+  "originalErrorCount": 11,
+  "currentErrorCount": 11,
+  "runs": [
+    {
+      "name": "original-product",
+      "exitCode": 1,
+      "elapsedSeconds": 2.303
+    },
+    {
+      "name": "current-product",
+      "exitCode": 1,
+      "elapsedSeconds": 1.616
+    }
+  ]
+}

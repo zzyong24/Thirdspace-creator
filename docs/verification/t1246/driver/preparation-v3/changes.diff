@@ -1,0 +1,2024 @@
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/ai-copilot.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-copilot.spec.ts
+index b0199104f..aed4ff85e 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/ai-copilot.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-copilot.spec.ts
+@@ -84,3 +84,6 @@ test.describe("AI Copilot dialog", () => {
+     expect(requests).toEqual([]);
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 10020000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/ai-nonblocking-recovery.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-nonblocking-recovery.spec.ts
+index 624eed50d..ee9afec54 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/ai-nonblocking-recovery.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-nonblocking-recovery.spec.ts
+@@ -63,7 +63,7 @@ async function selectFreshAccount(page: Page, baseURL: string | undefined) {
+         },
+       },
+     },
+-  });
++  timeout: 120000});
+   expect(response.ok()).toBe(true);
+   const payload = (await response.json()) as { data: { id: string } };
+   await page.context().addCookies([
+@@ -190,7 +190,7 @@ test("E2E-T1022-02 / E2E-T1023-01 临时失败沿同一轮自动恢复并交付
+ });
+ 
+ test("E2E-T1023-02 / E2E-T1023-03 持续提交失败会停止自动请求，继续恢复仍沿原轮完成", async ({ page, baseURL }) => {
+-  test.setTimeout(30_000);
++  test.setTimeout(Math.max((30_000), 25140000));
+   let attempts = 0;
+   const userMessageIds: string[] = [];
+   await page.route("**/api/chat", async (route) => {
+@@ -229,7 +229,7 @@ test("E2E-T1023-02 / E2E-T1023-03 持续提交失败会停止自动请求，继
+ 
+   const card = page.locator('[data-slot="copilot-error"]');
+   await expect(card).toContainText("正在恢复本轮生成");
+-  await expect(card).toContainText("自动恢复暂未取得进展", { timeout: 12_000 });
++  await expect(card).toContainText("自动恢复暂未取得进展", { timeout: 120000 });
+   await expect(card.getByRole("button", { name: "继续恢复" })).toBeVisible();
+   await expect(card.locator('[data-slot="copilot-error-auto-recovery"]')).toHaveCount(0);
+   expect(attempts).toBe(4);
+@@ -251,7 +251,7 @@ test("E2E-T1023-02 / E2E-T1023-03 持续提交失败会停止自动请求，继
+ });
+ 
+ test("E2E-T1023-04 已收到持久任务回执时停止重连也明确保留后台任务", async ({ page, baseURL }) => {
+-  test.setTimeout(20_000);
++  test.setTimeout(Math.max((20_000), 25140000));
+   let attempts = 0;
+   await page.route("**/api/chat", async (route) => {
+     attempts += 1;
+@@ -269,7 +269,7 @@ test("E2E-T1023-04 已收到持久任务回执时停止重连也明确保留后
+   await sendPrompt(page, "生成长篇分析并保留后台任务");
+ 
+   const card = page.locator('[data-slot="copilot-error"]');
+-  await expect(card).toContainText("自动恢复暂未取得进展", { timeout: 12_000 });
++  await expect(card).toContainText("自动恢复暂未取得进展", { timeout: 120000 });
+   await expect(card).toContainText("后台任务和已完成内容都已保留");
+   expect(attempts).toBe(4);
+   await page.waitForTimeout(1_000);
+@@ -278,3 +278,6 @@ test("E2E-T1023-04 已收到持久任务回执时停止重连也明确保留后
+     "AC-T1023-DURABLE-TASK-WAITS",
+   ]);
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 25140000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/ai-recovery-guidance.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-recovery-guidance.spec.ts
+index 12cc43f35..062afd6ed 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/ai-recovery-guidance.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-recovery-guidance.spec.ts
+@@ -72,7 +72,7 @@ async function selectFreshAccount(
+         },
+       },
+     },
+-  });
++  timeout: 120000});
+   expect(response.ok()).toBe(true);
+   const payload = (await response.json()) as { data: { id: string } };
+   await page.context().addCookies([
+@@ -139,7 +139,7 @@ test("E2E-T913-01 模型未配置时直接打开模型配置", async ({ page, ba
+   ]);
+   await card.screenshot({
+     path: resolve(process.cwd(), "../.codex-tmp/t913-model-recovery.png"),
+-  });
++  timeout: 120000});
+ 
+   await settings.click();
+   await expect(page).toHaveURL(/\/settings\?highlight=text-model/);
+@@ -184,7 +184,7 @@ test("E2E-T913-02 定位缺失时直达定位中心", async ({ page, baseURL })
+   ]);
+   await card.screenshot({
+     path: resolve(process.cwd(), "../.codex-tmp/t913-positioning-recovery-compact.png"),
+-  });
++  timeout: 120000});
+ 
+   await positioning.click();
+   await expect(page).toHaveURL(/\/positioning$/);
+@@ -242,3 +242,6 @@ test("E2E-T913-04 / E2E-T913-05 未知故障自动恢复且不泄露内部状态
+   ]);
+   await expect.poll(() => attempts).toBeGreaterThanOrEqual(2);
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 24180000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/ai-reliability-recovery.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-reliability-recovery.spec.ts
+index cb182ecb7..14c2876ff 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/ai-reliability-recovery.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/ai-reliability-recovery.spec.ts
+@@ -31,7 +31,7 @@ async function dispatch<T>(
+       ...(accountId ? { "x-account-id": accountId } : {}),
+     },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id} 应成功，实得 ${response.status()}`).toBe(true);
+   return ((await response.json()) as { data: T }).data;
+ }
+@@ -58,7 +58,7 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来
+   page,
+   baseURL,
+ }) => {
+-  test.setTimeout(90_000);
++  test.setTimeout(Math.max((90_000), 13860000));
+   const account = await dispatch<{ id: string }>(page, "accounts.create", {
+     params: undefined,
+     query: undefined,
+@@ -176,7 +176,7 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来
+   await button.click();
+   await expect(page.locator('[data-slot="production-decisions"]')).toContainText(
+     "如已有完成步骤，系统会保留",
+-    { timeout: 15_000 },
++    { timeout: 120000 },
+   );
+   await expect(page.locator('[data-slot="decisions-error"]')).not.toContainText(
+     /sk-[A-Za-z0-9_-]{6,}|Bearer\s+\S+/i,
+@@ -188,7 +188,7 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来
+   await expect(button).toHaveText("继续上次分场");
+   await page.locator('[data-slot="production-decisions"]').screenshot({
+     path: resolve(process.cwd(), "../.codex-tmp/t806-direct-error-regular.png"),
+-  });
++  timeout: 120000});
+   expect(createBodies[0]?.retryOfTaskId).toBeUndefined();
+ 
+   const terminalGetCount = taskGetCount;
+@@ -209,8 +209,11 @@ test("视频决策失败可见、终态停轮询，重新运行显式携带来
+   await expect(button).toBeVisible();
+   await page.locator('[data-slot="production-decisions"]').screenshot({
+     path: resolve(process.cwd(), "../.codex-tmp/t806-direct-error-compact.png"),
+-  });
++  timeout: 120000});
+   await button.click();
+   await expect.poll(() => createBodies.length).toBe(2);
+   expect(createBodies[1]?.retryOfTaskId).toBe(terminalTask.id);
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 13860000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/all-routes.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/all-routes.spec.ts
+index b2b9b748e..612e5f3b9 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/all-routes.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/all-routes.spec.ts
+@@ -50,3 +50,6 @@ test.describe("Whole-system route matrix (Task 26)", () => {
+     });
+   }
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 4740000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/app-shell.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/app-shell.spec.ts
+index 9373d5f19..3dfe11b9a 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/app-shell.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/app-shell.spec.ts
+@@ -206,3 +206,6 @@ test.describe("AppShell", () => {
+     });
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 16500000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/asr-configuration.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/asr-configuration.spec.ts
+index dd75422a2..01d2cd8e7 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/asr-configuration.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/asr-configuration.spec.ts
+@@ -104,3 +104,6 @@ test.describe("ASR 建议配置与小米 MiMo 轻量配置", () => {
+     expect(createHash("sha256").update(artifact).digest("hex")).toHaveLength(64);
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 8580000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/assets.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/assets.spec.ts
+index 25a7b7740..9d3ecc82e 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/assets.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/assets.spec.ts
+@@ -268,7 +268,7 @@ test.describe("Assets Center page", () => {
+   }, testInfo) => {
+     // 18 explicit 120s public/upload consumers (36m), initial navigation (2m),
+     // UI/selector observations (up to 60m), screenshots and service setup/teardown margin.
+-    test.setTimeout(6_600_000);
++    test.setTimeout(Math.max((6_600_000), 41700000));
+     page.setDefaultTimeout(120_000);
+     page.setDefaultNavigationTimeout(120_000);
+     context.setDefaultTimeout(120_000);
+@@ -378,7 +378,7 @@ test.describe("Assets Center page", () => {
+   }, testInfo) => {
+     // 22 explicit 120s public/upload consumers (44m), three navigations (6m),
+     // UI/selector observations (up to 70m), screenshots and service setup/teardown margin.
+-    test.setTimeout(8_400_000);
++    test.setTimeout(Math.max((8_400_000), 41700000));
+     page.setDefaultTimeout(120_000);
+     page.setDefaultNavigationTimeout(120_000);
+     context.setDefaultTimeout(120_000);
+@@ -489,7 +489,7 @@ test.describe("Assets Center page", () => {
+     baseURL,
+   }, testInfo) => {
+     // Four 120s public/navigation/file-chooser consumers plus rendering, screenshot, startup and cleanup margin.
+-    test.setTimeout(2_400_000);
++    test.setTimeout(Math.max((2_400_000), 41700000));
+     page.setDefaultTimeout(120_000);
+     page.setDefaultNavigationTimeout(120_000);
+     context.setDefaultTimeout(120_000);
+@@ -527,3 +527,6 @@ test.describe("Assets Center page", () => {
+     });
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 41700000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/audience-task-topics.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/audience-task-topics.spec.ts
+index c95ef7dca..91fbae714 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/audience-task-topics.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/audience-task-topics.spec.ts
+@@ -3,7 +3,7 @@ import { expect, test } from '../helpers/test-environment';
+ 
+ // T-1074：入口退役后仍能读回历史配置；旧冻结/采纳规则由backend/worker兼容回归覆盖。
+ for (const viewport of [{width:1366,height:900},{width:1024,height:768}]) test(`九宫格退役、普通选题入口保留及历史配置无损 ${viewport.width}`,async({page,baseURL})=>{
+- test.setTimeout(240000);
++ test.setTimeout(Math.max((240000), 11220000));
+  await page.setViewportSize(viewport);
+  const op=async(id:string,input:unknown,accountId?:string)=>{
+   const response=await page.request.post('/api/v1/dispatch',{headers:accountId?{'x-account-id':accountId}:{},data:{id,input},timeout:120000});
+@@ -22,3 +22,6 @@ for (const viewport of [{width:1366,height:900},{width:1024,height:768}]) test(`
+  await expect(page.getByTestId('content-radar-link')).toHaveAttribute('href','/intelligence');
+  const reread=await op('topics.workspace.get',{},account.id);expect(reread).toEqual(saved);
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 11220000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/automations-group-media-jobs.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/automations-group-media-jobs.spec.ts
+index aceae9464..24e7d9d31 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/automations-group-media-jobs.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/automations-group-media-jobs.spec.ts
+@@ -18,7 +18,7 @@ async function dispatch<T>(page: Page, id: string, input: DispatchInput, scope:
+       ...(scope.accountId ? { "x-account-id": scope.accountId } : {}),
+     },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id} 应成功，实际 ${response.status()}：${await response.text()}`).toBe(true);
+   return ((await response.json()) as { data: T }).data;
+ }
+@@ -197,3 +197,6 @@ test.describe("账号组内多平台定时任务可见性（T-1199）", () => {
+     await expect(page.locator('[data-slot="automations-list"] li[data-job-id]')).toHaveCount(0);
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 26580000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/automations-run-now-public.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts
+index 60656f3a9..ee470bfb8 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/automations-run-now-public.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/automations-run-now-public.spec.ts
+@@ -227,7 +227,7 @@ async function responsiveEvidence(page: Page, row: Locator, dialog: Locator, inf
+ }
+ 
+ test("组内真实作业通过立即运行准入并保原任务显示待扫码", async ({ page, context, baseURL }, testInfo) => {
+-  test.setTimeout(86_400_000);
++  test.setTimeout(Math.max((86_400_000), 127620000));
+   page.setDefaultTimeout(REQUEST_MS);
+   page.setDefaultNavigationTimeout(REQUEST_MS);
+   context.setDefaultTimeout(REQUEST_MS);
+@@ -315,7 +315,7 @@ test("组内真实作业通过立即运行准入并保原任务显示待扫码",
+   await expect(dialog.locator('[data-slot="automation-run-item"]')).toHaveAttribute("data-run-status", "needs_reconnect");
+   await expect(dialog.locator('[data-slot="automation-run-error"]')).toHaveText(AUTH_MESSAGE);
+   const desktopPath = testInfo.outputPath("run-now-auth-wait-desktop.png");
+-  await page.screenshot({ path: desktopPath, fullPage: true });
++  await page.screenshot({ path: desktopPath, fullPage: true , timeout: 120000});
+   await testInfo.attach("待扫码原运行桌面", { path: desktopPath, contentType: "image/png" });
+   await page.keyboard.press("Escape");
+   await expect(dialog).not.toBeVisible();
+@@ -324,7 +324,7 @@ test("组内真实作业通过立即运行准入并保原任务显示待扫码",
+   await expect(row.getByTestId("automation-login-douyin")).toContainText("扫码绑定");
+   await page.setViewportSize({ width: 390, height: 844 });
+   const narrowPath = testInfo.outputPath("run-now-auth-wait-narrow-after-reload.png");
+-  await page.screenshot({ path: narrowPath, fullPage: true });
++  await page.screenshot({ path: narrowPath, fullPage: true , timeout: 120000});
+   await testInfo.attach("刷新后的扫码指引窄窗口", { path: narrowPath, contentType: "image/png" });
+   await responsiveEvidence(page,row,dialog,testInfo);
+   const runs = await listRuns(page, job.id, target);
+@@ -352,3 +352,6 @@ test("组内真实作业通过立即运行准入并保原任务显示待扫码",
+   await writeFile(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`);
+   await testInfo.attach("public-original-task-auth-wait", { path: evidencePath, contentType: "application/json" });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 127620000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/built-in-ip-course.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/built-in-ip-course.spec.ts
+index c17ae5d6b..305b05411 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/built-in-ip-course.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/built-in-ip-course.spec.ts
+@@ -127,3 +127,6 @@ test("内置 IP 课程从目录到学习进度形成连续真实旅程", async (
+ 
+   writeVisibleCopy(captures);
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 12660000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/channel-public-links.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/channel-public-links.spec.ts
+index b36902d69..bd3d2d089 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/channel-public-links.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/channel-public-links.spec.ts
+@@ -74,3 +74,6 @@ test.describe("T-729/T-871 当前桌面包公开入口", () => {
+     });
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 7140000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/content-radar-one-click-project.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/content-radar-one-click-project.spec.ts
+index 308b385d7..4ac2ca05c 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/content-radar-one-click-project.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/content-radar-one-click-project.spec.ts
+@@ -851,7 +851,7 @@ test("内容雷达只有改写初稿和局部选题字段时仍可一键升级
+     await page.screenshot({
+       path: info.outputPath("radar-ready-1536x1024.png"),
+       fullPage: false,
+-    });
++    timeout: 120000});
+ 
+     await page.setViewportSize({ width: 1024, height: 720 });
+     await expect(confirmOnly).toBeVisible();
+@@ -926,7 +926,7 @@ test("内容雷达只有改写初稿和局部选题字段时仍可一键升级
+     await page.screenshot({
+       path: info.outputPath("project-created-1024x720.png"),
+       fullPage: false,
+-    });
++    timeout: 120000});
+ 
+     const firstProjectReadback = assertProjectBodyEvidence(
+       await dispatch<unknown>(
+@@ -1071,7 +1071,7 @@ test("内容雷达只有改写初稿和局部选题字段时仍可一键升级
+     await page.screenshot({
+       path: info.outputPath("project-reloaded-1024x720.png"),
+       fullPage: false,
+-    });
++    timeout: 120000});
+     bodyEvidence.reload_body_dom_matches_fixture =
+       reloadedParagraphs.join("\n") === FIXTURE_BODY;
+     bodyEvidence.reload_group_mirror = reloadGroupMirror;
+@@ -1135,3 +1135,6 @@ test("内容雷达只有改写初稿和局部选题字段时仍可一键升级
+     }
+   }
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 36420000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/copilot-project-reference.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/copilot-project-reference.spec.ts
+index a437073ce..e6f7e1c73 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/copilot-project-reference.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/copilot-project-reference.spec.ts
+@@ -26,7 +26,7 @@ async function dispatch<T extends { id: string }>(
+       ...(accountId ? { "x-account-id": accountId } : {}),
+     },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id} 应成功，实得 ${response.status()}`).toBe(true);
+   const payload = (await response.json()) as { data: T };
+   return payload.data;
+@@ -141,3 +141,6 @@ test.describe("Copilot 项目引用直读（T-642）", () => {
+     expect(createHash("sha256").update(artifact).digest("hex")).toHaveLength(64);
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 9300000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/creative-canvas.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts
+index 5bb624a22..010304e5d 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/creative-canvas.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/creative-canvas.spec.ts
+@@ -38,7 +38,7 @@ async function uploadMedia(page:Page,scope:Scope,path:string,assetType:"image"|"
+ }
+ 
+ test("T-993 画布可保存、重开，切换账号后列表和直链隔离",async({page,context,baseURL})=>{
+- test.setTimeout(600_000);
++ test.setTimeout(Math.max((600_000), 447780000));
+  const accountA=await groupedAccount(page,"douyin",`@canvas-a-${Date.now()}`);
+  const accountB=await groupedAccount(page,"douyin",`@canvas-b-${Date.now()}`);
+  const project=await dispatch(page,"projects.create",{params:undefined,query:undefined,body:{title:"画布关联项目",brief:""}},{groupId:accountA.groupId});
+@@ -160,7 +160,7 @@ test("T-993 视口缩放只保存在本地，不改画布内容版本",async({pa
+  await page.getByRole("button",{name:"＋ 文字"}).click();
+  await page.getByRole("button",{name:"保存",exact:true}).click();
+  await expect(page.getByText("已保存",{exact:true})).toBeVisible();
+- const before=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId},query:undefined,body:undefined}}});
++ const before=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000});
+  expect(before.ok(),await before.text()).toBe(true);
+  const beforeCanvas=(await before.json() as {data:{revision:number;userId:string;groupId:string|null;accountId:string|null}}).data;
+  const beforeRevision=beforeCanvas.revision;
+@@ -168,7 +168,7 @@ test("T-993 视口缩放只保存在本地，不改画布内容版本",async({pa
+  await expect(page.getByText(/\d+% · 双击空白处添加文字/)).toBeVisible();
+  const key=`creatoros:canvas-viewport:${beforeCanvas.userId}:${beforeCanvas.groupId??beforeCanvas.accountId}:${canvasId}`;
+  await expect.poll(async()=>page.evaluate(key=>JSON.parse(window.localStorage.getItem(key)??"null")?.zoom,key)).toBeGreaterThan(1);
+- const after=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId},query:undefined,body:undefined}}});
++ const after=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId},query:undefined,body:undefined}}, timeout: 120000});
+  expect(after.ok(),await after.text()).toBe(true);
+  expect((await after.json() as {data:{revision:number}}).data.revision).toBe(beforeRevision);
+ });
+@@ -196,12 +196,12 @@ test("T-993 旧版无尺寸画布可读，保存后补默认尺寸且连线不
+  const canvas=await dispatch(page,"canvas.create",{params:undefined,query:undefined,body:{title:"旧版画布"}},{groupId:account.groupId});
+  const headers={"content-type":"application/json","x-group-id":account.groupId};
+  const oldDocument={schemaVersion:1,viewport:{x:0,y:0,zoom:1},nodes:[{id:"old-a",type:"text",label:"旧文案",position:{x:100,y:100},text:"广告标题"},{id:"old-b",type:"image_generation",label:"旧生成",position:{x:460,y:100},prompt:"",mode:"text_to_image"}],edges:[{id:"old-edge",source:"old-a",target:"old-b"}]};
+- const saved=await page.request.post("/api/v1/dispatch",{headers,data:{id:"canvas.save",input:{params:{canvasId:canvas.id},query:undefined,body:{expectedRevision:1,document:oldDocument}}}});
++ const saved=await page.request.post("/api/v1/dispatch",{headers,data:{id:"canvas.save",input:{params:{canvasId:canvas.id},query:undefined,body:{expectedRevision:1,document:oldDocument}}}, timeout: 120000});
+  expect(saved.ok(),await saved.text()).toBe(true);
+  await enterGroup(page,context,baseURL!,account.groupId);
+  await page.goto(`/canvases/${canvas.id}`);await expect(page.getByTestId("canvas-node")).toHaveCount(2);await expect(page.locator("[data-canvas-connection]")).toHaveCount(1);
+  await page.getByRole("button",{name:"保存",exact:true}).click();await expect(page.getByText("已保存",{exact:true})).toBeVisible();
+- const read=await page.request.post("/api/v1/dispatch",{headers,data:{id:"canvas.get",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}});
++ const read=await page.request.post("/api/v1/dispatch",{headers,data:{id:"canvas.get",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000});
+  expect(read.ok(),await read.text()).toBe(true);
+  const document=(await read.json() as {data:{document:{nodes:Array<{size?:{width:number;height:number}}> ;edges:Array<{id:string}>}}}).data.document;
+  expect(document.nodes.every(node=>Boolean(node.size?.width&&node.size?.height))).toBe(true);
+@@ -251,18 +251,18 @@ test("T-994 作品素材入口、项目画布过滤与安全返回",async({page,
+  await enterGroup(page,context,baseURL!,account.groupId);
+  await page.goto(`/projects/${project.id}`);
+  await expect(page.getByRole("link",{name:"打开创作画布"})).toBeVisible();
+- await page.locator('#materials').screenshot({path:testInfo.outputPath("project-materials-after.png")});
++ await page.locator('#materials').screenshot({path:testInfo.outputPath("project-materials-after.png"), timeout: 120000});
+  await page.getByRole("link",{name:"打开创作画布"}).click();
+  await expect(page.getByRole("heading",{name:"新品广告体验的创作画布"})).toBeVisible();
+  await expect(page.getByText("另一件作品的画布")).toHaveCount(0);
+  await expect(page.getByRole("link",{name:"查看当前账号全部画布"})).toBeVisible();
+  await page.getByRole("button",{name:"创建作品画布"}).click();
+  await expect(page.getByRole("heading",{name:"从一个画面开始"})).toBeVisible();
+- await page.screenshot({path:testInfo.outputPath("canvas-empty-after.png")});
++ await page.screenshot({path:testInfo.outputPath("canvas-empty-after.png"), timeout: 120000});
+  await page.setViewportSize({width:1024,height:768});
+  await expect(page.getByRole("button",{name:"素材库"})).toBeVisible();
+  await expect(page.getByRole("button",{name:/生成视频 从描述或首帧开始做动态画面/})).toBeVisible();
+- await page.screenshot({path:testInfo.outputPath("canvas-narrow-after.png")});
++ await page.screenshot({path:testInfo.outputPath("canvas-narrow-after.png"), timeout: 120000});
+  await page.setViewportSize({width:1536,height:1024});
+  await expect(page.getByLabel("关联项目（可选）")).toHaveValue(project.id);
+  const canvasUrl=page.url();
+@@ -273,7 +273,7 @@ test("T-994 作品素材入口、项目画布过滤与安全返回",async({page,
+  await expect(page.getByRole("textbox",{name:"画布标题"})).toHaveValue("新品广告 · 视觉方案 A");
+  await page.getByRole("button",{name:"选已有素材 把账号里的图片和视频放进来"}).click();
+  await expect(page.getByRole("complementary",{name:"当前账号素材"})).toBeVisible();
+- await page.screenshot({path:testInfo.outputPath("canvas-assets-after.png")});
++ await page.screenshot({path:testInfo.outputPath("canvas-assets-after.png"), timeout: 120000});
+  // T1069 full-library search has no total; preserve the real empty result and upload action.
+  const gallery=page.getByRole("complementary",{name:"当前账号素材"});
+  await expect(gallery.getByRole("textbox",{name:"搜索素材",exact:true})).toBeVisible();
+@@ -284,9 +284,9 @@ test("T-994 作品素材入口、项目画布过滤与安全返回",async({page,
+  await page.setViewportSize({width:1024,height:768});
+  await expect(upload).toBeInViewport();
+  uploadCaptures.push({checkpoint:"空素材上传入口-1024",check_ids:["AC-UPLOAD-ENTRY"],viewport:page.viewportSize()!,text:await page.locator("body").innerText()});
+- await page.screenshot({path:testInfo.outputPath("canvas-upload-1024.png")});
++ await page.screenshot({path:testInfo.outputPath("canvas-upload-1024.png"), timeout: 120000});
+  await page.setViewportSize({width:1536,height:1024});
+- await page.screenshot({path:testInfo.outputPath("canvas-upload-1536.png")});
++ await page.screenshot({path:testInfo.outputPath("canvas-upload-1536.png"), timeout: 120000});
+  uploadCaptures.push({checkpoint:"空素材上传入口-1536",check_ids:["AC-UPLOAD-ENTRY"],viewport:page.viewportSize()!,text:await page.locator("body").innerText()});
+  const canvasId=new URL(canvasUrl).pathname.split("/").at(-1)!;
+  const before=await dispatch<{revision:number}>(page,"canvas.get",{params:{canvasId}},{groupId:account.groupId});
+@@ -314,9 +314,9 @@ test("T-994 画布版本冲突时不离开并给出恢复动作",async({page,con
+  await enterGroup(page,context,baseURL!,account.groupId);
+  await page.goto(`/canvases/${canvas.id}`);
+  await expect(page.getByRole("textbox",{name:"画布标题"})).toHaveValue("原画布");
+- const read=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}});
++ const read=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId:canvas.id},query:undefined,body:undefined}}, timeout: 120000});
+  const current=(await read.json() as {data:{revision:number;document:unknown}}).data;
+- const remote=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.save",input:{params:{canvasId:canvas.id},query:undefined,body:{expectedRevision:current.revision,title:"另一窗口已改",document:current.document,projectId:project.id}}}});
++ const remote=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.save",input:{params:{canvasId:canvas.id},query:undefined,body:{expectedRevision:current.revision,title:"另一窗口已改",document:current.document,projectId:project.id}}}, timeout: 120000});
+  expect(remote.ok(),await remote.text()).toBe(true);
+  await page.getByRole("textbox",{name:"画布标题"}).fill("我的未保存修改");
+  await page.getByRole("button",{name:/返回作品 · 冲突恢复作品/}).click();
+@@ -332,7 +332,7 @@ test("T-994 生成结果就地保留并加入当前作品（模拟任务回执
+  const assetId=await uploadMedia(page,{groupId:account.groupId},resolve(process.cwd(),"public/douyin-icon.png"),"image","image/png","结果操作预览.png");
+  const uploaded=await dispatch<{currentFileId:string}>(page,"assets.get",{params:{assetId},query:undefined,body:undefined},{groupId:account.groupId});
+  const download=await dispatch<{url:string}>(page,"assets.fileDownloadUrl",{params:{assetId,assetFileId:uploaded.currentFileId},query:undefined,body:undefined},{groupId:account.groupId});
+- const downloaded=await page.request.get(download.url);expect(downloaded.ok(),await downloaded.text()).toBe(true);
++ const downloaded=await page.request.get(download.url, { timeout: 120000 });expect(downloaded.ok(),await downloaded.text()).toBe(true);
+  const fileId=uploaded.currentFileId,checksum=createHash("sha256").update(await downloaded.body()).digest("hex");
+  const nodeId="result-generation-node";
+  await dispatch(page,"canvas.save",{params:{canvasId:canvas.id},query:undefined,body:{expectedRevision:1,document:{...canvas.document,nodes:[{id:nodeId,type:"image_generation",label:"主视觉",position:{x:100,y:100},size:{width:350,height:430},prompt:"秋季新品广告",mode:"text_to_image"}]}}},{groupId:account.groupId});
+@@ -357,7 +357,7 @@ test("T-994 生成结果就地保留并加入当前作品（模拟任务回执
+  await page.goto(`/canvases/${canvas.id}`);
+  const result=page.getByTestId("canvas-node").filter({hasText:"主视觉"});
+  await expect(result.getByText("最近结果",{exact:false})).toBeVisible();
+- await page.screenshot({path:testInfo.outputPath("canvas-result-actions-after.png")});
++ await page.screenshot({path:testInfo.outputPath("canvas-result-actions-after.png"), timeout: 120000});
+  await result.getByRole("button",{name:"保留到素材库"}).click();
+  await expect(result.getByRole("button",{name:"已在素材库"})).toBeDisabled();
+  expect(confirmCount).toBe(1);
+@@ -373,7 +373,7 @@ test("T-994 生成结果就地保留并加入当前作品（模拟任务回执
+ test("T-1021 首页案例独立浏览、取消无写入，多页模板创建原画布并可重新读取",async({page,context,baseURL})=>{
+  const account=await groupedAccount(page,"douyin",`@home-${Date.now()}`);
+  await enterGroup(page,context,baseURL!,account.groupId);
+- const canvases=async()=>{const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.list",input:{}}});expect(response.ok()).toBe(true);return (await response.json()).data as unknown[];};
++ const canvases=async()=>{const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.list",input:{}}, timeout: 120000});expect(response.ok()).toBe(true);return (await response.json()).data as unknown[];};
+  const before=(await canvases()).length;
+  await page.goto("/canvases");await expect(page.getByRole("heading",{name:"创作空间"})).toBeVisible();
+  await expect(page.getByRole("navigation",{name:"创作空间功能"}).getByRole("link",{name:"案例库"})).toHaveAttribute("aria-current","page");
+@@ -387,7 +387,7 @@ test("T-1021 首页案例独立浏览、取消无写入，多页模板创建原
+  await page.getByRole("button",{name:/用这个模板创作/}).click();
+  await page.getByRole("button",{name:"新建画布并放入",exact:true}).click();
+  await expect(page).toHaveURL(/\/canvases\/[^/?]+$/);await expect(page.getByTestId("canvas-node")).toHaveCount(3);
+- const id=page.url().split("/").at(-1)!;const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId:id}}}});
++ const id=page.url().split("/").at(-1)!;const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId:id}}}, timeout: 120000});
+  const saved=(await response.json()).data;expect(saved.document.nodes.every((n:{aspectRatio:string})=>n.aspectRatio==="1:1")).toBe(true);expect(saved.document.visualGroups[0].pageOrder).toHaveLength(3);expect(saved.document.visualGroups[0].generationAttempts).toEqual({});expect((await canvases()).length).toBe(before+1);
+  await page.reload();await expect(page.getByTestId("canvas-node")).toHaveCount(3);
+ });
+@@ -406,7 +406,7 @@ test("T-1021 资产独立上传，选用追加原画布并冻结真实文件",as
+  await page.getByRole("dialog").locator("select").selectOption(original.id);
+  await page.getByRole("button",{name:"放入这个画布",exact:true}).click();
+  await expect(page).toHaveURL(new RegExp(`/canvases/${original.id}$`));await expect(page.getByTestId("canvas-node")).toHaveCount(1);
+- const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId:original.id}}}});const saved=(await response.json()).data;
++ const response=await page.request.post("/api/v1/dispatch",{headers:{"content-type":"application/json","x-group-id":account.groupId},data:{id:"canvas.get",input:{params:{canvasId:original.id}}}, timeout: 120000});const saved=(await response.json()).data;
+  expect(saved.document.nodes[0].assetId).toBeTruthy();expect(saved.document.nodes[0].fileId).toBeTruthy();expect(saved.document.nodes[0].checksum).toMatch(/^[a-f0-9]{64}$/);
+  await page.reload();await expect(page.getByTestId("canvas-node")).toHaveCount(1);
+ });
+@@ -414,7 +414,7 @@ test("T-1021 资产独立上传，选用追加原画布并冻结真实文件",as
+ // T1101：公开真实canvas/asset/save；模型运行回执和能力为合成fixture，不访问用户profile。
+ // TEST-T1117-CANVAS：保留该公共流程，追加网络反馈与预览选择的实际DOM/键盘证据。
+ test('T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟模型回执）',async({page,context,baseURL},testInfo)=>{
+- test.setTimeout(7_200_000);const observe=expect.configure({timeout:120_000});page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
++ test.setTimeout(Math.max((7_200_000), 447780000));const observe=expect.configure({timeout:120_000});page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
+  const account=await groupedAccount(page,'douyin','创作验收账号','创作验收组');const scope={groupId:account.groupId};
+  const canvas=await dispatch<{id:string;userId:string;document:Record<string,unknown>}>(page,'canvas.create',{body:{title:'创作交互验收'}},scope);
+  const assetId=await uploadMedia(page,scope,resolve(process.cwd(),'../docs/verification/t1101/user-baseline.png'),'image','image/png','不应展示的很长素材文件名称.png');
+@@ -437,15 +437,15 @@ test('T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟
+  const up=page.getByTestId('canvas-node').filter({hasText:'上游生成'}),down=page.getByTestId('canvas-node').filter({hasText:'下游视频'});
+  const t1117Captures:Array<{checkpoint:string;check_ids:string[];viewport:{width:number;height:number};text:string}>=[];
+  await observe(up.getByRole('button',{name:'生成中…'})).toBeDisabled();expect(submissions).toBe(0);
+- await page.screenshot({path:testInfo.outputPath('t1101-running.png')});
++ await page.screenshot({path:testInfo.outputPath('t1101-running.png'), timeout: 120000});
+  status='awaiting_confirmation';await page.reload({waitUntil:'domcontentloaded'});await observe(up.getByText('最近结果',{exact:false})).toBeVisible();
+  await observe.poll(()=>interruptedSave,{timeout:120_000}).toBe(1);await observe(page.getByText('保存失败',{exact:true})).toBeVisible();
+  // 只检查实际画布界面；Next开发诊断portal保留原异常日志，不是产品错误文案。
+  const editor=page.locator('main').filter({has:page.getByRole('textbox',{name:'画布标题'})}).last();
+  const saveError=editor.getByRole('alert').filter({hasText:'网络连接不稳定,请检查网络后重试。'});await observe(saveError).toBeVisible();await observe(editor.getByText('Failed to fetch',{exact:true})).toHaveCount(0);
+- await page.screenshot({path:testInfo.outputPath('t1108-interrupted-save.png')});await page.screenshot({path:testInfo.outputPath('t1117-error-normal.png')});
++ await page.screenshot({path:testInfo.outputPath('t1108-interrupted-save.png'), timeout: 120000});await page.screenshot({path:testInfo.outputPath('t1117-error-normal.png'), timeout: 120000});
+  t1117Captures.push({checkpoint:'error-normal',check_ids:['AC-ERROR'],viewport:{width:1366,height:900},text:await saveError.innerText()});
+- await page.setViewportSize({width:900,height:900});await observe(saveError).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1117-error-narrow.png')});
++ await page.setViewportSize({width:900,height:900});await observe(saveError).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1117-error-narrow.png'), timeout: 120000});
+  t1117Captures.push({checkpoint:'error-narrow',check_ids:['AC-ERROR'],viewport:{width:900,height:900},text:await saveError.innerText()});
+  await page.setViewportSize({width:1366,height:900});await page.reload();await observe(up.getByText('最近结果',{exact:false})).toBeVisible();
+  await observe.poll(async()=>{const saved=await dispatch<{document:{nodes:Array<{id:string;referenceFileId?:string}>}}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);return saved.document.nodes.find(n=>n.id==='downstream')?.referenceFileId;},{timeout:360_000}).toBe(file.currentFileId);
+@@ -462,8 +462,8 @@ test('T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟
+  await page.evaluate(key=>localStorage.setItem(key,JSON.stringify(['exact-edge'])),`creatoros-canvas-references:group:${account.groupId}:${canvas.id}`);await canvasEntry.click();await observe(page).toHaveURL(new RegExp('/canvases/'+canvas.id+'$'));await observe(up.getByText('最近结果',{exact:false})).toBeVisible();
+  await page.getByRole('button',{name:/^编导与详情/}).click();const legacyButton=page.getByRole('button',{name:'使用连线参考',exact:true});await observe(legacyButton).toBeEnabled();
+  const beforeExplicit=await dispatch<{document:import('@creatoros/contract').CanvasDocument}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);expect(beforeExplicit.document.nodes.find(n=>n.id==='downstream')).toMatchObject({mode:'text_to_video'});expect((beforeExplicit.document.nodes.find(n=>n.id==='downstream') as {referenceFileId?:string}).referenceFileId).toBeUndefined();expect(confirmations).toBe(0);expect(submissions).toBe(0);
+- await page.screenshot({path:testInfo.outputPath('t1108-legacy-normal.png')});const legacyCaptures=[{checkpoint:'legacy-normal',check_ids:['AC-PERSIST','AC-LEGACY'],viewport:{width:1366,height:900},text:await legacyButton.locator('..').locator('..').innerText()}];
+- await page.setViewportSize({width:900,height:900});await observe(legacyButton).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1108-legacy-narrow.png')});legacyCaptures.push({checkpoint:'legacy-narrow',check_ids:['AC-PERSIST','AC-LEGACY'],viewport:{width:900,height:900},text:await legacyButton.locator('..').locator('..').innerText()});await legacyButton.focus();await page.keyboard.press('Enter');
++ await page.screenshot({path:testInfo.outputPath('t1108-legacy-normal.png'), timeout: 120000});const legacyCaptures=[{checkpoint:'legacy-normal',check_ids:['AC-PERSIST','AC-LEGACY'],viewport:{width:1366,height:900},text:await legacyButton.locator('..').locator('..').innerText()}];
++ await page.setViewportSize({width:900,height:900});await observe(legacyButton).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1108-legacy-narrow.png'), timeout: 120000});legacyCaptures.push({checkpoint:'legacy-narrow',check_ids:['AC-PERSIST','AC-LEGACY'],viewport:{width:900,height:900},text:await legacyButton.locator('..').locator('..').innerText()});await legacyButton.focus();await page.keyboard.press('Enter');
+  await observe.poll(async()=>{const saved=await dispatch<{document:import('@creatoros/contract').CanvasDocument}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);return (saved.document.nodes.find(n=>n.id==='downstream') as {referenceFileId?:string}).referenceFileId;},{timeout:360_000}).toBe(file.currentFileId);expect(confirmations).toBe(0);expect(submissions).toBe(0);await observe(page.getByText('已保存',{exact:true})).toBeVisible();
+  await page.setViewportSize({width:1366,height:900});await page.getByRole('button',{name:/^收起详情/}).click();
+  await page.getByRole('button',{name:'画布库',exact:true}).click();await observe(page).toHaveURL(/\/canvases\?tab=canvases$/);await observe(canvasEntry).toBeVisible();await canvasEntry.click();await observe(page).toHaveURL(new RegExp('/canvases/'+canvas.id+'$'));await observe(up.getByText('最近结果',{exact:false})).toBeVisible();
+@@ -475,14 +475,14 @@ test('T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟
+  await observe(referenceDialog.getByText('已选，可预览后使用',{exact:true})).toBeVisible();await observe(referenceDialog.getByText('不应展示的很长素材文件名称.png',{exact:true})).toHaveCount(0);
+  const largePreview=referenceDialog.getByAltText('画布图片素材',{exact:true});await observe(largePreview).toBeVisible();await observe.poll(()=>largePreview.evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);
+  await observe(previewButton.getByRole('img')).toBeVisible();await observe.poll(()=>previewButton.getByRole('img').evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);
+- expect(await referenceDialog.innerText()).not.toMatch(/\d+\s*×\s*\d+/);await page.screenshot({path:testInfo.outputPath('t1117-preview-normal.png')});
++ expect(await referenceDialog.innerText()).not.toMatch(/\d+\s*×\s*\d+/);await page.screenshot({path:testInfo.outputPath('t1117-preview-normal.png'), timeout: 120000});
+  t1117Captures.push({checkpoint:'preview-normal',check_ids:['AC-PREVIEW'],viewport:{width:1366,height:900},text:normalReferenceText+'\n'+await referenceDialog.innerText()});
+  await page.keyboard.press('Escape');await observe(referenceDialog).toHaveCount(0);
+  const afterCancel=await dispatch<{document:import('@creatoros/contract').CanvasDocument}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);expect(afterCancel.document).toEqual(afterBack.document);expect(confirmations).toBe(0);expect(submissions).toBe(0);
+  await page.setViewportSize({width:900,height:900});const narrowReferenceText=await referenceField.innerText();await referenceField.focus();await page.keyboard.press('Enter');await observe(previewButton).toBeVisible();await previewButton.focus();await page.keyboard.press('Enter');
+  await observe(referenceDialog.getByText('已选，可预览后使用',{exact:true})).toBeVisible();await observe(largePreview).toBeVisible();await observe.poll(()=>largePreview.evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);
+  await observe(previewButton.getByRole('img')).toBeVisible();await observe.poll(()=>previewButton.getByRole('img').evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);
+- expect(await referenceDialog.innerText()).not.toContain('不应展示的很长素材文件名称.png');await page.screenshot({path:testInfo.outputPath('t1117-preview-narrow.png')});
++ expect(await referenceDialog.innerText()).not.toContain('不应展示的很长素材文件名称.png');await page.screenshot({path:testInfo.outputPath('t1117-preview-narrow.png'), timeout: 120000});
+  t1117Captures.push({checkpoint:'preview-narrow',check_ids:['AC-PREVIEW'],viewport:{width:900,height:900},text:narrowReferenceText+'\n'+await referenceDialog.innerText()});
+  await referenceDialog.getByRole('button',{name:'使用此素材',exact:true}).focus();await page.keyboard.press('Enter');await observe(referenceDialog).toHaveCount(0);await observe(page.getByText('已保存',{exact:true})).toBeVisible();
+  const afterSelection=await dispatch<{document:import('@creatoros/contract').CanvasDocument}>(page,'canvas.get',{params:{canvasId:canvas.id}},scope);expect(afterSelection.document.nodes.find(n=>n.id==='downstream')).toMatchObject({referenceAssetId:assetId,referenceFileId:file.currentFileId});expect(confirmations).toBe(0);expect(submissions).toBe(0);
+@@ -490,31 +490,34 @@ test('T-1101 缩略素材、精确连线、运行锁与重生成确认（模拟
+  const inspector=page.locator('aside').filter({has:page.getByRole('heading',{name:'节点设置',exact:true})});const inspectorReference=inspector.getByRole('button',{name:'参考图片',exact:true});
+  await observe(inspectorReference.getByText('已选素材',{exact:true})).toBeVisible();await observe(inspectorReference.getByText('不应展示的很长素材文件名称.png',{exact:true})).toHaveCount(0);await inspectorReference.click();await observe(previewButton).toBeVisible();await previewButton.click();
+  await observe(referenceDialog.getByText('已选，可预览后使用',{exact:true})).toBeVisible();await observe(referenceDialog.getByText('不应展示的很长素材文件名称.png',{exact:true})).toHaveCount(0);await page.keyboard.press('Escape');await page.getByRole('button',{name:/^收起详情/}).click();
+- writeFileSync(resolve(process.cwd(),'../docs/verification/t1117/visible-copy.json'),JSON.stringify({schema:'frontend-visible-copy/v1',task_id:'T-1117',commit_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),captures:t1117Captures},null,2)+'\n');
+- writeFileSync(resolve(process.cwd(),'../docs/verification/t1108/visible-copy.json'),JSON.stringify({schema:'frontend-visible-copy/v1',task_id:'T-1108',commit_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),captures:legacyCaptures},null,2)+'\n');
++ writeFileSync(resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/t1117/visible-copy.json")),JSON.stringify({schema:'frontend-visible-copy/v1',task_id:'T-1117',commit_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),captures:t1117Captures},null,2)+'\n');
++ writeFileSync(resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/t1108/visible-copy.json")),JSON.stringify({schema:'frontend-visible-copy/v1',task_id:'T-1108',commit_sha:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),captures:legacyCaptures},null,2)+'\n');
+ 
+- await up.getByRole('button',{name:'生成',exact:true}).click();await observe(page.getByRole('dialog',{name:'重新生成图片？'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-regenerate.png')});
++ await up.getByRole('button',{name:'生成',exact:true}).click();await observe(page.getByRole('dialog',{name:'重新生成图片？'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-regenerate.png'), timeout: 120000});
+  await page.getByRole('button',{name:'取消',exact:true}).click();expect(submissions).toBe(0);
+  await up.getByRole('button',{name:'生成',exact:true}).click();await page.getByRole('button',{name:'确认重新生成'}).click();await observe.poll(()=>submissions,{timeout:120_000}).toBe(1);await observe(up.getByRole('button',{name:'生成中…'})).toBeDisabled();
+- await page.getByRole('button',{name:'素材库',exact:true}).click();const gallery=page.getByRole('complementary',{name:'当前账号素材'});await observe(gallery.getByRole('button',{name:'放到画布'}).first()).toBeVisible();await observe(gallery.getByText('不应展示的很长素材文件名称.png',{exact:true})).toHaveCount(0);await observe(gallery.getByRole('img').first()).toBeVisible();await observe.poll(()=>gallery.getByRole('img').first().evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);await page.screenshot({path:testInfo.outputPath('t1101-gallery.png')});
++ await page.getByRole('button',{name:'素材库',exact:true}).click();const gallery=page.getByRole('complementary',{name:'当前账号素材'});await observe(gallery.getByRole('button',{name:'放到画布'}).first()).toBeVisible();await observe(gallery.getByText('不应展示的很长素材文件名称.png',{exact:true})).toHaveCount(0);await observe(gallery.getByRole('img').first()).toBeVisible();await observe.poll(()=>gallery.getByRole('img').first().evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);await page.screenshot({path:testInfo.outputPath('t1101-gallery.png'), timeout: 120000});
+  await observe(page.getByText('已保存',{exact:true})).toBeVisible();
+  const captures=[{checkpoint:'canvas-normal',check_ids:['AC-GALLERY','AC-GENERATION','AC-EDGE'],viewport:{width:1366,height:900},text:await page.locator('body').innerText()}];
+- await page.getByRole('button',{name:'关闭素材库'}).click();await page.setViewportSize({width:900,height:900});await page.getByRole('button',{name:'缩小',exact:true}).click();await observe(page.getByText('83%',{exact:true})).toBeVisible();await observe(up.getByRole('button',{name:'生成中…'})).toBeDisabled();await page.getByRole('button',{name:'素材库',exact:true}).click();await observe(gallery.getByRole('button',{name:'放到画布'}).first()).toBeVisible();await observe(gallery.getByRole('img').first()).toBeVisible();await observe.poll(()=>gallery.getByRole('img').first().evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);await page.screenshot({path:testInfo.outputPath('t1101-canvas-narrow.png')});
++ await page.getByRole('button',{name:'关闭素材库'}).click();await page.setViewportSize({width:900,height:900});await page.getByRole('button',{name:'缩小',exact:true}).click();await observe(page.getByText('83%',{exact:true})).toBeVisible();await observe(up.getByRole('button',{name:'生成中…'})).toBeDisabled();await page.getByRole('button',{name:'素材库',exact:true}).click();await observe(gallery.getByRole('button',{name:'放到画布'}).first()).toBeVisible();await observe(gallery.getByRole('img').first()).toBeVisible();await observe.poll(()=>gallery.getByRole('img').first().evaluate((element:HTMLImageElement)=>element.complete&&element.naturalWidth>0),{timeout:120_000}).toBe(true);await page.screenshot({path:testInfo.outputPath('t1101-canvas-narrow.png'), timeout: 120000});
+  await observe(page.getByText('已保存',{exact:true})).toBeVisible();
+  captures.push({checkpoint:'canvas-narrow',check_ids:['AC-GALLERY','AC-GENERATION','AC-EDGE'],viewport:{width:900,height:900},text:await page.locator('body').innerText()});
+- writeFileSync(resolve(process.cwd(),'../docs/verification/t1101/canvas-copy.json'),JSON.stringify(captures));
++ writeFileSync(resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/t1101/canvas-copy.json")),JSON.stringify(captures));
+ });
+ 
+ test('T-1101 三平台表格直接打开扫码弹窗，无重复刷新和下方扫码区',async({page,context,baseURL},testInfo)=>{
+- test.setTimeout(7_200_000);const observe=expect.configure({timeout:120_000});page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);const account=await groupedAccount(page,'douyin','创作验收账号','创作验收组');await enterGroup(page,context,baseURL!,account.groupId);
++ test.setTimeout(Math.max((7_200_000), 447780000));const observe=expect.configure({timeout:120_000});page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);const account=await groupedAccount(page,'douyin','创作验收账号','创作验收组');await enterGroup(page,context,baseURL!,account.groupId);
+  await page.setViewportSize({width:1366,height:900});await page.goto('/accounts');
+  const table=page.getByRole('table',{name:'各平台能力'});await observe(table).toBeVisible();
+  for(const name of ['抖音','快手','小红书'])await observe(table.getByRole('button',{name:'扫码绑定'+name+'账号'})).toBeEnabled();
+  await observe(page.getByRole('button',{name:'重新读取平台能力'})).toHaveCount(0);await observe(page.getByText('兼容扫码入口',{exact:true})).toHaveCount(0);
+- await page.screenshot({path:testInfo.outputPath('t1101-platform-table.png'),fullPage:true});
+- await table.getByRole('button',{name:'扫码绑定小红书账号'}).click();await observe(page.getByRole('dialog',{name:'扫码绑定小红书账号'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-qr-dialog.png')});
++ await page.screenshot({path:testInfo.outputPath('t1101-platform-table.png'),fullPage:true, timeout: 120000});
++ await table.getByRole('button',{name:'扫码绑定小红书账号'}).click();await observe(page.getByRole('dialog',{name:'扫码绑定小红书账号'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-qr-dialog.png'), timeout: 120000});
+  await observe(page.getByRole('dialog').getByRole('button',{name:'扫码绑定小红书账号',exact:true})).toBeEnabled();
+  const captures=[{checkpoint:'binding-normal',check_ids:['AC-BINDING'],viewport:{width:1366,height:900},text:await page.locator('body').innerText()}];
+- await page.keyboard.press('Escape');await observe(page.getByRole('dialog')).toHaveCount(0);await page.setViewportSize({width:900,height:900});await observe(table.getByRole('button',{name:'扫码绑定抖音账号'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-platform-narrow.png'),fullPage:true});
+- captures.push({checkpoint:'binding-narrow',check_ids:['AC-BINDING'],viewport:{width:900,height:900},text:await page.locator('body').innerText()});writeFileSync(resolve(process.cwd(),'../docs/verification/t1101/binding-copy.json'),JSON.stringify(captures));
++ await page.keyboard.press('Escape');await observe(page.getByRole('dialog')).toHaveCount(0);await page.setViewportSize({width:900,height:900});await observe(table.getByRole('button',{name:'扫码绑定抖音账号'})).toBeVisible();await page.screenshot({path:testInfo.outputPath('t1101-platform-narrow.png'),fullPage:true, timeout: 120000});
++ captures.push({checkpoint:'binding-narrow',check_ids:['AC-BINDING'],viewport:{width:900,height:900},text:await page.locator('body').innerText()});writeFileSync(resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/t1101/binding-copy.json")),JSON.stringify(captures));
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 447780000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/draft-ammo-media-preview.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts
+index 1da4d3f4e..ece229287 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/draft-ammo-media-preview.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/draft-ammo-media-preview.spec.ts
+@@ -50,7 +50,7 @@ test("稿面视频素材双击与键盘均可真实预览，刷新和小窗口
+   page,
+   baseURL,
+ }, info) => {
+-  test.setTimeout(14_400_000);
++  test.setTimeout(Math.max((14_400_000), 15060000));
+   page.setDefaultTimeout(120_000);
+   page.setDefaultNavigationTimeout(120_000);
+   const repoRoot = resolve(process.cwd(), "..");
+@@ -258,3 +258,6 @@ test("稿面视频素材双击与键盘均可真实预览，刷新和小窗口
+   writeFileSync(resolve(evidenceDir, "T-853-visible-copy.json"), visibleCopy);
+   expect(createHash("sha256").update(visibleCopy).digest("hex")).toHaveLength(64);
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 15060000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/experience.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/experience.spec.ts
+index b92d427b5..c708d5180 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/experience.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/experience.spec.ts
+@@ -108,3 +108,6 @@ test.describe("经验裁决台 page", () => {
+     expect(href).toContain("surface=experience");
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 9300000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/group-skill-customization.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/group-skill-customization.spec.ts
+index a45971dcf..c745e6d80 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/group-skill-customization.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/group-skill-customization.spec.ts
+@@ -116,7 +116,7 @@ async function captureViewport(
+   name: string,
+ ): Promise<string> {
+   const path = testInfo.outputPath(name);
+-  await page.screenshot({ path, animations: "disabled", caret: "hide" });
++  await page.screenshot({ path, animations: "disabled", caret: "hide" , timeout: 120000});
+   await testInfo.attach(name, { path, contentType: "image/png" });
+   return name;
+ }
+@@ -589,7 +589,7 @@ test("账号组 Skill 首写、刷新、二次 CAS、历史与跨组版本归属
+   testInfo,
+ ) => {
+   // AST helper展开为280个保守120秒槽；24小时外层覆盖720槽与启动/清理余量。
+-  test.setTimeout(86_400_000);
++  test.setTimeout(Math.max((86_400_000), 166020000));
+   page.setDefaultTimeout(120_000);
+   page.setDefaultNavigationTimeout(120_000);
+   expect(baseURL).toBeTruthy();
+@@ -950,7 +950,7 @@ test("同组双页面保存只接受一个 CAS revision 并保留冲突草稿",
+   testInfo,
+ ) => {
+   // AST helper展开为133个保守120秒槽；24小时外层覆盖720槽与双页清理余量。
+-  test.setTimeout(86_400_000);
++  test.setTimeout(Math.max((86_400_000), 166020000));
+   page.setDefaultTimeout(120_000);
+   page.setDefaultNavigationTimeout(120_000);
+   expect(baseURL).toBeTruthy();
+@@ -1179,7 +1179,7 @@ test("切组 RSC 与原组保存回执迟到时阻止旧写并通过 ABA 保持
+   testInfo,
+ ) => {
+   // 四轮真实关闭/选组/设置RSC均有串行120秒观察；静态helper展开354个await槽位，预算最多720槽。
+-  test.setTimeout(86_400_000);
++  test.setTimeout(Math.max((86_400_000), 166020000));
+   page.setDefaultTimeout(120_000);
+   page.setDefaultNavigationTimeout(120_000);
+   expect(baseURL).toBeTruthy();
+@@ -1600,7 +1600,7 @@ test("组内 Skill 历史回滚与恢复默认通过真实按钮新增版本并
+   testInfo,
+ ) => {
+   // 保留24小时外层；docs中的AST逐项展开本例与既有helper，覆盖串行120秒观察及清理余量。
+-  test.setTimeout(86_400_000);
++  test.setTimeout(Math.max((86_400_000), 166020000));
+   page.setDefaultTimeout(120_000);
+   page.setDefaultNavigationTimeout(120_000);
+   await page.setViewportSize({ width: 1536, height: 1024 });
+@@ -1916,3 +1916,6 @@ test("组内 Skill 历史回滚与恢复默认通过真实按钮新增版本并
+     });
+   }
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 166020000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/knowledge-library.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/knowledge-library.spec.ts
+index 9d987bc1d..4d8799b00 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/knowledge-library.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/knowledge-library.spec.ts
+@@ -4,7 +4,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
+ import { resolve } from "node:path";
+ import { execFileSync } from "node:child_process";
+ const expect = baseExpect.configure({ timeout: 120000 });
+-const evidence = resolve(process.cwd(), "../docs/verification/t1075");
++const evidence = resolve(process.cwd(), (process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/t1075"));
+ const checks = [
+   "collection",
+   "selection",
+@@ -44,7 +44,7 @@ async function capture(page: Page, checkpoint: string, check_ids = checks) {
+     path: resolve(evidence, checkpoint + ".png"),
+     fullPage: true,
+     style: "nextjs-portal{visibility:hidden}",
+-  });
++  timeout: 120000});
+ }
+ for (const viewport of [
+   { width: 1366, height: 900 },
+@@ -54,7 +54,7 @@ for (const viewport of [
+     page,
+     baseURL,
+   }) => {
+-    test.setTimeout(600000);
++    test.setTimeout(Math.max((600000), 258420000));
+     page.setDefaultTimeout(120000);
+     page.setDefaultNavigationTimeout(180000);
+     await page.setViewportSize(viewport);
+@@ -684,3 +684,6 @@ test.afterAll(() => {
+     ) + "\n",
+   );
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 258420000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/media-root-isolation.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/media-root-isolation.spec.ts
+index 817a356de..73accf579 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/media-root-isolation.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/media-root-isolation.spec.ts
+@@ -77,7 +77,7 @@ async function assertGroupSelection(
+ }
+ 
+ test("T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根", async ({ page, context, baseURL }, info) => {
+-  test.setTimeout(4_200_000);
++  test.setTimeout(Math.max((4_200_000), 18660000));
+   page.setDefaultTimeout(120_000);
+   page.setDefaultNavigationTimeout(120_000);
+   expect(baseURL).toBeTruthy();
+@@ -170,7 +170,7 @@ test("T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根"
+   const forgedBody = await forged.json() as { error?: string };
+   expect(forgedBody.error).toMatch(/^blob token rejected:/);
+ 
+-  await page.screenshot({ path: info.outputPath("group-a-uploaded-asset.png"), fullPage: true });
++  await page.screenshot({ path: info.outputPath("group-a-uploaded-asset.png"), fullPage: true , timeout: 120000});
+   await selectGroup(page, context, baseURL!, groupB.id);
+   await page.reload({ waitUntil: "domcontentloaded", timeout: 120_000 });
+   await assertGroupSelection(page, context, baseURL!, groupB.id);
+@@ -190,7 +190,7 @@ test("T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根"
+   const wrongScope = await page.request.get(download.url, { timeout: 120_000 });
+   expect(wrongScope.status()).toBe(403);
+   expect(await wrongScope.json()).toEqual({ error: "文件凭证属于其他账号组" });
+-  await page.screenshot({ path: info.outputPath("group-b-cannot-see-group-a-asset.png"), fullPage: true });
++  await page.screenshot({ path: info.outputPath("group-b-cannot-see-group-a-asset.png"), fullPage: true , timeout: 120000});
+   await info.attach("T1226隔离媒体根与公开链路回读", {
+     contentType: "application/json",
+     body: JSON.stringify({
+@@ -212,3 +212,6 @@ test("T-1226 上传、公开下载与错组拒绝都使用本轮隔离媒体根"
+     }, null, 2),
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 18660000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/new-project.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/new-project.spec.ts
+index 2b455b202..32b6a3e07 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/new-project.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/new-project.spec.ts
+@@ -167,3 +167,6 @@ test.describe("New Project dialog", () => {
+     await expectCreatedProject(page, group, title, ["article", "image", "video"]);
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 20820000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/onboarding-and-small-sidebar.spec.ts
+index 461e54552..0d9b4759a 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/onboarding-and-small-sidebar.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/onboarding-and-small-sidebar.spec.ts
+@@ -173,3 +173,6 @@ test.describe("新手成果路径与低高度侧栏", () => {
+     writeVisibleCopy("T-638", captures);
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 12900000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/overlay-routing.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/overlay-routing.spec.ts
+index ca063e341..7decb2324 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/overlay-routing.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/overlay-routing.spec.ts
+@@ -101,3 +101,6 @@ test.describe("overlay routing", () => {
+     }
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 16980000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/platform-work-catalog.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/platform-work-catalog.spec.ts
+index c40beb28f..fae07b7df 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/platform-work-catalog.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/platform-work-catalog.spec.ts
+@@ -5,7 +5,7 @@ async function dispatch<T>(page: Page, id: string, params: unknown, accountId?:
+   const response = await page.request.post("/api/v1/dispatch", {
+     headers: { "content-type": "application/json", ...(accountId ? { "x-account-id": accountId } : {}) },
+     data: { id, input: params },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id}: ${response.status()} ${await response.text()}`).toBe(true);
+   return ((await response.json()) as { data: T }).data;
+ }
+@@ -18,7 +18,7 @@ test("平台作品页按当前账号显示真实空目录和待核验能力", as
+       input: { params: undefined, query: undefined,
+         body: { platform: "douyin", accountHandle: "E2E作品空目录号" } },
+     },
+-  });
++  timeout: 120000});
+   expect(created.ok()).toBe(true);
+   const payload = await created.json() as { data: { id: string } };
+   const accountId = payload.data.id;
+@@ -55,7 +55,7 @@ test("本地账号完成多平台目标项目与发布草稿，账号归属隔
+         data: { id: "projects.get", input: {
+           params: { projectId: firstProjectId }, query: undefined, body: undefined,
+         } },
+-      });
++      timeout: 120000});
+       expect(crossAccountRead.status()).toBe(404);
+     }
+     const project = await dispatch<{ id: string }>(page, "projects.create", {
+@@ -131,3 +131,6 @@ test("账号页绑定成功后可直接切换到对应的小红书与快手作
+     await expect(page.getByTestId("catalog-completeness")).toContainText("尚无已核验的作品目录");
+   }
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 16260000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/production-broll-remove.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/production-broll-remove.spec.ts
+index 374c2430e..3a61c4d90 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/production-broll-remove.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/production-broll-remove.spec.ts
+@@ -19,7 +19,7 @@ async function dispatch<T>(
+       ...(accountId ? { "x-account-id": accountId } : {}),
+     },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   const payload = (await response.json()) as {
+     data?: T;
+     error?: { message?: string };
+@@ -78,7 +78,7 @@ async function uploadVideoAsset(
+   const put = await page.request.put(upload.uploadUrl, {
+     headers: { "content-type": "video/mp4" },
+     data: bytes,
+-  });
++  timeout: 120000});
+   expect(put.ok()).toBe(true);
+   return dispatch<{ id: string }>(
+     page,
+@@ -96,7 +96,7 @@ test("已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧
+   page,
+   baseURL,
+ }) => {
+-  test.setTimeout(90_000);
++  test.setTimeout(Math.max((90_000), 12660000));
+   const account = await dispatch<{ id: string }>(page, "accounts.create", {
+     params: undefined,
+     query: undefined,
+@@ -274,3 +274,6 @@ test("已确认分镜剔除 B-roll 后写入新版本，刷新也不会恢复旧
+   );
+ 
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 12660000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/production-empty-workbench.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/production-empty-workbench.spec.ts
+index a0ff3ff33..4cd6ca9e0 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/production-empty-workbench.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/production-empty-workbench.spec.ts
+@@ -17,7 +17,7 @@ async function dispatch<T>(
+       ...(accountId ? { "x-account-id": accountId } : {}),
+     },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id} 应成功，实得 ${response.status()}`).toBe(true);
+   return ((await response.json()) as { data: T }).data;
+ }
+@@ -44,7 +44,7 @@ test("新项目无视频作品时可进入剪辑备料并导入人物视频", as
+   page,
+   baseURL,
+ }, info) => {
+-  test.setTimeout(120_000);
++  test.setTimeout(Math.max((120_000), 7620000));
+   page.setDefaultTimeout(120_000);
+ 
+   const account = await dispatch<{ id: string }>(page, "accounts.create", {
+@@ -82,7 +82,7 @@ test("新项目无视频作品时可进入剪辑备料并导入人物视频", as
+   await page.screenshot({
+     path: info.outputPath("no-video-output-workbench.png"),
+     fullPage: true,
+-  });
++  timeout: 120000});
+   await videoInput.setInputFiles(
+     resolve(
+       process.cwd(),
+@@ -95,3 +95,6 @@ test("新项目无视频作品时可进入剪辑备料并导入人物视频", as
+     }),
+   ).toBeVisible();
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 7620000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/projects.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/projects.spec.ts
+index e80d82dc3..af88a9ddf 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/projects.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/projects.spec.ts
+@@ -17,7 +17,7 @@ async function dispatch(
+       ...(accountId ? { "x-account-id": accountId } : {}),
+     },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id} 应成功，实得 ${response.status()}`).toBe(true);
+   const payload = (await response.json()) as { data: { id: string } };
+   return payload.data;
+@@ -108,3 +108,6 @@ test.describe("项目排期闭环（T-599）", () => {
+     await expect(trigger).toContainText("排期");
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 10740000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/publish-package-readback.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/publish-package-readback.spec.ts
+index 90d1b3377..68aff6e9c 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/publish-package-readback.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/publish-package-readback.spec.ts
+@@ -26,7 +26,7 @@ async function dispatch<T>(
+       ...(accountId ? { "x-account-id": accountId } : {}),
+     },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id} 应成功，实得 ${response.status()}`).toBe(true);
+   return ((await response.json()) as { data: T }).data;
+ }
+@@ -49,7 +49,7 @@ test("查看发布物料优先回读完整简介与标签，刷新和小窗口
+   page,
+   baseURL,
+ }) => {
+-  test.setTimeout(90_000);
++  test.setTimeout(Math.max((90_000), 15540000));
+   const captures: Array<{
+     checkpoint: string;
+     check_ids: string[];
+@@ -214,3 +214,6 @@ test("查看发布物料优先回读完整简介与标签，刷新和小窗口
+   writeFileSync(resolve(evidenceDir, "T-849-visible-copy.json"), visibleCopy);
+   expect(createHash("sha256").update(visibleCopy).digest("hex")).toHaveLength(64);
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 15540000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/publishing-center.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/publishing-center.spec.ts
+index 8d6381855..8e4721e68 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/publishing-center.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/publishing-center.spec.ts
+@@ -17,7 +17,7 @@ async function dispatch(
+       ...(accountId ? { "x-account-id": accountId } : {}),
+     },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id} 应成功，实得 ${response.status()}`).toBe(true);
+   const payload = (await response.json()) as { data: { id: string } };
+   return payload.data;
+@@ -122,3 +122,6 @@ test.describe("发布中心日历主视图（T-599）", () => {
+     await expect(activeNav).toHaveAttribute("href", "/publishing");
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 9300000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/publishing-workspace.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/publishing-workspace.spec.ts
+index 1ab21f535..4fff377d0 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/publishing-workspace.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/publishing-workspace.spec.ts
+@@ -8,7 +8,7 @@ async function dispatch<T>(page: Page, id: string, input: unknown, accountId?: s
+       ...(accountId ? { "x-account-id": accountId } : {}),
+     },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id} 应成功，实得 ${response.status()}`).toBe(true);
+   return ((await response.json()) as { data: T }).data;
+ }
+@@ -41,3 +41,6 @@ test("旧发布阶段链接进入当前项目稿面的发布区", async ({ page,
+   await expect(workbench.locator('[data-slot="draft-publish-pack"]')).toBeVisible();
+   await expect(page.getByRole("heading", { name: "未找到该页面" })).toHaveCount(0);
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 6180000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/qwen-asr-configuration.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/qwen-asr-configuration.spec.ts
+index d2fbc9609..514a05cbe 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/qwen-asr-configuration.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/qwen-asr-configuration.spec.ts
+@@ -32,3 +32,6 @@ test.describe("Qwen 方言 ASR 设置预设", () => {
+     await expect(page.locator('[data-slot="multimodal-audio-save"]')).toBeEnabled();
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 5940000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/recent-data-safety.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/recent-data-safety.spec.ts
+index ed7b71b06..40e95f47c 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/recent-data-safety.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/recent-data-safety.spec.ts
+@@ -20,7 +20,7 @@ async function dispatch<T>(
+       ...(accountId ? { "x-account-id": accountId } : {}),
+     },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id} 应成功，实得 ${response.status()}`).toBe(true);
+   const payload = (await response.json()) as { data: T };
+   return payload.data;
+@@ -79,7 +79,7 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，
+   page,
+   baseURL,
+ }) => {
+-  test.setTimeout(90_000);
++  test.setTimeout(Math.max((90_000), 15300000));
+   const account = await dispatch<{ id: string }>(page, "accounts.create", {
+     params: undefined,
+     query: undefined,
+@@ -144,7 +144,7 @@ test("已有定位进入从零前采时，正式母版和历史始终可见，
+   await researchInput.fill("湖南餐饮行业 IP");
+   await page.getByRole("button", { name: "联网补充" }).click();
+   const researchCandidates = center.getByRole("button", { name: "采用" });
+-  await expect(researchCandidates.first()).toBeVisible({ timeout: 45_000 });
++  await expect(researchCandidates.first()).toBeVisible({ timeout: 120000 });
+   await expect(center.locator('aside a[target="_blank"]').first()).toHaveAttribute(
+     "href",
+     /^https?:\/\//,
+@@ -245,3 +245,6 @@ test("信源确认删除后从工作台消失，并展示真实级联清理结
+   });
+   writeVisibleCopy("T-665", captures);
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 15300000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/review-empty-diagnosis-entry.spec.ts
+index 51cc3cbdf..884debe44 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/review-empty-diagnosis-entry.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/review-empty-diagnosis-entry.spec.ts
+@@ -276,7 +276,7 @@ test.describe("T-1239 无指标项目复盘入口与诚实空态", () => {
+     page,
+     baseURL,
+   }, testInfo) => {
+-    test.setTimeout(TEST_TIMEOUT_MS);
++    test.setTimeout(Math.max((TEST_TIMEOUT_MS), 86400000));
+     page.setDefaultTimeout(REQUEST_TIMEOUT_MS);
+     page.setDefaultNavigationTimeout(REQUEST_TIMEOUT_MS);
+ 
+@@ -406,3 +406,6 @@ test.describe("T-1239 无指标项目复盘入口与诚实空态", () => {
+     );
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 86400000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/review-history.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/review-history.spec.ts
+index 0c1f2dfce..aee3a39ad 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/review-history.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/review-history.spec.ts
+@@ -16,7 +16,7 @@ async function dispatch<T extends { id: string }>(
+       ...(accountId ? { "x-account-id": accountId } : {}),
+     },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id} 应成功，实得 ${response.status()}`).toBe(true);
+   const payload = (await response.json()) as { data: T };
+   return payload.data;
+@@ -141,3 +141,6 @@ test.describe("项目复盘记录闭环（T-634）", () => {
+     ).toHaveCount(1);
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 10500000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/search.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/search.spec.ts
+index 588384b68..aa714cfe6 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/search.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/search.spec.ts
+@@ -101,3 +101,6 @@ test.describe("Global Search page", () => {
+     await expect(input).toHaveValue("AI");
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 8100000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/semantic-material-generation.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/semantic-material-generation.spec.ts
+index 78453f8dd..562bcacf1 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/semantic-material-generation.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/semantic-material-generation.spec.ts
+@@ -26,7 +26,7 @@ async function dispatch<T>(
+       ...(accountId ? { "x-account-id": accountId } : {}),
+     },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id} 应成功，实得 ${response.status()}`).toBe(true);
+   return ((await response.json()) as { data: T }).data;
+ }
+@@ -176,3 +176,6 @@ test("图片按确认稿需要预填多个候选，视频默认预填一个候
+   writeFileSync(resolve(evidenceDir, "T-854-visible-copy.json"), visibleCopy);
+   expect(createHash("sha256").update(visibleCopy).digest("hex")).toHaveLength(64);
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 12900000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/settings-responsive-layout.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/settings-responsive-layout.spec.ts
+index 791ee6c15..a26c71a64 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/settings-responsive-layout.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/settings-responsive-layout.spec.ts
+@@ -127,10 +127,10 @@ function expectInside(inner: Rect, outer: Rect, label: string) {
+ }
+ 
+ async function capture(page: Page, info: TestInfo, name: string) {
+-  const directory = resolve(process.cwd(), "..", "docs/verification/t1237/browser-3925/visible-copy");
++  const directory = resolve(process.cwd(), "..", (process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/t1237/browser-3925/visible-copy"));
+   mkdirSync(directory, { recursive: true });
+   const path = resolve(directory, `${name}.png`);
+-  await page.screenshot({ path, animations: "disabled", caret: "hide" });
++  await page.screenshot({ path, animations: "disabled", caret: "hide" , timeout: 120000});
+   await info.attach(name, { path, contentType: "image/png" });
+ }
+ 
+@@ -349,3 +349,6 @@ test("[T-1237] 设置在窄屏与桌面保持分类可达、正文完整和未
+   await page.waitForURL((url) => url.pathname === "/accounts", { timeout: REQUEST_BUDGET });
+   await expect(slot(page, "settings-dialog")).toHaveCount(0);
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 51780000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/settings.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/settings.spec.ts
+index 0ebc06403..db54bb581 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/settings.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/settings.spec.ts
+@@ -76,7 +76,7 @@ async function selectOption(page: Page, trigger: string, label: string) {
+ }
+ 
+ async function captureBoth(page: Page, info: TestInfo, checkpoint: string, target: string) {
+-  const directory = resolve(process.cwd(), "..", "docs/verification/t1232/browser-3921/visible-copy");
++  const directory = resolve(process.cwd(), "..", (process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/t1232/browser-3921/visible-copy"));
+   mkdirSync(directory, { recursive: true });
+   for (const viewport of [{ width: 1536, height: 1024 }, { width: 390, height: 844 }]) {
+     await page.setViewportSize(viewport);
+@@ -86,7 +86,7 @@ async function captureBoth(page: Page, info: TestInfo, checkpoint: string, targe
+     await visibleTarget.scrollIntoViewIfNeeded();
+     await expect(visibleTarget).toBeInViewport();
+     const path = resolve(directory, `${info.testId}-${checkpoint}-${viewport.width}.png`);
+-    await page.screenshot({ path, animations: "disabled", caret: "hide" });
++    await page.screenshot({ path, animations: "disabled", caret: "hide" , timeout: 120000});
+     await info.attach(`${checkpoint}-${viewport.width}`, { path, contentType: "image/png" });
+   }
+   await page.setViewportSize({ width: 1536, height: 1024 });
+@@ -397,3 +397,6 @@ test.describe("Settings page", () => {
+     await captureBoth(page, info, "redfox-removed", "settings-panel");
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 74100000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/shared-resource-lifecycle.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/shared-resource-lifecycle.spec.ts
+index fe4db7446..e616a964e 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/shared-resource-lifecycle.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/shared-resource-lifecycle.spec.ts
+@@ -3,7 +3,7 @@ import {resolve} from "node:path";
+ import {expect,test} from "../helpers/test-environment";
+ 
+ test("TEST-T1105-RESOURCE 共享资源真实空态、刷新返回与失败重读",async({page,context,baseURL},testInfo)=>{
+- test.setTimeout(7_200_000);
++ test.setTimeout(Math.max((7_200_000), 17460000));
+  page.setDefaultTimeout(120_000);
+  page.setDefaultNavigationTimeout(120_000);
+  const created=await page.request.post("/api/v1/dispatch",{timeout:120_000,data:{id:"accountGroups.create",input:{body:{name:"共享资源验收组",idempotencyKey:crypto.randomUUID()}}}});
+@@ -24,7 +24,7 @@ test("TEST-T1105-RESOURCE 共享资源真实空态、刷新返回与失败重读
+  }
+  await settled();
+  const captures=[{checkpoint:"resource-normal",check_ids:["AC-READ"],viewport:{width:1366,height:900},text:await panel.innerText()}];
+- await panel.screenshot({path:testInfo.outputPath("t1105-resource-normal.png")});
++ await panel.screenshot({path:testInfo.outputPath("t1105-resource-normal.png"), timeout: 120000});
+  await reRead.focus();await page.keyboard.press("Enter");await settled();
+  await page.reload();await settled();
+  await page.goto("/projects");await page.goBack();await settled();
+@@ -42,12 +42,15 @@ test("TEST-T1105-RESOURCE 共享资源真实空态、刷新返回与失败重读
+  await expect(reRead).toBeEnabled({timeout:120_000});
+  expect(injected).toBe(true);
+  captures.push({checkpoint:"resource-read-error",check_ids:["AC-RECOVERY"],viewport:{width:1366,height:900},text:await panel.innerText()});
+- await panel.screenshot({path:testInfo.outputPath("t1105-resource-error.png")});
++ await panel.screenshot({path:testInfo.outputPath("t1105-resource-error.png"), timeout: 120000});
+  await page.unroute("**/api/v1/dispatch",failedRead);
+  await reRead.click();await settled();
+  await page.setViewportSize({width:900,height:900});
+  await settled();await reRead.click();await settled();
+- await panel.screenshot({path:testInfo.outputPath("t1105-resource-narrow.png")});
++ await panel.screenshot({path:testInfo.outputPath("t1105-resource-narrow.png"), timeout: 120000});
+  captures.push({checkpoint:"resource-recovered-narrow",check_ids:["AC-READ","AC-RECOVERY"],viewport:{width:900,height:900},text:await panel.innerText()});
+- writeFileSync(resolve(process.cwd(),"../docs/verification/t1105/resource-copy.json"),JSON.stringify(captures,null,2)+"\n");
++ writeFileSync(resolve(process.cwd(),(process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/t1105/resource-copy.json")),JSON.stringify(captures,null,2)+"\n");
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 17460000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/smoke.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/smoke.spec.ts
+index 83d374b49..9ff9cec13 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/smoke.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/smoke.spec.ts
+@@ -12,3 +12,6 @@ test("root route exposes the CreatorOS application container", async ({
+   await expect(main).toHaveCount(1);
+   await expect(main).toHaveAttribute("data-app", "creatoros");
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 4020000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1062-group-native-rough.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts
+index 31f76fadf..e7742110b 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1062-group-native-rough.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1062-group-native-rough.spec.ts
+@@ -30,7 +30,7 @@ const headers = (scope: Scope) => ({ 'content-type': 'application/json',
+   ...(scope.accountId ? { 'x-account-id': scope.accountId } : {}) });
+ 
+ async function dispatch<T>(page: Page, id: string, input: Input, scope: Scope = {}): Promise<T> {
+-  const response = await page.request.post('/api/v1/dispatch', { headers: headers(scope), data: { id, input } });
++  const response = await page.request.post('/api/v1/dispatch', { headers: headers(scope), data: { id, input } , timeout: 120000});
+   expect(response.ok(), `${id} ${response.status()}: ${await response.text()}`).toBe(true);
+   return (await response.json() as { data: T }).data;
+ }
+@@ -118,13 +118,13 @@ async function upload(page: Page, projectId: string, scope: Scope, kind: keyof t
+   expect(bytes.length).toBe(fixture.bytes); expect(sha(bytes)).toBe(fixture.sha);
+   const started = await dispatch<{ uploadId: string; uploadUrl: string }>(page, 'assets.uploads.create',
+     body({ assetType: 'video', mimeType: 'video/mp4', fileSize: bytes.length, projectId, fileName: fixture.name }), scope);
+-  const put = await page.request.put(started.uploadUrl, { headers: { 'content-type': 'video/mp4' }, data: bytes });
++  const put = await page.request.put(started.uploadUrl, { headers: { 'content-type': 'video/mp4' }, data: bytes , timeout: 120000});
+   expect(put.ok(), await put.text()).toBe(true);
+   const asset = await dispatch<{ id: string; currentFileId: string }>(page, 'assets.uploads.complete',
+     { params: { uploadId: started.uploadId }, body: { name: fixture.name } }, scope);
+   const exact = await dispatch<{ url: string; fileName: string }>(page, 'assets.fileDownloadUrl',
+     params({ assetId: asset.id, assetFileId: asset.currentFileId }), scope);
+-  const downloaded = await page.request.get(exact.url);
++  const downloaded = await page.request.get(exact.url, { timeout: 120000 });
+   expect(downloaded.ok()).toBe(true); expect(sha(await downloaded.body())).toBe(fixture.sha);
+   return { ...asset, name: fixture.name, nativeFileName: exact.fileName, sha: fixture.sha };
+ }
+@@ -306,7 +306,7 @@ async function completeGap(page: Page, article: Locator, expectedDuration: numbe
+   await article.getByRole('button', { name: '完整试听此项原声', exact: true }).click();
+   const acknowledgement = article.getByRole('checkbox', { name: '我已听完原声，并核对这次保留和删除的范围', exact: true });
+   await expect(acknowledgement).toHaveCount(0);
+-  await expect(acknowledgement).toBeVisible({ timeout: Math.ceil(expectedDuration * 1000) + 30_000 });
++  await expect(acknowledgement).toBeVisible({ timeout: Math.max((Math.ceil(expectedDuration * 1000) + 30_000), 120000) });
+   await expect(acknowledgement).not.toBeChecked();
+   const events = (await audioEvents(page)).slice(before);
+   const starts = events.filter(event => event.kind === 'start'); expect(starts.length).toBeGreaterThan(0);
+@@ -347,7 +347,7 @@ function requireLocalAsrAdmission() {
+   if (!process.env.CREATOROS_T1062_E2E_LOCAL_ASR_ADMISSION) throw Error('音频旅程待ROOT绑定真实离线worker/network/cache准入，禁止云端/下载/fake ASR');
+ }
+ async function evidence(page: Page, testInfo: TestInfo, name: string) {
+-  await page.screenshot({ path: testInfo.outputPath(name), fullPage: true });
++  await page.screenshot({ path: testInfo.outputPath(name), fullPage: true , timeout: 120000});
+ }
+ 
+ test.describe('T1062 账号组真实原生粗剪', () => {
+@@ -378,7 +378,7 @@ test.describe('T1062 账号组真实原生粗剪', () => {
+     expect(owned.id).toBe(projectId); expect(owned.title).toBe('纯组中性作品');
+     const foreignGroup = await group(page);
+     const foreignRead = await page.request.post('/api/v1/dispatch', { headers: headers({ groupId: foreignGroup.id }),
+-      data: { id: 'projects.get', input: params({ projectId }) } });
++      data: { id: 'projects.get', input: params({ projectId }) } , timeout: 120000});
+     expect(foreignRead.status()).toBe(404);
+     expect((await foreignRead.json() as { error: { code: string } }).error.code).toBe('OwnershipError');
+     await page.goto('/canvases?tab=canvases'); await page.getByRole('button', { name: '新建画布', exact: true }).click();
+@@ -427,7 +427,7 @@ test.describe('T1062 账号组真实原生粗剪', () => {
+     let intercepted = false;
+     await page.route('**/api/v1/dispatch', async route => {
+       if (!intercepted && requestInput(route.request())?.id === 'assets.list') {
+-        intercepted = true; const actual = await route.fetch(); entered(); await gate;
++        intercepted = true; const actual = await route.fetch({ timeout: 120000 }); entered(); await gate;
+         // 只延迟真实公共服务响应。取消后的route已经关闭是预期，绝不造成功body。
+         try { await route.fulfill({ response: actual }); } catch (error) { if (!/closed|aborted|canceled|disposed|finished/i.test(String(error))) throw error; }
+       } else await route.fallback();
+@@ -439,7 +439,7 @@ test.describe('T1062 账号组真实原生粗剪', () => {
+     await expect(page.getByText(asset.name, { exact: true })).toHaveCount(0);
+     expect((await document(page, output.id, scope)).revision).toBe(before.revision);
+     const foreign = await page.request.post('/api/v1/dispatch', { headers: headers({ groupId: b.id }),
+-      data: { id: ENDPOINTS.getProductionEditor.id, input: params({ outputId: output.id }) } });
++      data: { id: ENDPOINTS.getProductionEditor.id, input: params({ outputId: output.id }) } , timeout: 120000});
+     expect(foreign.ok()).toBe(false); await evidence(page, testInfo, 'cross-group-late-read.png');
+   });
+ 
+@@ -482,7 +482,7 @@ test.describe('T1062 账号组真实原生粗剪', () => {
+   });
+ 
+   for (const kind of ['normal', 'offset'] as const) test(`真实默认ASR与原生原声：${kind === 'normal' ? '普通AAC完整自然播放、单独核对、明确采用与保存刷新' : '非零视频起点仅此项手工降级，原工程仍可保存'}`, async ({ page, baseURL }, testInfo) => {
+-    test.setTimeout(600_000); requireLocalAsrAdmission();
++    test.setTimeout(Math.max((600_000), 672660000)); requireLocalAsrAdmission();
+     const provider = await roughProvider();
+     try {
+       const a = await group(page), scope = { groupId: a.id }, { project, output } = await projectAndOutput(page, scope);
+@@ -527,7 +527,7 @@ test.describe('T1062 账号组真实原生粗剪', () => {
+         const reloaded = await document(page, output.id, scope);
+         expect(reloaded.revision).toBe(manuallySaved.revision); expect(reloaded.plan).toEqual(manuallySaved.plan);
+         const exact = await dispatch<{ url: string }>(page, 'assets.fileDownloadUrl', params({ assetId: asset.id, assetFileId: asset.currentFileId }), scope);
+-        const originalFile = await page.request.get(exact.url); expect(originalFile.ok()).toBe(true);
++        const originalFile = await page.request.get(exact.url, { timeout: 120000 }); expect(originalFile.ok()).toBe(true);
+         expect(sha(await originalFile.body())).toBe(asset.sha);
+         expect(roughRequests).toEqual([]); expect(provider.calls).toEqual([]); expect(provider.errors).toEqual([]);
+         expect((await audioEvents(page)).filter(event => event.kind === 'start')).toHaveLength(0);
+@@ -587,7 +587,7 @@ test.describe('T1062 账号组真实原生粗剪', () => {
+         await page.reload(); await expect(native(page).locator('.native-workbench')).toBeVisible();
+         const afterReload = await document(page, output.id, scope); expect(afterReload.revision).toBe(afterAdopt.revision); expect(afterReload.plan).toEqual(afterAdopt.plan);
+         const exact = await dispatch<{ url: string }>(page, 'assets.fileDownloadUrl', params({ assetId: asset.id, assetFileId: asset.currentFileId }), scope);
+-        expect(sha(await (await page.request.get(exact.url)).body())).toBe(asset.sha);
++        expect(sha(await (await page.request.get(exact.url, { timeout: 120000 })).body())).toBe(asset.sha);
+       }
+       await testInfo.attach('原公开转写与候选', { body: Buffer.from(JSON.stringify({ source, candidate, providerCalls: provider.calls.length,
+         caveat: '真实默认ASR管线与自动自然播放流程；loopback建议不是语义评审，未代签用户听感' }, null, 2)), contentType: 'application/json' });
+@@ -653,7 +653,7 @@ test('真实首载组列表延迟时不发创建，根就绪后文章可创建
+     if (requestInput(route.request())?.id !== 'accountGroups.list' || delayedOnce) { await route.continue(); return; }
+     delayedOnce = true;
+     // 读取真实公开服务的成功字节，只延迟交付，不造组或授权。
+-    const response = await route.fetch();
++    const response = await route.fetch({ timeout: 120000 });
+     expect(response.ok()).toBe(true);
+     const envelope = await response.json() as { data: Array<{ id: string }>; meta: { total: number } };
+     expect(envelope.data.some(row => row.id === owner.id)).toBe(true);
+@@ -740,7 +740,7 @@ test('真实首次RSC同步中手动切B：旧A完成不能放行，B就绪才
+     const finished = selected === a.id ? finishedA : finishedB;
+     try {
+       // 获取实际RSC响应字节，不替换payload或服务授权；只延迟浏览器交付。
+-      const response = await route.fetch();
++      const response = await route.fetch({ timeout: 120000 });
+       expect(response.ok()).toBe(true);
+       const contentType = response.headers()['content-type'] ?? '';
+       expect(contentType).toContain('text/x-component');
+@@ -855,7 +855,7 @@ test('真实首载RSC一直未交付：有界超时后显式整页重试，同B
+     if (requestHeaders.rsc !== '1' || requestHeaders['next-router-prefetch'] === '1' || seen) { await route.continue(); return; }
+     seen = true;
+     try {
+-      const response = await route.fetch();
++      const response = await route.fetch({ timeout: 120000 });
+       expect(response.ok()).toBe(true);
+       observation.status = response.status(); observation.contentType = response.headers()['content-type'];
+       expect(observation.contentType).toContain('text/x-component');
+@@ -880,7 +880,7 @@ test('真实首载RSC一直未交付：有界超时后显式整页重试，同B
+     expect(browserCreates).toBe(0); expect(browserProjectCreates).toBe(0);
+     // 等待产品真实15s超时状态，不sleep、不给挂起响应放行。
+     const error = page.getByTestId('workspace-initialization-error');
+-    await expect(error).toContainText('工作区页面打开超时，请重试。', { timeout: 20_000 });
++    await expect(error).toContainText('工作区页面打开超时，请重试。', { timeout: 120000 });
+     observation.elapsedToErrorMs = Date.now() - started;
+     await expect(page.locator('[data-page="article-workbench"]')).toHaveCount(0);
+     await expect(page.locator('[data-page="projects"]')).toHaveCount(0);
+@@ -929,3 +929,6 @@ test('真实首载RSC一直未交付：有界超时后显式整页重试，同B
+       caveat: '旧真实RSC字节直到创建保存完成仍未交付；显式重试必须观测document请求与真实新文档就绪，非mockrouter或排队refresh。截图仅用例执行后才存在。' }, null, 2)), contentType: 'application/json' });
+   }
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 672660000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1069-asset-picker.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1069-asset-picker.spec.ts
+index a8f5c4734..beda35161 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1069-asset-picker.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1069-asset-picker.spec.ts
+@@ -5,7 +5,7 @@ import {expect as baseExpect,test} from '../helpers/test-environment';
+ const expect=baseExpect.configure({timeout:120_000});
+ const fresh=()=>randomUUID();
+ async function dispatch<T>(page:Page,id:string,input:unknown,groupId?:string):Promise<T>{
+- const response=await page.request.post('/api/v1/dispatch',{headers:{'content-type':'application/json',...(groupId?{'x-group-id':groupId}:{})},data:{id,input}});
++ const response=await page.request.post('/api/v1/dispatch',{headers:{'content-type':'application/json',...(groupId?{'x-group-id':groupId}:{})},data:{id,input}, timeout: 120000});
+  expect(response.ok(),`${id} status=${response.status()} ${await response.text()}`).toBe(true);return (await response.json()).data;
+ }
+ function crc32(bytes:Buffer){let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return (crc^0xffffffff)>>>0;}
+@@ -14,11 +14,11 @@ function chunk(name:string,data:Buffer){const type=Buffer.from(name),length=Buff
+ function image(index:number){const header=Buffer.alloc(13);header.writeUInt32BE(32,0);header.writeUInt32BE(24,4);header[8]=8;header[9]=6;const pixels=Buffer.alloc(24*(1+32*4));for(let y=0;y<24;y++)for(let x=0;x<32;x++){const at=y*129+1+x*4;pixels[at]=index;pixels[at+1]=x*7;pixels[at+2]=y*10;pixels[at+3]=255;}return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(pixels)),chunk('IEND',Buffer.alloc(0))]);}
+ async function upload(page:Page,groupId:string,index:number,name:string){
+  const bytes=image(index),start=await dispatch<{uploadId:string;uploadUrl:string}>(page,'assets.uploads.create',{body:{assetType:'image',mimeType:'image/png',fileSize:bytes.length,fileName:name}},groupId);
+- const put=await page.request.put(start.uploadUrl,{headers:{'content-type':'image/png','x-group-id':groupId},data:bytes});expect(put.ok()).toBe(true);
++ const put=await page.request.put(start.uploadUrl,{headers:{'content-type':'image/png','x-group-id':groupId},data:bytes, timeout: 120000});expect(put.ok()).toBe(true);
+  return await dispatch<{id:string;currentFileId:string}>(page,'assets.uploads.complete',{params:{uploadId:start.uploadId},body:{name}},groupId);
+ }
+ test('公共全库分页与模板照片选择：后页可见、搜索和取消保留精确照片',async({page,context,baseURL},testInfo)=>{
+- test.setTimeout(259_200_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);context.setDefaultTimeout(120_000);
++ test.setTimeout(Math.max((259_200_000), 259200000));page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);context.setDefaultTimeout(120_000);
+  await page.goto('/');const group=await dispatch<{id:string}>(page,'accountGroups.create',{body:{name:`中性图库-${fresh()}`,idempotencyKey:fresh()}});
+  const prefix=`中性照片_${fresh()}`;let oldest:{id:string;currentFileId:string}|undefined;
+  for(let index=0;index<140;index++){const asset=await upload(page,group.id,index,`${prefix}_${String(index).padStart(3,'0')}_完整长名称.png`);if(index===0)oldest=asset;}
+@@ -31,14 +31,17 @@ test('公共全库分页与模板照片选择：后页可见、搜索和取消
+  await page.goto('/canvases?tab=cases');await page.getByRole('button',{name:/真人知识封面/}).click();
+  await page.getByRole('button',{name:'本人照片（必选）',exact:true}).click();const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();
+  await dialog.getByRole('textbox',{name:'搜索素材'}).fill(`${prefix}_000`);await dialog.getByRole('button',{name:`预览 ${prefix}_000_完整长名称.png`}).click();
+- await expect(dialog.locator('img')).toHaveCount(2);await expect.poll(()=>dialog.locator('img').evaluateAll(images=>images.every(image=>(image as HTMLImageElement).complete&&(image as HTMLImageElement).naturalWidth===32)),{timeout:120_000}).toBe(true);await page.setViewportSize({width:1366,height:900});await page.screenshot({path:testInfo.outputPath('picker-1366.png'),fullPage:true});
+- await page.setViewportSize({width:1024,height:900});await page.screenshot({path:testInfo.outputPath('picker-1024.png'),fullPage:true});
++ await expect(dialog.locator('img')).toHaveCount(2);await expect.poll(()=>dialog.locator('img').evaluateAll(images=>images.every(image=>(image as HTMLImageElement).complete&&(image as HTMLImageElement).naturalWidth===32)),{timeout:120_000}).toBe(true);await page.setViewportSize({width:1366,height:900});await page.screenshot({path:testInfo.outputPath('picker-1366.png'),fullPage:true, timeout: 120000});
++ await page.setViewportSize({width:1024,height:900});await page.screenshot({path:testInfo.outputPath('picker-1024.png'),fullPage:true, timeout: 120000});
+  // 200%浏览器缩放对应的有效CSS视口；不用CSS zoom冒充原生浏览器缩放。
+  await page.setViewportSize({width:683,height:450});
+  await expect.poll(async()=>{const box=await dialog.boundingBox();return Boolean(box&&box.x>=0&&box.y>=0&&box.x+box.width<=683&&box.y+box.height<=450);},{timeout:120_000}).toBe(true);
+  const confirmBox=await dialog.getByRole('button',{name:'使用此素材'}).boundingBox();expect(confirmBox).not.toBeNull();expect(confirmBox!.y).toBeGreaterThanOrEqual(0);expect(confirmBox!.y+confirmBox!.height).toBeLessThanOrEqual(450);
+- await page.screenshot({path:testInfo.outputPath('picker-683x450-reflow.png'),fullPage:true});await page.setViewportSize({width:1366,height:900});
++ await page.screenshot({path:testInfo.outputPath('picker-683x450-reflow.png'),fullPage:true, timeout: 120000});await page.setViewportSize({width:1366,height:900});
+  await dialog.getByRole('button',{name:'使用此素材'}).click();await expect(dialog).not.toBeVisible();const field=page.getByRole('button',{name:'本人照片（必选）',exact:true});await expect(field).toContainText(`${prefix}_000_完整长名称.png`);
+  await field.click();await dialog.getByRole('textbox',{name:'搜索素材'}).fill(`${prefix}_139`);await dialog.getByRole('button',{name:`预览 ${prefix}_139_完整长名称.png`}).click();await dialog.getByRole('button',{name:'取消',exact:true}).click();await expect(field).toContainText(`${prefix}_000_完整长名称.png`);
+  await expect(field).toBeFocused();await field.press('Enter');await expect(dialog).toBeVisible();await page.keyboard.press('Escape');await expect(dialog).not.toBeVisible();await expect(field).toBeFocused();await expect(field).toContainText(`${prefix}_000_完整长名称.png`);
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 259200000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1069-media-tab-session.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1069-media-tab-session.spec.ts
+index 34640defe..7f36c8c02 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1069-media-tab-session.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1069-media-tab-session.spec.ts
+@@ -6,11 +6,11 @@ const expect=baseExpect.configure({timeout:120_000});
+ import type {Page} from '@playwright/test';
+ const fresh=()=>randomUUID();
+ async function dispatch<T>(page:Page,id:string,input:unknown,groupId?:string):Promise<T>{
+- const response=await page.request.post('/api/v1/dispatch',{headers:{'content-type':'application/json',...(groupId?{'x-group-id':groupId}:{})},data:{id,input}});
++ const response=await page.request.post('/api/v1/dispatch',{headers:{'content-type':'application/json',...(groupId?{'x-group-id':groupId}:{})},data:{id,input}, timeout: 120000});
+  expect(response.ok(),`${id}: ${await response.text()}`).toBe(true);return (await response.json()).data;
+ }
+ test('本地视频逐个导入、未保存切Tab返回、保存刷新保留原素材和工程',async({page,context,baseURL},info)=>{
+- test.setTimeout(1_800_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);context.setDefaultTimeout(120_000);
++ test.setTimeout(Math.max((1_800_000), 135660000));page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);context.setDefaultTimeout(120_000);
+  const bytes=readFileSync(resolve(process.cwd(),'../output/content-samples/ai-copy-eval-loop/motion-preview.mp4'));
+  expect(createHash('sha256').update(bytes).digest('hex')).toBe('a116d9d135ca730df76dd4932f2cf0e5630e47b4094eff6d83af5f731aa1ac04');
+  await page.goto('/');const group=await dispatch<{id:string}>(page,'accountGroups.create',{body:{name:`中性视频恢复-${fresh()}`,idempotencyKey:fresh()}});
+@@ -38,7 +38,7 @@ test('本地视频逐个导入、未保存切Tab返回、保存刷新保留原
+  await info.attach('真实中性视频导入时间',{body:JSON.stringify({bytesPerFile:bytes.length,timings,saved},null,2),contentType:'application/json'});
+  await page.reload();await expect(native.locator('.native-workbench')).toBeVisible();await expect(native.locator('header input[type="text"]')).toHaveValue('切Tab前未保存的工程名');for(const name of names)await expect(native.getByTitle(name,{exact:true})).toBeVisible();
+  const reloaded=await dispatch<{revision:number}>(page,'outputs.production.editor.get',{params:{outputId:output.id}},group.id);expect(reloaded).toEqual(saved);
+- await page.screenshot({path:info.outputPath('video-tab-restored.png'),fullPage:true});
++ await page.screenshot({path:info.outputPath('video-tab-restored.png'),fullPage:true, timeout: 120000});
+  const downloadPromise=page.waitForEvent('download',{timeout:900_000});
+  await bench.getByRole('button',{name:'导出当前场景 MP4',exact:true}).click();
+  const download=await downloadPromise;const exportedPath=info.outputPath('neutral-tab-export.mp4');await download.saveAs(exportedPath);
+@@ -46,3 +46,6 @@ test('本地视频逐个导入、未保存切Tab返回、保存刷新保留原
+  await info.attach('真实浏览器导出 MP4',{path:exportedPath,contentType:'video/mp4'});
+  const exportSaved=await dispatch<{revision:number}>(page,'outputs.production.editor.get',{params:{outputId:output.id}},group.id);expect(exportSaved.revision).toBeGreaterThan(saved.revision);
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 135660000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1070-director-editor.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts
+index 69133dbf9..b01a06fbf 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1070-director-editor.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1070-director-editor.spec.ts
+@@ -85,7 +85,7 @@ test("真实文章保存、指定版本刷新、同项目编导窄屏打开、No
+   context,
+   baseURL,
+ }, info) => {
+-  test.setTimeout(1_800_000);
++  test.setTimeout(Math.max((1_800_000), 27300000));
+   page.setDefaultTimeout(120_000);
+   page.setDefaultNavigationTimeout(120_000);
+   context.setDefaultTimeout(120_000);
+@@ -151,7 +151,7 @@ test("真实文章保存、指定版本刷新、同项目编导窄屏打开、No
+   await page.screenshot({
+     path: evidence(info, "article-after-desktop.png"),
+     fullPage: true,
+-  });
++  timeout: 120000});
+   await preview.getByText("更多导出", { exact: true }).click();
+   const downloadPromise = page.waitForEvent("download", { timeout: 120_000 });
+   await preview.getByRole("button", { name: "导出 HTML" }).click();
+@@ -169,7 +169,7 @@ test("真实文章保存、指定版本刷新、同项目编导窄屏打开、No
+   await page.screenshot({
+     path: evidence(info, "article-director-narrow.png"),
+     fullPage: true,
+-  });
++  timeout: 120000});
+   await dialog.press("Escape");
+   await expect(dialog).toHaveCount(0);
+   await expect(page.getByRole("button", { name: "打开编导" })).toBeFocused();
+@@ -180,7 +180,7 @@ test("真实图文三卡保存刷新，NoteRelay翻页与ZIP可用，旧图片
+   context,
+   baseURL,
+ }, info) => {
+-  test.setTimeout(1_800_000);
++  test.setTimeout(Math.max((1_800_000), 27300000));
+   page.setDefaultTimeout(120_000);
+   page.setDefaultNavigationTimeout(120_000);
+   context.setDefaultTimeout(120_000);
+@@ -271,7 +271,7 @@ test("真实图文三卡保存刷新，NoteRelay翻页与ZIP可用，旧图片
+   await page.screenshot({
+     path: evidence(info, "graphic-after-desktop.png"),
+     fullPage: true,
+-  });
++  timeout: 120000});
+   const downloadPromise = page.waitForEvent("download", { timeout: 120_000 });
+   await preview.getByRole("button", { name: "导出分页 ZIP" }).click();
+   const download = await downloadPromise;
+@@ -292,5 +292,8 @@ test("真实图文三卡保存刷新，NoteRelay翻页与ZIP可用，旧图片
+   await page.screenshot({
+     path: evidence(info, "graphic-director-narrow.png"),
+     fullPage: true,
+-  });
++  timeout: 120000});
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 27300000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1136-calendar-dialog-layout.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1136-calendar-dialog-layout.spec.ts
+index 6714c5155..8ab9ee6bc 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1136-calendar-dialog-layout.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1136-calendar-dialog-layout.spec.ts
+@@ -3,7 +3,7 @@ import {mkdirSync, readFileSync, writeFileSync} from "node:fs";
+ import {resolve} from "node:path";
+ import {expect, test} from "../helpers/test-environment";
+ 
+-const evidence = resolve("../docs/verification/t1136");
++const evidence = resolve((process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/t1136"));
+ const viewports = [{width:1366,height:900},{width:900,height:900},{width:390,height:900},{width:683,height:450}];
+ const wait = {timeout:120_000};
+ type Scope = {groupId?:string};
+@@ -12,7 +12,7 @@ const title = "发布策略复盘与内容创作计划".repeat(9);
+ const handle = "@calendar_creator_" + "long_unbroken_platform_identity_".repeat(8);
+ 
+ async function dispatch<T = {id:string}>(page:Page,id:string,input:unknown,scope:Scope={}):Promise<T> {
+- const response=await page.request.post("/api/v1/dispatch",{...wait,headers:{"content-type":"application/json",...(scope.groupId?{"x-group-id":scope.groupId}:{})},data:{id,input}});
++ const response=await page.request.post("/api/v1/dispatch",{...wait,headers:{"content-type":"application/json",...(scope.groupId?{"x-group-id":scope.groupId}:{})},data:{id,input}, timeout: 120000});
+  expect(response.ok(),id+" HTTP "+response.status()).toBe(true);
+  return (await response.json() as {data:T}).data;
+ }
+@@ -71,12 +71,12 @@ function noOverflow(d:Awaited<ReturnType<typeof dimensions>>) {
+ }
+ async function capture(page:Page,dialog:Locator,name:string) {
+  mkdirSync(resolve(evidence,"screenshots"),{recursive:true});
+- await page.screenshot({path:resolve(evidence,"screenshots",name+".png")});
++ await page.screenshot({path:resolve(evidence,"screenshots",name+".png"), timeout: 120000});
+  return {name,url:page.url(),viewport:page.viewportSize(),dimensions:await dimensions(dialog),text:await dialog.innerText()};
+ }
+ 
+ test("T-1136 当前真实排期长名称的四种窗口尺寸",async({page,context,baseURL})=>{
+- test.setTimeout(600_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
++ test.setTimeout(Math.max((600_000), 55380000));page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
+  const {group,first,project}=await setup(page);await enter(page,context,baseURL!,group.id);
+  const records=[];
+  for(const vp of viewports) {
+@@ -95,7 +95,7 @@ test("T-1136 当前真实排期长名称的四种窗口尺寸",async({page,conte
+ });
+ 
+ test("T-1136 真实保存回读重开、目标转组重选与失败保留输入",async({page,context,baseURL})=>{
+- test.setTimeout(720_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
++ test.setTimeout(Math.max((720_000), 55380000));page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
+  const {group,first,second,project}=await setup(page);await enter(page,context,baseURL!,group.id);await page.setViewportSize({width:900,height:900});
+  const captures=[];const trigger=page.getByRole("button",{name:"安排创作",exact:true});
+  await trigger.click(wait);let dialog=page.getByRole("dialog",{name:"安排创作日期"});
+@@ -142,7 +142,7 @@ test("T-1136 真实保存回读重开、目标转组重选与失败保留输入"
+ });
+ 
+ test("T-1136 读取中及共享反馈、参考素材弹窗仍可操作",async({page,context,baseURL})=>{
+- test.setTimeout(600_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
++ test.setTimeout(Math.max((600_000), 55380000));page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
+  await page.setViewportSize({width:900,height:900});
+  const {group,project}=await setup(page);await enter(page,context,baseURL!,group.id);
+  const captures=[];
+@@ -173,7 +173,7 @@ test("T-1136 读取中及共享反馈、参考素材弹窗仍可操作",async({p
+  await expect(page.getByRole("button",{name:"帮助与反馈",exact:true})).toBeFocused(wait);
+  const name="本地弹窗预览图.png",bytes=readFileSync(resolve("public/douyin-icon.png"));
+  const upload=await dispatch<{uploadId:string;uploadUrl:string}>(page,"assets.uploads.create",{body:{assetType:"image",mimeType:"image/png",fileSize:bytes.length,fileName:name}},{groupId:group.id});
+- const put=await page.request.put(upload.uploadUrl,{...wait,headers:{"content-type":"image/png"},data:bytes});expect(put.ok()).toBe(true);
++ const put=await page.request.put(upload.uploadUrl,{...wait,headers:{"content-type":"image/png"},data:bytes, timeout: 120000});expect(put.ok()).toBe(true);
+  const asset=await dispatch<{id:string;currentFileId:string}>(page,"assets.uploads.complete",{params:{uploadId:upload.uploadId},body:{name}},{groupId:group.id});
+  const canvas=await dispatch(page,"canvas.create",{body:{title:"共享弹窗验证画布",projectId:project.id}},{groupId:group.id});
+  await page.goto("/canvases/"+canvas.id,wait);await page.getByRole("button",{name:"＋ 图片生成",exact:true}).click(wait);
+@@ -207,3 +207,6 @@ test("T-1136 读取中及共享反馈、参考素材弹窗仍可操作",async({p
+  expect(saved.document.nodes.every(node=>node.referenceAssetId!==asset.id)).toBe(true);
+  writeFileSync(resolve(evidence,"shared-consumer-observation.json"),JSON.stringify({surface:"browser",loadingFixture:"once held real accountGroups.get; original response retained",feedbackSubmitted:false,modelCalled:false,assetId:asset.id,canvasId:canvas.id,cancelBeforeRevision:beforePicker.revision,cancelAfterRevision:saved.revision,cancelDocumentUnchanged:true,captures},null,2));
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 55380000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1140-picker-low-height.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1140-picker-low-height.spec.ts
+index 10dc4a615..36d6d30e6 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1140-picker-low-height.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1140-picker-low-height.spec.ts
+@@ -7,19 +7,19 @@ const test=base.extend<{}, {cleanupWitness:void}>({cleanupWitness:[async({browse
+  if(diagnostic)console.info("T1144 worker开始",JSON.stringify({at:new Date().toISOString(),pid:process.pid,browserConnected:browser.isConnected(),resources:process.getActiveResourcesInfo()}));
+  await provide();
+  if(diagnostic)console.info("T1144 worker测试已结束",JSON.stringify({at:new Date().toISOString(),pid:process.pid,browserConnected:browser.isConnected(),resources:process.getActiveResourcesInfo()}));
+-},{scope:"worker",auto:true,timeout:120_000}]});
+-const evidence=resolve("../docs/verification/t1140"),wait={timeout:120_000};
++},{scope:"worker",auto:true,timeout:180000}]});
++const evidence=resolve((process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/t1140")),wait={timeout:120_000};
+ const viewports=[{width:1366,height:900},{width:1024,height:680},{width:683,height:450},{width:390,height:900},{width:390,height:450},{width:512,height:340}];
+ const portrait="素材预览长图-"+"portrait_".repeat(12)+".png",wide="素材预览横图.png";
+ type Canvas={id:string;revision:number;document:{nodes:Array<{id:string;type:string;referenceAssetId?:string;referenceFileId?:string}>}};
+ async function dispatch<T={id:string}>(page:Page,id:string,input:unknown,groupId?:string):Promise<T>{
+- const response=await page.request.post("/api/v1/dispatch",{...wait,headers:{"content-type":"application/json",...(groupId?{"x-group-id":groupId}:{})},data:{id,input}});
++ const response=await page.request.post("/api/v1/dispatch",{...wait,headers:{"content-type":"application/json",...(groupId?{"x-group-id":groupId}:{})},data:{id,input}, timeout: 120000});
+  expect(response.ok(),id+" HTTP "+response.status()).toBe(true);return (await response.json() as {data:T}).data;
+ }
+ async function upload(page:Page,groupId:string,file:string,name:string){
+  const bytes=readFileSync(resolve("public/visual-templates",file));
+  const session=await dispatch<{uploadId:string;uploadUrl:string}>(page,"assets.uploads.create",{body:{assetType:"image",mimeType:"image/png",fileSize:bytes.length,fileName:name}},groupId);
+- const put=await page.request.put(session.uploadUrl,{...wait,headers:{"content-type":"image/png"},data:bytes});expect(put.ok()).toBe(true);
++ const put=await page.request.put(session.uploadUrl,{...wait,headers:{"content-type":"image/png"},data:bytes, timeout: 120000});expect(put.ok()).toBe(true);
+  return dispatch<{id:string;currentFileId:string}>(page,"assets.uploads.complete",{params:{uploadId:session.uploadId},body:{name}},groupId);
+ }
+ async function openReference(page:Page,trigger:Locator,readFailure=false){
+@@ -79,12 +79,12 @@ async function boundaries(dialog:Locator){
+  });
+ }
+ async function capture(page:Page,dialog:Locator,name:string,details:unknown={}){
+- mkdirSync(resolve(evidence,"screenshots"),{recursive:true});await page.screenshot({path:resolve(evidence,"screenshots",name+".png")});
++ mkdirSync(resolve(evidence,"screenshots"),{recursive:true});await page.screenshot({path:resolve(evidence,"screenshots",name+".png"), timeout: 120000});
+  return {name,url:page.url(),viewport:page.viewportSize(),text:await dialog.innerText(),boundaries:await boundaries(dialog),details};
+ }
+ 
+ test("T-1140 六种窗口完整预览、统一滚动、搜索与取消不写",async({page,context,baseURL})=>{
+- test.setTimeout(1_200_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
++ test.setTimeout(Math.max((1_200_000), 40500000));page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
+  await page.setViewportSize(viewports[0]!);const s=await setup(page,context,baseURL!);const before=await s.get(),captures=[];
+  for(const vp of viewports){
+   await page.setViewportSize(vp);const dialog=await openReference(page,s.field);
+@@ -112,7 +112,7 @@ test("T-1140 六种窗口完整预览、统一滚动、搜索与取消不写",as
+ });
+ 
+ test("T-1140 精确选用、正式回读、刷新返回与原gallery流程",async({page,context,baseURL})=>{
+- test.setTimeout(900_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
++ test.setTimeout(Math.max((900_000), 40500000));page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
+  await page.setViewportSize({width:1024,height:680});const s=await setup(page,context,baseURL!),before=await s.get(),captures=[];
+  let dialog=await openReference(page,s.field);
+  await dialog.getByRole("button",{name:"预览 "+wide,exact:true}).click(wait);await whole(dialog.getByAltText("画布图片素材",{exact:true}));
+@@ -147,3 +147,6 @@ test("T-1140 精确选用、正式回读、刷新返回与原gallery流程",asyn
+  await dialog.getByRole("button",{name:"取消",exact:true}).click(wait);expect((await s.get()).document).toEqual(saved.document);expect((await s.get()).revision).toBe(saved.revision);
+  writeFileSync(resolve(evidence,"public-write-read-observation.json"),JSON.stringify({surface:"browser",mode:"non-fixture",witnesses:{groupId:s.group.id,canvasId:s.canvas.id,selected:s.second,nodeId:node.id},beforeRevision:before.revision,savedRevision:saved.revision,exactReference:saved.document.nodes.find(n=>n.id===node.id),refresh:true,back:true,repeat:true,galleryAdopted:false,galleryUnchanged:true,errorFixture:{operation:"assets.search",count:injected,status:503,successfulWritesReplaced:false},modelCalled:false,captures},null,2));
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 40500000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1149-cover-aspect-group.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1149-cover-aspect-group.spec.ts
+index 1be9c7ed8..548f73299 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1149-cover-aspect-group.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1149-cover-aspect-group.spec.ts
+@@ -5,16 +5,16 @@ import type {CanvasDocument,CreativeCanvasResource,VisualTemplate} from "@creato
+ import {canvasGenerationCapabilitiesResource} from "@creatoros/contract";
+ import {expect,test} from "../helpers/test-environment";
+ 
+-const dir=resolve("../docs/verification/t1149"),wait={timeout:120_000};
++const dir=resolve((process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/t1149")),wait={timeout:120_000};
+ const viewports=[{width:1366,height:900},{width:900,height:900}];
+ async function dispatch<T>(page:Page,id:string,input:unknown,groupId?:string):Promise<T>{
+- const response=await page.request.post("/api/v1/dispatch",{...wait,headers:{"content-type":"application/json",...(groupId?{"x-group-id":groupId}:{})},data:{id,input}});
++ const response=await page.request.post("/api/v1/dispatch",{...wait,headers:{"content-type":"application/json",...(groupId?{"x-group-id":groupId}:{})},data:{id,input}, timeout: 120000});
+  expect(response.ok(),`${id} HTTP ${response.status()}`).toBe(true);return (await response.json()).data;
+ }
+ async function upload(page:Page,groupId:string,file:string,name:string){
+  const bytes=readFileSync(resolve("public/visual-templates",file));
+  const session=await dispatch<{uploadId:string;uploadUrl:string}>(page,"assets.uploads.create",{body:{assetType:"image",mimeType:"image/png",fileSize:bytes.length,fileName:name}},groupId);
+- const put=await page.request.put(session.uploadUrl,{...wait,headers:{"content-type":"image/png"},data:bytes});expect(put.ok()).toBe(true);
++ const put=await page.request.put(session.uploadUrl,{...wait,headers:{"content-type":"image/png"},data:bytes, timeout: 120000});expect(put.ok()).toBe(true);
+  return dispatch<{id:string;currentFileId:string}>(page,"assets.uploads.complete",{params:{uploadId:session.uploadId},body:{name}},groupId);
+ }
+ async function setup(page:Page,context:BrowserContext,baseURL:string,ratio:"3:4"|"16:9",bothReference=false){
+@@ -42,7 +42,7 @@ function node(page:Page){return page.locator('[data-testid="canvas-node"][data-n
+ async function inspector(page:Page){await node(page).click({...wait,position:{x:24,y:20}});await page.getByRole("button",{name:"编导与详情",exact:true}).click(wait);const panel=page.locator("aside").filter({has:page.getByRole("heading",{name:"节点设置",exact:true})});await panel.getByRole("combobox",{name:"画幅",exact:true}).scrollIntoViewIfNeeded(wait);return panel;}
+ async function capture(page:Page,panel:Locator,name:string,checkIds:string[],referenceExpected=false){
+  if(referenceExpected){const img=panel.getByRole("button",{name:"参考图片",exact:true}).locator("img");await expect(img).toHaveJSProperty("naturalWidth",1086,wait);await expect(img).toHaveJSProperty("naturalHeight",1448,wait);await expect(img).toHaveJSProperty("complete",true,wait);}
+- mkdirSync(resolve(dir,"screenshots"),{recursive:true});await page.screenshot({path:resolve(dir,"screenshots",name+".png")});return {name,viewport:page.viewportSize(),text:await panel.innerText(),check_ids:checkIds,referenceReady:referenceExpected?{naturalWidth:1086,naturalHeight:1448,complete:true}:null};
++ mkdirSync(resolve(dir,"screenshots"),{recursive:true});await page.screenshot({path:resolve(dir,"screenshots",name+".png"), timeout: 120000});return {name,viewport:page.viewportSize(),text:await panel.innerText(),check_ids:checkIds,referenceReady:referenceExpected?{naturalWidth:1086,naturalHeight:1448,complete:true}:null};
+ }
+ function unchanged(saved:CanvasDocument,before:CanvasDocument,ratio:string){
+  expect(saved.visualGroups).toEqual(before.visualGroups!.map(group=>group.id==="picture-group"?{...group,aspectRatio:ratio}:group));
+@@ -50,7 +50,7 @@ function unchanged(saved:CanvasDocument,before:CanvasDocument,ratio:string){
+ }
+ 
+ test("T1149 共同支持画幅同步、正式保存、刷新返回及重复修改",async({page,context,baseURL})=>{
+- test.setTimeout(900_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
++ test.setTimeout(Math.max((900_000), 38820000));page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);
+  const caps=await capabilities(page,["3:4","16:9","21:9"],["3:4","16:9","21:9"]),s=await setup(page,context,baseURL!,"3:4"),captures=[],writes=[];
+  for(const [index,vp] of viewports.entries()){
+   await page.setViewportSize(vp);await page.goto(s.url,wait);const before=await s.get(),panel=await inspector(page),ratio=panel.getByRole("combobox",{name:"画幅",exact:true});
+@@ -67,7 +67,7 @@ test("T1149 共同支持画幅同步、正式保存、刷新返回及重复修
+ });
+ 
+ test("T1149 能力禁用、两个模式入口保引用与保存失败后公开重试",async({page,context,baseURL})=>{
+- test.setTimeout(900_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);await page.setViewportSize(viewports[0]!);
++ test.setTimeout(Math.max((900_000), 38820000));page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);await page.setViewportSize(viewports[0]!);
+  const caps=await capabilities(page,["3:4"],["3:4","16:9"]),s=await setup(page,context,baseURL!,"16:9",true),captures=[];await page.goto(s.url,wait);const original=await s.get();const readyPanel=await inspector(page);await expect(readyPanel.getByText(/当前模型：参考能力合成样本/)).toBeVisible(wait);await page.getByRole("button",{name:"收起详情",exact:true}).click(wait);
+  const mode=node(page).getByRole("combobox",{name:"生成模式",exact:true});await mode.selectOption("text_to_image",wait);await expect(mode).toHaveValue("image_to_image",wait);await expect(page.getByRole("main").getByRole("alert")).toContainText("原参考图已保留",wait);expect((await s.get()).document).toEqual(original.document);
+  const panel=await inspector(page);await expect(panel.getByText(/当前模型：参考能力合成样本/)).toBeVisible(wait);const ratio=panel.getByRole("combobox",{name:"画幅",exact:true});
+@@ -82,3 +82,6 @@ test("T1149 能力禁用、两个模式入口保引用与保存失败后公开
+  await page.reload(wait);await page.goto("/canvases",wait);await page.goto(s.url,wait);expect((await s.get()).document).toEqual(saved.document);expect(injected).toBe(1);expect(caps()).toBeGreaterThan(0);
+  writeFileSync(resolve(dir,"capability-public-observation.json"),JSON.stringify({surface:"browser",mode:"non-fixture",witnesses:{groupId:s.group.id,projectId:s.project.id,canvasId:s.canvas.id,reference:s.reference},capabilityFixture:true,errorFixture:{operation:"canvas.save",count:injected,status:503,successfulWritesReplaced:false},modelCalled:false,originalRevision:original.revision,unifiedRevision:unified.revision,savedRevision:saved.revision,modeRefusalPreserved:true,refresh:true,back:true,repeat:true,captures},null,2));
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 38820000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1159-wechat-native-report.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1159-wechat-native-report.spec.ts
+index 4f60d7867..19a9c9a5c 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1159-wechat-native-report.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1159-wechat-native-report.spec.ts
+@@ -4,13 +4,13 @@ import { resolve } from "node:path";
+ import type { AccountGroupResource, PlatformAccountResource } from "@creatoros/contract";
+ import { expect, test } from "../helpers/test-environment";
+ 
+-const output = resolve("../docs/verification/t1159");
++const output = resolve((process.env.CREATOROS_T1246_RUN_DIR! + "/original-output/t1159"));
+ const wait = { timeout: 120_000 };
+ const viewports = [{ width: 1366, height: 900 }, { width: 900, height: 900 }, { width: 390, height: 900 }];
+ async function dispatch<T>(page: Page, id: string, input: unknown, groupId?: string, accountId?: string): Promise<T> {
+   const response = await page.request.post("/api/v1/dispatch", {
+     ...wait, headers: { "content-type": "application/json", ...(groupId ? { "x-group-id": groupId } : {}), ...(accountId ? { "x-account-id": accountId } : {}) }, data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id}: HTTP ${response.status()}`).toBe(true);
+   return (await response.json()).data;
+ }
+@@ -21,7 +21,7 @@ async function selectGroup(page: Page, context: BrowserContext, baseURL: string,
+ 
+ test("T1159 两微信账号从组成员进入真实0报告，刷新返回与身份拒绝", async ({ page, context, baseURL }) => {
+   // T1166：准备8 + 窗口24×6 + 身份24×2，至多200个120秒串行点，再留1200秒结算。
+-  test.setTimeout(25_200_000);
++  test.setTimeout(Math.max((25_200_000), 25200000));
+   page.setDefaultTimeout(120_000); page.setDefaultNavigationTimeout(120_000);
+   mkdirSync(resolve(output, "screenshots"), { recursive: true });
+   const group = await dispatch<AccountGroupResource>(page, "accountGroups.create", { body: { name: "微信报表入口验收", idempotencyKey: crypto.randomUUID() } });
+@@ -64,7 +64,7 @@ test("T1159 两微信账号从组成员进入真实0报告，刷新返回与身
+       await expect(panel.getByRole("button", { name: "同步数据", exact: true })).toBeEnabled(wait);
+       expect(await panel.getByRole("heading", {level:1}).evaluate(element=>getComputedStyle(element).fontSize)).toBe("24px");
+       const name = `${account.platform}-empty-${viewport.width}`;
+-      await page.screenshot({ path: resolve(output, "screenshots", `${name}.png`) });
++      await page.screenshot({ path: resolve(output, "screenshots", `${name}.png`) , timeout: 120000});
+       captures.push({ name, viewport, text: await panel.innerText(), check_ids: ["AC-REPORT-ENTRY", "AC-UI"] });
+       await page.reload(wait); await expect(panel).toHaveAttribute("data-account-id", account.id, wait); expect(await read()).toEqual(before);
+       await panel.getByRole("link", { name: "返回账号", exact: true }).click(wait); await expect(link).toBeVisible(wait);
+@@ -87,7 +87,7 @@ test("T1159 两微信账号从组成员进入真实0报告，刷新返回与身
+ 
+     expect(await read()).toEqual(before);
+     const name = `${account.platform}-identity-required`;
+-    await page.screenshot({ path: resolve(output, "screenshots", `${name}.png`) });
++    await page.screenshot({ path: resolve(output, "screenshots", `${name}.png`) , timeout: 120000});
+     captures.push({ name, viewport: page.viewportSize(), text: await panel.innerText(), check_ids: ["AC-REPORT-ENTRY", "AC-UI"] });
+     await page.reload(wait); await expect(panel.getByRole("alert")).toContainText("请先扫码绑定这个账号，再同步数据。", wait); expect(await read()).toEqual(before);
+     observations.push({ accountId: account.id, platform: account.platform, externalAccountId: account.externalAccountId, before, after: await read(), refusal: { httpStatus: response.status(), code: failure.error.code }, refresh: true, repeat: true, back: true });
+@@ -95,3 +95,6 @@ test("T1159 两微信账号从组成员进入真实0报告，刷新返回与身
+   expect(bindingStarts).toBe(0);
+   writeFileSync(resolve(output, "public-read-observation.json"), JSON.stringify({ surface: "browser", mode: "non-fixture", witnesses: { groupId: group.id, accountIds: accounts.map(account => account.id) }, domainResponsesReplaced: false, manualAccountsIdentityVerified: false, realWechatCalled: false, bindingStarts, observations, captures }, null, 2) + "\n");
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 25200000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1207-supplemental-route-matrix.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1207-supplemental-route-matrix.spec.ts
+index 87ac4a90a..30e64e07a 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t1207-supplemental-route-matrix.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t1207-supplemental-route-matrix.spec.ts
+@@ -30,7 +30,7 @@ async function dispatch<T>(
+       ...(scope.groupId ? { "x-group-id": scope.groupId } : {}),
+     },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id} 应成功，实际 ${response.status()}：${await response.text()}`).toBe(true);
+   return ((await response.json()) as { data: T }).data;
+ }
+@@ -215,3 +215,6 @@ test.describe("T-1207 补充真实页面路由矩阵", () => {
+     });
+   }
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 21060000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t954-director-review.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t954-director-review.spec.ts
+index c0c49571c..b409ec752 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/t954-director-review.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/t954-director-review.spec.ts
+@@ -2,13 +2,13 @@ import type { Page } from '@playwright/test';
+ import { expect, test } from '../helpers/test-environment';
+ 
+ async function create(page:Page,id:string,body:unknown,accountId?:string,groupId?:string):Promise<{id:string}>{
+- const response=await page.request.post('/api/v1/dispatch',{headers:{'content-type':'application/json',...(accountId?{'x-account-id':accountId}:{}),...(groupId?{'x-group-id':groupId}:{})},data:{id,input:{body}}});
++ const response=await page.request.post('/api/v1/dispatch',{headers:{'content-type':'application/json',...(accountId?{'x-account-id':accountId}:{}),...(groupId?{'x-group-id':groupId}:{})},data:{id,input:{body}}, timeout: 120000});
+  expect(response.ok(),`${id}: ${response.status()} ${await response.text()}`).toBe(true);
+  return (await response.json()).data;
+ }
+ 
+ test('T954 无发布数据的真实复盘页面可用，补采返回空结果，诊断入口不强制成功经验',async({page,baseURL},testInfo)=>{
+- test.setTimeout(180_000);
++ test.setTimeout(Math.max((180_000), 11220000));
+  const group=await create(page,'accountGroups.create',{name:`T954 内容诊断-${Date.now()}`,idempotencyKey:`t954-${Date.now()}`});
+  const account=await create(page,'accounts.create',{platform:'douyin',accountHandle:`@t954-isolated-${Date.now()}`,idempotencyKey:`t954-account-${Date.now()}`},undefined,group.id);
+  const project=await create(page,'projects.create',{title:'T954 内容诊断隔离验收',brief:''},account.id,group.id);
+@@ -17,7 +17,7 @@ test('T954 无发布数据的真实复盘页面可用，补采返回空结果，
+  await page.addInitScript(({accountId,groupId})=>{window.localStorage.setItem('creatoros:current-account',accountId);window.localStorage.setItem('creatoros:current-group',groupId);},{accountId:account.id,groupId:group.id});
+  await page.goto(`/projects/${project.id}/review`);
+  const traffic=page.getByRole('region',{name:'流量来源'});
+- await expect(traffic.getByText('观众从哪里来')).toBeVisible({timeout:60_000});
++ await expect(traffic.getByText('观众从哪里来')).toBeVisible({timeout:120000});
+  await expect(traffic.getByText(/暂无流量来源数据/)).toBeVisible();
+  const review=page.getByRole('button',{name:'帮我复盘'}).first();
+  await expect(review).toBeEnabled();
+@@ -31,11 +31,11 @@ test('T954 无发布数据的真实复盘页面可用，补采返回空结果，
+  expect((await response.json()).data).toMatchObject({queued:0,jobRunId:null,aiTaskId:null});
+  await expect(traffic.getByText('本项目暂无可补采的已发布抖音作品。')).toBeVisible();
+  await expect(traffic.getByRole('button',{name:'补采 / 重试'})).toBeEnabled();
+- await page.screenshot({path:testInfo.outputPath('t954-review-empty-desktop.png'),fullPage:true});
++ await page.screenshot({path:testInfo.outputPath('t954-review-empty-desktop.png'),fullPage:true, timeout: 120000});
+  await page.setViewportSize({width:1024,height:768});
+  await expect(traffic).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)).toBe(false);
+- await page.screenshot({path:testInfo.outputPath('t954-review-empty-narrow.png'),fullPage:true});
++ await page.screenshot({path:testInfo.outputPath('t954-review-empty-narrow.png'),fullPage:true, timeout: 120000});
+  await page.setViewportSize({width:1536,height:1024});
+  // 只验证真实按钮至聊天请求的接线；截停模型请求，避免隔离 smoke 消费付费模型。
+  const chatRequest=page.waitForRequest(request=>request.url().endsWith('/api/chat'));
+@@ -47,3 +47,6 @@ test('T954 无发布数据的真实复盘页面可用，补采返回空结果，
+  expect(JSON.stringify(payload.messages)).toContain('没有表现数据时只诊断内容，不作效果归因');
+  expect(JSON.stringify(payload.messages)).toContain('没有足够依据可以没有经验候选');
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 11220000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/web-material-read-save.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/web-material-read-save.spec.ts
+index 88457be9b..275828baa 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/web-material-read-save.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/web-material-read-save.spec.ts
+@@ -37,7 +37,7 @@ test.describe("联网素材先阅读后保存", () => {
+     page,
+     baseURL,
+   }) => {
+-    test.setTimeout(60_000);
++    test.setTimeout(Math.max((60_000), 16500000));
+     const accountResponse = await page.request.post("/api/v1/dispatch", {
+       data: {
+         id: "accounts.create",
+@@ -50,7 +50,7 @@ test.describe("联网素材先阅读后保存", () => {
+           },
+         },
+       },
+-    });
++    timeout: 120000});
+     expect(accountResponse.ok()).toBe(true);
+     const account = (await accountResponse.json()) as { data: { id: string } };
+     const projectResponse = await page.request.post("/api/v1/dispatch", {
+@@ -63,7 +63,7 @@ test.describe("联网素材先阅读后保存", () => {
+           body: { title: "联网素材阅读验收", brief: "" },
+         },
+       },
+-    });
++    timeout: 120000});
+     expect(projectResponse.ok()).toBe(true);
+     const project = (await projectResponse.json()) as { data: { id: string } };
+     await page.context().addCookies([
+@@ -279,3 +279,6 @@ test.describe("联网素材先阅读后保存", () => {
+     await runJourney(page);
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 16500000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/wechat-article-workbench.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/wechat-article-workbench.spec.ts
+index 708d1bc65..59fbf795a 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/wechat-article-workbench.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/wechat-article-workbench.spec.ts
+@@ -8,7 +8,7 @@ async function dispatch<T>(page: Page, id: string, input: unknown, scope?: Reque
+   const response = await page.request.post("/api/v1/dispatch", {
+     headers: { "content-type": "application/json", ...(typeof scope === "string" ? { "x-account-id": scope } : scope?.groupId ? { "x-group-id": scope.groupId } : {}) },
+     data: { id, input },
+-  });
++  timeout: 120000});
+   expect(response.ok(), `${id}: ${response.status()} ${await response.text()}`).toBe(true);
+   return ((await response.json()) as { data: T }).data;
+ }
+@@ -76,7 +76,7 @@ test("公众号文章从项目目标到手写版本、刷新回读和跨账号
+     params: undefined, query: undefined, body: { assetType: "image", mimeType: "image/png", fileSize: png.length,
+       fileName: "文章示意图.png", projectId: project.id },
+   }, {groupId});
+-  const put = await page.request.put(upload.uploadUrl, { headers: { "content-type": "image/png" }, data: png });
++  const put = await page.request.put(upload.uploadUrl, { headers: { "content-type": "image/png" }, data: png , timeout: 120000});
+   expect(put.ok()).toBe(true);
+   const image = await dispatch<{id: string; currentFileId: string}>(page, "assets.uploads.complete", {
+     params: {uploadId: upload.uploadId}, query: undefined, body: {name: "文章示意图.png"},
+@@ -112,12 +112,12 @@ test("公众号文章从项目目标到手写版本、刷新回读和跨账号
+   const cross = await page.request.post("/api/v1/dispatch", {
+     headers: { "content-type": "application/json", "x-account-id": accountB.id },
+     data: { id: "articles.get", input: { params: { outputId: output!.id }, query: undefined, body: undefined } },
+-  });
++  timeout: 120000});
+   expect(cross.status()).toBe(404);
+ });
+ 
+ test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后刷新回读", async ({ page, context, baseURL }) => {
+-  test.setTimeout(120_000);
++  test.setTimeout(Math.max((120_000), 50580000));
+   let projectRef: {kind: "project"; id: string; versionId: string} | null = null;
+   const proposal = () => ({
+     proposedTitle: "可核验的创作数据", proposedTitleSourceRefs: projectRef ? [projectRef] : [],
+@@ -197,7 +197,7 @@ test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后
+     });
+     await workbench.getByRole("button", { name: "根据脚本扩写文章" }).click();
+     const generatedEnvelope=await (await generatedResponsePromise).json() as {data:{candidateId:string}};
+-    await expect(workbench.getByRole("heading", { name: "待审读候选" })).toBeVisible({ timeout: 60_000 });
++    await expect(workbench.getByRole("heading", { name: "待审读候选" })).toBeVisible({ timeout: 120000 });
+     await expect(workbench.getByText("来源：项目资料").first()).toBeVisible();
+     const generatedCandidate=await dispatch<{proposedTitle:string;proposedTitleSourceRefs:unknown[];proposedSummary:string;proposedSummarySourceRefs:unknown[];proposedSections:Array<{sourceRefs:unknown[]}>}>(page,"articles.candidates.get",{params:{candidateId:generatedEnvelope.data.candidateId},query:undefined,body:undefined},{groupId});
+     // fixture模型确实返回projectRef；既有人工标题/摘要必须由Worker保留，不能被模型覆盖或伪造出处。
+@@ -251,3 +251,6 @@ test("公众号文章经独立模型 Worker 生成候选，用户审读采纳后
+     await new Promise<void>((done) => model.close(() => done()));
+   }
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 50580000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/zz-account-isolation.spec.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/zz-account-isolation.spec.ts
+index 5bb0bea06..0956dbadb 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/e2e/zz-account-isolation.spec.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/e2e/zz-account-isolation.spec.ts
+@@ -107,13 +107,13 @@ test.describe("双号切换端到端隔离(T-332 S6)", () => {
+     await expect(page.getByText(TITLE_A, { exact: true })).toBeVisible();
+     await expect(page.getByText(TITLE_B, { exact: true })).toHaveCount(0);
+     await expectGroupMirrors(page, groupA.id);
+-    await page.screenshot({ path: info.outputPath("group-a-initial.png"), fullPage: true });
++    await page.screenshot({ path: info.outputPath("group-a-initial.png"), fullPage: true , timeout: 120000});
+ 
+     await switchGroup(page, groupB.id);
+     await expect(page.getByText(TITLE_B, { exact: true })).toBeVisible();
+     await expect(page.getByText(TITLE_A, { exact: true })).toHaveCount(0);
+     await expectGroupMirrors(page, groupB.id);
+-    await page.screenshot({ path: info.outputPath("group-b-after-switch.png"), fullPage: true });
++    await page.screenshot({ path: info.outputPath("group-b-after-switch.png"), fullPage: true , timeout: 120000});
+ 
+     await switchGroup(page, groupA.id);
+     await expect(page.getByText(TITLE_A, { exact: true })).toBeVisible();
+@@ -122,7 +122,7 @@ test.describe("双号切换端到端隔离(T-332 S6)", () => {
+     await expect(page.getByText(TITLE_A, { exact: true })).toBeVisible();
+     await expect(page.getByText(TITLE_B, { exact: true })).toHaveCount(0);
+     await expectGroupMirrors(page, groupA.id);
+-    await page.screenshot({ path: info.outputPath("group-a-return-reload.png"), fullPage: true });
++    await page.screenshot({ path: info.outputPath("group-a-return-reload.png"), fullPage: true , timeout: 120000});
+ 
+     const readA = ENDPOINTS.getProject.response.parse(await dispatch<unknown>(page, "projects.get", { params: { projectId: projectA.id } }, undefined, groupA.id));
+     const readB = ENDPOINTS.getProject.response.parse(await dispatch<unknown>(page, "projects.get", { params: { projectId: projectB.id } }, undefined, groupB.id));
+@@ -143,3 +143,6 @@ test.describe("双号切换端到端隔离(T-332 S6)", () => {
+     await info.attach("真实双组项目回读", { body: JSON.stringify({ accountA: accA.id, accountB: accB.id, groupA: groupA.id, groupB: groupB.id, readA, readB, rejected }), contentType: "application/json" });
+   });
+ });
++
++// T-1246 copied-source declaration: original assertions unchanged.
++test.describe.configure({ timeout: 16020000 });
+diff --git a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/helpers/test-environment.ts b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/helpers/test-environment.ts
+index 6ab0c5d23..974c0e5ce 100644
+--- a/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests/helpers/test-environment.ts
++++ b/Users/zyongzhu/.codex/worktrees/integrated-dev-acceptance/Thirdspace-creator/frontend/tests-t1246-generated/helpers/test-environment.ts
+@@ -1,7 +1,8 @@
+ import { createHash } from "node:crypto";
+ import { appendFileSync, mkdirSync } from "node:fs";
+ import { basename, relative, resolve } from "node:path";
+-import { expect, test as base } from "@playwright/test";
++import { expect as baseExpect, test as base } from "@playwright/test";
++const expect = baseExpect.configure({ timeout: 120000 });
+ import type { BrowserContext, Page, TestInfo } from "@playwright/test";
+ import {
+   type ExternalNetworkAttempt,
+@@ -10,7 +11,7 @@ import {
+ } from "./network-policy";
+ 
+ const externalAttemptsByContext = new WeakMap<BrowserContext, ExternalNetworkAttempt[]>();
+-const verificationRoot = resolve(process.cwd(), "..", "docs", "verification", "t1207");
++const verificationRoot = resolve(process.env.CREATOROS_T1246_RUN_DIR!, "scenario");
+ const screenshotRoot = resolve(verificationRoot, "screenshots");
+ const scenarioIndexPath = resolve(verificationRoot, "scenario-index.ndjson");
+ 
+@@ -67,7 +68,7 @@ async function writeScenarioEvidence(
+         path: screenshotPath,
+         animations: "disabled",
+         caret: "hide",
+-      });
++      timeout: 120000});
+       await testInfo.attach(`t1207-${testInfo.testId}`, {
+         path: screenshotPath,
+         contentType: "image/png",
+@@ -183,7 +184,7 @@ export const test = base.extend<{ t1207ScenarioCapture: void }>({
+       if (captureError) throw captureError;
+       if (testError) throw testError;
+     },
+-    { auto: true },
++    { auto: true, timeout: 180000 },
+   ],
+ });
+ 

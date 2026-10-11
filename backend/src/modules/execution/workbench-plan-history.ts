@@ -2,8 +2,8 @@ import {isDeepStrictEqual} from "node:util";
 import type {executionCalls, executionTasks} from "@creatoros/backend";
 import {workbenchPlanSchema, workbenchResultSchema, type WorkbenchPlan} from "@creatoros/contract/agent-workbench";
 import {agenticToolOutcomeSchema, chatWorkerInputSchema, checkpointToolCallSchema, workerPortInputSchemas,
-  workerProviderReceiptSchema, workerToolResultReceiptSchema} from "@creatoros/contract/execution-worker";
-import {agenticToolOperationKey, createAgenticToolBinding} from "./agentic-tool-binding";
+  externalChatReceiptSchema,workerProviderReceiptSchema, workerToolResultReceiptSchema} from "@creatoros/contract/execution-worker";
+import {agenticModelToolParts,agenticToolOperationKey, createAgenticToolBinding} from "./agentic-tool-binding";
 import {chatFallbackParent, isChatModelOperation} from "./execution-chat-fallback.service";
 import {ConflictError} from "./execution.errors";
 import {chatWorkbenchPlanCapability} from "../ai-runtime/chat-workbench-plan-tool";
@@ -22,10 +22,15 @@ const noLaterThan = (left: string, right: string) => Number.isFinite(Date.parse(
 export async function workbenchPlanAtModel(task: Task, calls: Call[], modelCallId: string, current: WorkbenchPlan | null): Promise<WorkbenchPlan | null> {
   try {
     const input = chatWorkerInputSchema.parse((task.payload as Record<string, unknown>).modelInput);
-    if (task.kind !== "ai_task" || input.executionEngine !== "pi" || input.userId !== task.userId || input.accountId !== task.accountId ||
+    if (task.kind !== "ai_task" || !["pi","codex"].includes(input.executionEngine??'pi') || input.userId !== task.userId || input.accountId !== task.accountId ||
         calls.some(call => call.executionTaskId !== task.id)) return unproven();
     const ordered = [...calls].sort((a, b) => a.sequence - b.sequence);
     const rootModel = (call: Call): boolean => {
+      if(input.executionEngine==='codex'){
+        const receipt=externalChatReceiptSchema.safeParse(call.providerResult);
+        const binding=(task.payload as {codexCalls?:Record<string,{threadId?:string;turnId?:string}>}).codexCalls?.[call.id];
+        return !!binding&&receipt.success&&binding.threadId===receipt.data.sessionId&&(receipt.data.protocolKind==='acp'||binding.turnId===receipt.data.providerTurnId)&&call.operationKey===`${input.operationKey}/external-turn/1`&&call.kind==='external_agent'&&!call.parentCallId&&call.status==='settled'&&receipt.success&&receipt.data.engine==='codex'&&receipt.data.turnId===call.id&&receipt.data.stopReason==='end_turn';
+      }
       if (call.parentCallId || call.kind !== "model") return false;
       if (isChatModelOperation(input.operationKey, call.operationKey)) return true;
       const parentKey = chatFallbackParent(input.operationKey, call.operationKey);
@@ -35,7 +40,7 @@ export async function workbenchPlanAtModel(task: Task, calls: Call[], modelCallI
     };
     const model = ordered.find(call => call.id === modelCallId);
     if (!model || model.status !== "settled" || !rootModel(model) ||
-        workerProviderReceiptSchema.parse(model.providerResult).finishReason.unified !== "stop") return unproven();
+        (input.executionEngine!=='codex'&&workerProviderReceiptSchema.parse(model.providerResult).finishReason.unified !== "stop")) return unproven();
     const frozen = input.tools.filter(tool => tool.name === "plan.update");
     if (frozen.length > 1 || frozen.some(tool => tool.effect !== "committed" || (tool.execution ?? "host") !== "host")) return unproven();
     if (frozen.length) {
@@ -49,9 +54,9 @@ export async function workbenchPlanAtModel(task: Task, calls: Call[], modelCallI
     const snapshots: Array<{call: Call; plan: WorkbenchPlan}> = [];
     const confirmed = new Map<string, {call: Call; input: unknown; output: unknown}>();
     const unfinished: Array<{source: Call; call?: Call}> = [];
-    for (const source of ordered.filter(call => call.kind === "model" && !call.parentCallId && call.status === "settled")) {
-      const provider = workerProviderReceiptSchema.parse(source.providerResult);
-      for (const part of provider.content) {
+    for (const source of ordered.filter(call => !call.parentCallId && call.status === "settled" && (call.kind==='model'||call.kind==='external_agent'))) {
+      const parts=input.executionEngine==='codex'?agenticModelToolParts(task,source):workerProviderReceiptSchema.parse(source.providerResult).content;
+      for (const part of parts) {
         const proposed = checkpointToolCallSchema.safeParse(part);
         if (!proposed.success || proposed.data.toolName !== "plan_update") continue;
         if (!rootModel(source) || frozen.length !== 1) return unproven();
@@ -63,7 +68,7 @@ export async function workbenchPlanAtModel(task: Task, calls: Call[], modelCallI
         if (candidates.length !== 1) return unproven();
         const call = candidates[0]!;
         if (call.kind !== "tool" || call.parentCallId || call.status !== "settled" || call.sequence <= source.sequence ||
-            !call.resultText || !noLaterThan(source.updatedAt, call.createdAt)) return unproven();
+            !call.resultText || !(input.executionEngine==='codex'?noLaterThan(source.createdAt,call.createdAt)&&noLaterThan(call.updatedAt,source.updatedAt):noLaterThan(source.updatedAt, call.createdAt))) return unproven();
         const bound = binding.forCall(task, ordered, call);
         const receipt = workerToolResultReceiptSchema.parse(JSON.parse(call.resultText));
         if (receipt.toolCallId !== bound.toolCallId || receipt.toolName !== bound.toolName) return unproven();
@@ -100,15 +105,15 @@ export async function workbenchPlanAtModel(task: Task, calls: Call[], modelCallI
         if (!isDeepStrictEqual(plan, latest)) return unproven();
       } else if (plan.planRevision !== (latest?.planRevision ?? 0) + 1) return unproven();
       // 迟到结算不能仅凭低序号冒充模型当时已接受的计划。
-      const followingModel = ordered.find(row => row.sequence > call.sequence && row.kind === "model" && !row.parentCallId);
+      const followingModel = ordered.find(row => row.sequence > call.sequence && (row.kind === "model"||row.kind==='external_agent') && !row.parentCallId);
       if (!Number.isFinite(Date.parse(call.updatedAt)) || followingModel && !noLaterThan(call.updatedAt, followingModel.createdAt)) return unproven();
       latest = plan;
-      if (call.sequence < model.sequence) historical = plan;
+      if(input.executionEngine==='codex'?noLaterThan(call.updatedAt,model.updatedAt):call.sequence < model.sequence) historical = plan;
     }
     // 从 revision 1 开始证明完整已结算前缀。唯一例外是正式恢复后尚待原call结算的未来尾部：
     // 它只解释当前投影为何更晚，不加入 historical，不生成提交回执，更不取得工具执行权。
     if (!isDeepStrictEqual(latest, current)) {
-      if (unfinished.length !== 1) return unproven();
+      if (input.executionEngine==='codex'||unfinished.length !== 1) return unproven();
       const {source, call} = unfinished[0]!;
       if (!call || ordered.filter(row => row.kind === "model" && !row.parentCallId).at(-1)?.id !== source.id ||
           call.kind !== "tool" || call.parentCallId || call.status !== "reserved" || call.sequence <= source.sequence ||

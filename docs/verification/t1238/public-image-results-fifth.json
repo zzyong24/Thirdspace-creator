@@ -1,0 +1,25 @@
+{
+  "data": [
+    {
+      "id": "ai-result:call_b428abe7-5568-40ef-85ea-07ad736d3470",
+      "aiTaskId": "ai-task-a46c818b-48",
+      "resultType": "generated_asset",
+      "artifactId": null,
+      "knowledgeItemId": null,
+      "assetId": "asset-generated-50aabe8c75493ed9cf85d6b94b55ba955764af5038b4696f811d845007494bf6",
+      "resultData": {
+        "name": "生成白色背景的蓝色圆形极简图标，无文字。 · 生成图",
+        "prompt": "生成白色背景的蓝色圆形极简图标，无文字。",
+        "assetId": "asset-generated-50aabe8c75493ed9cf85d6b94b55ba955764af5038b4696f811d845007494bf6",
+        "assetType": "image",
+        "aspectRatio": "1:1"
+      }
+    }
+  ],
+  "meta": {
+    "requestId": "req-a46c818b-50",
+    "page": 1,
+    "pageSize": 1,
+    "total": 1
+  }
+}

@@ -1,0 +1,5 @@
+Error: 隔离设置服务提前退出 1
+    at ChildProcess.<anonymous> (/Users/zyongzhu/Workbase/Thirdspace-creator/docs/verification/t1238/run-ui-journey.cjs:21:262)
+    at Object.onceWrapper (node:events:631:12)
+    at ChildProcess.emit (node:events:509:20)
+    at ChildProcess._handle.onexit (node:internal/child_process:294:12)

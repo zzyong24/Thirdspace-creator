@@ -1,0 +1,185 @@
+{
+  "task": "T-1246",
+  "phase": "installed-registered",
+  "recordedAt": "2026-10-11T14:18:07.610Z",
+  "commandBudgetMs": 120000,
+  "outerBudgetMs": 1800000,
+  "taskTools": "/tmp/t1246-appium",
+  "packages": {
+    "appium": {
+      "version": "3.8.0",
+      "engines": {
+        "node": "^20.19.0 || ^22.12.0 || >=24.0.0",
+        "npm": ">=10"
+      },
+      "peerDependencies": null
+    },
+    "appium-mac2-driver": {
+      "version": "4.3.6",
+      "engines": {
+        "node": "^20.19.0 || ^22.12.0 || >=24.0.0",
+        "npm": ">=10"
+      },
+      "peerDependencies": {
+        "appium": "^3.0.0-rc.2"
+      }
+    }
+  },
+  "entries": [
+    {
+      "id": "macos",
+      "file": "/usr/bin/sw_vers",
+      "args": [],
+      "startedAt": "2026-10-11T14:18:05.363Z",
+      "elapsedMs": 14,
+      "exitCode": 0,
+      "stdout": "ProductName:\t\tmacOS\nProductVersion:\t\t26.2\nBuildVersion:\t\t25C56\n",
+      "stderr": ""
+    },
+    {
+      "id": "xcode-path",
+      "file": "/usr/bin/xcode-select",
+      "args": [
+        "-p"
+      ],
+      "startedAt": "2026-10-11T14:18:05.378Z",
+      "elapsedMs": 4,
+      "exitCode": 0,
+      "stdout": "/Applications/Xcode.app/Contents/Developer\n",
+      "stderr": ""
+    },
+    {
+      "id": "xcode-version",
+      "file": "/usr/bin/xcodebuild",
+      "args": [
+        "-version"
+      ],
+      "startedAt": "2026-10-11T14:18:05.382Z",
+      "elapsedMs": 114,
+      "exitCode": 0,
+      "stdout": "Xcode 26.6\nBuild version 17F113\n",
+      "stderr": ""
+    },
+    {
+      "id": "automation-tool",
+      "file": "/usr/bin/xcrun",
+      "args": [
+        "--find",
+        "automationmodetool"
+      ],
+      "startedAt": "2026-10-11T14:18:05.496Z",
+      "elapsedMs": 11,
+      "exitCode": 0,
+      "stdout": "/usr/bin/automationmodetool\n",
+      "stderr": ""
+    },
+    {
+      "id": "automation-status",
+      "file": "/usr/bin/automationmodetool",
+      "args": [],
+      "startedAt": "2026-10-11T14:18:05.507Z",
+      "elapsedMs": 6,
+      "exitCode": 0,
+      "stdout": "Automation Mode is disabled.\nThis device requires user authentication to enable Automation Mode.\n",
+      "stderr": ""
+    },
+    {
+      "id": "node-version",
+      "file": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+      "args": [
+        "--version"
+      ],
+      "startedAt": "2026-10-11T14:18:05.513Z",
+      "elapsedMs": 59,
+      "exitCode": 0,
+      "stdout": "v25.9.0\n",
+      "stderr": ""
+    },
+    {
+      "id": "npm-version",
+      "file": "/opt/homebrew/bin/npm",
+      "args": [
+        "--version"
+      ],
+      "startedAt": "2026-10-11T14:18:05.572Z",
+      "elapsedMs": 131,
+      "exitCode": 0,
+      "stdout": "11.12.1\n",
+      "stderr": ""
+    },
+    {
+      "id": "ffmpeg-version",
+      "file": "/opt/homebrew/bin/ffmpeg",
+      "args": [
+        "-version"
+      ],
+      "startedAt": "2026-10-11T14:18:05.703Z",
+      "elapsedMs": 80,
+      "exitCode": 0,
+      "stdout": "ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers\nbuilt with Apple clang version 21.0.0 (clang-2100.1.1.101)\nconfiguration: --prefix=/opt/homebrew/Cellar/ffmpeg/9.0.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gpl --enable-libsvtav1 --enable-libopus --enable-libx264 --enable-libmp3lame --enable-libdav1d --enable-libvmaf --enable-libvpx --enable-libx265 --enable-openssl --enable-videotoolbox --enable-audiotoolbox --enable-neon\nlibavutil      61.  1.101 / 61.  1.101\nlibavcodec     63.  1.101 / 63.  1.101\nlibavformat    63.  1.101 / 63.  1.101\nlibavdevice    63.  1.101 / 63.  1.101\nlibavfilter    12.  1.101 / 12.  1.101\nlibswscale     10.  1.101 / 10.  1.101\nlibswresample   7.  1.101 /  7.  1.101\n\nExiting with exit code 0\n",
+      "stderr": ""
+    },
+    {
+      "id": "source-commit",
+      "file": "/usr/bin/git",
+      "args": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "startedAt": "2026-10-11T14:18:05.783Z",
+      "elapsedMs": 22,
+      "exitCode": 0,
+      "stdout": "4df3424972831acfdd091056b3045b2472120692\n",
+      "stderr": ""
+    },
+    {
+      "id": "appium-version",
+      "file": "/tmp/t1246-appium/node_modules/.bin/appium",
+      "args": [
+        "--version"
+      ],
+      "startedAt": "2026-10-11T14:18:05.805Z",
+      "elapsedMs": 627,
+      "exitCode": 0,
+      "stdout": "3.8.0\n",
+      "stderr": "dbug Appium Creating hash file directory: /tmp/t1246-appium/home/node_modules/.cache/appium\n"
+    },
+    {
+      "id": "installed-drivers",
+      "file": "/tmp/t1246-appium/node_modules/.bin/appium",
+      "args": [
+        "driver",
+        "list",
+        "--installed"
+      ],
+      "startedAt": "2026-10-11T14:18:06.432Z",
+      "elapsedMs": 461,
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "dbug Appium Creating hash file directory: /tmp/t1246-appium/home/node_modules/.cache/appium\n- Listing installed drivers (rerun with --verbose for more info)\n✔ Listing installed drivers (rerun with --verbose for more info)\n- mac2@4.3.6 [installed (linked from /tmp/t1246-appium/node_modules/appium-mac2-driver)]\n"
+    },
+    {
+      "id": "mac2-doctor",
+      "file": "/tmp/t1246-appium/node_modules/.bin/appium",
+      "args": [
+        "driver",
+        "doctor",
+        "mac2"
+      ],
+      "startedAt": "2026-10-11T14:18:06.893Z",
+      "elapsedMs": 715,
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "dbug Appium Creating hash file directory: /tmp/t1246-appium/home/node_modules/.cache/appium\nRunning 5 doctor checks for the \"mac2\" driver\ninfo Doctor ### Starting doctor diagnostics  ###\ninfo Doctor  ✔ xCode is installed at '/Applications/Xcode.app/Contents/Developer'\ninfo Doctor  ✔ xcodebuild is installed and has a matching version number (26.6 >= 13)\nWARN Doctor  ✖ Automation Mode requires user authentication\ninfo Doctor  ✔ ffmpeg exists at '/opt/homebrew/bin/ffmpeg'\ninfo Doctor  ✔ This process can read \"/Users/zyongzhu/Library/Daemon Containers\" (no files under */Data/Attachments/* or */Data/tmp/Attachments/* yet).\ninfo Doctor ### Diagnostic completed, 0 required fixes needed, 1 optional fix possible. ###\ninfo Doctor \ninfo Doctor ### Optional Manual Fixes ###\ninfo Doctor To fix these optional issues, please do the following manually:\nWARN Doctor  ➜ Run `automationmodetool enable-automationmode-without-authentication` to disable Automation Mode authentication\ninfo Doctor \ninfo Doctor Bye! All issues have been fixed!\ninfo Doctor \n"
+    }
+  ],
+  "nativeAcceptance": "pending",
+  "nativeSessionCreated": false,
+  "applicationStarted": false,
+  "prerequisites": {
+    "userAuthentication": "等待系统正常认证；未调用免认证开关",
+    "frozenApp": "等待主线程提供冻结包路径",
+    "isolatedApplicationData": "待证明 shell app_data_dir、激活及用户资料均不读写真实用户数据"
+  },
+  "scope": "环境命令与版本；不证明 App 可用、驱动会话成功、所有功能或官方模型整链通过"
+}

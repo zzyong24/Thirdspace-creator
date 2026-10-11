@@ -16,6 +16,9 @@ import {
   skillLabelOf,
   SKILL_LABELS,
   type SkillItem,
+  skillWorkspaceOf,
+  skillWorkspaceKey,
+  skillsWorkspaceKey,
 } from "./skills-data";
 import type { AccountSkillOverlayResource } from "@creatoros/contract";
 
@@ -275,5 +278,39 @@ describe("facets 说明卡([gate-F2])", () => {
     expect(rows[2]!.required).toBe(false);
     // 每行都有中文含义(词表来源)。
     expect(rows[0]!.label).toContain("定位");
+  });
+});
+
+
+describe("[T-1234] 真实账号组投影", () => {
+  it("canonical 组保留公开 groupId，不借 accountId 表示组", () => {
+    const [projected] = buildSkillItems([catalogRow({skillId:"script.draft", groupId:"group-a", accountId:null})]);
+    expect(projected).toMatchObject({groupId:"group-a", accountId:null});
+  });
+  it("旧响应缺 groupId 仅归一 null，保原 legacy 账号", () => {
+    const [projected] = buildSkillItems([catalogRow({skillId:"script.draft"})]);
+    expect(projected).toMatchObject({groupId:null, accountId:"account-a"});
+  });
+});
+
+
+describe("[T-1234] scope实例与只读目录", () => {
+  it("组A/B、legacy同名账号和无scope不是同一编辑实例", () => {
+    const a=item({id:"script.draft",groupId:"a",accountId:null});
+    const b={...a,groupId:"b"};
+    const legacy={...a,groupId:null,accountId:"a"};
+    const none={...a,groupId:null};
+    expect(new Set([a,b,legacy,none].map(skillWorkspaceKey)).size).toBe(4);
+    expect(skillsWorkspaceKey([a])).not.toBe(skillsWorkspaceKey([b]));
+    expect(skillWorkspaceOf(a)).toEqual({groupId:"a",accountId:null});
+    expect(skillWorkspaceOf(legacy)).toEqual({groupId:null,accountId:"a"});
+    expect(skillWorkspaceOf(none)).toBeNull();
+  });
+  it.each([
+    {groupId:"a",accountId:"a"}, {groupId:"",accountId:null},
+    {groupId:"  ",accountId:null}, {groupId:" a ",accountId:null},
+    {groupId:null,accountId:""}, {groupId:null,accountId:" a "},
+  ])("混合/损坏scope不降级为legacy: %j", (scope) => {
+    expect(skillWorkspaceOf(item({id:"script.draft",...scope}))).toBeNull();
   });
 });

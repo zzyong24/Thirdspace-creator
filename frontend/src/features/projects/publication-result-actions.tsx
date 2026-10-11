@@ -1,5 +1,7 @@
 "use client";
 
+import {codexCapabilityExplanation} from '@/lib/codex-capability-explanation';
+
 import * as React from "react";
 import Image from "next/image";
 import type { CreativeCapability, CreativeResult } from "@creatoros/contract";
@@ -69,6 +71,7 @@ function candidateText(result: CreativeResult): string {
 function abilityText(cap: CreativeCapability | undefined) {
   if (!cap || cap.state === "unknown") return "尚未核验生成能力";
   if (cap.state === "supported") return "当前可生成";
+  const codexReason=codexCapabilityExplanation(cap.reasonCode);if(codexReason)return codexReason;
   if (cap.reasonCode === "MODEL_NOT_CONFIGURED") return "当前模型凭据不可用，请检查模型设置";
   if (cap.reasonCode === "ADAPTER_NOT_READY") return "尚未接通";
   return "当前暂不可用";

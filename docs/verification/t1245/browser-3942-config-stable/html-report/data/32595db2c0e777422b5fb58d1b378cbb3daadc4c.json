@@ -1,0 +1,43 @@
+{
+  "original": {
+    "jobId": "job-dc4c8d0c-17",
+    "runId": "run-43e5898e-62a8-4a3b-9215-7b04c7dfe1fc",
+    "aiId": "ai-task-dc4c8d0c-43",
+    "groupId": "grp-dc4c8d0c-7",
+    "accountId": "acct-dc4c8d0c-12",
+    "executionId": "exec_c289c06c-201f-486a-a7a2-5032399b2bad"
+  },
+  "observations": 1,
+  "triggers": [
+    {
+      "jobId": "job-dc4c8d0c-17",
+      "groupId": "grp-dc4c8d0c-7",
+      "accountId": "acct-dc4c8d0c-12"
+    }
+  ],
+  "readiness": "missing",
+  "run": {
+    "id": "run-43e5898e-62a8-4a3b-9215-7b04c7dfe1fc",
+    "status": "needs_reconnect",
+    "itemsNew": 0,
+    "itemsUpdated": 0,
+    "finishedAt": "2026-10-11T13:35:05.416Z"
+  },
+  "ai": {
+    "id": "ai-task-dc4c8d0c-43",
+    "status": "running",
+    "runtimeStatus": "waiting_user",
+    "executionTaskId": "exec_c289c06c-201f-486a-a7a2-5032399b2bad",
+    "errorCode": "FLYWHEEL_LOGIN_REQUIRED"
+  },
+  "execution": {
+    "id": "exec_c289c06c-201f-486a-a7a2-5032399b2bad",
+    "status": "blocked",
+    "runtimeStatus": "waiting_user",
+    "errorCode": "FLYWHEEL_LOGIN_REQUIRED",
+    "attempt": 1,
+    "ownerId": "ai-task-dc4c8d0c-43"
+  },
+  "wrongGroupStatus": 404,
+  "boundary": "真实无绑定授权等待，不代表平台采集成功或真人账号绑定"
+}

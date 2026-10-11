@@ -1,0 +1,17 @@
+{
+  "staticFailures": 22,
+  "dynamicVitestGroups": [
+    5,
+    20,
+    37,
+    68,
+    27
+  ],
+  "dynamicNodeGroups": [
+    6,
+    5
+  ],
+  "dynamicPassTotal": 168,
+  "staticExit": 1,
+  "noNewFindingClaimWithoutFullComparison": true
+}

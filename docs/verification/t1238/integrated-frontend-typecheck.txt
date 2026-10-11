@@ -1,0 +1,10 @@
+
+> creatoros-frontend@1.2.0 typecheck /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+> next typegen && tsc --noEmit
+
+Generating route types...
+✓ Types generated successfully
+src/features/settings/settings-interactive-region.tsx(282,6): error TS17008: JSX element 'Dialog' has no corresponding closing tag.
+src/features/settings/settings-interactive-region.tsx(283,8): error TS17008: JSX element 'DialogContent' has no corresponding closing tag.
+src/features/settings/settings-interactive-region.tsx(295,1): error TS1005: '</' expected.
+ ELIFECYCLE  Command failed with exit code 2.

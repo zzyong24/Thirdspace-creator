@@ -35,3 +35,10 @@ describe('原Codex prompt历史消费者',()=>{
   expect(()=>prompt([message])).toThrow(expect.objectContaining({outcome:'waiting_user',errorCode:'CODEX_INPUT_MODALITY_UNSUPPORTED'}));
  });
 });
+
+it('真实SDK用户已授权inline图片转换后可交原生输入，URL和错角色仍拒绝',async()=>{
+ const messages=await convertToModelMessages([{id:'image-user',role:'user',parts:[{type:'text',text:'看图'},{type:'file',mediaType:'image/png',url:'data:image/png;base64,AA=='}]}] as UIMessage[]);
+ const images:Array<{url:string}>=[];expect(externalChatPrompt({system:'原任务',messages:JSON.parse(JSON.stringify(messages))} as Parameters<typeof externalChatPrompt>[0],images)).toContain('用户图片 1');expect(images).toEqual([{url:'data:image/png;base64,AA=='}]);
+ for(const image of ['https://evil.invalid/x.png','file:///private/image.png','data:image/png;base64,not-base64'])expect(()=>externalChatPrompt({system:'',messages:[{role:'user',content:[{type:'image',image}]}]} as any,[])).toThrow();
+ expect(()=>externalChatPrompt({system:'',messages:[{role:'assistant',content:[{type:'image',image:'data:image/png;base64,AA=='}]}]} as any,[])).toThrow();
+});

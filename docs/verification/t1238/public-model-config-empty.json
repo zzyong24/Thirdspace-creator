@@ -1,0 +1,112 @@
+{
+  "data": [
+    {
+      "id": "ai-model-user-eb780691-1-copilot.assist",
+      "userId": "user-eb780691-1",
+      "capability": "copilot.assist",
+      "provider": "",
+      "modelName": "",
+      "secretReference": "",
+      "baseUrl": null,
+      "apiFormat": "anthropic",
+      "settings": {
+        "effort": "medium"
+      },
+      "isDefault": true,
+      "hasSecret": false
+    },
+    {
+      "id": "ai-model-user-eb780691-1-copy.generate",
+      "userId": "user-eb780691-1",
+      "capability": "copy.generate",
+      "provider": "",
+      "modelName": "",
+      "secretReference": "",
+      "baseUrl": null,
+      "apiFormat": "anthropic",
+      "settings": {
+        "effort": "high"
+      },
+      "isDefault": false,
+      "hasSecret": false
+    },
+    {
+      "id": "ai-model-user-eb780691-1-planning.contract",
+      "userId": "user-eb780691-1",
+      "capability": "planning.contract",
+      "provider": "",
+      "modelName": "",
+      "secretReference": "",
+      "baseUrl": null,
+      "apiFormat": "anthropic",
+      "settings": {
+        "effort": "high"
+      },
+      "isDefault": false,
+      "hasSecret": false
+    },
+    {
+      "id": "ai-model-user-eb780691-1-planning.outline",
+      "userId": "user-eb780691-1",
+      "capability": "planning.outline",
+      "provider": "",
+      "modelName": "",
+      "secretReference": "",
+      "baseUrl": null,
+      "apiFormat": "anthropic",
+      "settings": {
+        "effort": "high"
+      },
+      "isDefault": false,
+      "hasSecret": false
+    },
+    {
+      "id": "ai-model-user-eb780691-1-research.analyze",
+      "userId": "user-eb780691-1",
+      "capability": "research.analyze",
+      "provider": "",
+      "modelName": "",
+      "secretReference": "",
+      "baseUrl": null,
+      "apiFormat": "anthropic",
+      "settings": {
+        "effort": "high"
+      },
+      "isDefault": false,
+      "hasSecret": false
+    },
+    {
+      "id": "ai-model-user-eb780691-1-review.insights",
+      "userId": "user-eb780691-1",
+      "capability": "review.insights",
+      "provider": "",
+      "modelName": "",
+      "secretReference": "",
+      "baseUrl": null,
+      "apiFormat": "anthropic",
+      "settings": {
+        "effort": "high"
+      },
+      "isDefault": false,
+      "hasSecret": false
+    },
+    {
+      "id": "ai-model-user-eb780691-1-script.rewrite",
+      "userId": "user-eb780691-1",
+      "capability": "script.rewrite",
+      "provider": "",
+      "modelName": "",
+      "secretReference": "",
+      "baseUrl": null,
+      "apiFormat": "anthropic",
+      "settings": {
+        "effort": "high"
+      },
+      "isDefault": false,
+      "hasSecret": false
+    }
+  ],
+  "meta": {
+    "requestId": "req-a46c818b-70"
+  }
+}

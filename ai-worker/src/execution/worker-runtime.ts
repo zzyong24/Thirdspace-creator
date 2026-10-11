@@ -1,3 +1,4 @@
+import {codexCallAuthority,codexWorkerPorts} from './codex-call-context';
 import {AsrExecutionInterruption} from '../runtime/asr-request';
 import type {runAssetAsrInWorker} from './asset-asr-worker-run';
 import type {runExternalChatInWorker} from "./external-chat-worker-run";
@@ -14,8 +15,8 @@ import {dailyTopicInputSchema} from "./topic-worker-input";
 import {getHistoricalScriptFallback} from "./script-fallback";
 import { randomUUID } from "node:crypto";
 import {
-  chatToolApprovalReceiptSchema, chatCommitReceiptSchema, hostMessageSchema, workerStructuredResultSchema, agenticCommitReceiptSchema, workerPortInputSchemas, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, workerModelSpecSchema, sameExecution,
-  workerTaskInputSchema, structuredGenerationInputSchema, workerCallRequestId, type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
+  chatToolApprovalReceiptSchema, chatCommitReceiptSchema, hostMessageSchema, workerStructuredResultSchema, agenticCommitReceiptSchema, workerPortInputSchemas, workerReservationSchema, workerStartReceiptSchema, modelGenerationInputSchema, executionModelSpecSchema, sameExecution,
+  workerTaskInputSchema, structuredGenerationInputSchema, intelligenceRewriteInputSchema, workerCallRequestId, type ExecutionRef, type WorkerMessage, type WorkerPort, type WorkerStopReason,
 } from "@creatoros/contract/execution-worker";
 import { z } from "zod";
 import type { runAgenticInWorker } from "./agentic-worker-run";
@@ -30,7 +31,7 @@ const modelCheckpointSchema = z.object({
 
 export interface WorkerDependencies {
   heartbeatMs?: number;
-  capabilities?: Array<"asset.asr"|"transcribe.douyin"|"asset.generate"|"model.generate"|"model.structured"|"agentic.run"|"chat.run"|"chat.script-draft"|"chat.hooks"|"chat.structured"|"chat.research"|"chat.web-read">;
+  capabilities?: Array<"asset.asr"|"transcribe.douyin"|"asset.generate"|"model.generate"|"model.structured"|"intelligence.rewrite-text"|"agentic.run"|"chat.run"|"chat.script-draft"|"chat.hooks"|"chat.structured"|"chat.research"|"chat.web-read">;
   supportsChatWebRead?:boolean;
   supportsChatResearch?:boolean;
   supportsChatHooks?:boolean;
@@ -45,15 +46,16 @@ export interface WorkerDependencies {
   runAgentic?: typeof runAgenticInWorker;
   runChat?: typeof runChatInWorker;
   runExternalChat?:typeof runExternalChatInWorker;
-  generateStructured?(input:z.infer<typeof structuredGenerationInputSchema>,model:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
+  generateStructured?(input:z.infer<typeof structuredGenerationInputSchema>,model:z.infer<typeof executionModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
+  generateIntelligenceText?(input:z.infer<typeof intelligenceRewriteInputSchema>,model:z.infer<typeof executionModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>):Promise<{callId:string;text:string}>;
   send(message: WorkerMessage): void;
-  generate(input: z.infer<typeof modelGenerationInputSchema>, model: z.infer<typeof workerModelSpecSchema>, signal: AbortSignal,
+  generate(input: z.infer<typeof modelGenerationInputSchema>, model: z.infer<typeof executionModelSpecSchema>, signal: AbortSignal,
     onText: (text: string) => void | Promise<void>): Promise<{text: string; usage: unknown}>;
 }
 
 /** Worker 只执行；状态、预算、凭据、候选的权威均在父进程命名端口。 */
 export function createExecutionWorker(deps: WorkerDependencies) {
-  const capabilities=["model.generate",...(deps.runAssetAsr?["asset.asr"]:[]), ...(deps.runTranscribe?["transcribe.douyin"]:[]), ...(deps.runAsset?["asset.generate"]:[]), ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatScriptDraft?["chat.script-draft"]:[]),...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[]),...(deps.supportsChatWebRead?["chat.web-read"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
+  const capabilities=["model.generate",...(deps.runAssetAsr?["asset.asr"]:[]), ...(deps.runTranscribe?["transcribe.douyin"]:[]), ...(deps.runAsset?["asset.generate"]:[]), ...(deps.generateStructured ? ["model.structured"] : []), ...(deps.generateIntelligenceText ? ["intelligence.rewrite-text"] : []), ...(deps.runAgentic ? ["agentic.run"] : []), ...(deps.runChat ? ["chat.run",...(deps.supportsChatScriptDraft?["chat.script-draft"]:[]),...(deps.supportsChatHooks?["chat.hooks"]:[]),...(deps.supportsChatStructured?["chat.structured"]:[]),...(deps.supportsChatResearch?["chat.research"]:[]),...(deps.supportsChatWebRead?["chat.web-read"]:[])] : [])].filter(capability=>!deps.capabilities || deps.capabilities.some(item=>item===capability));
   type Active = {execution: ExecutionRef; controller: AbortController;deadlineAt:number|null;receiptProtocol:boolean;nextCallSeq:number};
   const pending = new Map<string, {resolve(data: unknown): void; reject(error: Error): void; cleanup(): void;scope?:Active;callSeq?:number}>();
 
@@ -135,7 +137,17 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         return parsed.data;
       };
       const input = await readBoundary("readTaskContext", {}, workerTaskInputSchema);
-      if(!capabilities.includes(input.kind))throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
+      const executionCapability="intelligenceText" in input ? "intelligence.rewrite-text" : input.kind;
+      if(!capabilities.includes(executionCapability))throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
+      // 明确标签先进入专用依赖，不被视频等旧 structured facets 抢走，也不降为泛型 handler。
+      if("intelligenceText" in input){
+        if(!deps.generateIntelligenceText)throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
+        const model=await readBoundary("resolveModelCredential",{capability:input.capability},executionModelSpecSchema);
+        const result=await deps.generateIntelligenceText(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
+        signal.throwIfAborted();committing=true;
+        await call(execution,"commitResult",{outcome:"succeeded",...result},signal);
+        reason="completed";return;
+      }
       if((input.kind==="scheduled.flywheel"||input.kind==="benchmark.transcribe"))throw new GenerationFailure("failed","DOMAIN_STAGE_AUTHORIZATION_REQUIRED");
       if(input.kind==="asset.asr"){
         if(!deps.runAssetAsr)throw new GenerationFailure("waiting_user","ASSET_ASR_WORKER_UNAVAILABLE");
@@ -177,7 +189,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         if(input.tools.some(tool=>tool.execution==="worker.script-draft") && !capabilities.includes("chat.script-draft"))throw new GenerationFailure("waiting_user","CHAT_SCRIPT_DRAFT_WORKER_UNAVAILABLE");
         if(input.tools.some(tool=>tool.execution==="worker.script-hooks") && !capabilities.includes("chat.hooks"))throw new GenerationFailure("waiting_user","CHAT_HOOKS_WORKER_UNAVAILABLE");
         if(!deps.runChat)throw new GenerationFailure("waiting_user","CHAT_WORKER_NOT_READY");
-        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
+        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema);
         const result=await deps.runChat(input,model,signal,{
           call:(port,data,portSignal)=>call(execution,port,data,portSignal),
           readPlanStatus:async(modelCallId,planSignal)=>call(execution,"readWorkbenchPlan",{modelCallId},planSignal) as ReturnType<NonNullable<Parameters<typeof deps.runChat>[3]["readPlanStatus"]>>,
@@ -197,7 +209,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       }
       if(input.kind==="agentic.run"){
         if(!deps.runAgentic)throw new GenerationFailure("waiting_user","AGENTIC_WORKER_NOT_READY");
-        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
+        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema);
         signal.throwIfAborted();
         const result=await deps.runAgentic(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal),text=>{
           if(!signal.aborted)send({version:1,type:"progress",requestId,execution,seq:seq++,text});
@@ -221,7 +233,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
           if(!deps.runCover)throw new GenerationFailure("waiting_user","COVER_WORKER_UNAVAILABLE");
           if(input.capability!=="copy.generate")throw new Error("COVER_INPUT_MISMATCH");
           // 先沿原凭据端口锁定业务任务的模型身份，封面链返回最终图片回执。
-          const model=await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
+          const model=await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema);
           const result=await deps.runCover(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
           signal.throwIfAborted();committing=true;
           await call(execution,"commitResult",{outcome:"succeeded",...result},signal);
@@ -256,7 +268,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
           return;
         }
         if(!deps.generateStructured)throw new Error("STRUCTURED_WORKER_UNAVAILABLE");
-        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
+        const model=await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema);
         const result=await deps.generateStructured(input,model,signal,(port,data,portSignal)=>call(execution,port,data,portSignal));
         signal.throwIfAborted();
         committing=true;
@@ -272,9 +284,6 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         return checkpoint;
       };
       const initialCheckpoint = await readCheckpoint();
-      if(initialCheckpoint.recovery === "requires_reconciliation" && ![...initialCheckpoint.messages,...initialCheckpoint.uncheckpointedReceipts].some(receipt=>receipt.resultText?.trim())) {
-        throw new GenerationFailure("unknown_result","CHECKPOINT_REQUIRES_RECONCILIATION");
-      }
       const checkpointReceipt = async (id:string, checkpoint=initialCheckpoint) => {
         const messages=checkpoint.messages.map(message=>({role:"assistant" as const,callId:message.callId}));
         const seen=new Set(messages.map(message=>message.callId));
@@ -289,6 +298,10 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         if(saved.revision!==checkpoint.revision+1)throw new Error("CHECKPOINT_REVISION_MISMATCH");
       };
       if(input.kind!=="model.generate")throw new GenerationFailure("waiting_user","WORKER_CAPABILITY_UNAVAILABLE");
+      // Pi 对账中的原检查点仍在任何调用预留前停止；Codex才核原回合只读证明。
+      const reconciliationModel=initialCheckpoint.recovery === "requires_reconciliation"
+        ? await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema) : undefined;
+      if(reconciliationModel && !("engine" in reconciliationModel))throw new GenerationFailure("unknown_result","CHECKPOINT_REQUIRES_RECONCILIATION");
       const operationKey = input.operationKey;
       const reservation = workerReservationSchema.parse(await call(execution, "reserveCall", {operationKey, maxOutputTokens: input.maxOutputTokens}, signal));
       callId = reservation.callId;
@@ -299,21 +312,27 @@ export function createExecutionWorker(deps: WorkerDependencies) {
         reason = "completed";
         return;
       }
-      if (initialCheckpoint.recovery === "requires_reconciliation") throw new GenerationFailure("unknown_result","CHECKPOINT_REQUIRES_RECONCILIATION");
-      if (reservation.status !== "reserved") throw new GenerationFailure("unknown_result", "CALL_REQUIRES_RECONCILIATION");
-      const model = await readBoundary("resolveModelCredential", {capability: input.capability}, workerModelSpecSchema);
+      const model = reconciliationModel ?? await readBoundary("resolveModelCredential", {capability: input.capability}, executionModelSpecSchema);
+      const codex="engine" in model;
+      const originalNative=codex&&['started','unknown'].includes(reservation.status)
+        ? z.object({threadId:z.string().min(1),turnId:z.string().min(1)}).passthrough().safeParse(await call(execution,'readCodexCall',{callId},signal)) : undefined;
+      const recovering=originalNative?.success===true;
+      if (!recovering && initialCheckpoint.recovery === "requires_reconciliation") throw new GenerationFailure("unknown_result","CHECKPOINT_REQUIRES_RECONCILIATION");
+      if (!recovering && reservation.status !== "reserved") throw new GenerationFailure("unknown_result", "CALL_REQUIRES_RECONCILIATION");
       signal.throwIfAborted();
       // 启动回执丢失也视为未知；没有明确许可绝不调用供应商。
       started = true;
-      const receipt = workerStartReceiptSchema.parse(await call(execution, "startCall", {callId}, signal));
-      if (receipt.callId !== callId) throw new Error("CALL_RECEIPT_MISMATCH");
+      if(!recovering){const receipt = workerStartReceiptSchema.parse(await call(execution, "startCall", {callId}, signal));
+      if (receipt.callId !== callId) throw new Error("CALL_RECEIPT_MISMATCH");}
       signal.throwIfAborted();
       const streamWriter=createPersistentStreamWriter(callId,data=>call(execution,"appendStreamEvents",data));
       const result = await (async()=>{
-        try{return await deps.generate(input,model,signal,async text=>{
+        try{return await codexCallAuthority.run({callId,recover:recovering},()=>deps.generate(input,model,signal,async text=>{
+          // 原回合只读结果直接结算；旧stream所属原启动attempt，不伪造新流执行事实。
+          if(recovering)return;
           await streamWriter.push({type:"text-delta",id:callId,delta:text});
           if(!signal.aborted)send({version:1,type:"progress",requestId,execution,seq:seq++,text});
-        });}finally{await streamWriter.close();}
+        }));}finally{await streamWriter.close();}
       })();
       // 已执行调用允许在取消后结算，提交候选仍由父端口检查控制状态。
       await call(execution, "settleCall", {callId, status: "settled", usage: result.usage, text:result.text});
@@ -371,7 +390,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
           if (!sameExecution(active.execution, message.execution)) send({version: 1, type: "stopped", requestId: message.requestId, execution: message.execution, reason: "failed"});
           return;
         }
-        void execute(message.execution, message.deadlineAt, message.requestId,message.receiptProtocol);
+        void codexWorkerPorts.run((port,data,signal)=>call(message.execution,port,data,signal),()=>execute(message.execution,message.deadlineAt,message.requestId,message.receiptProtocol));
       }
     },
     close() {

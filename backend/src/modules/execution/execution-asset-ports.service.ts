@@ -1,3 +1,4 @@
+import {executionAssetCredentialSchema} from '@creatoros/contract/execution-worker';
 import {createHash} from "node:crypto";
 import type {RequestContext} from "@creatoros/contract";
 import {assetCredentialSchema,assetRuntimeOptionsSchema} from "@creatoros/contract/execution-worker";
@@ -38,9 +39,11 @@ export function createExecutionAssetPorts(deps:Parameters<typeof createExecution
     const {callId}=workerPortInputSchemas.resolveAssetCredential.parse(raw);
     const owner=await leases.withLease(ref,"admission",async scope=>{await bindAssetExecution(scope,callId);return {context:scope.context,aiTaskId:scope.task.ownerId};});
     if(!deps.resolveCredential)throw new Error("ASSET_CREDENTIAL_UNAVAILABLE");
-    const credential=assetCredentialSchema.parse(await deps.resolveCredential(owner.context,{aiTaskId:owner.aiTaskId,executionTaskId:ref.executionTaskId}));
+    const credential=executionAssetCredentialSchema.parse(await deps.resolveCredential(owner.context,{aiTaskId:owner.aiTaskId,executionTaskId:ref.executionTaskId}));
     await leases.withLease(ref,"admission",async scope=>{
      const {input}=await bindAssetExecution(scope,callId);
+     if("engine" in input){if(!("engine" in credential)||credential.kind!==input.mediaKind||credential.runtimeVersion!==input.runtimeVersion)throw new ConflictError("Codex素材身份不符");return;}
+     if("engine" in credential)throw new ConflictError("API任务不能切换Codex");
      const {token:_token,provider,model,baseUrl,serviceId,kind,...rawOptions}=credential;
      const options=assetRuntimeOptionsSchema.parse(rawOptions),digest=(value:unknown)=>`sha256:${createHash("sha256").update(canonicalJson(value)).digest("hex")}`;
      if(provider!==input.provider || model!==input.model || baseUrl!==input.baseUrl || serviceId!==input.serviceId || kind!==input.mediaKind || digest(options)!==(input.runtimeOptionsDigest??digest({})))throw new ConflictError("素材模型配置与冻结输入不符");

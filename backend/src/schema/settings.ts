@@ -33,6 +33,7 @@ export const userPreferences = pgTable("user_preferences", {
   fileNamingRule: text("file_naming_rule").notNull().default(""),
   // 默认关 —— PROTECTION.md §4「数据上报 · 默认零收集」。隐私优先本地软件,遥测新用户默认 off。
   analyticsEnabled: boolean("analytics_enabled").notNull().default(false),
+  assistantExecutionEngine: text("assistant_execution_engine"),
 });
 
 // MODEL_CONFIGURATION — upsert keyed on (user_id, capability) (the unique index
@@ -276,7 +277,8 @@ CREATE TABLE IF NOT EXISTS user_preferences (
   default_visibility TEXT NOT NULL,
   autosave_enabled BOOLEAN NOT NULL DEFAULT TRUE,
   file_naming_rule TEXT NOT NULL DEFAULT '',
-  analytics_enabled BOOLEAN NOT NULL DEFAULT FALSE
+  analytics_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+  assistant_execution_engine TEXT CHECK (assistant_execution_engine IN ('pi', 'codex'))
 );
 CREATE TABLE IF NOT EXISTS model_configurations (
   id TEXT PRIMARY KEY,

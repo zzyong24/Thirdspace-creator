@@ -1,0 +1,30 @@
+{
+  "traceSha256": "a7bc8752bd46e638d4a0c812df9c3ec580f2c7ec9e1bb45b0656f7f1a749b8f8",
+  "calls": [
+    {
+      "type": "before",
+      "callId": "call@873",
+      "method": "setViewportSize",
+      "startTime": 36479.709
+    },
+    {
+      "type": "after",
+      "callId": "call@873",
+      "endTime": 36508.139
+    },
+    {
+      "type": "before",
+      "callId": "call@875",
+      "method": "screenshot",
+      "startTime": 36550.512
+    },
+    {
+      "type": "after",
+      "callId": "call@875",
+      "endTime": 36582.074
+    }
+  ],
+  "screenshotStartMinusViewportStartMs": 70.80299999999988,
+  "sidebarDeclaredTransitionMs": 200,
+  "scope": "真实 trace 调用时序，不声称实际像素曝光时刻或稳定侧栏宽度；无凭据/请求正文读取"
+}

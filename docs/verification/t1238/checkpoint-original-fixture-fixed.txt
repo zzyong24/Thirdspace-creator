@@ -1,0 +1,15 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/backend
+
+
+ Test Files  1 passed (1)
+      Tests  24 passed (24)
+   Start at  20:46:29
+   Duration  19.23s (transform 2.35s, setup 0ms, import 3.41s, tests 15.68s, environment 0ms)
+
+
+实际命令：pnpm --dir backend exec vitest run src/modules/execution/execution-checkpoint.service.test.ts --testTimeout=180000 --hookTimeout=180000 --retry=0 --maxWorkers=1
+EXIT_CODE=0；原完整单文件24PASS/0FAIL/0SKIP，原4项blocked/迟到结算水位测试实际通过，无Worker build。
+源码差异审阅：只改原测试50/62两行explicit-resume为explicit-resume:${f.task.id}，避免共享账号跨独立任务请求号冲突；没有修改任何生产服务、摘要校验、未知结果门或ACK断言。
+这两位置每项仅一次command，无同键重投断言；原同请求并发save只推进一次测试未改，因此不削弱已有同键幂等覆盖。
+原红24项20PASS/4FAIL保留checkpoint-original-recheck.txt；本文件真实24PASS关闭对应遗留，不能由其它26/31恢复测试代签。git diff --check该测试exit0，无commit。

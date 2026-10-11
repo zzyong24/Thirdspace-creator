@@ -47,7 +47,7 @@ describe("持久检查点与权威调用事实", () => {
     const call=await f.call("blocked-read","tool",false);
     await f.ledger.settle(f.ref,call.id,{status:"settled",usage:{totalTokens:0},resultText:JSON.stringify(result)});
     await db.update(executionTasks).set({status:"waiting_user"}).where(eq(executionTasks.id,f.task.id));
-    await f.tasks.command(ctx,{taskIds:[f.task.id],command:"resume",idempotencyKey:"explicit-resume"});
+    await f.tasks.command(ctx,{taskIds:[f.task.id],command:"resume",idempotencyKey:`explicit-resume:${f.task.id}`});
     const claim=(await f.tasks.claimTask({taskId:f.task.id,workerId:"resumed"}))!;
     const state=await f.checkpoints.read({...f.ref,attempt:claim.lease.attempt,fenceToken:claim.lease.fenceToken});
     expect(state.acknowledgedBlockedCallIds).toEqual([]);
@@ -59,7 +59,7 @@ describe("持久检查点与权威调用事实", () => {
     await f.ledger.settle(f.ref,known.id,{status:"settled",usage:{totalTokens:0},resultText:result("known")});
     const late=await f.call("late-read","tool",false);
     await db.update(executionTasks).set({status:"waiting_user"}).where(eq(executionTasks.id,f.task.id));
-    await f.tasks.command(ctx,{taskIds:[f.task.id],command:"resume",idempotencyKey:"explicit-resume"});
+    await f.tasks.command(ctx,{taskIds:[f.task.id],command:"resume",idempotencyKey:`explicit-resume:${f.task.id}`});
     // 真实settlement允许旧attempt在新claim之前结算既有调用。
     await f.ledger.settle(f.ref,late.id,{status:"settled",usage:{totalTokens:0},resultText:result("late")});
     const claim=(await f.tasks.claimTask({taskId:f.task.id,workerId:"resumed"}))!;

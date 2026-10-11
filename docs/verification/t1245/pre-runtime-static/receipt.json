@@ -1,0 +1,38 @@
+[
+  {
+    "name": "eslint",
+    "command": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "eslint",
+      "tests/e2e/automations-run-now-public.spec.ts"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 1.922
+  },
+  {
+    "name": "types",
+    "command": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "tsc",
+      "--noEmit"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 7.807
+  },
+  {
+    "name": "diff",
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 0.4
+  }
+]

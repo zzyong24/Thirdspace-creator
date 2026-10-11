@@ -1,0 +1,33 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+ ❯ src/execution/worker-runtime.test.ts (42 tests | 1 failed) 2203ms
+     × 检查点要求对账时不开始新的供应商调用 63ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/execution/worker-runtime.test.ts > 独立 Worker 端口生命周期 > 检查点要求对账时不开始新的供应商调用
+AssertionError: expected [ { version: 1, type: 'call', …(4) } ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/execution/worker-runtime.test.ts:288:114
+    286|     await vi.waitFor(()=>expect(messages.some(x=>x.type==="stopped")).…
+    287|     expect(generate).not.toHaveBeenCalled();
+    288|     expect(messages.filter(x=>x.type==="call" && ["reserveCall","start…
+       |                                                                                                                  ^
+    289|     expect(messages.find(x=>x.type==="stopped")).toMatchObject({reason…
+    290|     worker.close();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 50 passed (51)
+   Start at  20:08:12
+   Duration  6.97s (transform 1.95s, setup 0ms, import 3.85s, tests 2.71s, environment 0ms)
+

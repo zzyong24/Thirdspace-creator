@@ -352,4 +352,20 @@ describe("runExecutionTask (echo.manifest end-to-end)", () => {
     // in-flight 表已清:重复 abort 不再命中。
     expect(abortExecutionTask("t-abort")).toBe(false);
   });
+  it("T1238 原视频冻结期限贯通 executor，已耗尽期限不能重新启动", async () => {
+    const ai = makeFakeAi(), registry = createExecutorRegistry(), run = vi.fn(async () => ({summary:"不应重新执行"}));
+    registry.register({taskType:"video.render",run});
+    const bindModelExecutionScope = vi.fn(async (_ctx, input) => {expect(input.taskId).toBe("t-expired-video");return {deadlineAt:Date.now()-1};});
+    await runExecutionTask(ctx,{id:"t-expired-video",inputData:{spec:{taskType:"video.render",goal:"原视频",constraints:{timeoutSec:600,network:"deny",maxOutputMB:8}}}},{...depsWith(registry,ai),bindModelExecutionScope});
+    expect(bindModelExecutionScope).toHaveBeenCalledTimes(1);
+    expect(run).not.toHaveBeenCalled();expect(ai.candidates).toHaveLength(0);expect(ai.failures[0]).toContain("执行超时");
+  });
+  it("T1238 视频公共执行链把原持久绝对期限和同一signal交给审核端口", async () => {
+    const ai=makeFakeAi(),registry=createExecutorRegistry(),deadlineAt=Date.now()+240000;
+    registry.register({taskType:"video.render",async run(sandbox,_params,opts){expect(sandbox.taskId).toBe("t-original-video");expect(opts.deadlineAt).toBe(deadlineAt);expect(opts.signal.aborted).toBe(false);await fs.writeFile(path.join(sandbox.outDir,"final.mp4"),"fixture-render-output");return {summary:"原视频候选"};}});
+    const bindModelExecutionScope=vi.fn(async()=>({deadlineAt}));
+    await runExecutionTask(ctx,{id:"t-original-video",inputData:{spec:{taskType:"video.render",goal:"原视频",constraints:{timeoutSec:600,network:"deny",maxOutputMB:8}}}},{...depsWith(registry,ai),bindModelExecutionScope});
+    expect(ai.failures).toHaveLength(0);expect(ai.candidates).toHaveLength(1);expect(bindModelExecutionScope).toHaveBeenCalledTimes(1);
+  });
+
 });

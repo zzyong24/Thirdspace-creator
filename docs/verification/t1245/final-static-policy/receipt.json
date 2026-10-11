@@ -1,0 +1,47 @@
+[
+  {
+    "name": "test-eslint",
+    "command": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "eslint",
+      "tests/e2e/automations-run-now-public.spec.ts"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 1.222
+  },
+  {
+    "name": "types",
+    "command": [
+      "pnpm",
+      "--dir",
+      "frontend",
+      "exec",
+      "tsc",
+      "--noEmit"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 5.477
+  },
+  {
+    "name": "diff",
+    "command": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "exitCode": 0,
+    "elapsedSeconds": 0.295
+  },
+  {
+    "name": "timeout-policy",
+    "command": [
+      "node",
+      "tools/timeout-policy/verify.mjs"
+    ],
+    "exitCode": 1,
+    "elapsedSeconds": 33.47
+  }
+]

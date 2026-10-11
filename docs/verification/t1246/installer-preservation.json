@@ -1,0 +1,8 @@
+{
+  "source": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0.dmg",
+  "exists": false,
+  "installed_app_untouched": true,
+  "package_env_override": {
+    "CREATOROS_LOCAL_SKIP_INSTALL": "1"
+  }
+}

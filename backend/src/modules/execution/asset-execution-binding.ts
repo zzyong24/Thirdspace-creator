@@ -34,6 +34,7 @@ export async function bindAssetExecution(scope:AssetExecutionScope,callId?:strin
 
   if(!call || call.kind!=="model" || call.parentCallId || call.operationKey!==input.operationKey || call.inputDigest!==digest || call.toolExecutionClaimId)throw new ConflictError("素材执行与原调用不符");
   function identity(raw:unknown){
+   if("engine" in input)throw new ConflictError("Codex图片不能附供应商视频任务号");
    const job=providerJobSchema.parse(raw);
    if(job.provider!==input.provider || job.model!==input.model || job.baseUrl!==input.baseUrl || job.serviceId!==input.serviceId)throw new ConflictError("供应商身份与冻结输入不符");
    return job;

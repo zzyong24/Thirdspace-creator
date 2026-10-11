@@ -1,0 +1,24 @@
+{
+  "id": "exec_c2b9c4f7-b6bf-4b86-943b-7576cdd81560",
+  "userId": "user-eb780691-1",
+  "accountId": "acct-12b7a425-8",
+  "groupId": "grp_legacy_acct-12b7a425-8",
+  "kind": "model.structured",
+  "operationKey": "asset.classify",
+  "maxOutputTokens": 65536,
+  "skillSnapshot": {
+    "userId": "user-eb780691-1",
+    "accountId": "acct-12b7a425-8",
+    "groupId": "grp_legacy_acct-12b7a425-8"
+  },
+  "target": {
+    "taskType": "asset.classify",
+    "assetId": "asset-generated-a90fa8d3a1163270446eb06261efb27d29fe920337a571c6107960dd87918b86",
+    "fileId": "afile-generated-a90fa8d3a1163270446eb06261efb27d29fe920337a571c6107960dd87918b86",
+    "checksum": "b6f573c10f728efdfb0114e5bb4b0c940890cc8882daf8e1f6e3a3df7abfece7",
+    "fileName": "保留参考图片的白色背景和圆形布局，将蓝色圆形改为 · 生成图",
+    "mimeType": "image/png",
+    "skipModel": false,
+    "checksumPresent": true
+  }
+}

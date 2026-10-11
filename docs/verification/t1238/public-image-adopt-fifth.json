@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "ConflictError",
+    "message": "素材缺少原调用的持久提交事实",
+    "details": {}
+  },
+  "meta": {
+    "requestId": "dispatch"
+  }
+}

@@ -1,0 +1,9 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/backend
+
+
+ Test Files  2 passed (2)
+      Tests  2 passed (2)
+   Start at  19:38:06
+   Duration  8.64s (transform 2.38s, setup 0ms, import 5.26s, tests 11.55s, environment 0ms)
+

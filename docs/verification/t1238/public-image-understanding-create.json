@@ -1,0 +1,28 @@
+{
+  "data": {
+    "id": "ai-task-7721a047-97",
+    "userId": "user-eb780691-1",
+    "groupId": "grp_legacy_acct-12b7a425-8",
+    "groupVersion": 1,
+    "membershipVersion": 1,
+    "projectId": null,
+    "contentOutputId": null,
+    "taskType": "asset.classify",
+    "status": "queued",
+    "inputData": {
+      "assetId": "asset-generated-a90fa8d3a1163270446eb06261efb27d29fe920337a571c6107960dd87918b86"
+    },
+    "modelKey": "codex",
+    "idempotencyKey": "group:grp_legacy_acct-12b7a425-8:asset.classify:t1238-public-image-understanding-001",
+    "attemptId": "t1238-public-image-understanding-001",
+    "requestFingerprint": "sha256:dfca2e424fe6a0fc5f58c88be5a272e9bf9eae72d1857397a6fd333e79315b1a",
+    "retryOfTaskId": null,
+    "requestedAt": "2026-10-11T11:34:47.958Z",
+    "startedAt": null,
+    "completedAt": null,
+    "errorMessage": null
+  },
+  "meta": {
+    "requestId": "req-7721a047-96"
+  }
+}

@@ -1,0 +1,93 @@
+[macos] /usr/bin/sw_vers 
+started=2026-10-11T14:18:05.363Z elapsedMs=14 exit=0
+ProductName:		macOS
+ProductVersion:		26.2
+BuildVersion:		25C56
+
+
+[xcode-path] /usr/bin/xcode-select -p
+started=2026-10-11T14:18:05.378Z elapsedMs=4 exit=0
+/Applications/Xcode.app/Contents/Developer
+
+
+[xcode-version] /usr/bin/xcodebuild -version
+started=2026-10-11T14:18:05.382Z elapsedMs=114 exit=0
+Xcode 26.6
+Build version 17F113
+
+
+[automation-tool] /usr/bin/xcrun --find automationmodetool
+started=2026-10-11T14:18:05.496Z elapsedMs=11 exit=0
+/usr/bin/automationmodetool
+
+
+[automation-status] /usr/bin/automationmodetool 
+started=2026-10-11T14:18:05.507Z elapsedMs=6 exit=0
+Automation Mode is disabled.
+This device requires user authentication to enable Automation Mode.
+
+
+[node-version] /opt/homebrew/Cellar/node/25.9.0_2/bin/node --version
+started=2026-10-11T14:18:05.513Z elapsedMs=59 exit=0
+v25.9.0
+
+
+[npm-version] /opt/homebrew/bin/npm --version
+started=2026-10-11T14:18:05.572Z elapsedMs=131 exit=0
+11.12.1
+
+
+[ffmpeg-version] /opt/homebrew/bin/ffmpeg -version
+started=2026-10-11T14:18:05.703Z elapsedMs=80 exit=0
+ffmpeg version 9.0.1 Copyright (c) 2000-2026 the FFmpeg developers
+built with Apple clang version 21.0.0 (clang-2100.1.1.101)
+configuration: --prefix=/opt/homebrew/Cellar/ffmpeg/9.0.1_1 --enable-shared --enable-pthreads --enable-version3 --cc=clang --host-cflags= --host-ldflags= --enable-ffplay --enable-gpl --enable-libsvtav1 --enable-libopus --enable-libx264 --enable-libmp3lame --enable-libdav1d --enable-libvmaf --enable-libvpx --enable-libx265 --enable-openssl --enable-videotoolbox --enable-audiotoolbox --enable-neon
+libavutil      61.  1.101 / 61.  1.101
+libavcodec     63.  1.101 / 63.  1.101
+libavformat    63.  1.101 / 63.  1.101
+libavdevice    63.  1.101 / 63.  1.101
+libavfilter    12.  1.101 / 12.  1.101
+libswscale     10.  1.101 / 10.  1.101
+libswresample   7.  1.101 /  7.  1.101
+
+Exiting with exit code 0
+
+
+[source-commit] /usr/bin/git rev-parse HEAD
+started=2026-10-11T14:18:05.783Z elapsedMs=22 exit=0
+4df3424972831acfdd091056b3045b2472120692
+
+
+[appium-version] /tmp/t1246-appium/node_modules/.bin/appium --version
+started=2026-10-11T14:18:05.805Z elapsedMs=627 exit=0
+3.8.0
+dbug Appium Creating hash file directory: /tmp/t1246-appium/home/node_modules/.cache/appium
+
+
+[installed-drivers] /tmp/t1246-appium/node_modules/.bin/appium driver list --installed
+started=2026-10-11T14:18:06.432Z elapsedMs=461 exit=0
+dbug Appium Creating hash file directory: /tmp/t1246-appium/home/node_modules/.cache/appium
+- Listing installed drivers (rerun with --verbose for more info)
+✔ Listing installed drivers (rerun with --verbose for more info)
+- mac2@4.3.6 [installed (linked from /tmp/t1246-appium/node_modules/appium-mac2-driver)]
+
+
+[mac2-doctor] /tmp/t1246-appium/node_modules/.bin/appium driver doctor mac2
+started=2026-10-11T14:18:06.893Z elapsedMs=715 exit=0
+dbug Appium Creating hash file directory: /tmp/t1246-appium/home/node_modules/.cache/appium
+Running 5 doctor checks for the "mac2" driver
+info Doctor ### Starting doctor diagnostics  ###
+info Doctor  ✔ xCode is installed at '/Applications/Xcode.app/Contents/Developer'
+info Doctor  ✔ xcodebuild is installed and has a matching version number (26.6 >= 13)
+WARN Doctor  ✖ Automation Mode requires user authentication
+info Doctor  ✔ ffmpeg exists at '/opt/homebrew/bin/ffmpeg'
+info Doctor  ✔ This process can read "/Users/zyongzhu/Library/Daemon Containers" (no files under */Data/Attachments/* or */Data/tmp/Attachments/* yet).
+info Doctor ### Diagnostic completed, 0 required fixes needed, 1 optional fix possible. ###
+info Doctor 
+info Doctor ### Optional Manual Fixes ###
+info Doctor To fix these optional issues, please do the following manually:
+WARN Doctor  ➜ Run `automationmodetool enable-automationmode-without-authentication` to disable Automation Mode authentication
+info Doctor 
+info Doctor Bye! All issues have been fixed!
+info Doctor 
+

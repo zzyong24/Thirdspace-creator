@@ -1,0 +1,11 @@
+{"recordedAt":"2026-10-11T14:17:44.162Z","timeoutMs":600000,"exitCode":0}
+dbug Appium Creating hash file directory: /tmp/t1246-appium/home/node_modules/.cache/appium
+- Installing '/tmp/t1246-appium/node_modules/appium-mac2-driver'
+✔ Installing '/tmp/t1246-appium/node_modules/appium-mac2-driver'
+- Validating '/tmp/t1246-appium/node_modules/appium-mac2-driver'
+✔ Validating '/tmp/t1246-appium/node_modules/appium-mac2-driver'
+dbug Appium Creating hash file directory: /tmp/t1246-appium/home/node_modules/.cache/appium
+dbug Appium Updated hash of /tmp/t1246-appium/home/package.json from: d5cca03742134afb205a0b7f4ff67cb2 to: f098868fad4042794e517f4b0dc302b5
+i Driver mac2@4.3.6 successfully installed
+- automationName: Mac2
+- platformNames: ["Mac"]

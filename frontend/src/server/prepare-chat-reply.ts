@@ -1,3 +1,4 @@
+import {freezeChatModelMessages} from './chat-model-message-snapshot';
 import type { UIMessage } from "ai";
 import type { RequestContext } from "@creatoros/contract";
 import type { ChatTurnSnapshot } from "@creatoros/backend/modules/ai";
@@ -36,5 +37,5 @@ export async function prepareChatReply(runtime:ChatRuntime,owner:RequestContext,
  input?.abortSignal?.throwIfAborted();
  // 两份严格 typed 稿件由同一模型调用返回；局部精调沿用旧预算。
  const maxOutputTokens=chatContext.creationTarget?32768:8192;
- return {capability:prepared.assembly.capability,system:prepared.assembly.system,messages:JSON.parse(JSON.stringify(prepared.modelMessages)),tools:prepared.toolDefinitions,workbenchCapabilities:prepared.workbenchCapabilities,...(prepared.workbenchCapabilities.length?{workbenchPlatform:prepared.workbenchPlatform}:{}),maxSteps:resolveChatMaxSteps(process.env),maxOutputTokens,...(prepared.assembly.forcedTool?{forcedTool:prepared.assembly.forcedTool}:{}),...(prepared.assembly.forcedToolSequence?{forcedToolSequence:prepared.assembly.forcedToolSequence}:{}),hostContext:prepared.hostContext};
+ return {capability:prepared.assembly.capability,system:prepared.assembly.system,messages:freezeChatModelMessages(prepared.modelMessages),tools:prepared.toolDefinitions,workbenchCapabilities:prepared.workbenchCapabilities,...(prepared.workbenchCapabilities.length?{workbenchPlatform:prepared.workbenchPlatform}:{}),maxSteps:resolveChatMaxSteps(process.env),maxOutputTokens,...(prepared.assembly.forcedTool?{forcedTool:prepared.assembly.forcedTool}:{}),...(prepared.assembly.forcedToolSequence?{forcedToolSequence:prepared.assembly.forcedToolSequence}:{}),hostContext:prepared.hostContext};
 }

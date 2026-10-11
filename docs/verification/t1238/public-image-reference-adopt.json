@@ -1,0 +1,32 @@
+{
+  "data": {
+    "id": "ai-task-a46c818b-74",
+    "userId": "user-eb780691-1",
+    "groupId": "grp_legacy_acct-12b7a425-8",
+    "groupVersion": 1,
+    "membershipVersion": 1,
+    "projectId": null,
+    "contentOutputId": null,
+    "taskType": "asset.generate",
+    "status": "succeeded",
+    "inputData": {
+      "kind": "image",
+      "mode": "image_to_image",
+      "prompt": "保留参考图片的白色背景和圆形布局，将蓝色圆形改为绿色。不要增加文字。",
+      "aspectRatio": "1:1",
+      "referenceAssetId": "asset-generated-50aabe8c75493ed9cf85d6b94b55ba955764af5038b4696f811d845007494bf6"
+    },
+    "modelKey": "codex",
+    "idempotencyKey": "group:grp_legacy_acct-12b7a425-8:asset.generate:t1238-public-native-reference-001",
+    "attemptId": "t1238-public-native-reference-001",
+    "requestFingerprint": "sha256:861aa38b9bac0899713a1d2789154d573aea5ea573e00ccec9d2d03a598c1dec",
+    "retryOfTaskId": null,
+    "requestedAt": "2026-10-11T11:20:02.723Z",
+    "startedAt": null,
+    "completedAt": "2026-10-11T11:33:15.220Z",
+    "errorMessage": null
+  },
+  "meta": {
+    "requestId": "req-7721a047-92"
+  }
+}

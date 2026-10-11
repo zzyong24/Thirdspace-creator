@@ -1,0 +1,27 @@
+{
+  "data": [
+    {
+      "id": "asset-process:exec_f87c6a87-facb-4864-871e-667b4be782dd",
+      "aiTaskId": "ai-task-7f12bd42-50",
+      "resultType": "asset.classify",
+      "artifactId": null,
+      "knowledgeItemId": null,
+      "assetId": null,
+      "resultData": {
+        "assetId": "asset-generated-a90fa8d3a1163270446eb06261efb27d29fe920337a571c6107960dd87918b86",
+        "classification": {
+          "tags": [
+            "图表"
+          ],
+          "description": "白底中央绿色实心圆，可用于状态标识或几何概念讲解。"
+        }
+      }
+    }
+  ],
+  "meta": {
+    "requestId": "req-7f12bd42-52",
+    "page": 1,
+    "pageSize": 1,
+    "total": 1
+  }
+}

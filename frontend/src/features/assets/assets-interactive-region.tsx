@@ -664,10 +664,10 @@ function AssetCardGrid({ assets, selectedId, onSelect }: AssetCardGridProps) {
         className="flex flex-col items-center gap-1.5 rounded-card border border-dashed border-border bg-surface p-10 text-center"
       >
         <p className="text-sm font-medium text-foreground">
-          这个账号还没有素材
+          当前没有可显示的素材
         </p>
         <p className="max-w-md text-xs text-muted-foreground">
-          素材库按抖音号隔离。用上方工具栏的「上传」放入第一批素材;采集/制作产出的封面、截图也会自动落到这里。
+          素材按账号组分别管理。你可以调整筛选条件，或点击上方「上传素材」添加图片、视频等素材。
         </p>
       </div>
     );

@@ -1,3 +1,4 @@
+import {codexCallAuthority} from './codex-call-context';
 import { isStructuredResponseCompatibilityError } from "../nodes/structured-response-errors";
 import { wrapLanguageModel,type LanguageModel } from "ai";
 import type { LanguageModelV4GenerateResult } from "@ai-sdk/provider";
@@ -34,14 +35,16 @@ export function createDurableGenerationModel(input:{model:LanguageModel;operatio
         return receipt as LanguageModelV4GenerateResult;
       }
       if(reservation.status==="rejected" && reservation.rejectionCode==="STRUCTURED_PROTOCOL_UNSUPPORTED")throw new Error("response_format unsupported");
-      if(reservation.status!=="reserved")throw new GenerationFailure("unknown_result","MODEL_CALL_REQUIRES_RECONCILIATION");
+      const recovering=model.provider==="codex-app-server"&&["started","unknown"].includes(reservation.status);
+      if(reservation.status!=="reserved"&&!recovering)throw new GenerationFailure("unknown_result","MODEL_CALL_REQUIRES_RECONCILIATION");
       params.abortSignal?.throwIfAborted();
       // 启动回执丢失也不能重发供应商请求。
-      try{await input.ports.start(reservation.callId);}catch{throw new GenerationFailure("unknown_result","MODEL_START_RECEIPT_UNKNOWN");}
+      try{if(!recovering)await input.ports.start(reservation.callId);}catch{throw new GenerationFailure("unknown_result","MODEL_START_RECEIPT_UNKNOWN");}
       let result:LanguageModelV4GenerateResult;
-      try{params.abortSignal?.throwIfAborted();result=await doGenerate();}
+      try{params.abortSignal?.throwIfAborted();result=await codexCallAuthority.run({callId:reservation.callId,recover:recovering},doGenerate);}
       catch(error){
-        const failure=generationFailure(error,false,{allowUnconfirmedModelRetry:input.allowUnconfirmedModelRetry});
+        // Codex有原thread/turn只读恢复；连接或绑定确认丢失不能废弃原调用后另发新回合。
+        const failure=generationFailure(error,false,{allowUnconfirmedModelRetry:model.provider==='codex-app-server'?false:input.allowUnconfirmedModelRetry});
         try{await input.ports.settle(reservation.callId,failure.outcome==="unknown_result" ? {status:"unknown"} : failure.outcome==="retry_wait" && !isStructuredResponseCompatibilityError(error) ? {status:"superseded"} : {status:"rejected",...(isStructuredResponseCompatibilityError(error) ? {rejectionCode:"STRUCTURED_PROTOCOL_UNSUPPORTED" as const} : {})});}
         catch{throw new GenerationFailure("unknown_result","MODEL_SETTLEMENT_RECEIPT_UNKNOWN");}
         // 明确协议拒绝保留给原结构化兼容判断；未知提交不能触发协议回退。

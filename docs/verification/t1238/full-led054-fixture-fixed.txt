@@ -1,0 +1,46 @@
+LED-054 fixture correction actual recheck; original red reports retained
+Original check: pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0 && pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 && pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/workbench-artifact-lineage.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0
+Each configured segment runs with test/hook180000ms retry0 maxWorkers1.
+
+Command: pnpm --dir frontend exec vitest run src/server/workbench-native-client.test.ts src/server/workbench-browser-host.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/frontend
+
+(node:17601) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:17638) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  2 passed (2)
+      Tests  25 passed | 5 skipped (30)
+   Start at  20:31:24
+   Duration  21.22s (transform 3.01s, setup 385ms, import 4.52s, tests 14.69s, environment 1.29s)
+
+
+EXIT_CODE=0
+
+Command: pnpm --dir ai-worker exec vitest run src/runtime/chat/chat-pi-loop.protocol.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/ai-worker
+
+
+ Test Files  1 passed (1)
+      Tests  30 passed (30)
+   Start at  20:31:46
+   Duration  2.25s (transform 985ms, setup 0ms, import 1.92s, tests 194ms, environment 0ms)
+
+
+EXIT_CODE=0
+
+Command: pnpm --dir backend exec vitest run src/modules/execution/execution-worker-outcome.service.test.ts src/modules/execution/persistent-task.service.test.ts src/modules/execution/workbench-artifact-lineage.service.test.ts src/integration/chat-worker-entry.test.ts --retry=0 --testTimeout=180000 --hookTimeout=180000 --maxWorkers=1
+
+ RUN  v4.1.8 /Users/zyongzhu/.codex/worktrees/codex-text-image/Thirdspace-creator/backend
+
+
+ Test Files  4 passed (4)
+      Tests  74 passed (74)
+   Start at  20:31:49
+   Duration  155.85s (transform 3.51s, setup 0ms, import 8.59s, tests 146.66s, environment 0ms)
+
+
+EXIT_CODE=0

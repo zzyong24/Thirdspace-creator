@@ -1,3 +1,4 @@
+import {createExecutionRoute,frozenExecutionEngine} from '@creatoros/contract/execution-worker';
 import {PRIVATE_COLLECTION_SOURCE_KINDS,assertPrivateCollectorJob} from '../scheduling';
 import {requireWorkspace} from "../../workspace-scope";
 import {assertFrozenWorkspaceMembership} from "../platform-account/membership-lock.service";
@@ -103,7 +104,7 @@ export function createExecutionAuthorityService(db: Db, deps: {now?: () => strin
         await tx.insert(executionTasks).values({
           id: executionTaskId, userId: task.userId, accountId: task.accountId,groupId:task.groupId,groupVersion:task.groupVersion??undefined,membershipVersion:task.membershipVersion??undefined,
           kind: "ai_task", ownerType: "ai_task", ownerId: task.id,
-          idempotencyKey: `ai:${task.id}`, payload: {aiTaskId: task.id, ...(prepared ? {modelInput:prepared.modelInput} : {})},
+          idempotencyKey: `ai:${task.id}`, payload: {aiTaskId: task.id,executionRoute:createExecutionRoute(frozenExecutionEngine(task.runtimeData)), ...(prepared ? {modelInput:prepared.modelInput} : {})},
           ...(prepared ? {priority:prepared.priority??0,executionBudget:prepared.budget,deadlineAt} : {}),
           createdAt: stamp, updatedAt: stamp,
         });

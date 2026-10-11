@@ -1,0 +1,64 @@
+{
+  "original": {
+    "schemaVersion": 1,
+    "testId": "6d09fca92676595ee8d1-925a30d511adcca21d02",
+    "titlePath": [
+      "e2e/automations-run-now-public.spec.ts",
+      "组内真实作业通过立即运行准入并保原任务显示待扫码"
+    ],
+    "title": "组内真实作业通过立即运行准入并保原任务显示待扫码",
+    "spec": "frontend/tests/e2e/automations-run-now-public.spec.ts",
+    "url": "http://127.0.0.1:3940/automations",
+    "viewport": {
+      "width": 900,
+      "height": 900
+    },
+    "status": "failed",
+    "acceptanceStatus": "review",
+    "expectedStatus": "passed",
+    "retry": 0,
+    "screenshot": "screenshots/automations-run-now-public--组内真实作业通过立即运行准入并保原任务显示待扫码--4c83cfc4891336584a6d18f5f6f9fe57ea7c6fb261be338409a5cc32a0cbfed9.png",
+    "screenshotStatus": "captured",
+    "screenshotError": null,
+    "pageClosedBeforeCapture": false,
+    "externalNetworkAttempts": [],
+    "errors": [
+      {
+        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at responsiveEvidence (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/automations-run-now-public.spec.ts:214:137)\n    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/automations-run-now-public.spec.ts:329:3"
+      }
+    ]
+  },
+  "updated": {
+    "schemaVersion": 1,
+    "testId": "6d09fca92676595ee8d1-925a30d511adcca21d02",
+    "titlePath": [
+      "e2e/automations-run-now-public.spec.ts",
+      "组内真实作业通过立即运行准入并保原任务显示待扫码"
+    ],
+    "title": "组内真实作业通过立即运行准入并保原任务显示待扫码",
+    "spec": "frontend/tests/e2e/automations-run-now-public.spec.ts",
+    "url": "http://127.0.0.1:3940/automations",
+    "viewport": {
+      "width": 900,
+      "height": 900
+    },
+    "status": "failed",
+    "acceptanceStatus": "review",
+    "expectedStatus": "passed",
+    "retry": 0,
+    "screenshot": "../t1245/browser-3940-filters/original-common-failure.png",
+    "screenshotStatus": "captured",
+    "screenshotError": null,
+    "pageClosedBeforeCapture": false,
+    "externalNetworkAttempts": [],
+    "errors": [
+      {
+        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at responsiveEvidence (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/automations-run-now-public.spec.ts:214:137)\n    at /Users/zyongzhu/Workbase/Thirdspace-creator/frontend/tests/e2e/automations-run-now-public.spec.ts:329:3"
+      }
+    ]
+  },
+  "sha256": "1d959068a744f172bd036e2dbbf86c573e49ce4fd8bde4656208fa472523f44c",
+  "onlyFieldChanged": "screenshot"
+}

@@ -1,0 +1,18 @@
+{
+  "task": "T-1246",
+  "recordedDate": "2026-10-11",
+  "nativeStatus": "blocked",
+  "reason": "用户明确暂不授权原生App操作及系统正常认证，主线程通知停止原生执行",
+  "sessionCount": 0,
+  "applicationLaunchCount": 0,
+  "executedCaseCount": 0,
+  "nativeScreenshotCount": 0,
+  "caseIds": "APP-01～APP-22",
+  "caseStatus": "not_run",
+  "automationMode": "disabled_requires_user_authentication",
+  "environmentOnly": true,
+  "toolPreparation": "Appium3.8.0/mac2 4.3.6已安装；doctor exit0但保留需要用户认证警告及原登记失败",
+  "productFailure": false,
+  "acceptanceComplete": false,
+  "remainingPrerequisites": ["用户明确允许操作并可响应正常系统认证", "冻结开发App路径和来源", "shell应用数据与激活的隔离证明"]
+}

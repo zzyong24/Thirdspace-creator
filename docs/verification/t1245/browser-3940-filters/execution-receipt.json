@@ -1,0 +1,29 @@
+{
+  "startedAt": "2026-10-11T13:26:36.425004+00:00",
+  "elapsedSeconds": 35.837,
+  "command": [
+    "pnpm",
+    "--dir",
+    "frontend",
+    "exec",
+    "playwright",
+    "test",
+    "tests/e2e/automations-run-now-public.spec.ts",
+    "--config=../docs/verification/t1208/budget-recheck.config.ts",
+    "--timeout=86400000",
+    "--project=e2e",
+    "--workers=1",
+    "--retries=0",
+    "--trace=on",
+    "--output=../docs/verification/t1245/browser-3940-filters/test-output"
+  ],
+  "exitCode": 1,
+  "readsetCount": 3663,
+  "headAndSourcesUnchanged": true,
+  "cleanupLsofExit": 1,
+  "cleanupListenerPresent": false,
+  "nextRows": [],
+  "automaticRerun": false,
+  "workerCount": 1,
+  "retryCount": 0
+}

@@ -1,0 +1,596 @@
+[
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "pageGeometry": {
+      "clientWidth": 326,
+      "scrollWidth": 326
+    },
+    "filterGeometry": [
+      {
+        "left": 105,
+        "right": 349,
+        "top": 255.65625,
+        "bottom": 291.65625,
+        "width": 244,
+        "parentLeft": 88,
+        "parentRight": 366,
+        "parentTop": 138.65625,
+        "parentBottom": 542.65625,
+        "viewportWidth": 390,
+        "viewportHeight": 844,
+        "clientWidth": 242,
+        "scrollWidth": 242,
+        "fontSize": 14
+      },
+      {
+        "left": 105,
+        "right": 349,
+        "top": 331.65625,
+        "bottom": 367.65625,
+        "width": 244,
+        "parentLeft": 88,
+        "parentRight": 366,
+        "parentTop": 138.65625,
+        "parentBottom": 542.65625,
+        "viewportWidth": 390,
+        "viewportHeight": 844,
+        "clientWidth": 242,
+        "scrollWidth": 242,
+        "fontSize": 14
+      }
+    ],
+    "cardGeometry": [
+      {
+        "box": {
+          "left": 105,
+          "right": 349,
+          "top": 607.65625,
+          "bottom": 700.15625,
+          "width": 244,
+          "parentLeft": 88,
+          "parentRight": 366,
+          "parentTop": 558.65625,
+          "parentBottom": 717.15625,
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "clientWidth": 242,
+          "scrollWidth": 242,
+          "fontSize": 16
+        },
+        "titleBox": {
+          "left": 162,
+          "right": 270,
+          "top": 620.65625,
+          "bottom": 668.65625,
+          "width": 108,
+          "parentLeft": 105,
+          "parentRight": 349,
+          "parentTop": 607.65625,
+          "parentBottom": 700.15625,
+          "viewportWidth": 390,
+          "viewportHeight": 844,
+          "clientWidth": 108,
+          "scrollWidth": 108,
+          "fontSize": 14
+        }
+      }
+    ],
+    "actionGeometry": [
+      {
+        "left": 109,
+        "right": 141,
+        "top": 728.65625,
+        "bottom": 747.046875,
+        "width": 32,
+        "parentLeft": 89,
+        "parentRight": 365,
+        "parentTop": 456.15625,
+        "parentBottom": 811.046875,
+        "viewportWidth": 390,
+        "viewportHeight": 844,
+        "clientWidth": 30,
+        "scrollWidth": 42,
+        "fontSize": 16
+      },
+      {
+        "left": 109,
+        "right": 179,
+        "top": 763.046875,
+        "bottom": 795.046875,
+        "width": 70,
+        "parentLeft": 89,
+        "parentRight": 365,
+        "parentTop": 456.15625,
+        "parentBottom": 811.046875,
+        "viewportWidth": 390,
+        "viewportHeight": 844,
+        "clientWidth": 68,
+        "scrollWidth": 68,
+        "fontSize": 12
+      },
+      {
+        "left": 187,
+        "right": 279,
+        "top": 763.046875,
+        "bottom": 795.046875,
+        "width": 92,
+        "parentLeft": 89,
+        "parentRight": 365,
+        "parentTop": 456.15625,
+        "parentBottom": 811.046875,
+        "viewportWidth": 390,
+        "viewportHeight": 844,
+        "clientWidth": 92,
+        "scrollWidth": 92,
+        "fontSize": 12
+      }
+    ],
+    "dialogGeometry": {
+      "left": 338,
+      "right": 366,
+      "top": 274.296875,
+      "bottom": 302.296875,
+      "width": 28,
+      "parentLeft": 16,
+      "parentRight": 374,
+      "parentTop": 266.296875,
+      "parentBottom": 577.703125,
+      "viewportWidth": 390,
+      "viewportHeight": 844,
+      "clientWidth": 26,
+      "scrollWidth": 26,
+      "fontSize": 14
+    },
+    "textGeometry": {
+      "header": {
+        "left": 16,
+        "right": 374,
+        "top": 266.296875,
+        "bottom": 399.296875
+      },
+      "close": {
+        "left": 338,
+        "right": 366,
+        "top": 274.296875,
+        "bottom": 302.296875
+      },
+      "rects": [
+        {
+          "left": 60,
+          "right": 124,
+          "top": 282.296875,
+          "bottom": 306.296875
+        },
+        {
+          "left": 124,
+          "right": 293.078125,
+          "top": 282.296875,
+          "bottom": 306.296875
+        },
+        {
+          "left": 60,
+          "right": 309.375,
+          "top": 306.296875,
+          "bottom": 330.296875
+        },
+        {
+          "left": 60,
+          "right": 170.296875,
+          "top": 330.296875,
+          "bottom": 354.296875
+        }
+      ]
+    },
+    "errorGeometry": {
+      "left": 49,
+      "right": 341,
+      "top": 481.296875,
+      "bottom": 524.703125,
+      "width": 292,
+      "parentLeft": 16,
+      "parentRight": 374,
+      "parentTop": 266.296875,
+      "parentBottom": 577.703125,
+      "viewportWidth": 390,
+      "viewportHeight": 844,
+      "clientWidth": 292,
+      "scrollWidth": 292,
+      "fontSize": 11
+    }
+  },
+  {
+    "viewport": {
+      "width": 900,
+      "height": 900
+    },
+    "pageGeometry": {
+      "clientWidth": 836,
+      "scrollWidth": 836
+    },
+    "filterGeometry": [
+      {
+        "left": 757,
+        "right": 859,
+        "top": 135.65625,
+        "bottom": 171.65625,
+        "width": 102,
+        "parentLeft": 88,
+        "parentRight": 876,
+        "parentTop": 118.65625,
+        "parentBottom": 334.65625,
+        "viewportWidth": 900,
+        "viewportHeight": 900,
+        "clientWidth": 100,
+        "scrollWidth": 100,
+        "fontSize": 14
+      },
+      {
+        "left": 141,
+        "right": 610,
+        "top": 183.65625,
+        "bottom": 219.65625,
+        "width": 469,
+        "parentLeft": 88,
+        "parentRight": 876,
+        "parentTop": 118.65625,
+        "parentBottom": 334.65625,
+        "viewportWidth": 900,
+        "viewportHeight": 900,
+        "clientWidth": 467,
+        "scrollWidth": 467,
+        "fontSize": 14
+      }
+    ],
+    "cardGeometry": [
+      {
+        "box": {
+          "left": 105,
+          "right": 859,
+          "top": 399.65625,
+          "bottom": 468.15625,
+          "width": 754,
+          "parentLeft": 88,
+          "parentRight": 876,
+          "parentTop": 350.65625,
+          "parentBottom": 485.15625,
+          "viewportWidth": 900,
+          "viewportHeight": 900,
+          "clientWidth": 752,
+          "scrollWidth": 752,
+          "fontSize": 16
+        },
+        "titleBox": {
+          "left": 162,
+          "right": 780,
+          "top": 412.65625,
+          "bottom": 436.65625,
+          "width": 618,
+          "parentLeft": 105,
+          "parentRight": 859,
+          "parentTop": 399.65625,
+          "parentBottom": 468.15625,
+          "viewportWidth": 900,
+          "viewportHeight": 900,
+          "clientWidth": 618,
+          "scrollWidth": 618,
+          "fontSize": 14
+        }
+      }
+    ],
+    "actionGeometry": [
+      {
+        "left": 109,
+        "right": 141,
+        "top": 773.453125,
+        "bottom": 791.84375,
+        "width": 32,
+        "parentLeft": 89,
+        "parentRight": 875,
+        "parentTop": 604.15625,
+        "parentBottom": 814.65625,
+        "viewportWidth": 900,
+        "viewportHeight": 900,
+        "clientWidth": 30,
+        "scrollWidth": 42,
+        "fontSize": 16
+      },
+      {
+        "left": 685,
+        "right": 755,
+        "top": 766.65625,
+        "bottom": 798.65625,
+        "width": 70,
+        "parentLeft": 89,
+        "parentRight": 875,
+        "parentTop": 604.15625,
+        "parentBottom": 814.65625,
+        "viewportWidth": 900,
+        "viewportHeight": 900,
+        "clientWidth": 68,
+        "scrollWidth": 68,
+        "fontSize": 12
+      },
+      {
+        "left": 763,
+        "right": 855,
+        "top": 766.65625,
+        "bottom": 798.65625,
+        "width": 92,
+        "parentLeft": 89,
+        "parentRight": 875,
+        "parentTop": 604.15625,
+        "parentBottom": 814.65625,
+        "viewportWidth": 900,
+        "viewportHeight": 900,
+        "clientWidth": 92,
+        "scrollWidth": 92,
+        "fontSize": 12
+      }
+    ],
+    "dialogGeometry": {
+      "left": 750,
+      "right": 778,
+      "top": 330.1484375,
+      "bottom": 358.1484375,
+      "width": 28,
+      "parentLeft": 114,
+      "parentRight": 786,
+      "parentTop": 322.1484375,
+      "parentBottom": 577.8515625,
+      "viewportWidth": 900,
+      "viewportHeight": 900,
+      "clientWidth": 26,
+      "scrollWidth": 26,
+      "fontSize": 14
+    },
+    "textGeometry": {
+      "header": {
+        "left": 114,
+        "right": 786,
+        "top": 322.1484375,
+        "bottom": 431.1484375
+      },
+      "close": {
+        "left": 750,
+        "right": 778,
+        "top": 330.1484375,
+        "bottom": 358.1484375
+      },
+      "rects": [
+        {
+          "left": 158,
+          "right": 222,
+          "top": 338.1484375,
+          "bottom": 362.1484375
+        },
+        {
+          "left": 222,
+          "right": 644.046875,
+          "top": 338.1484375,
+          "bottom": 362.1484375
+        },
+        {
+          "left": 158,
+          "right": 268.296875,
+          "top": 362.1484375,
+          "bottom": 386.1484375
+        }
+      ]
+    },
+    "errorGeometry": {
+      "left": 147,
+      "right": 753,
+      "top": 497.1484375,
+      "bottom": 524.8515625,
+      "width": 606,
+      "parentLeft": 114,
+      "parentRight": 786,
+      "parentTop": 322.1484375,
+      "parentBottom": 577.8515625,
+      "viewportWidth": 900,
+      "viewportHeight": 900,
+      "clientWidth": 606,
+      "scrollWidth": 606,
+      "fontSize": 11
+    }
+  },
+  {
+    "viewport": {
+      "width": 1536,
+      "height": 1024
+    },
+    "pageGeometry": {
+      "clientWidth": 1312,
+      "scrollWidth": 1312
+    },
+    "filterGeometry": [
+      {
+        "left": 876,
+        "right": 978,
+        "top": 135.65625,
+        "bottom": 171.65625,
+        "width": 102,
+        "parentLeft": 248,
+        "parentRight": 1512,
+        "parentTop": 118.65625,
+        "parentBottom": 286.65625,
+        "viewportWidth": 1536,
+        "viewportHeight": 1024,
+        "clientWidth": 100,
+        "scrollWidth": 100,
+        "fontSize": 14
+      },
+      {
+        "left": 1026,
+        "right": 1495,
+        "top": 135.65625,
+        "bottom": 171.65625,
+        "width": 469,
+        "parentLeft": 248,
+        "parentRight": 1512,
+        "parentTop": 118.65625,
+        "parentBottom": 286.65625,
+        "viewportWidth": 1536,
+        "viewportHeight": 1024,
+        "clientWidth": 467,
+        "scrollWidth": 467,
+        "fontSize": 14
+      }
+    ],
+    "cardGeometry": [
+      {
+        "box": {
+          "left": 265,
+          "right": 876,
+          "top": 351.65625,
+          "bottom": 420.15625,
+          "width": 611,
+          "parentLeft": 248,
+          "parentRight": 1512,
+          "parentTop": 302.65625,
+          "parentBottom": 437.15625,
+          "viewportWidth": 1536,
+          "viewportHeight": 1024,
+          "clientWidth": 609,
+          "scrollWidth": 609,
+          "fontSize": 16
+        },
+        "titleBox": {
+          "left": 322,
+          "right": 797,
+          "top": 364.65625,
+          "bottom": 388.65625,
+          "width": 475,
+          "parentLeft": 265,
+          "parentRight": 876,
+          "parentTop": 351.65625,
+          "parentBottom": 420.15625,
+          "viewportWidth": 1536,
+          "viewportHeight": 1024,
+          "clientWidth": 475,
+          "scrollWidth": 475,
+          "fontSize": 14
+        }
+      }
+    ],
+    "actionGeometry": [
+      {
+        "left": 1017.703125,
+        "right": 1049.703125,
+        "top": 669.203125,
+        "bottom": 687.59375,
+        "width": 32,
+        "parentLeft": 249,
+        "parentRight": 1511,
+        "parentTop": 597.15625,
+        "parentBottom": 759.65625,
+        "viewportWidth": 1536,
+        "viewportHeight": 1024,
+        "clientWidth": 30,
+        "scrollWidth": 42,
+        "fontSize": 16
+      },
+      {
+        "left": 1321,
+        "right": 1391,
+        "top": 662.40625,
+        "bottom": 694.40625,
+        "width": 70,
+        "parentLeft": 249,
+        "parentRight": 1511,
+        "parentTop": 597.15625,
+        "parentBottom": 759.65625,
+        "viewportWidth": 1536,
+        "viewportHeight": 1024,
+        "clientWidth": 68,
+        "scrollWidth": 68,
+        "fontSize": 12
+      },
+      {
+        "left": 1399,
+        "right": 1491,
+        "top": 662.40625,
+        "bottom": 694.40625,
+        "width": 92,
+        "parentLeft": 249,
+        "parentRight": 1511,
+        "parentTop": 597.15625,
+        "parentBottom": 759.65625,
+        "viewportWidth": 1536,
+        "viewportHeight": 1024,
+        "clientWidth": 92,
+        "scrollWidth": 92,
+        "fontSize": 12
+      }
+    ],
+    "dialogGeometry": {
+      "left": 1068,
+      "right": 1096,
+      "top": 392.1484375,
+      "bottom": 420.1484375,
+      "width": 28,
+      "parentLeft": 432,
+      "parentRight": 1104,
+      "parentTop": 384.1484375,
+      "parentBottom": 639.8515625,
+      "viewportWidth": 1536,
+      "viewportHeight": 1024,
+      "clientWidth": 26,
+      "scrollWidth": 26,
+      "fontSize": 14
+    },
+    "textGeometry": {
+      "header": {
+        "left": 432,
+        "right": 1104,
+        "top": 384.1484375,
+        "bottom": 493.1484375
+      },
+      "close": {
+        "left": 1068,
+        "right": 1096,
+        "top": 392.1484375,
+        "bottom": 420.1484375
+      },
+      "rects": [
+        {
+          "left": 476,
+          "right": 540,
+          "top": 400.1484375,
+          "bottom": 424.1484375
+        },
+        {
+          "left": 540,
+          "right": 962.046875,
+          "top": 400.1484375,
+          "bottom": 424.1484375
+        },
+        {
+          "left": 476,
+          "right": 586.296875,
+          "top": 424.1484375,
+          "bottom": 448.1484375
+        }
+      ]
+    },
+    "errorGeometry": {
+      "left": 465,
+      "right": 1071,
+      "top": 559.1484375,
+      "bottom": 586.8515625,
+      "width": 606,
+      "parentLeft": 432,
+      "parentRight": 1104,
+      "parentTop": 384.1484375,
+      "parentBottom": 639.8515625,
+      "viewportWidth": 1536,
+      "viewportHeight": 1024,
+      "clientWidth": 606,
+      "scrollWidth": 606,
+      "fontSize": 11
+    }
+  }
+]

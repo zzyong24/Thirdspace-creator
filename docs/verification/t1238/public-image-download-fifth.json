@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "OwnershipError",
+    "message": "Asset not found",
+    "details": {}
+  },
+  "meta": {
+    "requestId": "dispatch"
+  }
+}
