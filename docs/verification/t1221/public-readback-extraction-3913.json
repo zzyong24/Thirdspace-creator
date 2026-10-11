@@ -1,0 +1,14 @@
+{
+  "zipSha256": "f77b2fd9face7f747ba0facc16ce6e26de4073c5dff1d690215ab3532b483f88",
+  "zipBytes": 5294,
+  "entry": "c30d334f01c06de6caf2.json",
+  "testId": "c30d334f01c06de6caf2-2d95b5b12af54537ace8",
+  "result": "passed",
+  "attachmentName": "真实双组项目回读",
+  "attachmentSha256": "91ac9d83b624641ac792c90e83dd9334143c7fba9615c21793c1bac843ab6171",
+  "attachmentBytes": 1392,
+  "sourceHtmlSha256": "5e2dd08f945878a87375c4c881ad9770e0cf5a9bd4716de3b8296f7feb8580f2",
+  "sourceHtmlBytes": 531464,
+  "zipPath": "browser-final-report-export.zip",
+  "attachmentPath": "public-readback-3913.json"
+}

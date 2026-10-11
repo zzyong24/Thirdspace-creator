@@ -1,0 +1,5 @@
+99c47bdafb625de4a009efde75a94d9040e06b348af9ab12654bb2cd7fe9094c  backend/src/modules/intelligence/intelligence-workspace-scope.ts
+13365bb4482e7a596a73608a4370670c369720adbf47c39589a6575b1e3d88b1  backend/src/modules/intelligence/intelligence.service.ts
+ac5990fa94e8fb9698f0fe66a0bcc3471aa0b0329b080fea692711200c097a4b  backend/src/modules/intelligence/transcript-execution-binding.ts
+7bbc60f1f1a40285817dfcd8cff4c6e5ca0abb5467b5277f3bace23966fec84a  backend/src/modules/intelligence/project-reference.service.ts
+4d62aa8e43addd7157352b870e85429d0ee24c8eecb0d8df7deff0c9d3253df3  backend/src/modules/intelligence/source-sync-runner.ts

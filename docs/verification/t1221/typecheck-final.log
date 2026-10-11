@@ -1,0 +1,2 @@
+tests/e2e/zz-account-isolation.spec.ts(2,21): error TS2724: '"@creatoros/contract"' has no exported member named 'projectResource'. Did you mean 'projectImageSource'?
+tests/e2e/zz-account-isolation.spec.ts(2,70): error TS2724: '"@creatoros/contract"' has no exported member named 'ProjectResource'. Did you mean 'ProjectImageSource'?

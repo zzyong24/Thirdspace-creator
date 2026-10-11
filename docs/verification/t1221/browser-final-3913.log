@@ -1,0 +1,125 @@
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-V5C1K2
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 predev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> node ../ai-worker/scripts/build.mjs
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-acp-host.ts:11:88:
+[2m[WebServer] [22m      11 │ ...ring'?dirname(__filename):dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m         ╵                                                    ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/src/execution/codex-app-server.ts:47:76:
+[2m[WebServer] [22m      47 │ ...re(typeof __filename === "string" ? __filename : import.meta.url);
+[2m[WebServer] [22m         ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/agent-registry.ts:319:42:
+[2m[WebServer] [22m      319 │   let cursor = path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m          ╵                                           ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/acpx/src/version.ts:6:90:
+[2m[WebServer] [22m      6 │ ...string" ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+[2m[WebServer] [22m        ╵                                                     ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexJsonRpcConnection.ts:27:93:
+[2m[WebServer] [22m      27 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+[2m[WebServer] [22m
+[2m[WebServer] [22m    ../ai-worker/vendor/codex-acp/src/CodexCli.ts:29:89:
+[2m[WebServer] [22m      29 │ ...= "string" ? __filename : import.meta.url).resolve("@openai/cod...
+[2m[WebServer] [22m         ╵                              ~~~~~~~~~~~
+[2m[WebServer] [22m
+[2m[WebServer] [22m  You need to set the output format to "esm" for "import.meta" to work correctly.
+[2m[WebServer] [22m
+[2m[WebServer] [22m
+[2m[WebServer] [22m> creatoros-frontend@1.2.0 dev /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+[2m[WebServer] [22m> next dev --hostname 127.0.0.1 --port 3913
+[2m[WebServer] [22m
+[2m[WebServer] [22m[1m[38;2;173;127;168m▲ Next.js 16.2.9[39m[22m (Turbopack)
+[2m[WebServer] [22m- Local:         http://127.0.0.1:3913
+[2m[WebServer] [22m- Network:       http://127.0.0.1:3913
+[2m[WebServer] [22m- Environments: .env.local
+[2m[WebServer] [22m[32m[1m✓[22m[39m Ready in 437ms
+[2m[WebServer] [22m[CreatorOS] SIDECAR_STARTUP_VERIFIED
+[2m[WebServer] [22m
+[2m[WebServer] [22m GET / [32m200[39m in 21.2s[2m (next.js: 3.3s, proxy.ts: 160ms, application-code: 17.8s)[22m
+
+Running 1 test using 1 worker
+
+[playwright.config] Isolated test data root: /var/folders/0f/yn6rgq1j2lj2n8_868n28jzc0000gn/T/creatoros-playwright-V5C1K2
+[playwright.config] Reference baselines: 17 files, fingerprint=73a23db59f7d…
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 994ms[2m (next.js: 950ms, proxy.ts: 18ms, application-code: 26ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 2ms, proxy.ts: 2ms, application-code: 8ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 27ms[2m (next.js: 1526µs, proxy.ts: 1678µs, application-code: 23ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1299µs, proxy.ts: 1706µs, application-code: 17ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 1604µs, proxy.ts: 2ms, application-code: 16ms)[22m
+[2m[WebServer] [22m[page-read] operation=projects.list durationMs=286
+[2m[WebServer] [22m GET /projects [32m200[39m in 984ms[2m (next.js: 42ms, proxy.ts: 3ms, application-code: 938ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 34ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 28ms)[22m
+[2m[WebServer] [22m GET /projects [32m200[39m in 85ms[2m (next.js: 5ms, proxy.ts: 3ms, application-code: 77ms)[22m
+[2m[WebServer] [22m GET /projects [32m200[39m in 111ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 105ms)[22m
+[2m[WebServer] [22m GET /projects [32m200[39m in 70ms[2m (next.js: 3ms, proxy.ts: 3ms, application-code: 64ms)[22m
+[2m[WebServer] [22m GET /projects [32m200[39m in 158ms[2m (next.js: 1608µs, proxy.ts: 1587µs, application-code: 155ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 20ms[2m (next.js: 2ms, proxy.ts: 4ms, application-code: 14ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 13ms[2m (next.js: 1871µs, proxy.ts: 2ms, application-code: 9ms)[22m
+[2m[WebServer] [22m POST /api/v1/dispatch [32m200[39m in 11ms[2m (next.js: 1574µs, proxy.ts: 1927µs, application-code: 8ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"projects.get","errorName":"OwnershipError","errorCode":"OwnershipError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m404[39m in 11ms[2m (next.js: 1357µs, proxy.ts: 1993µs, application-code: 8ms)[22m
+[2m[WebServer] [22m[CreatorOS] DISPATCH_FAILED {"operation":"projects.get","errorName":"OwnershipError","errorCode":"OwnershipError"}
+[2m[WebServer] [22m POST /api/v1/dispatch [33m404[39m in 10ms[2m (next.js: 1322µs, proxy.ts: 1524µs, application-code: 8ms)[22m
+  ✓  1 [e2e] › tests/e2e/zz-account-isolation.spec.ts:77:7 › 双号切换端到端隔离(T-332 S6) › A 号只见 A 的项目;切到 B 号后只见 B 的(无残影) (6.4s)
+
+  1 passed (33.9s)
