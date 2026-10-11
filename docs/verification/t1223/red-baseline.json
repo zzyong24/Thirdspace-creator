@@ -1,0 +1,32 @@
+{
+  "test": "legacy generator on two distinct historical statuses sharing one testId",
+  "sourceSha256": "eb268273912e0a5a60d57f9266802707d624eb99be95fdc6303a2b241062c2a3",
+  "fixtureRows": [
+    {
+      "status": "failed",
+      "testId": "c30d334f01c06de6caf2-2d95b5b12af54537ace8",
+      "url": "http://127.0.0.1:3912/projects",
+      "screenshot": "screenshots/failed.png"
+    },
+    {
+      "status": "passed",
+      "testId": "c30d334f01c06de6caf2-2d95b5b12af54537ace8",
+      "url": "http://127.0.0.1:3913/projects",
+      "screenshot": "screenshots/passed.png"
+    }
+  ],
+  "articleCount": 2,
+  "articleIds": [
+    "case-c30d334f01c06de6caf2-2d95b5b12af54537ace8",
+    "case-c30d334f01c06de6caf2-2d95b5b12af54537ace8"
+  ],
+  "duplicateArticleIds": [
+    "case-c30d334f01c06de6caf2-2d95b5b12af54537ace8"
+  ],
+  "legacySummary": "2 cases / 1 spec · 1 passed · 1 failed · 0 timed out。点击缩略图查看原图。",
+  "uniqueTestIdCount": 1,
+  "expectedRedAssertions": [
+    "unique article IDs expected; actual [\"case-c30d334f01c06de6caf2-2d95b5b12af54537ace8\",\"case-c30d334f01c06de6caf2-2d95b5b12af54537ace8\"] (duplicate [\"case-c30d334f01c06de6caf2-2d95b5b12af54537ace8\"])",
+    "summary should distinguish 1 unique Test ID from two run records; actual: 2 cases / 1 spec · 1 passed · 1 failed · 0 timed out。点击缩略图查看原图。"
+  ]
+}

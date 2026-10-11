@@ -1,0 +1,54 @@
+{
+  "task": "T1223 verification gallery record identity",
+  "sourceIndexSha256": "2a8039180fb68b992ffdb5ce9664a40f076c8bd8eec1562b420f7428f38b2769",
+  "generatorSha256": "84cd7d994ace92b4404cf7050e69ecd74c8849314fb40bc3b088e499194c8535",
+  "miniFixture": {
+    "records": 2,
+    "uniqueTestIds": 1,
+    "statuses": [
+      "failed",
+      "passed"
+    ],
+    "anchors": [
+      "record-fixtures%2Fduplicate-run.spec.ts--c30d334f01c06de6caf2-2d95b5b12af54537ace8--1",
+      "record-fixtures%2Fduplicate-run.spec.ts--c30d334f01c06de6caf2-2d95b5b12af54537ace8--2"
+    ],
+    "deterministic": true
+  },
+  "fullIndex": {
+    "3912": {
+      "status": "failed",
+      "anchor": "record-frontend%2Ftests%2Fe2e%2Fzz-account-isolation.spec.ts--c30d334f01c06de6caf2-2d95b5b12af54537ace8--344",
+      "screenshot": "../t1221/3912-fail-stable-screenshot.png",
+      "exists": true
+    },
+    "3913": {
+      "status": "passed",
+      "anchor": "record-frontend%2Ftests%2Fe2e%2Fzz-account-isolation.spec.ts--c30d334f01c06de6caf2-2d95b5b12af54537ace8--345",
+      "screenshot": "screenshots/zz-account-isolation--双号切换端到端隔离-T-332-S6-A-号只见-A-的项目-切到-B-号后只见-B-的-无残影--ae61bc4fed138d725521281afbb0ceba25e78fddd7e92856232de6c641d5e03f.png",
+      "exists": true
+    },
+    "records": 345,
+    "uniqueTestIds": 224,
+    "specs": 67,
+    "statuses": {
+      "failed": 86,
+      "passed": 251,
+      "timedOut": 8
+    },
+    "screenshotRows": 345,
+    "missingScreenshotRows": 0,
+    "articleCount": 345,
+    "articleIdsUnique": true,
+    "deterministic": true
+  },
+  "indexUnchanged": true,
+  "browser": {
+    "screenshots": [
+      "gallery-1024.png",
+      "gallery-1536.png"
+    ],
+    "requestCount": 94,
+    "nonFileRequests": []
+  }
+}

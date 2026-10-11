@@ -4,10 +4,9 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const indexPath = path.join(here, "scenario-index.ndjson");
-const rows = fs.readFileSync(indexPath, "utf8")
+const records = fs.readFileSync(indexPath, "utf8")
   .split(/\r?\n/u)
-  .filter(Boolean)
-  .map((line) => JSON.parse(line));
+  .flatMap((line, index) => line.trim() ? [{ row: JSON.parse(line), ordinal: index + 1 }] : []);
 
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/gu, (char) => ({
   "&": "&amp;",
@@ -16,21 +15,28 @@ const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/gu, (char) =>
   '"': "&quot;",
   "'": "&#39;",
 }[char]));
-const counts = rows.reduce((result, row) => {
+const statusCounts = records.reduce((result, { row }) => {
   result[row.status] = (result[row.status] ?? 0) + 1;
   return result;
 }, {});
 const groups = new Map();
-for (const row of rows) {
-  if (!groups.has(row.spec)) groups.set(row.spec, []);
-  groups.get(row.spec).push(row);
+for (const record of records) {
+  const { spec } = record.row;
+  if (!groups.has(spec)) groups.set(spec, []);
+  groups.get(spec).push(record);
 }
+const uniqueTestIdCount = new Set(records
+  .map(({ row }) => row.testId)
+  .filter((testId) => typeof testId === "string" && testId.length > 0)).size;
 const statusLabel = (status) => ({
   passed: "PASS",
   failed: "FAIL",
   timedOut: "TIMEOUT",
   skipped: "SKIP",
 }[status] ?? status);
+const recordAnchor = ({ row, ordinal }) =>
+  `record-${encodeURIComponent(row.spec ?? "")}--${encodeURIComponent(row.testId ?? "")}--${ordinal}`;
+const specAnchor = (spec) => `spec-${encodeURIComponent(spec ?? "")}`;
 
 let html = `<!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -49,22 +55,26 @@ let html = `<!doctype html>
 @media(max-width:600px){.top{padding:14px}.group{padding:0 10px}.grid{grid-template-columns:1fr}}
 </style></head><body>
 <header class="top"><div class="wrap"><h1>T-1207 浏览器场景截图总览</h1>
-<div class="meta">${rows.length} cases / ${groups.size} spec · ${counts.passed ?? 0} passed · ${counts.failed ?? 0} failed · ${counts.timedOut ?? 0} timed out。点击缩略图查看原图。</div>
-<div class="filters"><a href="#all">全部 ${rows.length}</a><a href="#passed">PASS ${counts.passed ?? 0}</a><a href="#failed">FAIL ${counts.failed ?? 0}</a><a href="#timedOut">TIMEOUT ${counts.timedOut ?? 0}</a><a href="E2E-CASE-INDEX.md">逐例 Markdown 索引</a><a href="full-e2e.log">完整 E2E</a><a href="route-matrix-expanded.log">路由矩阵</a><a href="visual.log">视觉基线</a><a href="accessibility.log">无障碍矩阵</a><a href="media-tab.log">素材导入与导出</a><a href="appium-probe.md">Appium 探测</a></div></div></header>`;
+<p class="meta" role="note">${records.length} 条历史运行记录 · ${uniqueTestIdCount} 个独立用例（按不同 Test ID 去重） · ${groups.size} 个 spec。重复 Test ID 的每次运行都保留；PASS、FAIL、TIMEOUT 是历史逐次统计，不表示全功能通过。</p>
+<div class="meta">${statusCounts.passed ?? 0} PASS · ${statusCounts.failed ?? 0} FAIL · ${statusCounts.timedOut ?? 0} TIMEOUT · ${statusCounts.skipped ?? 0} SKIP。点击缩略图查看原图。</div>
+<div class="filters"><a href="#all">全部 ${records.length} 条运行</a><a href="#passed">PASS ${statusCounts.passed ?? 0}</a><a href="#failed">FAIL ${statusCounts.failed ?? 0}</a><a href="#timedOut">TIMEOUT ${statusCounts.timedOut ?? 0}</a><a href="E2E-CASE-INDEX.md">逐例 Markdown 索引</a><a href="full-e2e.log">完整 E2E</a><a href="route-matrix-expanded.log">路由矩阵</a><a href="visual.log">视觉基线</a><a href="accessibility.log">无障碍矩阵</a><a href="media-tab.log">素材导入与导出</a><a href="appium-probe.md">Appium 探测</a></div></div></header>`;
 
-for (const [spec, cases] of groups) {
-  const anchor = spec.split("/").pop().replace(/[^a-zA-Z0-9_-]/gu, "-");
-  const specCounts = cases.reduce((result, row) => {
+for (const [spec, groupRecords] of groups) {
+  const groupStatusCounts = groupRecords.reduce((result, { row }) => {
     result[row.status] = (result[row.status] ?? 0) + 1;
     return result;
   }, {});
-  html += `<section class="group" id="${escapeHtml(anchor)}"><h2>${escapeHtml(spec)} <span class="count">${cases.length} cases · ${specCounts.passed ?? 0} PASS · ${specCounts.failed ?? 0} FAIL · ${specCounts.timedOut ?? 0} TIMEOUT</span></h2><div class="grid">`;
-  for (const row of cases) {
+  const groupTestIdCount = new Set(groupRecords
+    .map(({ row }) => row.testId)
+    .filter((testId) => typeof testId === "string" && testId.length > 0)).size;
+  html += `<section class="group" id="${escapeHtml(specAnchor(spec))}"><h2>${escapeHtml(spec)} <span class="count">${groupRecords.length} 条历史运行 · ${groupTestIdCount} 个独立用例 · ${groupStatusCounts.passed ?? 0} PASS · ${groupStatusCounts.failed ?? 0} FAIL · ${groupStatusCounts.timedOut ?? 0} TIMEOUT</span></h2><div class="grid">`;
+  for (const record of groupRecords) {
+    const { row, ordinal } = record;
     const error = row.errors?.[0]?.message ?? row.screenshotError ?? "";
     const thumb = row.screenshot
       ? `<a class="thumb" href="${escapeHtml(row.screenshot)}" target="_blank" rel="noopener"><img loading="lazy" src="${escapeHtml(row.screenshot)}" alt="${escapeHtml(row.title)}"></a>`
       : `<div class="thumb"><span class="empty">截图缺失：${escapeHtml(row.screenshotStatus)}</span></div>`;
-    html += `<article class="case ${escapeHtml(row.status)}" id="case-${escapeHtml(row.testId)}">${thumb}<div class="details"><div class="line1"><span class="count">${escapeHtml(row.spec)} · retry ${row.retry}</span><span class="badge">${statusLabel(row.status)}</span></div><div class="title">${escapeHtml(row.title)}</div><div class="url">${escapeHtml(row.url ?? "页面已关闭，URL不可用")}</div>${error ? `<div class="error">${escapeHtml(error)}</div>` : ""}<div class="testid">${escapeHtml(row.testId)}</div></div></article>`;
+    html += `<article class="case ${escapeHtml(row.status)}" id="${escapeHtml(recordAnchor(record))}">${thumb}<div class="details"><div class="line1"><span class="count">${escapeHtml(row.spec)} · 第 ${ordinal} 条历史运行 · retry ${row.retry}</span><span class="badge">${statusLabel(row.status)}</span></div><div class="title">${escapeHtml(row.title)}</div><div class="url">${escapeHtml(row.url ?? "页面已关闭，URL不可用")}</div>${error ? `<div class="error">${escapeHtml(error)}</div>` : ""}<div class="testid">${escapeHtml(row.testId)}</div></div></article>`;
   }
   html += "</div></section>";
 }
@@ -72,20 +82,22 @@ html += "</body></html>\n";
 fs.writeFileSync(path.join(here, "E2E-GALLERY.html"), html);
 
 let markdown = `# T-1207 浏览器场景逐例截图索引\n\n` +
-  `全量截图索引包含 ${rows.length} cases / ${groups.size} 个 spec：${counts.passed ?? 0} passed、${counts.failed ?? 0} failed、${counts.timedOut ?? 0} timed out、${counts.skipped ?? 0} skipped。\n\n` +
+  `本索引按 scenario-index.ndjson 每行保留一次运行记录：${records.length} 条历史运行记录、${uniqueTestIdCount} 个不同 Test ID（独立用例）、${groups.size} 个 spec；${statusCounts.passed ?? 0} PASS、${statusCounts.failed ?? 0} FAIL、${statusCounts.timedOut ?? 0} TIMEOUT、${statusCounts.skipped ?? 0} SKIP。重复 Test ID 不合并，状态按历史记录逐次统计，不代表全功能通过。\n\n` +
   `[打开静态截图总览](E2E-GALLERY.html) · [完整 E2E](full-e2e.log) · [扩展路由矩阵](route-matrix-expanded.log) · [视觉基线](visual.log) · [无障碍矩阵](accessibility.log) · [媒体导入/导出](media-tab.log) · [Appium 探测](appium-probe.md)\n\n`;
-for (const [spec, cases] of groups) {
-  markdown += `## ${spec}\n\n| 状态 | 用例 | URL | 截图 | Test ID |\n|---|---|---|---|---|\n`;
-  for (const row of cases) {
-    const title = row.title.replace(/\|/gu, "\\|").replace(/\n/gu, " ");
+for (const [spec, groupRecords] of groups) {
+  markdown += `## ${spec}\n\n| 状态 | 用例 | URL | 截图 | Test ID | 历史运行记录 |\n|---|---|---|---|---|---|\n`;
+  for (const record of groupRecords) {
+    const { row } = record;
+    const title = String(row.title ?? "").replace(/\|/gu, "\\|").replace(/\n/gu, " ");
     const url = row.url ? `[${row.url}](${row.url})` : "页面已关闭";
-    const screenshot = row.screenshot ? `[查看](${row.screenshot})` : `缺失（${row.screenshotStatus}）`;
-    markdown += `| ${statusLabel(row.status)} | ${title} | ${url} | ${screenshot} | \`${row.testId}\` |\n`;
+    const screenshot = row.screenshot ? `[查看原图](${row.screenshot})` : `缺失（${row.screenshotStatus}）`;
+    const recordLink = `[查看记录](E2E-GALLERY.html#${recordAnchor(record)})`;
+    markdown += `| ${statusLabel(row.status)} | ${title} | ${url} | ${screenshot} | \`${row.testId ?? ""}\` | ${recordLink} |\n`;
     if (row.errors?.[0]?.message) {
       markdown += `\n失败证据：\n\n\`\`\`text\n${row.errors[0].message.slice(0, 1200)}\n\`\`\`\n\n`;
     }
   }
   markdown += "\n";
 }
-fs.writeFileSync(path.join(here, "E2E-CASE-INDEX.md"), markdown);
-console.log(`已生成 ${rows.length} 条用例、${groups.size} 个 spec 的 gallery 与索引。`);
+fs.writeFileSync(path.join(here, "E2E-CASE-INDEX.md"), `${markdown.trimEnd()}\n`);
+console.log(`已生成 ${records.length} 条历史运行记录、${uniqueTestIdCount} 个独立用例、${groups.size} 个 spec 的 gallery 与索引。`);

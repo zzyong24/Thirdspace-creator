@@ -1,0 +1,7 @@
+source SHA256: eb268273912e0a5a60d57f9266802707d624eb99be95fdc6303a2b241062c2a3
+fixture rows: 2; unique Test IDs: 1
+legacy article ids: ["case-c30d334f01c06de6caf2-2d95b5b12af54537ace8","case-c30d334f01c06de6caf2-2d95b5b12af54537ace8"]
+duplicate ids: ["case-c30d334f01c06de6caf2-2d95b5b12af54537ace8"]
+legacy summary: 2 cases / 1 spec · 1 passed · 1 failed · 0 timed out。点击缩略图查看原图。
+RED assertion failed as expected: unique article IDs expected; actual ["case-c30d334f01c06de6caf2-2d95b5b12af54537ace8","case-c30d334f01c06de6caf2-2d95b5b12af54537ace8"] (duplicate ["case-c30d334f01c06de6caf2-2d95b5b12af54537ace8"])
+RED assertion failed as expected: summary should distinguish 1 unique Test ID from two run records; actual: 2 cases / 1 spec · 1 passed · 1 failed · 0 timed out。点击缩略图查看原图。
