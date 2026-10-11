@@ -251,3 +251,24 @@ it('T1108 跨账号迟到save回执不写引用标记',async()=>{
 it('T1108 新标记与正式输入不匹配时不能抑制默认引用',async()=>{
  const base=linkedReferenceCanvas();const fingerprint=JSON.stringify(['reference-edge','reference-source','generate-node','image_generation','image_to_image','other-asset','other-file']);localStorage.setItem(referenceChoiceKey,JSON.stringify({schema:'canvas-reference-choices/v1',revision:3,resolved:[fingerprint],legacy:[]}));f.read.mockResolvedValue(base);f.save.mockImplementation(async request=>({...base,revision:3,document:request.body.document}));render(<CanvasEditor canvasId='canvas-a'/>);const mode=await screen.findByRole('combobox',{name:'生成模式'},{timeout:120000});await waitFor(()=>expect(mode).toHaveValue('image_to_image'),{timeout:120000});fireEvent.click(screen.getByRole('button',{name:'保存'}));await screen.findByText('已保存',{}, {timeout:120000});expect(f.save.mock.calls[0]![0].body.document.nodes.find((n:any)=>n.id==='generate-node')).toMatchObject({referenceFileId:'source-file'});
 });
+
+
+it('T1220 空素材上传等待原dirty保存回执，重复点击不会再保存或提前导航',async()=>{
+ f.searchAssets.mockResolvedValue({items:[],nextCursor:null});let finish!:(v:unknown)=>void;
+ f.save.mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
+ render(<CanvasEditor canvasId="canvas-a"/>);fireEvent.change(await screen.findByLabelText('画布标题'),{target:{value:'上传前未保存标题'}});
+ fireEvent.click(screen.getByRole('button',{name:'素材库'}));
+ const upload=screen.getByRole('link',{name:'去素材中心上传'});expect(upload).toHaveAttribute('href','/assets');
+ fireEvent.click(upload);await waitFor(()=>expect(f.save).toHaveBeenCalledOnce());
+ expect(f.save.mock.calls[0]![0].body.title).toBe('上传前未保存标题');expect(f.router.push).not.toHaveBeenCalled();expect(upload).toHaveAttribute('aria-disabled','true');
+ fireEvent.click(upload);expect(f.save).toHaveBeenCalledOnce();
+ await act(async()=>{finish({...canvas(),title:'上传前未保存标题',revision:3});});
+ await waitFor(()=>expect(f.router.push).toHaveBeenCalledWith('/assets'));expect(f.router.push).toHaveBeenCalledOnce();
+});
+
+it.each(['真实保存失败','画布版本冲突'])('T1220 上传前%s留原dirty画布并恢复可点击入口',async error=>{
+ f.searchAssets.mockResolvedValue({items:[],nextCursor:null});f.save.mockRejectedValue(Error(error));
+ render(<CanvasEditor canvasId="canvas-a"/>);fireEvent.change(await screen.findByLabelText('画布标题'),{target:{value:'保存失败保留标题'}});
+ fireEvent.click(screen.getByRole('button',{name:'素材库'}));const upload=screen.getByRole('link',{name:'去素材中心上传'});
+ fireEvent.click(upload);await screen.findByText(error);expect(f.router.push).not.toHaveBeenCalled();expect(screen.getByLabelText('画布标题')).toHaveValue('保存失败保留标题');expect(upload).not.toHaveAttribute('aria-disabled','true');
+});

@@ -46,7 +46,7 @@ test("T-993 画布可保存、重开，切换账号后列表和直链隔离",asy
 
  await page.goto("/canvases?tab=canvases");
  await expect(page.getByRole("heading",{name:"创作画布"})).toBeVisible();
- await page.getByRole("button",{name:"新建画布"}).click();
+ await page.locator("header").getByRole("button",{name:"新建画布",exact:true}).click();
  await expect(page).toHaveURL(/\/canvases\/[^/]+$/,{timeout:120_000});
  const canvasUrl=page.url();
  await page.getByRole("textbox",{name:"画布标题"}).fill("分镜试验画布");
@@ -93,7 +93,7 @@ test("T-993 首次自动选账号后画布可创建，新增节点不会重叠",
  await page.goto("/canvases?tab=canvases");
  await expect.poll(async()=>page.evaluate(()=>window.localStorage.getItem("creatoros:current-group"))).not.toBeNull();
  await expect(page.getByRole("alert").filter({hasText:"AccountRequiredError"})).toHaveCount(0);
- await page.getByRole("button",{name:"新建画布"}).click();
+ await page.locator("header").getByRole("button",{name:"新建画布",exact:true}).click();
  await expect(page).toHaveURL(/\/canvases\/[^/]+$/);
  await page.getByRole("button",{name:"＋ 文字"}).click();
  await page.getByRole("button",{name:"＋ 图片生成"}).click();
@@ -154,7 +154,7 @@ test("T-993 视口缩放只保存在本地，不改画布内容版本",async({pa
  const account=await groupedAccount(page,"douyin",`@canvas-viewport-${Date.now()}`);
  await enterGroup(page,context,baseURL!,account.groupId);
  await page.goto("/canvases?tab=canvases");
- await page.getByRole("button",{name:"新建画布"}).click();
+ await page.locator("header").getByRole("button",{name:"新建画布",exact:true}).click();
  await expect(page).toHaveURL(/\/canvases\/[^/]+$/);
  const canvasId=page.url().split("/").at(-1)!;
  await page.getByRole("button",{name:"＋ 文字"}).click();
@@ -176,7 +176,7 @@ test("T-993 视口缩放只保存在本地，不改画布内容版本",async({pa
 test("T-993 双指滚动平移、组合键缩放，节点文字仍可独立滚动",async({page,context,baseURL})=>{
  const account=await groupedAccount(page,"douyin",`@canvas-wheel-${Date.now()}`);
  await enterGroup(page,context,baseURL!,account.groupId);
- await page.goto("/canvases?tab=canvases");await page.getByRole("button",{name:"新建画布"}).click();
+ await page.goto("/canvases?tab=canvases");await page.locator("header").getByRole("button",{name:"新建画布",exact:true}).click();
  const canvas=page.getByTestId("infinite-canvas"),rect=await canvas.boundingBox();expect(rect).not.toBeNull();
  const transform=()=>page.getByTestId("canvas-world").getAttribute("style");
  const before=await transform();await page.mouse.move(rect!.x+rect!.width/2,rect!.y+rect!.height/2);await page.mouse.wheel(70,90);
@@ -223,13 +223,18 @@ test("T-993 当前账号图片与视频能插入画布并实际预览",async({pa
  await uploadMedia(page,{groupId:account.groupId},resolve(process.cwd(),"public/douyin-icon.png"),"image","image/png","画布预览图片.png");
  await uploadMedia(page,{groupId:account.groupId},resolve(process.cwd(),"../output/content-samples/ai-copy-eval-loop/motion-preview.mp4"),"video","video/mp4","画布预览视频.mp4");
  await page.goto("/canvases?tab=canvases");
- await page.getByRole("button",{name:"新建画布"}).click();
+ await page.locator("header").getByRole("button",{name:"新建画布",exact:true}).click();
  await expect(page).toHaveURL(/\/canvases\/[^/]+$/);
  await page.getByRole("button",{name:"素材库"}).click();
- await page.getByRole("button",{name:/图片 · 画布预览图片/}).click();
+ const gallery=page.getByRole("complementary",{name:"当前账号素材"});
+ const imagePreview=gallery.getByRole("button",{name:"预览 画布预览图片.png",exact:true});
+ await expect(imagePreview).toHaveCount(1);
+ await imagePreview.locator("..").getByRole("button",{name:"放到画布",exact:true}).click();
  await expect.poll(async()=>page.locator('[data-testid="canvas-node"] img').first().evaluate(image=>(image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
  await page.getByRole("button",{name:"素材库"}).click();
- await page.getByRole("button",{name:/视频 · 画布预览视频/}).click();
+ const videoPreview=gallery.getByRole("button",{name:"预览 画布预览视频.mp4",exact:true});
+ await expect(videoPreview).toHaveCount(1);
+ await videoPreview.locator("..").getByRole("button",{name:"放到画布",exact:true}).click();
  await expect(page.locator('[data-testid="canvas-node"] video')).toHaveCount(1);
  await expect.poll(async()=>page.locator('[data-testid="canvas-node"] video').evaluate(video=>(video as HTMLVideoElement).readyState)).toBeGreaterThan(0);
  await expect(page.getByText("已保存",{exact:true})).toBeVisible();
@@ -269,8 +274,37 @@ test("T-994 作品素材入口、项目画布过滤与安全返回",async({page,
  await page.getByRole("button",{name:"选已有素材 把账号里的图片和视频放进来"}).click();
  await expect(page.getByRole("complementary",{name:"当前账号素材"})).toBeVisible();
  await page.screenshot({path:testInfo.outputPath("canvas-assets-after.png")});
- await expect(page.getByText("搜索已加载的 0 件素材")).toBeVisible();
- await expect(page.getByRole("link",{name:"去素材中心上传"})).toBeVisible();
+ // T1069 full-library search has no total; preserve the real empty result and upload action.
+ const gallery=page.getByRole("complementary",{name:"当前账号素材"});
+ await expect(gallery.getByRole("textbox",{name:"搜索素材",exact:true})).toBeVisible();
+ await expect(gallery.getByText("这里还没有可选素材",{exact:true})).toBeVisible();
+ const upload=gallery.getByRole("link",{name:"去素材中心上传",exact:true});
+ await expect(upload).toHaveAttribute("href","/assets");
+ const uploadCaptures:Array<{checkpoint:string;check_ids:string[];viewport:{width:number;height:number};text:string}>=[];
+ await page.setViewportSize({width:1024,height:768});
+ await expect(upload).toBeInViewport();
+ uploadCaptures.push({checkpoint:"空素材上传入口-1024",check_ids:["AC-UPLOAD-ENTRY"],viewport:page.viewportSize()!,text:await page.locator("body").innerText()});
+ await page.screenshot({path:testInfo.outputPath("canvas-upload-1024.png")});
+ await page.setViewportSize({width:1536,height:1024});
+ await page.screenshot({path:testInfo.outputPath("canvas-upload-1536.png")});
+ uploadCaptures.push({checkpoint:"空素材上传入口-1536",check_ids:["AC-UPLOAD-ENTRY"],viewport:page.viewportSize()!,text:await page.locator("body").innerText()});
+ const canvasId=new URL(canvasUrl).pathname.split("/").at(-1)!;
+ const before=await dispatch<{revision:number}>(page,"canvas.get",{params:{canvasId}},{groupId:account.groupId});
+ await page.getByRole("textbox",{name:"画布标题"}).fill("新品广告 · 上传前待保存");
+ await upload.click();
+ await expect(page).toHaveURL(/\/assets$/);
+ await expect(page.locator('main[data-page="assets"]')).toBeVisible();
+ await expect(page.getByRole("button",{name:"上传素材",exact:true})).toBeVisible();
+ const saved=await dispatch<{id:string;title:string;revision:number;projectId:string|null;document:{nodes:unknown[]}}>(page,"canvas.get",{params:{canvasId}},{groupId:account.groupId});
+ expect(saved).toMatchObject({id:canvasId,title:"新品广告 · 上传前待保存",projectId:project.id});
+ expect(saved.revision).toBeGreaterThan(before.revision);expect(saved.document.nodes).toHaveLength(0);
+ await page.goto(canvasUrl);
+ await expect(page.getByRole("textbox",{name:"画布标题"})).toHaveValue(saved.title);
+ await expect(page.getByLabel("关联项目（可选）")).toHaveValue(project.id);
+ await page.reload();
+ await expect(page.getByRole("textbox",{name:"画布标题"})).toHaveValue(saved.title);
+ uploadCaptures.push({checkpoint:"返回并刷新原画布",check_ids:["AC-SAVED-LEAVE","AC-RETURN-PRESERVES"],viewport:page.viewportSize()!,text:await page.locator("body").innerText()});
+ writeFileSync(testInfo.outputPath("t1220-upload-result.json"),JSON.stringify({commit_sha:execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim(),canvasId,groupId:account.groupId,projectId:project.id,beforeRevision:before.revision,savedRevision:saved.revision,title:saved.title,captures:uploadCaptures},null,2));
 });
 
 test("T-994 画布版本冲突时不离开并给出恢复动作",async({page,context,baseURL})=>{
@@ -364,7 +398,10 @@ test("T-1021 资产独立上传，选用追加原画布并冻结真实文件",as
  await enterGroup(page,context,baseURL!,account.groupId);
  await page.goto("/canvases?tab=assets");await page.locator('[data-slot="assets-upload-input"]').setInputFiles(resolve(process.cwd(),"public/douyin-icon.png"));
  await expect(page.getByRole("status").filter({hasText:"已上传素材"})).toBeVisible();
- await page.getByRole("button",{name:/douyin-icon.png · 用此素材创作/}).click();
+ const gallery=page.getByRole("complementary",{name:"当前账号素材"});
+ const assetPreview=gallery.getByRole("button",{name:"预览 douyin-icon.png",exact:true});
+ await expect(assetPreview).toHaveCount(1);
+ await assetPreview.locator("..").getByRole("button",{name:"用此素材创作",exact:true}).click();
  await page.getByRole("button",{name:"已有画布",exact:true}).click();
  await page.getByRole("dialog").locator("select").selectOption(original.id);
  await page.getByRole("button",{name:"放入这个画布",exact:true}).click();

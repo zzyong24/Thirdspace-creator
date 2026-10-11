@@ -374,7 +374,8 @@
     "calendar-dialog-layout:e2e": "node docs/verification/t1136/run-layout-journey.mjs",
     "picker-low-height:e2e": "node docs/verification/t1140/run-picker-journey.mjs",
     "cover-group-aspect:e2e": "node docs/verification/t1149/run-aspect-journey.mjs",
-    "wechat-native-report:e2e": "node docs/verification/t1159/run-report-journey.mjs"
+    "wechat-native-report:e2e": "node docs/verification/t1159/run-report-journey.mjs",
+    "canvas-upload-navigation:e2e": "node docs/verification/t1220/verify.mjs"
   },
   "research_verify_commands": {
     "t987-baseline-timing": "node docs/research/t987/verify-baseline.mjs timing",
