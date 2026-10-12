@@ -1,0 +1,79 @@
+先前诊断末尾追加Vitest参数误传Cargo，不能作为Cargo红；本轮按原Cargo命令重跑。
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:62234) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62235) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  2 passed (2)
+      Tests  155 passed (155)
+   Start at  00:28:52
+   Duration  3.80s (transform 1.13s, setup 412ms, import 1.83s, tests 1.00s, environment 1.29s)
+
+   Compiling creatoros-desktop v1.2.0 (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri)
+error: failed to run custom build command for `creatoros-desktop v1.2.0 (/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri)`
+
+Caused by:
+  process didn't exit successfully: `/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/debug/build/creatoros-desktop-325bbbee4dd1164a/build-script-build` (exit status: 101)
+  --- stdout
+  cargo:rerun-if-env-changed=CREATOROS_ENTITLEMENT_CLAIM_ENABLED
+  cargo:rerun-if-env-changed=CREATOROS_OWNED_DEVICES_ENABLED
+  cargo:rerun-if-env-changed=CREATOROS_PRODUCT_FEEDBACK_SUBMIT_ENABLED
+  cargo:rerun-if-env-changed=GROWTH_ENTITLEMENT_API_ORIGIN
+  cargo:rerun-if-env-changed=CREATOROS_FEEDBACK_OFFICIAL_ORIGINS
+  cargo:rerun-if-env-changed=CREATOROS_CLIENT_CONFIG_PULL_ENABLED
+  cargo:rerun-if-env-changed=CREATOROS_GROWTH_CLIENT_CONFIG_ORIGIN
+  cargo:rerun-if-env-changed=CREATOROS_GROWTH_CONFIG_PUBLIC_KEY_B64
+  cargo:rerun-if-env-changed=CREATOROS_GROWTH_CONFIG_KEY_ID
+  cargo:rerun-if-env-changed=CREATOROS_MODEL_CONFIGURATION_AUTHORITY
+  cargo:rustc-env=CREATOROS_BUILTIN_OWNED_DEVICES_ENABLED=0
+  cargo:rustc-env=CREATOROS_BUILTIN_ENTITLEMENT_CLAIM_ENABLED=0
+  cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_FEEDBACK_SUBMIT_ENABLED=0
+  cargo:rustc-env=CREATOROS_BUILTIN_CLIENT_CONFIG_PULL_ENABLED=0
+  cargo:rustc-env=CREATOROS_BUILTIN_MODEL_CONFIGURATION_AUTHORITY=local
+  cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_ENTITLEMENT_API_ORIGIN=
+  cargo:rustc-env=CREATOROS_BUILTIN_FEEDBACK_OFFICIAL_ORIGINS=
+  cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_CLIENT_CONFIG_ORIGIN=
+  cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_CONFIG_PUBLIC_KEY_B64=
+  cargo:rustc-env=CREATOROS_BUILTIN_GROWTH_CONFIG_KEY_ID=
+  cargo:rerun-if-env-changed=CREATOROS_VERDICT_SIGNING_KEY_B64
+  cargo:rerun-if-changed=/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/../product-identity.json
+  cargo:rerun-if-env-changed=CREATOROS_PACKAGE_IDENTITY_PATH
+  cargo:rerun-if-env-changed=CREATOROS_LICENSE_PROJECT_KEY
+  cargo:rustc-env=CREATOROS_BUILTIN_LICENSE_PROJECT_KEY=
+  cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_REF=creatoros
+  cargo:rustc-env=CREATOROS_BUILTIN_APP_IDENTIFIER=cloud.aitongban.creatoros
+  cargo:rustc-env=CREATOROS_BUILTIN_PACKAGE_DISPLAY_NAME=CreatorOS
+  cargo:rustc-env=CREATOROS_BUILTIN_KEYCHAIN_SERVICE=com.creatoros.desktop
+  cargo:rustc-env=CREATOROS_BUILTIN_PACKAGE_REF=creatoros-official
+  cargo:rustc-env=CREATOROS_BUILTIN_EXPECTED_CHANNEL_REF=official
+  cargo:rustc-env=CREATOROS_BUILTIN_PRODUCT_MANIFEST_JSON={"schema":"thirdspace-product-manifest/v1","productRef":"creatoros","appIdentifier":"cloud.aitongban.creatoros","projectKey":"creatoros"}
+  cargo:rustc-env=CREATOROS_SIDECAR_SHA256=
+  cargo:rerun-if-changed=sidecar.tar.gz
+  cargo:rustc-env=CREATOROS_SIDECAR_ENTRY_SHA256=
+  cargo:rerun-if-changed=sidecar/frontend/server.js
+  cargo:rerun-if-changed=sidecar
+  cargo:rerun-if-env-changed=TAURI_CONFIG
+  cargo:rustc-check-cfg=cfg(desktop)
+  cargo:rustc-cfg=desktop
+  cargo:rustc-check-cfg=cfg(mobile)
+  cargo:rerun-if-changed=/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/tauri.conf.json
+  cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_APP_NAME=creatoros
+  cargo:rustc-env=TAURI_ANDROID_PACKAGE_NAME_PREFIX=cloud_aitongban
+  cargo:rustc-check-cfg=cfg(dev)
+  cargo:rustc-cfg=dev
+  cargo:PERMISSION_FILES_PATH=/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/debug/build/creatoros-desktop-38b8c0e5adf2ec33/out/app-manifest/__app__-permission-files
+  cargo:rerun-if-changed=permissions
+  cargo:PERMISSION_FILES_PATH=/Users/zyongzhu/Workbase/Thirdspace-creator/frontend/src-tauri/target/debug/build/creatoros-desktop-38b8c0e5adf2ec33/out/app-manifest/__app__-permission-files
+  cargo:rerun-if-changed=capabilities
+  cargo:rerun-if-env-changed=REMOVE_UNUSED_COMMANDS
+  cargo:rustc-env=TAURI_ENV_TARGET_TRIPLE=aarch64-apple-darwin
+  cargo:rerun-if-changed=binaries/creatoros-server-aarch64-apple-darwin
+
+  --- stderr
+
+  thread 'main' (22382135) panicked at build.rs:409:6:
+  tauri_build 失败: resource path `sidecar.tar.gz` doesn't exist
+  note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace

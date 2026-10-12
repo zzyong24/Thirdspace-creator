@@ -1,0 +1,64 @@
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:43858) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > Windows真实密文store贯通200、304及无效响应隔离，不因目录fsync掩盖结果
+[client-config] refresh=configured correlation=cor_0123456789abcdef0123456789abcdef
+
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > Windows真实密文store贯通200、304及无效响应隔离，不因目录fsync掩盖结果
+[client-config] refresh=not-modified correlation=cor_0123456789abcdef0123456789abcdef
+
+stdout | src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > Windows真实密文store贯通200、304及无效响应隔离，不因目录fsync掩盖结果
+[client-config] {"phase":"refresh","status":"failed","errorCode":"CLIENT_CONFIG_INVALID","retryable":true}
+
+ ❯ src/server/activation/client-config.server.test.ts (24 tests | 2 failed | 22 skipped) 352ms
+     × Windows真实密文store贯通200、304及无效响应隔离，不因目录fsync掩盖结果 188ms
+     × POSIX目录fsync保留，Windows真实文件sync失败仍拒绝配置成功 163ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > Windows真实密文store贯通200、304及无效响应隔离，不因目录fsync掩盖结果
+AssertionError: expected +0 to be 3 // Object.is equality
+
+- Expected
++ Received
+
+- 3
++ 0
+
+ ❯ src/server/activation/client-config.server.test.ts:353:39
+    351|       await expect(refresh(invalid)).resolves.toMatchObject({ authorit…
+    352|       expect(await encrypted.load()).toMatchObject({ state: "quarantin…
+    353|       expect(diskFault.fileSyncCalls).toBe(3);
+       |                                       ^
+    354|       expect(diskFault.directorySyncCalls).toBe(0);
+    355|       expect(await readFile(join(directory, ".channel-model-config"), …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/server/activation/client-config.server.test.ts > T-575 config.pull Creator consumer > POSIX目录fsync保留，Windows真实文件sync失败仍拒绝配置成功
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/server/activation/client-config.server.test.ts:374:44
+    372|       Object.defineProperty(process, "platform", { ...descriptor, valu…
+    373|       await encrypted.save(record);
+    374|       expect(diskFault.directorySyncCalls).toBe(1);
+       |                                            ^
+    375|       Object.defineProperty(process, "platform", { ...descriptor, valu…
+    376|       diskFault.fileSync = true;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 22 skipped (24)
+   Start at  23:53:33
+   Duration  2.60s (transform 807ms, setup 171ms, import 1.36s, tests 352ms, environment 568ms)
+

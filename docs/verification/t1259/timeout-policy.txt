@@ -1,0 +1,259 @@
+验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node tools/timeout-policy/check.mjs
+{
+  "ok": false,
+  "minimumExecutionMs": 120000,
+  "scannedFiles": 2718,
+  "failures": [
+    {
+      "file": "frontend/public/reference-editors/doocs-md/native/chunks/codemirror-C3tEDw1q.js",
+      "line": 10081,
+      "kind": "timeout",
+      "valueMs": 400,
+      "source": "timeout: 400"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-codemirror-CzoyEQLj.js",
+      "line": 11,
+      "kind": "timeout",
+      "valueMs": 400,
+      "source": "timeout:400"
+    },
+    {
+      "file": "frontend/public/reference-editors/doocs-md/static/js/md-index-D9fKRfoA.js",
+      "line": 12,
+      "kind": "timeout",
+      "valueMs": 2000,
+      "source": "timeout:2e3"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "line": 63,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(()=>{this.popper&&!this.popperStatus&&(this.popper.popper.style.display=\"none\",this.popper.destroy(),this.popper=null),this.popperStatus=!1},300)"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "line": 92,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(()=>{this.destroy(),this.onRemove()},300)"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/js/index.770609ce.js",
+      "line": 92,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(()=>{this.closing=!1,this.destroy()},300)"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 38974,
+      "kind": "timeout",
+      "valueMs": 1,
+      "source": "timeout: y"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 53491,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(() => {\n          this.popper && !this.popperStatus && (this.popper.popper.style.display = \"none\", this.popper.destroy(), this.popper = null), this.popperStatus = !1;\n        }, 300)"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 59840,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(() => {\n            this.destroy(), this.onRemove();\n          }, 300)"
+    },
+    {
+      "file": "frontend/public/reference-editors/kuaitu/native/native.js",
+      "line": 60642,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 300,
+      "source": "setTimeout(() => {\n            this.closing = !1, this.destroy();\n          }, 300)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 194,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 90000,
+      "source": "setTimeout(()=>{s.abort.abort();void serial(s,()=>close(s,true)).catch(()=>{});},ports.idleMs??90_000)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 203,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 1000,
+      "source": "setTimeout(()=>{timedOut=true;reject(observationDeadline);},1000)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 240,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 1000,
+      "source": "setTimeout(()=>{active=false;reject(observationDeadline);},1000)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 322,
+      "kind": "abort/reject/kill timer",
+      "valueMs": 5000,
+      "source": "setTimeout(()=>s.abort.abort(),ports.checkoutMs??5000)"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 324,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15_000"
+    },
+    {
+      "file": "frontend/src/server/ingestion/douyin-cdp-comment-diagnosis.ts",
+      "line": 354,
+      "kind": "timeout",
+      "valueMs": 5000,
+      "source": "timeout:5000"
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-render.ts",
+      "line": 98,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15_000"
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-render.ts",
+      "line": 112,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "timeout:15_000"
+    },
+    {
+      "file": "frontend/src/server/workbench-artifact-render.ts",
+      "line": 115,
+      "kind": "timeout",
+      "valueMs": 20000,
+      "source": "timeout:20_000"
+    },
+    {
+      "file": "frontend/src/server/workbench-browser-host.ts",
+      "line": 168,
+      "kind": "timeout",
+      "valueMs": 10000,
+      "source": "AbortSignal.timeout(10_000)"
+    },
+    {
+      "file": "frontend/src/server/workbench-browser-host.ts",
+      "line": 180,
+      "kind": "timeout",
+      "valueMs": 15000,
+      "source": "AbortSignal.timeout(15_000)"
+    },
+    {
+      "file": "frontend/src/server/workbench-native-client.ts",
+      "line": 47,
+      "kind": "request timer",
+      "valueMs": 10000,
+      "source": "socket.setTimeout(10_000)"
+    }
+  ],
+  "limits": "静态已知数值及默认回归；动态调用链、库默认、绝对deadline与观察终态由聚焦测试和逐条清单核对"
+}
+该检查未通过：exit=1
+验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node --test tools/timeout-policy/check.test.mjs tools/timeout-policy/hyperframes.test.mjs
+✔ detects short request, browser default and abort timer consumers (5.278583ms)
+✔ does not turn polling, sleeps, TTL or shared remaining deadline into execution budgets (1.277084ms)
+✔ accepts normalized defaults and longer outer budget instead of bare numeric replacement (0.56375ms)
+✔ 锁定实际安装的同版本补丁，依赖升级必须重新核对内部等待 (1031.866584ms)
+✔ 实际安装的归一入口保留零值、拒绝非法值并明确覆盖页面默认 (4.23125ms)
+✔ 真实公共CLI拒绝一秒浏览器超时，错误单位为秒 (600.234542ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1940.758083
+验证：pnpm --dir contract exec vitest run tests/timeout-policy.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/contract
+
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  00:00:47
+   Duration  907ms (transform 402ms, setup 0ms, import 624ms, tests 6ms, environment 0ms)
+
+验证：pnpm --dir ai-worker exec vitest run src/execution/worker-timeout-policy.test.ts src/runtime/browser/chromium-guard-lifecycle.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/ai-worker
+
+
+ Test Files  2 passed (2)
+      Tests  20 passed (20)
+   Start at  00:00:48
+   Duration  2.24s (transform 1.37s, setup 0ms, import 2.19s, tests 82ms, environment 0ms)
+
+验证：pnpm --dir backend exec vitest run src/modules/execution/new-execution-budget.test.ts src/modules/execution/run-execution-task.test.ts src/modules/execution/execution-call-ledger.service.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/backend
+
+
+ Test Files  3 passed (3)
+      Tests  37 passed (37)
+   Start at  00:00:51
+   Duration  15.61s (transform 6.69s, setup 0ms, import 11.37s, tests 21.07s, environment 0ms)
+
+验证：pnpm --dir frontend exec vitest run src/features/knowledge/knowledge-dump-zone.test.tsx src/features/copilot/chat-thesis-card.test.tsx src/features/draft-workbench/content-direction-actions.test.tsx src/features/draft-workbench/script-review-gate.test.tsx src/server/ai/search/search-browser.test.ts src/server/ai/search/browser-search-fallback.test.ts --retry=0 --testTimeout=120000 --hookTimeout=120000
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/frontend
+
+(node:48671) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:48669) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:48672) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:48673) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:48674) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:48670) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  6 passed (6)
+      Tests  68 passed (68)
+   Start at  00:01:08
+   Duration  3.56s (transform 2.46s, setup 1.62s, import 4.38s, tests 802ms, environment 7.22s)
+
+验证：pnpm --dir mcp-server test tests/cli.test.ts --testTimeout=120000 --hookTimeout=120000
+
+> @creatoros/mcp-server@0.1.0 test /Users/zyongzhu/Workbase/Thirdspace-creator/mcp-server
+> vitest run tests/cli.test.ts --testTimeout=120000 --hookTimeout=120000
+
+
+ RUN  v4.1.8 /Users/zyongzhu/Workbase/Thirdspace-creator/mcp-server
+
+
+ Test Files  1 passed (1)
+      Tests  27 passed (27)
+   Start at  00:01:12
+   Duration  1.32s (transform 535ms, setup 0ms, import 882ms, tests 296ms, environment 0ms)
+
+验证：/opt/homebrew/Cellar/node/25.9.0_2/bin/node --test tools/windows-closure-rat/render-probe-policy.test.mjs frontend/scripts/desktop/timeout-policy.node.mjs
+✔ 短预算归一，更长不缩短，非法值明确拒绝 (0.828125ms)
+✔ 绝对deadline向内传播，最后剩余不能被floor重新延长 (0.190958ms)
+✔ 页面配置端口收到动作与导航两分钟策略 (0.742583ms)
+✔ 两个build-only消费者统一跳过外部依赖探针，正常验证传入两分钟 (1.076792ms)
+✔ 完整渲染探针无外层短帽子，已更长内层保留且拒绝非法配置 (155.58125ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 290.534667

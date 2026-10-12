@@ -9,6 +9,9 @@
 
 |ID|任务|状态|审核|验收|文档|一句话|
 |---|---|---|---|---|---|---|
+|T-1260|核对T1255审核绑定生成PROJECT造成收据漂移|📋|—|—|[实际对账失败](docs/features/t1260-generated-project-review-binding.md)|T1259完整对账26ERROR，25与旧回执逐字一致；另T1255绑定动态PROJECT已过期，保旧审核和事实，不重哈希洗绿，核稳定宪法与真实重新评审。|
+|T-1259|排查用户1.12版扫码绑定与配置同步异常并修复确认缺陷|✅ 待办|—|—|[排查与修复范围](docs/features/t1259-user-binding-config-repair.md)|用户确认1.12为当前、1.11为旧版；核版本与实际失败链，缺陷先RED再修，保原账号登录态与校验，不重发真实任务或发布。|
+|T-1258|分析用户2026-10-12四份加密运行日志异常|✅ 待办|—|—|[诊断范围](docs/features/t1258-user-log-diagnosis.md)|仅本地只读解密四份附件，按时间与影响分析失败、恢复及证据缺口，不改产品、不重发用户任务。|
 |T-1224|校准内容雷达公共旅程的短测试预算与证据输出|🔨 待办|—|待验|[范围与验收](docs/features/t1224-radar-e2e-budget-evidence.md)|独评后仅校准测试预算及证据目录，再跑原公共旅程。 [原记录](BACKLOG-details.md#b-331e63446d8d)|
 |T-1223|修复截图总览把历史运行记录当用例数及重复锚点|🔨 待办|—|待验|[范围与验收](docs/features/t1223-verification-gallery-record-identity.md)|真实历史记录误计及重复锚点已独评，报告生成器正在RED/GREEN验证；保全部旧图/结果。 [原记录](BACKLOG-details.md#b-43efc28c7f95)|
 |T-1222|核对文章图文编导的空态与功能指引脱离当前稿件|📋 待办|—|待验|[截图与范围](docs/features/t1222-director-context-guidance.md)|文章图文编导固定全局指引；真实editorTarget会在发送前准备。待核功能目录、独评和候选链。 [原记录](BACKLOG-details.md#b-7cb36965e02b)|

@@ -1,0 +1,3 @@
+# 原实时时钟回归记录
+
+首轮frontend-green.txt包含两例旧timeoutMs:20测试，实际完整执行下限370秒、两例串行。此轮尚未完成时主会话中止自有Vitest进程，不记PASS或FAIL。独立评审确认只将这两例改为虚拟时钟推进原DEFAULT_LAUNCH_TIMEOUT_MS，保留异常和迟到关闭断言，不缩短生产预算。修改后整套重新运行，原输出保留。
