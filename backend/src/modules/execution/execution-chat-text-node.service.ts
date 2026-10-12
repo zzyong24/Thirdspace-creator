@@ -1,5 +1,6 @@
 import {executionEvidence} from "../../schema/intelligence";
-import {recoverableChatNodeParents} from "./chat-generation-recovery";
+import {recoverableChatNodeParents,recoverableCodexTextParents,recoverableCodexSettledProposalParents} from "./chat-generation-recovery";
+import {originalCodexReadBinding} from './codex-read-recovery';
 import { createExecutionNodePreparationService } from "./execution-node-preparation.service";
 import {createExecutionWorkerOutcomeService} from "./execution-worker-outcome.service";
 import { createHash } from "node:crypto";
@@ -20,7 +21,7 @@ import { createChatHostContextReader } from "../ai/chat-host-context.service";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
 import {
-  createAgenticToolBinding,
+  latestAgenticRootCall,createAgenticToolBinding,
   type AgenticBackendTool,
 } from "./agentic-tool-binding";
 import { ConflictError } from "./execution.errors";
@@ -75,7 +76,8 @@ export function createExecutionChatTextNodeService(
       parent.toolExecutionClaimId
     )
       throw new ConflictError("开场调用缺少独立 Worker 父工具");
-    const bound = binding.forCall(task, calls, parent);
+    const readonlyRecovery=[...recoverableCodexTextParents(task,calls,node.name==='script.hooks'?'hooks':'script-draft'),...recoverableCodexSettledProposalParents(task,calls)].includes(callId);
+    const bound = binding.forCall(task, calls, parent,readonlyRecovery?{readonlyRecovery:true}:undefined);
     if (
       bound.executionToolName !== node.name || bound.execution !== node.execution ||
       bound.effect !== node.effect ||
@@ -92,7 +94,7 @@ export function createExecutionChatTextNodeService(
       throw new ConflictError("父工具尚不可准备生成");
     if (
       found.parent.status !== "settled" &&
-      calls.filter((call) => call.kind === "model" && !call.parentCallId).at(-1)
+      latestAgenticRootCall(calls)
         ?.id !== found.bound.modelCallId
     )
       throw new ConflictError("开场父工具不属于当前回合");
@@ -217,8 +219,9 @@ export function createExecutionChatTextNodeService(
         const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
         const found=findParent(task,calls,callId);assertCurrentRound(calls,found);
         const recoverable=node.resumable(recoverableChatNodeParents(task,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,task.id))));
-        if(found.parent.status!=="started" || !recoverable.includes(callId))throw new ConflictError("原任务没有可恢复的文本节点记录");
-        if(node.name!=="script.draft"){
+        const readonlyRecovery=[...recoverableCodexTextParents(task,calls,node.name==='script.hooks'?'hooks':'script-draft'),...recoverableCodexSettledProposalParents(task,calls)].includes(callId);
+        if(found.parent.status!=="started" || (!recoverable.includes(callId)&&!readonlyRecovery))throw new ConflictError("原任务没有可恢复的文本节点记录");
+        if(node.name!=="script.draft"&&!readonlyRecovery){
           const children=recoverableChildren(calls,callId,prepared.operationKey);
           if(task.retryOfCallId!==children.at(-1)!.id)throw new ConflictError("原节点缺少重试许可");
         }
@@ -314,15 +317,14 @@ export function createExecutionChatTextNodeService(
         (call) => {
           if (call.kind !== "model" || !call.parentCallId)
             throw new ConflictError("当前调用不是内部模型");
-          // 普通执行回执不具备对账权；新租约不能猜测旧请求是否已提交。
-          if (call.status === "unknown" && input.status !== "unknown")
-            throw new ConflictError("未知模型结果必须经独立对账确认");
-          if (call.status === "started" && call.startedAttempt !== ref.attempt)
-            throw new ConflictError("不能结算旧租约的在途模型");
         },
         (calls, task) => {
           const child = calls.find((call) => call.id === callId)!;
-          findParent(task, calls, child.parentCallId!);
+          const found=findParent(task, calls, child.parentCallId!);
+          if((child.status==='unknown'&&input.status!=='unknown')||(child.status==='started'&&child.startedAttempt!==ref.attempt)){
+            const native=originalCodexReadBinding(task,child),metadata=z.record(z.string(),z.json()).safeParse(input.status==='settled'?input.providerResult?.providerMetadata?.codex:undefined);
+            if(!native||!recoverableCodexTextParents(task,calls,node.name==='script.hooks'?'hooks':'script-draft').includes(found.parent.id)||found.parent.startedAttempt!==ref.attempt||input.status!=='settled'||!metadata.success||metadata.data.threadId!==native.threadId||metadata.data.turnId!==native.turnId)throw new ConflictError('文本节点回执缺少原生只读恢复证明');
+          }
         },
       );
       return { callId: settled.id, status: settled.status };

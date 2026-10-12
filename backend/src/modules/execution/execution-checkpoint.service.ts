@@ -1,5 +1,5 @@
 import {executionEvidence} from "../../schema/intelligence";
-import {recoverableChatNodeParents} from "./chat-generation-recovery";
+import {recoverableChatNodeParents,recoverableCodexStructuredParents,recoverableCodexTextParents} from "./chat-generation-recovery";
 import { partitionExecutionCalls } from "./execution-call-tree";
 import { createHash } from "node:crypto";
 import { asc, eq, executionCalls, executionTasks, type Db } from "@creatoros/backend";
@@ -134,8 +134,8 @@ export function createExecutionCheckpointService(db:Db,deps:{now?:()=>string}={}
         const knownSpentTokens=calls.reduce((sum,call)=>sum+(call.totalTokens ?? 0),0);
         // 仅宿主已记录的子模型拒绝可进入专用恢复门；不能据 Worker 自报忽略在途调用。
         const recoverable=recoverableChatNodeParents(task,calls,await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,task.id)));
-        const replayableScriptDraftToolCallIds=recoverable.scriptDrafts;
-        const resumableToolCallIds=recoverable.resumableHooks,completableToolCallIds=recoverable.completedHooks,replayableGenerationToolCallIds=recoverable.structured,replayableWebReadToolCallIds=recoverable.webReads;
+        const replayableScriptDraftToolCallIds=[...new Set([...recoverable.scriptDrafts,...recoverableCodexTextParents(task,calls,'script-draft')])];
+        const resumableToolCallIds=[...new Set([...recoverable.resumableHooks,...recoverableCodexTextParents(task,calls,'hooks')])],completableToolCallIds=recoverable.completedHooks,replayableGenerationToolCallIds=[...new Set([...recoverable.structured,...recoverableCodexStructuredParents(task,calls)])],replayableWebReadToolCallIds=recoverable.webReads;
         const recovery=unknownUsage || incompleteReceipt || pendingCalls.some(call=>call.status!=="reserved" && !resumableToolCallIds.includes(call.callId) && !completableToolCallIds.includes(call.callId) && !replayableGenerationToolCallIds.includes(call.callId) && !replayableWebReadToolCallIds.includes(call.callId) && !replayableScriptDraftToolCallIds.includes(call.callId)) ? "requires_reconciliation"
           : uncheckpointedReceipts.length ? "requires_replay"
           : pendingCalls.length || reconstructed.unresolvedToolCalls.length ? "pending" : "ready";

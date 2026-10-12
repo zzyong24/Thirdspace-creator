@@ -1,9 +1,11 @@
+import {frozenExecutionEngine,codexExecutionSpec} from '@creatoros/contract/execution-worker';
+import {createExecutionCodexCallService} from '../execution/execution-codex-call.service';
 import {createHash} from "node:crypto";
 import {isDeepStrictEqual} from "node:util";
 import {z} from "zod";
 import {eq,executionTasks,type Db} from "@creatoros/backend";
 import type {RequestContext} from "@creatoros/contract";
-import {isContinuousExecutionBudget,structuredGenerationInputSchema,workerModelSpecSchema,workerSkillSnapshotSchema,workerPortInputSchemas,type ExecutionRef} from "@creatoros/contract/execution-worker";
+import {isContinuousExecutionBudget,structuredGenerationInputSchema,intelligenceRewriteInputSchema,executionModelSpecSchema,workerSkillSnapshotSchema,workerPortInputSchemas,type ExecutionRef} from "@creatoros/contract/execution-worker";
 import {IntelligenceGenerationSuspended} from "./topic-preview-runner";
 import {createExecutionWorkerOutcomeService} from "../execution/execution-worker-outcome.service";
 import {createExecutionLeaseService} from "../execution/execution-lease.service";
@@ -18,7 +20,7 @@ import {intelligenceTopicDecomposeSchema,intelligenceTopicFromDecompositionSchem
 
 const hash=(value:unknown)=>createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const json=(value:unknown)=>z.json().parse(JSON.parse(JSON.stringify(value)));
-const savedSchema=z.object({sourceDigest:z.string(),input:structuredGenerationInputSchema,identity:z.json()});
+const savedSchema=z.object({sourceDigest:z.string(),input:z.union([structuredGenerationInputSchema,intelligenceRewriteInputSchema]),identity:z.json()});
 const topicResult=intelligenceTopicDecomposeSchema.and(intelligenceTopicFromDecompositionSchema).and(z.object({adaptedDraft:z.string().min(1)}));
 const rewriteOnlyResult=z.object({generationMode:z.literal("rewrite_only"),adaptedDraft:z.string().min(1)}).strict();
 function isRewriteOnlyInput(input:z.infer<typeof structuredGenerationInputSchema>){try{return JSON.parse(input.facets.target??"null")?.generationMode==="rewrite_only";}catch{return false;}}
@@ -46,14 +48,16 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
   const item=z.object({title:z.string().nullable().optional(),authorName:z.string().nullable().optional(),platform:z.string().optional(),canonicalUrl:z.string()});
   const stable=mode==="topic_preview"?z.object({generationMode:z.enum(["rewrite_only","strategy_backed"]).optional(),transformId:z.string(),item,positioning:z.unknown().nullable().optional(),positioningVersionId:z.string().nullable().optional(),personalizationStatus:z.enum(["applied","not_applied"]).optional(),transcript:z.object({hash:z.string(),text:z.string()})}).parse(target):z.object({strategy:z.string(),sources:z.array(z.object({item,transform:z.object({outputSnapshot:z.json()}),transcript:z.object({text:z.string()})}))}).parse(target);
   const sourceDigest=hash(stable),capability=mode==="topic_preview"?"topic.generate":"script.draft";
-  const spec=workerModelSpecSchema.parse(await deps.resolveModelSpec(ctx,capability));
+  const spec=executionModelSpecSchema.parse(frozenExecutionEngine(task.payload)==="codex"?codexExecutionSpec():await deps.resolveModelSpec(ctx,capability));
   const {identity}=prepareExecutionModelIdentity(capability,spec);
   let frozen=task.payload && typeof task.payload==="object"?(task.payload as Record<string,unknown>).intelligenceGeneration:undefined;
   if(!frozen){
    const skillIds=mode==="topic_preview"?(isRewriteOnlyTarget(target)?["intelligence.topic-adapted-draft"]:["intelligence.topic-decompose","intelligence.topic-from-decomposition","intelligence.topic-adapted-draft"]):["script.draft"];
    const snapshot=workerSkillSnapshotSchema.parse(await deps.resolveSkillSnapshot(ctx,skillIds));
    if(snapshot.userId!==ctx.userId || snapshot.accountId!==(ctx.accountId??null) || (snapshot.groupId??null)!==(ctx.groupId??null))throw new Error("INTELLIGENCE_SKILL_OWNER_MISMATCH");
-   const input=structuredGenerationInputSchema.parse({kind:"model.structured",operationKey:`intelligence:${task.id}`,capability,skillId:skillIds[0],skillSnapshot:snapshot,maxOutputTokens:8192,timeoutMs:600000,facets:{mode,target:JSON.stringify(target),...(task.executionBudget && isContinuousExecutionBudget(task.executionBudget)?{continuousRecovery:"true"}:{})}});
+   const rawInput={kind:"model.structured",operationKey:`intelligence:${task.id}`,capability,skillId:skillIds[0],skillSnapshot:snapshot,maxOutputTokens:8192,timeoutMs:600000,facets:{mode,target:JSON.stringify(target),...(task.executionBudget && isContinuousExecutionBudget(task.executionBudget)?{continuousRecovery:"true"}:{})}};
+   // 仅尚未冻结的已选正文用专用标签；原合法 structured 冻结输入不改写。
+   const input=mode==="topic_preview" && isRewriteOnlyTarget(target)?intelligenceRewriteInputSchema.parse({...rawInput,intelligenceText:"rewrite_only"}):structuredGenerationInputSchema.parse(rawInput);
    frozen=await leases.withLease(ref,"admission",async({tx,task})=>{
     const payload=task.payload as Record<string,unknown>;
     if(payload.intelligenceGeneration)return payload.intelligenceGeneration;
@@ -72,6 +76,7 @@ export function createIntelligenceGenerationBridge(db:Db,deps:IntelligenceGenera
   const ports:Parameters<typeof supervision.run>[0]["ports"]={
    async validate(current,kind){if(closedPorts)throw new Error("INTELLIGENCE_PORTS_CLOSED");if(!isDeepStrictEqual(current,ref))throw new Error("INTELLIGENCE_CLAIM_MISMATCH");await leases.withLease(ref,kind,async()=>{});},
    async invoke(current,port,raw){
+    if(port==='bindCodexCall'||port==='readCodexCall'||port==='recordCodexToolCall')return createExecutionCodexCallService(db).invoke(current,port,raw);
     if(port==="readTaskContext"){await verify();return saved.input;}
     if(port==="resolveModelCredential"){await verify();if(workerPortInputSchemas.resolveModelCredential.parse(raw).capability!==capability)throw new Error("INTELLIGENCE_CAPABILITY_MISMATCH");return spec;}
     if(port==="heartbeat"){await verify();return deps.tasks.heartbeat({taskId:ref.executionTaskId,workerId:claim.lease.workerId,attempt:ref.attempt,leaseSeconds:300});}

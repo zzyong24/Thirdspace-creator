@@ -1,10 +1,11 @@
 import {imageSize} from "image-size";
 
 export type AssetGenerationMode="text_to_image"|"image_to_image"|"text_to_video"|"image_to_video";
-export type AssetModelIdentity={provider:string;model:string};
+export type AssetModelIdentity={provider:string;model:string}|{engine:"codex";protocolKind:"codex-app-server";runtimeVersion:"0.159.3";requestedModel?:string};
 
 // SEMANTIC_BOUNDARY_ALLOW: 只约束供应商适配器已实现的协议和模型，不做创作语义判断。
 export function supportsAssetGenerationMode(spec:AssetModelIdentity,mode:AssetGenerationMode){
+ if("engine" in spec)return mode.endsWith("_image");
  const provider=spec.provider.toLowerCase(),model=spec.model.toLowerCase();
  if(mode==="image_to_image"||mode==="text_to_image")return provider==="openai"||(provider==="minimax"&&["image-01","image-01-live"].includes(model));
  if(mode==="image_to_video")return provider==="minimax"&&["minimax-h3","minimax-h3-max","minimax-hailuo-2.3","minimax-hailuo-2.3-fast","minimax-hailuo-02"].includes(model);
@@ -16,6 +17,7 @@ export function capabilityForAssetMode(mode:AssetGenerationMode):"image.generate
 export function referenceImageAllowed(spec:AssetModelIdentity,mode:AssetGenerationMode,mimeType:string,bytes:Uint8Array){
  const byteLength=bytes.byteLength;
  if(!["image/jpeg","image/png","image/webp"].includes(mimeType)||byteLength<=0||byteLength>20*1024*1024)return false;
+ if("engine" in spec)return mode==="image_to_image";
  if(mode==="image_to_image"&&spec.provider.toLowerCase()==="minimax")return mimeType!=="image/webp"&&byteLength<10*1024*1024;
  if(mode==="image_to_video"&&spec.provider.toLowerCase()==="minimax"){
   const h3=spec.model.toLowerCase().startsWith("minimax-h3");
@@ -32,6 +34,7 @@ export function referenceImageAllowed(spec:AssetModelIdentity,mode:AssetGenerati
 /** 仅返回适配器已有协议允许的比例，未知渠道不推断能力。 */
 export function assetGenerationAspectRatios(spec:AssetModelIdentity,mode:AssetGenerationMode):string[]|undefined {
  if(!supportsAssetGenerationMode(spec,mode))return undefined;
+ if("engine" in spec)return undefined;
  const provider=spec.provider.toLowerCase(),model=spec.model.toLowerCase();
  if(provider==="openai"&&mode.endsWith("_image"))return ["1:1","9:16","3:4","2:3","16:9","4:3","3:2"];
  if(provider==="minimax"&&mode.endsWith("_image"))return ["1:1","16:9","4:3","3:2","2:3","3:4","9:16","21:9"];
@@ -39,6 +42,7 @@ export function assetGenerationAspectRatios(spec:AssetModelIdentity,mode:AssetGe
  return undefined;
 }
 export function assetGenerationParameterError(spec:AssetModelIdentity,mode:AssetGenerationMode,input:{prompt:string;durationSec?:number;resolution?:string;aspectRatio?:string}):string|null{
+ if("engine" in spec)return mode.endsWith("_image")?null:"Codex未提供此视频模式";
  const provider=spec.provider.toLowerCase(),model=spec.model.toLowerCase();
  if(provider==="minimax"&&mode.endsWith("_image")&&input.prompt.length>1500)return "MiniMax 生图描述不能超过 1500 字";
  if(provider==="minimax"&&mode.endsWith("_image")&&input.aspectRatio&&!["1:1","16:9","4:3","3:2","2:3","3:4","9:16","21:9"].includes(input.aspectRatio))return "MiniMax 图片模型不支持该画幅";

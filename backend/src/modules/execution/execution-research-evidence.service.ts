@@ -1,8 +1,8 @@
 import {workspaceFilter} from "../../workspace-scope";
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
-import { and, asc, eq, aiTasks, executionCalls, type Db } from "@creatoros/backend";
-import { browserObserveInputSchema, browserActInputSchema, checkpointToolCallSchema, browserObservationSchema, agenticToolOutcomeSchema, workerToolResultReceiptSchema, workerPortInputSchemas, type AgenticToolOutcome, type ExecutionRef } from "@creatoros/contract/execution-worker";
+import { and, asc, eq, aiTasks, executionCalls, executionTasks, type Db } from "@creatoros/backend";
+import { frozenExecutionEngine, browserObserveInputSchema, browserActInputSchema, checkpointToolCallSchema, browserObservationSchema, agenticToolOutcomeSchema, workerToolResultReceiptSchema, workerPortInputSchemas, type AgenticToolOutcome, type ExecutionRef } from "@creatoros/contract/execution-worker";
 import { executionEvidence } from "../../schema/intelligence";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
@@ -42,7 +42,7 @@ export function browserObservationEvidence(output:AgenticToolOutcome,action?:{ac
  }
  return data.observation;
 }
-function assertOrigin(row:Evidence,call:Call|undefined,beforeSequence:number,calls:Call[]=[]){
+function assertOrigin(row:Evidence,call:Call|undefined,beforeSequence:number,calls:Call[]=[],task?:typeof executionTasks.$inferSelect){
   if(!call || call.kind!=="tool" || call.status!=="settled" || call.executionTaskId!==row.executionTaskId || call.sequence>=beforeSequence ||
     !row.fullText.trim() || row.byteLength!==Buffer.byteLength(row.fullText,"utf8") || row.contentHash!==contentHash(row.sourceUrl,row.fullText)) {
     throw new ConflictError("阅读证据缺少当前任务已确认的先前来源");
@@ -52,9 +52,12 @@ function assertOrigin(row:Evidence,call:Call|undefined,beforeSequence:number,cal
     const output=agenticToolOutcomeSchema.parse(receipt.output);
     const data=z.object({observation:browserObservationSchema,evidenceRef:z.string(),snapshotId:z.string()}).parse(output.data);
     const matching:Array<{sessionId:string;action?:string;targetRef?:string}>=[];
-    for(const model of calls.filter(item=>item.kind==="model" && item.status==="settled" && item.sequence<call.sequence && item.providerResult)){
-     const provider=model.providerResult as {content?:unknown[];finishReason?:{unified?:string}};
-     if(provider.finishReason?.unified!=="tool-calls")continue;
+    for(const model of calls.filter(item=>item.kind==='model'&&!item.parentCallId&&item.sequence<call.sequence)){
+     const codex=task&&frozenExecutionEngine(task.payload)==='codex'?(task.payload as {codexCalls?:Record<string,{threadId?:string;turnId?:string;tools?:Record<string,unknown>}>}).codexCalls?.[model.id]:undefined;
+     // SEMANTIC_BOUNDARY_ALLOW: 仅冻结Codex的原线程工具事实可在单回合未结束时证明已完成观察；Pi保留settled门。
+     const native=codex?.threadId&&codex.turnId&&['started','settled'].includes(model.status);
+     const provider=native?{content:Object.values(codex.tools??{}).map(part=>({type:'tool-call',...part as object})),finishReason:{unified:'tool-calls'}}:model.status==='settled'&&model.providerResult?model.providerResult as {content?:unknown[];finishReason?:{unified?:string}}:undefined;
+     if(provider?.finishReason?.unified!=='tool-calls')continue;
      for(const part of provider.content ?? []){const tool=checkpointToolCallSchema.safeParse(part);if(!tool.success || tool.data.toolName!==receipt.toolName || tool.data.toolCallId!==receipt.toolCallId)continue;
       const key=`tool:${createHash("sha256").update(JSON.stringify([model.id,tool.data.toolCallId])).digest("hex")}`;
       if(key!==call.operationKey)continue;
@@ -75,11 +78,12 @@ function assertOrigin(row:Evidence,call:Call|undefined,beforeSequence:number,cal
 /** 可在调用方已持有执行/AI行锁的事务中验证；引用只能来自生成该知识调用之前的真实阅读。 */
 export async function verifyReadEvidence(tx:Transaction,taskId:string,refs:string[],beforeSequence:number):Promise<Evidence[]> {
   z.array(z.string().min(1)).min(1).max(100).parse(refs);z.number().int().positive().parse(beforeSequence);
+  const [task]=await tx.select().from(executionTasks).where(eq(executionTasks.id,taskId));
   const rows=await tx.select().from(executionEvidence).where(eq(executionEvidence.executionTaskId,taskId));
   const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,taskId));
   return [...new Set(refs)].map(ref=>{
     const row=rows.find(item=>item.id===ref);if(!row)throw new ConflictError("阅读证据不存在或不属于当前任务");
-    assertOrigin(row,calls.find(call=>call.id===row.originCallId),beforeSequence,calls);return row;
+    assertOrigin(row,calls.find(call=>call.id===row.originCallId),beforeSequence,calls,task);return row;
   });
 }
 
@@ -105,14 +109,14 @@ export function createExecutionResearchEvidenceService(db:Db,deps:{tools:Record<
         const input=bound.validationOutcome?null:readInput.parse(bound.input);
         if(observation && input && (input.offset!==0 || input.snapshotId || input.evidenceRef))throw new ConflictError("指定快照只能回读原证据，不能重新提交网页观察");
         if(existing){
-          assertOrigin(existing,call,Number.MAX_SAFE_INTEGER,calls);
+          assertOrigin(existing,call,Number.MAX_SAFE_INTEGER,calls,task);
           if(observation && (observation.needLogin || observation.sourceUrl!==existing.sourceUrl || observation.title!==existing.title || observation.fullText!==existing.fullText))throw new ConflictError("同源阅读调用不能改写正文");
         }
         if(output.evidence.length){
           const row=existing ?? rows.find(row=>row.id===(output.data as {evidenceRef?:string})?.evidenceRef);
           if(!row || !input || row.requestedUrl!==input.url || (!existing && row.contentHash!==input.snapshotId))throw new ConflictError("已结算阅读缺少真实快照");
-          const before=existing?Number.MAX_SAFE_INTEGER:calls.find(row=>row.id===bound.modelCallId)!.sequence;
-          assertOrigin(row,calls.find(candidate=>candidate.id===row.originCallId),before,calls);
+          const before=existing?Number.MAX_SAFE_INTEGER:frozenExecutionEngine(task.payload)==='codex'?call.sequence:calls.find(row=>row.id===bound.modelCallId)!.sequence;
+          assertOrigin(row,calls.find(candidate=>candidate.id===row.originCallId),before,calls,task);
           if(JSON.stringify(output)!==JSON.stringify(page(row,input.offset)))throw new ConflictError("已结算阅读窗口与快照不符");
         }
         return output;
@@ -138,9 +142,10 @@ export function createExecutionResearchEvidenceService(db:Db,deps:{tools:Record<
           const matches=rows.filter(row=>row.contentHash===input.snapshotId && row.requestedUrl===input.url && (!input.evidenceRef || input.evidenceRef===row.id));
           if(matches.length!==1)throw new ConflictError("阅读快照缺失、来源或hash不符");
           const row=matches[0]!, model=calls.find(candidate=>candidate.id===bound.modelCallId)!;
-          assertOrigin(row,calls.find(candidate=>candidate.id===row.originCallId),model.sequence,calls);
+          const before=frozenExecutionEngine(task.payload)==='codex'?call.sequence:model.sequence;
+          assertOrigin(row,calls.find(candidate=>candidate.id===row.originCallId),before,calls,task);
           const prior=calls.some(candidate=>{
-            if(candidate.status!=="settled" || candidate.kind!=="tool" || candidate.sequence>=model.sequence)return false;
+            if(candidate.status!=="settled" || candidate.kind!=="tool" || candidate.sequence>=before)return false;
             try{const receipt=readReceipt(candidate);return receipt.continuation?.evidenceRef===row.id && receipt.continuation.nextOffset===input.offset && JSON.stringify(receipt)===JSON.stringify(page(row,(receipt.data as {offset:number}).offset));}catch{return false;}
           });
           if(input.offset!==0 && !prior)throw new ConflictError("续读位置没有先前已确认的阅读窗口来源");

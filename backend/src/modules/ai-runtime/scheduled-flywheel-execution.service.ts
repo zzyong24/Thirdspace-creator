@@ -98,6 +98,7 @@ export function createScheduledFlywheelExecutionService(db:Db,deps:ScheduledFlyw
  };
  const service={
  models,
+ async assertModelConfigured(ctx:RequestContext,capability:FlywheelCapability){const scope=await contextFor(ctx);return generation.assertConfiguration(scope.ref,capability);},
  ensureRunForTask:runIntents.ensureRunForTask,
  async prepare(ctx:RequestContext,aiTaskId:string){
   abort.signal.throwIfAborted();

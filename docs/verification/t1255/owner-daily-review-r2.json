@@ -1,0 +1,88 @@
+{
+  "schema": "spec-review-round/v2",
+  "review_kind": "recheck",
+  "summary": "独立只读复核每日观测与唯一owner合同；owner及24小时排期明确，配置载体/恢复、耗时分类和指标入口额度三项major，旧PASS不覆盖新增缺口。",
+  "findings": [
+    {
+      "id": "REV-001",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "T1255-REV-001",
+        "quote": "配置仅随每日响应更新，不独立联网轮询"
+      },
+      "acceptance_anchor": {
+        "id": "T1255-AC-REV-001",
+        "quote": "关闭后须通过下一次用户主动开启/已明确控制周期的授权内下一轮接收配置才能恢复"
+      },
+      "where": "docs/features/t1255-reporting-full-delivery.md:37",
+      "failure_mode": "日志回执无config；远端停止全部出站后未定义合法每日恢复载体，可能永久停发或额外联网。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "SPEC第37行；独立/root/reporting_review当场只读报告",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:37:8839aa7d3b403c95",
+      "suggestion": "统一配置closed载体及本机关停/远端暂停的状态机，保原每日预算。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-002",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "T1255-REV-002",
+        "quote": "durationBuckets"
+      },
+      "acceptance_anchor": {
+        "id": "T1255-AC-REV-002",
+        "quote": "最多100个operation维度"
+      },
+      "where": "docs/features/t1255-reporting-full-delivery.md:35",
+      "failure_mode": "指标wire只有一组duration，不能分别承载排队与执行耗时。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "SPEC第35行；独立/root/reporting_review当场只读报告",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:35:96fd1dbb6114d85f",
+      "suggestion": "精确独立queue与execution桶/count/sum，绑定原正式时钟。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    },
+    {
+      "id": "REV-003",
+      "status": "open",
+      "severity": "major",
+      "category": "consistency",
+      "requirement_anchor": {
+        "id": "T1255-REV-003",
+        "quote": "最多100个operation维度"
+      },
+      "acceptance_anchor": {
+        "id": "T1255-AC-REV-003",
+        "quote": "总256KiB"
+      },
+      "where": "docs/features/t1255-reporting-full-delivery.md:35",
+      "failure_mode": "指标新匿名入口未明确共用原body前IP/global原子护栏与字节额度。",
+      "evidence_kind": "spec-contradiction",
+      "evidence_ref": "SPEC第35行；独立/root/reporting_review当场只读报告",
+      "risk_class": "confirmed-requirement",
+      "disposition": "mitigate",
+      "remedy_type": "clarify",
+      "scope_effect": "none",
+      "origin": "changed-lines",
+      "origin_ref": "SPEC-LINE:35:96fd1dbb6114d85f",
+      "suggestion": "明确两个入口共同有界限量及幂等原子消费者，不加Activity。",
+      "resolution_evidence": "",
+      "parent_id": ""
+    }
+  ]
+}

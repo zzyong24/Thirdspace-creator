@@ -4,7 +4,7 @@ import { findStructuredOutputError } from "../nodes/structured-output-error";
 import {GenerationFailure,generationFailure} from "./generation-error";
 import {generateText} from "ai";
 import {z} from "zod";
-import {workerReservationSchema,workerStartReceiptSchema,type WorkerPort,type structuredGenerationInputSchema,type workerModelSpecSchema} from "@creatoros/contract/execution-worker";
+import {workerReservationSchema,workerStartReceiptSchema,type WorkerPort,type structuredGenerationInputSchema,type executionModelSpecSchema} from "@creatoros/contract/execution-worker";
 import {createDurableGenerationModel} from "./durable-generation-model";
 import {modelFor} from "../runtime/provider-factory";
 import {runWithEffectiveSkillSnapshot,getEffectiveTemplate} from "../prompt/effective-skill-runtime";
@@ -42,7 +42,7 @@ function formatPositioning(value:unknown):string {
  return lines.join("\n")||"未提供可用账号定位。本次为通用改写，请勿声称已经个性化。";
 }
 /** 原采集任务的模型阶段；只通过宿主同任务账本和检查点端口回传。 */
-export async function generateIntelligenceInWorker(input:z.infer<typeof structuredGenerationInputSchema>,spec:z.infer<typeof workerModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
+export async function generateIntelligenceInWorker(input:z.infer<typeof structuredGenerationInputSchema>,spec:z.infer<typeof executionModelSpecSchema>,signal:AbortSignal,call:(port:WorkerPort,data:unknown,signal?:AbortSignal)=>Promise<unknown>){
  let lastCallId:string|undefined;
  // 本地模型适配器初始化失败尚未预留或启动供应商调用，不能记成结果未知。
  let model:ReturnType<typeof createDurableGenerationModel>;

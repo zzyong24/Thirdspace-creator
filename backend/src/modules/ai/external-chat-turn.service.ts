@@ -10,9 +10,12 @@ import {readCommittedGeneratedAssetFile} from "../assets/generated-asset-candida
 import { chatHistoryDigest, chatInputDigest } from "./chat-turn-submission.service";
 import { selectFrozenChatHistory } from "./chat-turn-history";
 import {workspaceFilter} from "../../workspace-scope";
-import {applyChatToolOutcome} from "./chat-receipt-projection";
+import {applyChatToolOutcome,readChatApprovalFacts} from "./chat-receipt-projection";
 import {z} from "zod";
 
+import {requireExternalChatCallTree} from './external-chat-call-tree';
+import type {createAgenticToolBinding} from '../execution/agentic-tool-binding';
+import {workerToolResultReceiptSchema,checkpointToolCallSchema} from '@creatoros/contract/execution-worker';
 const object=(value:unknown):Record<string,unknown>=>value && typeof value==="object" && !Array.isArray(value)?value as Record<string,unknown>:{};
 type Tx=Parameters<Parameters<Db["transaction"]>[0]>[0];
 type Task=typeof executionTasks.$inferSelect;
@@ -37,7 +40,7 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
  }
  // SEMANTIC_BOUNDARY_ALLOW: 稳定事件摘要只固定幂等身份，不作内容选择。
  const imageKey=(callId:string,toolCallId:string,imageIndex:number)=>`chat-image-${createHash("sha256").update(JSON.stringify([callId,toolCallId,imageIndex])).digest("hex")}`;
- function imageAssets(ref:ExecutionRef,request:{callId:string;sessionId:string;toolCallId:string;imageIndex:number}){
+ function imageAssets(ref:ExecutionRef,request:z.infer<typeof import("@creatoros/contract/execution-worker").externalChatImageIdentitySchema>){
   if(!deps.objectStorageForCtx)throw new ConflictError("聊天图片保存服务未就绪");
   const key=`execution-asset:${imageKey(request.callId,request.toolCallId,request.imageIndex)}`;
   return {key,service:createPendingGeneratedAssetService({db,now,objectStorageForCtx:deps.objectStorageForCtx,authorize:async(ctx,operationKey,tx)=>{
@@ -45,26 +48,29 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
    await createExecutionLeaseService(tx as unknown as Db,{now}).withLease(ref,"admission",async scope=>{await imageOwner(scope.tx,scope.task,scope.context,request);if(scope.context.userId!==ctx.userId||(scope.context.accountId??null)!==(ctx.accountId??null)||(scope.context.groupId??null)!==(ctx.groupId??null))throw new ConflictError("图片账户不符");});
   }})};
  }
- async function imageOwner(tx:Tx,task:Task,context:Context,request:{callId:string;sessionId:string}){
+ async function imageOwner(tx:Tx,task:Task,context:Context,request:z.infer<typeof import("@creatoros/contract/execution-worker").externalChatImageIdentitySchema>){
   const {frozen}=await owner(tx,task,context,true),call=requireCall(await calls(tx,task.id),request.callId,task),start=externalChatStartSchema.parse(call.providerResult);
-  if(!frozen.externalAgentBinding||start.protocolKind!=="acp"||start.sessionId!==request.sessionId||start.turnId!==call.id||!["started","unknown"].includes(call.status))throw new ConflictError("图片缺少本聊天原回合归属");
+  if(start.sessionId!==request.sessionId||start.turnId!==call.id||!["started","unknown"].includes(call.status))throw new ConflictError("图片缺少本聊天原回合归属");
+  if(request.nativeSource){
+   const native=request.nativeSource,binding=object(object(object(task.payload).codexCalls)[call.id]);
+   if(frozen.executionEngine!=='codex'||frozen.externalAgentBinding||start.protocolKind!=='codex-app-server'||native.providerTurnId!==start.providerTurnId||binding.threadId!==request.sessionId||binding.turnId!==native.providerTurnId||native.itemId!==request.toolCallId||request.imageIndex!==0)throw new ConflictError('原生图片来源不符');
+   const payload=object(task.payload),facts=object(payload.externalChatNativeImages),key=imageKey(call.id,request.toolCallId,request.imageIndex),fact={sessionId:request.sessionId,...native};
+   if(facts[key]&&!isDeepStrictEqual(facts[key],fact))throw new ConflictError('原生图片来源不可替换');
+   if(!facts[key])await tx.update(executionTasks).set({payload:{...payload,externalChatNativeImages:{...facts,[key]:fact}}}).where(eq(executionTasks.id,task.id));
+  }else if(!frozen.externalAgentBinding||start.protocolKind!=='acp')throw new ConflictError('图片缺少原ACP来源');
  }
  const calls=(tx:Tx,taskId:string)=>tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,taskId)).orderBy(asc(executionCalls.sequence));
  function state(call:typeof executionCalls.$inferSelect){
   const result=object(call.providerResult),receipt=call.status==="settled"?externalChatReceiptSchema.parse(call.providerResult):undefined;
   return externalChatTurnStateSchema.parse({callId:call.id,status:call.status,...(typeof result.sessionId==="string"?{sessionId:result.sessionId}:{}),...(typeof result.protocolVersion==="number"?{protocolVersion:result.protocolVersion}:{}),...(result.protocolKind?{protocolKind:result.protocolKind}:{}),...(result.providerTurnId?{providerTurnId:result.providerTurnId}:{}),...(receipt?{receipt}:{})});
  }
- function requireCall(rows:Awaited<ReturnType<typeof calls>>,callId:string,task:Task){
-  const call=rows.find(row=>row.id===callId);
-  if(!call||call.executionTaskId!==task.id||call.kind!=="external_agent"||call.parentCallId||rows.some(row=>row.id!==callId&&(row.kind!=="external_tool"||row.parentCallId!==callId)))throw new ConflictError("外部聊天回执引用无效");
-  return call;
- }
+ const requireCall=(rows:Awaited<ReturnType<typeof calls>>,callId:string,task:Task)=>requireExternalChatCallTree(task,rows,callId);
  return {
   async reserve(ref:ExecutionRef,raw:unknown){
    workerPortInputSchemas.reserveExternalChatTurn.parse(raw);
    return leases.withLease(ref,"admission",async({tx,task,context})=>{
     const {frozen,business}=await owner(tx,task,context,true),existing=await calls(tx,task.id),key=`${frozen.operationKey}/external-turn/1`,digest=chatInputDigest(frozen);
-    if(existing.length){const call=existing[0]!;if(call.kind!=="external_agent"||call.operationKey!==key||call.inputDigest!==digest||call.parentCallId||existing.some(row=>row.id!==call.id&&(row.kind!=="external_tool"||row.parentCallId!==call.id)))throw new ConflictError("外部聊天账本不一致");return state(call);}
+    if(existing.length){const call=existing[0]!;if(call.kind!=="external_agent"||call.operationKey!==key||call.inputDigest!==digest||call.parentCallId)throw new ConflictError("外部聊天账本不一致");requireCall(existing,call.id,task);return state(call);}
     if(!["queued","running"].includes(business.status))throw new ConflictError("外部聊天任务已结束");
     const budget=executionBudgetSchema.parse(task.executionBudget??deps.budget);
     if(budget.maxCalls!==null&&budget.maxCalls<1)throw new ExecutionBudgetError("外部聊天调用预算不足");
@@ -112,16 +118,17 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
   },
   async saveImage(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
    const request=workerPortInputSchemas.saveExternalChatImage.parse(raw);
+   if(request.nativeSource&&createHash('sha256').update(request.bytes).digest('hex')!==request.nativeSource.checksum)throw new ConflictError('原生图片字节摘要不符');
    const context=await leases.withLease(ref,"admission",async({tx,task,context})=>{await imageOwner(tx,task,context,request);return context;});
    const {service,key}=imageAssets(ref,request);
    const receipt=await service.submit(context,{operationKey:key,assetType:"image",mimeType:request.mimeType,name:"Codex 生成图片",bytes:request.bytes},signal);
-   return {status:"committed",receipt:{toolCallId:request.toolCallId,imageIndex:request.imageIndex,...receipt}};
+   return {status:"committed",receipt:{toolCallId:request.toolCallId,imageIndex:request.imageIndex,...(request.nativeSource?{nativeSource:request.nativeSource}:{}),...receipt}};
   },
   async recoverImage(ref:ExecutionRef,raw:unknown,signal?:AbortSignal){
    const request=workerPortInputSchemas.recoverExternalChatImage.parse(raw);
    const context=await leases.withLease(ref,"settlement",async({tx,task,context})=>{await imageOwner(tx,task,context,request);return context;});
    const {service,key}=imageAssets(ref,request),saved=await service.recover(context,key,signal);
-   return saved.status==="committed"?{status:"committed",receipt:{toolCallId:request.toolCallId,imageIndex:request.imageIndex,...saved.receipt}}:saved;
+   return saved.status==="committed"?{status:"committed",receipt:{toolCallId:request.toolCallId,imageIndex:request.imageIndex,...(request.nativeSource?{nativeSource:request.nativeSource}:{}),...saved.receipt}}:saved;
   },
   async settle(ref:ExecutionRef,raw:unknown){
    const request=workerPortInputSchemas.settleExternalChatTurn.parse(raw);
@@ -149,14 +156,21 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
       if(receipt.protocolKind!==start.protocolKind||receipt.providerTurnId!==start.providerTurnId||(start.protocolKind==="codex-app-server"&&!start.providerTurnId))throw new ConflictError("供应商原生回合尚未核验或被替换");
       const imageIds=new Set<string>();
       for(const image of receipt.images??[]){
-       const {toolCallId,imageIndex,...assetReceipt}=image,key=imageKey(call.id,toolCallId,imageIndex);
-       if(start.protocolKind!=="acp"||!frozen.externalAgentBinding||imageIds.has(key))throw new ConflictError("图片回执协议或事件不符");imageIds.add(key);
+       const {toolCallId,imageIndex,nativeSource,...assetReceipt}=image,key=imageKey(call.id,toolCallId,imageIndex);
+       if(imageIds.has(key))throw new ConflictError("图片回执协议或事件不符");imageIds.add(key);
+       if(nativeSource){
+        const binding=object(object(object(task.payload).codexCalls)[call.id]),fact=object(object(task.payload).externalChatNativeImages)[key];
+        if(start.protocolKind!=='codex-app-server'||frozen.externalAgentBinding||nativeSource.itemId!==toolCallId||imageIndex!==0||nativeSource.providerTurnId!==start.providerTurnId||binding.threadId!==start.sessionId||binding.turnId!==start.providerTurnId||nativeSource.checksum!==image.checksum||!isDeepStrictEqual(fact,{sessionId:start.sessionId,...nativeSource}))throw new ConflictError('原生图片回执来源不符');
+       }else if(start.protocolKind!=='acp'||!frozen.externalAgentBinding)throw new ConflictError('图片回执协议或事件不符');
        await readCommittedGeneratedAssetFile(tx as unknown as Db,context as import("@creatoros/contract").RequestContext,key,assetReceipt);
       }
       if((await calls(tx,task.id)).some(row=>row.id!==call.id&&!["settled","rejected"].includes(row.status)))throw new ConflictError("子工具回执尚未确认");
       // ACP Usage 仍为协议不稳定字段；totalTokens 是所有 token 类型之和，
       // 真实 Codex 会把 cachedReadTokens 单列，不能强制 input+output==total。
-      const usage=receipt.usage,totalTokens=usage?.totalTokens??null;
+      const observed=object(call.usage),reported=receipt.usage;
+      // 保留已收到的累计原native事实；ACP最终last用量不能抹去之前的已知支出。
+      const usage=reported?{...observed,...Object.fromEntries(Object.entries(reported).filter(([key,value])=>value!==null&&!(typeof observed[key]==='number'&&typeof value==='number'&&(observed[key] as number)>value)))}:call.usage;
+      const totalTokens=typeof object(usage).totalTokens==='number'?object(usage).totalTokens as number:call.totalTokens;
       const [updated]=await tx.update(executionCalls).set({status:"settled",providerResult:receipt,resultText:receipt.text,usage,totalTokens,updatedAt:now()}).where(eq(executionCalls.id,call.id)).returning();
       return state(updated!);
     }
@@ -165,14 +179,28 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
     return state(updated!);
    });
   },
-  async commit(ref:ExecutionRef,raw:unknown){
+  async commit(ref:ExecutionRef,raw:unknown,verifyOrdinary?:(task:Task,callRows:Awaited<ReturnType<typeof calls>>,tool:typeof executionCalls.$inferSelect)=>ReturnType<ReturnType<typeof createAgenticToolBinding>["forCall"]>){
    const {callId}=workerPortInputSchemas.commitExternalChatResult.parse(raw);
    return leases.withLease(ref,"settlement",async({tx,task,context})=>{
     const {frozen,engine,business,conversation,messages,source}=await owner(tx,task,context,true);
     if(!conversation||!messages||!source)throw new ConflictError("外部聊天来源不完整");
     const allCalls=await calls(tx,task.id),call=requireCall(allCalls,callId,task),receipt=externalChatReceiptSchema.parse(call.providerResult);
-    const toolCards:Array<{callId:string;toolCallId:string;toolName:string;output:unknown;part:Record<string,unknown>}>=[];
-    for(const tool of allCalls.filter(row=>row.id!==call.id)){
+    const events=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(asc(executionStreamEvents.sequence));
+    const approvals=readChatApprovalFacts(events.map(event=>event.chunk));
+    const toolCards:Array<{callId:string;toolCallId:string;toolName:string;output:unknown;part:Record<string,unknown>;ordinary?:boolean}>=[];
+    for(const tool of allCalls.filter(row=>row.id!==call.id&&row.kind!=="model")){
+      if(tool.kind==='tool'){
+       if(!verifyOrdinary||tool.status!=='settled'||!tool.resultText)throw new ConflictError('普通工具缺少受信宿主核验');
+       const bound=verifyOrdinary(task,allCalls,tool),result=workerToolResultReceiptSchema.parse(JSON.parse(tool.resultText)),ordinaryOutcome=agenticToolOutcomeSchema.parse(result.output);
+       if(bound.modelCallId!==call.id||result.toolCallId!==bound.toolCallId||result.toolName!==bound.toolName||ordinaryOutcome.sideEffect==='unknown'||ordinaryOutcome.error?.code==='unknown_commit'||(ordinaryOutcome.sideEffect==='committed'&&bound.effect!=='committed')||(ordinaryOutcome.sideEffect==='proposal'&&bound.effect==='none'))throw new ConflictError('普通工具真实回执与冻结来源不符');
+       const native=object(object(object(task.payload).codexCalls)[call.id]),fact=checkpointToolCallSchema.parse({type:'tool-call',...object(object(native.tools)[bound.toolCallId])});
+       let input:unknown=fact.input,invalid=false;try{input=JSON.parse(fact.input);}catch{invalid=true;}
+       const part:Record<string,z.infer<ReturnType<typeof z.json>>>={type:`tool-${bound.toolName}`,toolCallId:bound.toolCallId,state:'input-available',input:z.json().parse(input)};
+       if(fact.providerMetadata)part.callProviderMetadata=z.json().parse(fact.providerMetadata);
+       let approval=approvals.get(bound.toolCallId);if(approval?.id===`chat-approval:${call.id}:${bound.toolCallId}`&&ordinaryOutcome.sideEffect==='none'&&ordinaryOutcome.error?.code==='permission')approval={id:approval.id,approved:false,reason:ordinaryOutcome.summary};
+       applyChatToolOutcome(part,tool.id,result.output,invalid,approval,frozen.toolOutcomeProjectionVersion);
+       toolCards.push({callId:tool.id,toolCallId:bound.toolCallId,toolName:bound.toolName,output:part.output,part,ordinary:true});continue;
+      }
       if(tool.status!=="settled"||!tool.resultText)throw new ConflictError("外部聊天工具结果尚未确认");
       const identity=externalTaskToolCallSchema.parse(tool.providerResult),outcome=agenticToolOutcomeSchema.parse(JSON.parse(tool.resultText));
       if(identity.turnCallId!==call.id||tool.parentCallId!==call.id||!["none","proposal"].includes(outcome.sideEffect))throw new ConflictError("外部聊天工具回执归属或效果无效");
@@ -184,14 +212,13 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
       toolCards.push({callId:tool.id,toolCallId:identity.toolCallId,toolName:identity.toolName,output:part.output,part});
     }
     if(call.status!=="settled"||call.inputDigest!==chatInputDigest(frozen)||receipt.engine!==engine||receipt.turnId!==call.id||call.resultText!==receipt.text)throw new ConflictError("外部聊天缺少已结算的真实回执");
-    const resultId=`chat:${business.id}`,messageId=`chat:${source.id}`,outcome=receipt.stopReason==="end_turn"?"succeeded" as const:"partial" as const;
+    const resultId=`chat:${business.id}`,messageId=`chat:${source.id}`,outcome=receipt.stopReason==="end_turn"&&!receipt.imageFailures?.length?"succeeded" as const:"partial" as const;
     for(const image of receipt.images??[]){const key=imageKey(call.id,image.toolCallId,image.imageIndex),output={kind:"native.image",asset:{id:image.assetId,name:image.name,previewUrl:null,sourceUrl:""},fileId:image.fileId};toolCards.push({callId:call.id,toolCallId:key,toolName:"native.image",output,part:{type:"tool-native.image",toolCallId:key,state:"output-available",input:{},output}});}
     const parts=[{type:"step-start"},...toolCards.map(card=>card.part),{type:"text",text:receipt.text,state:"done"}],metadata={chatTaskId:business.id,sourceMessageId:source.id,actualEngine:engine,protocolVersion:receipt.protocolVersion,...(receipt.protocolKind?{protocolKind:receipt.protocolKind}:{}),...(receipt.providerTurnId?{providerTurnId:receipt.providerTurnId}:{}),sessionId:receipt.sessionId,turnId:receipt.turnId,stopReason:receipt.stopReason,completeness:outcome==="succeeded"?"completed":"partial"};
     const resultData={conversationId:conversation.id,sourceMessageId:source.id,messageId,actualEngine:engine,protocolVersion:receipt.protocolVersion,...(receipt.protocolKind?{protocolKind:receipt.protocolKind}:{}),...(receipt.providerTurnId?{providerTurnId:receipt.providerTurnId}:{}),sessionId:receipt.sessionId,turnId:receipt.turnId,stopReason:receipt.stopReason,completeness:metadata.completeness};
     const [existing]=await tx.select().from(aiTaskResults).where(eq(aiTaskResults.id,resultId));
     if(existing){const saved=messages.find(message=>message.id===messageId);if(existing.aiTaskId!==business.id||existing.executionCallId!==call.id||chatInputDigest(existing.resultData)!==chatInputDigest(resultData)||!saved||saved.role!=="assistant"||saved.content!==receipt.text||chatInputDigest(saved.parts)!==chatInputDigest(parts)||chatInputDigest(saved.modelMetadata)!==chatInputDigest(metadata)||call.resultRef!==resultId||business.status!==outcome||task.status!==outcome)throw new ConflictError("外部聊天完成回执不一致");return {resultId,aiTaskId:business.id,messageId,outcome};}
     const stamp=now();if(call.resultRef||task.status!=="running"||!task.leaseOwner||!task.leaseExpiresAt||Date.parse(task.leaseExpiresAt)<=Date.parse(stamp)||(task.deadlineAt&&Date.parse(task.deadlineAt)<=Date.parse(stamp))||!["queued","running"].includes(business.status))throw new ConflictError("外部聊天当前不可提交");
-    const events=await tx.select().from(executionStreamEvents).where(eq(executionStreamEvents.executionTaskId,task.id)).orderBy(asc(executionStreamEvents.sequence));
     if(events.some(event=>object(event.chunk).type==="finish"))throw new ConflictError("外部聊天结束事件已存在");
     const repo=createAiRepository(tx as unknown as Db,{now:()=>stamp,nextId:()=>messageId,userId:context.userId,accountId:context.accountId??null,groupId:context.groupId});
     await repo.createMessage(conversation.id,{role:"assistant",content:receipt.text,parts,attachments:[],modelMetadata:metadata,usage:{inputTokens:receipt.usage?.inputTokens??null,outputTokens:receipt.usage?.outputTokens??null,cachedTokens:receipt.usage?.cachedReadTokens??null}});
@@ -203,6 +230,13 @@ export function createExternalChatTurnService(db:Db,deps:{now?:()=>string;budget
     for(const event of events)indices.set(event.callId,Math.max(indices.get(event.callId)??-1,event.callIndex));
     const append=(callId:string,chunk:Record<string,unknown>)=>({executionTaskId:task.id,sequence:++sequence,callId,callIndex:(indices.set(callId,(indices.get(callId)??-1)+1),indices.get(callId)!),chunk,createdAt:stamp});
     const streamRows=toolCards.flatMap(card=>{
+      if(card.ordinary){
+       const input=events.filter(event=>event.callId===call.id&&event.chunk.toolCallId===card.toolCallId&&["tool-input-available","tool-input-start"].includes(String(event.chunk.type)));
+       const output=events.filter(event=>event.callId===card.callId&&event.chunk.toolCallId===card.toolCallId&&["tool-output-available","tool-output-denied","tool-input-error"].includes(String(event.chunk.type)));
+       if(input.length!==1||output.length!==1)throw new ConflictError('普通工具缺少唯一真实流投影');
+       const chunk=output[0]!.chunk;if((card.part.state==='output-denied'&&chunk.type!=='tool-output-denied')||(card.part.state==='output-error'&&(chunk.type!=='tool-input-error'||chunk.errorText!==card.part.errorText))||(!['output-denied','output-error'].includes(String(card.part.state))&&(chunk.type!=='tool-output-available'||!isDeepStrictEqual(chunk.output,card.output))))throw new ConflictError('普通工具最终卡与已保存流事实不符');
+       return [];
+      }
       const input=append(call.id,{type:"tool-input-available",toolCallId:card.toolCallId,toolName:card.toolName,input:{}});
       if(card.part.state==="output-denied"){
         const approval=card.part.approval as {id:string;reason:string};

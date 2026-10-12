@@ -1,8 +1,9 @@
 import * as React from 'react';
 import {act,cleanup,fireEvent,render,screen,waitFor} from '@testing-library/react';
-import {afterEach,expect,it,vi} from 'vitest';
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {AICopilotContent} from '@/features/copilot/ai-copilot-content';
 import {getLiveChatSession as getLiveChatSessionWithFactory} from '@/features/copilot/live-chat-session';
+import {loadAssistantEngine} from '@/features/copilot/assistant-engine';
 import {Chat} from '@ai-sdk/react';
 import type {ChatTransport,UIMessage} from 'ai';
 import {readStoredConversationId,writeStoredConversationId} from '@/features/copilot/conversation-persistence';
@@ -22,8 +23,16 @@ function getLiveChatSession(key: string) {
 
 const query='copilot=open&selKind=project&selId=revisit';
 vi.mock('next/navigation',()=>({useSearchParams:()=>new URLSearchParams(query),useRouter:()=>({push:vi.fn(),replace:vi.fn(),refresh:vi.fn()})}));
-const api=vi.hoisted(()=>({listAITasks:vi.fn(async()=>[]),listConversations:vi.fn(async()=>[]),listMessages:vi.fn()}));
+const api=vi.hoisted(()=>({listAITasks:vi.fn(async()=>[]),listConversations:vi.fn(async()=>[]),listMessages:vi.fn(),getPreferences:vi.fn(),patchPreferences:vi.fn()}));
 vi.mock('@/lib/contract-client',()=>({client:api}));
+beforeEach(async()=>{
+ // 真实SDK消费者提交前仍须取得后端引擎偏好；不让SSE fetch替身冒充偏好回执。
+ api.getPreferences.mockReset();api.getPreferences.mockResolvedValue({assistantExecutionEngine:'pi'});
+ api.patchPreferences.mockReset();api.patchPreferences.mockImplementation(async(request:{body:{assistantExecutionEngine:'pi'|'codex'}})=>{
+  const result={assistantExecutionEngine:request.body.assistantExecutionEngine};api.getPreferences.mockResolvedValue(result);return result;
+ });
+ await loadAssistantEngine(true);
+});
 afterEach(cleanup);
 it('真实Copilot取得/释放观察者，淘汰回访恢复服务端历史且切账号组不串内容',async()=>{
  api.listMessages.mockImplementation(async({params}:{params:{conversationId:string}})=>[{id:'history',role:'assistant',content:params.conversationId==='original-a'?'原账号的历史回复':'新账号组的历史回复'}]);

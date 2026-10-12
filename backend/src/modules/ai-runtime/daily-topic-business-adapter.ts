@@ -8,7 +8,7 @@ import type {StructuredBusinessAdapter} from './structured-business-execution.se
 export interface DailyTopicPrepareDeps extends TopicGeneratePrepareDeps {
  resolveRun(ctx:RequestContext,aiTaskId:string):Promise<{jobId:string;jobRunId:string;dayKey:string}>;
  countCandidatesForDay(ctx:RequestContext,dayKey:string):Promise<number>;
- hasConfiguredModel(ctx:RequestContext):Promise<boolean>;
+ hasConfiguredModel(ctx:RequestContext,owner:{aiTaskId:string}):Promise<boolean>;
  listActivePreferences(ctx:RequestContext):Promise<ActivePreference[]>;
  dailyLimit?:number;
 }
@@ -26,7 +26,7 @@ export function createDailyTopicBusinessAdapter(deps:DailyTopicPrepareDeps):Stru
    if(!Number.isSafeInteger(count)||count<0)throw new Error('每日候选计数无效');
    const base={...run,dayKey:rankingNow.slice(0,10),dailyLimit,rankingNow,preferences:[] as ActivePreference[]};
    if(count>=dailyLimit)return {__dailyTopic:JSON.stringify(dailyTopicInputSchema.parse({...base,skipReason:'quota',observedCount:count}))};
-   if(!await deps.hasConfiguredModel(ctx))return {__dailyTopic:JSON.stringify(dailyTopicInputSchema.parse({...base,skipReason:'model_unconfigured'}))};
+   if(!await deps.hasConfiguredModel(ctx,{aiTaskId:task.id}))return {__dailyTopic:JSON.stringify(dailyTopicInputSchema.parse({...base,skipReason:'model_unconfigured'}))};
    const frozen=await prepareTopicGenerateContext(ctx,{projectId:null,inputData:{}},deps,{mode:'daily'});
    let preferences:ActivePreference[]=[];
    try{preferences=await deps.listActivePreferences(ctx);}catch{/* 原偏好读失败时调整为0。 */}

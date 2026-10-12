@@ -1,11 +1,11 @@
 import { createModels,createProvider,lazyApi,envApiKeyAuth,type Model,type Api,type AssistantMessageEvent } from "@earendil-works/pi-ai";
 import type { LanguageModelV4,LanguageModelV4CallOptions,LanguageModelV4StreamPart } from "@ai-sdk/provider";
-import type { ModelSpec } from "./provider-factory";
+import type { ApiModelSpec } from "./provider-factory";
 import { piProviderDiagnostic } from "./pi-provider-diagnostic";
 import { providerIdentityFor } from "./provider-identity";
 import { toPiContext,fromPiMessage,piPayload } from "./pi-provider-codec";
 
-export function createPiProviderModel(spec:ModelSpec,classifyRejection?:(facts:{statusCode:number;responseHeaders:Record<string,string>;message:string})=>Error):LanguageModelV4{
+export function createPiProviderModel(spec:ApiModelSpec,classifyRejection?:(facts:{statusCode:number;responseHeaders:Record<string,string>;message:string})=>Error):LanguageModelV4{
   const api=spec.apiFormat==="anthropic"?"anthropic-messages":spec.apiFormat==="openai_chat"?"openai-completions":"openai-responses";
   const baseUrl=(spec.apiFormat==="anthropic" && spec.baseUrl ? spec.baseUrl.replace(/\/v1\/?$/,"") : spec.baseUrl)??(spec.apiFormat==="anthropic"?"https://api.anthropic.com":"https://api.openai.com/v1");
   const model:Model<Api>={id:spec.model,name:spec.model,api,provider:"creatoros-pi",baseUrl,reasoning:false,input:["text","image"],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:200000,maxTokens:32768};

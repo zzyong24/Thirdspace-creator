@@ -88,6 +88,7 @@ import { ActivationResetControl } from "./activation-reset-control";
 import { CliAccessCard } from "./cli-access-card";
 import type { SkillItem } from "./skills-data";
 import { SkillsSection } from "./skills-section";
+import { skillsWorkspaceKey } from "./skills-data";
 
 // ---------------------------------------------------------------------------
 // Local appearance persistence (GAP-SET-1 — theme/density made真持久)
@@ -291,12 +292,12 @@ export function SettingsDialog({
         </div>
 
         {/* 主体:左竖 Tab 栏 + 右内容区 (各自框内滚动). */}
-        <div className="flex min-h-0 flex-1">
+        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
           {/* 左侧竖向 Tab 栏. */}
           <nav
             data-slot="settings-tabs"
             aria-label="设置分类导航"
-            className="flex w-44 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border/70 bg-surface-subtle/40 p-2"
+            className="grid w-full shrink-0 grid-cols-2 gap-0.5 overflow-y-auto border-b border-border/70 bg-surface-subtle/40 p-2 sm:grid-cols-3 md:flex md:w-44 md:flex-col md:border-r md:border-b-0"
           >
             {SETTINGS_DIALOG_TABS.map((t) => {
               const TabIcon = t.icon;
@@ -311,7 +312,7 @@ export function SettingsDialog({
                   data-active={active}
                   onClick={() => setTab(t.id)}
                   className={cn(
-                    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
+                    "flex min-w-0 items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium whitespace-nowrap transition-colors",
                     active
                       ? "bg-brand-soft text-brand"
                       : "text-muted-foreground hover:bg-surface-subtle hover:text-foreground",
@@ -327,7 +328,7 @@ export function SettingsDialog({
           {/* 右侧内容区:每个 Tab panel 各自框内滚动 (不是一屏铺满). */}
           <div
             data-slot="settings-panels"
-            className="min-w-0 flex-1 overflow-y-auto px-6 py-5"
+            className="min-h-0 min-w-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-5"
           >
             <SettingsPanel tabId="account" active={tab}>
               <div data-slot="main-settings" className="flex flex-col gap-card-gap">
@@ -380,7 +381,7 @@ export function SettingsDialog({
               <SkillsSection
                 // [T-513] 切号必须销毁展开行、草稿、pending/error 等本地状态；不能让旧账号
                 // textarea 在新账号目录上复用。服务端读写仍以 RequestContext 做最终归属门。
-                key={skills[0]?.accountId ?? "__no-account-skill-catalog__"}
+                key={skillsWorkspaceKey(skills)}
                 skills={skills}
               />
             </SettingsPanel>

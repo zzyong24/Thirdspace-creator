@@ -54,6 +54,8 @@ export interface RunExecutionTaskDeps {
   assets: ExecutionAssetsReadPort;
   registry: ExecutorRegistry;
   workspacesRoot: string;
+  /** 视频模型子阶段沿用原任务创建/启动时冻结的绝对期限，不能在审核时续期。 */
+  bindModelExecutionScope?(ctx:RequestContext,input:{taskId:string;deadlineAt:number|null}):Promise<{deadlineAt:number|null}>;
 }
 
 // in-flight 中止表:taskId → AbortController。discard(丢弃在跑任务)经
@@ -82,6 +84,7 @@ async function withExecutionDeadline<T>(
   work: Promise<T>,
   timeoutSec: number | null,
   controller: AbortController,
+  deadlineAt?: number | null,
 ): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout =
@@ -92,7 +95,7 @@ async function withExecutionDeadline<T>(
             const err = new ExecutionTimeoutError(executionTimeoutMs(timeoutSec * 1000) / 1000);
             controller.abort(err);
             reject(err);
-          }, executionTimeoutMs(timeoutSec * 1000));
+          }, deadlineAt === undefined || deadlineAt === null ? executionTimeoutMs(timeoutSec * 1000) : Math.max(0, deadlineAt - Date.now()));
         });
   // 丢弃中止:executor 若不响应 signal(挂死),这条 race 腿保证编排立即收尾
   // (任务由 discard 落 cancelled;悬空的 work promise 无人等待,进程内自然回收)。
@@ -193,6 +196,11 @@ export async function runExecutionTask(
     }
 
     if(!probeControl)await deps.ai.markRunning(ctx, taskId);
+    let deadlineAt = spec.constraints.timeoutSec === null ? null : Date.now() + executionTimeoutMs(spec.constraints.timeoutSec * 1000);
+    if(spec.taskType === "video.render" && deps.bindModelExecutionScope) ({deadlineAt}=await deps.bindModelExecutionScope(ctx,{taskId,deadlineAt}));
+    if(spec.taskType === "video.render" && deadlineAt !== null && deadlineAt <= Date.now()) {
+      const error=new ExecutionTimeoutError(executionTimeoutMs((spec.constraints.timeoutSec ?? 0)*1000)/1000);controller.abort(error);throw error;
+    }
 
     // network: deny 的降级明示(诚实,不宣称 OS 级隔离):记进步骤流,用户可见。
     await step(
@@ -226,10 +234,11 @@ export async function runExecutionTask(
         { goal: spec.goal, ...params },
         // [T-256b] ctx additive 透传:agentic executor 用它解析 model-config + 用户域端口;
         // 确定性 executor(echo/video.render)忽略此字段。
-        { signal: controller.signal, reportStep: (text) => step(text), ctx },
+        { signal: controller.signal, reportStep: (text) => step(text), ctx, deadlineAt },
       ),
       spec.constraints.timeoutSec,
       controller,
+      spec.taskType === "video.render" ? deadlineAt : undefined,
     );
 
     if(probe&&(result.meta?.dryRunPlan||result.meta?.proposals))throw new Error("媒体探针不能返回预演或创作候选");

@@ -1,16 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import type { RequestContext } from "@creatoros/contract";
 
-// knowledge.classify runner 单测(T-062c)—— mock ai-worker 的 runStructuredNode(动态 import
-// 目标),验证:capability 按 "knowledge.classify" 解析(可配不写死)、facet 截断、归一逻辑
-// (tags 去重截 5 / title 空 → 抛错诚实失败)、resolve 失败向上抛(调用方内联展示)。
-
-const runStructuredNode = vi.fn();
-vi.mock("@creatoros/ai-worker", () => ({
-  modelFor: vi.fn(() => ({}) as never),
-  runStructuredNode: (...args: unknown[]) => runStructuredNode(...args),
-  getTemplate: (id: string) => ({ id }),
-}));
+// T-1238：归一工具保持原合同；公共 runner 只向原持久任务端口提交。
 
 import {
   runKnowledgeClassify,
@@ -21,24 +12,9 @@ import {
 
 const ctx: RequestContext = { userId: "u1", requestId: "r1", source: "user" };
 
-const okSpec = {
-  apiFormat: "anthropic" as const,
-  baseUrl: null,
-  model: "claude-opus-4-8",
-  token: "k",
-};
 
-beforeEach(() => {
-  runStructuredNode.mockReset();
-  runStructuredNode.mockResolvedValue({
-    object: {
-      knowledgeType: "snippet",
-      title: "Hook 模板",
-      tags: ["Hook"],
-      summary: "开头钩子。",
-    },
-  });
-});
+
+
 
 describe("truncateForClassify(防爆截断)", () => {
   it("短原文原样透传(trim)", () => {
@@ -79,57 +55,19 @@ describe("normalizeClassification(归一)", () => {
   });
 });
 
-describe("runKnowledgeClassify(装配)", () => {
-  it("按 capability 'knowledge.classify' 解析模型 + 模板注入截断后的 content", async () => {
-    const resolveModelSpec = vi.fn(async () => okSpec);
-    const result = await runKnowledgeClassify(
-      ctx,
-      { content: "把素材都拖进去自动归类" },
-      { resolveModelSpec },
-    );
-    expect(resolveModelSpec).toHaveBeenCalledWith(ctx, "knowledge.classify");
-    const call = runStructuredNode.mock.calls[0]![0] as {
-      template: { id: string };
-      facets: Record<string, string>;
-    };
-    expect(call.template.id).toBe("knowledge.classify");
-    expect(call.facets.content).toBe("把素材都拖进去自动归类");
-    expect(result).toEqual({
-      knowledgeType: "snippet",
-      title: "Hook 模板",
-      tags: ["Hook"],
-      summary: "开头钩子。",
-    });
+describe("runKnowledgeClassify（受控任务端口）", () => {
+  it("保留原响应形状并透传请求信号", {timeout:120_000,retry:0}, async () => {
+    const output={ knowledgeType: "note", title: "候选", tags: [], summary: "摘要" }; const runKnowledgeGeneration=vi.fn(async()=>output),signal=new AbortController().signal;
+    const input={ content: "原文" };
+    expect(await runKnowledgeClassify(ctx, {...input,signal}, {runKnowledgeGeneration})).toEqual(output);
+    expect(runKnowledgeGeneration).toHaveBeenCalledWith(ctx, {skillId:"knowledge.classify",inputData:input}, signal);
   });
-
-  it("空原文 → 抛错(不空跑模型)", async () => {
-    const resolveModelSpec = vi.fn(async () => okSpec);
-    await expect(
-      runKnowledgeClassify(ctx, { content: "   " }, { resolveModelSpec }),
-    ).rejects.toThrow(/原文为空/);
-    expect(resolveModelSpec).not.toHaveBeenCalled();
+  it("空输入不创建执行任务", {timeout:120_000,retry:0}, async () => {
+    const runKnowledgeGeneration=vi.fn(); await expect(runKnowledgeClassify(ctx, { content: "   " }, {runKnowledgeGeneration})).rejects.toThrow(/原文为空/);
+    expect(runKnowledgeGeneration).not.toHaveBeenCalled();
   });
-
-  it("模型产出空 title → 抛错(调用方内联展示,原始输入留给手动补录)", async () => {
-    runStructuredNode.mockResolvedValue({
-      object: { knowledgeType: "note", title: "", tags: [], summary: "" },
-    });
-    await expect(
-      runKnowledgeClassify(
-        ctx,
-        { content: "内容" },
-        { resolveModelSpec: vi.fn(async () => okSpec) },
-      ),
-    ).rejects.toThrow(/未产出可用归类/);
-  });
-
-  it("resolveModelSpec 抛(无凭据)→ 原样向上抛,不静默兜底", async () => {
-    const resolveModelSpec = vi.fn(async () => {
-      throw new Error("无可用 LLM 凭据");
-    });
-    await expect(
-      runKnowledgeClassify(ctx, { content: "内容" }, { resolveModelSpec }),
-    ).rejects.toThrow(/无可用 LLM 凭据/);
-    expect(runStructuredNode).not.toHaveBeenCalled();
+  it("原任务失败向上透传，不在宿主绕过配置调用模型", {timeout:120_000,retry:0}, async () => {
+    const runKnowledgeGeneration=vi.fn(async()=>{throw Error("原知识任务等待核对");});
+    await expect(runKnowledgeClassify(ctx, { content: "原文" }, {runKnowledgeGeneration})).rejects.toThrow("原知识任务等待核对");
   });
 });

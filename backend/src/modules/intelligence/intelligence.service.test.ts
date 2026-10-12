@@ -1762,9 +1762,12 @@ describe("T-482 内容雷达领域主链", () => {
         preservedSnapshots: 2,
         status: "deleted",
       });
-      expect(
-        (await db.select().from(intelligenceSources)).map((row) => row.id),
-      ).toEqual(["source-keep"]);
+      // T1217：永久删除仍业务不可见；只留下已保护 snapshot 所需的不可执行父证据壳。
+      const storedSources=await db.select().from(intelligenceSources);
+      expect(storedSources.map(row=>row.id).sort()).toEqual(["source-delete","source-keep"]);
+      expect(storedSources.find(row=>row.id==="source-delete")).toMatchObject({status:"archived",monitorEnabled:false,nextRunAt:null,collectionId:null,browserSessionRef:null,extractionInstruction:null,externalKey:"__creatoros_deleted_source__:source-delete",adapterConfig:{__creatorosProvenanceOnly:1,originalExternalKey:"delete"}});
+      expect((await service.listSources(ctx,{})).rows.map(row=>row.id)).toEqual(["source-keep"]);
+      expect((await db.select().from(intelligenceSyncRuns)).map(row=>row.id)).toEqual(["run-delete","run-keep"]);
       expect(
         (await db.select().from(intelligenceItems)).map((row) => row.id),
       ).toEqual(["item-shared", "item-project", "item-topic"]);

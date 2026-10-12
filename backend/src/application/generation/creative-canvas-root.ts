@@ -15,7 +15,7 @@ export interface CreativeCanvasRootPorts {
  assets(store:Db):Pick<AssetsService,'getAsset'|'readMediaFile'|'readImageReference'|'getAssetFileDownloadUrl'>;
  projects(store:Db):Pick<ProjectsService,'getProject'>;
  resolveTemplateRequirement?:(ctx:RequestContext,id:string,version:number,tx?:Db)=>Promise<boolean>;
- resolveCapability(ctx:RequestContext,capability:'image.generate'|'image.edit'|'video.generate',store?:Db):Promise<{provider:string;model:string}>;
+ resolveCapability(ctx:RequestContext,capability:'image.generate'|'image.edit'|'video.generate',store?:Db):Promise<import("../../modules/ai-runtime/asset-generation-modes").AssetModelIdentity>;
  assetLimit?:{maxCalls:number;maxTokens:number;deadlineMs:number};
  assertProposalAdmission?:Parameters<typeof createCreativeCanvasService>[1]['assertProposalAdmission'];
  wake(ctx:RequestContext,id:string):Promise<void>;

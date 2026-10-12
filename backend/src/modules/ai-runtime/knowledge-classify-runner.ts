@@ -1,25 +1,19 @@
+import type {KnowledgeGenerationPort} from "./knowledge-generation.types";
 import type { RequestContext } from "@creatoros/contract";
-import type { ModelSpec, KnowledgeClassifyOutput } from "@creatoros/ai-worker";
+import type { KnowledgeClassifyOutput } from "@creatoros/ai-worker";
 
 // 知识倾倒场归类 runner(knowledge.classify,T-062c SPEC §4)—— 用户往 /knowledge 倒入原文,
-// 本 runner 同步跑一次结构化节点,产 `{ knowledgeType, title, tags, summary }` 归类候选,
+// 本 runner 等待受控 Worker 的原任务候选,产 `{ knowledgeType, title, tags, summary }` 归类候选,
 // 由 /api/knowledge/classify 路由返回给前端渲**确认门卡片**(type/title 可改,人点「存入
 // 知识库」才 knowledge.create 物化 —— AI 只产候选铁律)。
 //
-// 与 task 型 runner(topic-enrich 等)不同:这里没有 ai_tasks 生命周期 —— 归类是录入交互的
 // 一环,同步请求/响应;**失败直接抛错**,调用方(API 路由 → 倾倒场)显示内联错误,原始输入
 // 保留供重试或手动补录 [gate-F2],绝不静默兜底。
 //
-// 模型按 capability "knowledge.classify" 经 model-config 解析(多模态可配铁律,不写死):
-// resolveLlmConfig 无该 capability 专配行时自动回退 "default" 行 → env 默认(resolve.ts
 // Tier 1→2→3),自由 capability 天然可用。
 
 export interface KnowledgeClassifyDeps {
-  /** 按 capability 解析用户配的 model(Vercel SDK;composition root 的 resolveModelSpec)。 */
-  resolveModelSpec: (
-    ctx: RequestContext,
-    capability: string,
-  ) => Promise<ModelSpec>;
+  runKnowledgeGeneration: KnowledgeGenerationPort;
 }
 
 /** 归一后的归类候选 —— 确认门卡片的渲染形状(= knowledge.create 的 type/title 预填)。 */
@@ -62,34 +56,16 @@ export function normalizeClassification(
   };
 }
 
-/**
- * 跑一次 knowledge.classify —— resolveModelSpec("knowledge.classify") + runStructuredNode
- * (外置模板 + outputSchema,registry 运行时取,吃服务端覆盖)。任何失败(无凭据/模型不可用/
- * 产出不可用)直接抛错,由调用方内联展示。纯函数式端口注入,单测 fake resolveModelSpec + mock
- * ai-worker 即可。
- */
+/** 由原任务端口执行归类，保持确认门响应与用户采纳方式。 */
 export async function runKnowledgeClassify(
   ctx: RequestContext,
-  input: { content: string },
+  input: { content: string; signal?: AbortSignal },
   deps: KnowledgeClassifyDeps,
 ): Promise<KnowledgeClassification> {
   const content = input.content.trim();
   if (!content) {
     throw new Error("knowledge-classify: 原文为空,无可归类内容");
   }
-  const spec = await deps.resolveModelSpec(ctx, "knowledge.classify");
-  // 运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(T-040b 同款),outputSchema 由
-  // registry 收口(runStructuredNode 内 resolveOutputSchema)。
-  const { modelFor, runStructuredNode, getTemplate } =
-    await import("@creatoros/ai-worker");
-  const { object } = await runStructuredNode<KnowledgeClassifyOutput>({
-    model: modelFor(spec),
-    template: getTemplate("knowledge.classify"),
-    facets: { content: truncateForClassify(content) },
-  });
-  const classification = normalizeClassification(object);
-  if (!classification) {
-    throw new Error("knowledge-classify: 模型未产出可用归类(标题为空),请重试或手动补录");
-  }
-  return classification;
+  input.signal?.throwIfAborted();
+  return await deps.runKnowledgeGeneration(ctx, {skillId: "knowledge.classify", inputData: {content}}, input.signal) as KnowledgeClassification;
 }

@@ -1,4 +1,6 @@
 "use client";
+
+import {codexCapabilityExplanation} from '@/lib/codex-capability-explanation';
 import {useCreationClient,useCreationScope} from "@/lib/creation-workspace-scope";
 
 import * as React from "react";
@@ -63,6 +65,7 @@ function ability(items: readonly CreativeCapability[], kind: Kind | "cover" | "i
 function abilityText(item: CreativeCapability | undefined) {
   if (!item || item.state === "unknown") return "生成能力尚未核验";
   if (item.state === "supported") return "当前可生成";
+  const codexReason=codexCapabilityExplanation(item.reasonCode);if(codexReason)return codexReason;
   if (item.reasonCode === "MODEL_NOT_CONFIGURED") return "当前模型凭据不可用，请检查模型设置";
   if (item.reasonCode === "ADAPTER_NOT_READY") return "此项尚未接通";
   return "当前不可用，可稍后刷新状态";

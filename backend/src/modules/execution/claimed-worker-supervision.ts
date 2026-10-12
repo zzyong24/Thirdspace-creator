@@ -1,3 +1,4 @@
+import {localCodexWorkerEnv} from './local-codex-worker-env';
 import type {ExecutionRef} from "@creatoros/contract/execution-worker";
 import {createWorkerSupervisor,type WorkerSupervisorPorts} from "./worker-supervisor";
 
@@ -9,7 +10,7 @@ export function createClaimedWorkerSupervision(deps:{entryPath:string|(()=>strin
   isStopping:()=>stopping,
   async run(input:{ref:ExecutionRef;deadlineAt:number|null;ports:WorkerSupervisorPorts;verify():Promise<unknown>;isClosed():boolean;close():void;hasDurableOutcome():boolean}) {
    if(stopping)throw new Error("CLAIMED_WORKER_STOPPING");
-   const worker=createWorkerSupervisor({entryPath:typeof deps.entryPath==="function"?deps.entryPath():deps.entryPath,ports:input.ports});
+   const worker=createWorkerSupervisor({extraEnv:localCodexWorkerEnv(),entryPath:typeof deps.entryPath==="function"?deps.entryPath():deps.entryPath,ports:input.ports});
    active.add(worker);
    let checking=false;
    const timer=setInterval(()=>{

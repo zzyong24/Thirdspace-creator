@@ -3,7 +3,7 @@ import { z } from "zod";
 import { asc, eq, executionCalls, executionTasks, type Db } from "@creatoros/backend";
 import type { RequestContext } from "@creatoros/contract";
 import {
-  workerPortInputSchemas, transcribePostprocessPlanSchema, transcribePostprocessResultSchema,
+  codexExecutionSpec,frozenExecutionEngine,workerPortInputSchemas, transcribePostprocessPlanSchema, transcribePostprocessResultSchema,
   transcribePostprocessPreparationSchema, transcribePostprocessReservationSchema,
   type TranscribePostprocessPlan, type TranscribePostprocessResult, type ExecutionRef, type WorkerPort,
 } from "@creatoros/contract/execution-worker";
@@ -36,7 +36,7 @@ export function createExecutionTranscribePostprocessService(db:Db,deps:{
   budget:Parameters<typeof createExecutionCallLedgerService>[1]["budget"];
   now?:()=>string;
   maxOutputTokens?:number;
-  resolveModelSpec(context:RequestContext,capability:string,signal?:AbortSignal):Promise<unknown|null>;
+  resolveModelSpec(context:RequestContext,capability:string,owner:{aiTaskId:string},signal?:AbortSignal):Promise<unknown|null>;
   readContext(context:RequestContext,awemeId:string,signal?:AbortSignal):Promise<{accountPositioning?:string;title?:string}>;
 }) {
   const leases=createExecutionLeaseService(db,deps);
@@ -104,8 +104,9 @@ export function createExecutionTranscribePostprocessService(db:Db,deps:{
     const corrected=typeof result.value.object?.correctedText==="string"?result.value.object.correctedText:"";
     return checkTranscriptFidelity(entry.plan.transcript,corrected).ok?{applied:true,transcript:corrected}:fallback(entry.plan,"输出未过保真校验，保留原文");
   }
-  async function credential(context:RequestContext,signal?:AbortSignal){
-    try{return await awaitPreparation(()=>deps.resolveModelSpec({...context},TRANSCRIPT_POSTPROCESS_CAPABILITY,signal),signal);}
+  async function credential(value:State,signal?:AbortSignal){
+    if(frozenExecutionEngine(value.payload)==='codex')return codexExecutionSpec();
+    try{return await awaitPreparation(()=>deps.resolveModelSpec({...value.context},TRANSCRIPT_POSTPROCESS_CAPABILITY,{aiTaskId:value.business.id},signal),signal);}
     catch(error){signal?.throwIfAborted();if(error instanceof ConflictError||isTranscriptExecutionControlError(error))throw error;return null;}
   }
   const service={
@@ -124,7 +125,7 @@ export function createExecutionTranscribePostprocessService(db:Db,deps:{
       signal?.throwIfAborted();
       // 资料读取可能让取消或旧租约失效，取得凭据前再次核验。
       await access(ref,awemeId,"admission",async()=>{signal?.throwIfAborted();});
-      const rawSpec=await credential(initial.context,signal);
+      const rawSpec=await credential(initial,signal);
       const prepared=rawSpec===null?null:prepareExecutionModelIdentity(TRANSCRIPT_POSTPROCESS_CAPABILITY,rawSpec);
       signal?.throwIfAborted();
       return access(ref,awemeId,"admission",async value=>{

@@ -184,7 +184,9 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         }
         if (["rejected","superseded"].includes(input.status) && call.status !== "started") throw new ConflictError("未知提交不能变成可重试终态");
         const previousUsage = call.usage === null ? null : workerUsageSchema.parse(call.usage);
-        const usage = input.status === "settled" ? {...(previousUsage ?? {})} : null;
+        const observed=(task.payload as {codexCalls?:Record<string,{observedUsage?:unknown}>}).codexCalls?.[callId]?.observedUsage;
+        const nativeObserved=previousUsage!==null&&observed!==undefined&&isDeepStrictEqual(workerUsageSchema.parse(observed),previousUsage)&&call.status!=='settled';
+        const usage = input.status === "settled" || input.status==='unknown'&&nativeObserved ? {...(previousUsage ?? {})} : null;
         if (usage && input.status === "settled") {
           for (const field of ["totalTokens", "inputTokens", "outputTokens"] as const) {
             if (input.usage[field] !== undefined) usage[field] = input.usage[field];
@@ -214,7 +216,7 @@ export function createExecutionCallLedgerService(db: Db, deps: {now?: () => stri
         }
         if (input.status === "settled" && previousUsage) {
           for (const field of ["totalTokens", "inputTokens", "outputTokens"] as const) {
-            if (previousUsage[field] != null && input.usage[field] != null && previousUsage[field] !== input.usage[field]) {
+            if (previousUsage[field] != null && input.usage[field] != null && (nativeObserved?input.usage[field]!<previousUsage[field]!:previousUsage[field] !== input.usage[field])) {
               throw new ConflictError("已确认用量不能改写");
             }
           }

@@ -337,6 +337,9 @@ export function sanitizeModelAuthorityForClient(
 ): ModelAuthorityState | undefined {
   if (!state) return undefined;
 
+  const publicServiceIds=new Set(state.services
+    ?.filter(service=>service.credentialSource!=="activation_managed")
+    .map(service=>service.serviceId)??[]);
   const capabilities = state.capabilities
     ? Object.fromEntries(
         Object.entries(state.capabilities).map(([capability, item]) => [
@@ -344,7 +347,7 @@ export function sanitizeModelAuthorityForClient(
           item
             ? {
                 ...item,
-                serviceId: null,
+                serviceId: item.serviceId&&publicServiceIds.has(item.serviceId)?item.serviceId:null,
                 serviceName: null,
                 provider: null,
                 baseUrl: null,

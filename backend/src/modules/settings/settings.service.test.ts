@@ -139,7 +139,8 @@ function makeFakeRepo(
         defaultVisibility: "private",
         autosaveEnabled: true,
         fileNamingRule: "",
-        analyticsEnabled: false, // 镜像 schema 默认关(PROTECTION.md §4)
+        analyticsEnabled: false,
+        assistantExecutionEngine: null, // 镜像 schema 默认关(PROTECTION.md §4)
       };
       const provided = Object.fromEntries(
         Object.entries(patch).filter(([, v]) => v !== undefined),

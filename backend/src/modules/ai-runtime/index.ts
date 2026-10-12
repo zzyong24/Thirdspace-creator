@@ -167,3 +167,7 @@ export type {StructuredBusinessAdapter} from "./structured-business-execution.se
 export {createWorkEditorCandidateService,workEditorContentDigest,type WorkEditorPorts} from "./work-editor-candidate";
 export {createChatWorkEditorToolHost} from "./chat-work-editor-tool-host";
 export {createChatWorkCreationToolHost,type ChatWorkCreationToolPorts} from "./chat-work-creation-tool-host";
+
+export {createKnowledgeGenerationBusinessAdapters,type KnowledgeGenerationReaders} from "./knowledge-generation-business-adapters";
+export {createKnowledgeGenerationService,KnowledgeGenerationPendingError,type KnowledgeGenerationDeps} from "./knowledge-generation.service";
+export type {KnowledgeGenerationPort,KnowledgeGenerationSkill} from "./knowledge-generation.types";

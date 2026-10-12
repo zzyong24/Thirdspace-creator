@@ -19,3 +19,14 @@ LED052当前总命令没带原T1198所需隔离PG变量，另原归档入口显�
 本轮已taskctl start T1204审计并执行原机械backlog-compact --all --squeeze：19条已完成行原文归档、1条长详情外置，不改状态/审核/验收。七个当前任务的长诊断整条保留在BACKLOG-details指定锚，只在活跃行简述当前目标/真实结果/剩余工作；T1062重复详情链接去重，完整范围仍在既有详情。当前health实际exit1、59.9KB，执行ID唯一、行长和状态列正常，退出2/RUNAWAY已消除，但仍超过30KB硬限及原五撞号归档告警；不是health全绿，不移除在途/暂停任务为提速。实际日志docs/verification/t1204/{backlog-compact.log,backlog-health-after-mechanical.log,backlog-health-condensed-final.log}。仍需稳定树完整reconcile逐根因对账，T1204保持进行中。
 
 新增T1224后看板重新到60.2KB实际health exit2/RUNAWAY；本轮再把T1224/T1217/T1101长诊断原行完整保存BACKLOG-details哈希锚，仅缩活动行说明，不改状态/评审/范围或删任务。实际health仍exit1/60.0KB/超过30KB硬限，RUNAWAY消失但不是health绿；日志backlog-health-after-t1224与-condensed分别保留。
+
+本轮T1225/T1226新增登记后主表61953字节再次失控；仅将12条最长未外置旧任务一句话保完整原行/SHA于BACKLOG-details，前六列和全部任务顺序逐字校验未变，59628字节。proof notes-preservation-20261011-t1226.json；backlog-health-after-t1226.log真实exit1，硬上限仍失败，未签健康PASS。未修改任何任务状态或旧审核收据；后续稳定树完整非concise对账仍待执行。
+
+
+2026-10-11 T1227本地执行引擎核验运行完整非concise `node orchestrator/process/reconcile.mjs`，实际exit1/26ERROR/1WARN：19条审核收据错误，7项lesson检查失败（LED-052/018/042/054/058/057/053）。本轮完整原日志为 `docs/verification/t1227/reconcile.log`，结构化摘要 `docs/verification/t1227/global-checks.json`。共享工作树未冻结，原命令忽略底层子检查stdout，不能据此认定全为旧债或产品故障；沿用本任务继续逐根因核验。T1227全功能验收已block，相关270PASS/2FAIL不抵销全局失败；本轮未修产品、预算或guard。
+
+
+2026-10-11 T1238实际完整非concise对账原回执32ERROR/0WARN见docs/verification/t1238/reconcile-final.txt：包含本轮评审事件导入遗漏与异步偏好/视觉resolver测试夹具失配，不全部归旧债。T1238真实评审事件前缀及原snapshot已导入、review audit已关闭该task错误；LED054/058/059及consumer相关原红→整组绿回执保留，生命周期单变量修后真实1PASS，最终全量另存reconcile-after-fixture-fixes.txt。独立实际复跑范围外LED052缺55422隔离PG显式变量原门拒绝；LED018/057均因独立工作树缺binaries/creatoros-server-aarch64-apple-darwin真实构建资源而Cargo前置失败，未造包资源或放宽门。22条范围外静态短超时与T1026非法write_set进度生成失败同样保留。T1204持续逐根因核对，全局未签绿。
+
+
+最终完整reconcile-stable-final.txt实际exit1、25ERROR/0WARN：backlog-health1、旧review19、LED052/018/057/053四项，以及阶段记录日期陈旧1项。日期是本轮控制面问题，已更新为真实2026-10-11；manifest-date-recheck.txt重新执行原日期护栏exit0。没有再签完整24ERROR回执；其余24项按本次完整错误清单保留给T1204。完整执行中LED014/042/047/054/058/059/061均当场OK，相关产品回归不再报错。记录更新与测试器清理之后未改产品源码。

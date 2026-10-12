@@ -16,7 +16,7 @@ import { ChatToolUserError } from "../ai-runtime/chat-tool-errors";
 import { formatErrorDiagnostic } from "../ai-runtime/error-diagnostics";
 import { buildChatTools, type ChatToolDeps } from "../ai-runtime/chat-tools";
 import { getChatToolNativeExecutor } from "../ai-runtime/chat-tool-gate";
-import { createAgenticToolBinding } from "./agentic-tool-binding";
+import { latestAgenticRootCall,createAgenticToolBinding } from "./agentic-tool-binding";
 import type { ChatBackendTool } from "./execution-chat-tool-ports.service";
 import { createExecutionLeaseService } from "./execution-lease.service";
 import { createExecutionCallLedgerService } from "./execution-call-ledger.service";
@@ -50,7 +50,7 @@ export function createExecutionChatWebReadService(db: Db, deps: {
       if (bound.validationOutcome || bound.executionToolName !== "web.read" || bound.execution !== "worker.web-read" || bound.effect !== "committed") throw new ConflictError("网页观察不属于当前冻结工具");
       let url: string | null = null;
       if (restored) {
-        if (calls.filter((call) => call.kind === "model" && !call.parentCallId).at(-1)?.id !== bound.modelCallId) throw new ConflictError("旧模型回合不能上传新网页观察");
+        if (latestAgenticRootCall(calls)?.id !== bound.modelCallId) throw new ConflictError("旧模型回合不能上传新网页观察");
         const modelUrl = z.object({ url: z.string() }).parse(bound.input).url;
         url = normalizeWebReadUrl(restored.hostContext.chatContext.webReadUrl ?? modelUrl);
         if (!url || new URL(url).username || new URL(url).password) throw new ConflictError("冻结网页 URL 无效");
@@ -178,7 +178,7 @@ export function createExecutionChatWebReadService(db: Db, deps: {
         if(state.calls.some(call=>call.parentCallId===callId) || await stored(state))throw new ConflictError("网页已有成功事实或内部调用，不能降级失败");
         // settlement 只读取原冻结上下文；不重新访问网页、搜索或提交素材。
         const restored=await createChatHostContextReader(state.tx as unknown as Db,{now}).read(ref,"settlement");
-        if(state.calls.filter(call=>call.kind==="model" && !call.parentCallId).at(-1)?.id!==state.bound.modelCallId)throw new ConflictError("旧模型回合不能提交新失败");
+        if(latestAgenticRootCall(state.calls)?.id!==state.bound.modelCallId)throw new ConflictError("旧模型回合不能提交新失败");
         const url=normalizeWebReadUrl(restored.hostContext.chatContext.webReadUrl ?? z.object({url:z.string()}).parse(state.bound.input).url);
         if(!url || new URL(url).username || new URL(url).password)throw new ConflictError("冻结网页 URL 无效");
         const domain=assertSafeWebDomain(failure.kind==="needs_login" && failure.domain!==undefined ? failure.domain : webDomainFromUrl(url));

@@ -1,5 +1,6 @@
+import {createExecutionRoute,frozenExecutionEngine} from '@creatoros/contract/execution-worker';
 import {workspaceFilter} from "../../workspace-scope";
-import {and,asc,eq,inArray,sql,executionTasks,jobRuns,scheduledJobs,aiTasks,type Db} from '@creatoros/backend';
+import {and,asc,eq,inArray,sql,executionTasks,executionCalls,jobRuns,scheduledJobs,aiTasks,type Db} from '@creatoros/backend';
 import type {ExecutionRef} from '@creatoros/contract/execution-worker';
 import {ConflictError} from './execution.errors';
 type Row=typeof executionTasks.$inferSelect;
@@ -33,7 +34,13 @@ export function createExecutionScheduledChildService(db:Db,deps:{now?:()=>string
  const expectedTaskType=frozenInput.kind==='scheduled.flywheel'?`scheduled.${frozenInput.sourceKind}`:'scheduled.topic.daily';
  if(!run||!job||!ai||ai.taskType!==expectedTaskType||(frozenInput.kind==='scheduled.flywheel'&&job.sourceKind!==frozenInput.sourceKind)||run.aiTaskId!==ai.id||ai.executionTaskId!==child.id||ai.userId!==parent.userId||ai.accountId!==parent.accountId||ai.groupId!==parent.groupId||run.jobId!==parent.ownerId||run.userId!==parent.userId||job.userId!==parent.userId||job.accountId!==parent.accountId||job.groupId!==parent.groupId||run.scheduledFor!==payload(parent).scheduledFor||(payload(parent).job as {id?:string})?.id!==job.id)throw new ConflictError('调度运行记录不属于此父任务');
  const reverse=payload(child).parentExecutionTaskId;if(reverse&&reverse!==parent.id)throw new ConflictError('子任务已经绑定其它父任务');
- await tx.update(executionTasks).set({payload:{...payload(child),parentExecutionTaskId:parent.id}}).where(eq(executionTasks.id,child.id));
+ // 首次委派只允许尚未领取/调用的子任务继承；历史与在途执行保留原路由。
+ // 同一事务更新两处权威，避免Worker读业务runtime与飞轮读payload得到不同引擎。
+ const calls=await tx.select({id:executionCalls.id}).from(executionCalls).where(eq(executionCalls.executionTaskId,child.id)).limit(1);
+ const inherit=!reverse&&child.status==='queued'&&child.attempt===0&&!child.leaseOwner&&calls.length===0;
+ const route=inherit?createExecutionRoute(frozenExecutionEngine(payload(parent)),"parent"):undefined;
+ await tx.update(executionTasks).set({payload:{...payload(child),...(route?{executionRoute:route}:{}),parentExecutionTaskId:parent.id}}).where(eq(executionTasks.id,child.id));
+ if(route)await tx.update(aiTasks).set({runtimeData:{...(ai.runtimeData as Record<string,unknown>??{}),executionRoute:route}}).where(eq(aiTasks.id,ai.id));
  const existing=scheduledChildId(parent);if(existing&&existing!==child.id)throw new ConflictError('调度父任务已有不同子任务');
  if(!existing&&!['running','pause_requested','cancel_requested','cancelled','paused'].includes(parent.status))throw new ConflictError('调度父任务不可委派');
  let childState=child;

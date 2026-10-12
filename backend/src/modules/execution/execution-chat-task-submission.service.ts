@@ -1,4 +1,5 @@
 import {workspaceFilter} from "../../workspace-scope";
+import {recoverableCodexTextParents,recoverableCodexSettledProposalParents} from './chat-generation-recovery';
 import {chatSubmittedTaskType,chatSubmittedTaskResultKind} from "@creatoros/contract/execution-worker";
 import {classifyLlmError} from "@creatoros/ai-worker/retry-policy";
 import {isDeepStrictEqual} from "node:util";
@@ -7,7 +8,7 @@ import {and,asc,eq,aiTasks,executionCalls,type Db} from "@creatoros/backend";
 import {agenticToolOutcomeSchema,workerToolResultReceiptSchema,workerPortInputSchemas,type ExecutionRef} from "@creatoros/contract/execution-worker";
 import type {PreparedAiTaskCommit} from "../ai/ai-task-commit";
 import type {ChatBackendTool} from "./execution-chat-tool-ports.service";
-import {createAgenticToolBinding} from "./agentic-tool-binding";
+import {latestAgenticRootCall,createAgenticToolBinding} from "./agentic-tool-binding";
 import {createExecutionLeaseService} from "./execution-lease.service";
 import {ConflictError} from "./execution.errors";
 
@@ -33,25 +34,26 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
  const now=deps.now??(()=>new Date().toISOString());
  const blocked=(status:string)=>agenticToolOutcomeSchema.parse({status:"blocked",summary:status==="denied"?"本次操作已被拒绝":"本次操作需要恢复授权",evidence:[],data:status==="denied"?{denied:true}:{recoveryState:"chat_authorization_required"},error:{code:"permission",retryable:false,recovery:"恢复工具权限后继续原任务"},continuation:null,sideEffect:"none"});
  const output=(call:typeof executionCalls.$inferSelect)=>agenticToolOutcomeSchema.parse(workerToolResultReceiptSchema.parse(JSON.parse(call.resultText??"")).output);
- async function read(scope:Parameters<Parameters<typeof leases.withLease>[2]>[0],callId:string,settlement=false){
+ async function read(scope:Parameters<Parameters<typeof leases.withLease>[2]>[0],callId:string,settlement=false,verified?:VerifiedScriptDraftPreparation){
   const {tx,task,context}=scope;
   const [business]=await tx.select().from(aiTasks).where(and(eq(aiTasks.id,task.ownerId),eq(aiTasks.executionTaskId,task.id),eq(aiTasks.userId,context.userId),workspaceFilter(aiTasks,context))).for("update");
   if(task.ownerType!=="ai_task" || !business || business.taskType!=="copilot.assist" || (!settlement && !["queued","running"].includes(business.status)))throw new ConflictError("提交工具缺少真实聊天归属");
   const calls=await tx.select().from(executionCalls).where(eq(executionCalls.executionTaskId,task.id)).orderBy(asc(executionCalls.sequence));
   const call=calls.find(row=>row.id===callId);if(!call)throw new ConflictError("提交工具调用不存在");
-  const bound=binding.forCall(task,calls,call);
+  const readonlyRecovery=(verified&&recoverableCodexTextParents(task,calls,'script-draft').includes(callId))||((settlement||verified)&&recoverableCodexSettledProposalParents(task,calls).includes(callId));
+  const bound=binding.forCall(task,calls,call,readonlyRecovery?{readonlyRecovery:true}:undefined);
   return {call,bound,calls,context,task};
  }
  function assertPending(state:Awaited<ReturnType<typeof read>>,ref:ExecutionRef,verified?:VerifiedScriptDraftPreparation){
   const {call,bound,calls}=state;
   if((verified ? bound.execution!=="worker.script-draft" || bound.executionToolName!=="script.draft" || bound.inputDigest!==verified.inputDigest || !isDeepStrictEqual(calls.filter(row=>row.parentCallId===call.id),verified.children) : bound.execution!=="host.task-submit") || bound.effect!=="committed" || !chatSubmittedTaskType(bound.executionToolName) || call.kind!=="tool" || call.parentCallId || call.status!=="started" || call.startedAttempt!==ref.attempt || call.toolExecutionClaimId || call.resultText || call.totalTokens!==null || call.reservedTokens!==0 || (!verified && calls.some(row=>row.parentCallId===call.id)))throw new ConflictError("当前调用不是可提交的原子任务工具");
-  if(calls.filter(row=>row.kind==="model" && !row.parentCallId).at(-1)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能提交新任务");
+  if(latestAgenticRootCall(calls)?.id!==bound.modelCallId)throw new ConflictError("旧模型回合不能提交新任务");
  }
  function priorResult(state:Awaited<ReturnType<typeof read>>){
   if(state.bound.validationOutcome)return null;
   for(const prior of [...state.calls].reverse()){
    if(prior.sequence>=state.call.sequence || prior.kind!=="tool" || prior.status==="rejected")continue;
-   const previous=binding.forCall(state.task,state.calls,prior);
+   const previous=binding.forCall(state.task,state.calls,prior,prior.status==='settled'?{readonlyRecovery:true}:undefined);
    if(previous.validationOutcome || previous.execution!==state.bound.execution || previous.executionToolName!==state.bound.executionToolName || !isDeepStrictEqual(previous.input,state.bound.input))continue;
    if(prior.status==="settled"){
     const result=output(prior);
@@ -76,7 +78,7 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
   async handles(ref:ExecutionRef,raw:unknown){const {callId}=workerPortInputSchemas.executeAgenticTool.parse(raw);return leases.withLease(ref,"admission",async scope=>(await read(scope,callId)).bound.execution==="host.task-submit");},
   async execute(ref:ExecutionRef,raw:unknown,signal?:AbortSignal,verified?:VerifiedScriptDraftPreparation):Promise<Outcome>{
    signal?.throwIfAborted();const {callId}=workerPortInputSchemas.executeAgenticTool.parse(raw);
-   const initial=await leases.withLease(ref,"admission",scope=>read(scope,callId));
+   const initial=await leases.withLease(ref,"admission",scope=>read(scope,callId,false,verified));
    if(initial.call.status==="settled")return output(initial.call);
    assertPending(initial,ref,verified);
    const tool=deps.tools[initial.bound.executionToolName];if(!tool?.prepareTask || tool.execute)throw new ConflictError("事务工具未装配纯提交端口");
@@ -87,7 +89,7 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
    while(reuse && !reuse.result){
     signal?.throwIfAborted();
     await new Promise(resolve=>setTimeout(resolve,25));
-    const state=await leases.withLease(ref,"admission",scope=>read(scope,callId));
+    const state=await leases.withLease(ref,"admission",scope=>read(scope,callId,false,verified));
     if(state.call.status==="settled")return output(state.call);
     assertPending(state,ref,verified);reuse=priorResult(state);
    }
@@ -105,7 +107,7 @@ export function createExecutionChatTaskSubmissionService(db:Db,deps:{now?:()=>st
    const currentDecision=await deps.check(ref,request,signal);signal?.throwIfAborted();
    if(currentDecision.status!=="not-applicable")permission=blocked(currentDecision.status);
    return leases.withLease(ref,"admission",async scope=>{
-    signal?.throwIfAborted();const current=await read(scope,callId);
+    signal?.throwIfAborted();const current=await read(scope,callId,false,verified);
     if(current.call.status==="settled")return output(current.call);
     assertPending(current,ref,verified);
     if(current.bound.inputDigest!==initial.bound.inputDigest)throw new ConflictError("准备期间工具输入改变");

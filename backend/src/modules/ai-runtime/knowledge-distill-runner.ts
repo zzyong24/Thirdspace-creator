@@ -1,32 +1,22 @@
+import type {KnowledgeGenerationPort} from "./knowledge-generation.types";
 import type { RequestContext } from "@creatoros/contract";
-import type { ModelSpec, KnowledgeDistillOutput } from "@creatoros/ai-worker";
+import type { KnowledgeDistillOutput } from "@creatoros/ai-worker";
 import {
-  ChunkProcessingError,
-  chunkTextDeterministically,
-  runOrderedChunks,
   type ChunkProgressListener,
 } from "./chunk-and-merge";
 
 // 知识倾倒场蒸馏 runner(knowledge.distill,T-079b SPEC §2)—— 用户往 /knowledge 倒入原文,
-// 本 runner 同步跑一次结构化节点,产 `{ atoms[], suggestedTags[] }` 一批知识原子候选,
+// 本 runner 等待受控 Worker 的原任务候选,产 `{ atoms[], suggestedTags[] }` 一批知识原子候选,
 // 由 /api/knowledge/distill 路由返回给前端渲**蒸馏批量确认门**(每条可勾选/改 type/改 title,
 // 人点「采纳选中 N 条」才逐条 knowledge.create 物化 —— AI 只产候选铁律)。
 //
-// 与 knowledge-classify-runner 同款形态(同步请求/响应,无 ai_tasks 生命周期):**失败直接
 // 抛错**,调用方(API 路由 → 倾倒场)显示内联错误,原始输入保留供重试或手动补录 [gate-F2],
 // 绝不静默兜底。classify 保留供他用,知识流入口由本 runner 全面替代。
 //
-// 模型按 capability "knowledge.distill" 经 model-config 解析(多模态可配铁律,不写死):
-// resolveLlmConfig 无该 capability 专配行时自动回退 "default" 行 → env 默认(Tier 1→2→3),
 // 自由 capability 天然可用。
 
 export interface KnowledgeDistillDeps {
-  /** 按 capability 解析用户配的 model(Vercel SDK;composition root 的 resolveModelSpec)。 */
-  resolveModelSpec: (
-    ctx: RequestContext,
-    capability: string,
-  ) => Promise<ModelSpec>;
-  /** [T-430] 分块旁路进度；回调失败不改变蒸馏结果。 */
+  runKnowledgeGeneration: KnowledgeGenerationPort;
   onChunkProgress?: ChunkProgressListener;
 }
 
@@ -151,73 +141,21 @@ export function normalizeDistillation(
   return { atoms, suggestedTags };
 }
 
-/**
- * 跑 knowledge.distill —— 确定性分块 + 每块 runStructuredNode + 顺序近重归并
- * (外置模板 + outputSchema,registry 运行时取,吃服务端覆盖)。任何失败(无凭据/模型不可用/
- * 产出不可用)直接抛错,由调用方内联展示。纯函数式端口注入,单测 fake resolveModelSpec + mock
- * ai-worker 即可。
- */
+/** 同步公共响应继续等待同一持久任务；分块、模型调用与绝对期限由原 Worker 控制。 */
 export async function runKnowledgeDistill(
   ctx: RequestContext,
-  input: { content: string },
+  input: { content: string; signal?: AbortSignal },
   deps: KnowledgeDistillDeps,
 ): Promise<KnowledgeDistillation> {
   const content = input.content.trim();
   if (!content) {
     throw new Error("knowledge-distill: 原文为空,无可蒸馏内容");
   }
-  const inputChars = content.length;
-  const modelContent = content.slice(0, MAX_DISTILL_CONTENT_CHARS);
-  const chunks = chunkTextDeterministically(modelContent, DISTILL_CHUNK_CHARS);
-  const coverage: KnowledgeDistillCoverage = {
-    inputChars,
-    processedChars: modelContent.length,
-    truncatedChars: Math.max(0, inputChars - modelContent.length),
-    chunkCount: chunks.length,
-  };
-  const spec = await deps.resolveModelSpec(ctx, "knowledge.distill");
-  // 运行时 getTemplate 取被服务端覆盖后的 REGISTRY 对象(T-040b 同款),outputSchema 由
-  // registry 收口(runStructuredNode 内 resolveOutputSchema)。
-  const { modelFor, runStructuredNode, getTemplate } =
-    await import("@creatoros/ai-worker");
-  const model = modelFor(spec);
-  const template = getTemplate("knowledge.distill");
-  let parts: KnowledgeDistillation[];
-  try {
-    parts = await runOrderedChunks({
-      chunks,
-      onProgress: deps.onChunkProgress,
-      process: async (chunk) => {
-        const { object } = await runStructuredNode<KnowledgeDistillOutput>({
-          model,
-          template,
-          facets: { content: chunk.text },
-        });
-        const distillation = normalizeDistillation(object);
-        if (!distillation) {
-          throw new Error(
-            "模型未蒸馏出可用知识原子,请重试或手动补录",
-          );
-        }
-        return distillation;
-      },
-    });
-  } catch (error) {
-    if (error instanceof ChunkProcessingError) {
-      const cause =
-        error.cause instanceof Error ? `：${error.cause.message}` : "";
-      throw new Error(
-        `knowledge-distill: 第 ${error.chunkIndex + 1}/${error.totalChunks} 块失败${cause}；未返回部分候选，原文仍保留可重试`,
-        { cause: error },
-      );
-    }
-    throw error;
+  input.signal?.throwIfAborted();
+  const output=await deps.runKnowledgeGeneration(ctx, {skillId: "knowledge.distill", inputData: {content}}, input.signal) as KnowledgeDistillation;
+  if(output.coverage && deps.onChunkProgress){
+    // 仅在原任务全文候选完成后报告真实完成数；观察者失败不改变交付。
+    try{await deps.onChunkProgress({status:"completed",index:output.coverage.chunkCount-1,total:output.coverage.chunkCount,completed:output.coverage.chunkCount});}catch{}
   }
-  const merged = mergeDistillations(parts);
-  if (merged.atoms.length === 0) {
-    throw new Error(
-      "knowledge-distill: 模型未蒸馏出可用知识原子,请重试或手动补录",
-    );
-  }
-  return { ...merged, coverage };
+  return output;
 }

@@ -58,7 +58,7 @@ export async function createCodexAcpHost(cwd:string,signal:AbortSignal,mcpServer
  await preflight.rpc.close();signal.throwIfAborted();
  if(!authenticated)throw new CodexHostError('CODEX_LOGIN_REQUIRED');
  const disabled=['apps','plugins','hooks','multi_agent','multi_agent_v2','browser_use','computer_use','code_mode','code_mode_host','tool_suggest','shell_tool','unified_exec','view_image','skill_search','skill_mcp_dependency_install'];
- const config={sandbox_mode:'read-only',approval_policy:'on-request',approvals_reviewer:'user',web_search:'disabled',features:Object.fromEntries([...disabled.map(name=>[name,false]),['image_generation',true]]),mcp_servers:Object.fromEntries(mcpNames.map(name=>[name,{enabled:false}]))};
+ const config={sandbox_mode:'read-only',approval_policy:'on-request',approvals_reviewer:'user',web_search:'disabled',features:Object.fromEntries([...disabled.map(name=>[name,false]),['image_generation',true],['omit_app_server_notification_media',false]]),mcp_servers:Object.fromEntries(mcpNames.map(name=>[name,{enabled:false}]))};
  const args=codexProcessArguments(mcpNames).map(arg=>arg==='features.image_generation=false'?'features.image_generation=true':arg);
  if(profile===CREATOROS_ACP_POLICY_V2){
   const directNamespaces=['image_gen',...mcpServers.map(server=>creatorOsMcpNamespace(server.name))];

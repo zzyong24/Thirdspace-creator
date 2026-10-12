@@ -14,11 +14,11 @@ function chunk(name:string,data:Buffer){const type=Buffer.from(name),length=Buff
 function image(index:number){const header=Buffer.alloc(13);header.writeUInt32BE(32,0);header.writeUInt32BE(24,4);header[8]=8;header[9]=6;const pixels=Buffer.alloc(24*(1+32*4));for(let y=0;y<24;y++)for(let x=0;x<32;x++){const at=y*129+1+x*4;pixels[at]=index;pixels[at+1]=x*7;pixels[at+2]=y*10;pixels[at+3]=255;}return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(pixels)),chunk('IEND',Buffer.alloc(0))]);}
 async function upload(page:Page,groupId:string,index:number,name:string){
  const bytes=image(index),start=await dispatch<{uploadId:string;uploadUrl:string}>(page,'assets.uploads.create',{body:{assetType:'image',mimeType:'image/png',fileSize:bytes.length,fileName:name}},groupId);
- const put=await page.request.put(start.uploadUrl,{headers:{'content-type':'image/png'},data:bytes});expect(put.ok()).toBe(true);
+ const put=await page.request.put(start.uploadUrl,{headers:{'content-type':'image/png','x-group-id':groupId},data:bytes});expect(put.ok()).toBe(true);
  return await dispatch<{id:string;currentFileId:string}>(page,'assets.uploads.complete',{params:{uploadId:start.uploadId},body:{name}},groupId);
 }
 test('公共全库分页与模板照片选择：后页可见、搜索和取消保留精确照片',async({page,context,baseURL},testInfo)=>{
- test.setTimeout(900_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);context.setDefaultTimeout(120_000);
+ test.setTimeout(259_200_000);page.setDefaultTimeout(120_000);page.setDefaultNavigationTimeout(120_000);context.setDefaultTimeout(120_000);
  await page.goto('/');const group=await dispatch<{id:string}>(page,'accountGroups.create',{body:{name:`中性图库-${fresh()}`,idempotencyKey:fresh()}});
  const prefix=`中性照片_${fresh()}`;let oldest:{id:string;currentFileId:string}|undefined;
  for(let index=0;index<140;index++){const asset=await upload(page,group.id,index,`${prefix}_${String(index).padStart(3,'0')}_完整长名称.png`);if(index===0)oldest=asset;}

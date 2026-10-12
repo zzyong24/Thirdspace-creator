@@ -82,6 +82,8 @@ export const settingsOperations = {
       autosaveEnabled: z.boolean().optional(),
       fileNamingRule: z.string().optional(),
       analyticsEnabled: z.boolean().optional(),
+      assistantExecutionEngine: z.enum(["pi", "codex"]).optional(),
+      initializeAssistantExecutionEngine: z.literal(true).optional(),
     }),
     response: userPreferenceResource,
     fr: ["FR-SETTINGS-PREFERENCES-UPDATE"],

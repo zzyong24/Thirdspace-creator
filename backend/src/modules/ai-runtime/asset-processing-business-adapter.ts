@@ -4,7 +4,7 @@ import type { StructuredBusinessAdapter } from './structured-business-execution.
 import type { AssetsService } from '../assets';
 export interface AssetProcessingPreparationPorts {
     assets: Pick<AssetsService, 'getAsset' | 'getAssetBytes'>;
-    isModelConfigured(ctx: RequestContext, taskType: 'asset.classify' | 'material.extract'): Promise<boolean>;
+    isModelConfigured(ctx: RequestContext, taskType: 'asset.classify' | 'material.extract',owner:{aiTaskId:string}): Promise<boolean>;
 }
 /** 配置缺失保留原可选增强降级；账号与原文件摘要在首轮绑定，不由 Worker 指定。 */
 export function createAssetProcessingBusinessAdapter(taskType: 'asset.classify' | 'material.extract', deps: AssetProcessingPreparationPorts): StructuredBusinessAdapter {
@@ -15,7 +15,7 @@ export function createAssetProcessingBusinessAdapter(taskType: 'asset.classify' 
             const asset = await deps.assets.getAsset(ctx, assetId), file = await deps.assets.getAssetBytes(ctx, assetId), after = await deps.assets.getAsset(ctx, assetId);
             if (after.currentFileId !== asset.currentFileId)
                 throw new Error('素材版本在准备时发生变化');
-            const skipModel = !(await deps.isModelConfigured(ctx, taskType));
+            const skipModel = !(await deps.isModelConfigured(ctx, taskType,{aiTaskId:task.id}));
             return { __assetProcessing: JSON.stringify({ taskType, assetId, fileId: asset.currentFileId, checksum: file ? createHash('sha256').update(file.bytes).digest('hex') : null, fileName: typeof task.inputData.fileName === 'string' ? task.inputData.fileName : asset.name, mimeType: file?.mimeType ?? '', skipModel }) };
         }, project() { throw new Error('素材处理须经非候选完成事务'); } };
 }

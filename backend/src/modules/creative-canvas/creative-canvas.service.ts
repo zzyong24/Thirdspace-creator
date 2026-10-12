@@ -58,7 +58,7 @@ export function createCreativeCanvasService(db:Db,deps:{
  findTaskByAttempt?:(ctx:RequestContext,attemptId:string)=>Promise<{id:string}|null>;
  resolveTemplateRequirement?:(ctx:RequestContext,id:string,version:number,tx?:Db)=>Promise<boolean>;
  assertProposalAdmission?:(ctx:RequestContext,input:{attemptId:string;inputData:CanvasTaskInput;taskId:string;generationLinkId:string},tx:Db)=>Promise<void>;
- resolveCapability?:(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate",tx?:Db)=>Promise<{provider:string;model:string}>;
+ resolveCapability?:(ctx:RequestContext,capability:"image.generate"|"image.edit"|"video.generate",tx?:Db)=>Promise<import("../ai-runtime/asset-generation-modes").AssetModelIdentity>;
 }){
  const now=deps.now??(()=>new Date().toISOString());
  async function requireCanvas(ctx:RequestContext,id:string,store:Db=db){const [row]=await store.select().from(creativeCanvases).where(owned(ctx,id));if(!row)throw new OwnershipError("画布不存在");return row;}
@@ -269,8 +269,8 @@ export function createCreativeCanvasService(db:Db,deps:{
     if(!deps.resolveCapability)return {mode,available:false,model:null,reason:"生成模型尚未配置",aspectRatios:undefined};
     try{const spec=await deps.resolveCapability(ctx,capability);
      const supported=supportsAssetGenerationMode(spec,mode);
-     return {mode,available:supported,model:spec.model,reason:supported?null:"当前模型渠道不支持该模式",...(supported&&assetGenerationAspectRatios(spec,mode)?{aspectRatios:assetGenerationAspectRatios(spec,mode)}:{})};
-    }catch{return {mode,available:false,model:null,reason:"当前账号尚未配置可用模型",aspectRatios:undefined};}
+     return {mode,available:supported,model:"engine" in spec?"Codex":spec.model,reason:supported?null:"当前模型渠道不支持该模式",...(supported&&assetGenerationAspectRatios(spec,mode)?{aspectRatios:assetGenerationAspectRatios(spec,mode)}:{})};
+    }catch(error){return {mode,available:false,model:null,reason:error instanceof Error&&error.message.startsWith("CODEX_")?"本地Codex当前未提供此能力，请检查登录和套餐":"当前账号尚未配置可用模型",aspectRatios:undefined};}
    }))};
   },
   async list(ctx:RequestContext){const rows=await db.select().from(creativeCanvases).where(and(eq(creativeCanvases.userId,ctx.userId),workspaceFilter(creativeCanvases,ctx),isNull(creativeCanvases.archivedAt))).orderBy(desc(creativeCanvases.updatedAt));return Promise.all(rows.map(row=>visibleCanvas(ctx,row)));},

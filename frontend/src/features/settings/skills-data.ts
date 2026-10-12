@@ -23,8 +23,9 @@ import type {
 /** 一条技能列表条目(route server 侧投影,全部可序列化,客户端只读渲染 + 编辑草稿)。 */
 export interface SkillItem {
   readonly editableFields?: readonly string[];
-  /** 当前联合目录归属账号；null 表示未选号、只展示 official 目录。 */
+  /** legacy 联合目录归属账号；canonical 组目录此字段为 null。 */
   readonly accountId: string | null;
+  readonly groupId?: string | null;
   /** skill id(REGISTRY 注册 id,如 "script.draft")。 */
   readonly id: string;
   /** 当前版本标记(内置 version 或覆盖行 version)。 */
@@ -398,6 +399,7 @@ export function buildSkillItems(
 ): SkillItem[] {
   return catalog.map((row) => ({
     accountId: row.accountId,
+    groupId: row.groupId ?? null,
     editableFields: row.editableFields,
     id: row.skillId,
     version: row.overlayVersion ?? row.baseVersion,
@@ -417,4 +419,22 @@ export function buildSkillItems(
       row.overlay.completionPolicy !== null,
     customized: isOverlayCustomized(row),
   }));
+}
+
+
+/** 只识别公开目录的真实 scope；不从当前选择补齐缺失授权。 */
+export type SkillWorkspace = {groupId:string; accountId:null} | {groupId:null; accountId:string};
+export function skillWorkspaceOf(skill: Pick<SkillItem,"groupId"|"accountId">): SkillWorkspace | null {
+  const groupId = skill.groupId === undefined ? null : skill.groupId;
+  const nonempty = (value: unknown): value is string => typeof value === "string" && value.trim().length > 0 && value === value.trim();
+  if (nonempty(groupId) && skill.accountId === null) return {groupId, accountId:null};
+  if (groupId === null && nonempty(skill.accountId)) return {groupId:null, accountId:skill.accountId};
+  return null;
+}
+export function skillWorkspaceKey(skill: Pick<SkillItem,"groupId"|"accountId">): string {
+  const scope = skillWorkspaceOf(skill);
+  return scope ? JSON.stringify(scope) : "__readonly-skill-catalog__";
+}
+export function skillsWorkspaceKey(skills: readonly SkillItem[]): string {
+  return JSON.stringify(skills.map(skillWorkspaceKey));
 }
