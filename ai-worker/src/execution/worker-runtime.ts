@@ -30,6 +30,7 @@ const modelCheckpointSchema = z.object({
 });
 
 export interface WorkerDependencies {
+  observeException?:(event:{eventId:string;module:"worker";code:string;occurredAt:string;referenceId:string;stack:string;message:string})=>void;
   heartbeatMs?: number;
   capabilities?: Array<"asset.asr"|"transcribe.douyin"|"asset.generate"|"model.generate"|"model.structured"|"intelligence.rewrite-text"|"agentic.run"|"chat.run"|"chat.script-draft"|"chat.hooks"|"chat.structured"|"chat.research"|"chat.web-read">;
   supportsChatWebRead?:boolean;
@@ -344,6 +345,7 @@ export function createExecutionWorker(deps: WorkerDependencies) {
       reason = "completed";
     } catch (error) {
       const failure = error instanceof GenerationFailure ? error : undefined;
+      if(!signal.aborted){try{deps.observeException?.({eventId:randomUUID(),module:"worker",code:"WORKER_EXECUTION_INTERRUPTED",occurredAt:new Date().toISOString(),referenceId:execution.executionTaskId,stack:error instanceof Error?Buffer.from(error.stack??"").subarray(0,16000).toString("utf8"):"",message:error instanceof Error?Buffer.from(error.message).subarray(0,4000).toString("utf8"):""});}catch{/* 观察者不改变结局 */}}
       reason = signal.aborted ? "cancelled" : failure?.outcome ?? (started || committing ? "unknown_result" : "failed");
       if (started && !settled) {
         await call(execution, "settleCall", {callId, status: failure && failure.outcome !== "unknown_result" ? "rejected" : "unknown"}).catch(() => {});

@@ -1,3 +1,4 @@
+import {exceptionCapture} from "@creatoros/contract";
 import {executionTimeoutMs} from "@creatoros/contract/timeout-policy";
 import { fork, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
@@ -67,6 +68,7 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
       if (child === handle && current === run) void forceStop(handle).catch(() => {});
     }, executionTimeoutMs(options.shutdownGraceMs));
   };
+  const captureObservation=(event:unknown)=>{const parsed=exceptionCapture.safeParse(event);if(!parsed.success)return;try{(globalThis as {__creatorosCaptureException?:(event:unknown)=>void}).__creatorosCaptureException?.(parsed.data);}catch{/* 保原任务与IPC */}};
   const start = (): Promise<string[]> => {
     if (cleanupFailure) return Promise.reject(cleanupFailure);
     if (cleanups.size) return Promise.all([...cleanups.values()]).then(() => start());
@@ -85,11 +87,16 @@ export function createWorkerSupervisor(options: WorkerSupervisorOptions) {
         clearTimeout(startupTimer);
         if (!startupTimedOut) reject(new Error("WORKER_EXITED"));
         if (child !== processHandle) return;
+        if(!stopping)captureObservation({eventId:randomUUID(),module:"worker",code:"WORKER_EXITED",occurredAt:new Date().toISOString(),referenceId:current?.execution.executionTaskId??null,stack:"",message:"执行进程意外退出"});
         current?.reject(new Error(stopping ? "WORKER_STOPPED" : "WORKER_EXITED"));
         clearRun(); ready = undefined; child = undefined; receiptProtocol = false;
       });
       processHandle.on("message", raw => {
         if (child !== processHandle) return;
+        if(raw&&typeof raw==="object"&&(raw as {version?:unknown}).version===1&&(raw as {type?:unknown}).type==="observability"){
+          const event=exceptionCapture.safeParse((raw as {event?:unknown}).event);
+          if(event.success&&event.data.module==="worker"&&(event.data.referenceId===null||event.data.referenceId===current?.execution.executionTaskId))captureObservation(event.data);return;
+        }
         const parsed = workerMessageSchema.safeParse(raw);
         if (!parsed.success) return;
         const message = parsed.data;
