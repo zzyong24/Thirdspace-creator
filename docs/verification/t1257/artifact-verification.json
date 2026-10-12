@@ -1,0 +1,52 @@
+{
+  "version": "1.2.0",
+  "architecture": "arm64",
+  "source": "/Applications/CreatorOS.app",
+  "installed_source_commit": "unknown",
+  "source_unchanged": true,
+  "runtime_unchanged": true,
+  "macho_sections_unchanged": {
+    "Contents/MacOS/CreatorOS": {
+      "sectionCount": 14,
+      "unchangedSections": {
+        "__TEXT/__text": "ec65f7b2e7feee6c76f2db388c5f52d2ccbde4ca2bd0e1b550ae98056e0468cc",
+        "__TEXT/__stubs": "b1c1b4bf43e022d70da56ee365f2381d618ab0f5280fd794c81ea26df5b227a1",
+        "__TEXT/__init_offsets": "2985933c2830fbb074f679a50a2be9e5acbbd7d18e4a85c4b11eb24cd7e80e61",
+        "__TEXT/__cstring": "b49fed77dced239bdaf2ef9b6aec9ec46e1a67a4c9dfa637d97a8bca4584d073",
+        "__TEXT/__const": "c4a440f86f39492b62f12c855b61a34f17c86920d7d844e8cf34e0133f51883c",
+        "__TEXT/__gcc_except_tab": "24f64d2f34b8e3c304dacd043b3cad404274449dc8f799a3ee0140d497c83660",
+        "__TEXT/__unwind_info": "f5a4dba1d002a0fa45905646b78838543748881e7ee6f490de197e739921eaf8",
+        "__TEXT/__eh_frame": "edb87f713786966f32ac947e817e4595cbf9a0a87b26dcefc3cb9cd7606271d6",
+        "__DATA_CONST/__got": "681432f91bc13893759a4a20ee91609f3a3918f90b91841c0c4ba7bf154e7160",
+        "__DATA_CONST/__const": "142a3e095ff68d41692373cdd9fa8af0be396e5af08b5759ab12e7afc03066be",
+        "__DATA_CONST/__objc_imageinfo": "94039884329d3732c577860f40d0dfdf883ff89dac332f87216e692c08892fa2",
+        "__DATA/__data": "f34ed7ab0131458ee8a85d1420d2629e1afcae3e41add41590a849399d86c047",
+        "__DATA/__thread_vars": "69d9c0bfbf60416eb132dd5686918239f02a5b57c4faa768d06d7342b1e9ad3b",
+        "__DATA/__thread_data": "7c7a1e3632c27fe0e0b13b83c31fc7a4ce7a674259955964ba8e757d24e21c3b"
+      }
+    },
+    "Contents/MacOS/creatoros-server": {
+      "sectionCount": 3,
+      "unchangedSections": {
+        "__TEXT/__text": "49f4b247da0a5348f0c7dc57890c2db512cd474f01cc1d67f46d67fc8858017b",
+        "__TEXT/__stubs": "7aa2f05ec5ae9fdee2ee6d0528e30af69cf647a91033aec3152a00047ce6afcd",
+        "__DATA_CONST/__got": "e6ad6c9a3a3b7658c35bacf6553fcb8ffe34387534a648fe18f875b8f7a86ddb"
+      }
+    }
+  },
+  "unchanged_files": {
+    "Contents/Info.plist": "c73a5d55331d915719807ac7330aab4710cbfd3988335911929dfb6b67adcfc9",
+    "Contents/Resources/icon.icns": "ae5c1771c4a20cec9290b916d4aab90060d272a7f321c1eae528f72857a5f6eb",
+    "Contents/Resources/THIRD_PARTY_NOTICES.md": "164b46fc33639cb2e79cba8abea46e7daccc285d9c19343178823e8ec964e962",
+    "Contents/Resources/sidecar.tar.gz": "80ff6c84cb3b0c6cb972030c1a203b03c290f334650ab35a87a75a05c9c79e10"
+  },
+  "developer_id": "Developer ID Application: zhu zyong (2K9D3QH3YJ)",
+  "app_signature": "verified deep strict",
+  "dmg_signature": "verified strict",
+  "dmg_integrity": "hdiutil verify VALID",
+  "apple_notarization": "not-requested: 用户明确只做本地签名",
+  "fresh_install_launch": "not-run: 现有数据目录不具备隔离启动覆盖，未启动第二应用",
+  "artifact": "/Users/zyongzhu/Downloads/CreatorOS-1.2.0-local-signed-20261012/CreatorOS-1.2.0-macOS-arm64-local-signed.dmg",
+  "bytes": 842788980,
+  "sha256": "044f0720d326822158186351aae1155c8d8c2df9c6ef0e4559d6e52376e26eb5"
+}

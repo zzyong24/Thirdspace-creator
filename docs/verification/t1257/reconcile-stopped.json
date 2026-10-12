@@ -1,0 +1,26 @@
+{
+  "result": "incomplete",
+  "reason": "本次仅封装既有安装二进制，无产品代码变更；按打包技能只运行打包基本测试，停止范围外全局产品回归，不签为PASS。范围外全局欠债仍归T-1204。",
+  "ownedProcesses": [
+    {
+      "pid": 76656,
+      "command": "node orchestrator/process/reconcile.mjs"
+    },
+    {
+      "pid": 79513,
+      "command": "node /opt/homebrew/bin/pnpm --dir backend exec vitest run src/modules/intelligence/transcript-runner.test.ts src/modules/intelligence/topic-preview-runner.test.ts"
+    },
+    {
+      "pid": 79514,
+      "command": "node ./node_modules/.bin/../vitest/vitest.mjs run src/modules/intelligence/transcript-runner.test.ts src/modules/intelligence/topic-preview-runner.test.ts"
+    },
+    {
+      "pid": 79520,
+      "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node --experimental-import-meta-resolve --require /Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/suppress-warnings.cjs --conditions node --conditions development /Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/workers/forks.js"
+    },
+    {
+      "pid": 79521,
+      "command": "/opt/homebrew/Cellar/node/25.9.0_2/bin/node --experimental-import-meta-resolve --require /Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/suppress-warnings.cjs --conditions node --conditions development /Users/zyongzhu/Workbase/Thirdspace-creator/node_modules/.pnpm/vitest@4.1.8_@opentelemetry+api@1.9.0_@types+node@20.19.43_jsdom@29.1.1_@noble+hashes@1_c18eaf465aa959b5635d2ad70f1af95b/node_modules/vitest/dist/workers/forks.js"
+    }
+  ]
+}
